@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>JavaScript Unit Tests</title>
+  <link rel="stylesheet" href="../qunit-1.11.0.css">
+</head>
+<body>
+  <div id="qunit"></div>
+  <div id="qunit-fixture"></div>
+  
+  <script>
+      // clear session storage of failed tests, so async order is correct after fail & refresh
+  		window.sessionStorage.clear();
+  </script>
+  
+  <!-- dependencies -->  
+  <script src="../../src/lib/cordova-2.5.0.js"></script>
+  <script src="../qunit-1.11.0.js"></script>
+  <script src="../../src/lib/jquery-1.8.2.min.js"></script>
+  <script src="../../src/lib/underscore-1.4.4.min.js"></script>
+  <script src="../../src/lib/backbone-0.9.10.min.js"></script>
+  <script src="../../src/lib/lawnchair/lawnchair-git.min.js"></script>
+  <script src="../../src/lib/lawnchair/lawnchair-adapter-indexed-db-git.js"></script>
+  <script src="../../src/lib/lawnchair/lawnchair-adapter-webkit-sqlite-git.js"></script>
+  
+  <script src="../../src/lib/crypto-js/core.js"></script>
+  <script src="../../src/lib/crypto-js/enc-base64.js"></script>
+  <script src="../../src/lib/crypto-js/cipher-core.js"></script>
+  <script src="../../src/lib/crypto-js/aes.js"></script>
+  <script src="../../src/lib/crypto-js/sha1.js"></script>
+  <script src="../../src/lib/crypto-js/hmac.js"></script>
+  <script src="../../src/lib/crypto-js/pbkdf2.js"></script>
+  
+  <script src="../../src/lib/sjcl/sjcl.js"></script>
+  <script src="../../src/lib/sjcl/sha256.js"></script>
+  <script src="../../src/lib/sjcl/random.js"></script>
+  <script src="../../src/lib/sjcl/bitArray.js"></script>
+  <script src="../../src/lib/sjcl/codecBase64.js"></script>
+  <script src="../../src/lib/sjcl/codecString.js"></script>
+  <script src="../../src/lib/sjcl/aes.js"></script>
+  <script src="../../src/lib/sjcl/ccm.js"></script>
+  
+  <script src="../../src/lib/uuid.js"></script>
+  <script src="../../src/lib/openpgp.min.js"></script>
+  
+  <script src="../../src/js/app-config.js"></script>
+  <script>
+    app.config.workerPath = '../../src/js';
+    app.config.cloudUrl = 'http://localhost:8888';
+  </script>
+  
+  <script src="../../src/js/model/email-model.js"></script>
+  <script src="../../src/js/model/folder-model.js"></script>
+  <script src="../../src/js/model/account-model.js"></script>
+  
+  <script src="../../src/js/crypto/util.js"></script>
+  <script src="../../src/js/crypto/pbkdf2.js"></script>
+  <script src="../../src/js/crypto/aes-cbc.js"></script>
+  <script src="../../src/js/crypto/aes-ccm.js"></script>
+  <script src="../../src/js/crypto/aes-gcm.js"></script>
+  <script src="../../src/js/crypto/crypto.js"></script>
+  
+  <script src="../../src/js/dao/localstorage-dao.js"></script>
+  <script src="../../src/js/dao/lawnchair-dao.js"></script>
+  <script src="../../src/js/dao/devicestorage.js"></script>
+  <script src="../../src/js/dao/cloudstorage-dao.js"></script>
+  <script src="../../src/js/dao/email-dao.js"></script>
+  
+  <!-- tests -->
+  <script src="../test-data.js"></script>
+  <script src="util-test.js"></script>
+  <script src="aes-test.js"></script>
+  <script src="crypto-test.js"></script>
+  <script src="localstorage-dao-test.js"></script>
+  <script src="lawnchair-dao-test.js"></script>
+  <script src="devicestorage-test.js"></script>
+  <script src="email-dao-test.js"></script>
+  
+</body>
+</html>

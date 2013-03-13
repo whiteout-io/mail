@@ -1,0 +1,25 @@
+<div data-role="header" data-position="fixed">
+  <input type="button" id="backBtn" data-icon="arrow-l" value="Back" class="ui-btn-left">
+  <h1><%= subject %></h1>
+  <a href="#compose" data-role="button" data-icon="back" data-iconpos="right" class="ui-btn-right">Reply</a>
+</div><!-- /header -->
+
+<div data-role="content">
+  <ul data-role="listview" data-theme="d" data-divider-theme="d" id="idEmailList" data-mini="true">
+    
+    <li style="border: 0px">
+			<h3>from: <%= from %></h3>
+			<p>to: <%= to %></p>
+		</li>
+		
+		<li>
+			<h3 id="idMailSubject"><%= subject %></h3>
+			<p id="idMailDate"><%= sentDate %></p>
+		</li>
+		
+		<li id="bodyItem" style="font-size: 8pt; font-weight: normal; background-color: #FFFFFF">
+		  <iframe id="idMailContent" width="100%" height="100%" frameborder="0" scrolling="no"></iframe>
+		</li>
+		
+	</ul>  
+</div><!-- /content -->
