@@ -11,13 +11,6 @@ var AppRouter = Backbone.Router.extend({
 	},
 
 	initialize: function () {
-		// handle back click
-		var self = this;
-		$(document).on('vmousedown', '#backBtn', function(e) {
-			e.preventDefault();
-			self.back = true;
-			window.history.back();
-		});
 		this.firstPage = true;
 	},
 	
@@ -65,9 +58,18 @@ var AppRouter = Backbone.Router.extend({
 
 	changePage: function (page) {
 		// render the page and append it to the DOM
-		$(page.el).attr('data-role', 'page');
+		var pageEl = $(page.el);
+		pageEl.attr('data-role', 'page');
 		page.render();
-		$('body').append($(page.el));
+		$('body').append(pageEl);
+		
+		// handle back click
+		var self = this;
+		pageEl.on('vmousedown', '#backBtn', function(e) {
+			e.preventDefault();
+			self.back = true;
+			window.history.back();
+		});
 		
 		// change to the page using jQM transitions
 		var transition = $.mobile.defaultPageTransition;
@@ -76,7 +78,7 @@ var AppRouter = Backbone.Router.extend({
 			transition = 'none';
 			this.firstPage = false;
 		}
-		$.mobile.changePage($(page.el), {changeHash:false, transition:transition, reverse:this.back});
+		$.mobile.changePage(pageEl, {changeHash:false, transition:transition, reverse:this.back});
 		
 		// change transition direction back after back button was pushed
 		this.back = false;
