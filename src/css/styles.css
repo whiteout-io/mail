@@ -35,3 +35,10 @@ textarea.ui-input-text {
 	background-image: url('images/key-128.png');
 	background-repeat: no-repeat;
 }
+
+#loginForm {
+	padding: 10px 20px;
+	max-width: 400px;
+	margin-left: auto;
+	margin-right: auto;
+}
