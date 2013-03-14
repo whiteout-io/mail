@@ -11,7 +11,6 @@ var AppRouter = Backbone.Router.extend({
 	},
 
 	initialize: function () {
-		this.firstPage = true;
 	},
 	
 	login: function() {
@@ -28,10 +27,8 @@ var AppRouter = Backbone.Router.extend({
 	},
 	
 	compose: function() {
-		// $.mobile.defaultPageTransition = 'slideup';
 		var composeView = new app.view.ComposeView();
 		this.changePage(composeView);
-		// $.mobile.defaultPageTransition = 'slideup';
 	},
 	
 	folders: function(userId) {
@@ -64,25 +61,19 @@ var AppRouter = Backbone.Router.extend({
 		$('body').append(pageEl);
 		
 		// handle back click
-		var self = this;
 		pageEl.on('vmousedown', '#backBtn', function(e) {
 			e.preventDefault();
-			self.back = true;
 			window.history.back();
 		});
 		
-		// change to the page using jQM transitions
-		var transition = $.mobile.defaultPageTransition;
-		// We don't want to slide the first page
-		if (this.firstPage) {
-			transition = 'none';
-			this.firstPage = false;
-		}
-		$.mobile.changePage(pageEl, {changeHash:false, transition:transition, reverse:this.back});
+		// change page for link buttons on vmousedown instead of waiting on vmouseup
+		pageEl.on('vmousedown', 'a[data-role="button"]', function(e) {
+			e.preventDefault();
+			var href = $(e.currentTarget).attr('href');
+			window.location = href;
+		});
 		
-		// change transition direction back after back button was pushed
-		this.back = false;
-		// $.mobile.defaultPageTransition = 'fade';
+		$.mobile.changePage(pageEl, {changeHash:false, reverse:false});
 	}
 
 });

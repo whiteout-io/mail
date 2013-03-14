@@ -7,7 +7,17 @@ app.view.FolderListView = Backbone.View.extend({
     },
 
     render:function (eventName) {
-        $(this.el).html(this.template(this.options));
+		var page = $(this.el);
+	
+        page.html(this.template(this.options));		
+		
+		// change page for folder links on vmousedown instead of waiting on vmouseup
+		page.on('vmousedown', 'li a', function(e) {
+			e.preventDefault();
+			var href = $(e.currentTarget).attr('href');
+			window.location = href;
+		});
+
         return this;
     }
 });
