@@ -14,6 +14,13 @@ app.model.Email = Backbone.Model.extend({
 	},
 
     initialize: function () {
+		// decode body
+		try {			
+			var decodedBody = window.atob(this.get('body'));
+			this.set('body', decodedBody);
+		} catch (ex) {
+			console.log(ex);
+		}
     }
 
 });

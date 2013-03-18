@@ -52,7 +52,7 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage) {
 	 * @param num [Number] The number of items to fetch (null means fetch all)
 	 */
 	this.listItems = function(folderName, offset, num, callback) {
-		var model, collection, folder, self = this;
+		var collection, folder, self = this;
 		
 		// check if items are in memory already (account.folders model)
 		folder = this.account.get('folders').where({name: folderName})[0];

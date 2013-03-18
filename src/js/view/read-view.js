@@ -22,6 +22,7 @@ app.view.ReadView = Backbone.View.extend({
 			var newheight = iframeDoc.body.scrollHeight;
 			var newwidth = iframeDoc.body.scrollWidth;
 			iframe[0].height = (newheight) + 'px';
+			iframe[0].width = (newwidth) + 'px';
 		});
 		
 		iframeDoc.write(emailBody);
