@@ -94,6 +94,12 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage) {
 			}
 			
 			// TODO: remove old folder items from devicestorage
+			
+			// return if fetched list from cloud storage is empty
+			if (res.length === 0) {
+				callback();
+				return;
+			}
 						
 			// persist encrypted list in device storage
 			devicestorage.storeEcryptedList(res, 'email_' + folderName, function() {
