@@ -72,6 +72,12 @@ app.dao.LawnchairDAO = function(window) {
 					matchingKeys = [];
 				}
 				
+				// return if there are no matching keys
+				if (matchingKeys.length === 0) {
+					callback(list);
+					return;
+				}
+				
 				// get matching objects from data-store
 				self.get(matchingKeys, function(matchingList) {
 					for (i = 0; i < matchingList.length; i++) {
