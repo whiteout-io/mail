@@ -34,7 +34,7 @@ app.view.MessageListView = Backbone.View.extend({
 			
 			// check for error
 			if (res && res.status) {
-				alert('Syncing failed: ' + JSON.stringify(res));
+				alert('Syncing failed!');
 				return;
 			}
 			
