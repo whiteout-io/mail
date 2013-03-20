@@ -15,8 +15,7 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage) {
 		// sync user's cloud key with local storage
 		cloudstorage.getUserSecretKey(account.get('emailAddress'), function(err) {
 			if (err) {
-				alert(err.status);
-				return;
+				console.log('Could not sync user key from server: ' + JSON.stringify(err));
 			}
 			// init crypto
 			initCrypto();
@@ -88,18 +87,13 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage) {
 		var folder, self = this;
 		
 		cloudstorage.listEncryptedItems('email', this.account.get('emailAddress'), folderName, function(res) {
-			if (res.status) {
+			// return if an error occured or if fetched list from cloud storage is empty
+			if (!res || res.status || res.length === 0) {
 				callback(res);	// error
 				return;
 			}
 			
 			// TODO: remove old folder items from devicestorage
-			
-			// return if fetched list from cloud storage is empty
-			if (res.length === 0) {
-				callback();
-				return;
-			}
 						
 			// persist encrypted list in device storage
 			devicestorage.storeEcryptedList(res, 'email_' + folderName, function() {

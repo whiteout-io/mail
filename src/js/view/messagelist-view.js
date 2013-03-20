@@ -29,8 +29,15 @@ app.view.MessageListView = Backbone.View.extend({
 		
 		$.mobile.loading('show', { text: 'Syncing...', textVisible: true });
 		// sync from cloud
-		this.dao.syncFromCloud(this.folder, function() {
+		this.dao.syncFromCloud(this.folder, function(res) {
 			$.mobile.loading('hide');
+			
+			// check for error
+			if (res && res.status) {
+				alert('Syncing failed: ' + JSON.stringify(res));
+				return;
+			}
+			
 			// read local storage and add to list view
 			self.loadItems();
 		});

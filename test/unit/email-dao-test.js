@@ -56,6 +56,7 @@ asyncTest("List Email models", 1, function() {
 	emaildao_test.emailDao.listItems('inbox', 0, emaildao_test.list.length, function(collection) {
 		var gotten = collection.toJSON(),
 			reference = emaildao_test.list.toJSON();
+			
 		deepEqual(gotten, reference, 'Collection length');
 		
 		start();
