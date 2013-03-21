@@ -45,7 +45,7 @@ app.dao.LawnchairDAO = function(window) {
 	 * @param num [Number] The number of items to fetch (null means fetch all)
 	 */
 	this.list = function(type, offset, num, callback) {	
-		var i, list = [], matchingKeys =[];
+		var i, list = [], matchingKeys =[], parts, date;
 		
 		Lawnchair(function() {
 			var self = this;
@@ -75,8 +75,8 @@ app.dao.LawnchairDAO = function(window) {
 					// sort items by date
 					if (list[0].sentDate) {						
 						list = _.sortBy(list, function(item) {
-							var parts = item.sentDate.match(/(\d+)/g);
-							var date = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5]);
+							parts = item.sentDate.match(/(\d+)/g);
+							date = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5]);
 							return date.getTime();
 						});
 					}			
