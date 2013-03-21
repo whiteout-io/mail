@@ -60,7 +60,10 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage) {
 			// get items from storage
 			devicestorage.listItems('email_' + folderName ,offset ,num, function(decryptedList) {
 				// parse to backbone model collection
-				collection = new app.model.EmailCollection(decryptedList);
+				collection = new app.model.EmailCollection(decryptedList);				
+
+				// reverse order so that mails with the most recent dat will be displayed first
+				collection.models.reverse();
 
 				// cache collection in folder memory
 				if (decryptedList.length > 0) {

@@ -20,7 +20,7 @@ asyncTest("Init", 2, function() {
 	emaildao_test.emailDao = new app.dao.EmailDAO(_, emaildao_test.crypto, emaildao_test.storage, cloudstorageStub);
 	
 	// generate test data
-	emaildao_test.list = new TestData().getEmailCollection(10);
+	emaildao_test.list = new TestData().getEmailCollection(100);
 	
 	var account = new app.model.Account({
 		emailAddress: emaildao_test.user,
@@ -44,6 +44,11 @@ asyncTest("Persist test emails", 2, function() {
 	emaildao_test.crypto.aesEncryptListForUser(emaildao_test.list.toJSON(), function(encryptedList) {
 		equal(encryptedList.length, emaildao_test.list.length, 'Encrypt list');
 		
+		// add sent date to encrypted items
+		for (var i = 0; i < encryptedList.length; i++) {
+			encryptedList[i].sentDate = emaildao_test.list.at(i).get('sentDate');
+		}
+		
 		emaildao_test.storage.storeEcryptedList(encryptedList, 'email_inbox', function() {
 			ok(true, 'Store encrypted list');
 
@@ -55,9 +60,9 @@ asyncTest("Persist test emails", 2, function() {
 asyncTest("List Email models", 1, function() {
 	emaildao_test.emailDao.listItems('inbox', 0, emaildao_test.list.length, function(collection) {
 		var gotten = collection.toJSON(),
-			reference = emaildao_test.list.toJSON();
+			reference = emaildao_test.list.toJSON().reverse();
 			
-		deepEqual(gotten, reference, 'Collection length');
+		deepEqual(gotten, reference, 'Compare collection');
 		
 		start();
 	});
