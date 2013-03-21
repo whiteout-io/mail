@@ -50,18 +50,19 @@ app.view.MessageListView = Backbone.View.extend({
 		var self = this,
 			page = $(this.el),
 			list = page.find('#message-list'),
-			listItemArgs;
+			listItemArgs, i, email;
 		
 		$.mobile.loading('show', { text: 'decrypting...', textVisible: true });
 		this.dao.listItems(this.folder, 0, 10, function(collection) {			
 			// clear list
 			list.html('');
 			
-			// append items to list
-			_.each(collection.models, function(email) {
+			// append items to list in reverse order so mails with the most recent date will be displayed first
+			for (i = collection.models.length - 1; i >= 0; i--) {
+				email = collection.at(i);
 				listItemArgs = {account: self.options.account, folder: self.folder, model: email};
 				list.append(new app.view.MessageListItemView(listItemArgs).render().el);
-			}, this);
+			}
 			
 			// refresh list view
 			list.listview('refresh');			
