@@ -14,6 +14,10 @@ app.view.MessageListItemView = Backbone.View.extend({
 		params.folder = this.options.folder;
 		params.id = encodeURIComponent(params.id);
 		
+		var util = new app.crypto.Util(window, null);
+		var date = util.parseDate(params.sentDate);
+		params.displayDate = date.getDate() + '.' + (date.getMonth() + 1) + '. ' + date.getHours() + ':' + date.getMinutes();
+		
         $(this.el).html(this.template(params));
         return this;
     }
