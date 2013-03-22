@@ -13,7 +13,7 @@ var TestData = function() {
 				from:'john@from.com',
 				to:['jack@to.com'],
 				subject: 'Important stuff ' + i,
-				sentDate: (1900 + i) + '-03-13 18:17:53',
+				sentDate: (1971 + i) + '-03-13 18:17:53',
 				body: bigAssString
 			});
 			

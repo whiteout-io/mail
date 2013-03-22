@@ -6,7 +6,7 @@
  * through transparent encryption. If not, the crypto API is
  * used to encrypt data on the fly before persisting via a JSON store.
  */
-app.dao.DeviceStorage = function(crypto, jsonDao, sqlcipherDao) {
+app.dao.DeviceStorage = function(util, crypto, jsonDao, sqlcipherDao) {
 	
 	/**
 	 * Stores a list of encrypted items in the object store
@@ -14,11 +14,20 @@ app.dao.DeviceStorage = function(crypto, jsonDao, sqlcipherDao) {
 	 * @param type [String] The type of item to be persisted e.g. 'email'
 	 */
 	this.storeEcryptedList = function(list, type, callback) {
-		var i, items = [];
+		var i, date, key, items = [];
 		
 		// format items for batch storing in dao
 		for (i = 0; i < list.length; i++) {
-			items.push({ key:crypto.emailAddress + '_' + type + '_' + list[i].id, object:list[i] });
+			
+			// put date in key if available... for easy querying
+			if (list[i].sentDate) {				
+				date = util.parseDate(list[i].sentDate);
+				key = crypto.emailAddress + '_' + type + '_' + date.getTime() + '_' + list[i].id;
+			} else {
+				key = crypto.emailAddress + '_' + type + '_' + list[i].id;
+			}		
+			
+			items.push({ key:key, object:list[i] });
 		}
 		
 		jsonDao.batch(items, function() {

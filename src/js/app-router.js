@@ -19,7 +19,7 @@ var AppRouter = Backbone.Router.extend({
 		var jsonDao = new app.dao.LawnchairDAO(window);
 		var crypto = new app.crypto.Crypto(window, util);
 		var cloudstorage = new app.dao.CloudStorage(window, $);
-		var devicestorage = new app.dao.DeviceStorage(crypto, jsonDao, null);
+		var devicestorage = new app.dao.DeviceStorage(util, crypto, jsonDao, null);
 		this.emailDao = new app.dao.EmailDAO(_, crypto, devicestorage, cloudstorage);
 	
 		var loginView = new app.view.LoginView({dao: this.emailDao});

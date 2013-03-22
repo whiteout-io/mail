@@ -45,7 +45,7 @@ app.dao.LawnchairDAO = function(window) {
 	 * @param num [Number] The number of items to fetch (null means fetch all)
 	 */
 	this.list = function(type, offset, num, callback) {	
-		var i, list = [], matchingKeys =[], parts, date;
+		var i, list = [], matchingKeys = [], parts, timeStr, time;
 		
 		Lawnchair(function() {
 			var self = this;
@@ -58,7 +58,27 @@ app.dao.LawnchairDAO = function(window) {
 					if (keys[i].indexOf(type) === 0) {
 						matchingKeys.push(keys[i]);
 					}
-				}				
+				}					
+				
+				// sort keys by type and date								
+				matchingKeys = _.sortBy(matchingKeys, function(key) {
+					parts = key.split('_');
+					timeStr = parts[parts.length-2];
+					time = parseInt(timeStr, 10);
+					return time;
+				});			
+				
+				// if num is null, list all items
+				num = (num !== null) ? num : matchingKeys.length;
+
+				// set window of items to fetch
+				if (offset + num < matchingKeys.length) {
+					matchingKeys = matchingKeys.splice(matchingKeys.length - offset - num, num);
+				} else if (offset + num >= matchingKeys.length && offset < matchingKeys.length) {
+					matchingKeys = matchingKeys.splice(0, matchingKeys.length - offset);
+				} else {
+					matchingKeys = [];
+				}							
 				
 				// return if there are no matching keys
 				if (matchingKeys.length === 0) {
@@ -70,27 +90,6 @@ app.dao.LawnchairDAO = function(window) {
 				self.get(matchingKeys, function(matchingList) {
 					for (i = 0; i < matchingList.length; i++) {
 						list.push(matchingList[i].object);
-					}
-					
-					// sort items by date
-					if (list[0].sentDate) {						
-						list = _.sortBy(list, function(item) {
-							parts = item.sentDate.match(/(\d+)/g);
-							date = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5]);
-							return date.getTime();
-						});
-					}			
-					
-					// if num is null, list all items
-					num = (num !== null) ? num : list.length;
-
-					// set window of items to fetch
-					if (offset + num < list.length) {
-						list = list.splice(list.length - offset - num, num);
-					} else if (offset + num >= list.length && offset < list.length) {
-						list = list.splice(0, list.length - offset);
-					} else {
-						list = [];
 					}					
 					
 					// return only the interval between offset and num

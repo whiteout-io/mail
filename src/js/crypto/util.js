@@ -67,6 +67,14 @@ app.crypto.Util = function(window, uuid) {
 	};
 	
 	/**
+	 * Parse a date string with the following format "1900-01-31 18:17:53"
+	 */
+	this.parseDate = function(str) {
+		var parts = str.match(/(\d+)/g);
+		return new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5]);
+	};
+	
+	/**
 	 * Converts a binary String (e.g. from the FileReader Api) to an ArrayBuffer
 	 * @param str [String] a binary string with integer values (0..255) per character
 	 * @return [ArrayBuffer]

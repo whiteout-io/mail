@@ -12,7 +12,7 @@ asyncTest("Init", 2, function() {
 	var util = new app.crypto.Util(window, uuid);
 	var jsonDao = new app.dao.LawnchairDAO(window);
 	emaildao_test.crypto = new app.crypto.Crypto(window, util);
-	emaildao_test.storage = new app.dao.DeviceStorage(emaildao_test.crypto, jsonDao, null);
+	emaildao_test.storage = new app.dao.DeviceStorage(util, emaildao_test.crypto, jsonDao, null);
 	// cloud storage stub
 	var cloudstorageStub = {
 		getUserSecretKey: function(emailAdress, callback) { callback();	}
