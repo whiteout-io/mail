@@ -1,15 +1,14 @@
 {
   "name": "Whiteout",
   "description": "HTML5 Mail with end-2-end encrypted messenging and encrypted cloud storage",
-  "launch_path": "/src/",
+  "launch_path": "/html5-mail/src/",
   "icons": {
-    "128": "/src/css/images/key-128.png"
+    "128": "/html5-mail/src/css/images/key-128.png"
   },
   "developer": {
     "name": "Whiteout Networks GmbH",
     "url": "http://whiteout.io"
   },
-  "appcache_path": "/src/manifest.appcache",
   "csp": "default-src *; script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'",
   "default_locale": "en"
 }
