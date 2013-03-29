@@ -3,8 +3,7 @@
     <p>Packaged app installation page</p>
     <script>
       // This URL must be a full url.
-      var baseUrl = window.location;
-      var manifestUrl = 'http://tanx.github.com/html5-mail/manifest.webapp';
+      var manifestUrl = window.location.href.replace('install.html', 'manifest.webapp');
       var req = navigator.mozApps.install(manifestUrl);
       req.onsuccess = function() {
         alert('Success: ' + this.result.origin);
