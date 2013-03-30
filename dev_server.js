@@ -18,9 +18,13 @@ if (process.argv[2]) {
 
 // Server setup
 app = express();
-app.configure(function(){
-    app.use(app.router);
+app.configure(function(){	
     app.use(express['static'](__dirname));
+	app.use(function(req, res, next) {
+		res.set('Content-Security-Policy', "script-src 'self' 'unsafe-eval'; object-src 'none'; style-src 'self' 'unsafe-inline'");
+		return next();
+	});
+    app.use(express['static'](__dirname + '/src'));
 });
 
 // start server
