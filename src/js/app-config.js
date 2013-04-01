@@ -1,4 +1,4 @@
-var app;
+var app; // container for the application namespace
 
 (function() {
 	'use strict';

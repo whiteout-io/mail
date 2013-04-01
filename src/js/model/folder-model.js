@@ -1,22 +1,23 @@
-'use strict';
+(function() {
+	'use strict';
 
-app.model.Folder = Backbone.Model.extend({
-	
-	defaults: {
-		name: null,
-		items: null
-	},
+	app.model.Folder = Backbone.Model.extend({
 
-    initialize: function () {
-    }
+		defaults: {
+			name: null,
+			items: null
+		},
 
-});
+		initialize: function() {}
 
-app.model.FolderCollection = Backbone.Collection.extend({
+	});
 
-    model: app.model.Folder,
+	app.model.FolderCollection = Backbone.Collection.extend({
 
-    findByName: function (key) {
-    }
+		model: app.model.Folder,
 
-});
+		findByName: function(key) {}
+
+	});
+
+}());

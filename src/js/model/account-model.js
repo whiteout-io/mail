@@ -1,25 +1,27 @@
-'use strict';
+(function() {
+	'use strict';
 
-app.model.Account = Backbone.Model.extend({
-	
-	defaults: {
-		emailAddress: null,
-		symKeySize: null,
-		symIvSize: null,
-		folders: null
-	},
+	app.model.Account = Backbone.Model.extend({
 
-    initialize: function () {
-		this.set('folders', new app.model.FolderCollection());
-    }
+		defaults: {
+			emailAddress: null,
+			symKeySize: null,
+			symIvSize: null,
+			folders: null
+		},
 
-});
+		initialize: function() {
+			this.set('folders', new app.model.FolderCollection());
+		}
 
-app.model.AccountCollection = Backbone.Collection.extend({
+	});
 
-    model: app.model.Account,
+	app.model.AccountCollection = Backbone.Collection.extend({
 
-    findByName: function (key) {
-    }
+		model: app.model.Account,
 
-});
+		findByName: function(key) {}
+
+	});
+
+}());
