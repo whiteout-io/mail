@@ -143,7 +143,7 @@ app.crypto.Util = function(window, uuid) {
 		var b = new Uint8Array(buf);
 		var str = '';
 
-		for (var i = 0; i < b.byteLength; i++) {
+		for (var i = 0; i < b.length; i++) {
 			str += String.fromCharCode(b[i]);
 		}
 
@@ -158,7 +158,7 @@ app.crypto.Util = function(window, uuid) {
 	this.uint8Arr2BinStr = function(buf) {
 		var str = '';
 
-		for (var i = 0; i < buf.byteLength; i++) {
+		for (var i = 0; i < buf.length; i++) {
 			str += String.fromCharCode(buf[i]);
 		}
 
