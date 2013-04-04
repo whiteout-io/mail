@@ -10,33 +10,28 @@ test("Init", 1, function() {
 	ok(nacl_test.util, 'Util');
 	// generate test data
 	nacl_test.test_message = new TestData().generateBigString(1000);
+	nacl_test.crypto = new app.crypto.NaclCrypto();
 });
 
-test("Generate Keypiar", 1, function() {
+test("Generate Keypair", 2, function() {
 	// generate keypair from seed
-	var keys = nacl.crypto_box_keypair();
-	ok(keys.boxSk && keys.boxPk, "Keysize: " + keys.boxPk.length);
-	nacl_test.keys = keys;
+	var senderKeypair = nacl_test.crypto.generateKeypair();
+	ok(senderKeypair.boxSk && senderKeypair.boxPk, "Sender keypair: " + JSON.stringify(senderKeypair));
+	var recipientKeypair = nacl_test.crypto.generateKeypair();
+	ok(recipientKeypair.boxSk && recipientKeypair.boxPk, "Receiver keypair: " + JSON.stringify(recipientKeypair));
+
+	nacl_test.senderKeypair = senderKeypair;
+	nacl_test.recipientKeypair = recipientKeypair;
 });
 
 test("En/Decrypt", 2, function() {
-	var naclCrypto = new app.crypto.NaclCrypto();
-
 	var plaintext = nacl_test.test_message;
-	// var key = nacl_test.util.random(nacl_test.keySize);
-	// var iv = nacl_test.util.random(104);
 
-	// convert utf8 string to Uint8Array 
-	var pt = nacl.encode_utf8(plaintext);
-	// generate nonce
-	var nonce = nacl.crypto_secretbox_random_nonce();
 	// encrypt
-	var ct = nacl.crypto_secretbox(pt, nonce, nacl_test.keys.boxSk);
-	ok(ct, 'Ciphertext length: ' + ct.length);
+	var ct = nacl_test.crypto.asymmetricEncrypt(plaintext, nacl_test.recipientKeypair.boxPk, nacl_test.senderKeypair.boxSk);
+	ok(ct.ct && ct.nonce, 'Ciphertext length: ' + ct.ct.length);
 
 	// decrypt
-	var decryptedBuf = nacl.crypto_secretbox_open(ct, nonce, nacl_test.keys.boxSk);
-	var decrypted = nacl.decode_utf8(decryptedBuf);
+	var decrypted = nacl_test.crypto.asymmetricDecrypt(ct.ct, ct.nonce, nacl_test.senderKeypair.boxPk, nacl_test.recipientKeypair.boxSk);
 	equal(decrypted, plaintext, 'Decryption correct: ' + decrypted);
-
 });
