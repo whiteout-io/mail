@@ -10,7 +10,7 @@ test("Init", 1, function() {
 	ok(nacl_test.util, 'Util');
 	// generate test data
 	nacl_test.test_message = new TestData().generateBigString(1000);
-	nacl_test.crypto = new app.crypto.NaclCrypto(nacl_test.util);
+	nacl_test.crypto = new app.crypto.NaclCrypto(nacl, nacl_test.util);
 });
 
 test("Generate Keypair from seed", 1, function() {

@@ -1,9 +1,7 @@
-var crypt = crypt;
-
 /**
  * Various utitity methods for crypto, encoding & decoding
  */
-var Util = function(window, uuid) {
+var Util = function(window, uuid, crypt) {
 	'use strict';
 
 	/**
@@ -213,7 +211,6 @@ var Util = function(window, uuid) {
 };
 
 if (typeof module !== 'undefined' && module.exports) {
-	crypt = require('crypto');
 	module.exports = Util;
 } else {
 	app.crypto.Util = Util;

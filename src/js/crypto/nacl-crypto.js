@@ -1,7 +1,7 @@
 /**
  * A Wrapper for NaCl's asymmetric/symmetric crypto
  */
-var NaclCrypto = function(util) {
+var NaclCrypto = function(nacl, util) {
 	'use strict';
 
 	/**
