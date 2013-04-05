@@ -14,15 +14,7 @@
 			sentDate: null
 		},
 
-		initialize: function() {
-			// decode body
-			try {
-				var decodedBody = window.atob(this.get('body'));
-				this.set('body', decodedBody);
-			} catch (ex) {
-				console.log(ex);
-			}
-		}
+		initialize: function() {}
 
 	});
 
