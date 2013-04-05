@@ -1,7 +1,9 @@
+var crypt = crypt;
+
 /**
  * Various utitity methods for crypto, encoding & decoding
  */
-app.crypto.Util = function(window, uuid) {
+var Util = function(window, uuid) {
 	'use strict';
 
 	/**
@@ -19,10 +21,15 @@ app.crypto.Util = function(window, uuid) {
 	this.random = function(keySize) {
 		var keyBase64, keyBuf;
 
-		if (window.crypto && window.crypto.getRandomValues) {
+		if (typeof module !== 'undefined' && module.exports) {
+			keyBuf = crypt.randomBytes(keySize / 8);
+			keyBase64 = new Buffer(keyBuf).toString('base64');
+
+		} else if (window.crypto && window.crypto.getRandomValues) {
 			keyBuf = new Uint8Array(keySize / 8);
 			window.crypto.getRandomValues(keyBuf);
 			keyBase64 = window.btoa(this.uint8Arr2BinStr(keyBuf));
+
 		} else {
 			// add an additional peace of entropy to the pot and stir with the sjcl prng
 			sjcl.random.addEntropy((new Date()).valueOf(), 2, "calltime");
@@ -165,4 +172,33 @@ app.crypto.Util = function(window, uuid) {
 		return str;
 	};
 
+	/**
+	 * Convert a str to base64 in a browser and in node.js
+	 */
+	this.str2Base64 = function(str) {
+		if (typeof module !== 'undefined' && module.exports) {
+			return new Buffer(str, 'binary').toString('base64');
+		} else {
+			return window.btoa(str);
+		}
+	};
+
+	/**
+	 * Convert a base64 encoded string in a browser and in node.js
+	 */
+	this.base642Str = function(str) {
+		if (typeof module !== 'undefined' && module.exports) {
+			return new Buffer(str, 'base64').toString('binary');
+		} else {
+			return window.atob(str);
+		}
+	};
+
 };
+
+if (typeof module !== 'undefined' && module.exports) {
+	crypt = require('crypto');
+	module.exports = Util;
+} else {
+	app.crypto.Util = Util;
+}
