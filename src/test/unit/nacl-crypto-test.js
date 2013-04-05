@@ -6,12 +6,18 @@ var nacl_test = {
 
 test("Init", 1, function() {
 	// init dependencies
-	nacl_test.util = new app.crypto.Util(window, uuid);
-	ok(nacl_test.util, 'Util');
+	var util = new app.crypto.Util(window, uuid);
+	ok(util, 'Util');
 	// generate test data
 	nacl_test.test_message = new TestData().generateBigString(1000);
-	nacl_test.crypto = new app.crypto.NaclCrypto();
+	nacl_test.crypto = new app.crypto.NaclCrypto(util);
 });
+
+// test("Generate Keypair from seed", 2, function() {
+// 	// generate keypair from seed
+// 	var keys = nacl_test.crypto.generateKeypair();
+// 	ok(keys.boxSk && keys.boxPk, "Keypair: " + JSON.stringify(keys));
+// });
 
 test("Generate Keypair", 2, function() {
 	// generate keypair from seed

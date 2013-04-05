@@ -29,15 +29,15 @@ test("CBC mode", 4, function() {
 });
 
 test("CCM mode", 2, function() {
-	var aes = new app.crypto.AesCCM();
-	
+	var aes = new app.crypto.AesCCM(sjcl);
+
 	var plaintext = aes_test.test_message;
 	var key = aes_test.util.random(aes_test.keySize);
 	var iv = aes_test.util.random(104);
-	
+
 	var ciphertext = aes.encrypt(plaintext, key, iv);
 	ok(ciphertext, 'Ciphertext length: ' + ciphertext.length);
-	
+
 	var decrypted = aes.decrypt(ciphertext, key, iv);
 	equal(decrypted, plaintext, 'Decryption correct: ' + decrypted);
 });

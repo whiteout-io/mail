@@ -6,7 +6,7 @@ app.crypto.Crypto = function(window, util) {
 	'use strict';
 
 	var symmetricUserKey, // the user's secret key used to encrypt item-keys
-	aes = new app.crypto.AesCCM(); // use authenticated AES-CCM mode by default
+	aes = new app.crypto.AesCCM(sjcl); // use authenticated AES-CCM mode by default
 
 	/**
 	 * Initializes the crypto modules by fetching the user's

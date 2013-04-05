@@ -1,13 +1,13 @@
 module("Util");
 
 test("JQuery and basic requirements", 7, function() {
-	ok( Array.prototype.push, "Array.push()" );
-	ok( Function.prototype.apply, "Function.apply()" );
-	ok( document.getElementById, "getElementById" );
-	ok( document.getElementsByTagName, "getElementsByTagName" );
-	ok( RegExp, "RegExp" );
-	ok( jQuery, "jQuery" );
-	ok( $, "$" );
+	ok(Array.prototype.push, "Array.push()");
+	ok(Function.prototype.apply, "Function.apply()");
+	ok(document.getElementById, "getElementById");
+	ok(document.getElementsByTagName, "getElementsByTagName");
+	ok(RegExp, "RegExp");
+	ok(jQuery, "jQuery");
+	ok($, "$");
 });
 
 test("UUID", 2, function() {
@@ -32,25 +32,15 @@ test("Parse Date", 1, function() {
 	ok(date, "Date: " + date);
 });
 
-test("String -> ArrayBuffer -> String", 3, function() {
+test("String -> Uint8Array -> String", 3, function() {
 	var util = new app.crypto.Util(window);
-	
+
 	var input = "asdf";
-	var buf = util.binStr2ArrBuf(input);
+	var buf = util.binStr2Uint8Arr(input);
 	ok(buf);
-	
+
 	// test slow conversion in js
-	var binStr = util.arrBuf2BinStr(buf);
+	var binStr = util.uint8Arr2BinStr(buf);
 	ok(binStr);
 	equal(binStr, input);
-	
-	// // test native conversion with BlobBuilder Api
-	// var blob = util.arrBuf2Blob(buf, 'application/octet-stream');
-	// ok(blob);
-	// 
-	// util.blob2BinStr(blob, function(output) {
-	// 	equal(output, input);
-	// 
-	// 	start();
-	// });
 });

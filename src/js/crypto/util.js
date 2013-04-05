@@ -173,6 +173,22 @@ var Util = function(window, uuid) {
 	};
 
 	/**
+	 * Converts a binary String (e.g. from the FileReader Api) to a UInt8Array
+	 * @param str [String] a binary string with integer values (0..255) per character
+	 * @return [UInt8Array]
+	 */
+	this.binStr2Uint8Arr = function(str) {
+		var c, buf = new Uint8Array(str.length);
+
+		for (var i = 0; i < buf.length; i++) {
+			c = str.charCodeAt(i);
+			buf[i] = (c & 0xff);
+		}
+
+		return buf;
+	};
+
+	/**
 	 * Convert a str to base64 in a browser and in node.js
 	 */
 	this.str2Base64 = function(str) {

@@ -1,7 +1,7 @@
 /**
  * A Wrapper for SJCL's authenticated AES-CCM encryption
  */
-app.crypto.AesCCM = function() {
+var AesCCM = function(sjcl) {
 	'use strict';
 
 	var adata = []; // authenticated data (empty by default)
@@ -48,3 +48,9 @@ app.crypto.AesCCM = function() {
 	};
 
 };
+
+if (typeof module !== 'undefined' && module.exports) {
+	module.exports = AesCCM;
+} else {
+	app.crypto.AesCCM = AesCCM;
+}

@@ -20,7 +20,7 @@
 
 		var args = e.data,
 			output = null,
-			aes = new app.crypto.AesCCM(),
+			aes = new app.crypto.AesCCM(sjcl),
 			util = new app.crypto.Util(null, null);
 
 		if (args.type === 'encrypt' && args.list) {
