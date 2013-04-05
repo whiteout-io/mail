@@ -24,6 +24,7 @@ app.crypto.Util = function(window, uuid) {
 			window.crypto.getRandomValues(keyBuf);
 			keyBase64 = window.btoa(this.uint8Arr2BinStr(keyBuf));
 		} else {
+			// add an additional peace of entropy to the pot and stir with the sjcl prng
 			sjcl.random.addEntropy((new Date()).valueOf(), 2, "calltime");
 			keyBuf = sjcl.random.randomWords(keySize / 32, 0);
 			keyBase64 = sjcl.codec.base64.fromBits(keyBuf);
