@@ -6,17 +6,22 @@ var NaclCrypto = function(util) {
 
 	/**
 	 * Generates a baes64 encoded keypair for use with NaCl
+	 * @param seed [String] A base64 encoded (pseudo) random seed e.g. PBKDF2
 	 */
 	this.generateKeypair = function(seed) {
+		var keys;
+
 		if (seed) {
-			return null; // TODO: generate from PBKDF2
+			var seedBuf = nacl.encode_latin1(util.base642Str(seed));
+			keys = nacl.crypto_box_keypair_from_seed(seedBuf);
 		} else {
-			var keys = nacl.crypto_box_keypair();
-			return {
-				boxPk: util.str2Base64(nacl.decode_latin1(keys.boxPk)),
-				boxSk: util.str2Base64(nacl.decode_latin1(keys.boxSk))
-			};
+			keys = nacl.crypto_box_keypair();
 		}
+
+		return {
+			boxPk: util.str2Base64(nacl.decode_latin1(keys.boxPk)),
+			boxSk: util.str2Base64(nacl.decode_latin1(keys.boxSk))
+		};
 	};
 
 	/**
