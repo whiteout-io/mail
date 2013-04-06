@@ -6,21 +6,16 @@ var express = require('express'),
 	fs = require('fs'),
 	port, app, prot, dev;
 
-// set port
-if (process.argv[2]) {
-	port = process.argv[2];
-} else {
-	port = 8585;
-}
+port = (process.argv[2]) ? process.argv[2] : 8585;
+dev = (process.argv[3] === '--dev');
 
-if (process.argv[3] === '--dev') {
+if (dev) {
 	// development server
-	dev = true;
+	console.log(' > Starting in development mode ...');
 	prot = 'http';
 	app = express();
 } else {
 	// production server
-	dev = false;
 	prot = 'https';
 	app = express({
 		ca: fs.readFileSync('./ssl/sub.class1.server.ca.pem'),
@@ -31,8 +26,12 @@ if (process.argv[3] === '--dev') {
 
 // Server setup
 app.configure(function() {
-	// active content security policy for production
-	if (!dev) {
+	if (dev) {
+		// serve test files in development mode
+		app.use(express['static'](__dirname + '/test'));
+
+	} else {
+		// activate content security policy for production
 		app.use(function(req, res, next) {
 			var csp = "script-src 'self' 'unsafe-eval'; object-src 'none'; style-src 'self' 'unsafe-inline'";
 			res.set('Content-Security-Policy', csp);
@@ -40,10 +39,6 @@ app.configure(function() {
 			res.set('X-WebKit-CSP', csp);
 			return next();
 		});
-	}
-
-	if (dev) {
-		app.use(express['static'](__dirname + '/test'));
 	}
 
 	app.use(express['static'](__dirname + '/src'));
