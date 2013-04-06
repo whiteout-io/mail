@@ -10,7 +10,7 @@ var express = require('express'),
 if (process.argv[2]) {
 	port = process.argv[2];
 } else {
-	port = 8080;
+	port = 8585;
 }
 
 if (process.argv[3] === '--dev') {
@@ -41,6 +41,11 @@ app.configure(function() {
 			return next();
 		});
 	}
+
+	if (dev) {
+		app.use(express['static'](__dirname + '/test'));
+	}
+
 	app.use(express['static'](__dirname + '/src'));
 });
 
