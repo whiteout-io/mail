@@ -4,30 +4,17 @@
 
 var express = require('express'),
 	fs = require('fs'),
-	port, app, prot, dev;
+	port, app, dev;
 
 port = (process.argv[2]) ? process.argv[2] : 8585;
 dev = (process.argv[3] === '--dev');
-
-if (dev) {
-	// development server
-	console.log(' > Starting in development mode ...');
-	prot = 'http';
-	app = express();
-} else {
-	// production server
-	prot = 'https';
-	app = express({
-		ca: fs.readFileSync('./ssl/sub.class1.server.ca.pem'),
-		key: fs.readFileSync('./ssl/ssl.key'),
-		cert: fs.readFileSync('./ssl/ssl.crt')
-	});
-}
+app = express();
 
 // Server setup
 app.configure(function() {
 	if (dev) {
 		// serve test files in development mode
+		console.log(' > Starting in development mode ...');
 		app.use(express['static'](__dirname + '/test'));
 
 	} else {
@@ -46,4 +33,4 @@ app.configure(function() {
 
 // start server
 app.listen(port);
-console.log(' > listening on ' + prot + '://localhost:' + port);
+console.log(' > listening on http://localhost:' + port);

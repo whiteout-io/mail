@@ -28,8 +28,10 @@ test("random", 3, function() {
 
 test("Parse Date", 1, function() {
 	var util = new app.crypto.Util(window, uuid);
-	var date = util.parseDate('1900-01-31 18:17:53');
-	ok(date, "Date: " + date);
+	var str = '1900-01-31 18:17:53';
+	var date = util.parseDate(str);
+	var formated = util.formatDate(date);
+	equal(formated, str, "Date: " + date);
 });
 
 test("String -> Uint8Array -> String", 3, function() {
