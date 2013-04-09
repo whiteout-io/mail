@@ -6,8 +6,8 @@ var express = require('express'),
 	fs = require('fs'),
 	port, app, dev;
 
-port = (process.argv[2]) ? process.argv[2] : 8585;
-dev = (process.argv[3] === '--dev');
+port = process.env.PORT || 8585;
+dev = (process.argv[2] === '--dev');
 app = express();
 
 // Server setup
