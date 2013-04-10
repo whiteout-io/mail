@@ -25,29 +25,36 @@ var NaclCrypto = function(nacl, util) {
 	};
 
 	/**
+	 * Generates a random nonce and returns it base64 encoded
+	 */
+	this.generateNonce = function() {
+		// generate nonce
+		var nonce = nacl.crypto_secretbox_random_nonce();
+		var nonceBase64 = util.str2Base64(nacl.decode_latin1(nonce));
+
+		return nonceBase64;
+	};
+
+	/**
 	 * Asymmetrically encrypt a String
 	 * @param plaintext [String] The input string in UTF8
+	 * @param nonce [String] The base64 encoded nonce
 	 * @param recipientBoxPk [String] The receiver's base64 encoded public key
 	 * @param senderBoxSk [String] The sender's base64 encoded private key
 	 * @return [Object] The base64 encoded ciphertext and nonce
 	 */
-	this.asymmetricEncrypt = function(plaintext, recipientBoxPk, senderBoxSk) {
+	this.asymmetricEncrypt = function(plaintext, nonce, recipientBoxPk, senderBoxSk) {
 		// convert to Uint8Array
 		var ptBuf = nacl.encode_utf8(plaintext);
 		var recipientBoxPkBuf = nacl.encode_latin1(util.base642Str(recipientBoxPk));
 		var senderBoxSkBuf = nacl.encode_latin1(util.base642Str(senderBoxSk));
-		// generate nonce
-		var nonce = nacl.crypto_secretbox_random_nonce();
+		var nonceBuf = nacl.encode_latin1(util.base642Str(nonce));
 		// encrypt
-		var ct = nacl.crypto_box(ptBuf, nonce, recipientBoxPkBuf, senderBoxSkBuf);
+		var ct = nacl.crypto_box(ptBuf, nonceBuf, recipientBoxPkBuf, senderBoxSkBuf);
 		// encode to base64
 		var ctBase64 = util.str2Base64(nacl.decode_latin1(ct));
-		var nonceBase64 = util.str2Base64(nacl.decode_latin1(nonce));
 
-		return {
-			ct: ctBase64,
-			nonce: nonceBase64
-		};
+		return ctBase64;
 	};
 
 	/**
@@ -75,25 +82,21 @@ var NaclCrypto = function(nacl, util) {
 	/**
 	 * Symmetrically encrypt a String
 	 * @param plaintext [String] The input string in UTF8
+	 * @param nonce [String] The base64 encoded nonce
 	 * @param secretKey [String] The receiver's base64 encoded public key
 	 * @return [Object] The base64 encoded ciphertext and nonce
 	 */
-	this.symmetricEncrypt = function(plaintext, secretKey) {
+	this.symmetricEncrypt = function(plaintext, nonce, secretKey) {
 		// convert to Uint8Array
 		var ptBuf = nacl.encode_utf8(plaintext);
 		var secretKeyBuf = nacl.encode_latin1(util.base642Str(secretKey));
-		// generate nonce
-		var nonce = nacl.crypto_secretbox_random_nonce();
+		var nonceBuf = nacl.encode_latin1(util.base642Str(nonce));
 		// encrypt
-		var ct = nacl.crypto_secretbox(ptBuf, nonce, secretKeyBuf);
+		var ct = nacl.crypto_secretbox(ptBuf, nonceBuf, secretKeyBuf);
 		// encode to base64
 		var ctBase64 = util.str2Base64(nacl.decode_latin1(ct));
-		var nonceBase64 = util.str2Base64(nacl.decode_latin1(nonce));
 
-		return {
-			ct: ctBase64,
-			nonce: nonceBase64
-		};
+		return ctBase64;
 	};
 
 	/**
