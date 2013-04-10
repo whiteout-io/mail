@@ -37,11 +37,11 @@ test("Asymmetric En/Decrypt", 3, function() {
 	var nonce = nacl_test.crypto.generateNonce();
 	ok(nonce, 'Nonce: ' + nonce);
 	// encrypt
-	var ct = nacl_test.crypto.asymmetricEncrypt(plaintext, nonce, nacl_test.recipientKeypair.boxPk, nacl_test.senderKeypair.boxSk);
+	var ct = nacl_test.crypto.asymEncrypt(plaintext, nonce, nacl_test.recipientKeypair.boxPk, nacl_test.senderKeypair.boxSk);
 	ok(ct, 'Ciphertext length: ' + ct.length);
 
 	// decrypt
-	var decrypted = nacl_test.crypto.asymmetricDecrypt(ct, nonce, nacl_test.senderKeypair.boxPk, nacl_test.recipientKeypair.boxSk);
+	var decrypted = nacl_test.crypto.asymDecrypt(ct, nonce, nacl_test.senderKeypair.boxPk, nacl_test.recipientKeypair.boxSk);
 	equal(decrypted, plaintext, 'Decryption correct: ' + decrypted);
 });
 
@@ -51,11 +51,11 @@ test("Symmetric En/Decrypt", 3, function() {
 	var nonce = nacl_test.crypto.generateNonce();
 	ok(nonce, 'Nonce: ' + nonce);
 	// encrypt
-	var ct = nacl_test.crypto.symmetricEncrypt(plaintext, nonce, nacl_test.senderKeypair.boxSk);
+	var ct = nacl_test.crypto.symEncrypt(plaintext, nonce, nacl_test.senderKeypair.boxSk);
 	ok(ct, 'Ciphertext length: ' + ct.length);
 
 	// decrypt
-	var decrypted = nacl_test.crypto.symmetricDecrypt(ct, nonce, nacl_test.senderKeypair.boxSk);
+	var decrypted = nacl_test.crypto.symDecrypt(ct, nonce, nacl_test.senderKeypair.boxSk);
 	equal(decrypted, plaintext, 'Decryption correct: ' + decrypted);
 });
 

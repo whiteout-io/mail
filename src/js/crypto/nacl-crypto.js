@@ -43,7 +43,7 @@ var NaclCrypto = function(nacl, util) {
 	 * @param senderBoxSk [String] The sender's base64 encoded private key
 	 * @return [Object] The base64 encoded ciphertext and nonce
 	 */
-	this.asymmetricEncrypt = function(plaintext, nonce, recipientBoxPk, senderBoxSk) {
+	this.asymEncrypt = function(plaintext, nonce, recipientBoxPk, senderBoxSk) {
 		// convert to Uint8Array
 		var ptBuf = nacl.encode_utf8(plaintext);
 		var recipientBoxPkBuf = nacl.encode_latin1(util.base642Str(recipientBoxPk));
@@ -65,7 +65,7 @@ var NaclCrypto = function(nacl, util) {
 	 * @param recipientBoxSk [String] The receiver's base64 encoded private key
 	 * @return [String] The decrypted plaintext in UTF8
 	 */
-	this.asymmetricDecrypt = function(ciphertext, nonce, senderBoxPk, recipientBoxSk) {
+	this.asymDecrypt = function(ciphertext, nonce, senderBoxPk, recipientBoxSk) {
 		// convert to Uint8Array
 		var ctBuf = nacl.encode_latin1(util.base642Str(ciphertext));
 		var nonceBuf = nacl.encode_latin1(util.base642Str(nonce));
@@ -86,7 +86,7 @@ var NaclCrypto = function(nacl, util) {
 	 * @param secretKey [String] The receiver's base64 encoded public key
 	 * @return [Object] The base64 encoded ciphertext and nonce
 	 */
-	this.symmetricEncrypt = function(plaintext, nonce, secretKey) {
+	this.symEncrypt = function(plaintext, nonce, secretKey) {
 		// convert to Uint8Array
 		var ptBuf = nacl.encode_utf8(plaintext);
 		var secretKeyBuf = nacl.encode_latin1(util.base642Str(secretKey));
@@ -106,7 +106,7 @@ var NaclCrypto = function(nacl, util) {
 	 * @param secretKey [String] The sender's base64 encoded public key
 	 * @return [String] The decrypted plaintext in UTF8
 	 */
-	this.symmetricDecrypt = function(ciphertext, nonce, secretKey) {
+	this.symDecrypt = function(ciphertext, nonce, secretKey) {
 		// convert to Uint8Array
 		var ctBuf = nacl.encode_latin1(util.base642Str(ciphertext));
 		var nonceBuf = nacl.encode_latin1(util.base642Str(nonce));
