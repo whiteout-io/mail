@@ -31,7 +31,7 @@ test("Generate Keypair", 2, function() {
 	nacl_test.recipientKeypair = recipientKeypair;
 });
 
-test("En/Decrypt", 2, function() {
+test("Asymmetric En/Decrypt", 2, function() {
 	var plaintext = nacl_test.test_message;
 
 	// encrypt
@@ -41,4 +41,17 @@ test("En/Decrypt", 2, function() {
 	// decrypt
 	var decrypted = nacl_test.crypto.asymmetricDecrypt(ct.ct, ct.nonce, nacl_test.senderKeypair.boxPk, nacl_test.recipientKeypair.boxSk);
 	equal(decrypted, plaintext, 'Decryption correct: ' + decrypted);
+});
+
+test("Symmetric En/Decrypt", 2, function() {
+	var plaintext = nacl_test.test_message;
+
+	// encrypt
+	var ct = nacl_test.crypto.symmetricEncrypt(plaintext, nacl_test.senderKeypair.boxSk);
+	ok(ct.ct && ct.nonce, 'Ciphertext length: ' + ct.ct.length);
+
+	// decrypt
+	var decrypted = nacl_test.crypto.symmetricDecrypt(ct.ct, ct.nonce, nacl_test.senderKeypair.boxSk);
+	equal(decrypted, plaintext, 'Decryption correct: ' + decrypted);
+
 });
