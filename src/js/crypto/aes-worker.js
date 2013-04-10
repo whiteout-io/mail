@@ -15,7 +15,7 @@
 	 * In the web worker thread context, 'this' and 'self' can be used as a global
 	 * variable namespace similar to the 'window' object in the main thread
 	 */
-	self.addEventListener('message', function(e) {
+	self.onmessage = function(e) {
 
 		var args = e.data,
 			output = null,
@@ -35,6 +35,6 @@
 
 		// pass output back to main thread
 		self.postMessage(output);
-	}, false);
+	};
 
 }());

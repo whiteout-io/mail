@@ -54,10 +54,10 @@ app.crypto.Crypto = function(window, util) {
 			// init webworker thread
 			var worker = new Worker(app.config.workerPath + '/crypto/pbkdf2-worker.js');
 
-			worker.addEventListener('message', function(e) {
+			worker.onmessage = function(e) {
 				// return derived key from the worker
 				callback(e.data);
-			}, false);
+			};
 
 			// send plaintext data to the worker
 			worker.postMessage({
@@ -81,9 +81,9 @@ app.crypto.Crypto = function(window, util) {
 		if (window.Worker) {
 
 			var worker = new Worker(app.config.workerPath + '/crypto/aes-worker.js');
-			worker.addEventListener('message', function(e) {
+			worker.onmessage = function(e) {
 				callback(e.data);
-			}, false);
+			};
 			worker.postMessage({
 				type: 'encrypt',
 				plaintext: plaintext,
@@ -101,9 +101,9 @@ app.crypto.Crypto = function(window, util) {
 		if (window.Worker) {
 
 			var worker = new Worker(app.config.workerPath + '/crypto/aes-worker.js');
-			worker.addEventListener('message', function(e) {
+			worker.onmessage = function(e) {
 				callback(e.data);
-			}, false);
+			};
 			worker.postMessage({
 				type: 'decrypt',
 				ciphertext: ciphertext,
@@ -133,9 +133,9 @@ app.crypto.Crypto = function(window, util) {
 		if (window.Worker) {
 
 			var worker = new Worker(app.config.workerPath + '/crypto/aes-batch-worker.js');
-			worker.addEventListener('message', function(e) {
+			worker.onmessage = function(e) {
 				callback(e.data);
-			}, false);
+			};
 			worker.postMessage({
 				type: 'encrypt',
 				list: list
@@ -151,9 +151,9 @@ app.crypto.Crypto = function(window, util) {
 		if (window.Worker) {
 
 			var worker = new Worker(app.config.workerPath + '/crypto/aes-batch-worker.js');
-			worker.addEventListener('message', function(e) {
+			worker.onmessage = function(e) {
 				callback(e.data);
-			}, false);
+			};
 			worker.postMessage({
 				type: 'decrypt',
 				list: list
