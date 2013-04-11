@@ -3,9 +3,6 @@
 
 	// import web worker dependencies
 	importScripts('../../lib/nacl.js');
-	importScripts('../app-config.js');
-	importScripts('./util.js');
-	importScripts('./nacl-crypto.js');
 
 	/**
 	 * In the web worker thread context, 'this' and 'self' can be used as a global
@@ -14,9 +11,7 @@
 	self.onmessage = function(e) {
 
 		var args = e.data,
-			output = null,
-			util = new app.crypto.Util(),
-			crypto = new app.crypto.NaclCrypto(nacl, util);
+			output = null;
 
 		if (args.type === 'encrypt' && args.plaintext && args.nonce && args.recipientPk && args.senderSk) {
 			// start encryption
