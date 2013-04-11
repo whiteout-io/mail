@@ -32,77 +32,34 @@ test("Generate Keypair", 2, function() {
 	nacl_test.recipientKeypair = recipientKeypair;
 });
 
-test("Asymmetric En/Decrypt", 3, function() {
+test("Asymmetric En/Decrypt (Synchronous)", 3, function() {
 	var plaintext = nacl_test.test_message;
 
 	var nonce = nacl_test.crypto.generateNonce();
 	ok(nonce, 'Nonce: ' + nonce);
 	// encrypt
-	var ct = nacl_test.crypto.asymEncrypt(plaintext, nonce, nacl_test.recipientKeypair.boxPk, nacl_test.senderKeypair.boxSk);
+	var ct = nacl_test.crypto.asymEncryptSync(plaintext, nonce, nacl_test.recipientKeypair.boxPk, nacl_test.senderKeypair.boxSk);
 	ok(ct, 'Ciphertext length: ' + ct.length);
 
 	// decrypt
-	var decrypted = nacl_test.crypto.asymDecrypt(ct, nonce, nacl_test.senderKeypair.boxPk, nacl_test.recipientKeypair.boxSk);
+	var decrypted = nacl_test.crypto.asymDecryptSync(ct, nonce, nacl_test.senderKeypair.boxPk, nacl_test.recipientKeypair.boxSk);
 	equal(decrypted, plaintext, 'Decryption correct: ' + decrypted);
 });
 
-test("Symmetric En/Decrypt", 3, function() {
+asyncTest("Asymmetric En/Decrypt (Async/Worker)", 3, function() {
 	var plaintext = nacl_test.test_message;
 
 	var nonce = nacl_test.crypto.generateNonce();
 	ok(nonce, 'Nonce: ' + nonce);
 	// encrypt
-	var ct = nacl_test.crypto.symEncrypt(plaintext, nonce, nacl_test.senderKeypair.boxSk);
-	ok(ct, 'Ciphertext length: ' + ct.length);
+	nacl_test.crypto.asymEncrypt(plaintext, nonce, nacl_test.recipientKeypair.boxPk, nacl_test.senderKeypair.boxSk, function(ct) {
+		ok(ct, 'Ciphertext length: ' + ct.length);
 
-	// decrypt
-	var decrypted = nacl_test.crypto.symDecrypt(ct, nonce, nacl_test.senderKeypair.boxSk);
-	equal(decrypted, plaintext, 'Decryption correct: ' + decrypted);
-});
+		// decrypt
+		nacl_test.crypto.asymDecrypt(ct, nonce, nacl_test.senderKeypair.boxPk, nacl_test.recipientKeypair.boxSk, function(decrypted) {
+			equal(decrypted, plaintext, 'Decryption correct: ' + decrypted);
 
-asyncTest("Asymmetric En/Decrypt (WebWorker)", 3, function() {
-	var plaintext = nacl.encode_utf8(nacl_test.test_message),
-		nonce = nacl.crypto_secretbox_random_nonce(),
-		utl = nacl_test.util,
-		recipientPk = utl.binStr2Uint8Arr(utl.base642Str(nacl_test.recipientKeypair.boxPk)),
-		senderSk = utl.binStr2Uint8Arr(utl.base642Str(nacl_test.senderKeypair.boxSk)),
-		recipienSk = utl.binStr2Uint8Arr(utl.base642Str(nacl_test.recipientKeypair.boxSk)),
-		senderPk = utl.binStr2Uint8Arr(utl.base642Str(nacl_test.senderKeypair.boxPk));
-
-	// encrypt
-
-	function encrypt(pt) {
-		var encryptWorker = new Worker(app.config.workerPath + '/crypto/nacl-worker.js');
-		encryptWorker.onmessage = function(e) {
-			ok(e.data, 'Encryption');
-			decrypt(e.data);
-		};
-		encryptWorker.postMessage({
-			type: 'encrypt',
-			plaintext: pt,
-			nonce: nonce,
-			recipientPk: recipientPk,
-			senderSk: senderSk
-		});
-	}
-
-	// decrypt
-
-	function decrypt(ct) {
-		var decryptWorker = new Worker(app.config.workerPath + '/crypto/nacl-worker.js');
-		decryptWorker.onmessage = function(e) {
-			ok(e.data, 'Decryption');
-			deepEqual(e.data, plaintext, 'Decrypted = Plaintext');
 			start();
-		};
-		decryptWorker.postMessage({
-			type: 'decrypt',
-			ciphertext: ct,
-			nonce: nonce,
-			senderPk: senderPk,
-			recipienSk: recipienSk
 		});
-	}
-
-	encrypt(plaintext);
+	});
 });
