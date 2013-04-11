@@ -39,18 +39,18 @@ var NaclCrypto = function(nacl, util) {
 	 * Asymmetrically encrypt a String
 	 * @param plaintext [String] The input string in UTF8
 	 * @param nonce [String] The base64 encoded nonce
-	 * @param recipientBoxPk [String] The receiver's base64 encoded public key
-	 * @param senderBoxSk [String] The sender's base64 encoded private key
+	 * @param recipientPk [String] The receiver's base64 encoded public key
+	 * @param senderSk [String] The sender's base64 encoded private key
 	 * @return [Object] The base64 encoded ciphertext and nonce
 	 */
-	this.asymEncrypt = function(plaintext, nonce, recipientBoxPk, senderBoxSk) {
+	this.asymEncrypt = function(plaintext, nonce, recipientPk, senderSk) {
 		// convert to Uint8Array
 		var ptBuf = nacl.encode_utf8(plaintext);
-		var recipientBoxPkBuf = nacl.encode_latin1(util.base642Str(recipientBoxPk));
-		var senderBoxSkBuf = nacl.encode_latin1(util.base642Str(senderBoxSk));
+		var recipientPkBuf = nacl.encode_latin1(util.base642Str(recipientPk));
+		var senderSkBuf = nacl.encode_latin1(util.base642Str(senderSk));
 		var nonceBuf = nacl.encode_latin1(util.base642Str(nonce));
 		// encrypt
-		var ct = nacl.crypto_box(ptBuf, nonceBuf, recipientBoxPkBuf, senderBoxSkBuf);
+		var ct = nacl.crypto_box(ptBuf, nonceBuf, recipientPkBuf, senderSkBuf);
 		// encode to base64
 		var ctBase64 = util.str2Base64(nacl.decode_latin1(ct));
 
@@ -61,18 +61,18 @@ var NaclCrypto = function(nacl, util) {
 	 * Asymmetrically decrypt a String
 	 * @param ciphertext [String] The base64 encoded ciphertext
 	 * @param nonce [String] The base64 encoded nonce
-	 * @param senderBoxPk [String] The sender's base64 encoded public key
-	 * @param recipientBoxSk [String] The receiver's base64 encoded private key
+	 * @param senderPk [String] The sender's base64 encoded public key
+	 * @param recipientSk [String] The receiver's base64 encoded private key
 	 * @return [String] The decrypted plaintext in UTF8
 	 */
-	this.asymDecrypt = function(ciphertext, nonce, senderBoxPk, recipientBoxSk) {
+	this.asymDecrypt = function(ciphertext, nonce, senderPk, recipientSk) {
 		// convert to Uint8Array
 		var ctBuf = nacl.encode_latin1(util.base642Str(ciphertext));
 		var nonceBuf = nacl.encode_latin1(util.base642Str(nonce));
-		var senderBoxPkBuf = nacl.encode_latin1(util.base642Str(senderBoxPk));
-		var recipientBoxSkBuf = nacl.encode_latin1(util.base642Str(recipientBoxSk));
+		var senderPkBuf = nacl.encode_latin1(util.base642Str(senderPk));
+		var recipientSkBuf = nacl.encode_latin1(util.base642Str(recipientSk));
 		// decrypt
-		var pt = nacl.crypto_box_open(ctBuf, nonceBuf, senderBoxPkBuf, recipientBoxSkBuf);
+		var pt = nacl.crypto_box_open(ctBuf, nonceBuf, senderPkBuf, recipientSkBuf);
 		// decode to string
 		var ptStr = nacl.decode_utf8(pt);
 
