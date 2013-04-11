@@ -19,6 +19,7 @@ var NaclCrypto = function(nacl, util) {
 		}
 
 		return {
+			id: util.UUID(),
 			boxPk: util.str2Base64(nacl.decode_latin1(keys.boxPk)),
 			boxSk: util.str2Base64(nacl.decode_latin1(keys.boxSk))
 		};

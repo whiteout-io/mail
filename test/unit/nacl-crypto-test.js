@@ -1,7 +1,8 @@
 module("NaCl Crypto");
 
 var nacl_test = {
-	keySize: 128
+	keySize: 128,
+	nonceSize: 192
 };
 
 test("Init", 1, function() {
@@ -17,7 +18,7 @@ test("Generate Keypair from seed", 1, function() {
 	// generate keypair from seed
 	var seed = nacl_test.util.random(128);
 	var keys = nacl_test.crypto.generateKeypair(seed);
-	ok(keys.boxSk && keys.boxPk, "Keypair: " + JSON.stringify(keys));
+	ok(keys.boxSk && keys.boxPk && keys.id, "Keypair: " + JSON.stringify(keys));
 });
 
 test("Generate Keypair", 2, function() {
