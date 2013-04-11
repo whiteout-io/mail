@@ -1,7 +1,7 @@
 var TestData = function() {
-	
+
 	var util = new app.crypto.Util(window, uuid);
-	
+
 	this.getEmailCollection = function(size) {
 		// create test data
 		var i, mail, envelope, collection = new app.model.EmailCollection(),
@@ -10,45 +10,45 @@ var TestData = function() {
 		for (i = 0; i < size; i++) {
 			mail = new app.model.Email({
 				id: i,
-				from:'john@from.com',
-				to:['jack@to.com'],
+				from: 'john@from.com',
+				to: ['jack@to.com'],
 				subject: 'Important stuff ' + i,
 				sentDate: (1971 + i) + '-03-13 18:17:53',
 				body: bigAssString
 			});
-			
+
 			collection.add(mail);
 		}
-		
+
 		return collection;
 	};
-	
-	this.packageCollectionForEncryption= function(collection, keySize, ivSize) {
+
+	this.packageCollectionForEncryption = function(collection, keySize, ivSize) {
 		// package json objects for batch encrytion
 		var envelope, envelopes = [];
-		
+
 		collection.forEach(function(model) {
 			envelope = {
-				id: model.id,			
+				id: model.id,
 				plaintext: model.toJSON(),
 				key: util.random(keySize),
 				iv: util.random(ivSize)
 			};
 
-			envelopes.push(envelope);				
+			envelopes.push(envelope);
 		});
-		
+
 		return envelopes;
 	};
-	
+
 	this.generateBigString = function(iterations) {
 		var test_message = '';
 		// generate test data
-		for (var i=0; i < iterations; i++) {
+		for (var i = 0; i < iterations; i++) {
 			test_message += 'aslghaksfdhsakjzfgasjfdgsauk';
 		}
-		
+
 		return test_message;
 	};
-	
+
 };
