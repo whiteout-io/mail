@@ -5,8 +5,8 @@
 app.crypto.Crypto = function(window, util) {
 	'use strict';
 
-	var symmetricUserKey, // the user's secret key used to encrypt item-keys
-	aes = new app.crypto.AesCCM(sjcl); // use authenticated AES-CCM mode by default
+	var symmetricUserKey = null, // the user's secret key used to encrypt item-keys
+		aes = new app.crypto.AesCCM(sjcl); // use authenticated AES-CCM mode by default
 
 	/**
 	 * Initializes the crypto modules by fetching the user's
@@ -42,6 +42,13 @@ app.crypto.Crypto = function(window, util) {
 
 			callback();
 		});
+	};
+
+	/**
+	 * Generates the user's asymmetric keypair from the user's secret key
+	 */
+	this.generateKeypair = function(naclCrypto) {
+		return naclCrypto.generateKeypair(symmetricUserKey);
 	};
 
 	/**
