@@ -18,7 +18,7 @@ var app; // container for the application namespace
 	 * Global app configurations
 	 */
 	app.config = {
-		cloudUrl: 'https://whiteout-io.appspot.com',
+		cloudUrl: 'http://storage.whiteout.io',
 		symKeySize: 128,
 		symIvSize: 104,
 		asymKeySize: 2048,

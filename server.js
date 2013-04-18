@@ -1,9 +1,6 @@
-/**
- * A simple server for serving static files using node.js
- */
+'use strict';
 
 var express = require('express'),
-	fs = require('fs'),
 	port, app, dev;
 
 port = process.env.PORT || 8585;

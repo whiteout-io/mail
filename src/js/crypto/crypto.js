@@ -23,32 +23,27 @@ app.crypto.Crypto = function(window, util) {
 			// fetch user's encrypted secret key from keychain/storage
 			var keyStore = new app.dao.LocalStorageDAO(window);
 			var storageId = emailAddress + '_encryptedSymmetricKey';
-			var encryptedKey = keyStore.read(storageId);
+			var storedKey = keyStore.read(storageId);
 
 			// check if key exists
-			if (!encryptedKey) {
+			if (!storedKey) {
 				// generate key, encrypt and persist if none exists
 				symmetricUserKey = util.random(keySize);
 				var iv = util.random(ivSize);
 				var key = aes.encrypt(symmetricUserKey, pbkdf2, iv);
 				keyStore.persist(storageId, {
-					key: key,
-					iv: iv
+					_id: util.UUID(),
+					userId: emailAddress,
+					encryptedKey: key,
+					keyIV: iv
 				});
 			} else {
 				// decrypt key
-				symmetricUserKey = aes.decrypt(encryptedKey.key, pbkdf2, encryptedKey.iv);
+				symmetricUserKey = aes.decrypt(storedKey.encryptedKey, pbkdf2, storedKey.keyIV);
 			}
 
 			callback();
 		});
-	};
-
-	/**
-	 * Generates the user's asymmetric keypair from the user's secret key
-	 */
-	this.generateKeypair = function(naclCrypto) {
-		return naclCrypto.generateKeypair(symmetricUserKey);
 	};
 
 	/**

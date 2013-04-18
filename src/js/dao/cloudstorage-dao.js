@@ -37,21 +37,22 @@ app.dao.CloudStorage = function(window, $) {
 	 */
 	this.persistUserSecretKey = function(emailAddress, callback) {
 		// fetch user's encrypted secret key from keychain/storage
-		var keyStore = new app.dao.LocalStorageDAO(window);
-		var storageId = emailAddress + '_encryptedSymmetricKey';
-		var encryptedKey = keyStore.read(storageId);
+		var keyStore = new app.dao.LocalStorageDAO(window),
+			storageId = emailAddress + '_encryptedSymmetricKey',
+			storedKey = keyStore.read(storageId);
 
-		var payload = {
-			userId: emailAddress,
-			encryptedKey: encryptedKey.key,
-			keyIV: encryptedKey.iv
-		};
+		if (!storedKey) {
+			callback({
+				error: 'err',
+				status: 'No key found in storage!'
+			});
+			return;
+		}
 
-		var uri = app.config.cloudUrl + '/keys/user/' + emailAddress;
 		$.ajax({
-			url: uri,
+			url: app.config.cloudUrl + '/secretkey/user/' + emailAddress + '/key/' + storedKey._id,
 			type: 'PUT',
-			data: JSON.stringify(payload),
+			data: JSON.stringify(storedKey),
 			contentType: 'application/json',
 			success: function() {
 				callback();
@@ -70,50 +71,25 @@ app.dao.CloudStorage = function(window, $) {
 	 */
 	this.getUserSecretKey = function(emailAddress, callback, replaceCallback) {
 		// fetch user's encrypted secret key from keychain/storage
-		var self = this;
-		var keyStore = new app.dao.LocalStorageDAO(window);
-		var storageId = emailAddress + '_encryptedSymmetricKey';
-		var storedKey = keyStore.read(storageId);
+		var self = this,
+			keyStore = new app.dao.LocalStorageDAO(window),
+			storageId = emailAddress + '_encryptedSymmetricKey',
+			storedKey = keyStore.read(storageId);
 
-		var uri = app.config.cloudUrl + '/keys/user/' + emailAddress;
 		$.ajax({
-			url: uri,
+			url: app.config.cloudUrl + '/secretkey/user/' + emailAddress,
 			type: 'GET',
 			dataType: 'json',
-			success: function(fetchedKey) {
-				if ((!storedKey || !storedKey.key) && fetchedKey && fetchedKey.encryptedKey && fetchedKey.keyIV) {
-					// no local key... persist fetched key
-					keyStore.persist(storageId, {
-						key: fetchedKey.encryptedKey,
-						iv: fetchedKey.keyIV
+			success: function(keys) {
+				if (!keys || keys.length === 0) {
+					callback({
+						error: 'err',
+						status: 'Key not synced!'
 					});
-					replaceCallback();
-
-				} else if (storedKey && fetchedKey && (storedKey.key !== fetchedKey.encryptedKey || storedKey.iv !== fetchedKey.keyIV)) {
-					// local and fetched keys are not equal
-					if (confirm('Swap local key?')) {
-						// replace local key with fetched key
-						keyStore.persist(storageId, {
-							key: fetchedKey.encryptedKey,
-							iv: fetchedKey.keyIV
-						});
-						replaceCallback();
-					} else {
-						if (confirm('Swap cloud key?')) {
-							// upload local key to cloud
-							self.persistUserSecretKey(emailAddress, callback);
-						} else {
-							callback({
-								error: 'err',
-								status: 'Key not synced!'
-							});
-						}
-					}
-
-				} else {
-					// local and cloud keys are equal or cloud key is null
-					callback();
+					return;
 				}
+
+				handleKey(keys[0], callback);
 			},
 			error: function(xhr, textStatus, err) {
 				callback({
@@ -122,6 +98,36 @@ app.dao.CloudStorage = function(window, $) {
 				});
 			}
 		});
+
+		function handleKey(fetchedKey, callback) {
+			if ((!storedKey || !storedKey.encryptedKey) && fetchedKey && fetchedKey.encryptedKey && fetchedKey.keyIV) {
+				// no local key... persist fetched key
+				keyStore.persist(storageId, fetchedKey);
+				replaceCallback();
+
+			} else if (storedKey && fetchedKey && (storedKey.encryptedKey !== fetchedKey.encryptedKey || storedKey.keyIV !== fetchedKey.keyIV)) {
+				// local and fetched keys are not equal
+				if (confirm('Swap local key?')) {
+					// replace local key with fetched key
+					keyStore.persist(storageId, fetchedKey);
+					replaceCallback();
+				} else {
+					if (confirm('Swap cloud key?')) {
+						// upload local key to cloud
+						self.persistUserSecretKey(emailAddress, callback);
+					} else {
+						callback({
+							error: 'err',
+							status: 'Key not synced!'
+						});
+					}
+				}
+
+			} else {
+				// local and cloud keys are equal or cloud key is null
+				callback();
+			}
+		}
 	};
 
 };
