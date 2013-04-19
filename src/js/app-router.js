@@ -15,12 +15,13 @@
 
 		login: function() {
 			// init email dao and dependencies
-			var util = new app.crypto.Util(window, null);
+			var util = new app.crypto.Util(window, uuid);
 			var jsonDao = new app.dao.LawnchairDAO(window);
 			var crypto = new app.crypto.Crypto(window, util);
+			var naclCrypto = new app.crypto.NaclCrypto(nacl, util);
 			var cloudstorage = new app.dao.CloudStorage(window, $);
 			var devicestorage = new app.dao.DeviceStorage(util, crypto, jsonDao, null);
-			this.emailDao = new app.dao.EmailDAO(_, crypto, devicestorage, cloudstorage);
+			this.emailDao = new app.dao.EmailDAO(_, crypto, devicestorage, cloudstorage, naclCrypto, util);
 
 			var loginView = new app.view.LoginView({
 				dao: this.emailDao

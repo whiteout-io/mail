@@ -32,18 +32,28 @@
 				text: 'Syncing...',
 				textVisible: true
 			});
-			// sync from cloud
-			this.dao.syncFromCloud(this.folder, function(err) {
-				$.mobile.loading('hide');
 
-				// check for error
+			// sync vinbox from cloud
+			self.dao.checkVInbox(function(err) {
 				if (err) {
-					window.alert('Syncing failed!');
+					$.mobile.loading('hide');
+					window.alert('Fetching new from inbox failed!');
 					return;
 				}
 
-				// read local storage and add to list view
-				self.loadItems();
+				// sync current folder from cloud
+				self.dao.syncFromCloud(self.folder, function(err) {
+					$.mobile.loading('hide');
+
+					// check for error
+					if (err) {
+						window.alert('Syncing failed!');
+						return;
+					}
+
+					// read local storage and add to list view
+					self.loadItems();
+				});
 			});
 		},
 
