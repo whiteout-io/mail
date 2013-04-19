@@ -91,10 +91,12 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage) {
 	this.syncFromCloud = function(folderName, callback) {
 		var folder, self = this;
 
-		cloudstorage.listEncryptedItems('email', this.account.get('emailAddress'), folderName, function(res) {
+		cloudstorage.listEncryptedItems('email', this.account.get('emailAddress'), folderName, function(err, res) {
 			// return if an error occured or if fetched list from cloud storage is empty
-			if (!res || res.status || res.length === 0) {
-				callback(res); // error
+			if (err || !res || res.status || res.length === 0) {
+				callback({
+					error: err
+				}); // error
 				return;
 			}
 

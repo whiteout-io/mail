@@ -5,23 +5,30 @@
 app.dao.CloudStorage = function(window, $) {
 	'use strict';
 
-	/**
-	 * Lists the encrypted items
-	 * @param type [String] The type of item e.g. 'email'
-	 * @param offset [Number] The offset of items to fetch (0 is the last stored item)
-	 * @param num [Number] The number of items to fetch (null means fetch all)
-	 */
-	this.listEncryptedItems = function(type, emailAddress, folderName, callback) {
-		var folder, uri, self = this;
+	//
+	// Public Key
+	//
 
-		// fetch encrypted json objects from cloud service
-		uri = app.config.cloudUrl + '/' + type + '/user/' + emailAddress + '/folder/' + folderName;
+	/**
+	 * Find the user's corresponding public key
+	 */
+	this.getPublicKey = function(emailAddress, callback) {
+		var uri;
+
+		uri = app.config.cloudUrl + '/publickey/user/' + emailAddress;
 		$.ajax({
 			url: uri,
 			type: 'GET',
 			dataType: 'json',
 			success: function(list) {
-				callback(list);
+				if (!list || list.length === 0) {
+					callback({
+						error: 'No public key for that user!'
+					});
+					return;
+				}
+
+				callback(null, list[0]);
 			},
 			error: function(xhr, textStatus, err) {
 				callback({
@@ -33,13 +40,73 @@ app.dao.CloudStorage = function(window, $) {
 	};
 
 	/**
+	 * Persist the user's publc key
+	 */
+	this.putPublicKey = function(pubkey, callback) {
+		var uri;
+
+		uri = app.config.cloudUrl + '/publickey/user/' + pubkey.userId + '/key/' + pubkey._id;
+		$.ajax({
+			url: uri,
+			type: 'PUT',
+			data: JSON.stringify(pubkey),
+			contentType: 'application/json',
+			success: function() {
+				callback();
+			},
+			error: function(xhr, textStatus, err) {
+				callback({
+					error: err,
+					status: textStatus
+				});
+			}
+		});
+	};
+
+	//
+	// Encrypted Mails
+	//
+
+	/**
+	 * Lists the encrypted items
+	 * @param type [String] The type of item e.g. 'email'
+	 * @param offset [Number] The offset of items to fetch (0 is the last stored item)
+	 * @param num [Number] The number of items to fetch (null means fetch all)
+	 */
+	this.listEncryptedItems = function(type, emailAddress, folderName, callback) {
+		var uri;
+
+		// fetch encrypted json objects from cloud service
+		uri = app.config.cloudUrl + '/' + type + '/user/' + emailAddress + '/folder/' + folderName;
+		$.ajax({
+			url: uri,
+			type: 'GET',
+			dataType: 'json',
+			success: function(list) {
+				callback(null, list);
+			},
+			error: function(xhr, textStatus, err) {
+				callback({
+					error: err,
+					status: textStatus
+				});
+			}
+		});
+	};
+
+	//
+	// Secret Key
+	//
+
+	/**
 	 * Persist encrypted user key to cloud service
 	 */
-	this.persistUserSecretKey = function(emailAddress, callback) {
+	this.putUserSecretKey = function(emailAddress, callback) {
 		// fetch user's encrypted secret key from keychain/storage
 		var keyStore = new app.dao.LocalStorageDAO(window),
 			storageId = emailAddress + '_encryptedSymmetricKey',
-			storedKey = keyStore.read(storageId);
+			storedKey = keyStore.read(storageId),
+			uri;
 
 		if (!storedKey) {
 			callback({
@@ -49,8 +116,9 @@ app.dao.CloudStorage = function(window, $) {
 			return;
 		}
 
+		uri = app.config.cloudUrl + '/secretkey/user/' + emailAddress + '/key/' + storedKey._id;
 		$.ajax({
-			url: app.config.cloudUrl + '/secretkey/user/' + emailAddress + '/key/' + storedKey._id,
+			url: uri,
 			type: 'PUT',
 			data: JSON.stringify(storedKey),
 			contentType: 'application/json',
@@ -74,10 +142,12 @@ app.dao.CloudStorage = function(window, $) {
 		var self = this,
 			keyStore = new app.dao.LocalStorageDAO(window),
 			storageId = emailAddress + '_encryptedSymmetricKey',
-			storedKey = keyStore.read(storageId);
+			storedKey = keyStore.read(storageId),
+			uri;
 
+		uri = app.config.cloudUrl + '/secretkey/user/' + emailAddress;
 		$.ajax({
-			url: app.config.cloudUrl + '/secretkey/user/' + emailAddress,
+			url: uri,
 			type: 'GET',
 			dataType: 'json',
 			success: function(keys) {
@@ -107,14 +177,14 @@ app.dao.CloudStorage = function(window, $) {
 
 			} else if (storedKey && fetchedKey && (storedKey.encryptedKey !== fetchedKey.encryptedKey || storedKey.keyIV !== fetchedKey.keyIV)) {
 				// local and fetched keys are not equal
-				if (confirm('Swap local key?')) {
+				if (window.confirm('Swap local key?')) {
 					// replace local key with fetched key
 					keyStore.persist(storageId, fetchedKey);
 					replaceCallback();
 				} else {
-					if (confirm('Swap cloud key?')) {
+					if (window.confirm('Swap cloud key?')) {
 						// upload local key to cloud
-						self.persistUserSecretKey(emailAddress, callback);
+						self.putUserSecretKey(emailAddress, callback);
 					} else {
 						callback({
 							error: 'err',

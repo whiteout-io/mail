@@ -75,6 +75,17 @@ app.crypto.Crypto = function(window, util) {
 		}
 	};
 
+	/**
+	 * Derive an asymmetric keypait from the user's secret
+	 */
+	this.deriveKeyPair = function(naclCrypto, id) {
+		var keys = naclCrypto.generateKeypair(symmetricUserKey);
+		if (id) {
+			keys.id = id;
+		}
+		return keys;
+	};
+
 	//
 	// En/Decrypts single item
 	//

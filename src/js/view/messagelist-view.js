@@ -33,12 +33,12 @@
 				textVisible: true
 			});
 			// sync from cloud
-			this.dao.syncFromCloud(this.folder, function(res) {
+			this.dao.syncFromCloud(this.folder, function(err) {
 				$.mobile.loading('hide');
 
 				// check for error
-				if (res && res.status) {
-					alert('Syncing failed!');
+				if (err) {
+					window.alert('Syncing failed!');
 					return;
 				}
 
