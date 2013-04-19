@@ -2,8 +2,10 @@
  * A high-level Data-Access Api for handling Email synchronization
  * between the cloud service and the device's local storage
  */
-app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage) {
+app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, naclCrypto) {
 	'use strict';
+
+	var keypair; // the user's keypair
 
 	/**
 	 * Inits all dependencies
@@ -14,7 +16,8 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage) {
 		// sync user's cloud key with local storage
 		cloudstorage.getUserSecretKey(account.get('emailAddress'), function(err) {
 			if (err) {
-				console.log('Could not sync user key from server: ' + JSON.stringify(err));
+				callback(err);
+				return;
 			}
 			// init crypto
 			initCrypto();
@@ -28,7 +31,21 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage) {
 
 		function initCrypto() {
 			crypto.init(account.get('emailAddress'), password, account.get('symKeySize'), account.get('symIvSize'), function() {
-				callback();
+				initNaclCrypto();
+			});
+		}
+
+		function initNaclCrypto() {
+			// derive keypair from user's secret key
+			keypair = crypto.deriveKeyPair(naclCrypto);
+			//publish public key to cloud service
+			var pubkey = new app.model.PublicKey({
+				_id: keypair.id,
+				userId: account.get('emailAddress'),
+				publicKey: keypair.boxPk
+			});
+			cloudstorage.putPublicKey(pubkey.toJSON(), function(err) {
+				callback(err);
 			});
 		}
 	};

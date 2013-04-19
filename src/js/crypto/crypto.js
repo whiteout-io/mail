@@ -6,6 +6,7 @@ app.crypto.Crypto = function(window, util) {
 	'use strict';
 
 	var symmetricUserKey = null, // the user's secret key used to encrypt item-keys
+		keyId = null, // the key ID linking the user's key set
 		aes = new app.crypto.AesCCM(sjcl); // use authenticated AES-CCM mode by default
 
 	/**
@@ -31,16 +32,18 @@ app.crypto.Crypto = function(window, util) {
 				symmetricUserKey = util.random(keySize);
 				var iv = util.random(ivSize);
 				var key = aes.encrypt(symmetricUserKey, pbkdf2, iv);
-				keyStore.persist(storageId, {
+				storedKey = {
 					_id: util.UUID(),
 					userId: emailAddress,
 					encryptedKey: key,
 					keyIV: iv
-				});
+				};
+				keyStore.persist(storageId, storedKey);
 			} else {
 				// decrypt key
 				symmetricUserKey = aes.decrypt(storedKey.encryptedKey, pbkdf2, storedKey.keyIV);
 			}
+			keyId = storedKey._id;
 
 			callback();
 		});
@@ -78,10 +81,10 @@ app.crypto.Crypto = function(window, util) {
 	/**
 	 * Derive an asymmetric keypait from the user's secret
 	 */
-	this.deriveKeyPair = function(naclCrypto, id) {
+	this.deriveKeyPair = function(naclCrypto) {
 		var keys = naclCrypto.generateKeypair(symmetricUserKey);
-		if (id) {
-			keys.id = id;
+		if (keyId) {
+			keys.id = keyId;
 		}
 		return keys;
 	};

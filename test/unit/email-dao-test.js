@@ -12,14 +12,18 @@ asyncTest("Init", 2, function() {
 	var util = new app.crypto.Util(window, uuid);
 	var jsonDao = new app.dao.LawnchairDAO(window);
 	emaildao_test.crypto = new app.crypto.Crypto(window, util);
+	var naclCrypto = new app.crypto.NaclCrypto(nacl, util);
 	emaildao_test.storage = new app.dao.DeviceStorage(util, emaildao_test.crypto, jsonDao, null);
 	// cloud storage stub
 	var cloudstorageStub = {
 		getUserSecretKey: function(emailAdress, callback) {
 			callback();
+		},
+		putPublicKey: function(pk, callback) {
+			callback();
 		}
 	};
-	emaildao_test.emailDao = new app.dao.EmailDAO(_, emaildao_test.crypto, emaildao_test.storage, cloudstorageStub);
+	emaildao_test.emailDao = new app.dao.EmailDAO(_, emaildao_test.crypto, emaildao_test.storage, cloudstorageStub, naclCrypto);
 
 	// generate test data
 	emaildao_test.list = new TestData().getEmailCollection(100);
