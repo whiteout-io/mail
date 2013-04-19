@@ -16,8 +16,7 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, naclCrypto, 
 		// sync user's cloud key with local storage
 		cloudstorage.getUserSecretKey(account.get('emailAddress'), function(err) {
 			if (err) {
-				callback(err);
-				return;
+				console.log('Error syncing secret key to cloud: ' + err);
 			}
 			// init crypto
 			initCrypto();
