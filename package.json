@@ -1,0 +1,10 @@
+{
+	"name": "html5-mail",
+	"version": "0.0.1",
+	"engines": {
+		"node": ">=0.8"
+	},
+	"dependencies": {
+		"express": "latest"
+	}
+}
