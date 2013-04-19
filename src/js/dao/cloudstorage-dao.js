@@ -12,23 +12,23 @@ app.dao.CloudStorage = function(window, $) {
 	/**
 	 * Find the user's corresponding public key
 	 */
-	this.getPublicKey = function(emailAddress, callback) {
+	this.getPublicKey = function(keyId, callback) {
 		var uri;
 
-		uri = app.config.cloudUrl + '/publickey/user/' + emailAddress;
+		uri = app.config.cloudUrl + '/publickey/key/' + keyId;
 		$.ajax({
 			url: uri,
 			type: 'GET',
 			dataType: 'json',
-			success: function(list) {
-				if (!list || list.length === 0) {
+			success: function(key) {
+				if (!key || !key._id) {
 					callback({
 						error: 'No public key for that user!'
 					});
 					return;
 				}
 
-				callback(null, list[0]);
+				callback(null, key);
 			},
 			error: function(xhr, textStatus, err) {
 				callback({
@@ -66,6 +66,31 @@ app.dao.CloudStorage = function(window, $) {
 	//
 	// Encrypted Mails
 	//
+
+	/**
+	 * Pushes an encrypted item to the user's cloud storage
+	 * @param type [String] The type of item e.g. 'email'
+	 */
+	this.putEncryptedItem = function(item, type, emailAddress, folderName, callback) {
+		var uri;
+
+		uri = app.config.cloudUrl + '/' + type + '/user/' + emailAddress + '/folder/' + folderName + '/' + item.id;
+		$.ajax({
+			url: uri,
+			type: 'PUT',
+			data: JSON.stringify(item),
+			contentType: 'application/json',
+			success: function() {
+				callback();
+			},
+			error: function(xhr, textStatus, err) {
+				callback({
+					error: err,
+					status: textStatus
+				});
+			}
+		});
+	};
 
 	/**
 	 * Lists the encrypted items

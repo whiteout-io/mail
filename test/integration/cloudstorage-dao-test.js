@@ -15,7 +15,7 @@ asyncTest("Init", 1, function() {
 	var naclCrypto = new app.crypto.NaclCrypto(nacl, util);
 	cloudstoragedao_test.storage = new app.dao.DeviceStorage(util, crypto, jsonDao, null);
 	cloudstoragedao_test.cloudstorage = new app.dao.CloudStorage(window, $);
-	cloudstoragedao_test.emailDao = new app.dao.EmailDAO(_, crypto, cloudstoragedao_test.storage, cloudstoragedao_test.cloudstorage, naclCrypto);
+	cloudstoragedao_test.emailDao = new app.dao.EmailDAO(_, crypto, cloudstoragedao_test.storage, cloudstoragedao_test.cloudstorage, naclCrypto, util);
 
 	// clear db before tests
 	jsonDao.clear(function(err) {
@@ -43,7 +43,7 @@ asyncTest("Persist public key to cloud", 1, function() {
 });
 
 asyncTest("Get Public key from cloud", 2, function() {
-	cloudstoragedao_test.cloudstorage.getPublicKey(cloudstoragedao_test.publicKey.get('userId'), function(err, data) {
+	cloudstoragedao_test.cloudstorage.getPublicKey(cloudstoragedao_test.publicKey.get('_id'), function(err, data) {
 		ok(!err && data && data.publicKey, 'Get public key from cloud');
 		deepEqual(data, cloudstoragedao_test.publicKey.toJSON(), 'Public key is equal');
 
@@ -91,8 +91,15 @@ asyncTest("Init", 1, function() {
 	});
 });
 
-asyncTest("Sync emails from cloud", 3, function() {
+asyncTest("Check virtual inbox, re-encrypt and push to cloud", 1, function() {
+	cloudstoragedao_test.emailDao.checkVInbox(function(err) {
+		ok(!err, 'Synced items');
 
+		start();
+	});
+});
+
+asyncTest("Sync emails from cloud", 2, function() {
 	cloudstoragedao_test.emailDao.syncFromCloud('inbox', function(err) {
 		ok(!err, 'Synced items');
 

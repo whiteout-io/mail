@@ -2,7 +2,7 @@
  * A high-level Data-Access Api for handling Email synchronization
  * between the cloud service and the device's local storage
  */
-app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, naclCrypto) {
+app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, naclCrypto, util) {
 	'use strict';
 
 	var keypair; // the user's keypair
@@ -102,15 +102,101 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, naclCrypto) 
 	};
 
 	/**
+	 * Checks the user virtual inbox containing end-2-end encrypted mail items
+	 */
+	this.checkVInbox = function(callback) {
+		var self = this;
+
+		cloudstorage.listEncryptedItems('email', this.account.get('emailAddress'), 'vinbox', function(err, data) {
+			// if virtual inbox is emtpy just callback
+			if (err || !data || data.status || data.length === 0) {
+				callback(); // error
+				return;
+			}
+
+			// asynchronously iterate over the encrypted items
+			var after = _.after(data.length, function() {
+				callback();
+			});
+
+			_.each(data, function(asymCt) {
+				// asymmetric decrypt
+				asymDecryptMail(asymCt, function(err, pt) {
+					if (err) {
+						callback(err);
+						return;
+					}
+
+					// symmetric encrypt and push to cloud
+					symEncryptAndUpload(pt, function(err) {
+						if (err) {
+							callback(err);
+							return;
+						}
+
+						// TODO: delete items from virtual inbox
+
+						after(); // asynchronously iterate through objects
+					});
+				});
+			});
+		});
+
+		function asymDecryptMail(m, callback) {
+			var pubKeyId = m.senderPk.split(';')[1];
+			// pull the sender's public key
+			cloudstorage.getPublicKey(pubKeyId, function(err, senderPk) {
+				if (err) {
+					callback(err);
+					return;
+				}
+
+				// do authenticated decryption
+				naclCrypto.asymDecrypt(m.ciphertext, m.itemIV, senderPk.publicKey, keypair.boxSk, function(plaintext) {
+					callback(null, JSON.parse(plaintext));
+				});
+			});
+		}
+
+		function symEncryptAndUpload(email, callback) {
+			var itemKey = util.random(self.account.get('symKeySize')),
+				itemIV = util.random(self.account.get('symIvSize')),
+				keyIV = util.random(self.account.get('symIvSize')),
+				json = JSON.stringify(email),
+				envelope, encryptedKey;
+
+			// symmetrically encrypt item
+			crypto.aesEncrypt(json, itemKey, itemIV, function(ct) {
+
+				// encrypt item key for user
+				encryptedKey = crypto.aesEncryptForUserSync(itemKey, keyIV);
+				envelope = {
+					id: email.id,
+					crypto: 'aes-128-ccm',
+					ciphertext: ct,
+					encryptedKey: encryptedKey,
+					keyIV: keyIV,
+					itemIV: itemIV
+				};
+
+				// push encrypted item to cloud
+				cloudstorage.putEncryptedItem(envelope, 'email', self.account.get('emailAddress'), 'inbox', function(err) {
+					callback(err);
+				});
+			});
+		}
+	};
+
+	/**
 	 * Synchronize a folder's items from the cloud to the device-storage
 	 * @param folderName [String] The name of the folder e.g. 'inbox'
 	 */
 	this.syncFromCloud = function(folderName, callback) {
 		var folder, self = this;
 
-		cloudstorage.listEncryptedItems('email', this.account.get('emailAddress'), folderName, function(err, res) {
+		cloudstorage.listEncryptedItems('email', this.account.get('emailAddress'), folderName, function(err, data) {
 			// return if an error occured or if fetched list from cloud storage is empty
-			if (err || !res || res.status || res.length === 0) {
+			if (err || !data || data.status || data.length === 0) {
 				callback({
 					error: err
 				}); // error
@@ -120,7 +206,7 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, naclCrypto) 
 			// TODO: remove old folder items from devicestorage
 
 			// persist encrypted list in device storage
-			devicestorage.storeEcryptedList(res, 'email_' + folderName, function() {
+			devicestorage.storeEcryptedList(data, 'email_' + folderName, function() {
 				// remove cached folder in account model
 				folder = self.account.get('folders').where({
 					name: folderName
