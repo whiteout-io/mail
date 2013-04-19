@@ -18,9 +18,7 @@
 
 	app.model.AccountCollection = Backbone.Collection.extend({
 
-		model: app.model.Account,
-
-		findByName: function(key) {}
+		model: app.model.Account
 
 	});
 

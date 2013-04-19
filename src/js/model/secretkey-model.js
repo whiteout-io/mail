@@ -16,9 +16,7 @@
 
 	app.model.SecretKeyCollection = Backbone.Collection.extend({
 
-		model: app.model.SecretKey,
-
-		findByName: function(key) {}
+		model: app.model.SecretKey
 
 	});
 

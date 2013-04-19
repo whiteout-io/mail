@@ -14,9 +14,7 @@
 
 	app.model.FolderCollection = Backbone.Collection.extend({
 
-		model: app.model.Folder,
-
-		findByName: function(key) {}
+		model: app.model.Folder
 
 	});
 

@@ -20,9 +20,7 @@
 
 	app.model.EmailCollection = Backbone.Collection.extend({
 
-		model: app.model.Email,
-
-		findByName: function(key) {}
+		model: app.model.Email
 
 	});
 

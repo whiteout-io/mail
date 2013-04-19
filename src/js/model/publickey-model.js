@@ -15,9 +15,7 @@
 
 	app.model.PublicKeyCollection = Backbone.Collection.extend({
 
-		model: app.model.PublicKey,
-
-		findByName: function(key) {}
+		model: app.model.PublicKey
 
 	});
 
