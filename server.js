@@ -9,6 +9,8 @@ app = express();
 
 // Server setup
 app.configure(function() {
+	app.use(express.compress());
+
 	if (dev) {
 		// serve test files in development mode
 		console.log(' > Starting in development mode ...');
@@ -17,10 +19,10 @@ app.configure(function() {
 	} else {
 		// activate content security policy for production
 		app.use(function(req, res, next) {
-			var csp = "script-src 'self' 'unsafe-eval'; object-src 'none'; style-src 'self' 'unsafe-inline'";
-			res.set('Content-Security-Policy', csp);
-			res.set('X-Content-Security-Policy', csp);
-			res.set('X-WebKit-CSP', csp);
+			res.set('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-eval'; connect-src *; object-src 'none'; style-src 'self' 'unsafe-inline'");
+			res.set('X-Content-Security-Policy', "default-src *; script-src 'self' 'unsafe-eval'; options eval-script; object-src 'none'; style-src 'self' 'unsafe-inline'");
+			res.set('X-WebKit-CSP', "default-src 'self'; script-src 'self' 'unsafe-eval'; connect-src *; object-src 'none'; style-src 'self' 'unsafe-inline'");
+
 			return next();
 		});
 	}
