@@ -10,6 +10,6 @@
 		"url": "http://whiteout.io"
 	},
 	"appcache_path": "/html5-mail/src/manifest.appcache",
-	"csp": "script-src 'self' 'unsafe-eval'; object-src 'none'; style-src 'self' 'unsafe-inline'",
+	"csp": "default-src *; script-src 'self' 'unsafe-eval'; options eval-script; object-src 'none'; style-src 'self' 'unsafe-inline'",
 	"default_locale": "en"
 }
