@@ -168,7 +168,7 @@ app.dao.CloudStorage = function(window, $) {
 			keyStore = new app.dao.LocalStorageDAO(window),
 			storageId = emailAddress + '_encryptedSymmetricKey',
 			storedKey = keyStore.read(storageId),
-			uri;
+			gottenKey, uri;
 
 		uri = app.config.cloudUrl + '/secretkey/user/' + emailAddress;
 		$.ajax({
@@ -176,7 +176,7 @@ app.dao.CloudStorage = function(window, $) {
 			type: 'GET',
 			dataType: 'json',
 			success: function(keys) {
-				if (!keys || keys.length === 0) {
+				if (!keys) {
 					callback({
 						error: 'err',
 						status: 'Key not synced!'
@@ -184,7 +184,12 @@ app.dao.CloudStorage = function(window, $) {
 					return;
 				}
 
-				handleKey(keys[0], callback);
+				// use first key, if it exists
+				if (keys.length > 0) {
+					gottenKey = keys[0];
+				}
+
+				handleKey(gottenKey, callback);
 			},
 			error: function(xhr, textStatus, err) {
 				callback({
@@ -199,6 +204,10 @@ app.dao.CloudStorage = function(window, $) {
 				// no local key... persist fetched key
 				keyStore.persist(storageId, fetchedKey);
 				replaceCallback();
+
+			} else if (!fetchedKey && storedKey && storedKey.encryptedKey && storedKey.keyIV) {
+				// no key in cloud... push local key to cloud
+				self.putUserSecretKey(emailAddress, callback);
 
 			} else if (storedKey && fetchedKey && (storedKey.encryptedKey !== fetchedKey.encryptedKey || storedKey.keyIV !== fetchedKey.keyIV)) {
 				// local and fetched keys are not equal
@@ -219,7 +228,7 @@ app.dao.CloudStorage = function(window, $) {
 				}
 
 			} else {
-				// local and cloud keys are equal or cloud key is null
+				// local and cloud keys are equal
 				callback();
 			}
 		}
