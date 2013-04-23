@@ -133,9 +133,15 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, naclCrypto, 
 							return;
 						}
 
-						// TODO: delete items from virtual inbox
+						// delete asymmetricall encrypted item from virtual inbox
+						deleteVinboxItem(asymCt, function(err) {
+							if (err) {
+								callback(err);
+								return;
+							}
 
-						after(); // asynchronously iterate through objects
+							after(); // asynchronously iterate through objects
+						});
 					});
 				});
 			});
@@ -182,6 +188,12 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, naclCrypto, 
 				cloudstorage.putEncryptedItem(envelope, 'email', self.account.get('emailAddress'), 'inbox', function(err) {
 					callback(err);
 				});
+			});
+		}
+
+		function deleteVinboxItem(email, callback) {
+			cloudstorage.deleteEncryptedItem(email.id, 'email', self.account.get('emailAddress'), 'vinbox', function(err) {
+				callback(err);
 			});
 		}
 	};

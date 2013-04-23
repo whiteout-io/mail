@@ -93,6 +93,29 @@ app.dao.CloudStorage = function(window, $) {
 	};
 
 	/**
+	 * Delete an encrypted item from the cloud
+	 * @param type [String] The type of item e.g. 'email'
+	 */
+	this.deleteEncryptedItem = function(id, type, emailAddress, folderName, callback) {
+		var uri;
+
+		uri = app.config.cloudUrl + '/' + type + '/user/' + emailAddress + '/folder/' + folderName + '/' + id;
+		$.ajax({
+			url: uri,
+			type: 'DELETE',
+			success: function() {
+				callback();
+			},
+			error: function(xhr, textStatus, err) {
+				callback({
+					error: err,
+					status: textStatus
+				});
+			}
+		});
+	};
+
+	/**
 	 * Lists the encrypted items
 	 * @param type [String] The type of item e.g. 'email'
 	 * @param offset [Number] The offset of items to fetch (0 is the last stored item)
