@@ -43,7 +43,7 @@
 	$(document).ready(function() {
 		// are we running in native app or in browser?
 		var isBrowser = false;
-		if (document.URL.indexOf("http://") !== -1) {
+		if (document.URL.indexOf("http") === 0) {
 			isBrowser = true;
 		}
 
