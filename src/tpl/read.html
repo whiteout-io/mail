@@ -8,8 +8,12 @@
   <ul data-role="listview" data-theme="d" data-divider-theme="d" id="idEmailList" data-mini="true">
     
     <li style="border: 0px">
-			<h3>from: <%- from %></h3>
-			<p>to: <%- to %></p>
+			<h3>from: <%- from[0].name %> &lt;<%- from[0].address %>&gt;</h3>
+			<p>to:
+				<% _.each(to, function(o) { %>
+					<%- o.name %> &lt;<%- o.address %>&gt;
+				<% }); %>
+			</p>
 		</li>
 		
 		<li>
