@@ -81,12 +81,13 @@ app.crypto.Crypto = function(window, util) {
 	/**
 	 * Derive an asymmetric keypait from the user's secret
 	 */
-	this.deriveKeyPair = function(naclCrypto) {
-		var keys = naclCrypto.generateKeypair(symmetricUserKey);
-		if (keyId) {
-			keys.id = keyId;
-		}
-		return keys;
+	this.deriveKeyPair = function(naclCrypto, callback) {
+		naclCrypto.generateKeypair(symmetricUserKey, function(keys) {
+			if (keyId) {
+				keys.id = keyId;
+			}
+			callback(keys);
+		});
 	};
 
 	//

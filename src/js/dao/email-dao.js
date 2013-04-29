@@ -36,15 +36,18 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, naclCrypto, 
 
 		function initNaclCrypto() {
 			// derive keypair from user's secret key
-			keypair = crypto.deriveKeyPair(naclCrypto);
-			//publish public key to cloud service
-			var pubkey = new app.model.PublicKey({
-				_id: keypair.id,
-				userId: account.get('emailAddress'),
-				publicKey: keypair.boxPk
-			});
-			cloudstorage.putPublicKey(pubkey.toJSON(), function(err) {
-				callback(err);
+			crypto.deriveKeyPair(naclCrypto, function(generated) {
+				keypair = generated;
+
+				//publish public key to cloud service
+				var pubkey = new app.model.PublicKey({
+					_id: keypair.id,
+					userId: account.get('emailAddress'),
+					publicKey: keypair.boxPk
+				});
+				cloudstorage.putPublicKey(pubkey.toJSON(), function(err) {
+					callback(err);
+				});
 			});
 		}
 	};

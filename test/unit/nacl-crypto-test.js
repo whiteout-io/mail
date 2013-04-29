@@ -14,22 +14,30 @@ test("Init", 1, function() {
 	nacl_test.crypto = new app.crypto.NaclCrypto(nacl, nacl_test.util);
 });
 
-test("Generate Keypair from seed", 1, function() {
+asyncTest("Generate Keypair from seed", 1, function() {
 	// generate keypair from seed
 	var seed = nacl_test.util.random(128);
-	var keys = nacl_test.crypto.generateKeypair(seed);
-	ok(keys.boxSk && keys.boxPk && keys.id, "Keypair: " + JSON.stringify(keys));
+	nacl_test.crypto.generateKeypair(seed, function(keys) {
+		ok(keys.boxSk && keys.boxPk && keys.id, "Keypair: " + JSON.stringify(keys));
+
+		start();
+	});
 });
 
-test("Generate Keypair", 2, function() {
+asyncTest("Generate Keypair", 2, function() {
 	// generate keypair
-	var senderKeypair = nacl_test.crypto.generateKeypair();
-	ok(senderKeypair.boxSk && senderKeypair.boxPk, "Sender keypair: " + JSON.stringify(senderKeypair));
-	var recipientKeypair = nacl_test.crypto.generateKeypair();
-	ok(recipientKeypair.boxSk && recipientKeypair.boxPk, "Receiver keypair: " + JSON.stringify(recipientKeypair));
+	nacl_test.crypto.generateKeypair(null, function(senderKeypair) {
+		ok(senderKeypair.boxSk && senderKeypair.boxPk, "Sender keypair: " + JSON.stringify(senderKeypair));
 
-	nacl_test.senderKeypair = senderKeypair;
-	nacl_test.recipientKeypair = recipientKeypair;
+		nacl_test.crypto.generateKeypair(null, function(recipientKeypair) {
+			ok(recipientKeypair.boxSk && recipientKeypair.boxPk, "Receiver keypair: " + JSON.stringify(recipientKeypair));
+
+			nacl_test.senderKeypair = senderKeypair;
+			nacl_test.recipientKeypair = recipientKeypair;
+
+			start();
+		});
+	});
 });
 
 test("Asymmetric En/Decrypt (Synchronous)", 3, function() {

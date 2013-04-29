@@ -8,21 +8,49 @@ var NaclCrypto = function(nacl, util) {
 	 * Generates a baes64 encoded keypair for use with NaCl
 	 * @param seed [String] A base64 encoded (pseudo) random seed e.g. PBKDF2
 	 */
-	this.generateKeypair = function(seed) {
-		var keys;
+	this.generateKeypair = function(seed, callback) {
+		var keys, seedBuf;
 
 		if (seed) {
-			var seedBuf = nacl.encode_latin1(util.base642Str(seed));
-			keys = nacl.crypto_box_keypair_from_seed(seedBuf);
-		} else {
-			keys = nacl.crypto_box_keypair();
-		}
+			// do key deterministic derivation from pseudo random seed
+			seedBuf = nacl.encode_latin1(util.base642Str(seed));
 
-		return {
-			id: util.UUID(),
-			boxPk: util.str2Base64(nacl.decode_latin1(keys.boxPk)),
-			boxSk: util.str2Base64(nacl.decode_latin1(keys.boxSk))
-		};
+			if (Worker) {
+
+				var worker = new Worker(app.config.workerPath + '/crypto/nacl-worker.js');
+				worker.onmessage = function(e) {
+					callback({
+						id: util.UUID(),
+						boxPk: util.str2Base64(nacl.decode_latin1(e.data.boxPk)),
+						boxSk: util.str2Base64(nacl.decode_latin1(e.data.boxSk))
+					});
+				};
+				worker.postMessage({
+					type: 'keygen',
+					seed: seedBuf
+				});
+
+			} else {
+				// no web worker support
+				keys = nacl.crypto_box_keypair_from_seed(seedBuf);
+
+				callback({
+					id: util.UUID(),
+					boxPk: util.str2Base64(nacl.decode_latin1(keys.boxPk)),
+					boxSk: util.str2Base64(nacl.decode_latin1(keys.boxSk))
+				});
+			}
+
+		} else {
+			// generate keypiar from random values
+			keys = nacl.crypto_box_keypair();
+
+			callback({
+				id: util.UUID(),
+				boxPk: util.str2Base64(nacl.decode_latin1(keys.boxPk)),
+				boxSk: util.str2Base64(nacl.decode_latin1(keys.boxSk))
+			});
+		}
 	};
 
 	/**

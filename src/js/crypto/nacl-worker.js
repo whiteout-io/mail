@@ -13,7 +13,15 @@
 		var args = e.data,
 			output = null;
 
-		if (args.type === 'encrypt' && args.plaintext && args.nonce && args.recipientPk && args.senderSk) {
+		if (args.type === 'keygen') {
+			// generate keypair
+			if (args.seed) {
+				output = nacl.crypto_box_keypair_from_seed(args.seed);
+			} else {
+				output = nacl.crypto_box_keypair();
+			}
+
+		} else if (args.type === 'encrypt' && args.plaintext && args.nonce && args.recipientPk && args.senderSk) {
 			// start encryption
 			output = nacl.crypto_box(args.plaintext, args.nonce, args.recipientPk, args.senderSk);
 
