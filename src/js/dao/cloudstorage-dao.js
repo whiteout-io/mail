@@ -64,7 +64,7 @@ app.dao.CloudStorage = function(window, $) {
 	};
 
 	//
-	// Encrypted Mails
+	// Encrypted Mail storage
 	//
 
 	/**

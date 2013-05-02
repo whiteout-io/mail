@@ -233,4 +233,15 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, naclCrypto, 
 		});
 	};
 
+	/**
+	 * Send a plaintext Email to the user's outbox in the cloud
+	 */
+	this.sendEmail = function(email, callback) {
+		var userId = this.account.get('emailAddress');
+
+		cloudstorage.putEncryptedItem(email, 'email', userId, 'outbox', function(err) {
+			callback(err);
+		});
+	};
+
 };

@@ -1,21 +1,21 @@
 module("CloudStorage DAO");
 
 var cloudstoragedao_test = {
-	user: 'test@atlasdev.onmicrosoft.com',
-	password: 'Xoza76645',
+	user: 'email.dao.it.test@mail.whiteout.io',
+	password: 'hellosafe',
 	keySize: 128,
 	ivSize: 104
 };
 
 asyncTest("Init", 1, function() {
 	// init dependencies	
-	var util = new app.crypto.Util(window, uuid);
+	cloudstoragedao_test.util = new app.crypto.Util(window, uuid);
 	var jsonDao = new app.dao.LawnchairDAO(window);
-	var crypto = new app.crypto.Crypto(window, util);
-	var naclCrypto = new app.crypto.NaclCrypto(nacl, util);
-	cloudstoragedao_test.storage = new app.dao.DeviceStorage(util, crypto, jsonDao, null);
+	var crypto = new app.crypto.Crypto(window, cloudstoragedao_test.util);
+	var naclCrypto = new app.crypto.NaclCrypto(nacl, cloudstoragedao_test.util);
+	cloudstoragedao_test.storage = new app.dao.DeviceStorage(cloudstoragedao_test.util, crypto, jsonDao, null);
 	cloudstoragedao_test.cloudstorage = new app.dao.CloudStorage(window, $);
-	cloudstoragedao_test.emailDao = new app.dao.EmailDAO(_, crypto, cloudstoragedao_test.storage, cloudstoragedao_test.cloudstorage, naclCrypto, util);
+	cloudstoragedao_test.emailDao = new app.dao.EmailDAO(_, crypto, cloudstoragedao_test.storage, cloudstoragedao_test.cloudstorage, naclCrypto, cloudstoragedao_test.util);
 
 	// clear db before tests
 	jsonDao.clear(function(err) {
@@ -86,6 +86,23 @@ asyncTest("Init", 1, function() {
 
 	cloudstoragedao_test.emailDao.init(account, cloudstoragedao_test.password, function(err) {
 		ok(!err, 'Init complete');
+
+		start();
+	});
+});
+
+asyncTest("Send Plaintext Email item", 1, function() {
+
+	var email = new app.model.Email({
+		id: cloudstoragedao_test.util.UUID(),
+		from: cloudstoragedao_test.user, // sender address
+		to: [cloudstoragedao_test.user], // list of receivers
+		subject: 'Client Email DAO Test', // Subject line
+		body: 'Hello world' // plaintext body
+	});
+
+	cloudstoragedao_test.emailDao.sendEmail(email, function(err) {
+		ok(!err, 'Email sent');
 
 		start();
 	});
