@@ -239,6 +239,9 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, naclCrypto, 
 	this.sendEmail = function(email, callback) {
 		var userId = this.account.get('emailAddress');
 
+		// generate a new UUID for the new email
+		email.set('id', util.UUID());
+
 		cloudstorage.putEncryptedItem(email, 'email', userId, 'outbox', function(err) {
 			callback(err);
 		});

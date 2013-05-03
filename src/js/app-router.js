@@ -29,8 +29,13 @@
 			this.changePage(loginView);
 		},
 
-		compose: function() {
-			var composeView = new app.view.ComposeView();
+		compose: function(to, reSubject, reBody) {
+			var composeView = new app.view.ComposeView({
+				to: to,
+				reSubject: reSubject,
+				reBody: reBody,
+				dao: this.emailDao
+			});
 			this.changePage(composeView);
 		},
 
