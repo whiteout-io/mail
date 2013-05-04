@@ -18,11 +18,43 @@
 
 			page.html(this.template());
 
+			// prefill fields for reply
+			if (this.replyTo) {
+				self.fillFields();
+			}
+
 			page.find('#sendBtn').on('vmousedown', function() {
 				self.sendEmail();
 			});
 
 			return this;
+		},
+
+		fillFields: function() {
+			var page = $(this.el),
+				re = this.replyTo,
+				from = re.get('from')[0],
+				subject = re.get('subject');
+
+			// fill recipient field
+			var replyToAddress = from.address;
+			page.find('#toInput').val(replyToAddress);
+
+			// fill subject
+			subject = 'Re: ' + ((subject) ? subject.replace('Re: ', '') : '');
+			page.find('#subjectInput').val(subject);
+
+			// fill text body
+			var body = '\n\n' + re.get('sentDate') + ' ' + from.name + ' <' + from.address + '>\n';
+			var bodyRows = re.get('body').split('\n');
+			var isHtml = false;
+			_.each(bodyRows, function(row) {
+				if (row.indexOf('<') === 0) {
+					isHtml = true;
+				}
+				body += (!isHtml) ? '> ' + row + '\n' : '';
+			});
+			page.find('#bodyTextarea').text(body);
 		},
 
 		/**
@@ -44,7 +76,7 @@
 				return;
 			}
 
-			var signature = '\n\nSent with whiteout.io - get your mailbox for end-2-end encrypted messaging!\nhttps://mail.whiteout.io';
+			var signature = '\n\nSent with whiteout mail - get your free mailbox for end-2-end encrypted messaging!\nhttps://mail.whiteout.io';
 
 			var email = new app.model.Email({
 				from: self.dao.account.get('emailAddress'),
@@ -60,7 +92,7 @@
 					return;
 				}
 
-				//window.history.back();
+				window.history.back();
 			});
 		}
 

@@ -9,7 +9,12 @@
 		},
 
 		render: function(eventName) {
-			$(this.el).html(this.template(this.model.toJSON()));
+			var params = this.model.toJSON();
+			params.account = this.options.dao.account.get('emailAddress');
+			params.folder = this.options.folder;
+			params.id = encodeURIComponent(params.id);
+
+			$(this.el).html(this.template(params));
 			this.renderBody();
 
 			return this;

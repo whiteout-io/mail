@@ -8,7 +8,8 @@
 			'compose': 'compose',
 			'accounts/:userId/folders': 'folders',
 			'accounts/:userId/folders/:folder': 'messagelist',
-			'accounts/:userId/folders/:folder/read/:messageId': 'read'
+			'accounts/:userId/folders/:folder/read/:messageId': 'read',
+			'accounts/:userId/folders/:folder/reply/:messageId': 'compose'
 		},
 
 		initialize: function() {},
