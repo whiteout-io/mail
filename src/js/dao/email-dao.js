@@ -239,12 +239,34 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, naclCrypto, 
 	this.sendEmail = function(email, callback) {
 		var userId = this.account.get('emailAddress');
 
+		// validate email addresses
+		_.each(email.get('to'), function(address) {
+			if (!validateEmail(address)) {
+				callback({
+					errMsg: 'Invalid recipient: ' + address
+				});
+				return;
+			}
+		});
+		if (!validateEmail(email.get('from'))) {
+			callback({
+				errMsg: 'Invalid sender: ' + email.from
+			});
+			return;
+		}
+
 		// generate a new UUID for the new email
 		email.set('id', util.UUID());
 
+		// send email to cloud service
 		cloudstorage.putEncryptedItem(email, 'email', userId, 'outbox', function(err) {
 			callback(err);
 		});
+
+		function validateEmail(email) {
+			var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+			return re.test(email);
+		}
 	};
 
 };

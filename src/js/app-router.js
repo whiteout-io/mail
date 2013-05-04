@@ -29,11 +29,10 @@
 			this.changePage(loginView);
 		},
 
-		compose: function(to, reSubject, reBody) {
+		compose: function(userId, folder, messageId) {
 			var composeView = new app.view.ComposeView({
-				to: to,
-				reSubject: reSubject,
-				reBody: reBody,
+				folder: folder,
+				messageId: decodeURIComponent(messageId),
 				dao: this.emailDao
 			});
 			this.changePage(composeView);
@@ -64,7 +63,7 @@
 				dao: this.emailDao
 			});
 			this.changePage(readView);
-			readView.renderBody();
+			readView.renderBody(true);
 		},
 
 		changePage: function(page) {

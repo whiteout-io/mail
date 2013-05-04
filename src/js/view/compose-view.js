@@ -6,6 +6,10 @@
 		initialize: function(args) {
 			this.template = _.template(app.util.tpl.get('compose'));
 			this.dao = args.dao;
+			if (args.folder && args.messageId) {
+				// fetch reply-to email model
+				this.replyTo = args.dao.getItem(args.folder, args.messageId);
+			}
 		},
 
 		render: function(eventName) {
@@ -40,7 +44,7 @@
 				return;
 			}
 
-			var signature = '\n\nSent with https://mail.whiteout.io - get your mailbox for end-2-end encrypted messaging!';
+			var signature = '\n\nSent with whiteout.io - get your mailbox for end-2-end encrypted messaging!\nhttps://mail.whiteout.io';
 
 			var email = new app.model.Email({
 				from: self.dao.account.get('emailAddress'),
