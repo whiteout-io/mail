@@ -240,14 +240,18 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, naclCrypto, 
 		var userId = this.account.get('emailAddress');
 
 		// validate email addresses
+		var invalidRecipient;
 		_.each(email.get('to'), function(address) {
 			if (!validateEmail(address)) {
-				callback({
-					errMsg: 'Invalid recipient: ' + address
-				});
-				return;
+				invalidRecipient = address;
 			}
 		});
+		if (invalidRecipient) {
+			callback({
+				errMsg: 'Invalid recipient: ' + invalidRecipient
+			});
+			return;
+		}
 		if (!validateEmail(email.get('from'))) {
 			callback({
 				errMsg: 'Invalid sender: ' + email.from
