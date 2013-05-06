@@ -49,7 +49,7 @@
 			var bodyRows = re.get('body').split('\n');
 			var isHtml = false;
 			_.each(bodyRows, function(row) {
-				if (row.indexOf('<') === 0) {
+				if (row.indexOf('</') !== -1) {
 					isHtml = true;
 				}
 				body += (!isHtml) ? '> ' + row + '\n' : '';
