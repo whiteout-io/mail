@@ -41,7 +41,15 @@ app.crypto.Crypto = function(window, util) {
 				keyStore.persist(storageId, storedKey);
 			} else {
 				// decrypt key
-				symmetricUserKey = aes.decrypt(storedKey.encryptedKey, pbkdf2, storedKey.keyIV);
+				try {
+					symmetricUserKey = aes.decrypt(storedKey.encryptedKey, pbkdf2, storedKey.keyIV);
+				} catch (ex) {
+					callback({
+						errMsg: 'Wrong password!'
+					});
+					return;
+				}
+
 			}
 			keyId = storedKey._id;
 

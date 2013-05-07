@@ -29,7 +29,12 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, naclCrypto, 
 		});
 
 		function initCrypto() {
-			crypto.init(account.get('emailAddress'), password, account.get('symKeySize'), account.get('symIvSize'), function() {
+			crypto.init(account.get('emailAddress'), password, account.get('symKeySize'), account.get('symIvSize'), function(err) {
+				if (err) {
+					callback(err);
+					return;
+				}
+
 				initNaclCrypto();
 			});
 		}

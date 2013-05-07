@@ -39,8 +39,13 @@
 				textVisible: true,
 				theme: 'c'
 			});
-			this.dao.init(account, password, function() {
+			this.dao.init(account, password, function(err) {
 				$.mobile.loading('hide');
+				if (err) {
+					window.alert(err.errMsg);
+					return;
+				}
+
 				window.location = '#accounts/' + account.get('emailAddress') + '/folders';
 			});
 		}
