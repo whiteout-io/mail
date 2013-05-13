@@ -1,3 +1,5 @@
+(function(window) {
+
 /**
  * Utility functions for web applications.
  *
@@ -5,7 +7,7 @@
  *
  * Copyright (c) 2010-2012 Digital Bazaar, Inc.
  */
-(function(window) {
+(function() {
 /* ########## Begin module implementation ########## */
 function initModule(forge) {
 
@@ -11655,4 +11657,6 @@ if(nodeDefine || typeof define === 'function') {
     };
   });
 }
+})();
+
 })((typeof window !== 'undefined') ? window : null);
