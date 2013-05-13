@@ -7,17 +7,13 @@ var rsa_test = {
 
 asyncTest("Generate RSA Keypair", 1, function() {
 
-	forge.pki.rsa.generateKeyPair({
+	forge.rsa.generateKeyPair({
 		bits: rsa_test.keySize,
 		workerScript: app.config.workerPath + '/../lib/forge/prime.worker.js'
 	}, function(err, keypair) {
 		ok(!err && keypair);
-		console.log(keypair);
 
 		rsa_test.keypair = keypair;
-
-		var pkPem = forge.pki.publicKeyToPem(keypair.publicKey);
-		var pk = forge.pki.publicKeyFromPem(pkPem);
 
 		start();
 	});
