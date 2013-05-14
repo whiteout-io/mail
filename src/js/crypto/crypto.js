@@ -210,58 +210,59 @@ app.crypto.Crypto = function(window, util) {
 	};
 
 	this.aesEncryptListForUser = function(list, callback) {
-		var i, envelope, envelopes = [],
+		var envelope, envelopes = [],
 			self = this;
 
 		// package objects into batchable envelope format
-		for (i = 0; i < list.length; i++) {
+		list.forEach(function(i) {
 			envelope = {
-				id: list[i].id,
-				plaintext: list[i],
+				id: i.id,
+				plaintext: i,
 				key: util.random(self.keySize),
 				iv: util.random(self.ivSize)
 			};
 			envelopes.push(envelope);
-		}
+		});
 
 		// encrypt list
 		this.aesEncryptList(envelopes, function(encryptedList) {
 
 			// encrypt keys for user
-			for (i = 0; i < encryptedList.length; i++) {
+			encryptedList.forEach(function(i) {
 				// process new values
-				encryptedList[i].itemIV = encryptedList[i].iv;
-				encryptedList[i].keyIV = util.random(self.ivSize);
-				encryptedList[i].encryptedKey = self.aesEncryptForUserSync(encryptedList[i].key, encryptedList[i].keyIV);
+				i.itemIV = i.iv;
+				i.keyIV = util.random(self.ivSize);
+				i.encryptedKey = self.aesEncryptForUserSync(i.key, i.keyIV);
 				// delete old ones
-				delete encryptedList[i].iv;
-				delete encryptedList[i].key;
-			}
+				delete i.iv;
+				delete i.key;
+			});
 
 			callback(encryptedList);
 		});
 	};
 
 	this.aesDecryptListForUser = function(encryptedList, callback) {
-		var i, list = [];
+		var list = [],
+			self = this;
 
 		// decrypt keys for user
-		for (i = 0; i < encryptedList.length; i++) {
+		encryptedList.forEach(function(i) {
 			// decrypt item key
-			encryptedList[i].key = this.aesDecryptForUserSync(encryptedList[i].encryptedKey, encryptedList[i].keyIV);
-			encryptedList[i].iv = encryptedList[i].itemIV;
+			i.key = self.aesDecryptForUserSync(i.encryptedKey, i.keyIV);
+			i.iv = i.itemIV;
 			// delete old values
-			delete encryptedList[i].keyIV;
-			delete encryptedList[i].itemIV;
-			delete encryptedList[i].encryptedKey;
-		}
+			delete i.keyIV;
+			delete i.itemIV;
+			delete i.encryptedKey;
+		});
 
 		// decrypt list
 		this.aesDecryptList(encryptedList, function(decryptedList) {
 			// add plaintext to list
-			for (i = 0; i < decryptedList.length; i++) {
-				list.push(decryptedList[i].plaintext);
-			}
+			decryptedList.forEach(function(i) {
+				list.push(i.plaintext);
+			});
 
 			callback(list);
 		});

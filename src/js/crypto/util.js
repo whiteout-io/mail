@@ -44,19 +44,19 @@ var Util = function(window, uuid, crypt) {
 	 * @list list [Array] The list of items to encrypt
 	 */
 	this.encryptList = function(aes, list) {
-		var i, json, ct, outList = [];
+		var json, ct, outList = [];
 
-		for (i = 0; i < list.length; i++) {
+		list.forEach(function(i) {
 			// stringify to JSON before encryption
-			json = JSON.stringify(list[i].plaintext);
-			ct = aes.encrypt(json, list[i].key, list[i].iv);
+			json = JSON.stringify(i.plaintext);
+			ct = aes.encrypt(json, i.key, i.iv);
 			outList.push({
-				id: list[i].id,
+				id: i.id,
 				ciphertext: ct,
-				key: list[i].key,
-				iv: list[i].iv
+				key: i.key,
+				iv: i.iv
 			});
-		}
+		});
 
 		return outList;
 	};
@@ -67,19 +67,19 @@ var Util = function(window, uuid, crypt) {
 	 * @list list [Array] The list of items to decrypt
 	 */
 	this.decryptList = function(aes, list) {
-		var i, json, pt, outList = [];
+		var json, pt, outList = [];
 
-		for (i = 0; i < list.length; i++) {
+		list.forEach(function(i) {
 			// decrypt JSON and parse to object literal
-			json = aes.decrypt(list[i].ciphertext, list[i].key, list[i].iv);
+			json = aes.decrypt(i.ciphertext, i.key, i.iv);
 			pt = JSON.parse(json);
 			outList.push({
-				id: list[i].id,
+				id: i.id,
 				plaintext: pt,
-				key: list[i].key,
-				iv: list[i].iv
+				key: i.key,
+				iv: i.iv
 			});
-		}
+		});
 
 		return outList;
 	};
