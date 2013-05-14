@@ -86,7 +86,7 @@ test("AES-128-CBC En/Decrypt", 1, function() {
 	deCipher.update(forge.util.createBuffer(enCipher.output.data));
 	deCipher.finish();
 
-	equal(input, deCipher.output, 'En/Decrypt');
+	equal(input, deCipher.output, 'En/Decrypt length: ' + input.length);
 });
 
 test("PBKDF2", 1, function() {
