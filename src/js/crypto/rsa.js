@@ -73,20 +73,34 @@ app.crypto.RSA = function(forge) {
 		return privateKey.decrypt(ctUtf8);
 	};
 
-	this.sign = function(input) {
+	/**
+	 * Signs an Array of Base64 encoded parts with the private key
+	 * @param parts [Array] Array of Base64 encoded parts
+	 * @return [String] The Base64 encoded signature
+	 */
+	this.sign = function(parts) {
 		var sha = forge.md.sha256.create();
-		sha.update(input);
+		parts.forEach(function(i) {
+			sha.update(forge.util.decode64(i));
+		});
 
-		var sig = privateKey.sign(sha);
-		return forge.util.encode64(sig);
+		return forge.util.encode64(privateKey.sign(sha));
 	};
 
-	this.verify = function(input, sig) {
+	/**
+	 * Verifies an Array of Base64 encoded parts with the public key
+	 * @param parts [Array] Array of Base64 encoded parts
+	 * @param sig [String] The Base64 encoded signatrure
+	 * @return [bool] if the verification was successful
+	 */
+	this.verify = function(parts, sig) {
 		// parse base64 signature to utf8
 		var sigUtf8 = forge.util.decode64(sig);
 
 		var sha = forge.md.sha256.create();
-		sha.update(input);
+		parts.forEach(function(i) {
+			sha.update(forge.util.decode64(i));
+		});
 
 		return publicKey.verify(sha.digest().getBytes(), sigUtf8);
 	};

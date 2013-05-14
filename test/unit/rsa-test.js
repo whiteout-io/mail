@@ -40,11 +40,11 @@ test("Decrypt", 1, function() {
 });
 
 test("Sign", 1, function() {
-	rsa_test.sig = rsa_test.rsa.sign(rsa_test.test_message);
+	rsa_test.sig = rsa_test.rsa.sign([btoa('iv'), btoa(rsa_test.test_message)]);
 	ok(rsa_test.sig);
 });
 
 test("Verify", 1, function() {
-	var res = rsa_test.rsa.verify(rsa_test.test_message, rsa_test.sig);
+	var res = rsa_test.rsa.verify([btoa('iv'), btoa(rsa_test.test_message)], rsa_test.sig);
 	ok(res);
 });
