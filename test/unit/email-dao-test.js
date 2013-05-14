@@ -4,7 +4,7 @@ var emaildao_test = {
 	user: 'test@atlasdev.onmicrosoft.com',
 	password: 'Xoza76645',
 	keySize: 128,
-	ivSize: 104
+	ivSize: 128
 };
 
 asyncTest("Init", 2, function() {

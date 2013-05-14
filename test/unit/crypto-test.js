@@ -4,7 +4,7 @@ var crypto_test = {
 	user: 'crypto_test@example.com',
 	password: 'Password',
 	keySize: 128,
-	ivSize: 104
+	ivSize: 128
 };
 
 asyncTest("Init", 2, function() {
@@ -54,7 +54,7 @@ asyncTest("En/Decrypt for User", 4, function() {
 	});
 });
 
-asyncTest("CCM mode (Async/Worker)", 2, function() {
+asyncTest("AES (Async/Worker)", 2, function() {
 	var secret = 'Big secret';
 
 	var key = crypto_test.util.random(crypto_test.keySize);
@@ -71,7 +71,7 @@ asyncTest("CCM mode (Async/Worker)", 2, function() {
 	});
 });
 
-asyncTest("CCM batch mode (Async/Worker)", 5, function() {
+asyncTest("AES batch (Async/Worker)", 5, function() {
 	// generate test data
 	var collection, list, td = new TestData();
 
@@ -92,7 +92,7 @@ asyncTest("CCM batch mode (Async/Worker)", 5, function() {
 	});
 });
 
-asyncTest("CCM batch mode for User (Async/Worker)", 5, function() {
+asyncTest("AES batch for User (Async/Worker)", 5, function() {
 	// generate test data
 	var collection, list, td = new TestData();
 
