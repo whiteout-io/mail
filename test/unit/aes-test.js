@@ -1,16 +1,10 @@
 module("AES Crypto");
 
 var aes_test = {
-	keySize: 128
+	keySize: 128,
+	util: new app.crypto.Util(window, uuid),
+	test_message: new TestData().generateBigString(1000)
 };
-
-test("Init", 1, function() {
-	// init dependencies
-	aes_test.util = new app.crypto.Util(window, uuid);
-	ok(aes_test.util, 'Util');
-	// generate test data
-	aes_test.test_message = new TestData().generateBigString(1000);
-});
 
 test("CBC mode", 4, function() {
 	var aes = new app.crypto.AesCBC(forge);

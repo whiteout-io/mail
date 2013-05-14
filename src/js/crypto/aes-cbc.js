@@ -30,7 +30,6 @@ app.crypto.AesCBC = function(forge) {
 	 * @param ciphertext [String] The base64 encoded ciphertext
 	 * @param key [String] The base64 encoded key
 	 * @param iv [String] The base64 encoded IV
-	 * @param iv [String] The base64 encoded HMAC
 	 * @return [String] The decrypted plaintext in UTF8
 	 */
 	this.decrypt = function(ciphertext, key, iv) {
