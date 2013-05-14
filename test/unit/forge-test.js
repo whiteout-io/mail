@@ -85,23 +85,30 @@ test("RSA Verify", 1, function() {
 	ok(res);
 });
 
-test("AES-128-CBC En/Decrypt", 1, function() {
+test("AES-128-CBC Encrypt", 1, function() {
 	var util = new app.crypto.Util(window, uuid);
 
-	var key = util.base642Str(util.random(forge_aes_test.keySize));
-	var iv = util.base642Str(util.random(forge_aes_test.keySize));
+	forge_aes_test.key = util.base642Str(util.random(forge_aes_test.keySize));
+	forge_aes_test.iv = util.base642Str(util.random(forge_aes_test.keySize));
 	var input = forge_aes_test.test_message;
 
 	// encrypt
-	var enCipher = forge.aes.createEncryptionCipher(key);
-	enCipher.start(iv);
+	var enCipher = forge.aes.createEncryptionCipher(forge_aes_test.key);
+	enCipher.start(forge_aes_test.iv);
 	enCipher.update(forge.util.createBuffer(input));
 	enCipher.finish();
 
+	forge_aes_test.ct = enCipher.output.getBytes();
+	ok(forge_aes_test.ct);
+});
+
+test("AES-128-CBC Decrypt", 1, function() {
+	var input = forge_aes_test.test_message;
+
 	// decrypt
-	var deCipher = forge.aes.createDecryptionCipher(key);
-	deCipher.start(iv);
-	deCipher.update(forge.util.createBuffer(enCipher.output.getBytes()));
+	var deCipher = forge.aes.createDecryptionCipher(forge_aes_test.key);
+	deCipher.start(forge_aes_test.iv);
+	deCipher.update(forge.util.createBuffer(forge_aes_test.ct));
 	deCipher.finish();
 
 	equal(input, deCipher.output, 'En/Decrypt length: ' + input.length);
