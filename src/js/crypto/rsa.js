@@ -4,6 +4,8 @@
 app.crypto.RSA = function(forge) {
 	'use strict';
 
+	var utl = forge.util;
+
 	var publicKey = null,
 		privateKey = null;
 
@@ -54,23 +56,26 @@ app.crypto.RSA = function(forge) {
 
 	/**
 	 * Encrypt a String using RSA with PKCS#1 v1.5 padding
-	 * @param plaintext [String] The input string in UTF8
+	 * @param plaintext [String] The input string in UTF-16
 	 * @return [String] The base64 encoded ciphertext
 	 */
 	this.encrypt = function(plaintext) {
-		var ct = publicKey.encrypt(plaintext);
-		return forge.util.encode64(ct);
+		// encode plaintext to utf8 and encrypt
+		var ct = publicKey.encrypt(utl.encodeUtf8(plaintext));
+		// encode ciphtext to base64
+		return utl.encode64(ct);
 	};
 
 	/**
 	 * Decrypt a String using RSA with PKCS#1 v1.5 padding
 	 * @param ciphertext [String] The base64 encoded ciphertext
-	 * @return [String] The decrypted plaintext in UTF8
+	 * @return [String] The decrypted plaintext in UTF-16
 	 */
 	this.decrypt = function(ciphertext) {
-		// parse base64 input to utf8
-		var ctUtf8 = forge.util.decode64(ciphertext);
-		return privateKey.decrypt(ctUtf8);
+		// decode base64 ciphertext to utf8
+		var ctUtf8 = utl.decode64(ciphertext);
+		// decrypt and decode to utf16
+		return utl.decodeUtf8(privateKey.decrypt(ctUtf8));
 	};
 
 	/**
@@ -81,10 +86,10 @@ app.crypto.RSA = function(forge) {
 	this.sign = function(parts) {
 		var sha = forge.md.sha256.create();
 		parts.forEach(function(i) {
-			sha.update(forge.util.decode64(i));
+			sha.update(utl.decode64(i));
 		});
 
-		return forge.util.encode64(privateKey.sign(sha));
+		return utl.encode64(privateKey.sign(sha));
 	};
 
 	/**
@@ -95,11 +100,11 @@ app.crypto.RSA = function(forge) {
 	 */
 	this.verify = function(parts, sig) {
 		// parse base64 signature to utf8
-		var sigUtf8 = forge.util.decode64(sig);
+		var sigUtf8 = utl.decode64(sig);
 
 		var sha = forge.md.sha256.create();
 		parts.forEach(function(i) {
-			sha.update(forge.util.decode64(i));
+			sha.update(utl.decode64(i));
 		});
 
 		return publicKey.verify(sha.digest().getBytes(), sigUtf8);
