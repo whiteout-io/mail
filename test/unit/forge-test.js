@@ -76,7 +76,10 @@ test("RSA Decrypt", 1, function() {
 });
 
 test("RSA Sign", 1, function() {
-	rsa_test.sig = rsa_test.keypair.privateKey.sign(rsa_test.md);
+	var sha = forge.md.sha256.create();
+	sha.update(forge_aes_test.test_message);
+
+	rsa_test.sig = rsa_test.keypair.privateKey.sign(sha);
 	ok(rsa_test.sig);
 });
 
