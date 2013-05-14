@@ -5,6 +5,11 @@ var rsa_test = {
 	test_message: '06a9214036b8a15b512e03d534120006'
 };
 
+var forge_aes_test = {
+	keySize: 128,
+	test_message: new TestData().generateBigString(1000)
+};
+
 asyncTest("Generate RSA Keypair", 1, function() {
 
 	forge.rsa.generateKeyPair({
@@ -32,7 +37,7 @@ test("RSA Decrypt", 1, function() {
 
 test("SHA-256 Hash", 1, function() {
 	rsa_test.md = forge.md.sha256.create();
-	rsa_test.md.update(rsa_test.ct);
+	rsa_test.md.update(forge_aes_test.test_message);
 	var digest = rsa_test.md.digest().data;
 	ok(digest);
 });
@@ -46,11 +51,6 @@ test("RSA Verify", 1, function() {
 	var res = rsa_test.keypair.publicKey.verify(rsa_test.md.digest().getBytes(), rsa_test.sig);
 	ok(res);
 });
-
-var forge_aes_test = {
-	keySize: 128,
-	test_message: new TestData().generateBigString(1000)
-};
 
 test("HMAC SHA-256", 1, function() {
 	var util = new app.crypto.Util(window, uuid);
