@@ -2,7 +2,7 @@ module("RSA Crypto");
 
 var rsa_test = {
 	keySize: 1024,
-	rsa: new app.crypto.RSA(forge),
+	rsa: new app.crypto.RSA(forge, new app.crypto.Util(window, uuid)),
 	test_message: '06a9214036b8a15b512e03d534120006'
 };
 

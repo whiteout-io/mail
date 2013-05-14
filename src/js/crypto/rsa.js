@@ -1,24 +1,24 @@
 /**
  * A Wrapper for Forge's RSA encryption
  */
-app.crypto.RSA = function(forge) {
+app.crypto.RSA = function(forge, util) {
 	'use strict';
 
 	var utl = forge.util;
 
-	var publicKey = null,
-		privateKey = null;
+	var keypair = null;
 
 	/**
 	 * Initializes the RSA module by passing the user's keypair
 	 * The private key is option and required only for decryption
 	 * and signing
 	 */
-	this.init = function(pubkeyPem, privkeyPem) {
-		publicKey = forge.pki.publicKeyFromPem(pubkeyPem);
+	this.init = function(pubkeyPem, privkeyPem, keyId) {
+		keypair.publicKey = forge.pki.publicKeyFromPem(pubkeyPem);
 		if (privkeyPem) {
-			privateKey = forge.pki.privateKeyFromPem(privkeyPem);
+			keypair.privateKey = forge.pki.privateKeyFromPem(privkeyPem);
 		}
+		keypair._id = keyId;
 	};
 
 	/**
@@ -28,8 +28,8 @@ app.crypto.RSA = function(forge) {
 		forge.rsa.generateKeyPair({
 			bits: keySize,
 			workerScript: app.config.workerPath + '/../../lib/forge/prime.worker.js'
-		}, function(err, keypair) {
-			if (err || !keypair.publicKey || !keypair.privateKey) {
+		}, function(err, newKeypair) {
+			if (err || !newKeypair || !newKeypair.publicKey || !newKeypair.privateKey) {
 				callback({
 					errMsg: 'RSA keygeneration failed!',
 					err: err
@@ -37,8 +37,9 @@ app.crypto.RSA = function(forge) {
 				return;
 			}
 
-			publicKey = keypair.publicKey;
-			privateKey = keypair.privateKey;
+			keypair = newKeypair;
+			// generate unique keypair ID
+			keypair._id = util.UUID();
 
 			callback();
 		});
@@ -49,8 +50,9 @@ app.crypto.RSA = function(forge) {
 	 */
 	this.exportKeys = function() {
 		return {
-			pubkeyPem: forge.pki.publicKeyToPem(publicKey),
-			privkeyPem: forge.pki.privateKeyToPem(privateKey)
+			_id: keypair._id,
+			pubkeyPem: forge.pki.publicKeyToPem(keypair.publicKey),
+			privkeyPem: forge.pki.privateKeyToPem(keypair.privateKey)
 		};
 	};
 
@@ -61,7 +63,7 @@ app.crypto.RSA = function(forge) {
 	 */
 	this.encrypt = function(plaintext) {
 		// encode plaintext to utf8 and encrypt
-		var ct = publicKey.encrypt(utl.encodeUtf8(plaintext));
+		var ct = keypair.publicKey.encrypt(utl.encodeUtf8(plaintext));
 		// encode ciphtext to base64
 		return utl.encode64(ct);
 	};
@@ -75,7 +77,7 @@ app.crypto.RSA = function(forge) {
 		// decode base64 ciphertext to utf8
 		var ctUtf8 = utl.decode64(ciphertext);
 		// decrypt and decode to utf16
-		return utl.decodeUtf8(privateKey.decrypt(ctUtf8));
+		return utl.decodeUtf8(keypair.privateKey.decrypt(ctUtf8));
 	};
 
 	/**
@@ -91,7 +93,7 @@ app.crypto.RSA = function(forge) {
 		});
 
 		// encode signature to base64
-		return utl.encode64(privateKey.sign(sha));
+		return utl.encode64(keypair.privateKey.sign(sha));
 	};
 
 	/**
@@ -110,7 +112,7 @@ app.crypto.RSA = function(forge) {
 			sha.update(utl.decode64(i));
 		});
 
-		return publicKey.verify(sha.digest().getBytes(), sigUtf8);
+		return keypair.publicKey.verify(sha.digest().getBytes(), sigUtf8);
 	};
 
 };

@@ -5,56 +5,80 @@
 app.crypto.Crypto = function(window, util) {
 	'use strict';
 
-	var symmetricUserKey = null, // the user's secret key used to encrypt item-keys
-		keyId = null, // the key ID linking the user's key set
-		aes = new app.crypto.AesCBC(forge); // use AES-CBC mode by default
+	var keypair = null, // the user's keys used to encrypt item-keys
+		aes = new app.crypto.AesCBC(forge), // use AES-CBC mode by default
+		rsa = new app.crypto.RSA(forge, util); // use RSA for asym. crypto
 
 	/**
 	 * Initializes the crypto modules by fetching the user's
 	 * encrypted secret key from storage and storing it in memory.
 	 */
-	this.init = function(emailAddress, password, keySize, ivSize, callback) {
-		this.emailAddress = emailAddress;
-		this.keySize = keySize;
-		this.ivSize = ivSize;
+	this.init = function(args, callback) {
+		var self = this;
+
+		this.emailAddress = args.emailAddress;
+		this.keySize = args.keySize;
+		this.ivSize = args.keySize;
 
 		// derive PBKDF2 from password in web worker thread
-		this.deriveKey(password, keySize, function(pbkdf2) {
+		this.deriveKey(args.password, args.keySize, function(pbkdf2) {
 
 			// fetch user's encrypted secret key from keychain/storage
 			var keyStore = new app.dao.LocalStorageDAO(window);
-			var storageId = emailAddress + '_encryptedSymmetricKey';
-			var storedKey = keyStore.read(storageId);
+			var storageId = args.emailAddress + '_encryptedKeypair';
+			var storedKeypair = keyStore.read(storageId);
 
 			// check if key exists
-			if (!storedKey) {
-				// generate key, encrypt and persist if none exists
-				symmetricUserKey = util.random(keySize);
-				var iv = util.random(ivSize);
-				var key = aes.encrypt(symmetricUserKey, pbkdf2, iv);
-				storedKey = {
-					_id: util.UUID(),
-					userId: emailAddress,
-					encryptedKey: key,
-					keyIV: iv
-				};
-				keyStore.persist(storageId, storedKey);
+			if (!storedKeypair) {
+				// generate keys, encrypt and persist if none exists
+				generateKeypair(keyStore, storageId, pbkdf2);
 			} else {
 				// decrypt key
-				try {
-					symmetricUserKey = aes.decrypt(storedKey.encryptedKey, pbkdf2, storedKey.keyIV);
-				} catch (ex) {
-					callback({
-						errMsg: 'Wrong password!'
-					});
+				decryptKeypair(storedKeypair, pbkdf2);
+			}
+
+		});
+
+		function generateKeypair(keyStore, storageId, pbkdf2) {
+			// generate RSA keypair in web worker
+			rsa.generateKeypair(rsa_test.keySize, function(err) {
+				if (err) {
+					callback(err);
 					return;
 				}
 
+				keypair = rsa.exportKeys();
+
+				// encrypt keypair
+				var iv = util.random(self.ivSize);
+				var encryptedKeys = aes.encrypt(JSON.stringify(keypair), pbkdf2, iv);
+
+				// store encrypted keypair
+				var newStoredKeypair = {
+					_id: keypair._id,
+					userId: args.emailAddress,
+					encryptedKeys: encryptedKeys,
+					keyIV: iv
+				};
+				keyStore.persist(storageId, newStoredKeypair);
+
+				callback();
+			});
+		}
+
+		function decryptKeypair(storedKeypair, pbkdf2) {
+			try {
+				var keypairJson = aes.decrypt(storedKeypair.encryptedKeys, pbkdf2, storedKeypair.keyIV);
+				keypair = JSON.parse(keypairJson);
+			} catch (ex) {
+				callback({
+					errMsg: 'Wrong password!'
+				});
+				return;
 			}
-			keyId = storedKey._id;
 
 			callback();
-		});
+		}
 	};
 
 	/**
@@ -84,18 +108,6 @@ app.crypto.Crypto = function(window, util) {
 			var key = pbkdf2.getKey(password, keySize);
 			callback(key);
 		}
-	};
-
-	/**
-	 * Derive an asymmetric keypait from the user's secret
-	 */
-	this.deriveKeyPair = function(naclCrypto, callback) {
-		naclCrypto.generateKeypair(symmetricUserKey, function(keys) {
-			if (keyId) {
-				keys.id = keyId;
-			}
-			callback(keys);
-		});
 	};
 
 	//

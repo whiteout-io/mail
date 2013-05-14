@@ -13,7 +13,11 @@ asyncTest("Init", 2, function() {
 	crypto_test.crypto = new app.crypto.Crypto(window, crypto_test.util);
 	ok(crypto_test.crypto, 'Crypto');
 
-	crypto_test.crypto.init(crypto_test.user, crypto_test.password, crypto_test.keySize, crypto_test.ivSize, function() {
+	crypto_test.crypto.init({
+		emailAddress: crypto_test.user,
+		password: crypto_test.password,
+		keySize: crypto_test.keySize
+	}, function() {
 		ok(true, 'Init crypto');
 
 		start();
