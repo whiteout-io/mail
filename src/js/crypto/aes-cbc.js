@@ -4,25 +4,24 @@
 app.crypto.AesCBC = function(forge) {
 	'use strict';
 
+	var utl = forge.util;
+
 	/**
 	 * Encrypt a String using AES-CBC-Pkcs7 using the provided keysize (e.g. 128, 256)
-	 * @param plaintext [String] The input string in UTF8
+	 * @param plaintext [String] The input string in UTF-16
 	 * @param key [String] The base64 encoded key
 	 * @param iv [String] The base64 encoded IV
 	 * @return [String] The base64 encoded ciphertext
 	 */
 	this.encrypt = function(plaintext, key, iv) {
-		// parse base64 input to utf8
-		var keyUtf8 = forge.util.decode64(key);
-		var ivUtf8 = forge.util.decode64(iv);
-
-		// encrypt
-		var cipher = forge.aes.createEncryptionCipher(keyUtf8);
-		cipher.start(ivUtf8);
-		cipher.update(forge.util.createBuffer(plaintext));
+		// decode args to utf8 and encrypt
+		var cipher = forge.aes.createEncryptionCipher(utl.decode64(key));
+		cipher.start(utl.decode64(iv));
+		cipher.update(utl.createBuffer(utl.encodeUtf8(plaintext)));
 		cipher.finish();
 
-		return forge.util.encode64(cipher.output.getBytes());
+		// encode to base64
+		return utl.encode64(cipher.output.getBytes());
 	};
 
 	/**
@@ -30,20 +29,17 @@ app.crypto.AesCBC = function(forge) {
 	 * @param ciphertext [String] The base64 encoded ciphertext
 	 * @param key [String] The base64 encoded key
 	 * @param iv [String] The base64 encoded IV
-	 * @return [String] The decrypted plaintext in UTF8
+	 * @return [String] The decrypted plaintext in UTF-16
 	 */
 	this.decrypt = function(ciphertext, key, iv) {
-		// parse base64 input to utf8
-		var ctUtf8 = forge.util.decode64(ciphertext);
-		var keyUtf8 = forge.util.decode64(key);
-		var ivUtf8 = forge.util.decode64(iv);
-
-		var cipher = forge.aes.createDecryptionCipher(keyUtf8);
-		cipher.start(ivUtf8);
-		cipher.update(forge.util.createBuffer(ctUtf8));
+		// decode args input to utf8 decrypt
+		var cipher = forge.aes.createDecryptionCipher(utl.decode64(key));
+		cipher.start(utl.decode64(iv));
+		cipher.update(utl.createBuffer(utl.decode64(ciphertext)));
 		cipher.finish();
 
-		return cipher.output.getBytes();
+		// decode to utf16
+		return utl.decodeUtf8(cipher.output.getBytes());
 	};
 
 };
