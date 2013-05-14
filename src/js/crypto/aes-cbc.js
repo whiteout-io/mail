@@ -1,7 +1,7 @@
 /**
  * A Wrapper for Forge's AES-CBC encryption
  */
-app.crypto.AesCBC = function() {
+app.crypto.AesCBC = function(forge) {
 	'use strict';
 
 	/**

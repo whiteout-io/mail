@@ -13,7 +13,7 @@ test("Init", 1, function() {
 });
 
 test("CBC mode", 4, function() {
-	var aes = new app.crypto.AesCBC();
+	var aes = new app.crypto.AesCBC(forge);
 
 	var plaintext = aes_test.test_message;
 	var key = aes_test.util.random(aes_test.keySize);
