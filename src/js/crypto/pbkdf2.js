@@ -1,5 +1,5 @@
 /**
- * A Wrapper for Crypto.js's PBKDF2 function
+ * A Wrapper for Forge's PBKDF2 function
  */
 app.crypto.PBKDF2 = function() {
 	'use strict';
@@ -11,12 +11,9 @@ app.crypto.PBKDF2 = function() {
 	 * @return [String] The base64 encoded key
 	 */
 	this.getKey = function(password, keySize) {
-		var salt = CryptoJS.enc.Base64.parse("vbhmLjC+Ub6MSbhS6/CkOwxB25wvwRkSLP2DzDtYb+4="); // from random 256 bit value
-		var key = CryptoJS.PBKDF2(password, salt, {
-			keySize: keySize / 32,
-			iterations: 1000
-		});
-		var keyBase64 = CryptoJS.enc.Base64.stringify(key);
+		var salt = forge.util.decode64("vbhmLjC+Ub6MSbhS6/CkOwxB25wvwRkSLP2DzDtYb+4=");
+		var key = forge.pkcs5.pbkdf2(password, salt, 1000, keySize / 8);
+		var keyBase64 = forge.util.encode64(key);
 
 		return keyBase64;
 	};

@@ -2,11 +2,7 @@
 	'use strict';
 
 	// import web worker dependencies
-	importScripts('../../lib/crypto-js/core.js');
-	importScripts('../../lib/crypto-js/enc-base64.js');
-	importScripts('../../lib/crypto-js/sha1.js');
-	importScripts('../../lib/crypto-js/hmac.js');
-	importScripts('../../lib/crypto-js/pbkdf2.js');
+	importScripts('../../lib/forge/forge.rsa.bundle.js');
 	importScripts('../app-config.js');
 	importScripts('./pbkdf2.js');
 

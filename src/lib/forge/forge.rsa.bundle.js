@@ -11659,4 +11659,4 @@ if(nodeDefine || typeof define === 'function') {
 }
 })();
 
-})((typeof window !== 'undefined') ? window : null);
+})((typeof window !== 'undefined') ? window : 'undefined');
