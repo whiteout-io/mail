@@ -86,9 +86,11 @@ app.crypto.RSA = function(forge) {
 	this.sign = function(parts) {
 		var sha = forge.md.sha256.create();
 		parts.forEach(function(i) {
+			// decode base64 part and append to sha msg
 			sha.update(utl.decode64(i));
 		});
 
+		// encode signature to base64
 		return utl.encode64(privateKey.sign(sha));
 	};
 
@@ -99,11 +101,12 @@ app.crypto.RSA = function(forge) {
 	 * @return [bool] if the verification was successful
 	 */
 	this.verify = function(parts, sig) {
-		// parse base64 signature to utf8
+		// decode base64 signature to utf8
 		var sigUtf8 = utl.decode64(sig);
 
 		var sha = forge.md.sha256.create();
 		parts.forEach(function(i) {
+			// decode base64 part and append to sha msg
 			sha.update(utl.decode64(i));
 		});
 
