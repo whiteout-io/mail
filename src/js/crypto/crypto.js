@@ -5,8 +5,7 @@
 app.crypto.Crypto = function(window, util) {
 	'use strict';
 
-	var keypair = null, // the user's keys used to encrypt item-keys
-		aes = new app.crypto.AesCBC(forge), // use AES-CBC mode by default
+	var aes = new app.crypto.AesCBC(forge), // use AES-CBC mode by default
 		rsa = new app.crypto.RSA(forge, util); // use RSA for asym. crypto
 
 	/**
@@ -47,7 +46,7 @@ app.crypto.Crypto = function(window, util) {
 					return;
 				}
 
-				keypair = rsa.exportKeys();
+				var keypair = rsa.exportKeys();
 
 				// encrypt keypair
 				var iv = util.random(self.ivSize);
@@ -69,7 +68,7 @@ app.crypto.Crypto = function(window, util) {
 		function decryptKeypair(storedKeypair, pbkdf2) {
 			try {
 				var keypairJson = aes.decrypt(storedKeypair.encryptedKeys, pbkdf2, storedKeypair.keyIV);
-				keypair = JSON.parse(keypairJson);
+				var keypair = JSON.parse(keypairJson);
 			} catch (ex) {
 				callback({
 					errMsg: 'Wrong password!'
