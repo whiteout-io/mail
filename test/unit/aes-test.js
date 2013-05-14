@@ -12,7 +12,7 @@ test("Init", 1, function() {
 	aes_test.test_message = new TestData().generateBigString(1000);
 });
 
-test("CBC mode with HMAC-SHA-256", 4, function() {
+test("CBC mode", 4, function() {
 	var aes = new app.crypto.AesCBC();
 
 	var plaintext = aes_test.test_message;
@@ -21,10 +21,10 @@ test("CBC mode with HMAC-SHA-256", 4, function() {
 	ok(key, 'Key: ' + key);
 	equal(aes_test.util.base642Str(key).length * 8, aes_test.keySize, 'Keysize ' + aes_test.keySize);
 
-	var ct = aes.encrypt(plaintext, key, iv);
-	ok(ct.ciphertext, 'Ciphertext lenght: ' + ct.ciphertext.length);
+	var ciphertext = aes.encrypt(plaintext, key, iv);
+	ok(ciphertext, 'Ciphertext lenght: ' + ciphertext.length);
 
-	var decrypted = aes.decrypt(ct.ciphertext, key, iv, ct.hmac);
+	var decrypted = aes.decrypt(ciphertext, key, iv);
 	equal(decrypted, plaintext, 'Decryption correct' + decrypted);
 });
 
