@@ -20,19 +20,19 @@ var Util = function(window, uuid, crypt) {
 		var keyBase64, keyBuf;
 
 		if (typeof module !== 'undefined' && module.exports) {
+			// node.js
 			keyBuf = crypt.randomBytes(keySize / 8);
 			keyBase64 = new Buffer(keyBuf).toString('base64');
 
 		} else if (window.crypto && window.crypto.getRandomValues) {
+			// browser if secure rng exists
 			keyBuf = new Uint8Array(keySize / 8);
 			window.crypto.getRandomValues(keyBuf);
 			keyBase64 = window.btoa(this.uint8Arr2BinStr(keyBuf));
 
 		} else {
-			// add an additional peace of entropy to the pot and stir with the sjcl prng
-			sjcl.random.addEntropy((new Date()).valueOf(), 2, "calltime");
-			keyBuf = sjcl.random.randomWords(keySize / 32, 0);
-			keyBase64 = sjcl.codec.base64.fromBits(keyBuf);
+			// generate random bytes with fortuna algorithm from forge
+			keyBase64 = window.btoa(forge.random.getBytesSync(keySize / 8));
 		}
 
 		return keyBase64;

@@ -4,7 +4,7 @@ var cloudstoragedao_test = {
 	user: 'email.dao.it.test@mail.whiteout.io',
 	password: 'hellosafe',
 	keySize: 128,
-	ivSize: 104
+	ivSize: 128
 };
 
 asyncTest("Init", 1, function() {
