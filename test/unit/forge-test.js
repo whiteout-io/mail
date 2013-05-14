@@ -10,7 +10,47 @@ var forge_aes_test = {
 	test_message: new TestData().generateBigString(1000)
 };
 
-asyncTest("Generate RSA Keypair", 1, function() {
+test("SHA-1 Hash", 1, function() {
+	var sha1 = forge.md.sha1.create();
+	sha1.update(forge_aes_test.test_message);
+	var digest = sha1.digest().getBytes();
+	ok(digest);
+});
+
+test("SHA-256 Hash", 1, function() {
+	rsa_test.md = forge.md.sha256.create();
+	rsa_test.md.update(forge_aes_test.test_message);
+	var digest = rsa_test.md.digest().getBytes();
+	ok(digest);
+});
+
+test("HMAC SHA-256", 1, function() {
+	var util = new app.crypto.Util(window, uuid);
+
+	var key = util.base642Str(util.random(forge_aes_test.keySize));
+	var iv = util.base642Str(util.random(forge_aes_test.keySize));
+
+	var hmac = forge.hmac.create();
+	hmac.start('sha256', key);
+	hmac.update(iv);
+	hmac.update(forge_aes_test.test_message);
+	var result = hmac.digest().toHex();
+
+	ok(result);
+});
+
+test("PBKDF2", 1, function() {
+	var util = new app.crypto.Util(window, uuid);
+
+	var salt = util.base642Str("vbhmLjC+Ub6MSbhS6/CkOwxB25wvwRkSLP2DzDtYb+4=");
+	var expect = '5223bd44b0523090b21e9d38a749b090';
+
+	var dk = forge.pkcs5.pbkdf2('password', salt, 1000, 16);
+
+	equal(expect, forge.util.bytesToHex(dk));
+});
+
+asyncTest("RSA Generate Keypair", 1, function() {
 
 	forge.rsa.generateKeyPair({
 		bits: rsa_test.keySize,
@@ -35,13 +75,6 @@ test("RSA Decrypt", 1, function() {
 	equal(rsa_test.test_message, pt);
 });
 
-test("SHA-256 Hash", 1, function() {
-	rsa_test.md = forge.md.sha256.create();
-	rsa_test.md.update(forge_aes_test.test_message);
-	var digest = rsa_test.md.digest().data;
-	ok(digest);
-});
-
 test("RSA Sign", 1, function() {
 	rsa_test.sig = rsa_test.keypair.privateKey.sign(rsa_test.md);
 	ok(rsa_test.sig);
@@ -50,21 +83,6 @@ test("RSA Sign", 1, function() {
 test("RSA Verify", 1, function() {
 	var res = rsa_test.keypair.publicKey.verify(rsa_test.md.digest().getBytes(), rsa_test.sig);
 	ok(res);
-});
-
-test("HMAC SHA-256", 1, function() {
-	var util = new app.crypto.Util(window, uuid);
-
-	var key = util.base642Str(util.random(forge_aes_test.keySize));
-	var iv = util.base642Str(util.random(forge_aes_test.keySize));
-
-	var hmac = forge.hmac.create();
-	hmac.start('sha256', key);
-	hmac.update(iv);
-	hmac.update(forge_aes_test.test_message);
-	var result = hmac.digest().toHex();
-
-	ok(result);
 });
 
 test("AES-128-CBC En/Decrypt", 1, function() {
@@ -83,19 +101,8 @@ test("AES-128-CBC En/Decrypt", 1, function() {
 	// decrypt
 	var deCipher = forge.aes.createDecryptionCipher(key);
 	deCipher.start(iv);
-	deCipher.update(forge.util.createBuffer(enCipher.output.data));
+	deCipher.update(forge.util.createBuffer(enCipher.output.getBytes()));
 	deCipher.finish();
 
 	equal(input, deCipher.output, 'En/Decrypt length: ' + input.length);
-});
-
-test("PBKDF2", 1, function() {
-	var util = new app.crypto.Util(window, uuid);
-
-	var salt = util.base642Str("vbhmLjC+Ub6MSbhS6/CkOwxB25wvwRkSLP2DzDtYb+4=");
-	var expect = '5223bd44b0523090b21e9d38a749b090';
-
-	var dk = forge.pkcs5.pbkdf2('password', salt, 1000, 16);
-
-	equal(expect, forge.util.bytesToHex(dk));
 });
