@@ -19,7 +19,7 @@ test("CBC mode with HMAC-SHA-256", 4, function() {
 	var key = aes_test.util.random(aes_test.keySize);
 	var iv = aes_test.util.random(aes_test.keySize);
 	ok(key, 'Key: ' + key);
-	equal(CryptoJS.enc.Base64.parse(key).sigBytes * 8, aes_test.keySize, 'Keysize ' + aes_test.keySize);
+	equal(aes_test.util.base642Str(key).length * 8, aes_test.keySize, 'Keysize ' + aes_test.keySize);
 
 	var ct = aes.encrypt(plaintext, key, iv);
 	ok(ct.ciphertext, 'Ciphertext lenght: ' + ct.ciphertext.length);
