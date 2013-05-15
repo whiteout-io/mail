@@ -174,8 +174,10 @@ var Util = function(window, uuid, crypt) {
 	this.str2Base64 = function(str) {
 		if (typeof module !== 'undefined' && module.exports) {
 			return new Buffer(str, 'binary').toString('base64');
-		} else {
+		} else if (typeof window !== 'undefined' && window.btoa) {
 			return window.btoa(str);
+		} else {
+			return forge.util.encode64(str);
 		}
 	};
 
@@ -185,8 +187,10 @@ var Util = function(window, uuid, crypt) {
 	this.base642Str = function(str) {
 		if (typeof module !== 'undefined' && module.exports) {
 			return new Buffer(str, 'base64').toString('binary');
-		} else {
+		} else if (typeof window !== 'undefined' && window.atob) {
 			return window.atob(str);
+		} else {
+			return forge.util.decode64(str);
 		}
 	};
 

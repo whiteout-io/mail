@@ -1,7 +1,7 @@
 /**
  * Crypto batch library for processing large sets of data
  */
-var CryptoBatch = function(aes, rsa) {
+var CryptoBatch = function(aes, rsa, util) {
 	'use strict';
 
 	/**
@@ -56,7 +56,7 @@ var CryptoBatch = function(aes, rsa) {
 		encryptedList.forEach(function(i) {
 			// process new values
 			i.encryptedKey = rsa.encrypt(i.key);
-			i.signature = rsa.sign([i.iv, i.encryptedKey, i.ciphertext]);
+			i.signature = rsa.sign([i.iv, util.str2Base64(i.id), i.encryptedKey, i.ciphertext]);
 			// delete old ones
 			delete i.key;
 		});
@@ -75,7 +75,7 @@ var CryptoBatch = function(aes, rsa) {
 		// decrypt keys for user
 		encryptedList.forEach(function(i) {
 			// verify signature
-			if (!rsa.verify([i.iv, i.encryptedKey, i.ciphertext], i.signature)) {
+			if (!rsa.verify([i.iv, util.str2Base64(i.id), i.encryptedKey, i.ciphertext], i.signature)) {
 				throw new Error('Verifying RSA signature failed!');
 			}
 			// precoess new values

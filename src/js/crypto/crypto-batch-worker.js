@@ -6,6 +6,7 @@
 	importScripts('../app-config.js');
 	importScripts('./crypto-batch.js');
 	importScripts('./aes-cbc.js');
+	importScripts('./util.js');
 	importScripts('./rsa.js');
 
 	/**
@@ -18,7 +19,8 @@
 			output = null,
 			aes = new app.crypto.AesCBC(forge),
 			rsa = new app.crypto.RSA(forge),
-			batch = new app.crypto.CryptoBatch(aes, rsa);
+			util = new app.crypto.Util(),
+			batch = new app.crypto.CryptoBatch(aes, rsa, util);
 
 		// pass RSA keys to module
 		rsa.init(i.pubkeyPem, i.privkeyPem);

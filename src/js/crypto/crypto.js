@@ -242,7 +242,7 @@ app.crypto.Crypto = function(window, util) {
 			});
 
 		} else {
-			var batch = new app.crypto.CryptoBatch(aes, rsa);
+			var batch = new app.crypto.CryptoBatch(aes, rsa, util);
 			var encryptedList = batch.encryptListForUser(envelopes);
 			callback(null, encryptedList);
 		}
@@ -265,7 +265,7 @@ app.crypto.Crypto = function(window, util) {
 			});
 
 		} else {
-			var batch = new app.crypto.CryptoBatch(aes, rsa);
+			var batch = new app.crypto.CryptoBatch(aes, rsa, util);
 			var decryptedList = batch.decryptListForUser(list);
 			callback(null, decryptedList);
 		}

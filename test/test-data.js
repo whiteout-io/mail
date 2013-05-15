@@ -9,7 +9,7 @@ var TestData = function() {
 
 		for (i = 0; i < size; i++) {
 			mail = new app.model.Email({
-				id: i,
+				id: i + '',
 				from: 'john@from.com',
 				to: ['jack@to.com'],
 				subject: 'Important stuff ' + i,
