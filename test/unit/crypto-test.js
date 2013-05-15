@@ -32,33 +32,7 @@ asyncTest("PBKDF2 (Async/Worker)", 1, function() {
 	});
 });
 
-asyncTest("En/Decrypt for User", 4, function() {
-	var secret = "Secret stuff";
-
-	var itemKey = crypto_test.util.random(crypto_test.keySize);
-	var itemIV = crypto_test.util.random(crypto_test.ivSize);
-	var keyIV = crypto_test.util.random(crypto_test.ivSize);
-
-	crypto_test.crypto.aesEncrypt(secret, itemKey, itemIV, function(ciphertext) {
-		ok(ciphertext, 'Encrypt item');
-
-		crypto_test.crypto.aesEncryptForUser(itemKey, keyIV, function(encryptedKey) {
-			ok(encryptedKey, 'Encrypt item key');
-
-			crypto_test.crypto.aesDecryptForUser(encryptedKey, keyIV, function(decryptedKey) {
-				equal(decryptedKey, itemKey, 'Decrypt item key');
-
-				crypto_test.crypto.aesDecrypt(ciphertext, decryptedKey, itemIV, function(decrypted) {
-					equal(decrypted, secret, 'Decrypt item');
-
-					start();
-				});
-			});
-		});
-	});
-});
-
-asyncTest("AES (Async/Worker)", 2, function() {
+asyncTest("AES en/decrypt (Async/Worker)", 2, function() {
 	var secret = 'Big secret';
 
 	var key = crypto_test.util.random(crypto_test.keySize);
@@ -75,7 +49,7 @@ asyncTest("AES (Async/Worker)", 2, function() {
 	});
 });
 
-asyncTest("AES batch (Async/Worker)", 5, function() {
+asyncTest("AES en/decrypt batch (Async/Worker)", 5, function() {
 	// generate test data
 	var collection, list, td = new TestData();
 
@@ -96,23 +70,28 @@ asyncTest("AES batch (Async/Worker)", 5, function() {
 	});
 });
 
-asyncTest("AES batch for User (Async/Worker)", 5, function() {
+asyncTest("AES/RSA encrypt batch for User (Async/Worker)", 2, function() {
 	// generate test data
-	var collection, list, td = new TestData();
+	var collection, td = new TestData();
 
-	collection = td.getEmailCollection(100);
-	list = collection.toJSON();
+	collection = td.getEmailCollection(10);
+	crypto_test.list = collection.toJSON();
 
-	crypto_test.crypto.aesEncryptListForUser(list, function(encryptedList) {
-		ok(encryptedList, 'Encrypt list for user');
-		equal(encryptedList.length, list.length, 'Length of list');
+	crypto_test.crypto.encryptListForUser(crypto_test.list, null, function(err, encryptedList) {
+		ok(!err && encryptedList, 'Encrypt list for user');
+		equal(encryptedList.length, crypto_test.list.length, 'Length of list');
+		crypto_test.encryptedList = encryptedList;
 
-		crypto_test.crypto.aesDecryptListForUser(encryptedList, function(decryptedList) {
-			ok(decryptedList, 'Decrypt list');
-			equal(decryptedList.length, list.length, 'Length of list');
-			deepEqual(decryptedList, list, 'Decrypted list is correct');
+		start();
+	});
+});
 
-			start();
-		});
+asyncTest("AES/RSA decrypt batch for User (Async/Worker)", 3, function() {
+	crypto_test.crypto.decryptListForUser(crypto_test.encryptedList, null, function(err, decryptedList) {
+		ok(!err && decryptedList, 'Decrypt list');
+		equal(decryptedList.length, crypto_test.list.length, 'Length of list');
+		deepEqual(decryptedList, crypto_test.list, 'Decrypted list is correct');
+
+		start();
 	});
 });

@@ -66,15 +66,19 @@ app.crypto.Crypto = function(window, util) {
 		}
 
 		function decryptKeypair(storedKeypair, pbkdf2) {
+			var keypairJson, keypair;
+			// try to decrypt with pbkdf2
 			try {
-				var keypairJson = aes.decrypt(storedKeypair.encryptedKeys, pbkdf2, storedKeypair.keyIV);
-				var keypair = JSON.parse(keypairJson);
+				keypairJson = aes.decrypt(storedKeypair.encryptedKeys, pbkdf2, storedKeypair.keyIV);
+				keypair = JSON.parse(keypairJson);
 			} catch (ex) {
 				callback({
 					errMsg: 'Wrong password!'
 				});
 				return;
 			}
+			// set rsa keys
+			rsa.init(keypair.pubkeyPem, keypair.privkeyPem, keypair._id);
 
 			callback();
 		}
@@ -205,22 +209,7 @@ app.crypto.Crypto = function(window, util) {
 	// En/Decrypt something speficially using the user's secret key
 	//
 
-	this.aesEncryptForUser = function(plaintext, iv, callback) {
-		var ciphertext = aes.encrypt(plaintext, symmetricUserKey, iv);
-		callback(ciphertext);
-	};
-	this.aesDecryptForUser = function(ciphertext, iv, callback) {
-		var decrypted = aes.decrypt(ciphertext, symmetricUserKey, iv);
-		callback(decrypted);
-	};
-	this.aesEncryptForUserSync = function(plaintext, iv) {
-		return aes.encrypt(plaintext, symmetricUserKey, iv);
-	};
-	this.aesDecryptForUserSync = function(ciphertext, iv) {
-		return aes.decrypt(ciphertext, symmetricUserKey, iv);
-	};
-
-	this.aesEncryptListForUser = function(list, callback) {
+	this.encryptListForUser = function(list, recipientPubkey, callback) {
 		var envelope, envelopes = [],
 			self = this;
 
@@ -242,26 +231,33 @@ app.crypto.Crypto = function(window, util) {
 			encryptedList.forEach(function(i) {
 				// process new values
 				i.itemIV = i.iv;
-				i.keyIV = util.random(self.ivSize);
-				i.encryptedKey = self.aesEncryptForUserSync(i.key, i.keyIV);
+				i.encryptedKey = rsa.encrypt(i.key);
+				i.keyIV = rsa.sign([i.itemIV, i.encryptedKey, i.ciphertext]);
 				// delete old ones
 				delete i.iv;
 				delete i.key;
 			});
 
-			callback(encryptedList);
+			callback(null, encryptedList);
 		});
 	};
 
-	this.aesDecryptListForUser = function(encryptedList, callback) {
+	this.decryptListForUser = function(encryptedList, recipientPubkey, callback) {
 		var list = [],
 			self = this;
 
 		// decrypt keys for user
 		encryptedList.forEach(function(i) {
-			// decrypt item key
-			i.key = self.aesDecryptForUserSync(i.encryptedKey, i.keyIV);
+			// verify signature
+			if (!rsa.verify([i.itemIV, i.encryptedKey, i.ciphertext], i.keyIV)) {
+				callback({
+					errMsg: 'Verifying RSA signature failed!'
+				});
+				return;
+			}
+			// precoess new values
 			i.iv = i.itemIV;
+			i.key = rsa.decrypt(i.encryptedKey);
 			// delete old values
 			delete i.keyIV;
 			delete i.itemIV;
@@ -275,7 +271,7 @@ app.crypto.Crypto = function(window, util) {
 				list.push(i.plaintext);
 			});
 
-			callback(list);
+			callback(null, list);
 		});
 	};
 

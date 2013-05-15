@@ -14,11 +14,13 @@ app.crypto.RSA = function(forge, util) {
 	 * and signing
 	 */
 	this.init = function(pubkeyPem, privkeyPem, keyId) {
-		keypair.publicKey = forge.pki.publicKeyFromPem(pubkeyPem);
+		keypair = {
+			_id: keyId,
+			publicKey: forge.pki.publicKeyFromPem(pubkeyPem)
+		};
 		if (privkeyPem) {
 			keypair.privateKey = forge.pki.privateKeyFromPem(privkeyPem);
 		}
-		keypair._id = keyId;
 	};
 
 	/**

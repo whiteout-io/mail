@@ -44,15 +44,13 @@ var Util = function(window, uuid, crypt) {
 	 * @list list [Array] The list of items to encrypt
 	 */
 	this.encryptList = function(aes, list) {
-		var json, ct, outList = [];
+		var outList = [];
 
 		list.forEach(function(i) {
 			// stringify to JSON before encryption
-			json = JSON.stringify(i.plaintext);
-			ct = aes.encrypt(json, i.key, i.iv);
 			outList.push({
 				id: i.id,
-				ciphertext: ct,
+				ciphertext: aes.encrypt(JSON.stringify(i.plaintext), i.key, i.iv),
 				key: i.key,
 				iv: i.iv
 			});
@@ -67,15 +65,13 @@ var Util = function(window, uuid, crypt) {
 	 * @list list [Array] The list of items to decrypt
 	 */
 	this.decryptList = function(aes, list) {
-		var json, pt, outList = [];
+		var outList = [];
 
 		list.forEach(function(i) {
 			// decrypt JSON and parse to object literal
-			json = aes.decrypt(i.ciphertext, i.key, i.iv);
-			pt = JSON.parse(json);
 			outList.push({
 				id: i.id,
-				plaintext: pt,
+				plaintext: JSON.parse(aes.decrypt(i.ciphertext, i.key, i.iv)),
 				key: i.key,
 				iv: i.iv
 			});
