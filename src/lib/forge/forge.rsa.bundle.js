@@ -1,5 +1,3 @@
-(function(window) {
-
 /**
  * Utility functions for web applications.
  *
@@ -11658,5 +11656,3 @@ if(nodeDefine || typeof define === 'function') {
   });
 }
 })();
-
-})((typeof window !== 'undefined') ? window : 'undefined');
