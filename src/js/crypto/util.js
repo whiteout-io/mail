@@ -59,6 +59,24 @@ var Util = function(window, uuid, crypt) {
 		return outList;
 	};
 
+	this.encryptListForUser = function(aes, rsa, list) {
+		// encrypt list
+		var encryptedList = this.encryptList(aes, list);
+
+		// encrypt keys for user
+		encryptedList.forEach(function(i) {
+			// process new values
+			i.itemIV = i.iv;
+			i.encryptedKey = rsa.encrypt(i.key);
+			i.keyIV = rsa.sign([i.itemIV, i.encryptedKey, i.ciphertext]);
+			// delete old ones
+			delete i.iv;
+			delete i.key;
+		});
+
+		return encryptedList;
+	};
+
 	/**
 	 * Decrypt a list of items
 	 * @param aes [Object] The object implementing the aes mode
@@ -78,6 +96,36 @@ var Util = function(window, uuid, crypt) {
 		});
 
 		return outList;
+	};
+
+	this.decryptListForUser = function(aes, rsa, encryptedList) {
+		var list = [],
+			self = this;
+
+		// decrypt keys for user
+		encryptedList.forEach(function(i) {
+			// verify signature
+			if (!rsa.verify([i.itemIV, i.encryptedKey, i.ciphertext], i.keyIV)) {
+				throw new Error('Verifying RSA signature failed!');
+			}
+			// precoess new values
+			i.iv = i.itemIV;
+			i.key = rsa.decrypt(i.encryptedKey);
+			// delete old values
+			delete i.keyIV;
+			delete i.itemIV;
+			delete i.encryptedKey;
+		});
+
+		// decrypt list
+		var decryptedList = this.decryptList(aes, encryptedList);
+
+		// add plaintext to list
+		decryptedList.forEach(function(i) {
+			list.push(i.plaintext);
+		});
+
+		return list;
 	};
 
 	/**

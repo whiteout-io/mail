@@ -12,13 +12,13 @@
 	 */
 	self.onmessage = function(e) {
 
-		var args = e.data,
+		var i = e.data,
 			key = null;
 
-		if (e.data.password && e.data.keySize) {
+		if (i.password && i.keySize) {
 			// start deriving key
 			var pbkdf2 = new app.crypto.PBKDF2();
-			key = pbkdf2.getKey(e.data.password, e.data.keySize);
+			key = pbkdf2.getKey(i.password, i.keySize);
 
 		} else {
 			throw 'Not all arguments for web worker crypto are defined!';

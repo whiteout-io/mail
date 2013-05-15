@@ -5,6 +5,8 @@
 	importScripts('../../lib/forge/forge.rsa.bundle.js');
 	importScripts('../app-config.js');
 	importScripts('./aes-cbc.js');
+	importScripts('./rsa.js');
+	importScripts('./util.js');
 
 	/**
 	 * In the web worker thread context, 'this' and 'self' can be used as a global
@@ -14,15 +16,19 @@
 
 		var i = e.data,
 			output = null,
-			aes = new app.crypto.AesCBC(forge);
+			util = new app.crypto.Util(null, null),
+			aes = new app.crypto.AesCBC(forge),
+			rsa = new app.crypto.RSA(forge, util);
 
-		if (i.type === 'encrypt' && i.plaintext && i.key && i.iv) {
+		rsa.init(i.pubkeyPem, i.privkeyPem);
+
+		if (i.type === 'encrypt' && i.list) {
 			// start encryption
-			output = aes.encrypt(i.plaintext, i.key, i.iv);
+			output = util.encryptListForUser(aes, rsa, i.list);
 
-		} else if (i.type === 'decrypt' && i.ciphertext && i.key && i.iv) {
+		} else if (i.type === 'decrypt' && i.list) {
 			// start decryption
-			output = aes.decrypt(i.ciphertext, i.key, i.iv);
+			output = util.decryptListForUser(aes, rsa, i.list);
 
 		} else {
 			throw 'Not all arguments for web worker crypto are defined!';

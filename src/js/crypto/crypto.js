@@ -224,55 +224,47 @@ app.crypto.Crypto = function(window, util) {
 			envelopes.push(envelope);
 		});
 
-		// encrypt list
-		this.aesEncryptList(envelopes, function(encryptedList) {
+		if (window.Worker) {
 
-			// encrypt keys for user
-			encryptedList.forEach(function(i) {
-				// process new values
-				i.itemIV = i.iv;
-				i.encryptedKey = rsa.encrypt(i.key);
-				i.keyIV = rsa.sign([i.itemIV, i.encryptedKey, i.ciphertext]);
-				// delete old ones
-				delete i.iv;
-				delete i.key;
+			var keypair = rsa.exportKeys();
+
+			var worker = new Worker(app.config.workerPath + '/crypto/crypto-batch-worker.js');
+			worker.onmessage = function(e) {
+				callback(null, e.data);
+			};
+			worker.postMessage({
+				type: 'encrypt',
+				list: envelopes,
+				pubkeyPem: keypair.pubkeyPem,
+				privkeyPem: keypair.privkeyPem
 			});
 
+		} else {
+			var encryptedList = util.encryptListForUser(aes, rsa, envelopes);
 			callback(null, encryptedList);
-		});
+		}
 	};
 
-	this.decryptListForUser = function(encryptedList, recipientPubkey, callback) {
-		var list = [],
-			self = this;
+	this.decryptListForUser = function(list, recipientPubkey, callback) {
+		if (window.Worker) {
 
-		// decrypt keys for user
-		encryptedList.forEach(function(i) {
-			// verify signature
-			if (!rsa.verify([i.itemIV, i.encryptedKey, i.ciphertext], i.keyIV)) {
-				callback({
-					errMsg: 'Verifying RSA signature failed!'
-				});
-				return;
-			}
-			// precoess new values
-			i.iv = i.itemIV;
-			i.key = rsa.decrypt(i.encryptedKey);
-			// delete old values
-			delete i.keyIV;
-			delete i.itemIV;
-			delete i.encryptedKey;
-		});
+			var keypair = rsa.exportKeys();
 
-		// decrypt list
-		this.aesDecryptList(encryptedList, function(decryptedList) {
-			// add plaintext to list
-			decryptedList.forEach(function(i) {
-				list.push(i.plaintext);
+			var worker = new Worker(app.config.workerPath + '/crypto/crypto-batch-worker.js');
+			worker.onmessage = function(e) {
+				callback(null, e.data);
+			};
+			worker.postMessage({
+				type: 'decrypt',
+				list: list,
+				pubkeyPem: keypair.pubkeyPem,
+				privkeyPem: keypair.privkeyPem
 			});
 
-			callback(null, list);
-		});
+		} else {
+			var decryptedList = util.decryptListForUser(aes, rsa, list);
+			callback(null, decryptedList);
+		}
 	};
 
 };

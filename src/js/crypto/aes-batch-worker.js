@@ -13,18 +13,18 @@
 	 */
 	self.onmessage = function(e) {
 
-		var args = e.data,
+		var i = e.data,
 			output = null,
 			aes = new app.crypto.AesCBC(forge),
 			util = new app.crypto.Util(null, null);
 
-		if (args.type === 'encrypt' && args.list) {
+		if (i.type === 'encrypt' && i.list) {
 			// start encryption
-			output = util.encryptList(aes, args.list);
+			output = util.encryptList(aes, i.list);
 
-		} else if (args.type === 'decrypt' && args.list) {
+		} else if (i.type === 'decrypt' && i.list) {
 			// start decryption
-			output = util.decryptList(aes, args.list);
+			output = util.decryptList(aes, i.list);
 
 		} else {
 			throw 'Not all arguments for web worker crypto are defined!';
