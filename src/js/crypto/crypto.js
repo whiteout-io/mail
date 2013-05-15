@@ -182,7 +182,8 @@ app.crypto.Crypto = function(window, util) {
 			});
 
 		} else {
-			var encryptedList = util.encryptList(aes, list);
+			var batch = new app.crypto.CryptoBatch(aes);
+			var encryptedList = batch.encryptList(list);
 			callback(encryptedList);
 		}
 	};
@@ -200,7 +201,8 @@ app.crypto.Crypto = function(window, util) {
 			});
 
 		} else {
-			var decryptedList = util.decryptList(aes, list);
+			var batch = new app.crypto.CryptoBatch(aes);
+			var decryptedList = batch.decryptList(list);
 			callback(decryptedList);
 		}
 	};
@@ -240,7 +242,8 @@ app.crypto.Crypto = function(window, util) {
 			});
 
 		} else {
-			var encryptedList = util.encryptListForUser(aes, rsa, envelopes);
+			var batch = new app.crypto.CryptoBatch(aes, rsa);
+			var encryptedList = batch.encryptListForUser(envelopes);
 			callback(null, encryptedList);
 		}
 	};
@@ -262,7 +265,8 @@ app.crypto.Crypto = function(window, util) {
 			});
 
 		} else {
-			var decryptedList = util.decryptListForUser(aes, rsa, list);
+			var batch = new app.crypto.CryptoBatch(aes, rsa);
+			var decryptedList = batch.decryptListForUser(list);
 			callback(null, decryptedList);
 		}
 	};

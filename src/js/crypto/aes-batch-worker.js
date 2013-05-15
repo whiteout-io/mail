@@ -4,8 +4,8 @@
 	// import web worker dependencies
 	importScripts('../../lib/forge/forge.rsa.bundle.js');
 	importScripts('../app-config.js');
+	importScripts('./crypto-batch.js');
 	importScripts('./aes-cbc.js');
-	importScripts('./util.js');
 
 	/**
 	 * In the web worker thread context, 'this' and 'self' can be used as a global
@@ -16,15 +16,15 @@
 		var i = e.data,
 			output = null,
 			aes = new app.crypto.AesCBC(forge),
-			util = new app.crypto.Util(null, null);
+			batch = new app.crypto.CryptoBatch(aes);
 
 		if (i.type === 'encrypt' && i.list) {
 			// start encryption
-			output = util.encryptList(aes, i.list);
+			output = batch.encryptList(i.list);
 
 		} else if (i.type === 'decrypt' && i.list) {
 			// start decryption
-			output = util.decryptList(aes, i.list);
+			output = batch.decryptList(i.list);
 
 		} else {
 			throw 'Not all arguments for web worker crypto are defined!';
