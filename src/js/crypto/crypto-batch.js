@@ -4,10 +4,6 @@
 var CryptoBatch = function(aes, rsa) {
 	'use strict';
 
-	//
-	// Encryption
-	//
-
 	/**
 	 * Encrypt a list of items using AES
 	 * @list list [Array] The list of items to encrypt
@@ -27,32 +23,6 @@ var CryptoBatch = function(aes, rsa) {
 
 		return outList;
 	};
-
-	/**
-	 * Encrypt a list of items using AES and RSA
-	 * @list list [Array] The list of items to encrypt
-	 */
-	this.encryptListForUser = function(list) {
-		// encrypt list
-		var encryptedList = this.encryptList(list);
-
-		// encrypt keys for user
-		encryptedList.forEach(function(i) {
-			// process new values
-			i.itemIV = i.iv;
-			i.encryptedKey = rsa.encrypt(i.key);
-			i.keyIV = rsa.sign([i.itemIV, i.encryptedKey, i.ciphertext]);
-			// delete old ones
-			delete i.iv;
-			delete i.key;
-		});
-
-		return encryptedList;
-	};
-
-	//
-	// Decryption
-	//
 
 	/**
 	 * Decrypt a list of items using AES
@@ -75,7 +45,27 @@ var CryptoBatch = function(aes, rsa) {
 	};
 
 	/**
-	 * Decrypt a list of items using AES and RSA
+	 * Encrypt and sign a list of items using AES and RSA
+	 * @list list [Array] The list of items to encrypt
+	 */
+	this.encryptListForUser = function(list) {
+		// encrypt list
+		var encryptedList = this.encryptList(list);
+
+		// encrypt keys for user
+		encryptedList.forEach(function(i) {
+			// process new values
+			i.encryptedKey = rsa.encrypt(i.key);
+			i.signature = rsa.sign([i.iv, i.encryptedKey, i.ciphertext]);
+			// delete old ones
+			delete i.key;
+		});
+
+		return encryptedList;
+	};
+
+	/**
+	 * Decrypt and verify a list of items using AES and RSA
 	 * @list list [Array] The list of items to decrypt
 	 */
 	this.decryptListForUser = function(encryptedList) {
@@ -85,15 +75,13 @@ var CryptoBatch = function(aes, rsa) {
 		// decrypt keys for user
 		encryptedList.forEach(function(i) {
 			// verify signature
-			if (!rsa.verify([i.itemIV, i.encryptedKey, i.ciphertext], i.keyIV)) {
+			if (!rsa.verify([i.iv, i.encryptedKey, i.ciphertext], i.signature)) {
 				throw new Error('Verifying RSA signature failed!');
 			}
 			// precoess new values
-			i.iv = i.itemIV;
 			i.key = rsa.decrypt(i.encryptedKey);
 			// delete old values
-			delete i.keyIV;
-			delete i.itemIV;
+			delete i.signature;
 			delete i.encryptedKey;
 		});
 
