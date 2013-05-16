@@ -1,7 +1,7 @@
 /**
  * A Wrapper for Forge's AES-CBC encryption
  */
-app.crypto.AesCBC = function(forge) {
+var AesCBC = function(forge) {
 	'use strict';
 
 	var utl = forge.util;
@@ -43,3 +43,9 @@ app.crypto.AesCBC = function(forge) {
 	};
 
 };
+
+if (typeof module !== 'undefined' && module.exports) {
+	module.exports = AesCBC;
+} else {
+	app.crypto.AesCBC = AesCBC;
+}

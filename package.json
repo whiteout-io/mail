@@ -4,7 +4,11 @@
 	"engines": {
 		"node": ">=0.8"
 	},
+	"scripts": {
+		"postinstall": "./res/copy-deps.sh"
+	},
 	"dependencies": {
-		"express": "latest"
+		"express": "latest",
+		"crypto-lib": "git://github.com/whiteout-io/crypto-lib.git#master"
 	}
 }
