@@ -49,8 +49,8 @@ app.dao.DeviceStorage = function(util, crypto, jsonDao, sqlcipherDao) {
 		jsonDao.list(crypto.emailAddress + '_' + type, offset, num, function(encryptedList) {
 
 			// decrypt list
-			crypto.aesDecryptListForUser(encryptedList, function(decryptedList) {
-				callback(decryptedList);
+			crypto.decryptListForUser(encryptedList, null, function(err, decryptedList) {
+				callback(err, decryptedList);
 			});
 		});
 	};

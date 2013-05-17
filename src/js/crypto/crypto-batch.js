@@ -9,19 +9,13 @@ var CryptoBatch = function(aes, rsa, util) {
 	 * @list list [Array] The list of items to encrypt
 	 */
 	this.encryptList = function(list) {
-		var outList = [];
-
 		list.forEach(function(i) {
 			// stringify to JSON before encryption
-			outList.push({
-				id: i.id,
-				ciphertext: aes.encrypt(JSON.stringify(i.plaintext), i.key, i.iv),
-				key: i.key,
-				iv: i.iv
-			});
+			i.ciphertext = aes.encrypt(JSON.stringify(i.plaintext), i.key, i.iv);
+			delete i.plaintext;
 		});
 
-		return outList;
+		return list;
 	};
 
 	/**
@@ -29,19 +23,13 @@ var CryptoBatch = function(aes, rsa, util) {
 	 * @list list [Array] The list of items to decrypt
 	 */
 	this.decryptList = function(list) {
-		var outList = [];
-
 		list.forEach(function(i) {
 			// decrypt JSON and parse to object literal
-			outList.push({
-				id: i.id,
-				plaintext: JSON.parse(aes.decrypt(i.ciphertext, i.key, i.iv)),
-				key: i.key,
-				iv: i.iv
-			});
+			i.plaintext = JSON.parse(aes.decrypt(i.ciphertext, i.key, i.iv));
+			delete i.ciphertext;
 		});
 
-		return outList;
+		return list;
 	};
 
 	/**
@@ -69,8 +57,7 @@ var CryptoBatch = function(aes, rsa, util) {
 	 * @list list [Array] The list of items to decrypt
 	 */
 	this.decryptListForUser = function(encryptedList) {
-		var list = [],
-			self = this;
+		var j, self = this;
 
 		// decrypt keys for user
 		encryptedList.forEach(function(i) {
@@ -89,11 +76,11 @@ var CryptoBatch = function(aes, rsa, util) {
 		var decryptedList = this.decryptList(encryptedList);
 
 		// add plaintext to list
-		decryptedList.forEach(function(i) {
-			list.push(i.plaintext);
-		});
+		for (j = 0; j < decryptedList.length; j++) {
+			decryptedList[j] = decryptedList[j].plaintext;
+		}
 
-		return list;
+		return decryptedList;
 	};
 };
 

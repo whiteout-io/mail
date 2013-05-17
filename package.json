@@ -9,6 +9,6 @@
 	},
 	"dependencies": {
 		"express": "latest",
-		"crypto-lib": "git://github.com/whiteout-io/crypto-lib.git#master"
+		"crypto-lib": "https://github.com/whiteout-io/crypto-lib/tarball/master"
 	}
 }

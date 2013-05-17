@@ -17,8 +17,8 @@ asyncTest("Init", 2, function() {
 		emailAddress: crypto_test.user,
 		password: crypto_test.password,
 		keySize: crypto_test.keySize
-	}, function() {
-		ok(true, 'Init crypto');
+	}, function(err) {
+		ok(!err, 'Init crypto');
 
 		start();
 	});
