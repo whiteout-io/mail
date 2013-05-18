@@ -7,12 +7,11 @@ var emaildao_test = {
 	ivSize: 128
 };
 
-asyncTest("Init", 2, function() {
+asyncTest("Init", 3, function() {
 	// init dependencies	
 	var util = new app.crypto.Util(window, uuid);
 	var jsonDao = new app.dao.LawnchairDAO(window);
 	emaildao_test.crypto = new app.crypto.Crypto(window, util);
-	var naclCrypto = new app.crypto.NaclCrypto(nacl, util);
 	emaildao_test.storage = new app.dao.DeviceStorage(util, emaildao_test.crypto, jsonDao, null);
 	// cloud storage stub
 	var cloudstorageStub = {
@@ -23,7 +22,7 @@ asyncTest("Init", 2, function() {
 			callback();
 		}
 	};
-	emaildao_test.emailDao = new app.dao.EmailDAO(_, emaildao_test.crypto, emaildao_test.storage, cloudstorageStub, naclCrypto);
+	emaildao_test.emailDao = new app.dao.EmailDAO(_, emaildao_test.crypto, emaildao_test.storage, cloudstorageStub);
 
 	// generate test data
 	emaildao_test.list = new TestData().getEmailCollection(100);
@@ -34,7 +33,8 @@ asyncTest("Init", 2, function() {
 		symIvSize: emaildao_test.ivSize
 	});
 
-	emaildao_test.emailDao.init(account, emaildao_test.password, function() {
+	emaildao_test.emailDao.init(account, emaildao_test.password, function(err) {
+		ok(!err);
 		equal(emaildao_test.emailDao.account.get('emailAddress'), emaildao_test.user, 'Email DAO Account');
 
 		// clear db before tests
@@ -46,8 +46,9 @@ asyncTest("Init", 2, function() {
 	});
 });
 
-asyncTest("Persist test emails", 2, function() {
-	emaildao_test.crypto.aesEncryptListForUser(emaildao_test.list.toJSON(), function(encryptedList) {
+asyncTest("Persist test emails", 3, function() {
+	emaildao_test.crypto.encryptListForUser(emaildao_test.list.toJSON(), null, function(err, encryptedList) {
+		ok(!err);
 		equal(encryptedList.length, emaildao_test.list.length, 'Encrypt list');
 
 		// add sent date to encrypted items
@@ -63,8 +64,10 @@ asyncTest("Persist test emails", 2, function() {
 	});
 });
 
-asyncTest("List Email models", 1, function() {
-	emaildao_test.emailDao.listItems('inbox', 0, emaildao_test.list.length, function(collection) {
+asyncTest("List Email models", 2, function() {
+	emaildao_test.emailDao.listItems('inbox', 0, emaildao_test.list.length, function(err, collection) {
+		ok(!err);
+
 		var gotten = collection.toJSON(),
 			reference = emaildao_test.list.toJSON();
 

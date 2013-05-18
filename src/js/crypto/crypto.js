@@ -85,6 +85,19 @@ app.crypto.Crypto = function(window, util) {
 	};
 
 	/**
+	 * Return a Public Key object containing the Public Key PEM
+	 */
+	this.getPublicKey = function() {
+		var keypair = rsa.exportKeys();
+
+		return {
+			_id: keypair._id,
+			userId: this.emailAddress,
+			publicKey: keypair.pubkeyPem
+		};
+	};
+
+	/**
 	 * Do PBKDF2 key derivation in a WebWorker thread
 	 */
 	this.deriveKey = function(password, keySize, callback) {

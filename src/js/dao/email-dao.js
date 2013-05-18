@@ -2,10 +2,8 @@
  * A high-level Data-Access Api for handling Email synchronization
  * between the cloud service and the device's local storage
  */
-app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, naclCrypto, util) {
+app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage) {
 	'use strict';
-
-	var keypair; // the user's keypair
 
 	/**
 	 * Inits all dependencies
@@ -29,30 +27,27 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, naclCrypto, 
 		});
 
 		function initCrypto() {
-			crypto.init(account.get('emailAddress'), password, account.get('symKeySize'), account.get('symIvSize'), function(err) {
+			crypto.init({
+				emailAddress: account.get('emailAddress'),
+				password: password,
+				keySize: account.get('symKeySize')
+			}, function(err) {
 				if (err) {
 					callback(err);
 					return;
 				}
 
-				initNaclCrypto();
+				publishPublicKey();
 			});
 		}
 
-		function initNaclCrypto() {
-			// derive keypair from user's secret key
-			crypto.deriveKeyPair(naclCrypto, function(generated) {
-				keypair = generated;
+		function publishPublicKey() {
+			// get public key from crypto
+			var pubkey = crypto.getPublicKey();
 
-				//publish public key to cloud service
-				var pubkey = new app.model.PublicKey({
-					_id: keypair.id,
-					userId: account.get('emailAddress'),
-					publicKey: keypair.boxPk
-				});
-				cloudstorage.putPublicKey(pubkey.toJSON(), function(err) {
-					callback(err);
-				});
+			//publish public key to cloud service
+			cloudstorage.putPublicKey(pubkey, function(err) {
+				callback(err);
 			});
 		}
 	};
@@ -85,7 +80,12 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, naclCrypto, 
 
 		if (!folder) {
 			// get items from storage
-			devicestorage.listItems('email_' + folderName, offset, num, function(decryptedList) {
+			devicestorage.listItems('email_' + folderName, offset, num, function(err, decryptedList) {
+				if (err) {
+					callback(err);
+					return;
+				}
+
 				// parse to backbone model collection
 				collection = new app.model.EmailCollection(decryptedList);
 
@@ -98,13 +98,13 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, naclCrypto, 
 					self.account.get('folders').add(folder);
 				}
 
-				callback(collection);
+				callback(null, collection);
 			});
 
 		} else {
 			// read items from memory
 			collection = folder.get('items');
-			callback(collection);
+			callback(null, collection);
 		}
 	};
 

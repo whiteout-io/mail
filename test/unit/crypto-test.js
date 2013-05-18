@@ -24,6 +24,12 @@ asyncTest("Init", 2, function() {
 	});
 });
 
+test("Get Public Key PEM", 2, function() {
+	var pk = crypto_test.crypto.getPublicKey();
+	ok(pk._id && pk.userId, 'Key ID: ' + pk._id);
+	ok(pk.publicKey.indexOf('-----BEGIN PUBLIC KEY-----') === 0, pk.publicKey);
+});
+
 asyncTest("PBKDF2 (Async/Worker)", 1, function() {
 	crypto_test.crypto.deriveKey(crypto_test.password, crypto_test.keySize, function(key) {
 		equal(crypto_test.util.base642Str(key).length * 8, crypto_test.keySize, 'Keysize ' + crypto_test.keySize);
