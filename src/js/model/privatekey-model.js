@@ -1,22 +1,22 @@
 (function() {
 	'use strict';
 
-	app.model.SecretKey = Backbone.Model.extend({
+	app.model.PrivateKey = Backbone.Model.extend({
 
 		defaults: {
 			_id: null,
 			userId: null,
 			encryptedKey: null,
-			keyIV: null
+			iv: null
 		},
 
 		initialize: function() {}
 
 	});
 
-	app.model.SecretKeyCollection = Backbone.Collection.extend({
+	app.model.PrivateKeyCollection = Backbone.Collection.extend({
 
-		model: app.model.SecretKey
+		model: app.model.PrivateKey
 
 	});
 
