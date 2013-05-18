@@ -2,7 +2,7 @@
  * A high-level Data-Access Api for handling Email synchronization
  * between the cloud service and the device's local storage
  */
-app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage) {
+app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, util) {
 	'use strict';
 
 	/**
@@ -30,7 +30,8 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage) {
 			crypto.init({
 				emailAddress: account.get('emailAddress'),
 				password: password,
-				keySize: account.get('symKeySize')
+				keySize: account.get('symKeySize'),
+				rsaKeySize: account.get('asymKeySize')
 			}, function(err) {
 				if (err) {
 					callback(err);

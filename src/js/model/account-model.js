@@ -7,6 +7,7 @@
 			emailAddress: null,
 			symKeySize: null,
 			symIvSize: null,
+			ssymKeySize: null,
 			folders: null
 		},
 

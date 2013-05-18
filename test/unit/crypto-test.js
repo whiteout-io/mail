@@ -4,7 +4,8 @@ var crypto_test = {
 	user: 'crypto_test@example.com',
 	password: 'Password',
 	keySize: 128,
-	ivSize: 128
+	ivSize: 128,
+	rsaKeySize: 1024
 };
 
 asyncTest("Init", 2, function() {
@@ -16,7 +17,8 @@ asyncTest("Init", 2, function() {
 	crypto_test.crypto.init({
 		emailAddress: crypto_test.user,
 		password: crypto_test.password,
-		keySize: crypto_test.keySize
+		keySize: crypto_test.keySize,
+		rsaKeySize: crypto_test.rsaKeySize
 	}, function(err) {
 		ok(!err, 'Init crypto');
 

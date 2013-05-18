@@ -4,7 +4,8 @@ var emaildao_test = {
 	user: 'test@atlasdev.onmicrosoft.com',
 	password: 'Xoza76645',
 	keySize: 128,
-	ivSize: 128
+	ivSize: 128,
+	rsaKeySize: 1024
 };
 
 asyncTest("Init", 3, function() {
@@ -22,7 +23,7 @@ asyncTest("Init", 3, function() {
 			callback();
 		}
 	};
-	emaildao_test.emailDao = new app.dao.EmailDAO(_, emaildao_test.crypto, emaildao_test.storage, cloudstorageStub);
+	emaildao_test.emailDao = new app.dao.EmailDAO(_, emaildao_test.crypto, emaildao_test.storage, cloudstorageStub, util);
 
 	// generate test data
 	emaildao_test.list = new TestData().getEmailCollection(100);
@@ -30,7 +31,8 @@ asyncTest("Init", 3, function() {
 	var account = new app.model.Account({
 		emailAddress: emaildao_test.user,
 		symKeySize: emaildao_test.keySize,
-		symIvSize: emaildao_test.ivSize
+		symIvSize: emaildao_test.ivSize,
+		asymKeySize: emaildao_test.rsaKeySize
 	});
 
 	emaildao_test.emailDao.init(account, emaildao_test.password, function(err) {

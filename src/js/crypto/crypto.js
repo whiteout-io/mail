@@ -15,9 +15,18 @@ app.crypto.Crypto = function(window, util) {
 	this.init = function(args, callback) {
 		var self = this;
 
+		// valdiate input
+		if (!args.emailAddress || !args.keySize || !args.rsaKeySize) {
+			callback({
+				errMsg: 'Crypto init failed. Not all args set!'
+			});
+			return;
+		}
+
 		this.emailAddress = args.emailAddress;
 		this.keySize = args.keySize;
 		this.ivSize = args.keySize;
+		this.rsaKeySize = args.rsaKeySize;
 
 		// derive PBKDF2 from password in web worker thread
 		this.deriveKey(args.password, args.keySize, function(pbkdf2) {
@@ -40,7 +49,7 @@ app.crypto.Crypto = function(window, util) {
 
 		function generateKeypair(keyStore, storageId, pbkdf2) {
 			// generate RSA keypair in web worker
-			rsa.generateKeypair(rsa_test.keySize, function(err) {
+			rsa.generateKeypair(self.rsaKeySize, function(err) {
 				if (err) {
 					callback(err);
 					return;
@@ -56,8 +65,8 @@ app.crypto.Crypto = function(window, util) {
 				var newStoredKeypair = {
 					_id: keypair._id,
 					userId: args.emailAddress,
-					encryptedKeys: encryptedKeys,
-					keyIV: iv
+					encryptedKey: encryptedKeys,
+					iv: iv
 				};
 				keyStore.persist(storageId, newStoredKeypair);
 
@@ -69,7 +78,7 @@ app.crypto.Crypto = function(window, util) {
 			var keypairJson, keypair;
 			// try to decrypt with pbkdf2
 			try {
-				keypairJson = aes.decrypt(storedKeypair.encryptedKeys, pbkdf2, storedKeypair.keyIV);
+				keypairJson = aes.decrypt(storedKeypair.encryptedKey, pbkdf2, storedKeypair.iv);
 				keypair = JSON.parse(keypairJson);
 			} catch (ex) {
 				callback({
