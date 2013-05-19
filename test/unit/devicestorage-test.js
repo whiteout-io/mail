@@ -4,7 +4,8 @@ var devicestorage_test = {
 	user: 'devicestorage_test@example.com',
 	password: 'Password',
 	keySize: 128,
-	ivSize: 128
+	ivSize: 128,
+	rsaKeySize: 1024
 };
 
 asyncTest("Init", 3, function() {
@@ -22,7 +23,8 @@ asyncTest("Init", 3, function() {
 	devicestorage_test.crypto.init({
 		emailAddress: devicestorage_test.user,
 		password: devicestorage_test.password,
-		keySize: devicestorage_test.keySize
+		keySize: devicestorage_test.keySize,
+		rsaKeySize: devicestorage_test.rsaKeySize
 	}, function(err) {
 		ok(!err, 'Init crypto');
 

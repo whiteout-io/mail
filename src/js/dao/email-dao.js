@@ -12,15 +12,18 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, util) {
 		this.account = account;
 
 		// sync user's cloud key with local storage
-		cloudstorage.getUserSecretKey(account.get('emailAddress'), function(err) {
+		var storedKey = crypto.getEncryptedPrivateKey(account.get('emailAddress'));
+		cloudstorage.syncPrivateKey(account.get('emailAddress'), storedKey, function(err) {
 			if (err) {
 				console.log('Error syncing secret key to cloud: ' + err);
 			}
 			// init crypto
 			initCrypto();
 
-		}, function() {
-			// replaced local key with cloud key... whipe local storage
+		}, function(fetchedKey) {
+			// replace local key with cloud key
+			crypto.putEncryptedPrivateKey(fetchedKey);
+			// whipe local storage
 			devicestorage.clear(function() {
 				initCrypto();
 			});

@@ -4,18 +4,18 @@ var cloudstoragedao_test = {
 	user: 'email.dao.it.test@mail.whiteout.io',
 	password: 'hellosafe',
 	keySize: 128,
-	ivSize: 128
+	ivSize: 128,
+	rsaKeySize: 1024
 };
 
 asyncTest("Init", 1, function() {
 	// init dependencies	
 	cloudstoragedao_test.util = new app.crypto.Util(window, uuid);
 	var jsonDao = new app.dao.LawnchairDAO(window);
-	var crypto = new app.crypto.Crypto(window, cloudstoragedao_test.util);
-	var naclCrypto = new app.crypto.NaclCrypto(nacl, cloudstoragedao_test.util);
-	cloudstoragedao_test.storage = new app.dao.DeviceStorage(cloudstoragedao_test.util, crypto, jsonDao, null);
+	cloudstoragedao_test.crypto = new app.crypto.Crypto(window, cloudstoragedao_test.util);
+	cloudstoragedao_test.storage = new app.dao.DeviceStorage(cloudstoragedao_test.util, cloudstoragedao_test.crypto, jsonDao, null);
 	cloudstoragedao_test.cloudstorage = new app.dao.CloudStorage(window, $);
-	cloudstoragedao_test.emailDao = new app.dao.EmailDAO(_, crypto, cloudstoragedao_test.storage, cloudstoragedao_test.cloudstorage, naclCrypto, cloudstoragedao_test.util);
+	cloudstoragedao_test.emailDao = new app.dao.EmailDAO(_, cloudstoragedao_test.crypto, cloudstoragedao_test.storage, cloudstoragedao_test.cloudstorage, cloudstoragedao_test.util);
 
 	// clear db before tests
 	jsonDao.clear(function(err) {
@@ -28,11 +28,33 @@ asyncTest("Init", 1, function() {
 asyncTest("Persist public key to cloud", 1, function() {
 
 	// testdata
-	cloudstoragedao_test.privateKey = "Bv51afjeuH8CatKo75HOHQRT1B3amvF+DEwijka79nA=";
+	cloudstoragedao_test.privateKey = "-----BEGIN RSA PRIVATE KEY-----\r\n" +
+		"MIICXAIBAAKBgQDK6H7BiPcwiRWnWDuqndw+t+3vIhSmwEEn38kPLenbd+iWb2dX\r\n" +
+		"M5y5aBFIgqqHBrcZLwzhMQ10BUTcOgB6Kr3AK7lONKxZ+HD5hX6koj9X5uHtFYF1\r\n" +
+		"NYkQv+5WKzHGHRFqoKityZ6AqTxgPss29s6EIOqF/dvvKMiFhgp+4JPsJQIDAQAB\r\n" +
+		"AoGAQxIM7C44/zshBDrfJiueJMEpjhUm3GPKZcLMNA9KMPh20lsqvqFZ2dNzexNu\r\n" +
+		"CMoIdfOef0V2m/Yt59noVHmSVL7itN4nvbTcD39UQacFiyzT7GRQjeaVAs8ZyeO5\r\n" +
+		"2AXtJTNipEyvJ3TbJZCOCML/wOEvCimyHLNCMcoDvkjAbMECQQD81xbRonOZt/7E\r\n" +
+		"fBHZQonaTQU/x88l8bXDHvcPfMfg4QkPO+pZ8dBQ4+IpuG60kl4TSmmme4frcJoj\r\n" +
+		"jSqd54VVAkEAzXGon2gP+9ZjhbOWESpw+JXiRBytAgailnblFnCJt+o+UoXU8hwH\r\n" +
+		"1D5rG2yOIO1vOiqGDQq/Bs61DsfeotvLkQJBAKo6tmZWFba9Jo5raij4n4+Wo54Z\r\n" +
+		"jOJjJplEU9rdjEVfvZXAJTyBjlun0jF8tyxkD2q1gwRPz2c43M5q0PKXWjECQCl4\r\n" +
+		"UO5khh1yyEIb3yX16Dn1n2faVf37suQmedXOv631RcFIrJR2ngn005AEmKgC5Znb\r\n" +
+		"LZYCXk8UeK3UIJfFQFECQGkP1NPyd10Z76LR0lXeL15iP22M/OCaQUIsSi/S+idL\r\n" +
+		"YCVcgDpdgVXef0NeNk6w821rlqUjseZyGGKpJ4VNywU=\r\n" +
+		"-----END RSA PRIVATE KEY-----";
+
+	var pk = "-----BEGIN PUBLIC KEY-----\r\n" +
+		"MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDK6H7BiPcwiRWnWDuqndw+t+3v\r\n" +
+		"IhSmwEEn38kPLenbd+iWb2dXM5y5aBFIgqqHBrcZLwzhMQ10BUTcOgB6Kr3AK7lO\r\n" +
+		"NKxZ+HD5hX6koj9X5uHtFYF1NYkQv+5WKzHGHRFqoKityZ6AqTxgPss29s6EIOqF\r\n" +
+		"/dvvKMiFhgp+4JPsJQIDAQAB\r\n" +
+		"-----END PUBLIC KEY-----";
+
 	cloudstoragedao_test.publicKey = new app.model.PublicKey({
-		_id: "da4bfa93-ba87-490e-877c-e4020a6f6729",
+		_id: "e91f04a2-a634-42df-a1a4-6a7f1448dbf6",
 		userId: 'integration@atlasdev.onmicrosoft.com',
-		publicKey: "yHUhh3Pcbjmh2k367pSXfE8hDwPsAxQs0QETm9mfmz0="
+		publicKey: pk
 	});
 
 	cloudstoragedao_test.cloudstorage.putPublicKey(cloudstoragedao_test.publicKey.toJSON(), function(err) {
@@ -51,12 +73,15 @@ asyncTest("Get Public key from cloud", 2, function() {
 	});
 });
 
-asyncTest("Get user secret key from cloud", 1, function() {
-	cloudstoragedao_test.cloudstorage.getUserSecretKey(cloudstoragedao_test.user, function(err) {
+asyncTest("Sync private key from cloud", 1, function() {
+	cloudstoragedao_test.cloudstorage.syncPrivateKey(cloudstoragedao_test.user, null, function(err) {
 		ok(!err, 'Get/Sync key from cloud');
 
 		start();
-	}, function() {
+	}, function(fetchedKey) {
+		// replace local key with cloud key
+		cloudstoragedao_test.crypto.putEncryptedPrivateKey(fetchedKey);
+		// whipe local storage
 		cloudstoragedao_test.storage.clear(function(err) {
 			ok(!err, 'DB cleared. Error status: ' + err);
 
@@ -65,8 +90,10 @@ asyncTest("Get user secret key from cloud", 1, function() {
 	});
 });
 
-asyncTest("Persist user secret key to cloud", 1, function() {
-	cloudstoragedao_test.cloudstorage.putUserSecretKey(cloudstoragedao_test.user, function(err) {
+asyncTest("Persist private key to cloud", 1, function() {
+	var storedKey = cloudstoragedao_test.crypto.getEncryptedPrivateKey(cloudstoragedao_test.user);
+
+	cloudstoragedao_test.cloudstorage.putPrivateKey(storedKey, function(err) {
 		ok(!err, 'Persist key to cloud');
 
 		start();
@@ -81,7 +108,8 @@ asyncTest("Init", 1, function() {
 	var account = new app.model.Account({
 		emailAddress: cloudstoragedao_test.user,
 		symKeySize: cloudstoragedao_test.keySize,
-		symIvSize: cloudstoragedao_test.ivSize
+		symIvSize: cloudstoragedao_test.ivSize,
+		asymKeySize: cloudstoragedao_test.rsaKeySize
 	});
 
 	cloudstoragedao_test.emailDao.init(account, cloudstoragedao_test.password, function(err) {
@@ -91,39 +119,39 @@ asyncTest("Init", 1, function() {
 	});
 });
 
-asyncTest("Send Plaintext Email item", 1, function() {
+// asyncTest("Send Plaintext Email item", 1, function() {
 
-	var email = new app.model.Email({
-		id: cloudstoragedao_test.util.UUID(),
-		from: cloudstoragedao_test.user, // sender address
-		to: [cloudstoragedao_test.user], // list of receivers
-		subject: 'Client Email DAO Test', // Subject line
-		body: 'Hello world' // plaintext body
-	});
+// 	var email = new app.model.Email({
+// 		id: cloudstoragedao_test.util.UUID(),
+// 		from: cloudstoragedao_test.user, // sender address
+// 		to: [cloudstoragedao_test.user], // list of receivers
+// 		subject: 'Client Email DAO Test', // Subject line
+// 		body: 'Hello world' // plaintext body
+// 	});
 
-	cloudstoragedao_test.emailDao.sendEmail(email, function(err) {
-		ok(!err, 'Email sent');
+// 	cloudstoragedao_test.emailDao.sendEmail(email, function(err) {
+// 		ok(!err, 'Email sent');
 
-		start();
-	});
-});
+// 		start();
+// 	});
+// });
 
-asyncTest("Check virtual inbox, re-encrypt and push to cloud", 1, function() {
-	cloudstoragedao_test.emailDao.checkVInbox(function(err) {
-		ok(!err, 'Synced items');
+// asyncTest("Check virtual inbox, re-encrypt and push to cloud", 1, function() {
+// 	cloudstoragedao_test.emailDao.checkVInbox(function(err) {
+// 		ok(!err, 'Synced items');
 
-		start();
-	});
-});
+// 		start();
+// 	});
+// });
 
-asyncTest("Sync emails from cloud", 2, function() {
-	cloudstoragedao_test.emailDao.syncFromCloud('inbox', function(err) {
-		ok(!err, 'Synced items');
+// asyncTest("Sync emails from cloud", 2, function() {
+// 	cloudstoragedao_test.emailDao.syncFromCloud('inbox', function(err) {
+// 		ok(!err, 'Synced items');
 
-		cloudstoragedao_test.emailDao.listItems('inbox', 0, null, function(collection) {
-			ok(collection.length > 0, 'Read synced items');
+// 		cloudstoragedao_test.emailDao.listItems('inbox', 0, null, function(collection) {
+// 			ok(collection.length > 0, 'Read synced items');
 
-			start();
-		});
-	});
-});
+// 			start();
+// 		});
+// 	});
+// });

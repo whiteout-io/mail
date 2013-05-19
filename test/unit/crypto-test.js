@@ -32,6 +32,19 @@ test("Get Public Key PEM", 2, function() {
 	ok(pk.publicKey.indexOf('-----BEGIN PUBLIC KEY-----') === 0, pk.publicKey);
 });
 
+test("Get Encrypted Private Key", 2, function() {
+	var prk = crypto_test.crypto.getEncryptedPrivateKey();
+	ok(prk._id && prk.userId, 'Key ID: ' + prk._id);
+	ok(prk.encryptedKey, prk.encryptedKey);
+
+	crypto_test.prk = prk;
+});
+
+test("Put Encrypted Private Key", 1, function() {
+	crypto_test.crypto.putEncryptedPrivateKey(crypto_test.prk);
+	ok(true);
+});
+
 asyncTest("PBKDF2 (Async/Worker)", 1, function() {
 	crypto_test.crypto.deriveKey(crypto_test.password, crypto_test.keySize, function(key) {
 		equal(crypto_test.util.base642Str(key).length * 8, crypto_test.keySize, 'Keysize ' + crypto_test.keySize);

@@ -5,8 +5,11 @@
 app.crypto.Crypto = function(window, util) {
 	'use strict';
 
-	var aes = new app.crypto.AesCBC(forge), // use AES-CBC mode by default
-		rsa = new app.crypto.RSA(forge, util); // use RSA for asym. crypto
+	var aes = new app.crypto.AesCBC(forge); // use AES-CBC mode by default
+	var rsa = new app.crypto.RSA(forge, util); // use RSA for asym. crypto
+	var keyStore = new app.dao.LocalStorageDAO(window);
+
+	var storageId; // storage id for the encrypted keypair in local storage
 
 	/**
 	 * Initializes the crypto modules by fetching the user's
@@ -28,18 +31,18 @@ app.crypto.Crypto = function(window, util) {
 		this.ivSize = args.keySize;
 		this.rsaKeySize = args.rsaKeySize;
 
+		storageId = self.emailAddress + '_encryptedKeypair';
+
 		// derive PBKDF2 from password in web worker thread
-		this.deriveKey(args.password, args.keySize, function(pbkdf2) {
+		this.deriveKey(args.password, self.keySize, function(pbkdf2) {
 
 			// fetch user's encrypted secret key from keychain/storage
-			var keyStore = new app.dao.LocalStorageDAO(window);
-			var storageId = args.emailAddress + '_encryptedKeypair';
 			var storedKeypair = keyStore.read(storageId);
 
 			// check if key exists
 			if (!storedKeypair) {
 				// generate keys, encrypt and persist if none exists
-				generateKeypair(keyStore, storageId, pbkdf2);
+				generateKeypair(pbkdf2);
 			} else {
 				// decrypt key
 				decryptKeypair(storedKeypair, pbkdf2);
@@ -47,7 +50,7 @@ app.crypto.Crypto = function(window, util) {
 
 		});
 
-		function generateKeypair(keyStore, storageId, pbkdf2) {
+		function generateKeypair(pbkdf2) {
 			// generate RSA keypair in web worker
 			rsa.generateKeypair(self.rsaKeySize, function(err) {
 				if (err) {
@@ -64,7 +67,7 @@ app.crypto.Crypto = function(window, util) {
 				// store encrypted keypair
 				var newStoredKeypair = {
 					_id: keypair._id,
-					userId: args.emailAddress,
+					userId: self.emailAddress,
 					encryptedKey: encryptedKeys,
 					iv: iv
 				};
@@ -104,6 +107,31 @@ app.crypto.Crypto = function(window, util) {
 			userId: this.emailAddress,
 			publicKey: keypair.pubkeyPem
 		};
+	};
+
+	/**
+	 * Return a Private Key object containing the encrypted private key
+	 */
+	this.getEncryptedPrivateKey = function(emailAddress) {
+		if (!emailAddress && !storageId) {
+			throw new Error('Emailaddress needs to be set or crypto needs to be initiated!');
+		}
+
+		var strgId = (storageId) ? storageId : emailAddress + '_encryptedKeypair';
+		var storedKeypair = keyStore.read(strgId);
+
+		return storedKeypair;
+	};
+
+	this.putEncryptedPrivateKey = function(privkey) {
+		var strgId = (storageId) ? storageId : privkey.userId + '_encryptedKeypair';
+
+		// validate private key object
+		if (!strgId || !privkey || !privkey._id || !privkey.userId || !privkey.encryptedKey || !privkey.iv) {
+			throw new Error('Invalid encrypted private key object... will not store!');
+		}
+
+		return keyStore.persist(strgId, privkey);
 	};
 
 	/**

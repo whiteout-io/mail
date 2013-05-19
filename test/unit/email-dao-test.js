@@ -16,7 +16,7 @@ asyncTest("Init", 3, function() {
 	emaildao_test.storage = new app.dao.DeviceStorage(util, emaildao_test.crypto, jsonDao, null);
 	// cloud storage stub
 	var cloudstorageStub = {
-		getUserSecretKey: function(emailAdress, callback) {
+		syncPrivateKey: function(emailAdress, storedKey, callback) {
 			callback();
 		},
 		putPublicKey: function(pk, callback) {
