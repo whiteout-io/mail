@@ -10,7 +10,7 @@
 		"test": "test/test.sh"
 	},
 	"dependencies": {
-		"express": "latest",
+		"express": "~3.2.4",
 		"crypto-lib": "https://github.com/whiteout-io/crypto-lib/tarball/master"
 	},
 	"devDependencies": {
