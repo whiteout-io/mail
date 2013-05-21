@@ -6,7 +6,7 @@ var RSA = function(forge, util) {
 
 	var utl = forge.util;
 
-	var keypair = null;
+	var keypair = {};
 
 	/**
 	 * Initializes the RSA module by passing the user's keypair
@@ -14,12 +14,14 @@ var RSA = function(forge, util) {
 	 * and signing
 	 */
 	this.init = function(pubkeyPem, privkeyPem, keyId) {
-		keypair = {
-			_id: keyId,
-			publicKey: forge.pki.publicKeyFromPem(pubkeyPem)
-		};
+		if (pubkeyPem) {
+			keypair.publicKey = forge.pki.publicKeyFromPem(pubkeyPem);
+		}
 		if (privkeyPem) {
 			keypair.privateKey = forge.pki.privateKeyFromPem(privkeyPem);
+		}
+		if (keyId) {
+			keypair._id = keyId;
 		}
 	};
 
@@ -43,7 +45,11 @@ var RSA = function(forge, util) {
 			// generate unique keypair ID
 			keypair._id = util.UUID();
 
-			callback();
+			callback(null, {
+				_id: keypair._id,
+				pubkeyPem: forge.pki.publicKeyToPem(keypair.publicKey),
+				privkeyPem: forge.pki.privateKeyToPem(keypair.privateKey)
+			});
 		});
 	};
 
