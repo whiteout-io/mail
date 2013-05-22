@@ -25,7 +25,7 @@ test("SHA-256 Hash", 1, function() {
 });
 
 test("HMAC SHA-256", 1, function() {
-	var util = new app.crypto.Util(window, uuid);
+	var util = new cryptoLib.Util(window, uuid);
 
 	var key = util.base642Str(util.random(forge_aes_test.keySize));
 	var iv = util.base642Str(util.random(forge_aes_test.keySize));

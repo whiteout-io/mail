@@ -17,10 +17,10 @@
 
 		var i = e.data,
 			output = null,
-			aes = new app.crypto.AesCBC(forge),
-			rsa = new app.crypto.RSA(forge),
-			util = new app.crypto.Util(),
-			batch = new app.crypto.CryptoBatch(aes, rsa, util);
+			aes = new cryptoLib.AesCBC(forge),
+			rsa = new cryptoLib.RSA(forge),
+			util = new cryptoLib.Util(),
+			batch = new cryptoLib.CryptoBatch(aes, rsa, util);
 
 		// pass RSA keys to module
 		rsa.init(i.pubkeyPem, i.privkeyPem);

@@ -10,7 +10,7 @@ var crypto_test = {
 
 asyncTest("Init", 2, function() {
 	// init dependencies
-	crypto_test.util = new app.crypto.Util(window, uuid);
+	crypto_test.util = new cryptoLib.Util(window, uuid);
 	crypto_test.crypto = new app.crypto.Crypto(window, crypto_test.util);
 	ok(crypto_test.crypto, 'Crypto');
 

@@ -15,7 +15,7 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, util) {
 		var storedKey = crypto.getEncryptedPrivateKey(account.get('emailAddress'));
 		cloudstorage.syncPrivateKey(account.get('emailAddress'), storedKey, function(err) {
 			if (err) {
-				console.log('Error syncing secret key to cloud: ' + err);
+				console.log('Error syncing private key to cloud: ' + err);
 			}
 			// init crypto
 			initCrypto();

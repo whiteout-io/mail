@@ -5,8 +5,8 @@
 app.crypto.Crypto = function(window, util) {
 	'use strict';
 
-	var aes = new app.crypto.AesCBC(forge); // use AES-CBC mode by default
-	var rsa = new app.crypto.RSA(forge, util); // use RSA for asym. crypto
+	var aes = new cryptoLib.AesCBC(forge); // use AES-CBC mode by default
+	var rsa = new cryptoLib.RSA(forge, util); // use RSA for asym. crypto
 	var keyStore = new app.dao.LocalStorageDAO(window);
 
 	var storageId; // storage id for the encrypted keypair in local storage
@@ -232,7 +232,7 @@ app.crypto.Crypto = function(window, util) {
 			});
 
 		} else {
-			var batch = new app.crypto.CryptoBatch(aes);
+			var batch = new cryptoLib.CryptoBatch(aes);
 			var encryptedList = batch.encryptList(list);
 			callback(encryptedList);
 		}
@@ -251,7 +251,7 @@ app.crypto.Crypto = function(window, util) {
 			});
 
 		} else {
-			var batch = new app.crypto.CryptoBatch(aes);
+			var batch = new cryptoLib.CryptoBatch(aes);
 			var decryptedList = batch.decryptList(list);
 			callback(decryptedList);
 		}
@@ -292,7 +292,7 @@ app.crypto.Crypto = function(window, util) {
 			});
 
 		} else {
-			var batch = new app.crypto.CryptoBatch(aes, rsa, util);
+			var batch = new cryptoLib.CryptoBatch(aes, rsa, util);
 			var encryptedList = batch.encryptListForUser(envelopes);
 			callback(null, encryptedList);
 		}
@@ -315,7 +315,7 @@ app.crypto.Crypto = function(window, util) {
 			});
 
 		} else {
-			var batch = new app.crypto.CryptoBatch(aes, rsa, util);
+			var batch = new cryptoLib.CryptoBatch(aes, rsa, util);
 			var decryptedList = batch.decryptListForUser(list);
 			callback(null, decryptedList);
 		}

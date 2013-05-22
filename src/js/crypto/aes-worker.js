@@ -14,7 +14,7 @@
 
 		var i = e.data,
 			output = null,
-			aes = new app.crypto.AesCBC(forge);
+			aes = new cryptoLib.AesCBC(forge);
 
 		if (i.type === 'encrypt' && i.plaintext && i.key && i.iv) {
 			// start encryption

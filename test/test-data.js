@@ -1,6 +1,6 @@
 var TestData = function() {
 
-	var util = new app.crypto.Util(window, uuid);
+	var util = new cryptoLib.Util(window, uuid);
 
 	this.getEmailCollection = function(size) {
 		// create test data

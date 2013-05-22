@@ -15,8 +15,8 @@
 
 		var i = e.data,
 			output = null,
-			aes = new app.crypto.AesCBC(forge),
-			batch = new app.crypto.CryptoBatch(aes);
+			aes = new cryptoLib.AesCBC(forge),
+			batch = new cryptoLib.CryptoBatch(aes);
 
 		if (i.type === 'encrypt' && i.list) {
 			// start encryption
