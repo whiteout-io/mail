@@ -7,14 +7,15 @@
 	"scripts": {
 		"preinstall": "rm -rf node_modules/",
 		"postinstall": "./res/copy-deps.sh",
-		"test": "test/test.sh"
+		"test": "grunt test",
+		"start": "grunt prod"
 	},
 	"dependencies": {
-		"express": "~3.2.4",
+		"grunt": "~0.4.1",
+		"grunt-contrib-connect": "~0.3.0",
 		"crypto-lib": "https://github.com/whiteout-io/crypto-lib/tarball/master"
 	},
 	"devDependencies": {
-		"grunt": "~0.4.1",
 		"grunt-contrib-jshint": "~0.5.3",
 		"grunt-contrib-qunit": "~0.2.1"
 	}
