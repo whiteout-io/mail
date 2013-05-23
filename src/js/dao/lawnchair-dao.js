@@ -6,7 +6,11 @@ app.dao.LawnchairDAO = function(window) {
 
 	var db = new Lawnchair({
 		name: 'data-store'
-	}, function() {});
+	}, function(lc) {
+		if (!lc) {
+			throw new Error('Lawnchair init failed!');
+		}
+	});
 
 	/**
 	 * Create or update an object
