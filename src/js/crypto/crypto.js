@@ -36,6 +36,8 @@ app.crypto.Crypto = function(window, util) {
 		// derive PBKDF2 from password in web worker thread
 		this.deriveKey(args.password, self.keySize, function(pbkdf2) {
 
+			// TODO: rm keystore logix and check args.storedKeypair
+
 			// fetch user's encrypted secret key from keychain/storage
 			var storedKeypair = keyStore.read(storageId);
 
@@ -52,13 +54,11 @@ app.crypto.Crypto = function(window, util) {
 
 		function generateKeypair(pbkdf2) {
 			// generate RSA keypair in web worker
-			rsa.generateKeypair(self.rsaKeySize, function(err) {
+			rsa.generateKeypair(self.rsaKeySize, function(err, keypair) {
 				if (err) {
 					callback(err);
 					return;
 				}
-
-				var keypair = rsa.exportKeys();
 
 				// encrypt keypair
 				var iv = util.random(self.ivSize);
@@ -73,6 +73,7 @@ app.crypto.Crypto = function(window, util) {
 				};
 				keyStore.persist(storageId, newStoredKeypair);
 
+				// TODO: return generated keypair for storage in keychain dao
 				callback();
 			});
 		}
