@@ -43,13 +43,13 @@ app.dao.DeviceStorage = function(util, crypto, jsonDao, sqlcipherDao) {
 	 * @param offset [Number] The offset of items to fetch (0 is the last stored item)
 	 * @param num [Number] The number of items to fetch (null means fetch all)
 	 */
-	this.listItems = function(type, offset, num, callback) {
+	this.listItems = function(type, offset, num, senderPubkeys, callback) {
 
 		// fetch all items of a certain type from the data-store
 		jsonDao.list(crypto.emailAddress + '_' + type, offset, num, function(encryptedList) {
 
 			// decrypt list
-			crypto.decryptListForUser(encryptedList, null, function(err, decryptedList) {
+			crypto.decryptListForUser(encryptedList, senderPubkeys, function(err, decryptedList) {
 				callback(err, decryptedList);
 			});
 		});

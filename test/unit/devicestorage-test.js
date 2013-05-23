@@ -39,7 +39,9 @@ asyncTest("Init", 3, function() {
 });
 
 asyncTest("Encrypt list for user", 2, function() {
-	devicestorage_test.crypto.encryptListForUser(devicestorage_test.list, null, function(err, encryptedList) {
+	var receiverPubkeys = [devicestorage_test.crypto.getPublicKey()];
+
+	devicestorage_test.crypto.encryptListForUser(devicestorage_test.list, receiverPubkeys, function(err, encryptedList) {
 		ok(!err);
 		equal(encryptedList.length, devicestorage_test.list.length, 'Encrypt list');
 
@@ -58,11 +60,13 @@ asyncTest("Store encrypted list", 1, function() {
 
 asyncTest("List items", 3, function() {
 
+	var senderPubkeys = [devicestorage_test.crypto.getPublicKey()];
+
 	var offset = 2,
 		num = 6;
 
 	// list items from storage (decrypted)
-	devicestorage_test.storage.listItems('email_inbox_5', offset, num, function(err, decryptedList) {
+	devicestorage_test.storage.listItems('email_inbox_5', offset, num, senderPubkeys, function(err, decryptedList) {
 		ok(!err);
 		equal(decryptedList.length, num, 'Found ' + decryptedList.length + ' items in store (and decrypted)');
 
