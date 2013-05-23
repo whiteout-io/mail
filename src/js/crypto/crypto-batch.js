@@ -58,8 +58,8 @@
 
 				// process new values
 				i.encryptedKey = rsa.encrypt(i.key);
-				i.signature = rsa.sign([i.iv, util.str2Base64(i.id), i.encryptedKey, i.ciphertext]);
 				i.senderPk = senderPrivkey._id;
+				i.signature = rsa.sign([i.iv, util.str2Base64(i.id), util.str2Base64(i.senderPk), i.encryptedKey, i.ciphertext]);
 				// delete old ones
 				delete i.key;
 				delete i.receiverPk;
@@ -90,7 +90,7 @@
 				rsa.init(pk.publicKey);
 
 				// verify signature
-				if (!rsa.verify([i.iv, util.str2Base64(i.id), i.encryptedKey, i.ciphertext], i.signature)) {
+				if (!rsa.verify([i.iv, util.str2Base64(i.id), util.str2Base64(i.senderPk), i.encryptedKey, i.ciphertext], i.signature)) {
 					throw new Error('Verifying RSA signature failed!');
 				}
 				// process new values
