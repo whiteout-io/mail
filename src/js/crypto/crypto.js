@@ -96,6 +96,8 @@ app.crypto.Crypto = function(window, util) {
 		}
 	};
 
+	// TODO: not required since key is synced before crypto init in keychain dao getUserKeyPair
+
 	/**
 	 * Return a Public Key object containing the Public Key PEM
 	 */
@@ -108,6 +110,8 @@ app.crypto.Crypto = function(window, util) {
 			publicKey: keypair.pubkeyPem
 		};
 	};
+
+	// TODO: not required since key is synced before crypto init in keychain dao getUserKeyPair
 
 	/**
 	 * Return a Private Key object containing the encrypted private key
@@ -122,6 +126,8 @@ app.crypto.Crypto = function(window, util) {
 
 		return storedKeypair;
 	};
+
+	// TODO: not required since key is synced before crypto init in keychain dao getUserKeyPair
 
 	this.putEncryptedPrivateKey = function(privkey) {
 		var strgId = (storageId) ? storageId : privkey.userId + '_encryptedKeypair';
@@ -261,9 +267,22 @@ app.crypto.Crypto = function(window, util) {
 	// En/Decrypt something speficially using the user's secret key
 	//
 
-	this.encryptListForUser = function(list, recipientPubkey, callback) {
+	this.encryptListForUser = function(list, receiverPubkeys, callback) {
 		var envelope, envelopes = [],
 			self = this;
+
+		if (!receiverPubkeys || receiverPubkeys.length !== 1) {
+			callback({
+				errMsg: 'Encryption is currently implemented for only one receiver!'
+			});
+			return;
+		}
+
+		var keypair = rsa.exportKeys();
+		var senderPrivkey = {
+			_id: keypair._id,
+			privateKey: keypair.privkeyPem
+		};
 
 		// package objects into batchable envelope format
 		list.forEach(function(i) {
@@ -271,14 +290,13 @@ app.crypto.Crypto = function(window, util) {
 				id: i.id,
 				plaintext: i,
 				key: util.random(self.keySize),
-				iv: util.random(self.ivSize)
+				iv: util.random(self.ivSize),
+				receiverPk: receiverPubkeys[0]._id
 			};
 			envelopes.push(envelope);
 		});
 
 		if (window.Worker) {
-
-			var keypair = rsa.exportKeys();
 
 			var worker = new Worker(app.config.workerPath + '/crypto/crypto-batch-worker.js');
 			worker.onmessage = function(e) {
@@ -287,21 +305,32 @@ app.crypto.Crypto = function(window, util) {
 			worker.postMessage({
 				type: 'encrypt',
 				list: envelopes,
-				pubkeyPem: keypair.pubkeyPem,
-				privkeyPem: keypair.privkeyPem
+				senderPrivkey: senderPrivkey,
+				receiverPubkeys: receiverPubkeys
 			});
 
 		} else {
-			var batch = new cryptoLib.CryptoBatch(aes, rsa, util);
-			var encryptedList = batch.encryptListForUser(envelopes);
+			var batch = new cryptoLib.CryptoBatch(aes, rsa, util, _);
+			var encryptedList = batch.encryptListForUser(envelopes, receiverPubkeys, senderPrivkey);
 			callback(null, encryptedList);
 		}
 	};
 
-	this.decryptListForUser = function(list, recipientPubkey, callback) {
-		if (window.Worker) {
+	this.decryptListForUser = function(list, senderPubkeys, callback) {
+		if (!senderPubkeys || senderPubkeys < 1) {
+			callback({
+				errMsg: 'Sender public keys must be set!'
+			});
+			return;
+		}
 
-			var keypair = rsa.exportKeys();
+		var keypair = rsa.exportKeys();
+		var receiverPrivkey = {
+			_id: keypair._id,
+			privateKey: keypair.privkeyPem
+		};
+
+		if (window.Worker) {
 
 			var worker = new Worker(app.config.workerPath + '/crypto/crypto-batch-worker.js');
 			worker.onmessage = function(e) {
@@ -310,13 +339,13 @@ app.crypto.Crypto = function(window, util) {
 			worker.postMessage({
 				type: 'decrypt',
 				list: list,
-				pubkeyPem: keypair.pubkeyPem,
-				privkeyPem: keypair.privkeyPem
+				receiverPrivkey: receiverPrivkey,
+				senderPubkeys: senderPubkeys
 			});
 
 		} else {
-			var batch = new cryptoLib.CryptoBatch(aes, rsa, util);
-			var decryptedList = batch.decryptListForUser(list);
+			var batch = new cryptoLib.CryptoBatch(aes, rsa, util, _);
+			var decryptedList = batch.decryptListForUser(list, senderPubkeys, receiverPrivkey);
 			callback(null, decryptedList);
 		}
 	};

@@ -98,7 +98,9 @@ asyncTest("AES/RSA encrypt batch for User (Async/Worker)", 2, function() {
 	collection = td.getEmailCollection(10);
 	crypto_test.list = collection.toJSON();
 
-	crypto_test.crypto.encryptListForUser(crypto_test.list, null, function(err, encryptedList) {
+	var receiverPubkeys = [crypto_test.crypto.getPublicKey()];
+
+	crypto_test.crypto.encryptListForUser(crypto_test.list, receiverPubkeys, function(err, encryptedList) {
 		ok(!err && encryptedList, 'Encrypt list for user');
 		equal(encryptedList.length, crypto_test.list.length, 'Length of list');
 		crypto_test.encryptedList = encryptedList;
@@ -108,7 +110,10 @@ asyncTest("AES/RSA encrypt batch for User (Async/Worker)", 2, function() {
 });
 
 asyncTest("AES/RSA decrypt batch for User (Async/Worker)", 3, function() {
-	crypto_test.crypto.decryptListForUser(crypto_test.encryptedList, null, function(err, decryptedList) {
+
+	var senderPubkeys = [crypto_test.crypto.getPublicKey()];
+
+	crypto_test.crypto.decryptListForUser(crypto_test.encryptedList, senderPubkeys, function(err, decryptedList) {
 		ok(!err && decryptedList, 'Decrypt list');
 		equal(decryptedList.length, crypto_test.list.length, 'Length of list');
 		deepEqual(decryptedList, crypto_test.list, 'Decrypted list is correct');
