@@ -5,10 +5,10 @@ var keychaindao_test = {
 	password: 'Password',
 	keySize: 128,
 	ivSize: 128,
-	rsaKeySize: 1024
+	rsaKeySize: 512
 };
 
-asyncTest("Init", 1, function() {
+asyncTest("Init", 2, function() {
 	// init dependencies
 	var util = new cryptoLib.Util(window, uuid);
 	var jsonDao = new app.dao.LawnchairDAO(window);
@@ -26,7 +26,35 @@ asyncTest("Init", 1, function() {
 	keychaindao_test.keychainDao = new app.dao.KeychainDAO(jsonDao, cloudstorageStub);
 	ok(keychaindao_test.keychainDao);
 
-	start();
+	// clear db before test
+	jsonDao.clear(function() {
+		ok(true, 'cleared db');
+
+		start();
+	});
+});
+
+asyncTest("Put User Keypair", 1, function() {
+
+	keychaindao_test.keypair = {
+		publicKey: {
+			_id: '1',
+			userId: keychaindao_test.user,
+			publicKey: 'asdf'
+		},
+		privateKey: {
+			_id: '1',
+			userId: keychaindao_test.user,
+			encryptedKey: 'qwer',
+			iv: 'yxvc'
+		}
+	};
+
+	keychaindao_test.keychainDao.putUserKeyPair(keychaindao_test.keypair, function(err) {
+		ok(!err);
+
+		start();
+	});
 });
 
 asyncTest("Get User Keypair", 2, function() {

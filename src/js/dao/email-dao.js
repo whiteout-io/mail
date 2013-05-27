@@ -11,6 +11,8 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, util) {
 	this.init = function(account, password, callback) {
 		this.account = account;
 
+		// TODO: call getUserKeyPair to read/sync keypair with devicestorage/cloud
+
 		// sync user's cloud key with local storage
 		var storedKey = crypto.getEncryptedPrivateKey(account.get('emailAddress'));
 		cloudstorage.syncPrivateKey(account.get('emailAddress'), storedKey, function(err) {
@@ -30,6 +32,9 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, util) {
 		});
 
 		function initCrypto() {
+
+			// TODO: passed fetched keypair from keychain dao
+
 			crypto.init({
 				emailAddress: account.get('emailAddress'),
 				password: password,
@@ -44,6 +49,8 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, util) {
 				publishPublicKey();
 			});
 		}
+
+		// TODO: refactor to be part of sync in getUserKeypair
 
 		function publishPublicKey() {
 			// get public key from crypto
@@ -84,7 +91,7 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, util) {
 
 		if (!folder) {
 			// get items from storage
-			devicestorage.listItems('email_' + folderName, offset, num, function(err, decryptedList) {
+			devicestorage.listItems('email_' + folderName, offset, num, null, function(err, decryptedList) {
 				if (err) {
 					callback(err);
 					return;

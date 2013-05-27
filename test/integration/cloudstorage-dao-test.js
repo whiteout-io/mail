@@ -10,7 +10,7 @@ var cloudstoragedao_test = {
 
 asyncTest("Init", 1, function() {
 	// init dependencies	
-	cloudstoragedao_test.util = new app.crypto.Util(window, uuid);
+	cloudstoragedao_test.util = new cryptoLib.Util(window, uuid);
 	var jsonDao = new app.dao.LawnchairDAO(window);
 	cloudstoragedao_test.crypto = new app.crypto.Crypto(window, cloudstoragedao_test.util);
 	cloudstoragedao_test.storage = new app.dao.DeviceStorage(cloudstoragedao_test.util, cloudstoragedao_test.crypto, jsonDao, null);
@@ -119,22 +119,22 @@ asyncTest("Init", 1, function() {
 	});
 });
 
-// asyncTest("Send Plaintext Email item", 1, function() {
+asyncTest("Send Plaintext Email item", 1, function() {
 
-// 	var email = new app.model.Email({
-// 		id: cloudstoragedao_test.util.UUID(),
-// 		from: cloudstoragedao_test.user, // sender address
-// 		to: [cloudstoragedao_test.user], // list of receivers
-// 		subject: 'Client Email DAO Test', // Subject line
-// 		body: 'Hello world' // plaintext body
-// 	});
+	var email = new app.model.Email({
+		id: cloudstoragedao_test.util.UUID(),
+		from: cloudstoragedao_test.user, // sender address
+		to: [cloudstoragedao_test.user], // list of receivers
+		subject: 'Client Email DAO Test', // Subject line
+		body: 'Hello world' // plaintext body
+	});
 
-// 	cloudstoragedao_test.emailDao.sendEmail(email, function(err) {
-// 		ok(!err, 'Email sent');
+	cloudstoragedao_test.emailDao.sendEmail(email, function(err) {
+		ok(!err, 'Email sent');
 
-// 		start();
-// 	});
-// });
+		start();
+	});
+});
 
 // asyncTest("Check virtual inbox, re-encrypt and push to cloud", 1, function() {
 // 	cloudstoragedao_test.emailDao.checkVInbox(function(err) {
@@ -144,14 +144,20 @@ asyncTest("Init", 1, function() {
 // 	});
 // });
 
-// asyncTest("Sync emails from cloud", 2, function() {
-// 	cloudstoragedao_test.emailDao.syncFromCloud('inbox', function(err) {
-// 		ok(!err, 'Synced items');
+asyncTest("Sync emails from cloud", 1, function() {
+	cloudstoragedao_test.emailDao.syncFromCloud('inbox', function(err) {
+		ok(!err, 'Synced items');
 
-// 		cloudstoragedao_test.emailDao.listItems('inbox', 0, null, function(collection) {
-// 			ok(collection.length > 0, 'Read synced items');
+		start();
+	});
+});
 
-// 			start();
-// 		});
-// 	});
-// });
+asyncTest("List emails from cloud", 3, function() {
+
+	cloudstoragedao_test.emailDao.listItems('inbox', 0, null, function(err, collection) {
+		ok(!err);
+		ok(collection.length > 0, 'Read synced items');
+
+		start();
+	});
+});
