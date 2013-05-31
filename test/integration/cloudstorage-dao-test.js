@@ -135,61 +135,51 @@ asyncTest("Get Public Keys", 2, function() {
 
 module("Email DAO");
 
-// asyncTest("Init", 1, function() {
+asyncTest("Init", 1, function() {
+	var account = new app.model.Account({
+		emailAddress: cloudstoragedao_test.user,
+		symKeySize: cloudstoragedao_test.keySize,
+		symIvSize: cloudstoragedao_test.ivSize,
+		asymKeySize: cloudstoragedao_test.rsaKeySize
+	});
 
-// 	var account = new app.model.Account({
-// 		emailAddress: cloudstoragedao_test.user,
-// 		symKeySize: cloudstoragedao_test.keySize,
-// 		symIvSize: cloudstoragedao_test.ivSize,
-// 		asymKeySize: cloudstoragedao_test.rsaKeySize
-// 	});
+	cloudstoragedao_test.emailDao.init(account, cloudstoragedao_test.password, function(err) {
+		ok(!err, 'Init complete');
 
-// 	cloudstoragedao_test.emailDao.init(account, cloudstoragedao_test.password, function(err) {
-// 		ok(!err, 'Init complete');
+		start();
+	});
+});
 
-// 		start();
-// 	});
-// });
+asyncTest("Send Plaintext Email item", 1, function() {
+	var email = new app.model.Email({
+		id: cloudstoragedao_test.util.UUID(),
+		from: cloudstoragedao_test.user, // sender address
+		to: [cloudstoragedao_test.user], // list of receivers
+		subject: 'Client Email DAO Test', // Subject line
+		body: 'Hello world' // plaintext body
+	});
 
-// asyncTest("Send Plaintext Email item", 1, function() {
+	cloudstoragedao_test.emailDao.sendEmail(email, function(err) {
+		ok(!err, 'Email sent');
 
-// 	var email = new app.model.Email({
-// 		id: cloudstoragedao_test.util.UUID(),
-// 		from: cloudstoragedao_test.user, // sender address
-// 		to: [cloudstoragedao_test.user], // list of receivers
-// 		subject: 'Client Email DAO Test', // Subject line
-// 		body: 'Hello world' // plaintext body
-// 	});
+		start();
+	});
+});
 
-// 	cloudstoragedao_test.emailDao.sendEmail(email, function(err) {
-// 		ok(!err, 'Email sent');
+asyncTest("Sync emails from cloud", 1, function() {
+	cloudstoragedao_test.emailDao.syncFromCloud('inbox', function(err) {
+		ok(!err, 'Synced items');
 
-// 		start();
-// 	});
-// });
+		start();
+	});
+});
 
-// asyncTest("Check virtual inbox, re-encrypt and push to cloud", 1, function() {
-// 	cloudstoragedao_test.emailDao.checkVInbox(function(err) {
-// 		ok(!err, 'Synced items');
+asyncTest("List emails from cloud", 2, function() {
 
-// 		start();
-// 	});
-// });
+	cloudstoragedao_test.emailDao.listItems('inbox', 0, null, function(err, collection) {
+		ok(!err);
+		ok(collection.length > 0, 'Read synced items');
 
-// asyncTest("Sync emails from cloud", 1, function() {
-// 	cloudstoragedao_test.emailDao.syncFromCloud('inbox', function(err) {
-// 		ok(!err, 'Synced items');
-
-// 		start();
-// 	});
-// });
-
-// asyncTest("List emails from cloud", 3, function() {
-
-// 	cloudstoragedao_test.emailDao.listItems('inbox', 0, null, function(err, collection) {
-// 		ok(!err);
-// 		ok(collection.length > 0, 'Read synced items');
-
-// 		start();
-// 	});
-// });
+		start();
+	});
+});

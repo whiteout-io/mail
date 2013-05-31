@@ -48,7 +48,9 @@ module.exports = function(grunt) {
 		qunit: {
 			all: {
 				options: {
-					urls: ['http://localhost:<%= connect.test.options.port %>/test/unit/index.html']
+					urls: [
+						'http://localhost:<%= connect.test.options.port %>/test/unit/index.html',
+						'http://localhost:<%= connect.test.options.port %>/test/integration/index.html']
 				}
 			}
 		}
