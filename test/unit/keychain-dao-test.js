@@ -15,10 +15,10 @@ asyncTest("Init", 2, function() {
 	var crypto = new app.crypto.Crypto(window, util);
 	// cloud storage stub
 	var cloudstorageStub = {
-		syncPrivateKey: function(emailAdress, storedKey, callback) {
+		putPublicKey: function(pk, callback) {
 			callback();
 		},
-		putPublicKey: function(pk, callback) {
+		putPrivateKey: function(prk, callback) {
 			callback();
 		}
 	};

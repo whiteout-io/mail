@@ -16,10 +16,10 @@ asyncTest("Init", 3, function() {
 	emaildao_test.storage = new app.dao.DeviceStorage(util, emaildao_test.crypto, jsonDao, null);
 	// cloud storage stub
 	var cloudstorageStub = {
-		syncPrivateKey: function(emailAdress, storedKey, callback) {
+		putPublicKey: function(pk, callback) {
 			callback();
 		},
-		putPublicKey: function(pk, callback) {
+		putPrivateKey: function(prk, callback) {
 			callback();
 		}
 	};

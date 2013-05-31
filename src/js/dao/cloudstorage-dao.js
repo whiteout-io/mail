@@ -6,58 +6,61 @@ app.dao.CloudStorage = function(window, $) {
 	'use strict';
 
 	//
-	// Public Key
+	// Generic Ajax helper functions
 	//
 
 	/**
-	 * Find the user's corresponding public key
+	 * GET (read) request
 	 */
-	this.getPublicKey = function(keyId, callback) {
-		var uri;
-
-		uri = app.config.cloudUrl + '/publickey/key/' + keyId;
+	this.get = function(uri, callback) {
 		$.ajax({
 			url: uri,
 			type: 'GET',
 			dataType: 'json',
-			success: function(key) {
-				if (!key || !key._id) {
-					callback({
-						error: 'No public key for that user!'
-					});
-					return;
-				}
-
-				callback(null, key);
+			success: function(res) {
+				callback(null, res);
 			},
 			error: function(xhr, textStatus, err) {
 				callback({
-					error: err,
-					status: textStatus
+					errMsg: xhr.status + ': ' + xhr.statusText
 				});
 			}
 		});
 	};
 
 	/**
-	 * Persist the user's publc key
+	 * PUT (update) request
 	 */
-	this.putPublicKey = function(pubkey, callback) {
-		var uri;
-
-		uri = app.config.cloudUrl + '/publickey/user/' + pubkey.userId + '/key/' + pubkey._id;
+	this.put = function(item, uri, callback) {
 		$.ajax({
 			url: uri,
 			type: 'PUT',
-			data: JSON.stringify(pubkey),
+			data: JSON.stringify(item),
 			contentType: 'application/json',
 			success: function() {
 				callback();
 			},
 			error: function(xhr, textStatus, err) {
 				callback({
-					error: err,
-					status: textStatus
+					errMsg: xhr.status + ': ' + xhr.statusText
+				});
+			}
+		});
+	};
+
+	/**
+	 * DELETE (remove) request
+	 */
+	this.remove = function(uri, callback) {
+		$.ajax({
+			url: uri,
+			type: 'DELETE',
+			success: function() {
+				callback();
+			},
+			error: function(xhr, textStatus, err) {
+				callback({
+					errMsg: xhr.status + ': ' + xhr.statusText
 				});
 			}
 		});
@@ -72,24 +75,8 @@ app.dao.CloudStorage = function(window, $) {
 	 * @param type [String] The type of item e.g. 'email'
 	 */
 	this.putEncryptedItem = function(item, type, emailAddress, folderName, callback) {
-		var uri;
-
-		uri = app.config.cloudUrl + '/' + type + '/user/' + emailAddress + '/folder/' + folderName + '/' + item.id;
-		$.ajax({
-			url: uri,
-			type: 'PUT',
-			data: JSON.stringify(item),
-			contentType: 'application/json',
-			success: function() {
-				callback();
-			},
-			error: function(xhr, textStatus, err) {
-				callback({
-					error: err,
-					status: textStatus
-				});
-			}
-		});
+		var uri = app.config.cloudUrl + '/' + type + '/user/' + emailAddress + '/folder/' + folderName + '/' + item.id;
+		this.put(item, uri, callback);
 	};
 
 	/**
@@ -97,22 +84,8 @@ app.dao.CloudStorage = function(window, $) {
 	 * @param type [String] The type of item e.g. 'email'
 	 */
 	this.deleteEncryptedItem = function(id, type, emailAddress, folderName, callback) {
-		var uri;
-
-		uri = app.config.cloudUrl + '/' + type + '/user/' + emailAddress + '/folder/' + folderName + '/' + id;
-		$.ajax({
-			url: uri,
-			type: 'DELETE',
-			success: function() {
-				callback();
-			},
-			error: function(xhr, textStatus, err) {
-				callback({
-					error: err,
-					status: textStatus
-				});
-			}
-		});
+		var uri = app.config.cloudUrl + '/' + type + '/user/' + emailAddress + '/folder/' + folderName + '/' + id;
+		this.remove(uri, callback);
 	};
 
 	/**
@@ -122,24 +95,51 @@ app.dao.CloudStorage = function(window, $) {
 	 * @param num [Number] The number of items to fetch (null means fetch all)
 	 */
 	this.listEncryptedItems = function(type, emailAddress, folderName, callback) {
-		var uri;
+		var uri = app.config.cloudUrl + '/' + type + '/user/' + emailAddress + '/folder/' + folderName;
+		this.get(uri, callback);
+	};
 
-		// fetch encrypted json objects from cloud service
-		uri = app.config.cloudUrl + '/' + type + '/user/' + emailAddress + '/folder/' + folderName;
-		$.ajax({
-			url: uri,
-			type: 'GET',
-			dataType: 'json',
-			success: function(list) {
-				callback(null, list);
-			},
-			error: function(xhr, textStatus, err) {
-				callback({
-					error: err,
-					status: textStatus
-				});
+	//
+	// Public Key
+	//
+
+	/**
+	 * Find the user's corresponding public key
+	 */
+	this.getPublicKey = function(keyId, callback) {
+		var uri = app.config.cloudUrl + '/publickey/key/' + keyId;
+
+		this.get(uri, function(err, key) {
+			if (err) {
+				callback(err);
+				return;
 			}
+
+			if (!key || !key._id) {
+				callback({
+					errMsg: 'No public key for that user!'
+				});
+				return;
+			}
+
+			callback(null, key);
 		});
+	};
+
+	/**
+	 * Persist the user's publc key
+	 */
+	this.putPublicKey = function(pubkey, callback) {
+		var uri = app.config.cloudUrl + '/publickey/user/' + pubkey.userId + '/key/' + pubkey._id;
+		this.put(pubkey, uri, callback);
+	};
+
+	/**
+	 * Delete the public key from the cloud storage service
+	 */
+	this.removePublicKey = function(keyId, callback) {
+		var uri = app.config.cloudUrl + '/publickey/key/' + keyId;
+		this.remove(uri, callback);
 	};
 
 	//
@@ -147,28 +147,41 @@ app.dao.CloudStorage = function(window, $) {
 	//
 
 	/**
+	 * Fetch private key by id
+	 */
+	this.getPrivateKey = function(keyId, callback) {
+		var uri = app.config.cloudUrl + '/privatekey/key/' + keyId;
+		this.get(uri, function(err, key) {
+			if (err) {
+				callback(err);
+				return;
+			}
+
+			if (!key || !key._id) {
+				callback({
+					errMsg: 'No private key for that user!'
+				});
+				return;
+			}
+
+			callback(null, key);
+		});
+	};
+
+	/**
 	 * Persist encrypted private key to cloud service
 	 */
 	this.putPrivateKey = function(privkey, callback) {
-		// fetch user's encrypted secret key from keychain/storage
-		var uri;
+		var uri = app.config.cloudUrl + '/privatekey/user/' + privkey.userId + '/key/' + privkey._id;
+		this.put(privkey, uri, callback);
+	};
 
-		uri = app.config.cloudUrl + '/privatekey/user/' + privkey.userId + '/key/' + privkey._id;
-		$.ajax({
-			url: uri,
-			type: 'PUT',
-			data: JSON.stringify(privkey),
-			contentType: 'application/json',
-			success: function() {
-				callback();
-			},
-			error: function(xhr, textStatus, err) {
-				callback({
-					error: err,
-					status: textStatus
-				});
-			}
-		});
+	/**
+	 * Delete the private key from the cloud storage service
+	 */
+	this.removePrivateKey = function(keyId, callback) {
+		var uri = app.config.cloudUrl + '/privatekey/key/' + keyId;
+		this.remove(uri, callback);
 	};
 
 	/**
@@ -180,32 +193,24 @@ app.dao.CloudStorage = function(window, $) {
 			gottenKey, uri;
 
 		uri = app.config.cloudUrl + '/privatekey/user/' + emailAddress;
-		$.ajax({
-			url: uri,
-			type: 'GET',
-			dataType: 'json',
-			success: function(keys) {
-				if (!keys) {
-					callback({
-						error: 'err',
-						status: 'Key not synced!'
-					});
-					return;
-				}
-
-				// use first key, if it exists
-				if (keys.length > 0) {
-					gottenKey = keys[0];
-				}
-
-				handleKey(gottenKey, callback);
-			},
-			error: function(xhr, textStatus, err) {
-				callback({
-					error: err,
-					status: textStatus
-				});
+		self.get(uri, function(err, keys) {
+			if (err) {
+				callback(err);
+				return;
 			}
+			if (!keys) {
+				callback({
+					errMsg: 'Key not synced!'
+				});
+				return;
+			}
+
+			// use first key, if it exists
+			if (keys.length > 0) {
+				gottenKey = keys[0];
+			}
+
+			handleKey(gottenKey, callback);
 		});
 
 		function handleKey(fetchedKey, callback) {
