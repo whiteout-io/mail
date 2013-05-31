@@ -2,7 +2,7 @@
  * A high-level Data-Access Api for handling Email synchronization
  * between the cloud service and the device's local storage
  */
-app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, util) {
+app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, util, keychain) {
 	'use strict';
 
 	/**
@@ -11,54 +11,46 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, util) {
 	this.init = function(account, password, callback) {
 		this.account = account;
 
-		// TODO: call getUserKeyPair to read/sync keypair with devicestorage/cloud
-
-		// sync user's cloud key with local storage
-		var storedKey = crypto.getEncryptedPrivateKey(account.get('emailAddress'));
-		cloudstorage.syncPrivateKey(account.get('emailAddress'), storedKey, function(err) {
+		// call getUserKeyPair to read/sync keypair with devicestorage/cloud
+		keychain.getUserKeyPair(account.get('emailAddress'), function(err, storedKeypair) {
 			if (err) {
-				console.log('Error syncing private key to cloud: ' + err);
+				callback(err);
+				return;
 			}
 			// init crypto
-			initCrypto();
+			initCrypto(storedKeypair);
 
-		}, function(fetchedKey) {
-			// replace local key with cloud key
-			crypto.putEncryptedPrivateKey(fetchedKey);
-			// whipe local storage
+		}, function(err, keypairReplacement) {
+			if (err) {
+				callback(err);
+				return;
+			}
+			// whipe local storage in case local keypair was replaced with cloud keypair
 			devicestorage.clear(function() {
-				initCrypto();
+				// init crypto and generate new keypair
+				initCrypto(keypairReplacement);
 			});
 		});
 
-		function initCrypto() {
-
-			// TODO: passed fetched keypair from keychain dao
-
+		function initCrypto(storedKeypair) {
 			crypto.init({
 				emailAddress: account.get('emailAddress'),
 				password: password,
 				keySize: account.get('symKeySize'),
-				rsaKeySize: account.get('asymKeySize')
-			}, function(err) {
+				rsaKeySize: account.get('asymKeySize'),
+				storedKeypair: storedKeypair
+			}, function(err, generatedKeypair) {
 				if (err) {
 					callback(err);
 					return;
 				}
 
-				publishPublicKey();
-			});
-		}
-
-		// TODO: refactor to be part of sync in getUserKeypair
-
-		function publishPublicKey() {
-			// get public key from crypto
-			var pubkey = crypto.getPublicKey();
-
-			//publish public key to cloud service
-			cloudstorage.putPublicKey(pubkey, function(err) {
-				callback(err);
+				if (generatedKeypair) {
+					// persist newly generated keypair
+					keychain.putUserKeyPair(generatedKeypair, callback);
+				} else {
+					callback();
+				}
 			});
 		}
 	};
@@ -82,7 +74,8 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, util) {
 	 * @param num [Number] The number of items to fetch (null means fetch all)
 	 */
 	this.listItems = function(folderName, offset, num, callback) {
-		var collection, folder, self = this;
+		var collection, folder, already, pubkeyIds = [],
+			self = this;
 
 		// check if items are in memory already (account.folders model)
 		folder = this.account.get('folders').where({
@@ -90,26 +83,56 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, util) {
 		})[0];
 
 		if (!folder) {
-			// get items from storage
-			devicestorage.listItems('email_' + folderName, offset, num, null, function(err, decryptedList) {
+			// get encrypted items from storage
+			devicestorage.listEncryptedItems('email_' + folderName, offset, num, function(err, encryptedList) {
 				if (err) {
 					callback(err);
 					return;
 				}
 
-				// parse to backbone model collection
-				collection = new app.model.EmailCollection(decryptedList);
-
-				// cache collection in folder memory
-				if (decryptedList.length > 0) {
-					folder = new app.model.Folder({
-						name: folderName
+				// gather public key ids required to verify signatures
+				encryptedList.forEach(function(i) {
+					already = null;
+					already = _.findWhere(pubkeyIds, {
+						_id: i.senderPk
 					});
-					folder.set('items', collection);
-					self.account.get('folders').add(folder);
-				}
+					if (!already) {
+						pubkeyIds.push({
+							_id: i.senderPk
+						});
+					}
+				});
 
-				callback(null, collection);
+				// fetch public keys from keychain
+				keychain.getPublicKeys(pubkeyIds, function(err, senderPubkeys) {
+					if (err) {
+						callback(err);
+						return;
+					}
+
+					// decrypt list
+					crypto.decryptListForUser(encryptedList, senderPubkeys, function(err, decryptedList) {
+						if (err) {
+							callback(err);
+							return;
+						}
+
+						// parse to backbone model collection
+						collection = new app.model.EmailCollection(decryptedList);
+
+						// cache collection in folder memory
+						if (decryptedList.length > 0) {
+							folder = new app.model.Folder({
+								name: folderName
+							});
+							folder.set('items', collection);
+							self.account.get('folders').add(folder);
+						}
+
+						callback(null, collection);
+					});
+
+				});
 			});
 
 		} else {

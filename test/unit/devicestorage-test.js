@@ -59,28 +59,33 @@ asyncTest("Store encrypted list", 1, function() {
 	});
 });
 
-asyncTest("List items", 3, function() {
+asyncTest("List items", 4, function() {
 
 	var senderPubkeys = [devicestorage_test.generatedKeypair.publicKey];
 
 	var offset = 2,
 		num = 6;
 
-	// list items from storage (decrypted)
-	devicestorage_test.storage.listItems('email_inbox_5', offset, num, senderPubkeys, function(err, decryptedList) {
+	// list encrypted items from storage
+	devicestorage_test.storage.listEncryptedItems('email_inbox_5', offset, num, function(err, encryptedList) {
 		ok(!err);
-		equal(decryptedList.length, num, 'Found ' + decryptedList.length + ' items in store (and decrypted)');
 
-		var decrypted, orig = devicestorage_test.list[54];
+		// decrypt list
+		devicestorage_test.crypto.decryptListForUser(encryptedList, senderPubkeys, function(err, decryptedList) {
+			ok(!err);
+			equal(decryptedList.length, num, 'Found ' + decryptedList.length + ' items in store (and decrypted)');
 
-		// check ids
-		for (var i = 0; i < decryptedList.length; i++) {
-			if (decryptedList[i].id === orig.id && decryptedList[i].from === orig.from) {
-				deepEqual(decryptedList[i], orig, 'Messages decrypted correctly');
-				break;
+			var decrypted, orig = devicestorage_test.list[54];
+
+			// check ids
+			for (var i = 0; i < decryptedList.length; i++) {
+				if (decryptedList[i].id === orig.id && decryptedList[i].from === orig.from) {
+					deepEqual(decryptedList[i], orig, 'Messages decrypted correctly');
+					break;
+				}
 			}
-		}
 
-		start();
+			start();
+		});
 	});
 });

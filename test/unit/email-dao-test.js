@@ -23,7 +23,8 @@ asyncTest("Init", 3, function() {
 			callback();
 		}
 	};
-	emaildao_test.emailDao = new app.dao.EmailDAO(_, emaildao_test.crypto, emaildao_test.storage, cloudstorageStub, util);
+	emaildao_test.keychain = new app.dao.KeychainDAO(jsonDao, cloudstorageStub);
+	emaildao_test.emailDao = new app.dao.EmailDAO(_, emaildao_test.crypto, emaildao_test.storage, cloudstorageStub, util, emaildao_test.keychain);
 
 	// generate test data
 	emaildao_test.list = new TestData().getEmailCollection(100);
@@ -35,33 +36,39 @@ asyncTest("Init", 3, function() {
 		asymKeySize: emaildao_test.rsaKeySize
 	});
 
-	emaildao_test.emailDao.init(account, emaildao_test.password, function(err) {
-		ok(!err);
-		equal(emaildao_test.emailDao.account.get('emailAddress'), emaildao_test.user, 'Email DAO Account');
+	// clear db before tests
+	jsonDao.clear(function(err) {
+		ok(!err, 'DB cleared. Error status: ' + err);
 
-		// clear db before tests
-		jsonDao.clear(function(err) {
-			ok(!err, 'DB cleared. Error status: ' + err);
+		emaildao_test.emailDao.init(account, emaildao_test.password, function(err) {
+			ok(!err);
+			equal(emaildao_test.emailDao.account.get('emailAddress'), emaildao_test.user, 'Email DAO Account');
 
 			start();
 		});
 	});
 });
 
-asyncTest("Persist test emails", 3, function() {
-	emaildao_test.crypto.encryptListForUser(emaildao_test.list.toJSON(), null, function(err, encryptedList) {
-		ok(!err);
-		equal(encryptedList.length, emaildao_test.list.length, 'Encrypt list');
+asyncTest("Persist test emails", 4, function() {
+	emaildao_test.keychain.getUserKeyPair(emaildao_test.user, function(err, keypair) {
+		ok(!err && keypair, 'Fetch keypair from keychain');
 
-		// add sent date to encrypted items
-		for (var i = 0; i < encryptedList.length; i++) {
-			encryptedList[i].sentDate = emaildao_test.list.at(i).get('sentDate');
-		}
+		var receiverPubkeys = [keypair.publicKey];
 
-		emaildao_test.storage.storeEcryptedList(encryptedList, 'email_inbox', function() {
-			ok(true, 'Store encrypted list');
+		emaildao_test.crypto.encryptListForUser(emaildao_test.list.toJSON(), receiverPubkeys, function(err, encryptedList) {
+			ok(!err);
+			equal(encryptedList.length, emaildao_test.list.length, 'Encrypt list');
 
-			start();
+			// add sent date to encrypted items
+			for (var i = 0; i < encryptedList.length; i++) {
+				encryptedList[i].sentDate = emaildao_test.list.at(i).get('sentDate');
+			}
+
+			emaildao_test.storage.storeEcryptedList(encryptedList, 'email_inbox', function() {
+				ok(true, 'Store encrypted list');
+
+				start();
+			});
 		});
 	});
 });

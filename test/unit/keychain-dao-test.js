@@ -66,6 +66,14 @@ asyncTest("Get User Keypair", 2, function() {
 	});
 });
 
-// asyncTest("Get Public Keys", 1, function() {
+asyncTest("Get Public Keys", 2, function() {
+	var pubkeyIds = [{
+		_id: keychaindao_test.keypair.publicKey._id
+	}];
+	keychaindao_test.keychainDao.getPublicKeys(pubkeyIds, function(err, pubkeys) {
+		ok(!err);
+		deepEqual(pubkeys[0], keychaindao_test.keypair.publicKey, "Fetch public key");
 
-// });
+		start();
+	});
+});

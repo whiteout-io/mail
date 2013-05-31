@@ -12,32 +12,59 @@ app.dao.KeychainDAO = function(jsonDao, cloudstorage) {
 	 * @return [PublicKeyCollection] The requiested public keys
 	 */
 	this.getPublicKeys = function(ids, callback) {
+		var already, pubkeys = [];
 
+		var after = _.after(ids.length, function() {
+			callback(null, pubkeys);
+		});
+
+		_.each(ids, function(i) {
+			// try to read public key from local storage
+			jsonDao.read('publickey_' + i._id, function(pubkey) {
+				if (!pubkey) {
+					// TODO: fetch from cloud storage
+					callback({
+						errMsg: 'Not implemented yet!'
+					});
+					return;
+				}
+
+				// check if public key with that id has already been fetched
+				already = null;
+				already = _.findWhere(pubkeys, {
+					_id: i._id
+				});
+				if (!already) {
+					pubkeys.push(pubkey);
+				}
+
+				after(); // asynchronously iterate through objects
+			});
+		});
 	};
 
 	/**
 	 * Gets the local user's key either from local storage
-	 * or syncronizes from the cloud. The private key is encrypted.
+	 * or fetches it from the cloud. The private key is encrypted.
 	 * If no key pair exists, null is returned.
 	 * return [Object] The user's key pair {publicKey, privateKey}
 	 */
 	this.getUserKeyPair = function(userId, callback) {
-		// loojup public key id
+		// lookup public key id
 		jsonDao.read('publickey_' + userId, function(pubkeyId) {
+			if (!pubkeyId || !pubkeyId._id) {
+				// no public key in storage
+				// TODO: fetch from cloud
+				// TODO: persist in local storage
+				callback();
+				return;
+			}
+
 			// try to read public key from local storage
 			jsonDao.read('publickey_' + pubkeyId._id, function(pubkey) {
-				if (!pubkey) {
-					// no public key in storage
-					// TODO: fetch from cloud
-					// TODO: persist in local storage
-					callback({
-						errMsg: 'Not implemented yet!'
-					});
-				} else {
-					// public key found
-					// get corresponding private key
-					fetchEncryptedPrivateKey(pubkey);
-				}
+				// public key found				
+				// get corresponding private key
+				fetchEncryptedPrivateKey(pubkey);
 			});
 		});
 
@@ -75,6 +102,8 @@ app.dao.KeychainDAO = function(jsonDao, cloudstorage) {
 			});
 			return;
 		}
+
+		// TODO: persist in the cloud
 
 		// persist public key (email, _id)
 		var pkLookupKey = 'publickey_' + keypair.publicKey.userId;
