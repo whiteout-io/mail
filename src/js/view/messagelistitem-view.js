@@ -15,7 +15,7 @@
 			params.folder = this.options.folder;
 			params.id = encodeURIComponent(params.id);
 
-			var util = new app.crypto.Util(window, null);
+			var util = new cryptoLib.Util(window, null);
 			var date = util.parseDate(params.sentDate);
 			params.displayDate = date.getDate() + '.' + (date.getMonth() + 1) + '. ' + date.getHours() + ':' + date.getMinutes();
 

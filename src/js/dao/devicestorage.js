@@ -15,6 +15,12 @@ app.dao.DeviceStorage = function(util, crypto, jsonDao, sqlcipherDao) {
 	this.storeEcryptedList = function(list, type, callback) {
 		var i, date, key, items = [];
 
+		// nothing to store
+		if (list.length === 0) {
+			callback();
+			return;
+		}
+
 		// format items for batch storing in dao
 		list.forEach(function(i) {
 

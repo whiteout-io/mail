@@ -30,7 +30,8 @@
 			var account = new app.model.Account({
 				emailAddress: userId,
 				symKeySize: app.config.symKeySize,
-				symIvSize: app.config.symIvSize
+				symIvSize: app.config.symIvSize,
+				asymKeySize: app.config.asymKeySize
 			});
 
 			// show loading msg during init

@@ -20,8 +20,8 @@ var app; // container for the application namespace
 	app.config = {
 		cloudUrl: 'http://storage.whiteout.io',
 		symKeySize: 128,
-		symIvSize: 104,
-		asymKeySize: 2048,
+		symIvSize: 128,
+		asymKeySize: 1024,
 		workerPath: 'js'
 	};
 

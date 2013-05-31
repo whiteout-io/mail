@@ -78,6 +78,10 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, util, keycha
 					callback(err);
 					return;
 				}
+				if (encryptedList.length === 0) {
+					callback(null, new app.model.EmailCollection());
+					return;
+				}
 
 				// gather public key ids required to verify signatures
 				encryptedList.forEach(function(i) {
@@ -139,10 +143,11 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, util, keycha
 		var folder, self = this;
 
 		cloudstorage.listEncryptedItems('email', this.account.get('emailAddress'), folderName, function(err, data) {
-			// return if an error occured or if fetched list from cloud storage is empty
-			if (err || !data || data.status || data.length === 0) {
+			// return if an error occured
+			if (err) {
 				callback({
-					error: err
+					errMsg: 'Syncing encrypted items from cloud failed!',
+					err: err
 				}); // error
 				return;
 			}
