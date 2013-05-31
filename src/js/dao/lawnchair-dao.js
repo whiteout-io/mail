@@ -1,7 +1,7 @@
 /**
  * Handles generic caching of JSON objects in a lawnchair adapter
  */
-app.dao.LawnchairDAO = function(window) {
+app.dao.LawnchairDAO = function(Lawnchair) {
 	'use strict';
 
 	var db = new Lawnchair({

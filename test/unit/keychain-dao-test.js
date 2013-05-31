@@ -11,7 +11,7 @@ var keychaindao_test = {
 asyncTest("Init", 2, function() {
 	// init dependencies
 	var util = new cryptoLib.Util(window, uuid);
-	var jsonDao = new app.dao.LawnchairDAO(window);
+	var jsonDao = new app.dao.LawnchairDAO(Lawnchair);
 	var crypto = new app.crypto.Crypto(window, util);
 	// cloud storage stub
 	var cloudstorageStub = {

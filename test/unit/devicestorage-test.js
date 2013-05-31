@@ -11,7 +11,7 @@ var devicestorage_test = {
 asyncTest("Init", 3, function() {
 	// init dependencies
 	devicestorage_test.util = new cryptoLib.Util(window, uuid);
-	devicestorage_test.jsonDao = new app.dao.LawnchairDAO(window);
+	devicestorage_test.jsonDao = new app.dao.LawnchairDAO(Lawnchair);
 	devicestorage_test.crypto = new app.crypto.Crypto(window, devicestorage_test.util);
 	devicestorage_test.storage = new app.dao.DeviceStorage(devicestorage_test.util, devicestorage_test.crypto, devicestorage_test.jsonDao, null);
 	ok(devicestorage_test.storage, 'DeviceStorageDAO');

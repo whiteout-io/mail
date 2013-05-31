@@ -4,7 +4,7 @@ var lawnchairdao_test = {};
 
 asyncTest("Init", 2, function() {
 	// init dependencies
-	lawnchairdao_test.jsonDao = new app.dao.LawnchairDAO(window);
+	lawnchairdao_test.jsonDao = new app.dao.LawnchairDAO(Lawnchair);
 	ok(lawnchairdao_test.jsonDao, 'LanwchairDAO');
 
 	// clear db before test
