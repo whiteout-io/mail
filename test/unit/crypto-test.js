@@ -8,41 +8,42 @@ var crypto_test = {
 	rsaKeySize: 1024
 };
 
-asyncTest("Init", 2, function() {
+asyncTest("Init without keypair", 4, function() {
 	// init dependencies
 	crypto_test.util = new cryptoLib.Util(window, uuid);
 	crypto_test.crypto = new app.crypto.Crypto(window, crypto_test.util);
 	ok(crypto_test.crypto, 'Crypto');
 
+	// test without passing keys
 	crypto_test.crypto.init({
 		emailAddress: crypto_test.user,
 		password: crypto_test.password,
 		keySize: crypto_test.keySize,
 		rsaKeySize: crypto_test.rsaKeySize
-	}, function(err) {
-		ok(!err, 'Init crypto');
+	}, function(err, generatedKeypair) {
+		ok(!err && generatedKeypair, 'Init crypto without keypair input');
+		var pk = generatedKeypair.publicKey;
+		ok(pk._id && pk.userId, 'Key ID: ' + pk._id);
+		ok(pk.publicKey.indexOf('-----BEGIN PUBLIC KEY-----') === 0, pk.publicKey);
+		crypto_test.generatedKeypair = generatedKeypair;
 
 		start();
 	});
 });
 
-test("Get Public Key PEM", 2, function() {
-	var pk = crypto_test.crypto.getPublicKey();
-	ok(pk._id && pk.userId, 'Key ID: ' + pk._id);
-	ok(pk.publicKey.indexOf('-----BEGIN PUBLIC KEY-----') === 0, pk.publicKey);
-});
+asyncTest("Init with keypair", 1, function() {
+	// test with passing keypair
+	crypto_test.crypto.init({
+		emailAddress: crypto_test.user,
+		password: crypto_test.password,
+		keySize: crypto_test.keySize,
+		rsaKeySize: crypto_test.rsaKeySize,
+		storedKeypair: crypto_test.generatedKeypair
+	}, function(err, generatedKeypair) {
+		ok(!err, 'Init crypto with keypair input');
 
-test("Get Encrypted Private Key", 2, function() {
-	var prk = crypto_test.crypto.getEncryptedPrivateKey();
-	ok(prk._id && prk.userId, 'Key ID: ' + prk._id);
-	ok(prk.encryptedKey, prk.encryptedKey);
-
-	crypto_test.prk = prk;
-});
-
-test("Put Encrypted Private Key", 1, function() {
-	crypto_test.crypto.putEncryptedPrivateKey(crypto_test.prk);
-	ok(true);
+		start();
+	});
 });
 
 asyncTest("PBKDF2 (Async/Worker)", 1, function() {
@@ -98,7 +99,7 @@ asyncTest("AES/RSA encrypt batch for User (Async/Worker)", 2, function() {
 	collection = td.getEmailCollection(10);
 	crypto_test.list = collection.toJSON();
 
-	var receiverPubkeys = [crypto_test.crypto.getPublicKey()];
+	var receiverPubkeys = [crypto_test.generatedKeypair.publicKey];
 
 	crypto_test.crypto.encryptListForUser(crypto_test.list, receiverPubkeys, function(err, encryptedList) {
 		ok(!err && encryptedList, 'Encrypt list for user');
@@ -111,7 +112,7 @@ asyncTest("AES/RSA encrypt batch for User (Async/Worker)", 2, function() {
 
 asyncTest("AES/RSA decrypt batch for User (Async/Worker)", 3, function() {
 
-	var senderPubkeys = [crypto_test.crypto.getPublicKey()];
+	var senderPubkeys = [crypto_test.generatedKeypair.publicKey];
 
 	crypto_test.crypto.decryptListForUser(crypto_test.encryptedList, senderPubkeys, function(err, decryptedList) {
 		ok(!err && decryptedList, 'Decrypt list');

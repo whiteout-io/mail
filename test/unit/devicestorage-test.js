@@ -25,8 +25,9 @@ asyncTest("Init", 3, function() {
 		password: devicestorage_test.password,
 		keySize: devicestorage_test.keySize,
 		rsaKeySize: devicestorage_test.rsaKeySize
-	}, function(err) {
-		ok(!err, 'Init crypto');
+	}, function(err, generatedKeypair) {
+		ok(!err && generatedKeypair, 'Init crypto');
+		devicestorage_test.generatedKeypair = generatedKeypair;
 
 		// clear db before tests
 		devicestorage_test.jsonDao.clear(function(err) {
@@ -39,7 +40,7 @@ asyncTest("Init", 3, function() {
 });
 
 asyncTest("Encrypt list for user", 2, function() {
-	var receiverPubkeys = [devicestorage_test.crypto.getPublicKey()];
+	var receiverPubkeys = [devicestorage_test.generatedKeypair.publicKey];
 
 	devicestorage_test.crypto.encryptListForUser(devicestorage_test.list, receiverPubkeys, function(err, encryptedList) {
 		ok(!err);
@@ -60,7 +61,7 @@ asyncTest("Store encrypted list", 1, function() {
 
 asyncTest("List items", 3, function() {
 
-	var senderPubkeys = [devicestorage_test.crypto.getPublicKey()];
+	var senderPubkeys = [devicestorage_test.generatedKeypair.publicKey];
 
 	var offset = 2,
 		num = 6;

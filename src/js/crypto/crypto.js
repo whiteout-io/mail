@@ -7,9 +7,6 @@ app.crypto.Crypto = function(window, util) {
 
 	var aes = new cryptoLib.AesCBC(forge); // use AES-CBC mode by default
 	var rsa = new cryptoLib.RSA(forge, util); // use RSA for asym. crypto
-	var keyStore = new app.dao.LocalStorageDAO(window);
-
-	var storageId; // storage id for the encrypted keypair in local storage
 
 	/**
 	 * Initializes the crypto modules by fetching the user's
@@ -26,35 +23,28 @@ app.crypto.Crypto = function(window, util) {
 			return;
 		}
 
-		this.emailAddress = args.emailAddress;
-		this.keySize = args.keySize;
-		this.ivSize = args.keySize;
-		this.rsaKeySize = args.rsaKeySize;
-
-		storageId = self.emailAddress + '_encryptedKeypair';
+		self.emailAddress = args.emailAddress;
+		self.keySize = args.keySize;
+		self.ivSize = args.keySize;
+		self.rsaKeySize = args.rsaKeySize;
 
 		// derive PBKDF2 from password in web worker thread
-		this.deriveKey(args.password, self.keySize, function(pbkdf2) {
-
-			// TODO: rm keystore logix and check args.storedKeypair
-
-			// fetch user's encrypted secret key from keychain/storage
-			var storedKeypair = keyStore.read(storageId);
+		self.deriveKey(args.password, self.keySize, function(pbkdf2) {
 
 			// check if key exists
-			if (!storedKeypair) {
+			if (!args.storedKeypair) {
 				// generate keys, encrypt and persist if none exists
 				generateKeypair(pbkdf2);
 			} else {
 				// decrypt key
-				decryptKeypair(storedKeypair, pbkdf2);
+				decryptKeypair(args.storedKeypair, pbkdf2);
 			}
 
 		});
 
 		function generateKeypair(pbkdf2) {
 			// generate RSA keypair in web worker
-			rsa.generateKeypair(self.rsaKeySize, function(err, keypair) {
+			rsa.generateKeypair(self.rsaKeySize, function(err, generatedKeypair) {
 				if (err) {
 					callback(err);
 					return;
@@ -62,28 +52,43 @@ app.crypto.Crypto = function(window, util) {
 
 				// encrypt keypair
 				var iv = util.random(self.ivSize);
-				var encryptedKeys = aes.encrypt(JSON.stringify(keypair), pbkdf2, iv);
+				var encryptedPrivateKey = aes.encrypt(generatedKeypair.privkeyPem, pbkdf2, iv);
 
-				// store encrypted keypair
-				var newStoredKeypair = {
-					_id: keypair._id,
-					userId: self.emailAddress,
-					encryptedKey: encryptedKeys,
-					iv: iv
+				// new encrypted keypair object
+				var newKeypair = {
+					publicKey: {
+						_id: generatedKeypair._id,
+						userId: self.emailAddress,
+						publicKey: generatedKeypair.pubkeyPem
+					},
+					privateKey: {
+						_id: generatedKeypair._id,
+						userId: self.emailAddress,
+						encryptedKey: encryptedPrivateKey,
+						iv: iv
+					}
 				};
-				keyStore.persist(storageId, newStoredKeypair);
 
-				// TODO: return generated keypair for storage in keychain dao
-				callback();
+				// return generated keypair for storage in keychain dao
+				callback(null, newKeypair);
 			});
 		}
 
 		function decryptKeypair(storedKeypair, pbkdf2) {
-			var keypairJson, keypair;
+			var decryptedPrivateKey;
+
+			// validate input
+			if (!storedKeypair || !storedKeypair.privateKey || !storedKeypair.privateKey.encryptedKey || !storedKeypair.privateKey.iv) {
+				callback({
+					errMsg: 'Incomplete arguments for private key decryption!'
+				});
+				return;
+			}
+
 			// try to decrypt with pbkdf2
 			try {
-				keypairJson = aes.decrypt(storedKeypair.encryptedKey, pbkdf2, storedKeypair.iv);
-				keypair = JSON.parse(keypairJson);
+				var prK = storedKeypair.privateKey;
+				decryptedPrivateKey = aes.decrypt(prK.encryptedKey, pbkdf2, prK.iv);
 			} catch (ex) {
 				callback({
 					errMsg: 'Wrong password!'
@@ -91,54 +96,10 @@ app.crypto.Crypto = function(window, util) {
 				return;
 			}
 			// set rsa keys
-			rsa.init(keypair.pubkeyPem, keypair.privkeyPem, keypair._id);
+			rsa.init(storedKeypair.publicKey.publicKey, decryptedPrivateKey, storedKeypair.publicKey._id);
 
 			callback();
 		}
-	};
-
-	// TODO: not required since key is synced before crypto init in keychain dao getUserKeyPair
-
-	/**
-	 * Return a Public Key object containing the Public Key PEM
-	 */
-	this.getPublicKey = function() {
-		var keypair = rsa.exportKeys();
-
-		return {
-			_id: keypair._id,
-			userId: this.emailAddress,
-			publicKey: keypair.pubkeyPem
-		};
-	};
-
-	// TODO: not required since key is synced before crypto init in keychain dao getUserKeyPair
-
-	/**
-	 * Return a Private Key object containing the encrypted private key
-	 */
-	this.getEncryptedPrivateKey = function(emailAddress) {
-		if (!emailAddress && !storageId) {
-			throw new Error('Emailaddress needs to be set or crypto needs to be initiated!');
-		}
-
-		var strgId = (storageId) ? storageId : emailAddress + '_encryptedKeypair';
-		var storedKeypair = keyStore.read(strgId);
-
-		return storedKeypair;
-	};
-
-	// TODO: not required since key is synced before crypto init in keychain dao getUserKeyPair
-
-	this.putEncryptedPrivateKey = function(privkey) {
-		var strgId = (storageId) ? storageId : privkey.userId + '_encryptedKeypair';
-
-		// validate private key object
-		if (!strgId || !privkey || !privkey._id || !privkey.userId || !privkey.encryptedKey || !privkey.iv) {
-			throw new Error('Invalid encrypted private key object... will not store!');
-		}
-
-		return keyStore.persist(strgId, privkey);
 	};
 
 	/**
