@@ -73,23 +73,6 @@ asyncTest("Delete Public key from cloud", 1, function() {
 	});
 });
 
-// asyncTest("Sync private key from cloud", 1, function() {
-// 	cloudstoragedao_test.cloudstorage.syncPrivateKey(cloudstoragedao_test.user, null, function(err) {
-// 		ok(!err, 'Get/Sync key from cloud');
-
-// 		start();
-// 	}, function(fetchedKey) {
-// 		// replace local key with cloud key
-// 		cloudstoragedao_test.crypto.putEncryptedPrivateKey(fetchedKey);
-// 		// whipe local storage
-// 		cloudstoragedao_test.storage.clear(function(err) {
-// 			ok(!err, 'DB cleared. Error status: ' + err);
-
-// 			start();
-// 		});
-// 	});
-// });
-
 asyncTest("Put private key to cloud", 1, function() {
 	cloudstoragedao_test.cloudstorage.putPrivateKey(cloudstoragedao_test.keypair.privateKey, function(err) {
 		ok(!err, 'Persist key to cloud');

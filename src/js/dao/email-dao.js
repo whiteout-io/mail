@@ -19,17 +19,6 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, util, keycha
 			}
 			// init crypto
 			initCrypto(storedKeypair);
-
-		}, function(err, keypairReplacement) {
-			if (err) {
-				callback(err);
-				return;
-			}
-			// whipe local storage in case local keypair was replaced with cloud keypair
-			devicestorage.clear(function() {
-				// init crypto and generate new keypair
-				initCrypto(keypairReplacement);
-			});
 		});
 
 		function initCrypto(storedKeypair) {
