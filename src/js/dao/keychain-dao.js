@@ -44,37 +44,6 @@ app.dao.KeychainDAO = function(jsonDao, cloudstorage) {
 	};
 
 	/**
-	 * Helper function that looks for public key in local storage
-	 * and then in cloud storage
-	 */
-
-	function lookupPublicKey(id, callback) {
-		// lookup in local storage
-		jsonDao.read('publickey_' + id, function(pubkey) {
-			if (!pubkey) {
-				// fetch from cloud storage
-				cloudstorage.getPublicKey(id, callback);
-
-			} else {
-				callback(null, pubkey);
-			}
-		});
-	}
-
-	function lookupPrivateKey(id, callback) {
-		// lookup in local storage
-		jsonDao.read('privatekey_' + id, function(privkey) {
-			if (!privkey) {
-				// fetch from cloud storage
-				cloudstorage.getPrivateKey(id, callback);
-
-			} else {
-				callback(null, privkey);
-			}
-		});
-	}
-
-	/**
 	 * Gets the local user's key either from local storage
 	 * or fetches it from the cloud. The private key is encrypted.
 	 * If no key pair exists, null is returned.
@@ -141,10 +110,109 @@ app.dao.KeychainDAO = function(jsonDao, cloudstorage) {
 			return;
 		}
 
+		// store public key locally
+		saveLocalPublicKey(keypair.publicKey, function(err) {
+			if (err) {
+				callback(err);
+				return;
+			}
+
+			// persist public key in cloud storage
+			cloudstorage.putPublicKey(keypair.publicKey, function(err) {
+				// validate result
+				if (err) {
+					callback(err);
+					return;
+				}
+
+				// store private key locally
+				saveLocalPrivateKey(keypair.privateKey, function(err) {
+					if (err) {
+						callback(err);
+						return;
+					}
+
+					// persist private key in cloud storage
+					cloudstorage.putPrivateKey(keypair.privateKey, function(err) {
+						// validate result
+						if (err) {
+							callback(err);
+							return;
+						}
+
+						callback(null);
+					});
+				});
+			});
+		});
+	};
+
+	//
+	// Helper functions
+	//
+
+	function lookupPublicKey(id, callback) {
+		// lookup in local storage
+		jsonDao.read('publickey_' + id, function(pubkey) {
+			if (!pubkey) {
+				// fetch from cloud storage
+				cloudstorage.getPublicKey(id, function(err, cloudPubkey) {
+					if (err) {
+						callback(err);
+						return;
+					}
+
+					// cache public key in cache
+					saveLocalPublicKey(cloudPubkey, function(err) {
+						if (err) {
+							callback(err);
+							return;
+						}
+
+						callback(null, cloudPubkey);
+					});
+				});
+
+			} else {
+				callback(null, pubkey);
+			}
+		});
+	}
+
+	function lookupPrivateKey(id, callback) {
+		// lookup in local storage
+		jsonDao.read('privatekey_' + id, function(privkey) {
+			if (!privkey) {
+				// fetch from cloud storage
+				cloudstorage.getPrivateKey(id, function(err, cloudPrivkey) {
+					if (err) {
+						callback(err);
+						return;
+					}
+
+					// cache private key in cache
+					saveLocalPrivateKey(cloudPrivkey, function(err) {
+						if (err) {
+							callback(err);
+							return;
+						}
+
+						callback(null, cloudPrivkey);
+					});
+
+				});
+
+			} else {
+				callback(null, privkey);
+			}
+		});
+	}
+
+	function saveLocalPublicKey(pubkey, callback) {
 		// persist public key (email, _id)
-		var pkLookupKey = 'publickey_' + keypair.publicKey.userId;
+		var pkLookupKey = 'publickey_' + pubkey.userId;
 		jsonDao.persist(pkLookupKey, {
-			_id: keypair.publicKey._id
+			_id: pubkey._id
 		}, function(res1) {
 			// validate result
 			if (res1.key !== pkLookupKey) {
@@ -155,8 +223,8 @@ app.dao.KeychainDAO = function(jsonDao, cloudstorage) {
 			}
 
 			// persist public key in local storage
-			var pkKey = 'publickey_' + keypair.publicKey._id;
-			jsonDao.persist(pkKey, keypair.publicKey, function(res2) {
+			var pkKey = 'publickey_' + pubkey._id;
+			jsonDao.persist(pkKey, pubkey, function(res2) {
 				// validate result
 				if (res2.key !== pkKey) {
 					callback({
@@ -165,56 +233,39 @@ app.dao.KeychainDAO = function(jsonDao, cloudstorage) {
 					return;
 				}
 
-				// perist in public key in cloud storage
-				cloudstorage.putPublicKey(keypair.publicKey, function(err) {
-					// validate result
-					if (err) {
-						callback({
-							errMsg: 'Persisting public key in cloud storage went wrong!'
-						});
-						return;
-					}
-
-					// persist private key (email, _id)
-					var prkLookupKey = 'privatekey_' + keypair.privateKey.userId;
-					jsonDao.persist(prkLookupKey, {
-						_id: keypair.privateKey._id
-					}, function(res3) {
-						// validate result
-						if (res3.key !== prkLookupKey) {
-							callback({
-								errMsg: 'Persisting private key in local storage went wrong!'
-							});
-							return;
-						}
-
-						// persist private key
-						var prkKey = 'privatekey_' + keypair.privateKey._id;
-						jsonDao.persist(prkKey, keypair.privateKey, function(res4) {
-							// validate result
-							if (res4.key !== prkKey) {
-								callback({
-									errMsg: 'Persisting private key in local storage went wrong!'
-								});
-								return;
-							}
-
-							cloudstorage.putPrivateKey(keypair.privateKey, function(err) {
-								// validate result
-								if (err) {
-									callback({
-										errMsg: 'Persisting private key in cloud storage went wrong!'
-									});
-									return;
-								}
-
-								callback(null);
-							});
-						});
-					});
-				});
+				callback();
 			});
 		});
-	};
+	}
+
+	function saveLocalPrivateKey(privkey, callback) {
+		// persist private key (email, _id)
+		var prkLookupKey = 'privatekey_' + privkey.userId;
+		jsonDao.persist(prkLookupKey, {
+			_id: privkey._id
+		}, function(res1) {
+			// validate result
+			if (res1.key !== prkLookupKey) {
+				callback({
+					errMsg: 'Persisting private key in local storage went wrong!'
+				});
+				return;
+			}
+
+			// persist private key
+			var prkKey = 'privatekey_' + privkey._id;
+			jsonDao.persist(prkKey, privkey, function(res2) {
+				// validate result
+				if (res2.key !== prkKey) {
+					callback({
+						errMsg: 'Persisting private key in local storage went wrong!'
+					});
+					return;
+				}
+
+				callback();
+			});
+		});
+	}
 
 };
