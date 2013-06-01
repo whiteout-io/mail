@@ -71,27 +71,6 @@ asyncTest("AES en/decrypt (Async/Worker)", 2, function() {
 	});
 });
 
-asyncTest("AES en/decrypt batch (Async/Worker)", 5, function() {
-	// generate test data
-	var collection, list, td = new TestData();
-
-	collection = td.getEmailCollection(100);
-	list = td.packageCollectionForEncryption(collection, crypto_test.keySize, crypto_test.ivSize);
-
-	crypto_test.crypto.aesEncryptList(list, function(encryptedList) {
-		ok(encryptedList, 'Encrypt list');
-		equal(encryptedList.length, list.length, 'Length of list');
-
-		crypto_test.crypto.aesDecryptList(encryptedList, function(decryptedList) {
-			ok(decryptedList, 'Decrypt list');
-			equal(decryptedList.length, list.length, 'Length of list');
-			deepEqual(decryptedList, list, 'Decrypted list is correct');
-
-			start();
-		});
-	});
-});
-
 asyncTest("AES/RSA encrypt batch for User (Async/Worker)", 2, function() {
 	// generate test data
 	var collection, td = new TestData();
