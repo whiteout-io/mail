@@ -72,11 +72,7 @@ app.dao.LawnchairDAO = function(Lawnchair) {
 			}
 
 			// sort keys
-			matchingKeys.sort(function(a, b) {
-				if (a < b) return -1;
-				if (b < a) return 1;
-				return 0;
-			});
+			matchingKeys.sort();
 
 			// if num is null, list all items
 			num = (num !== null) ? num : matchingKeys.length;
