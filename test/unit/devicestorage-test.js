@@ -12,6 +12,7 @@ asyncTest("Init", 3, function() {
 	// init dependencies
 	devicestorage_test.util = new cryptoLib.Util(window, uuid);
 	devicestorage_test.jsonDao = new app.dao.LawnchairDAO(Lawnchair);
+	devicestorage_test.jsonDao.init(devicestorage_test.user);
 	devicestorage_test.crypto = new app.crypto.Crypto(window, devicestorage_test.util);
 	devicestorage_test.storage = new app.dao.DeviceStorage(devicestorage_test.util, devicestorage_test.crypto, devicestorage_test.jsonDao, null);
 	ok(devicestorage_test.storage, 'DeviceStorageDAO');
@@ -47,7 +48,9 @@ asyncTest("Encrypt list for user", 2, function() {
 		equal(encryptedList.length, devicestorage_test.list.length, 'Encrypt list');
 
 		encryptedList.forEach(function(i) {
-			i.sentDate = _.findWhere(devicestorage_test.list, {id: i.id}).sentDate;
+			i.sentDate = _.findWhere(devicestorage_test.list, {
+				id: i.id
+			}).sentDate;
 		});
 
 		devicestorage_test.encryptedList = encryptedList;

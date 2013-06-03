@@ -12,6 +12,7 @@ asyncTest("Init", 2, function() {
 	// init dependencies
 	var util = new cryptoLib.Util(window, uuid);
 	var jsonDao = new app.dao.LawnchairDAO(Lawnchair);
+	jsonDao.init(keychaindao_test.user);
 	var crypto = new app.crypto.Crypto(window, util);
 	// cloud storage stub
 	var cloudstorageStub = {
@@ -68,8 +69,9 @@ asyncTest("Get User Keypair", 2, function() {
 
 asyncTest("Get Public Keys", 2, function() {
 	var pubkeyIds = [{
-		_id: keychaindao_test.keypair.publicKey._id
-	}];
+			_id: keychaindao_test.keypair.publicKey._id
+		}
+	];
 	keychaindao_test.keychainDao.getPublicKeys(pubkeyIds, function(err, pubkeys) {
 		ok(!err);
 		deepEqual(pubkeys[0], keychaindao_test.keypair.publicKey, "Fetch public key");

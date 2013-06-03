@@ -12,6 +12,7 @@ asyncTest("Init", 3, function() {
 	// init dependencies	
 	var util = new cryptoLib.Util(window, uuid);
 	var jsonDao = new app.dao.LawnchairDAO(Lawnchair);
+	jsonDao.init(emaildao_test.user);
 	emaildao_test.crypto = new app.crypto.Crypto(window, util);
 	emaildao_test.storage = new app.dao.DeviceStorage(util, emaildao_test.crypto, jsonDao, null);
 	// cloud storage stub

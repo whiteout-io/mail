@@ -1,10 +1,13 @@
 module("Lawnchair DAO");
 
-var lawnchairdao_test = {};
+var lawnchairdao_test = {
+	user: 'lawnchair@test.com'
+};
 
 asyncTest("Init", 2, function() {
 	// init dependencies
 	lawnchairdao_test.jsonDao = new app.dao.LawnchairDAO(Lawnchair);
+	lawnchairdao_test.jsonDao.init(lawnchairdao_test.user);
 	ok(lawnchairdao_test.jsonDao, 'LanwchairDAO');
 
 	// clear db before test

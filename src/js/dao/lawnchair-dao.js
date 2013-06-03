@@ -4,13 +4,21 @@
 app.dao.LawnchairDAO = function(Lawnchair) {
 	'use strict';
 
-	var db = new Lawnchair({
-		name: 'dataStore'
-	}, function(lc) {
-		if (!lc) {
-			throw new Error('Lawnchair init failed!');
+	var db;
+
+	this.init = function(dbName) {
+		if (!dbName) {
+			throw new Error('Lawnchair DB name must be specified!');
 		}
-	});
+
+		db = new Lawnchair({
+			name: dbName
+		}, function(lc) {
+			if (!lc) {
+				throw new Error('Lawnchair init failed!');
+			}
+		});
+	};
 
 	/**
 	 * Create or update an object
