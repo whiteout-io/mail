@@ -127,6 +127,36 @@ app.dao.CloudStorage = function(window, $) {
 	};
 
 	/**
+	 * Find the user's corresponding public key by email
+	 */
+	this.getPublicKeyByUserId = function(userId, callback) {
+		var uri = app.config.cloudUrl + '/publickey/user/' + userId;
+
+		this.get(uri, function(err, keys) {
+			if (err) {
+				callback(err);
+				return;
+			}
+
+			if (!keys || keys.length < 1) {
+				callback({
+					errMsg: 'No public key for that user!'
+				});
+				return;
+			}
+
+			if (keys.length > 1) {
+				callback({
+					errMsg: 'That user has multiple public keys!'
+				});
+				return;
+			}
+
+			callback(null, keys[0]);
+		});
+	};
+
+	/**
 	 * Persist the user's publc key
 	 */
 	this.putPublicKey = function(pubkey, callback) {

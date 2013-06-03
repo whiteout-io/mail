@@ -39,7 +39,7 @@ asyncTest("Init", 1, function() {
 	cloudstoragedao_test.storage = new app.dao.DeviceStorage(cloudstoragedao_test.util, cloudstoragedao_test.crypto, jsonDao, null);
 	cloudstoragedao_test.cloudstorage = new app.dao.CloudStorage(window, $);
 	cloudstoragedao_test.keychain = new app.dao.KeychainDAO(jsonDao, cloudstoragedao_test.cloudstorage);
-	cloudstoragedao_test.emailDao = new app.dao.EmailDAO(_, cloudstoragedao_test.crypto, cloudstoragedao_test.storage, cloudstoragedao_test.cloudstorage, cloudstoragedao_test.util, cloudstoragedao_test.keychain);
+	cloudstoragedao_test.emailDao = new app.dao.EmailDAO(jsonDao, cloudstoragedao_test.crypto, cloudstoragedao_test.storage, cloudstoragedao_test.cloudstorage, cloudstoragedao_test.util, cloudstoragedao_test.keychain);
 
 	// clear db before tests
 	jsonDao.clear(function(err) {
@@ -57,8 +57,17 @@ asyncTest("Put public key to cloud", 1, function() {
 	});
 });
 
-asyncTest("Get Public key from cloud", 2, function() {
+asyncTest("Get Public key from cloud by id", 2, function() {
 	cloudstoragedao_test.cloudstorage.getPublicKey(cloudstoragedao_test.keypair.publicKey._id, function(err, data) {
+		ok(!err && data && data.publicKey, 'Get public key from cloud');
+		deepEqual(data, cloudstoragedao_test.keypair.publicKey, 'Public key is equal');
+
+		start();
+	});
+});
+
+asyncTest("Get Public key from cloud by email", 2, function() {
+	cloudstoragedao_test.cloudstorage.getPublicKeyByUserId(cloudstoragedao_test.keypair.publicKey.userId, function(err, data) {
 		ok(!err && data && data.publicKey, 'Get public key from cloud');
 		deepEqual(data, cloudstoragedao_test.keypair.publicKey, 'Public key is equal');
 

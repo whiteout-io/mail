@@ -50,40 +50,67 @@ app.dao.KeychainDAO = function(jsonDao, cloudstorage) {
 	 * return [Object] The user's key pair {publicKey, privateKey}
 	 */
 	this.getUserKeyPair = function(userId, callback) {
-		// search for user's public key
+		// search for user's public key locally
 		jsonDao.list('publickey', 0, null, function(allPubkeys) {
 			var pubkey = _.findWhere(allPubkeys, {
 				userId: userId
 			});
 
-			if (!pubkey) {
+			if (!pubkey || !pubkey._id) {
 				// no public key by that user id in storage
-				// TODO: find from cloud
-				// TODO: persist in local storage
-				callback();
-				return;
-			}
+				// find from cloud by email address
+				cloudstorage.getPublicKeyByUserId(userId, function(err, cloudPubkey) {
+					if (err) {
+						callback(err);
+						return;
+					}
 
-			// public key found				
-			// get corresponding private key
-			fetchEncryptedPrivateKey(pubkey);
+					if (cloudPubkey && cloudPubkey._id) {
+						// there is a public key for that user already in the cloud...
+						// sync keypair to local storage
+						syncKeypair(cloudPubkey._id);
+					} else {
+						// continue without keypair... generate in crypto.js
+						callback();
+						return;
+					}
+				});
+
+			} else {
+				// that user's public key is already in local storage...
+				// sync keypair to the cloud
+				syncKeypair(pubkey._id);
+			}
 		});
 
-		function fetchEncryptedPrivateKey(publicKey) {
-			// try to read private key from local storage
-			lookupPrivateKey(publicKey._id, function(err, privkey) {
-				if (err || !privkey) {
-					callback({
-						errMsg: 'Error looking up private key!',
-						err: err
-					});
+		function syncKeypair(keypairId) {
+			// persist key pair in local storage
+			lookupPublicKey(keypairId, function(err, savedPubkey) {
+				if (err) {
+					callback(err);
 					return;
 				}
 
-				// private key found
-				callback(null, {
-					publicKey: publicKey,
-					privateKey: privkey
+				// persist private key in local storage
+				lookupPrivateKey(keypairId, function(err, savedPrivkey) {
+					if (err) {
+						callback(err);
+						return;
+					}
+
+					// validate fetched key
+					if (savedPubkey && savedPubkey.publicKey && savedPrivkey && savedPrivkey.encryptedKey) {
+						callback(null, {
+							publicKey: savedPubkey,
+							privateKey: savedPrivkey
+						});
+						return;
+
+					} else {
+						// continue without keypair... generate in crypto.js
+						callback();
+						return;
+					}
 				});
 			});
 		}

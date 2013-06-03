@@ -2,7 +2,7 @@
  * A high-level Data-Access Api for handling Email synchronization
  * between the cloud service and the device's local storage
  */
-app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, util, keychain) {
+app.dao.EmailDAO = function(jsonDB, crypto, devicestorage, cloudstorage, util, keychain) {
 	'use strict';
 
 	/**
@@ -11,8 +11,20 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, util, keycha
 	this.init = function(account, password, callback) {
 		this.account = account;
 
+		// validate email address
+		var emailAddress = account.get('emailAddress');
+		if (!validateEmail(emailAddress)) {
+			callback({
+				errMsg: 'The user email address must be specified!'
+			});
+			return;
+		}
+
+		// init user's local database
+		jsonDB.init(emailAddress);
+
 		// call getUserKeyPair to read/sync keypair with devicestorage/cloud
-		keychain.getUserKeyPair(account.get('emailAddress'), function(err, storedKeypair) {
+		keychain.getUserKeyPair(emailAddress, function(err, storedKeypair) {
 			if (err) {
 				callback(err);
 				return;
@@ -23,7 +35,7 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, util, keycha
 
 		function initCrypto(storedKeypair) {
 			crypto.init({
-				emailAddress: account.get('emailAddress'),
+				emailAddress: emailAddress,
 				password: password,
 				keySize: account.get('symKeySize'),
 				rsaKeySize: account.get('asymKeySize'),
@@ -201,11 +213,11 @@ app.dao.EmailDAO = function(_, crypto, devicestorage, cloudstorage, util, keycha
 		cloudstorage.putEncryptedItem(email, 'email', userId, 'outbox', function(err) {
 			callback(err);
 		});
-
-		function validateEmail(email) {
-			var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-			return re.test(email);
-		}
 	};
+
+	function validateEmail(email) {
+		var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+		return re.test(email);
+	}
 
 };

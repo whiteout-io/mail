@@ -22,10 +22,13 @@ asyncTest("Init", 3, function() {
 		},
 		putPrivateKey: function(prk, callback) {
 			callback();
+		},
+		getPublicKeyByUserId: function(userId, callback) {
+			callback();
 		}
 	};
 	emaildao_test.keychain = new app.dao.KeychainDAO(jsonDao, cloudstorageStub);
-	emaildao_test.emailDao = new app.dao.EmailDAO(_, emaildao_test.crypto, emaildao_test.storage, cloudstorageStub, util, emaildao_test.keychain);
+	emaildao_test.emailDao = new app.dao.EmailDAO(jsonDao, emaildao_test.crypto, emaildao_test.storage, cloudstorageStub, util, emaildao_test.keychain);
 
 	// generate test data
 	emaildao_test.list = new TestData().getEmailCollection(100);
