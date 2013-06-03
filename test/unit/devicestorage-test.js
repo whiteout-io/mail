@@ -46,6 +46,10 @@ asyncTest("Encrypt list for user", 2, function() {
 		ok(!err);
 		equal(encryptedList.length, devicestorage_test.list.length, 'Encrypt list');
 
+		encryptedList.forEach(function(i) {
+			i.sentDate = _.findWhere(devicestorage_test.list, {id: i.id}).sentDate;
+		});
+
 		devicestorage_test.encryptedList = encryptedList;
 		start();
 	});
@@ -67,7 +71,7 @@ asyncTest("List items", 4, function() {
 		num = 6;
 
 	// list encrypted items from storage
-	devicestorage_test.storage.listEncryptedItems('email_inbox_5', offset, num, function(err, encryptedList) {
+	devicestorage_test.storage.listEncryptedItems('email_inbox', offset, num, function(err, encryptedList) {
 		ok(!err);
 
 		// decrypt list
@@ -75,15 +79,8 @@ asyncTest("List items", 4, function() {
 			ok(!err);
 			equal(decryptedList.length, num, 'Found ' + decryptedList.length + ' items in store (and decrypted)');
 
-			var decrypted, orig = devicestorage_test.list[54];
-
-			// check ids
-			for (var i = 0; i < decryptedList.length; i++) {
-				if (decryptedList[i].id === orig.id && decryptedList[i].from === orig.from) {
-					deepEqual(decryptedList[i], orig, 'Messages decrypted correctly');
-					break;
-				}
-			}
+			var origSet = devicestorage_test.list.splice(92, num);
+			deepEqual(decryptedList, origSet, 'Messages decrypted correctly');
 
 			start();
 		});

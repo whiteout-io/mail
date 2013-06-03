@@ -5,7 +5,7 @@ app.dao.LawnchairDAO = function(Lawnchair) {
 	'use strict';
 
 	var db = new Lawnchair({
-		name: 'data-store'
+		name: 'dataStore'
 	}, function(lc) {
 		if (!lc) {
 			throw new Error('Lawnchair init failed!');
@@ -62,14 +62,6 @@ app.dao.LawnchairDAO = function(Lawnchair) {
 					matchingKeys.push(keys[i]);
 				}
 			}
-
-			// sort keys by type and date								
-			matchingKeys = _.sortBy(matchingKeys, function(key) {
-				parts = key.split('_');
-				timeStr = parts[parts.length - 2];
-				time = parseInt(timeStr, 10);
-				return time;
-			});
 
 			// if num is null, list all items
 			num = (num !== null) ? num : matchingKeys.length;

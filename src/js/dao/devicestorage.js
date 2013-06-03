@@ -27,9 +27,9 @@ app.dao.DeviceStorage = function(util, crypto, jsonDao, sqlcipherDao) {
 			// put date in key if available... for easy querying
 			if (i.sentDate) {
 				date = util.parseDate(i.sentDate);
-				key = crypto.emailAddress + '_' + type + '_' + date.getTime() + '_' + i.id;
+				key = type + '_' + i.sentDate + '_' + i.id;
 			} else {
-				key = crypto.emailAddress + '_' + type + '_' + i.id;
+				key = type + '_' + i.id;
 			}
 
 			items.push({
@@ -52,7 +52,7 @@ app.dao.DeviceStorage = function(util, crypto, jsonDao, sqlcipherDao) {
 	 */
 	this.listEncryptedItems = function(type, offset, num, callback) {
 		// fetch all items of a certain type from the data-store
-		jsonDao.list(crypto.emailAddress + '_' + type, offset, num, function(encryptedList) {
+		jsonDao.list(type, offset, num, function(encryptedList) {
 
 			callback(null, encryptedList);
 		});
