@@ -57,46 +57,46 @@ app.dao.LawnchairDAO = function(Lawnchair) {
 	 * @param num [Number] The number of items to fetch (null means fetch all)
 	 */
 	this.list = function(type, offset, num, callback) {
-		var i, list = [],
+		var i, from, to,
 			matchingKeys = [],
-			parts, timeStr, time;
+			intervalKeys = [],
+			list = [];
 
 		// get all keys
 		db.keys(function(keys) {
 
 			// check if key begins with type
-			for (i = 0; i < keys.length; i++) {
-				if (keys[i].indexOf(type) === 0) {
-					matchingKeys.push(keys[i]);
+			keys.forEach(function(key) {
+				if (key.indexOf(type) === 0) {
+					matchingKeys.push(key);
 				}
-			}
+			});
 
 			// sort keys
 			matchingKeys.sort();
 
-			// if num is null, list all items
-			num = (num !== null) ? num : matchingKeys.length;
-
 			// set window of items to fetch
-			if (offset + num < matchingKeys.length) {
-				matchingKeys = matchingKeys.splice(matchingKeys.length - offset - num, num);
-			} else if (offset + num >= matchingKeys.length && offset < matchingKeys.length) {
-				matchingKeys = matchingKeys.splice(0, matchingKeys.length - offset);
-			} else {
-				matchingKeys = [];
+			// if num is null, list all items
+			from = (num) ? matchingKeys.length - offset - num : 0;
+			to = matchingKeys.length - 1 - offset;
+			// filter items within requested interval
+			for (i = 0; i < matchingKeys.length; i++) {
+				if (i >= from && i <= to) {
+					intervalKeys.push(matchingKeys[i]);
+				}
 			}
 
 			// return if there are no matching keys
-			if (matchingKeys.length === 0) {
+			if (intervalKeys.length === 0) {
 				callback(list);
 				return;
 			}
 
 			// fetch all items from data-store with matching key
-			db.get(matchingKeys, function(matchingList) {
-				for (i = 0; i < matchingList.length; i++) {
-					list.push(matchingList[i].object);
-				}
+			db.get(intervalKeys, function(intervalList) {
+				intervalList.forEach(function(item) {
+					list.push(item.object);
+				});
 
 				// return only the interval between offset and num
 				callback(list);
