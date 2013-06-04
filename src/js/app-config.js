@@ -25,4 +25,14 @@ var app; // container for the application namespace
 		workerPath: 'js'
 	};
 
+	/**
+	 * The Template Loader. Used to asynchronously load templates located in separate .html files
+	 */
+	app.util.tpl = {
+		templates: {},
+		get: function(name) {
+			return this.templates[name];
+		}
+	};
+
 }());

@@ -1,20 +1,9 @@
 (function() {
 	'use strict';
 
-	/**
-	 * The Template Loader. Used to asynchronously load templates located in separate .html files
-	 */
-	app.util.tpl = {
-
-		// Hash of preloaded templates for the app
-		templates: {},
-
-		// Get template by name from hash of preloaded templates
-		get: function(name) {
-			return this.templates[name];
-		}
-
-	};
+	var router,
+		mainWindow,
+		mainWindowOrigin;
 
 	/**
 	 * Load templates and start the application
@@ -28,13 +17,31 @@
 				app.util.tpl.templates = e.data.args;
 
 				// remember references to main window
-				window.mainWindow = e.source;
-				window.mainWindowOrigin = e.origin;
+				mainWindow = e.source;
+				mainWindowOrigin = e.origin;
 
-				var router = new app.Router();
+				router = new app.Router();
 				Backbone.history.start();
 			}
 		};
 	});
+
+	/**
+	 * Helper method to ease message posting between sandbox and main window
+	 */
+	app.util.postMessage = function(cmd, args, callback) {
+		// set listender
+		window.onmessage = function(e) {
+			if (e.data.cmd === cmd) {
+				callback(e.data.args);
+			}
+		};
+
+		// send message to main window
+		mainWindow.postMessage({
+			cmd: cmd,
+			args: args
+		}, mainWindowOrigin);
+	};
 
 }());

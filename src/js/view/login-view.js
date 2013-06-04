@@ -33,29 +33,21 @@
 				theme: 'c'
 			});
 
-			// set listener for event from main window
-			window.onmessage = function(e) {
-				if (e.data.cmd === 'login') {
-					var err = e.data.args.err;
+			// post message to main window
+			app.util.postMessage('login', {
+				userId: userId,
+				password: password
+			}, function(resArgs) {
+				var err = resArgs.err;
 
-					$.mobile.loading('hide');
-					if (err) {
-						window.alert(err.errMsg);
-						return;
-					}
-
-					window.location = '#accounts/' + userId + '/folders';
+				$.mobile.loading('hide');
+				if (err) {
+					window.alert(err.errMsg);
+					return;
 				}
-			};
 
-			// send message to main window
-			window.mainWindow.postMessage({
-				cmd: 'login',
-				args: {
-					userId: userId,
-					password: password
-				}
-			}, window.mainWindowOrigin);
+				window.location = '#accounts/' + userId + '/folders';
+			});
 		}
 	});
 

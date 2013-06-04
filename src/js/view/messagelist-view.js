@@ -6,10 +6,9 @@
 		initialize: function(args) {
 			this.template = _.template(app.util.tpl.get('messagelist'));
 			this.folder = args.folder;
-			this.dao = args.dao;
 		},
 
-		render: function(eventName) {
+		render: function() {
 			var self = this,
 				page = $(this.el);
 
@@ -33,8 +32,12 @@
 				textVisible: true
 			});
 
-			// sync current folder from cloud
-			self.dao.syncFromCloud(self.folder, function(err) {
+			// post message to main window
+			app.util.postMessage('syncEmails', {
+				folder: self.folder
+			}, function(resArgs) {
+				var err = resArgs.err;
+
 				$.mobile.loading('hide');
 
 				// check for error
@@ -61,7 +64,16 @@
 				text: 'decrypting...',
 				textVisible: true
 			});
-			this.dao.listItems(this.folder, 0, 10, function(err, collection) {
+
+			// post message to main window
+			app.util.postMessage('listEmails', {
+				folder: self.folder,
+				offset: 0,
+				num: 10
+			}, function(resArgs) {
+				var err = resArgs.err;
+				var collection = resArgs.collection;
+
 				// check for error
 				if (err) {
 					$.mobile.loading('hide');
@@ -73,8 +85,8 @@
 				list.html('');
 
 				// append items to list in reverse order so mails with the most recent date will be displayed first
-				for (i = collection.models.length - 1; i >= 0; i--) {
-					email = collection.at(i);
+				for (i = collection.length - 1; i >= 0; i--) {
+					email = collection[i];
 					listItemArgs = {
 						account: self.options.account,
 						folder: self.folder,

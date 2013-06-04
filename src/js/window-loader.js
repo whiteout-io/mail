@@ -6,37 +6,23 @@
 	/**
 	 * The Template Loader. Used to asynchronously load templates located in separate .html files
 	 */
-	app.util.tpl = {
+	app.util.tpl.loadTemplates = function(names, callback) {
+		var that = this;
 
-		// Hash of preloaded templates for the app
-		templates: {},
-
-		// Recursively pre-load all the templates for the app.
-		loadTemplates: function(names, callback) {
-			var that = this;
-
-			var loadTemplate = function(index) {
-				var name = names[index];
-				console.log('Loading template: ' + name);
-				$.get('tpl/' + name + '.html', function(data) {
-					that.templates[name] = data;
-					index++;
-					if (index < names.length) {
-						loadTemplate(index);
-					} else {
-						callback();
-					}
-				});
-			};
-
-			loadTemplate(0);
-		},
-
-		// Get template by name from hash of preloaded templates
-		get: function(name) {
-			return this.templates[name];
-		}
-
+		var loadTemplate = function(index) {
+			var name = names[index];
+			console.log('Loading template: ' + name);
+			$.get('tpl/' + name + '.html', function(data) {
+				that.templates[name] = data;
+				index++;
+				if (index < names.length) {
+					loadTemplate(index);
+				} else {
+					callback();
+				}
+			});
+		};
+		loadTemplate(0);
 	};
 
 	/**
@@ -71,26 +57,21 @@
 	function startApp() {
 		// init email dao and dependencies
 		initDAO();
-
 		// sandboxed ui in iframe
 		var sandbox = document.getElementById('sandboxFrame').contentWindow;
 
-		// set listener for events from sandbox
+		// set global listener for events from sandbox
 		window.onmessage = function(e) {
 			var cmd = e.data.cmd;
 			var args = e.data.args;
-
-			if (cmd === 'login') {
-				// login user
-				login(args.userId, args.password, function(err) {
-					sandbox.postMessage({
-						cmd: 'login',
-						args: {
-							err: err
-						}
-					}, '*');
-				});
-			}
+			// handle the workload in the main window
+			handleCommand(cmd, args, function(resArgs) {
+				// send reponse to sandbox
+				sandbox.postMessage({
+					cmd: cmd,
+					args: resArgs
+				}, '*');
+			});
 		};
 
 		// init sandbox ui
@@ -98,6 +79,42 @@
 			cmd: 'init',
 			args: app.util.tpl.templates
 		}, '*');
+	}
+
+	function handleCommand(cmd, args, callback) {
+		if (cmd === 'login') {
+			// login user
+			login(args.userId, args.password, function(err) {
+				callback({
+					err: err
+				});
+			});
+
+		} else if (cmd === 'syncEmails') {
+			// list emails from folder
+			emailDao.syncFromCloud(args.folder, function(err) {
+				callback({
+					err: err
+				});
+			});
+
+		} else if (cmd === 'listEmails') {
+			// list emails from folder
+			emailDao.listItems(args.folder, args.offset, args.num, function(err, collection) {
+				callback({
+					err: err,
+					collection: collection.toJSON()
+				});
+			});
+
+		} else {
+			// error: invalid message from sandbox
+			callback({
+				err: {
+					errMsg: 'Invalid message posted from sandbox!'
+				}
+			});
+		}
 	}
 
 	function initDAO() {
