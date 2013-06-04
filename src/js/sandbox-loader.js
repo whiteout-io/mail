@@ -22,15 +22,18 @@
 	$(document).ready(function() {
 		console.log('sandbox loaded');
 
+		// set listener for event from main window
 		window.onmessage = function(e) {
-			app.util.tpl.templates = e.data;
+			if (e.data.cmd === 'init') {
+				app.util.tpl.templates = e.data.args;
 
-			// remember references to main window
-			window.mainWindow = e.source;
-			window.mainWindowOrigin = e.origin;
+				// remember references to main window
+				window.mainWindow = e.source;
+				window.mainWindowOrigin = e.origin;
 
-			var router = new app.Router();
-			Backbone.history.start();
+				var router = new app.Router();
+				Backbone.history.start();
+			}
 		};
 	});
 

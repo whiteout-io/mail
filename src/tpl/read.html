@@ -8,7 +8,7 @@
   <ul data-role="listview" data-theme="d" data-divider-theme="d" id="idEmailList" data-mini="true">
     
     <li style="border: 0px">
-			<h3>from: <%- from[0].name %> &lt;<%- from[0].address %>&gt;</h3>
+		  <h3>from: <%- from[0].name %> &lt;<%- from[0].address %>&gt;</h3>
 			<p>to:
 				<% _.each(to, function(o) { %>
 					<%- o.name %> &lt;<%- o.address %>&gt;
@@ -25,7 +25,7 @@
 		  <div style="font-size: 8pt; font-weight: normal">
         <iframe id="idMailContent" sandbox="allow-same-origin" width="100%" height="100%" frameborder="0" scrolling="no"></iframe>
       </div>
-		</li>
+    </li>
 		
 	</ul>  
 </div><!-- /content -->

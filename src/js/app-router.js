@@ -15,20 +15,14 @@
 		initialize: function() {},
 
 		login: function() {
-			// init email dao and dependencies
-			this.emailDao = null;
-
-			var loginView = new app.view.LoginView({
-				dao: this.emailDao
-			});
+			var loginView = new app.view.LoginView();
 			this.changePage(loginView);
 		},
 
 		compose: function(userId, folder, messageId) {
 			var composeView = new app.view.ComposeView({
 				folder: folder,
-				messageId: decodeURIComponent(messageId),
-				dao: this.emailDao
+				messageId: decodeURIComponent(messageId)
 			});
 			this.changePage(composeView);
 		},
@@ -44,8 +38,7 @@
 			var self = this;
 			var messageListView = new app.view.MessageListView({
 				account: userId,
-				folder: folder,
-				dao: this.emailDao
+				folder: folder
 			});
 			self.changePage(messageListView);
 			messageListView.loadItems();
@@ -54,8 +47,7 @@
 		read: function(userId, folder, messageId) {
 			var readView = new app.view.ReadView({
 				folder: folder,
-				messageId: decodeURIComponent(messageId),
-				dao: this.emailDao
+				messageId: decodeURIComponent(messageId)
 			});
 			this.changePage(readView);
 			readView.renderBody(true);

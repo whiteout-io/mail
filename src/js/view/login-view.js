@@ -3,12 +3,11 @@
 
 	app.view.LoginView = Backbone.View.extend({
 
-		initialize: function(args) {
+		initialize: function() {
 			this.template = _.template(app.util.tpl.get('login'));
-			this.dao = args.dao;
 		},
 
-		render: function(eventName) {
+		render: function() {
 			var self = this,
 				page = $(this.el);
 
@@ -27,13 +26,6 @@
 				userId = page.find('#userId').val(),
 				password = page.find('#password').val();
 
-			var account = new app.model.Account({
-				emailAddress: userId,
-				symKeySize: app.config.symKeySize,
-				symIvSize: app.config.symIvSize,
-				asymKeySize: app.config.asymKeySize
-			});
-
 			// show loading msg during init
 			$.mobile.loading('show', {
 				text: 'Unlocking...',
@@ -41,20 +33,29 @@
 				theme: 'c'
 			});
 
-			window.location = '#accounts/test@example.com/folders';
+			// set listener for event from main window
+			window.onmessage = function(e) {
+				if (e.data.cmd === 'login') {
+					var err = e.data.args.err;
+
+					$.mobile.loading('hide');
+					if (err) {
+						window.alert(err.errMsg);
+						return;
+					}
+
+					window.location = '#accounts/' + userId + '/folders';
+				}
+			};
+
+			// send message to main window
 			window.mainWindow.postMessage({
-				cmd: 'hello back from sandbox'
+				cmd: 'login',
+				args: {
+					userId: userId,
+					password: password
+				}
 			}, window.mainWindowOrigin);
-
-			// this.dao.init(account, password, function(err) {
-			// 	$.mobile.loading('hide');
-			// 	if (err) {
-			// 		window.alert(err.errMsg);
-			// 		return;
-			// 	}
-
-			// 	window.location = '#accounts/' + account.get('emailAddress') + '/folders';
-			// });
 		}
 	});
 
