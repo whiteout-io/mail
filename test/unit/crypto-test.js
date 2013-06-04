@@ -1,3 +1,5 @@
+'use strict';
+
 module("Crypto Api");
 
 var crypto_test = {
@@ -40,30 +42,33 @@ asyncTest("Init with keypair", 1, function() {
 		rsaKeySize: crypto_test.rsaKeySize,
 		storedKeypair: crypto_test.generatedKeypair
 	}, function(err, generatedKeypair) {
-		ok(!err, 'Init crypto with keypair input');
+		ok(!err && !generatedKeypair, 'Init crypto with keypair input');
 
 		start();
 	});
 });
 
-asyncTest("PBKDF2 (Async/Worker)", 1, function() {
-	crypto_test.crypto.deriveKey(crypto_test.password, crypto_test.keySize, function(key) {
+asyncTest("PBKDF2 (Async/Worker)", 2, function() {
+	crypto_test.crypto.deriveKey(crypto_test.password, crypto_test.keySize, function(err, key) {
+		ok(!err);
 		equal(crypto_test.util.base642Str(key).length * 8, crypto_test.keySize, 'Keysize ' + crypto_test.keySize);
 
 		start();
 	});
 });
 
-asyncTest("AES en/decrypt (Async/Worker)", 2, function() {
+asyncTest("AES en/decrypt (Async/Worker)", 4, function() {
 	var secret = 'Big secret';
 
 	var key = crypto_test.util.random(crypto_test.keySize);
 	var iv = crypto_test.util.random(crypto_test.ivSize);
 
-	crypto_test.crypto.aesEncrypt(secret, key, iv, function(ciphertext) {
+	crypto_test.crypto.aesEncrypt(secret, key, iv, function(err, ciphertext) {
+		ok(!err);
 		ok(ciphertext, 'Encrypt item');
 
-		crypto_test.crypto.aesDecrypt(ciphertext, key, iv, function(decrypted) {
+		crypto_test.crypto.aesDecrypt(ciphertext, key, iv, function(err, decrypted) {
+			ok(!err);
 			equal(decrypted, secret, 'Decrypt item');
 
 			start();

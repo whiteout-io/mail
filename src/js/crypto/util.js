@@ -54,23 +54,23 @@
 		this.formatDate = function(date) {
 			var year = "" + date.getFullYear();
 			var month = "" + (date.getMonth() + 1);
-			if (month.length == 1) {
+			if (month.length === 1) {
 				month = "0" + month;
 			}
 			var day = "" + date.getDate();
-			if (day.length == 1) {
+			if (day.length === 1) {
 				day = "0" + day;
 			}
 			var hour = "" + date.getHours();
-			if (hour.length == 1) {
+			if (hour.length === 1) {
 				hour = "0" + hour;
 			}
 			var minute = "" + date.getMinutes();
-			if (minute.length == 1) {
+			if (minute.length === 1) {
 				minute = "0" + minute;
 			}
 			var second = "" + date.getSeconds();
-			if (second.length == 1) {
+			if (second.length === 1) {
 				second = "0" + second;
 			}
 			return year + "-" + month + "-" + day + " " + hour + ":" + minute + ":" + second;

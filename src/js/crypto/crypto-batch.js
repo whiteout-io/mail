@@ -7,7 +7,7 @@
 	var CryptoBatch = function(aes, rsa, util, _) {
 
 		/**
-		 * Encrypt and sign a an item using AES and RSA
+		 * Encrypt and sign an item using AES and RSA
 		 * @param i [Object] The item to encrypt
 		 * @param receiverPubkey [String] The public key used to encrypt
 		 * @param senderKeyId [String] The sender's private key ID used to sign

@@ -29,7 +29,11 @@ app.crypto.Crypto = function(window, util) {
 		self.rsaKeySize = args.rsaKeySize;
 
 		// derive PBKDF2 from password in web worker thread
-		self.deriveKey(args.password, self.keySize, function(pbkdf2) {
+		self.deriveKey(args.password, self.keySize, function(err, pbkdf2) {
+			if (err) {
+				callback(err);
+				return;
+			}
 
 			// check if key exists
 			if (!args.storedKeypair) {
@@ -106,29 +110,13 @@ app.crypto.Crypto = function(window, util) {
 	 * Do PBKDF2 key derivation in a WebWorker thread
 	 */
 	this.deriveKey = function(password, keySize, callback) {
-		// check for WebWorker support
-		if (window.Worker) {
-
-			// init webworker thread
-			var worker = new Worker(app.config.workerPath + '/crypto/pbkdf2-worker.js');
-
-			worker.onmessage = function(e) {
-				// return derived key from the worker
-				callback(e.data);
-			};
-
-			// send plaintext data to the worker
-			worker.postMessage({
-				password: password,
-				keySize: keySize
-			});
-
-		} else {
-			// no WebWorker support... do synchronous call
+		startWorker('/crypto/pbkdf2-worker.js', {
+			password: password,
+			keySize: keySize
+		}, callback, function() {
 			var pbkdf2 = new app.crypto.PBKDF2();
-			var key = pbkdf2.getKey(password, keySize);
-			callback(key);
-		}
+			return pbkdf2.getKey(password, keySize);
+		});
 	};
 
 	//
@@ -136,43 +124,29 @@ app.crypto.Crypto = function(window, util) {
 	//
 
 	this.aesEncrypt = function(plaintext, key, iv, callback) {
-		if (window.Worker) {
+		var self = this;
 
-			var worker = new Worker(app.config.workerPath + '/crypto/aes-worker.js');
-			worker.onmessage = function(e) {
-				callback(e.data);
-			};
-			worker.postMessage({
-				type: 'encrypt',
-				plaintext: plaintext,
-				key: key,
-				iv: iv
-			});
-
-		} else {
-			var ct = this.aesEncryptSync(plaintext, key, iv);
-			callback(ct);
-		}
+		startWorker('/crypto/aes-worker.js', {
+			type: 'encrypt',
+			plaintext: plaintext,
+			key: key,
+			iv: iv
+		}, callback, function() {
+			return self.aesEncryptSync(plaintext, key, iv);
+		});
 	};
 
 	this.aesDecrypt = function(ciphertext, key, iv, callback) {
-		if (window.Worker) {
+		var self = this;
 
-			var worker = new Worker(app.config.workerPath + '/crypto/aes-worker.js');
-			worker.onmessage = function(e) {
-				callback(e.data);
-			};
-			worker.postMessage({
-				type: 'decrypt',
-				ciphertext: ciphertext,
-				key: key,
-				iv: iv
-			});
-
-		} else {
-			var pt = this.aesDecryptSync(ciphertext, key, iv);
-			callback(pt);
-		}
+		startWorker('/crypto/aes-worker.js', {
+			type: 'decrypt',
+			ciphertext: ciphertext,
+			key: key,
+			iv: iv
+		}, callback, function() {
+			return self.aesDecryptSync(ciphertext, key, iv);
+		});
 	};
 
 	this.aesEncryptSync = function(plaintext, key, iv) {
@@ -188,41 +162,23 @@ app.crypto.Crypto = function(window, util) {
 	//
 
 	this.aesEncryptList = function(list, callback) {
-		if (window.Worker) {
-
-			var worker = new Worker(app.config.workerPath + '/crypto/aes-batch-worker.js');
-			worker.onmessage = function(e) {
-				callback(e.data);
-			};
-			worker.postMessage({
-				type: 'encrypt',
-				list: list
-			});
-
-		} else {
+		startWorker('/crypto/aes-batch-worker.js', {
+			type: 'encrypt',
+			list: list
+		}, callback, function() {
 			var batch = new cryptoLib.CryptoBatch(aes);
-			var encryptedList = batch.encryptList(list);
-			callback(encryptedList);
-		}
+			return batch.encryptList(list);
+		});
 	};
 
 	this.aesDecryptList = function(list, callback) {
-		if (window.Worker) {
-
-			var worker = new Worker(app.config.workerPath + '/crypto/aes-batch-worker.js');
-			worker.onmessage = function(e) {
-				callback(e.data);
-			};
-			worker.postMessage({
-				type: 'decrypt',
-				list: list
-			});
-
-		} else {
+		startWorker('/crypto/aes-batch-worker.js', {
+			type: 'decrypt',
+			list: list
+		}, callback, function() {
 			var batch = new cryptoLib.CryptoBatch(aes);
-			var decryptedList = batch.decryptList(list);
-			callback(decryptedList);
-		}
+			return batch.decryptList(list);
+		});
 	};
 
 	//
@@ -258,24 +214,15 @@ app.crypto.Crypto = function(window, util) {
 			envelopes.push(envelope);
 		});
 
-		if (window.Worker) {
-
-			var worker = new Worker(app.config.workerPath + '/crypto/crypto-batch-worker.js');
-			worker.onmessage = function(e) {
-				callback(null, e.data);
-			};
-			worker.postMessage({
-				type: 'encrypt',
-				list: envelopes,
-				senderPrivkey: senderPrivkey,
-				receiverPubkeys: receiverPubkeys
-			});
-
-		} else {
+		startWorker('/crypto/crypto-batch-worker.js', {
+			type: 'encrypt',
+			list: envelopes,
+			senderPrivkey: senderPrivkey,
+			receiverPubkeys: receiverPubkeys
+		}, callback, function() {
 			var batch = new cryptoLib.CryptoBatch(aes, rsa, util, _);
-			var encryptedList = batch.encryptListForUser(envelopes, receiverPubkeys, senderPrivkey);
-			callback(null, encryptedList);
-		}
+			return batch.encryptListForUser(envelopes, receiverPubkeys, senderPrivkey);
+		});
 	};
 
 	this.decryptListForUser = function(list, senderPubkeys, callback) {
@@ -292,24 +239,37 @@ app.crypto.Crypto = function(window, util) {
 			privateKey: keypair.privkeyPem
 		};
 
+		startWorker('/crypto/crypto-batch-worker.js', {
+			type: 'decrypt',
+			list: list,
+			receiverPrivkey: receiverPrivkey,
+			senderPubkeys: senderPubkeys
+		}, callback, function() {
+			var batch = new cryptoLib.CryptoBatch(aes, rsa, util, _);
+			return batch.decryptListForUser(list, senderPubkeys, receiverPrivkey);
+		});
+	};
+
+	function startWorker(script, args, callback, noWorker) {
+		// check for WebWorker support
 		if (window.Worker) {
 
-			var worker = new Worker(app.config.workerPath + '/crypto/crypto-batch-worker.js');
+			// init webworker thread
+			var worker = new Worker(app.config.workerPath + script);
+
 			worker.onmessage = function(e) {
+				// return derived key from the worker
 				callback(null, e.data);
 			};
-			worker.postMessage({
-				type: 'decrypt',
-				list: list,
-				receiverPrivkey: receiverPrivkey,
-				senderPubkeys: senderPubkeys
-			});
+
+			// send data to the worker
+			worker.postMessage(args);
 
 		} else {
-			var batch = new cryptoLib.CryptoBatch(aes, rsa, util, _);
-			var decryptedList = batch.decryptListForUser(list, senderPubkeys, receiverPrivkey);
-			callback(null, decryptedList);
+			// no WebWorker support... do synchronous call
+			var result = noWorker();
+			callback(null, result);
 		}
-	};
+	}
 
 };

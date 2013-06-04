@@ -4,7 +4,6 @@
 	"jquery": true,
 	"node": true,
 	"browser": true,
-	"camelcase": true,
 	"nonew": true,
 	"curly": true,
 	"eqeqeq": true,
@@ -32,10 +31,12 @@
 			"describe",
 			"it",
 			"chai",
+			"asyncTest",
 			"ok",
 			"equal",
 			"deepEqual",
 			"start",
+			"TestData",
 			"chrome"
 	],
 
