@@ -1,0 +1,19 @@
+{
+  "name": "Whiteout Mail",
+  "description": "An offline enable mail app with integrated end-2-end messaging and a client-side encrypted message store both locally and in the cloud",
+  "version": "0.0.1",
+  "manifest_version": 2,
+  "offline_enabled": true,
+  "permissions": [
+      "http://storage.whiteout.io/"
+  ],
+  "app": {
+    "background": {
+      "scripts": ["background.js"]
+    }
+  },
+  "sandbox": {
+    "pages": ["sandbox.html"],
+    "content_security_policy": "sandbox allow-scripts; default-src 'self'; object-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'"
+  }
+}

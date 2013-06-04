@@ -42,15 +42,19 @@ module.exports = function(grunt) {
 		},
 
 		jshint: {
-			all: ['Gruntfile.js', 'src/js/**/*.js']
+			all: ['Gruntfile.js', 'src/js/**/*.js'],
+			options: {
+				jshintrc: '.jshintrc'
+			}
 		},
 
 		qunit: {
 			all: {
 				options: {
 					urls: [
-						'http://localhost:<%= connect.test.options.port %>/test/unit/index.html',
-						'http://localhost:<%= connect.test.options.port %>/test/integration/index.html']
+							'http://localhost:<%= connect.test.options.port %>/test/unit/index.html',
+							'http://localhost:<%= connect.test.options.port %>/test/integration/index.html'
+					]
 				}
 			}
 		}
@@ -63,7 +67,7 @@ module.exports = function(grunt) {
 
 	// Default task(s).
 	grunt.registerTask('dev', ['connect:dev']);
-	grunt.registerTask('test', ['jshint', 'connect:test', 'qunit']);
+	grunt.registerTask('test', ['connect:test', 'qunit']);
 	grunt.registerTask('prod', ['connect:prod']);
 
 };

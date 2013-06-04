@@ -40,15 +40,21 @@
 				textVisible: true,
 				theme: 'c'
 			});
-			this.dao.init(account, password, function(err) {
-				$.mobile.loading('hide');
-				if (err) {
-					window.alert(err.errMsg);
-					return;
-				}
 
-				window.location = '#accounts/' + account.get('emailAddress') + '/folders';
-			});
+			window.location = '#accounts/test@example.com/folders';
+			window.mainWindow.postMessage({
+				cmd: 'hello back from sandbox'
+			}, window.mainWindowOrigin);
+
+			// this.dao.init(account, password, function(err) {
+			// 	$.mobile.loading('hide');
+			// 	if (err) {
+			// 		window.alert(err.errMsg);
+			// 		return;
+			// 	}
+
+			// 	window.location = '#accounts/' + account.get('emailAddress') + '/folders';
+			// });
 		}
 	});
 
