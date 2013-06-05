@@ -1,9 +1,12 @@
 {
   "name": "Whiteout Mail",
-  "description": "A fully offline enabled mail app with end-2-end encrypted messaging and client-side encrypted sync to the cloud. Your data belongs only to you.",
+  "description": "Mail app with end-2-end encrypted messaging and client-side encrypted sync to the cloud. Your data belongs only to you.",
   "version": "0.0.1",
   "manifest_version": 2,
   "offline_enabled": true,
+  "icons": {
+    "128": "css/images/key-128.png"
+  },
   "permissions": [
       "http://storage.whiteout.io/"
   ],
