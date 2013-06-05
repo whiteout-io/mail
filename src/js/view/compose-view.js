@@ -5,14 +5,16 @@
 
 		initialize: function(args) {
 			this.template = _.template(app.util.tpl.get('compose'));
-			this.dao = args.dao;
+			this.account = args.account;
+			this.folder = args.folder;
+
 			if (args.folder && args.messageId) {
 				// fetch reply-to email model
 				this.replyTo = args.dao.getItem(args.folder, args.messageId);
 			}
 		},
 
-		render: function(eventName) {
+		render: function() {
 			var self = this,
 				page = $(this.el);
 
@@ -23,6 +25,12 @@
 				self.fillFields();
 			}
 
+			// handle back button
+			page.find('#backBtn').on('vmousedown', function(e) {
+				e.preventDefault();
+				self.goBackToLastPage();
+			});
+			// handle send button
 			page.find('#sendBtn').on('vmousedown', function() {
 				self.sendEmail();
 			});
@@ -79,23 +87,39 @@
 			var signature = '\n\nSent with whiteout mail - get your free mailbox for end-2-end encrypted messaging!\nhttps://mail.whiteout.io';
 
 			var email = new app.model.Email({
-				from: self.dao.account.get('emailAddress'),
+				from: self.account,
 				to: to,
 				subject: page.find('#subjectInput').val(),
 				body: page.find('#bodyTextarea').val() + signature
 			});
 
-			self.dao.sendEmail(email, function(err) {
+			// post message to main window
+			app.util.postMessage('sendEmail', {
+				email: email.toJSON()
+			}, function(resArgs) {
+				var err = resArgs.err;
+
 				$.mobile.loading('hide');
 				if (err) {
 					window.alert(JSON.stringify(err));
 					return;
 				}
 
-				window.history.back();
+				self.goBackToLastPage();
 			});
-		}
+		},
 
+		/**
+		 * Go back to the last activity
+		 * depending from where to compose dialog was opened
+		 */
+		goBackToLastPage: function() {
+			if (this.folder) {
+				window.location = '#accounts/' + this.account + '/folders/' + this.folder;
+			} else {
+				window.location = '#accounts/' + this.account + '/folders';
+			}
+		}
 	});
 
 }());

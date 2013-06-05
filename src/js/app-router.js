@@ -5,7 +5,8 @@
 
 		routes: {
 			'': 'login',
-			'compose': 'compose',
+			'compose/:userId': 'compose',
+			'compose/:userId/folders/:folder': 'compose',
 			'accounts/:userId/folders': 'folders',
 			'accounts/:userId/folders/:folder': 'messagelist',
 			'accounts/:userId/folders/:folder/read/:messageId': 'read',
@@ -21,8 +22,9 @@
 
 		compose: function(userId, folder, messageId) {
 			var composeView = new app.view.ComposeView({
+				account: userId,
 				folder: folder,
-				messageId: decodeURIComponent(messageId)
+				messageId: (messageId) ? decodeURIComponent(messageId) : null
 			});
 			this.changePage(composeView);
 		},
@@ -59,12 +61,6 @@
 			pageEl.attr('data-role', 'page');
 			page.render();
 			$('body').append(pageEl);
-
-			// handle back click
-			pageEl.on('vmousedown', '#backBtn', function(e) {
-				e.preventDefault();
-				window.history.back();
-			});
 
 			// change page for link buttons on vmousedown instead of waiting on vmouseup
 			pageEl.on('vmousedown', 'a[data-role="button"]', function(e) {

@@ -54,6 +54,16 @@
 		}
 	});
 
+	function initDAO() {
+		var util = new cryptoLib.Util(window, uuid);
+		var crypto = new app.crypto.Crypto(window, util);
+		var cloudstorage = new app.dao.CloudStorage(window, $);
+		var jsonDao = new app.dao.LawnchairDAO(Lawnchair);
+		var devicestorage = new app.dao.DeviceStorage(util, crypto, jsonDao, null);
+		var keychain = new app.dao.KeychainDAO(jsonDao, cloudstorage);
+		emailDao = new app.dao.EmailDAO(jsonDao, crypto, devicestorage, cloudstorage, util, keychain);
+	}
+
 	function startApp() {
 		// init email dao and dependencies
 		initDAO();
@@ -107,6 +117,14 @@
 				});
 			});
 
+		} else if (cmd === 'sendEmail') {
+			// list emails from folder
+			sendEmail(args.email, function(err) {
+				callback({
+					err: err
+				});
+			});
+
 		} else {
 			// error: invalid message from sandbox
 			callback({
@@ -117,16 +135,6 @@
 		}
 	}
 
-	function initDAO() {
-		var util = new cryptoLib.Util(window, uuid);
-		var crypto = new app.crypto.Crypto(window, util);
-		var cloudstorage = new app.dao.CloudStorage(window, $);
-		var jsonDao = new app.dao.LawnchairDAO(Lawnchair);
-		var devicestorage = new app.dao.DeviceStorage(util, crypto, jsonDao, null);
-		var keychain = new app.dao.KeychainDAO(jsonDao, cloudstorage);
-		emailDao = new app.dao.EmailDAO(jsonDao, crypto, devicestorage, cloudstorage, util, keychain);
-	}
-
 	function login(userId, password, callback) {
 		var account = new app.model.Account({
 			emailAddress: userId,
@@ -134,8 +142,12 @@
 			symIvSize: app.config.symIvSize,
 			asymKeySize: app.config.asymKeySize
 		});
-
 		emailDao.init(account, password, callback);
+	}
+
+	function sendEmail(email, callback) {
+		var em = new app.model.Email(email);
+		emailDao.sendEmail(em, callback);
 	}
 
 }());
