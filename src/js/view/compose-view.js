@@ -4,13 +4,31 @@
 	app.view.ComposeView = Backbone.View.extend({
 
 		initialize: function(args) {
+			var self = this;
+
 			this.template = _.template(app.util.tpl.get('compose'));
 			this.account = args.account;
 			this.folder = args.folder;
 
 			if (args.folder && args.messageId) {
 				// fetch reply-to email model
-				this.replyTo = args.dao.getItem(args.folder, args.messageId);
+				// post message to main window
+				app.util.postMessage('getEmail', {
+					folder: args.folder,
+					messageId: args.messageId
+				}, function(resArgs) {
+					var err = resArgs.err;
+					if (err) {
+						window.alert(JSON.stringify(err));
+						return;
+					}
+					// set mail to reply to
+					self.replyTo = resArgs.email;
+					args.callback(self);
+				});
+
+			} else {
+				args.callback(self);
 			}
 		},
 

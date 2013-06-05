@@ -21,12 +21,17 @@
 		},
 
 		compose: function(userId, folder, messageId) {
-			var composeView = new app.view.ComposeView({
+			var self = this,
+				composeView;
+
+			composeView = new app.view.ComposeView({
 				account: userId,
 				folder: folder,
-				messageId: (messageId) ? decodeURIComponent(messageId) : null
+				messageId: (messageId) ? decodeURIComponent(messageId) : null,
+				callback: function(view) {
+					self.changePage(view);
+				}
 			});
-			this.changePage(composeView);
 		},
 
 		folders: function(userId) {

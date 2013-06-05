@@ -117,6 +117,14 @@
 				});
 			});
 
+		} else if (cmd === 'getEmail') {
+			// list emails from folder
+			var mail = emailDao.getItem(args.folder, args.messageId);
+			callback({
+				err: null,
+				email: mail.toJSON()
+			});
+
 		} else if (cmd === 'sendEmail') {
 			// list emails from folder
 			sendEmail(args.email, function(err) {
