@@ -48,19 +48,20 @@
 
 			} else if (tryHtml && emailBody.indexOf('</') !== -1) {
 				// render html email inside a sandboxed iframe
-				var iframe = page.find('#idMailContent'),
-					iframeDoc = iframe[0].contentDocument || iframe[0].contentWindow.document;
-
+				var iframe = page.find('#mailContentFrame');
 				iframe.load(function() {
-					// resize
-					var newheight = iframeDoc.body.scrollHeight;
-					var newwidth = iframeDoc.body.scrollWidth;
-					iframe[0].height = (newheight) + 'px';
-					iframe[0].width = (newwidth) + 'px';
-				});
+					// set listener for the answering call, which return the document height
+					window.onmessage = function(e) {
+						// resize
+						var newheight = e.data;
+						//var newwidth = iframeDoc.body.scrollWidth;
+						iframe[0].height = (newheight) + 'px';
+						//iframe[0].width = (newwidth) + 'px';
+					};
 
-				iframeDoc.write(emailBody);
-				iframeDoc.close();
+					// send email body to content frame
+					document.getElementById('mailContentFrame').contentWindow.postMessage(emailBody, '*');
+				});
 			}
 		}
 

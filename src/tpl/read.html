@@ -4,7 +4,7 @@
   <a href="#accounts/<%- account %>/folders/<%- folder %>/reply/<%- id %>" data-role="button" data-icon="back" data-iconpos="right" class="ui-btn-right">Reply</a>
 </div><!-- /header -->
 
-<div data-role="content">
+<div data-role="content" id="readViewContent">
   <ul data-role="listview" data-theme="d" data-divider-theme="d" id="idEmailList" data-mini="true">
     
     <li style="border: 0px">
@@ -21,9 +21,9 @@
 			<p id="idMailDate"><%- sentDate %></p>
 		</li>
 		
-		<li id="bodyItem" style="background-color: #FFFFFF">
-		  <div style="font-size: 8pt; font-weight: normal">
-        <iframe id="idMailContent" sandbox="allow-same-origin" width="100%" height="100%" frameborder="0" scrolling="no"></iframe>
+		<li id="bodyItem">
+		  <div id="mailContentDiv">
+        <iframe src="mail-content.html" sandbox="allow-scripts" id="mailContentFrame" frameborder="0"></iframe>
       </div>
     </li>
 		

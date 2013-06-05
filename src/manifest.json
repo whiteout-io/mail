@@ -16,7 +16,7 @@
     }
   },
   "sandbox": {
-    "pages": ["sandbox.html"],
-    "content_security_policy": "sandbox allow-scripts; default-src 'self'; object-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'"
+    "pages": ["sandbox.html", "mail-content.html"],
+    "content_security_policy": "sandbox allow-scripts; default-src 'self'; object-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src *"
   }
 }
