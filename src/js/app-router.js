@@ -52,12 +52,18 @@
 		},
 
 		read: function(userId, folder, messageId) {
-			var readView = new app.view.ReadView({
+			var self = this,
+				readView;
+
+			readView = new app.view.ReadView({
+				account: userId,
 				folder: folder,
-				messageId: decodeURIComponent(messageId)
+				messageId: decodeURIComponent(messageId),
+				callback: function(view) {
+					self.changePage(view);
+					view.renderBody(true);
+				}
 			});
-			this.changePage(readView);
-			readView.renderBody(true);
 		},
 
 		changePage: function(page) {

@@ -4,14 +4,31 @@
 	app.view.ReadView = Backbone.View.extend({
 
 		initialize: function(args) {
+			var self = this;
+
 			this.template = _.template(app.util.tpl.get('read'));
-			this.model = args.dao.getItem(args.folder, args.messageId);
+			this.account = args.account;
+			this.folder = args.folder;
+
+			app.util.postMessage('getEmail', {
+				folder: args.folder,
+				messageId: args.messageId
+			}, function(resArgs) {
+				var err = resArgs.err;
+				if (err) {
+					window.alert(JSON.stringify(err));
+					return;
+				}
+				// set mail to reply to
+				self.model = new app.model.Email(resArgs.email);
+				args.callback(self);
+			});
 		},
 
-		render: function(eventName) {
+		render: function() {
 			var params = this.model.toJSON();
-			params.account = this.options.dao.account.get('emailAddress');
-			params.folder = this.options.folder;
+			params.account = this.account;
+			params.folder = this.folder;
 			params.id = encodeURIComponent(params.id);
 
 			$(this.el).html(this.template(params));

@@ -23,7 +23,7 @@
 						return;
 					}
 					// set mail to reply to
-					self.replyTo = resArgs.email;
+					self.replyTo = new app.model.Email(resArgs.email);
 					args.callback(self);
 				});
 
