@@ -185,7 +185,7 @@ app.dao.EmailDAO = function(jsonDB, crypto, devicestorage, cloudstorage, util, k
 
 		// validate email addresses
 		var invalidRecipient;
-		_.each(email.get('to'), function(address) {
+		_.each(email.to, function(address) {
 			if (!validateEmail(address)) {
 				invalidRecipient = address;
 			}
@@ -196,7 +196,7 @@ app.dao.EmailDAO = function(jsonDB, crypto, devicestorage, cloudstorage, util, k
 			});
 			return;
 		}
-		if (!validateEmail(email.get('from'))) {
+		if (!validateEmail(email.from)) {
 			callback({
 				errMsg: 'Invalid sender: ' + email.from
 			});
@@ -204,7 +204,7 @@ app.dao.EmailDAO = function(jsonDB, crypto, devicestorage, cloudstorage, util, k
 		}
 
 		// generate a new UUID for the new email
-		email.set('id', util.UUID());
+		email.id = util.UUID();
 
 		// send email to cloud service
 		cloudstorage.putEncryptedItem(email, 'email', userId, 'outbox', function(err) {

@@ -164,13 +164,12 @@ asyncTest("Init", 1, function() {
 });
 
 asyncTest("Send Plaintext Email item", 1, function() {
-	var email = new app.model.Email({
-		id: cloudstoragedao_test.util.UUID(),
+	var email = {
 		from: cloudstoragedao_test.user, // sender address
 		to: [cloudstoragedao_test.user], // list of receivers
 		subject: 'Client Email DAO Test', // Subject line
 		body: 'Hello world' // plaintext body
-	});
+	};
 
 	cloudstoragedao_test.emailDao.sendEmail(email, function(err) {
 		ok(!err, 'Email sent');

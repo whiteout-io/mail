@@ -89,7 +89,7 @@ app.Controller = function() {
 
 		} else if (cmd === 'sendEmail') {
 			// list emails from folder
-			sendEmail(args.email, function(err) {
+			emailDao.sendEmail(args.email, function(err) {
 				callback({
 					err: err
 				});
@@ -117,11 +117,6 @@ app.Controller = function() {
 			asymKeySize: app.config.asymKeySize
 		});
 		emailDao.init(account, password, callback);
-	}
-
-	function sendEmail(email, callback) {
-		var em = new app.model.Email(email);
-		emailDao.sendEmail(em, callback);
 	}
 
 };
