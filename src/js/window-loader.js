@@ -1,29 +1,14 @@
 (function() {
 	'use strict';
 
-	var emailDao; // local variable for main DAO
-
-	/**
-	 * The Template Loader. Used to asynchronously load templates located in separate .html files
-	 */
-	app.util.tpl.loadTemplates = function(names, callback) {
-		var that = this;
-
-		var loadTemplate = function(index) {
-			var name = names[index];
-			console.log('Loading template: ' + name);
-			$.get('tpl/' + name + '.html', function(data) {
-				that.templates[name] = data;
-				index++;
-				if (index < names.length) {
-					loadTemplate(index);
-				} else {
-					callback();
-				}
-			});
-		};
-		loadTemplate(0);
-	};
+	var views = [
+			'login',
+			'compose',
+			'folderlist',
+			'messagelist',
+			'messagelistitem',
+			'read'
+	];
 
 	/**
 	 * Load templates and start the application
@@ -43,39 +28,22 @@
 
 		function onDeviceReady() {
 			console.log('Starting in Browser: ' + isBrowser);
-			app.util.tpl.loadTemplates([
-					'login',
-					'compose',
-					'folderlist',
-					'messagelist',
-					'messagelistitem',
-					'read'
-			], startApp);
+			app.util.tpl.loadTemplates(views, startApp);
 		}
 	});
 
-	function initDAO() {
-		var util = new cryptoLib.Util(window, uuid);
-		var crypto = new app.crypto.Crypto(window, util);
-		var cloudstorage = new app.dao.CloudStorage(window, $);
-		var jsonDao = new app.dao.LawnchairDAO(Lawnchair);
-		var devicestorage = new app.dao.DeviceStorage(util, crypto, jsonDao, null);
-		var keychain = new app.dao.KeychainDAO(jsonDao, cloudstorage);
-		emailDao = new app.dao.EmailDAO(jsonDao, crypto, devicestorage, cloudstorage, util, keychain);
-	}
-
 	function startApp() {
-		// init email dao and dependencies
-		initDAO();
 		// sandboxed ui in iframe
 		var sandbox = document.getElementById('sandboxFrame').contentWindow;
+		var controller = new app.Controller();
 
 		// set global listener for events from sandbox
 		window.onmessage = function(e) {
 			var cmd = e.data.cmd;
 			var args = e.data.args;
+
 			// handle the workload in the main window
-			handleCommand(cmd, args, function(resArgs) {
+			controller.execute(cmd, args, function(resArgs) {
 				// send reponse to sandbox
 				sandbox.postMessage({
 					cmd: cmd,
@@ -84,78 +52,14 @@
 			});
 		};
 
-		// init sandbox ui
-		sandbox.postMessage({
-			cmd: 'init',
-			args: app.util.tpl.templates
-		}, '*');
-	}
-
-	function handleCommand(cmd, args, callback) {
-		if (cmd === 'login') {
-			// login user
-			login(args.userId, args.password, function(err) {
-				callback({
-					err: err
-				});
-			});
-
-		} else if (cmd === 'syncEmails') {
-			// list emails from folder
-			emailDao.syncFromCloud(args.folder, function(err) {
-				callback({
-					err: err
-				});
-			});
-
-		} else if (cmd === 'listEmails') {
-			// list emails from folder
-			emailDao.listItems(args.folder, args.offset, args.num, function(err, collection) {
-				callback({
-					err: err,
-					collection: collection.toJSON()
-				});
-			});
-
-		} else if (cmd === 'getEmail') {
-			// list emails from folder
-			var mail = emailDao.getItem(args.folder, args.messageId);
-			callback({
-				err: null,
-				email: mail.toJSON()
-			});
-
-		} else if (cmd === 'sendEmail') {
-			// list emails from folder
-			sendEmail(args.email, function(err) {
-				callback({
-					err: err
-				});
-			});
-
-		} else {
-			// error: invalid message from sandbox
-			callback({
-				err: {
-					errMsg: 'Invalid message posted from sandbox!'
-				}
-			});
-		}
-	}
-
-	function login(userId, password, callback) {
-		var account = new app.model.Account({
-			emailAddress: userId,
-			symKeySize: app.config.symKeySize,
-			symIvSize: app.config.symIvSize,
-			asymKeySize: app.config.asymKeySize
+		// init controller
+		controller.init(function() {
+			// init sandbox ui
+			sandbox.postMessage({
+				cmd: 'init',
+				args: app.util.tpl.templates
+			}, '*');
 		});
-		emailDao.init(account, password, callback);
-	}
-
-	function sendEmail(email, callback) {
-		var em = new app.model.Email(email);
-		emailDao.sendEmail(em, callback);
 	}
 
 }());
