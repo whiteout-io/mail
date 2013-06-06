@@ -72,7 +72,7 @@
 				num: 10
 			}, function(resArgs) {
 				var err = resArgs.err;
-				var collection = resArgs.collection;
+				var emails = resArgs.emails;
 
 				// check for error
 				if (err) {
@@ -85,8 +85,8 @@
 				list.html('');
 
 				// append items to list in reverse order so mails with the most recent date will be displayed first
-				for (i = collection.length - 1; i >= 0; i--) {
-					email = collection[i];
+				for (i = emails.length - 1; i >= 0; i--) {
+					email = emails[i];
 					listItemArgs = {
 						account: self.options.account,
 						folder: self.folder,

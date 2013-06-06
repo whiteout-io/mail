@@ -63,7 +63,7 @@ app.dao.EmailDAO = function(jsonDB, crypto, devicestorage, cloudstorage, util, k
 		var folder = this.account.get('folders').where({
 			name: folderName
 		})[0];
-		var mail = _.find(folder.get('items').models, function(email) {
+		var mail = _.find(folder.get('items'), function(email) {
 			return email.id + '' === itemId + '';
 		});
 		return mail;
@@ -91,7 +91,7 @@ app.dao.EmailDAO = function(jsonDB, crypto, devicestorage, cloudstorage, util, k
 					return;
 				}
 				if (encryptedList.length === 0) {
-					callback(null, new app.model.EmailCollection());
+					callback(null, []);
 					return;
 				}
 
@@ -122,19 +122,16 @@ app.dao.EmailDAO = function(jsonDB, crypto, devicestorage, cloudstorage, util, k
 							return;
 						}
 
-						// parse to backbone model collection
-						collection = new app.model.EmailCollection(decryptedList);
-
 						// cache collection in folder memory
 						if (decryptedList.length > 0) {
 							folder = new app.model.Folder({
 								name: folderName
 							});
-							folder.set('items', collection);
+							folder.set('items', decryptedList);
 							self.account.get('folders').add(folder);
 						}
 
-						callback(null, collection);
+						callback(null, decryptedList);
 					});
 
 				});

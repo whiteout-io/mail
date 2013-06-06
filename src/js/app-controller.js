@@ -72,10 +72,10 @@ app.Controller = function() {
 
 		} else if (cmd === 'listEmails') {
 			// list emails from folder
-			emailDao.listItems(args.folder, args.offset, args.num, function(err, collection) {
+			emailDao.listItems(args.folder, args.offset, args.num, function(err, emails) {
 				callback({
 					err: err,
-					collection: collection.toJSON()
+					emails: emails
 				});
 			});
 
@@ -84,7 +84,7 @@ app.Controller = function() {
 			var mail = emailDao.getItem(args.folder, args.messageId);
 			callback({
 				err: null,
-				email: mail.toJSON()
+				email: mail
 			});
 
 		} else if (cmd === 'sendEmail') {

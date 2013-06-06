@@ -1,3 +1,5 @@
+'use strict';
+
 module("Email DAO");
 
 var emaildao_test = {
@@ -78,11 +80,10 @@ asyncTest("Persist test emails", 4, function() {
 });
 
 asyncTest("List Email models", 2, function() {
-	emaildao_test.emailDao.listItems('inbox', 0, emaildao_test.list.length, function(err, collection) {
+	emaildao_test.emailDao.listItems('inbox', 0, emaildao_test.list.length, function(err, gotten) {
 		ok(!err);
 
-		var gotten = collection.toJSON(),
-			reference = emaildao_test.list.toJSON();
+		var reference = emaildao_test.list.toJSON();
 
 		deepEqual(gotten, reference, 'Compare collection');
 
@@ -93,6 +94,6 @@ asyncTest("List Email models", 2, function() {
 asyncTest("Get item", 1, function() {
 	var item = emaildao_test.list.toJSON()[0];
 	var mail = emaildao_test.emailDao.getItem('inbox', item.id);
-	deepEqual(mail.toJSON(), item, 'Item correct');
+	deepEqual(mail, item, 'Item correct');
 	start();
 });

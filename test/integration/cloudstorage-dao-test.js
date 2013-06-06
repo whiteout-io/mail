@@ -1,3 +1,5 @@
+'use strict';
+
 module("CloudStorage DAO");
 
 var cloudstoragedao_test = {
@@ -187,9 +189,9 @@ asyncTest("Sync emails from cloud", 1, function() {
 
 asyncTest("List emails from cloud", 2, function() {
 
-	cloudstoragedao_test.emailDao.listItems('inbox', 0, null, function(err, collection) {
+	cloudstoragedao_test.emailDao.listItems('inbox', 0, null, function(err, gotten) {
 		ok(!err);
-		ok(collection.length > 0, 'Read synced items');
+		ok(gotten.length > 0, 'Read synced items');
 
 		start();
 	});
