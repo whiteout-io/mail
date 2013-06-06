@@ -104,16 +104,16 @@
 
 			var signature = '\n\nSent with whiteout mail - get your free mailbox for end-2-end encrypted messaging!\nhttps://mail.whiteout.io';
 
-			var email = new app.model.Email({
+			var email = {
 				from: self.account,
 				to: to,
 				subject: page.find('#subjectInput').val(),
 				body: page.find('#bodyTextarea').val() + signature
-			});
+			};
 
 			// post message to main window
 			app.util.postMessage('sendEmail', {
-				email: email.toJSON()
+				email: email
 			}, function(resArgs) {
 				var err = resArgs.err;
 
