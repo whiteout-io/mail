@@ -23,7 +23,7 @@
 						return;
 					}
 					// set mail to reply to
-					self.replyTo = new app.model.Email(resArgs.email);
+					self.replyTo = resArgs.email;
 					args.callback(self);
 				});
 
@@ -59,8 +59,8 @@
 		fillFields: function() {
 			var page = $(this.el),
 				re = this.replyTo,
-				from = re.get('from')[0],
-				subject = re.get('subject');
+				from = re.from[0],
+				subject = re.subject;
 
 			// fill recipient field
 			var replyToAddress = from.address;
@@ -71,8 +71,8 @@
 			page.find('#subjectInput').val(subject);
 
 			// fill text body
-			var body = '\n\n' + re.get('sentDate') + ' ' + from.name + ' <' + from.address + '>\n';
-			var bodyRows = re.get('body').split('\n');
+			var body = '\n\n' + re.sentDate + ' ' + from.name + ' <' + from.address + '>\n';
+			var bodyRows = re.body.split('\n');
 			var isHtml = false;
 			_.each(bodyRows, function(row) {
 				if (row.indexOf('</') !== -1) {

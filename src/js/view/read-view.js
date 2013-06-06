@@ -20,13 +20,13 @@
 					return;
 				}
 				// set mail to reply to
-				self.model = new app.model.Email(resArgs.email);
+				self.model = resArgs.email;
 				args.callback(self);
 			});
 		},
 
 		render: function() {
-			var params = this.model.toJSON();
+			var params = this.model;
 			params.account = this.account;
 			params.folder = this.folder;
 			params.id = encodeURIComponent(params.id);
@@ -39,7 +39,7 @@
 
 		renderBody: function(tryHtml) {
 			var page = $(this.el),
-				emailBody = this.model.get('body');
+				emailBody = this.model.body;
 
 			if (!tryHtml && emailBody.indexOf('</') === -1) {
 				// render text email
