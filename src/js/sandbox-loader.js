@@ -20,6 +20,7 @@
 				mainWindow = e.source;
 				mainWindowOrigin = e.origin;
 
+				// start backone.js router
 				router = new app.Router();
 				Backbone.history.start();
 			}

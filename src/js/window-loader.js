@@ -1,41 +1,21 @@
 (function() {
 	'use strict';
 
-	var views = [
-			'login',
-			'compose',
-			'folderlist',
-			'messagelist',
-			'messagelistitem',
-			'read'
-	];
+	var controller;
 
 	/**
 	 * Load templates and start the application
 	 */
 	$(document).ready(function() {
-		// are we running in native app or in browser?
-		var isBrowser = false;
-		if (document.URL.indexOf("http") === 0 || document.URL.indexOf("chrome") === 0) {
-			isBrowser = true;
-		}
-
-		if (!isBrowser) {
-			document.addEventListener("deviceready", onDeviceReady, false);
-		} else {
-			onDeviceReady();
-		}
-
-		function onDeviceReady() {
-			console.log('Starting in Browser: ' + isBrowser);
-			app.util.tpl.loadTemplates(views, startApp);
-		}
+		controller = new app.Controller();
+		controller.init(function() {
+			controller.start(startApp);
+		});
 	});
 
 	function startApp() {
 		// sandboxed ui in iframe
 		var sandbox = document.getElementById('sandboxFrame').contentWindow;
-		var controller = new app.Controller();
 
 		// set global listener for events from sandbox
 		window.onmessage = function(e) {
@@ -52,14 +32,11 @@
 			});
 		};
 
-		// init controller
-		controller.init(function() {
-			// init sandbox ui
-			sandbox.postMessage({
-				cmd: 'init',
-				args: app.util.tpl.templates
-			}, '*');
-		});
+		// init sandbox ui
+		sandbox.postMessage({
+			cmd: 'init',
+			args: app.util.tpl.templates
+		}, '*');
 	}
 
 }());

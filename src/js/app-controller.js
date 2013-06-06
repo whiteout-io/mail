@@ -22,6 +22,35 @@ app.Controller = function() {
 	};
 
 	/**
+	 * Start the application by loading the view templates
+	 */
+	this.start = function(callback) {
+		// the views to load
+		var views = [
+				'login',
+				'compose',
+				'folderlist',
+				'messagelist',
+				'messagelistitem',
+				'read'
+		];
+
+		// are we running in native app or in browser?
+		if (document.URL.indexOf("http") === 0 || document.URL.indexOf("chrome") === 0) {
+			console.log('Assuming Browser environment...');
+			onDeviceReady();
+		} else {
+			console.log('Assuming Cordova environment...');
+			document.addEventListener("deviceready", onDeviceReady, false);
+		}
+
+		function onDeviceReady() {
+			console.log('Starting app.');
+			app.util.tpl.loadTemplates(views, callback);
+		}
+	};
+
+	/**
 	 * Executes a number of commands
 	 */
 	this.execute = function(cmd, args, callback) {
