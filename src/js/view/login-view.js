@@ -35,7 +35,7 @@
 
 			// post message to main window
 			app.util.postMessage('login', {
-				userId: userId,
+				userId: userId + '@mail.whiteout.io',
 				password: password
 			}, function(resArgs) {
 				var err = resArgs.err;
