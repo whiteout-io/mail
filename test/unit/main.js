@@ -22,7 +22,9 @@ require(['../../src/require-config'], function() {
 function startTests() {
 	require([
 			'test/unit/forge-test',
-			'test/unit/aes-test'
+			'test/unit/aes-test',
+			'test/unit/rsa-test',
+			'test/unit/lawnchair-dao-test'
 	], function() {
 
 		QUnit.start(); //Tests loaded, run tests

@@ -1,50 +1,53 @@
-module("RSA Crypto");
+define(['cryptoLib/rsa'], function(rsa) {
+	'use strict';
 
-var rsa_test = {
-	keySize: 1024,
-	rsa: new cryptoLib.RSA(forge, new cryptoLib.Util(window, uuid)),
-	test_message: '06a9214036b8a15b512e03d534120006'
-};
+	module("RSA Crypto");
 
-asyncTest("Generate keypair", 1, function() {
-	rsa_test.rsa.generateKeypair(rsa_test.keySize, function(err) {
-		ok(!err);
+	var rsaTest = {
+		keySize: 1024,
+		testMessage: '06a9214036b8a15b512e03d534120006'
+	};
 
-		start();
+	asyncTest("Generate keypair", 1, function() {
+		rsa.generateKeypair(rsaTest.keySize, function(err) {
+			ok(!err);
+
+			start();
+		});
 	});
-});
 
-test("Export keys", 2, function() {
-	rsa_test.keypair = rsa_test.rsa.exportKeys();
+	test("Export keys", 2, function() {
+		rsaTest.keypair = rsa.exportKeys();
 
-	ok(rsa_test.keypair.pubkeyPem.indexOf('-----BEGIN PUBLIC KEY-----') === 0, rsa_test.keypair.pubkeyPem);
-	ok(rsa_test.keypair.privkeyPem.indexOf('-----BEGIN RSA PRIVATE KEY-----') === 0, rsa_test.keypair.privkeyPem);
-});
+		ok(rsaTest.keypair.pubkeyPem.indexOf('-----BEGIN PUBLIC KEY-----') === 0, rsaTest.keypair.pubkeyPem);
+		ok(rsaTest.keypair.privkeyPem.indexOf('-----BEGIN RSA PRIVATE KEY-----') === 0, rsaTest.keypair.privkeyPem);
+	});
 
-test("Init", 2, function() {
-	rsa_test.rsa.init(rsa_test.keypair.pubkeyPem, rsa_test.keypair.privkeyPem);
-	var exported = rsa_test.rsa.exportKeys();
+	test("Init", 2, function() {
+		rsa.init(rsaTest.keypair.pubkeyPem, rsaTest.keypair.privkeyPem);
+		var exported = rsa.exportKeys();
 
-	ok(exported.pubkeyPem.indexOf('-----BEGIN PUBLIC KEY-----') === 0);
-	ok(exported.privkeyPem.indexOf('-----BEGIN RSA PRIVATE KEY-----') === 0);
-});
+		ok(exported.pubkeyPem.indexOf('-----BEGIN PUBLIC KEY-----') === 0);
+		ok(exported.privkeyPem.indexOf('-----BEGIN RSA PRIVATE KEY-----') === 0);
+	});
 
-test("Encrypt", 1, function() {
-	rsa_test.ct = rsa_test.rsa.encrypt(rsa_test.test_message);
-	ok(rsa_test.ct);
-});
+	test("Encrypt", 1, function() {
+		rsaTest.ct = rsa.encrypt(rsaTest.testMessage);
+		ok(rsaTest.ct);
+	});
 
-test("Decrypt", 1, function() {
-	var pt = rsa_test.rsa.decrypt(rsa_test.ct);
-	equal(pt, rsa_test.test_message);
-});
+	test("Decrypt", 1, function() {
+		var pt = rsa.decrypt(rsaTest.ct);
+		equal(pt, rsaTest.testMessage);
+	});
 
-test("Sign", 1, function() {
-	rsa_test.sig = rsa_test.rsa.sign([btoa('iv'), btoa(rsa_test.test_message)]);
-	ok(rsa_test.sig);
-});
+	test("Sign", 1, function() {
+		rsaTest.sig = rsa.sign([btoa('iv'), btoa(rsaTest.testMessage)]);
+		ok(rsaTest.sig);
+	});
 
-test("Verify", 1, function() {
-	var res = rsa_test.rsa.verify([btoa('iv'), btoa(rsa_test.test_message)], rsa_test.sig);
-	ok(res);
+	test("Verify", 1, function() {
+		var res = rsa.verify([btoa('iv'), btoa(rsaTest.testMessage)], rsaTest.sig);
+		ok(res);
+	});
 });

@@ -43,13 +43,13 @@ define(['cryptoLib/util'], function(util) {
 	};
 
 	self.generateBigString = function(iterations) {
-		var test_message = '';
+		var testMessage = '';
 		// generate test data
 		for (var i = 0; i < iterations; i++) {
-			test_message += 'aslghaksfdhsakjzfgasjfdgsauk';
+			testMessage += 'aslghaksfdhsakjzfgasjfdgsauk';
 		}
 
-		return test_message;
+		return testMessage;
 	};
 
 	return self;

@@ -17,8 +17,13 @@
 		},
 		shim: {
 			lawnchair: {
-				deps: ['lawnchairSQL', 'lawnchairIDB'],
 				exports: 'Lawnchair'
+			},
+			lawnchairSQL: {
+				deps: ['lawnchair']
+			},
+			lawnchairIDB: {
+				deps: ['lawnchair', 'lawnchairSQL']
 			},
 			backbone: {
 				//These script dependencies should be loaded before loading

@@ -1,65 +1,69 @@
-module("Lawnchair DAO");
+define(['js/dao/lawnchair-dao'], function(jsonDao) {
+	'use strict';
 
-var lawnchairdao_test = {
-	user: 'lawnchair@test.com'
-};
+	module("Lawnchair DAO");
 
-asyncTest("Init", 2, function() {
-	// init dependencies
-	lawnchairdao_test.jsonDao = new app.dao.LawnchairDAO(Lawnchair);
-	lawnchairdao_test.jsonDao.init(lawnchairdao_test.user);
-	ok(lawnchairdao_test.jsonDao, 'LanwchairDAO');
-
-	// clear db before test
-	lawnchairdao_test.jsonDao.clear(function() {
-		ok(true, 'cleared db');
-
-		start();
-	});
-});
-
-asyncTest("CRUD object literal", 4, function() {
-
-	var key = 'type_asdf';
-	var data = {
-		name: 'testName',
-		type: 'testType'
+	var lawnchairdaoTest = {
+		user: 'lawnchair@test.com'
 	};
 
-	// create
-	lawnchairdao_test.jsonDao.persist(key, data, function() {
+	asyncTest("Init", 2, function() {
+		// init dependencies
+		jsonDao.init(lawnchairdaoTest.user);
+		ok(jsonDao, 'LanwchairDAO');
 
-		// read
-		lawnchairdao_test.jsonDao.read(key, function(read) {
-			equal(data.name, read.name, 'Create, Read');
+		// clear db before test
+		jsonDao.clear(function() {
+			ok(true, 'cleared db');
 
-			// list all
-			lawnchairdao_test.jsonDao.list('type', 0, null, function(list) {
-				ok(list.length === 1, 'List');
+			start();
+		});
+	});
 
-				// update
-				var newName = 'updatedName';
-				read.name = newName;
-				lawnchairdao_test.jsonDao.persist(key, read, function() {
+	asyncTest("CRUD object literal", 4, function() {
 
-					// read again
-					lawnchairdao_test.jsonDao.read(key, function(updated) {
-						equal(updated.name, newName, 'Update');
+		var key = 'type_asdf';
+		var data = {
+			name: 'testName',
+			type: 'testType'
+		};
 
-						// delete
-						lawnchairdao_test.jsonDao.remove(key, function() {
+		// create
+		jsonDao.persist(key, data, function() {
 
-							// should read empty
-							lawnchairdao_test.jsonDao.read(key, function(lastRead) {
-								equal(lastRead, null, 'Delete');
+			// read
+			jsonDao.read(key, function(read) {
+				equal(data.name, read.name, 'Create, Read');
 
-								start();
+				// list all
+				jsonDao.list('type', 0, null, function(list) {
+					ok(list.length === 1, 'List');
+
+					// update
+					var newName = 'updatedName';
+					read.name = newName;
+					jsonDao.persist(key, read, function() {
+
+						// read again
+						jsonDao.read(key, function(updated) {
+							equal(updated.name, newName, 'Update');
+
+							// delete
+							jsonDao.remove(key, function() {
+
+								// should read empty
+								jsonDao.read(key, function(lastRead) {
+									equal(lastRead, null, 'Delete');
+
+									start();
+								});
 							});
-						});
 
+						});
 					});
 				});
 			});
 		});
 	});
+
 });

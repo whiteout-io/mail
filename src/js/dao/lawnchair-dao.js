@@ -1,12 +1,14 @@
 /**
  * Handles generic caching of JSON objects in a lawnchair adapter
  */
-app.dao.LawnchairDAO = function(Lawnchair) {
+define(['lawnchair', 'lawnchairSQL', 'lawnchairIDB'], function(Lawnchair) {
 	'use strict';
+
+	var self = {};
 
 	var db;
 
-	this.init = function(dbName) {
+	self.init = function(dbName) {
 		if (!dbName) {
 			throw new Error('Lawnchair DB name must be specified!');
 		}
@@ -23,7 +25,7 @@ app.dao.LawnchairDAO = function(Lawnchair) {
 	/**
 	 * Create or update an object
 	 */
-	this.persist = function(key, object, callback) {
+	self.persist = function(key, object, callback) {
 		db.save({
 			key: key,
 			object: object
@@ -33,14 +35,14 @@ app.dao.LawnchairDAO = function(Lawnchair) {
 	/**
 	 * Persist a bunch of items at once
 	 */
-	this.batch = function(list, callback) {
+	self.batch = function(list, callback) {
 		db.batch(list, callback);
 	};
 
 	/**
 	 * Read a single item by its key
 	 */
-	this.read = function(key, callback) {
+	self.read = function(key, callback) {
 		db.get(key, function(o) {
 			if (o) {
 				callback(o.object);
@@ -56,7 +58,7 @@ app.dao.LawnchairDAO = function(Lawnchair) {
 	 * @param offset [Number] The offset of items to fetch (0 is the last stored item)
 	 * @param num [Number] The number of items to fetch (null means fetch all)
 	 */
-	this.list = function(type, offset, num, callback) {
+	self.list = function(type, offset, num, callback) {
 		var i, from, to,
 			matchingKeys = [],
 			intervalKeys = [],
@@ -108,15 +110,16 @@ app.dao.LawnchairDAO = function(Lawnchair) {
 	/**
 	 * Removes an object liter from local storage by its key (delete)
 	 */
-	this.remove = function(key, callback) {
+	self.remove = function(key, callback) {
 		db.remove(key, callback);
 	};
 
 	/**
 	 * Clears the whole local storage cache
 	 */
-	this.clear = function(callback) {
+	self.clear = function(callback) {
 		db.nuke(callback);
 	};
 
-};
+	return self;
+});
