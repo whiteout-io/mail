@@ -13,7 +13,6 @@ require(['../../src/require-config'], function() {
 		window.Worker = undefined;
 
 		app.config.workerPath = '../../src/js';
-		app.config.cloudUrl = 'http://localhost:8888';
 
 		startTests();
 	});

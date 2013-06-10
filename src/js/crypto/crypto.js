@@ -2,7 +2,9 @@
  * High level crypto api that invokes native crypto (if available) and
  * gracefully degrades to JS crypto (if unavailable)
  */
-define(['cryptoLib/util', 'cryptoLib/aes-cbc', 'cryptoLib/rsa', 'cryptoLib/crypto-batch', 'js/crypto/pbkdf2'], function(util, aes, rsa, cryptoBatch, pbkdf2) {
+define(['cryptoLib/util', 'cryptoLib/aes-cbc', 'cryptoLib/rsa', 'cryptoLib/crypto-batch',
+		'js/crypto/pbkdf2'
+], function(util, aes, rsa, cryptoBatch, pbkdf2) {
 	'use strict';
 
 	var self = {};

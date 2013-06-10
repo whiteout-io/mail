@@ -51,6 +51,7 @@ module.exports = function(grunt) {
 		qunit: {
 			all: {
 				options: {
+					timeout: 20000,
 					urls: [
 							'http://localhost:<%= connect.test.options.port %>/test/unit/index.html',
 							'http://localhost:<%= connect.test.options.port %>/test/integration/index.html'
