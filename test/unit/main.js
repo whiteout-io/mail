@@ -25,7 +25,8 @@ function startTests() {
 			'test/unit/aes-test',
 			'test/unit/rsa-test',
 			'test/unit/lawnchair-dao-test',
-			'test/unit/keychain-dao-test'
+			'test/unit/keychain-dao-test',
+			'test/unit/crypto-test'
 	], function() {
 		//Tests loaded, run tests
 		QUnit.start();

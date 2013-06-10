@@ -1,4 +1,4 @@
-(function() {
+define(['backbone'], function(Backbone) {
 	'use strict';
 
 	app.model.Email = Backbone.Model.extend({
@@ -24,4 +24,4 @@
 
 	});
 
-}());
+});

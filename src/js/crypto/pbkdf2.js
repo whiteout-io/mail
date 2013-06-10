@@ -1,8 +1,10 @@
 /**
  * A Wrapper for Forge's PBKDF2 function
  */
-app.crypto.PBKDF2 = function() {
+define(['forge'], function(forge) {
 	'use strict';
+
+	var self = {};
 
 	/**
 	 * PBKDF2-HMAC-SHA1 key derivation with a constant salt and 1000 iterations
@@ -10,7 +12,7 @@ app.crypto.PBKDF2 = function() {
 	 * @param keySize [Number] The key size in bits
 	 * @return [String] The base64 encoded key
 	 */
-	this.getKey = function(password, keySize) {
+	self.getKey = function(password, keySize) {
 		var salt = forge.util.decode64("vbhmLjC+Ub6MSbhS6/CkOwxB25wvwRkSLP2DzDtYb+4=");
 		var key = forge.pkcs5.pbkdf2(password, salt, 1000, keySize / 8);
 		var keyBase64 = forge.util.encode64(key);
@@ -18,4 +20,5 @@ app.crypto.PBKDF2 = function() {
 		return keyBase64;
 	};
 
-};
+	return self;
+});

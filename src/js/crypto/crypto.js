@@ -2,7 +2,7 @@
  * High level crypto api that invokes native crypto (if available) and
  * gracefully degrades to JS crypto (if unavailable)
  */
-define(['cryptoLib/util', 'cryptoLib/aes-cbc', 'cryptoLib/rsa', 'cryptoLib/crypto-batch'], function(util, aes, rsa, cryptoBatch) {
+define(['cryptoLib/util', 'cryptoLib/aes-cbc', 'cryptoLib/rsa', 'cryptoLib/crypto-batch', 'js/crypto/pbkdf2'], function(util, aes, rsa, cryptoBatch, pbkdf2) {
 	'use strict';
 
 	var self = {};
@@ -26,7 +26,7 @@ define(['cryptoLib/util', 'cryptoLib/aes-cbc', 'cryptoLib/rsa', 'cryptoLib/crypt
 		self.rsaKeySize = args.rsaKeySize;
 
 		// derive PBKDF2 from password in web worker thread
-		self.deriveKey(args.password, self.keySize, function(err, pbkdf2) {
+		self.deriveKey(args.password, self.keySize, function(err, derivedKey) {
 			if (err) {
 				callback(err);
 				return;
@@ -35,15 +35,15 @@ define(['cryptoLib/util', 'cryptoLib/aes-cbc', 'cryptoLib/rsa', 'cryptoLib/crypt
 			// check if key exists
 			if (!args.storedKeypair) {
 				// generate keys, encrypt and persist if none exists
-				generateKeypair(pbkdf2);
+				generateKeypair(derivedKey);
 			} else {
 				// decrypt key
-				decryptKeypair(args.storedKeypair, pbkdf2);
+				decryptKeypair(args.storedKeypair, derivedKey);
 			}
 
 		});
 
-		function generateKeypair(pbkdf2) {
+		function generateKeypair(derivedKey) {
 			// generate RSA keypair in web worker
 			rsa.generateKeypair(self.rsaKeySize, function(err, generatedKeypair) {
 				if (err) {
@@ -53,7 +53,7 @@ define(['cryptoLib/util', 'cryptoLib/aes-cbc', 'cryptoLib/rsa', 'cryptoLib/crypt
 
 				// encrypt keypair
 				var iv = util.random(self.ivSize);
-				var encryptedPrivateKey = aes.encrypt(generatedKeypair.privkeyPem, pbkdf2, iv);
+				var encryptedPrivateKey = aes.encrypt(generatedKeypair.privkeyPem, derivedKey, iv);
 
 				// new encrypted keypair object
 				var newKeypair = {
@@ -75,7 +75,7 @@ define(['cryptoLib/util', 'cryptoLib/aes-cbc', 'cryptoLib/rsa', 'cryptoLib/crypt
 			});
 		}
 
-		function decryptKeypair(storedKeypair, pbkdf2) {
+		function decryptKeypair(storedKeypair, derivedKey) {
 			var decryptedPrivateKey;
 
 			// validate input
@@ -86,10 +86,10 @@ define(['cryptoLib/util', 'cryptoLib/aes-cbc', 'cryptoLib/rsa', 'cryptoLib/crypt
 				return;
 			}
 
-			// try to decrypt with pbkdf2
+			// try to decrypt with derivedKey
 			try {
 				var prK = storedKeypair.privateKey;
-				decryptedPrivateKey = aes.decrypt(prK.encryptedKey, pbkdf2, prK.iv);
+				decryptedPrivateKey = aes.decrypt(prK.encryptedKey, derivedKey, prK.iv);
 			} catch (ex) {
 				callback({
 					errMsg: 'Wrong password!'
@@ -111,7 +111,6 @@ define(['cryptoLib/util', 'cryptoLib/aes-cbc', 'cryptoLib/rsa', 'cryptoLib/crypt
 			password: password,
 			keySize: keySize
 		}, callback, function() {
-			var pbkdf2 = new app.crypto.PBKDF2();
 			return pbkdf2.getKey(password, keySize);
 		});
 	};
