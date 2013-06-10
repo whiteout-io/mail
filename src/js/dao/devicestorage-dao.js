@@ -4,16 +4,18 @@
  * through transparent encryption. If not, the crypto API is
  * used to encrypt data on the fly before persisting via a JSON store.
  */
-app.dao.DeviceStorage = function(util, crypto, jsonDao, sqlcipherDao) {
+define(['cryptoLib/util', 'js/crypto/crypto', 'js/dao/lawnchair-dao'], function(util, crypto, jsonDao) {
 	'use strict';
+
+	var self = {};
 
 	/**
 	 * Stores a list of encrypted items in the object store
 	 * @param list [Array] The list of items to be persisted
 	 * @param type [String] The type of item to be persisted e.g. 'email'
 	 */
-	this.storeEcryptedList = function(list, type, callback) {
-		var i, date, key, items = [];
+	self.storeEcryptedList = function(list, type, callback) {
+		var date, key, items = [];
 
 		// nothing to store
 		if (list.length === 0) {
@@ -50,7 +52,7 @@ app.dao.DeviceStorage = function(util, crypto, jsonDao, sqlcipherDao) {
 	 * @param offset [Number] The offset of items to fetch (0 is the last stored item)
 	 * @param num [Number] The number of items to fetch (null means fetch all)
 	 */
-	this.listEncryptedItems = function(type, offset, num, callback) {
+	self.listEncryptedItems = function(type, offset, num, callback) {
 		// fetch all items of a certain type from the data-store
 		jsonDao.list(type, offset, num, function(encryptedList) {
 
@@ -61,8 +63,9 @@ app.dao.DeviceStorage = function(util, crypto, jsonDao, sqlcipherDao) {
 	/**
 	 * Clear the whole device data-store
 	 */
-	this.clear = function(callback) {
+	self.clear = function(callback) {
 		jsonDao.clear(callback);
 	};
 
-};
+	return self;
+});
