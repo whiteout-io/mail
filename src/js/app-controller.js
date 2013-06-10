@@ -24,13 +24,8 @@ define(['js/dao/email-dao'], function(emailDao) {
 	 */
 	self.start = function(callback) {
 		// the views to load
-		var views = [
-				'login',
-				'compose',
-				'folderlist',
-				'messagelist',
-				'messagelistitem',
-				'read'
+		var views = ['login', 'compose', 'folderlist', 'messagelist',
+				'messagelistitem', 'read'
 		];
 
 		// are we running in native app or in browser?

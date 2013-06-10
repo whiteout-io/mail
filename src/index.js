@@ -1,4 +1,4 @@
-require(['../require-config'], function() {
+require(['require-config'], function() {
 	'use strict';
 
 	// Start the main app logic.
