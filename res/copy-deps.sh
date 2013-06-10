@@ -7,3 +7,4 @@ cd `dirname $0`
 cd ..
 
 cp ./node_modules/crypto-lib/src/*.js ./src/js/crypto/
+cp ./node_modules/crypto-lib/node_modules/node-forge/js/*.js ./src/lib/

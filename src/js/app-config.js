@@ -1,12 +1,10 @@
-var app; // container for the application namespace
-
 (function() {
 	'use strict';
 
 	/**
 	 * Create the application namespace
 	 */
-	app = {
+	var app = {
 		model: {},
 		view: {},
 		dao: {},
@@ -54,5 +52,7 @@ var app; // container for the application namespace
 			loadTemplate(0);
 		}
 	};
+
+	window.app = app;
 
 }());

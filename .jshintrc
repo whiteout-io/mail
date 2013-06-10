@@ -1,7 +1,6 @@
 {
 	"strict": true,
 	"globalstrict": true,
-	"jquery": true,
 	"node": true,
 	"browser": true,
 	"nonew": true,
@@ -18,29 +17,20 @@
 	"unused": true,
 
 	"predef": [
-			"self",
 			"console",
 			"importScripts",
-			"cryptoLib",
-			"Backbone",
-			"forge",
-			"uuid",
-			"Lawnchair",
-			"_",
 			"process",
-			"describe",
-			"it",
-			"chai",
+			"QUnit",
+			"test",
 			"asyncTest",
 			"ok",
 			"equal",
 			"deepEqual",
 			"start",
-			"TestData",
-			"chrome"
+			"chrome",
+			"define"
 	],
 
 	"globals": {
-		"app": true
 	}
 }

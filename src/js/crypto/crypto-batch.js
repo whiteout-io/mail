@@ -118,12 +118,14 @@
 		};
 	};
 
-	if (typeof module !== 'undefined' && module.exports) {
-		module.exports = CryptoBatch;
-	} else {
-		var that = (typeof window !== 'undefined') ? window : self;
-		that.cryptoLib = that.cryptoLib || {};
-		that.cryptoLib.CryptoBatch = CryptoBatch;
+	if (typeof define !== 'undefined' && define.amd) {
+		// AMD
+		define(['cryptoLib/aes-cbc', 'cryptoLib/rsa', 'cryptoLib/util', 'underscore'], function(aes, rsa, util, _) {
+			return new CryptoBatch(aes, rsa, util, _);
+		});
+	} else if (typeof module !== 'undefined' && module.exports) {
+		// node.js
+		module.exports = new CryptoBatch(require('./aes-cbc'), require('./rsa'), require('./util'), require('underscore'));
 	}
 
 })();

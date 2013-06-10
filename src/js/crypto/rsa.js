@@ -33,7 +33,7 @@
 		this.generateKeypair = function(keySize, callback) {
 			forge.rsa.generateKeyPair({
 				bits: keySize,
-				workerScript: (typeof app !== 'undefined') ? (app.config.workerPath + '/../lib/forge/prime.worker.js') : undefined
+				workerScript: (typeof app !== 'undefined') ? (app.config.workerPath + '/../lib/prime.worker.js') : undefined
 			}, function(err, newKeypair) {
 				if (err || !newKeypair || !newKeypair.publicKey || !newKeypair.privateKey) {
 					callback({
@@ -127,12 +127,14 @@
 
 	};
 
-	if (typeof module !== 'undefined' && module.exports) {
-		module.exports = RSA;
-	} else {
-		var that = (typeof window !== 'undefined') ? window : self;
-		that.cryptoLib = that.cryptoLib || {};
-		that.cryptoLib.RSA = RSA;
+	if (typeof define !== 'undefined' && define.amd) {
+		// AMD
+		define(['forge', 'cryptoLib/util'], function(forge, util) {
+			return new RSA(forge, util);
+		});
+	} else if (typeof module !== 'undefined' && module.exports) {
+		// node.js
+		module.exports = new RSA(require('node-forge'), require('./util'));
 	}
 
 })();

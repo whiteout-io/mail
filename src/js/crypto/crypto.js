@@ -2,19 +2,16 @@
  * High level crypto api that invokes native crypto (if available) and
  * gracefully degrades to JS crypto (if unavailable)
  */
-app.crypto.Crypto = function(window, util) {
+define(['cryptoLib/util', 'cryptoLib/aes-cbc', 'cryptoLib/rsa', 'cryptoLib/crypto-batch'], function(util, aes, rsa, cryptoBatch) {
 	'use strict';
 
-	var aes = new cryptoLib.AesCBC(forge); // use AES-CBC mode by default
-	var rsa = new cryptoLib.RSA(forge, util); // use RSA for asym. crypto
+	var self = {};
 
 	/**
 	 * Initializes the crypto modules by fetching the user's
 	 * encrypted secret key from storage and storing it in memory.
 	 */
-	this.init = function(args, callback) {
-		var self = this;
-
+	self.init = function(args, callback) {
 		// valdiate input
 		if (!args.emailAddress || !args.keySize || !args.rsaKeySize) {
 			callback({
@@ -109,7 +106,7 @@ app.crypto.Crypto = function(window, util) {
 	/**
 	 * Do PBKDF2 key derivation in a WebWorker thread
 	 */
-	this.deriveKey = function(password, keySize, callback) {
+	self.deriveKey = function(password, keySize, callback) {
 		startWorker('/crypto/pbkdf2-worker.js', {
 			password: password,
 			keySize: keySize
@@ -123,9 +120,7 @@ app.crypto.Crypto = function(window, util) {
 	// En/Decrypts single item
 	//
 
-	this.aesEncrypt = function(plaintext, key, iv, callback) {
-		var self = this;
-
+	self.aesEncrypt = function(plaintext, key, iv, callback) {
 		startWorker('/crypto/aes-worker.js', {
 			type: 'encrypt',
 			plaintext: plaintext,
@@ -136,9 +131,7 @@ app.crypto.Crypto = function(window, util) {
 		});
 	};
 
-	this.aesDecrypt = function(ciphertext, key, iv, callback) {
-		var self = this;
-
+	self.aesDecrypt = function(ciphertext, key, iv, callback) {
 		startWorker('/crypto/aes-worker.js', {
 			type: 'decrypt',
 			ciphertext: ciphertext,
@@ -149,11 +142,11 @@ app.crypto.Crypto = function(window, util) {
 		});
 	};
 
-	this.aesEncryptSync = function(plaintext, key, iv) {
+	self.aesEncryptSync = function(plaintext, key, iv) {
 		return aes.encrypt(plaintext, key, iv);
 	};
 
-	this.aesDecryptSync = function(ciphertext, key, iv) {
+	self.aesDecryptSync = function(ciphertext, key, iv) {
 		return aes.decrypt(ciphertext, key, iv);
 	};
 
@@ -161,23 +154,21 @@ app.crypto.Crypto = function(window, util) {
 	// En/Decrypt a list of items with AES in a WebWorker thread
 	//
 
-	this.aesEncryptList = function(list, callback) {
+	self.aesEncryptList = function(list, callback) {
 		startWorker('/crypto/aes-batch-worker.js', {
 			type: 'encrypt',
 			list: list
 		}, callback, function() {
-			var batch = new cryptoLib.CryptoBatch(aes);
-			return batch.encryptList(list);
+			return cryptoBatch.encryptList(list);
 		});
 	};
 
-	this.aesDecryptList = function(list, callback) {
+	self.aesDecryptList = function(list, callback) {
 		startWorker('/crypto/aes-batch-worker.js', {
 			type: 'decrypt',
 			list: list
 		}, callback, function() {
-			var batch = new cryptoLib.CryptoBatch(aes);
-			return batch.decryptList(list);
+			return cryptoBatch.decryptList(list);
 		});
 	};
 
@@ -185,9 +176,8 @@ app.crypto.Crypto = function(window, util) {
 	// En/Decrypt something speficially using the user's secret key
 	//
 
-	this.encryptListForUser = function(list, receiverPubkeys, callback) {
-		var envelope, envelopes = [],
-			self = this;
+	self.encryptListForUser = function(list, receiverPubkeys, callback) {
+		var envelope, envelopes = [];
 
 		if (!receiverPubkeys || receiverPubkeys.length !== 1) {
 			callback({
@@ -220,12 +210,11 @@ app.crypto.Crypto = function(window, util) {
 			senderPrivkey: senderPrivkey,
 			receiverPubkeys: receiverPubkeys
 		}, callback, function() {
-			var batch = new cryptoLib.CryptoBatch(aes, rsa, util, _);
-			return batch.encryptListForUser(envelopes, receiverPubkeys, senderPrivkey);
+			return cryptoBatch.encryptListForUser(envelopes, receiverPubkeys, senderPrivkey);
 		});
 	};
 
-	this.decryptListForUser = function(list, senderPubkeys, callback) {
+	self.decryptListForUser = function(list, senderPubkeys, callback) {
 		if (!senderPubkeys || senderPubkeys < 1) {
 			callback({
 				errMsg: 'Sender public keys must be set!'
@@ -245,8 +234,7 @@ app.crypto.Crypto = function(window, util) {
 			receiverPrivkey: receiverPrivkey,
 			senderPubkeys: senderPubkeys
 		}, callback, function() {
-			var batch = new cryptoLib.CryptoBatch(aes, rsa, util, _);
-			return batch.decryptListForUser(list, senderPubkeys, receiverPrivkey);
+			return cryptoBatch.decryptListForUser(list, senderPubkeys, receiverPrivkey);
 		});
 	};
 
@@ -272,4 +260,5 @@ app.crypto.Crypto = function(window, util) {
 		}
 	}
 
-};
+	return self;
+});

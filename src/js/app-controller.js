@@ -1,30 +1,28 @@
 /**
  * The main application controller
  */
-app.Controller = function() {
+define(['js/dao/email-dao'], function(emailDao) {
 	'use strict';
 
-	var emailDao; // local variable for the main email data access object
+	var self = {};
 
 	/**
 	 * Initializes modules through dependecy injection
 	 */
-	this.init = function(callback) {
-		var util = new cryptoLib.Util(window, uuid);
-		var crypto = new app.crypto.Crypto(window, util);
-		var cloudstorage = new app.dao.CloudStorage(window, $);
-		var jsonDao = new app.dao.LawnchairDAO(Lawnchair);
-		var devicestorage = new app.dao.DeviceStorage(util, crypto, jsonDao, null);
-		var keychain = new app.dao.KeychainDAO(jsonDao, cloudstorage);
-		emailDao = new app.dao.EmailDAO(jsonDao, crypto, devicestorage, cloudstorage, util, keychain);
-
+	self.init = function(callback) {
+		// var crypto = new app.crypto.Crypto(window, util);
+		// var cloudstorage = new app.dao.CloudStorage(window, $);
+		// var jsonDao = new app.dao.LawnchairDAO(Lawnchair);
+		// var devicestorage = new app.dao.DeviceStorage(util, crypto, jsonDao, null);
+		// var keychain = new app.dao.KeychainDAO(jsonDao, cloudstorage);
+		// emailDao = new app.dao.EmailDAO(jsonDao, crypto, devicestorage, cloudstorage, util, keychain);
 		callback();
 	};
 
 	/**
 	 * Start the application by loading the view templates
 	 */
-	this.start = function(callback) {
+	self.start = function(callback) {
 		// the views to load
 		var views = [
 				'login',
@@ -53,7 +51,7 @@ app.Controller = function() {
 	/**
 	 * Executes a number of commands
 	 */
-	this.execute = function(cmd, args, callback) {
+	self.execute = function(cmd, args, callback) {
 		if (cmd === 'login') {
 			// login user
 			login(args.userId, args.password, function(err) {
@@ -119,4 +117,5 @@ app.Controller = function() {
 		emailDao.init(account, password, callback);
 	}
 
-};
+	return self;
+});

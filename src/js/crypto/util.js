@@ -4,7 +4,7 @@
 	/**
 	 * Various utitity methods for crypto, encoding & decoding
 	 */
-	var Util = function(window, uuid, crypt) {
+	var Util = function(forge, uuid, crypt) {
 
 		/**
 		 * Generates a new RFC 4122 version 4 compliant random UUID
@@ -26,7 +26,7 @@
 				keyBuf = crypt.randomBytes(keySize / 8);
 				keyBase64 = new Buffer(keyBuf).toString('base64');
 
-			} else if (window.crypto && window.crypto.getRandomValues) {
+			} else if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
 				// browser if secure rng exists
 				keyBuf = new Uint8Array(keySize / 8);
 				window.crypto.getRandomValues(keyBuf);
@@ -198,12 +198,14 @@
 
 	};
 
-	if (typeof module !== 'undefined' && module.exports) {
-		module.exports = Util;
-	} else {
-		var that = (typeof window !== 'undefined') ? window : self;
-		that.cryptoLib = that.cryptoLib || {};
-		that.cryptoLib.Util = Util;
+	if (typeof define !== 'undefined' && define.amd) {
+		// AMD
+		define(['uuid', 'forge'], function(uuid, forge) {
+			return new Util(forge, uuid, undefined);
+		});
+	} else if (typeof module !== 'undefined' && module.exports) {
+		// node.js
+		module.exports = new Util(require('node-forge'), require('node-uuid'), require('crypto'));
 	}
 
 })();

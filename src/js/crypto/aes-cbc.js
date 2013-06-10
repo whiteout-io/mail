@@ -46,12 +46,14 @@
 
 	};
 
-	if (typeof module !== 'undefined' && module.exports) {
-		module.exports = AesCBC;
-	} else {
-		var that = (typeof window !== 'undefined') ? window : self;
-		that.cryptoLib = that.cryptoLib || {};
-		that.cryptoLib.AesCBC = AesCBC;
+	if (typeof define !== 'undefined' && define.amd) {
+		// AMD
+		define(['forge'], function(forge) {
+			return new AesCBC(forge);
+		});
+	} else if (typeof module !== 'undefined' && module.exports) {
+		// node.js
+		module.exports = new AesCBC(require('node-forge'));
 	}
 
 })();
