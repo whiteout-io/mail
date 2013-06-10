@@ -24,9 +24,10 @@ function startTests() {
 			'test/unit/forge-test',
 			'test/unit/aes-test',
 			'test/unit/rsa-test',
-			'test/unit/lawnchair-dao-test'
+			'test/unit/lawnchair-dao-test',
+			'test/unit/keychain-dao-test'
 	], function() {
-
-		QUnit.start(); //Tests loaded, run tests
+		//Tests loaded, run tests
+		QUnit.start();
 	});
 }
