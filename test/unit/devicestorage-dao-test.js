@@ -1,4 +1,6 @@
-define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/lawnchair-dao', 'js/dao/devicestorage-dao', 'test/test-data'], function(_, util, crypto, jsonDao, storage, testData) {
+define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/lawnchair-dao',
+		'js/dao/devicestorage-dao', 'test/test-data'
+], function(_, util, crypto, jsonDao, storage, testData) {
 	'use strict';
 
 	module("DeviceStorage");

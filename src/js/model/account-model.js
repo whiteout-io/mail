@@ -1,4 +1,4 @@
-(function() {
+define(['backbone', 'js/model/folder-model'], function(Backbone) {
 	'use strict';
 
 	app.model.Account = Backbone.Model.extend({
@@ -23,4 +23,4 @@
 
 	});
 
-}());
+});

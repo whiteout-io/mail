@@ -1,4 +1,4 @@
-(function() {
+define(['backbone'], function(Backbone) {
 	'use strict';
 
 	app.model.Folder = Backbone.Model.extend({
@@ -18,4 +18,4 @@
 
 	});
 
-}());
+});

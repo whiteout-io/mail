@@ -27,7 +27,8 @@ function startTests() {
 			'test/unit/lawnchair-dao-test',
 			'test/unit/keychain-dao-test',
 			'test/unit/crypto-test',
-			'test/unit/devicestorage-dao-test'
+			'test/unit/devicestorage-dao-test',
+			'test/unit/email-dao-test'
 	], function() {
 		//Tests loaded, run tests
 		QUnit.start();
