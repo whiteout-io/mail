@@ -20,9 +20,7 @@ require(['../../src/require-config'], function() {
 });
 
 function startTests() {
-	require([
-			'test/integration/cloudstorage-dao-test'
-	], function() {
+	require(['test/integration/cloudstorage-dao-test'], function() {
 		//Tests loaded, run tests
 		QUnit.start();
 	});

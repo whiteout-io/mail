@@ -1,4 +1,4 @@
-(function() {
+define(['backbone', 'js/app-config'], function(Backbone, app) {
 	'use strict';
 
 	app.model.PrivateKey = Backbone.Model.extend({
@@ -20,4 +20,4 @@
 
 	});
 
-}());
+});

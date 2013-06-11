@@ -24,9 +24,7 @@ module.exports = function(grunt) {
 					keepalive: true,
 					middleware: function(connect, options) {
 						// Return array of whatever middlewares you want
-						return [
-
-						function(req, res, next) {
+						return [function(req, res, next) {
 							res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-eval'; connect-src *; object-src 'none'; style-src 'self' 'unsafe-inline'");
 							res.setHeader('X-Content-Security-Policy', "default-src *; script-src 'self' 'unsafe-eval'; options eval-script; object-src 'none'; style-src 'self' 'unsafe-inline'");
 							res.setHeader('X-WebKit-CSP', "default-src 'self'; script-src 'self' 'unsafe-eval'; connect-src *; object-src 'none'; style-src 'self' 'unsafe-inline'");
@@ -42,7 +40,7 @@ module.exports = function(grunt) {
 		},
 
 		jshint: {
-			all: ['Gruntfile.js', 'src/*.js', 'src/js/**/*.js', 'test/**/*.js'],
+			all: ['Gruntfile.js', 'src/*.js', 'src/js/**/*.js', 'test/unit/*.js', 'test/integration/*.js'],
 			options: {
 				jshintrc: '.jshintrc'
 			}
@@ -52,8 +50,7 @@ module.exports = function(grunt) {
 			all: {
 				options: {
 					timeout: 20000,
-					urls: [
-							'http://localhost:<%= connect.test.options.port %>/test/unit/index.html',
+					urls: ['http://localhost:<%= connect.test.options.port %>/test/unit/index.html',
 							'http://localhost:<%= connect.test.options.port %>/test/integration/index.html'
 					]
 				}
@@ -68,7 +65,7 @@ module.exports = function(grunt) {
 
 	// Default task(s).
 	grunt.registerTask('dev', ['connect:dev']);
-	grunt.registerTask('test', ['connect:test', 'qunit']);
+	grunt.registerTask('test', ['jshint', 'connect:test', 'qunit']);
 	grunt.registerTask('prod', ['connect:prod']);
 
 };
