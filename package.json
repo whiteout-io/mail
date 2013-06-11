@@ -12,7 +12,7 @@
 	"dependencies": {
 		"grunt": "~0.4.1",
 		"grunt-contrib-connect": "~0.3.0",
-		"crypto-lib": "https://github.com/whiteout-io/crypto-lib/tarball/requirejs"
+		"crypto-lib": "https://github.com/whiteout-io/crypto-lib/tarball/master"
 	},
 	"devDependencies": {
 		"grunt-contrib-jshint": "~0.5.3",
