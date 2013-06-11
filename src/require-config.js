@@ -8,6 +8,7 @@
 			test: '../../test',
 			cryptoLib: '../js/crypto',
 			jquery: 'jquery-1.8.2.min',
+			jquerymobile: 'jquery.mobile-1.2.0.min',
 			underscore: 'underscore-1.4.4.min',
 			backbone: 'backbone-1.0.0.min',
 			lawnchair: 'lawnchair/lawnchair-git',
@@ -31,6 +32,9 @@
 			},
 			underscore: {
 				exports: '_'
+			},
+			jquerymobile: {
+				deps: ['jquery', 'js/jqm-config']
 			}
 		}
 	});

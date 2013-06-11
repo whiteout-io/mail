@@ -2,7 +2,7 @@
  * High level storage api for handling syncing of data to
  * and from the cloud.
  */
-define(['jquery'], function($) {
+define(['jquery', 'js/app-config'], function($, app) {
 	'use strict';
 
 	var self = {};

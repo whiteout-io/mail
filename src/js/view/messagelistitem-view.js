@@ -1,7 +1,7 @@
-(function() {
+define(['jquery', 'underscore', 'backbone', 'js/app-config'], function($, _, Backbone, app) {
 	'use strict';
 
-	app.view.MessageListItemView = Backbone.View.extend({
+	var MessageListItemView = Backbone.View.extend({
 
 		tagName: "li",
 
@@ -25,4 +25,5 @@
 		}
 	});
 
-}());
+	return MessageListItemView;
+});

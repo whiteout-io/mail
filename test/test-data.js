@@ -1,4 +1,4 @@
-define(['cryptoLib/util', 'js/model/email-model'], function(util) {
+define(['cryptoLib/util', 'js/app-config', 'js/model/email-model'], function(util, app) {
 	'use strict';
 
 	var self = {};

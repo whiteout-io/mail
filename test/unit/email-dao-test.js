@@ -1,6 +1,6 @@
 define(['js/dao/email-dao', 'js/dao/keychain-dao', 'js/dao/lawnchair-dao',
-		'js/crypto/crypto', 'js/dao/devicestorage-dao', 'test/test-data'
-], function(EmailDAO, KeychainDAO, jsonDao, crypto, storage, testData) {
+		'js/crypto/crypto', 'js/dao/devicestorage-dao', 'test/test-data', 'js/app-config'
+], function(EmailDAO, KeychainDAO, jsonDao, crypto, storage, testData, app) {
 	'use strict';
 
 	module("Email DAO");

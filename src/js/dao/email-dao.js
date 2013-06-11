@@ -3,8 +3,8 @@
  * between the cloud service and the device's local storage
  */
 define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/lawnchair-dao',
-		'js/dao/devicestorage-dao', 'js/model/account-model'
-], function(_, util, crypto, jsonDB, devicestorage) {
+		'js/dao/devicestorage-dao', 'js/app-config', 'js/model/account-model'
+], function(_, util, crypto, jsonDB, devicestorage, app) {
 	'use strict';
 
 	var EmailDAO = function(cloudstorage, keychain) {

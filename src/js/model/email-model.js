@@ -1,4 +1,4 @@
-define(['backbone'], function(Backbone) {
+define(['backbone', 'js/app-config'], function(Backbone, app) {
 	'use strict';
 
 	app.model.Email = Backbone.Model.extend({

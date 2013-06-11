@@ -1,21 +1,21 @@
 /**
  * The main application controller
  */
-define(['js/dao/email-dao'], function(emailDao) {
+define(['jquery', 'js/dao/email-dao', 'js/dao/keychain-dao', 'js/dao/cloudstorage-dao',
+		'js/app-config', 'cordova'
+], function($, EmailDAO, KeychainDAO, cloudstorage, app) {
 	'use strict';
 
 	var self = {};
+
+	var emailDao;
 
 	/**
 	 * Initializes modules through dependecy injection
 	 */
 	self.init = function(callback) {
-		// var crypto = new app.crypto.Crypto(window, util);
-		// var cloudstorage = new app.dao.CloudStorage(window, $);
-		// var jsonDao = new app.dao.LawnchairDAO(Lawnchair);
-		// var devicestorage = new app.dao.DeviceStorage(util, crypto, jsonDao, null);
-		// var keychain = new app.dao.KeychainDAO(jsonDao, cloudstorage);
-		// emailDao = new app.dao.EmailDAO(jsonDao, crypto, devicestorage, cloudstorage, util, keychain);
+		var keychain = new KeychainDAO(cloudstorage);
+		emailDao = new EmailDAO(cloudstorage, keychain);
 		callback();
 	};
 
@@ -39,7 +39,7 @@ define(['js/dao/email-dao'], function(emailDao) {
 
 		function onDeviceReady() {
 			console.log('Starting app.');
-			app.util.tpl.loadTemplates(views, callback);
+			loadTemplates(views, callback);
 		}
 	};
 
@@ -110,6 +110,23 @@ define(['js/dao/email-dao'], function(emailDao) {
 			asymKeySize: app.config.asymKeySize
 		});
 		emailDao.init(account, password, callback);
+	}
+
+	function loadTemplates(names, callback) {
+		var loadTemplate = function(index) {
+			var name = names[index];
+			console.log('Loading template: ' + name);
+			$.get('tpl/' + name + '.html', function(data) {
+				app.util.tpl.templates[name] = data;
+				index++;
+				if (index < names.length) {
+					loadTemplate(index);
+				} else {
+					callback();
+				}
+			});
+		};
+		loadTemplate(0);
 	}
 
 	return self;

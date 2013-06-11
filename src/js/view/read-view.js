@@ -1,7 +1,7 @@
-(function() {
+define(['jquery', 'underscore', 'backbone', 'js/app-config'], function($, _, Backbone, app) {
 	'use strict';
 
-	app.view.ReadView = Backbone.View.extend({
+	var ReadView = Backbone.View.extend({
 
 		initialize: function(args) {
 			var self = this;
@@ -67,4 +67,5 @@
 
 	});
 
-}());
+	return ReadView;
+});

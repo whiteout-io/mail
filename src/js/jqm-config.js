@@ -1,4 +1,4 @@
-(function() {
+define(['jquery'], function($) {
 	'use strict';
 
 	$(document).on('mobileinit', function() {
@@ -10,9 +10,9 @@
 		$.mobile.defaultPageTransition = 'none';
 
 		// Remove page from DOM when it's being replaced
-		$(document).on('pagehide', 'div[data-role="page"]', function(event, ui) {
+		$(document).on('pagehide', 'div[data-role="page"]', function(event) {
 			$(event.currentTarget).remove();
 		});
 	});
 
-}());
+});

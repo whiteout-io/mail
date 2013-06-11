@@ -1,7 +1,9 @@
-(function() {
+define(['jquery', 'underscore', 'backbone', 'js/app-config',
+		'js/view/messagelistitem-view'
+], function($, _, Backbone, app, MessageListItemView) {
 	'use strict';
 
-	app.view.MessageListView = Backbone.View.extend({
+	var MessageListView = Backbone.View.extend({
 
 		initialize: function(args) {
 			this.template = _.template(app.util.tpl.get('messagelist'));
@@ -92,7 +94,7 @@
 						folder: self.folder,
 						model: email
 					};
-					list.append(new app.view.MessageListItemView(listItemArgs).render().el);
+					list.append(new MessageListItemView(listItemArgs).render().el);
 				}
 
 				// refresh list view
@@ -103,4 +105,5 @@
 
 	});
 
-}());
+	return MessageListView;
+});

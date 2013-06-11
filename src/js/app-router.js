@@ -1,7 +1,10 @@
-(function() {
+define(['jquery', 'backbone', 'js/view/login-view', 'js/view/compose-view',
+		'js/view/folderlist-view', 'js/view/messagelist-view', 'js/view/read-view',
+		'jquerymobile'
+], function($, Backbone, LoginView, ComposeView, FolderListView, MessageListView, ReadView) {
 	'use strict';
 
-	app.Router = Backbone.Router.extend({
+	var Router = Backbone.Router.extend({
 
 		routes: {
 			'': 'login',
@@ -16,7 +19,7 @@
 		initialize: function() {},
 
 		login: function() {
-			var loginView = new app.view.LoginView();
+			var loginView = new LoginView();
 			this.changePage(loginView);
 		},
 
@@ -24,7 +27,7 @@
 			var self = this,
 				composeView;
 
-			composeView = new app.view.ComposeView({
+			composeView = new ComposeView({
 				account: userId,
 				folder: folder,
 				messageId: (messageId) ? decodeURIComponent(messageId) : null,
@@ -35,7 +38,7 @@
 		},
 
 		folders: function(userId) {
-			var folderListView = new app.view.FolderListView({
+			var folderListView = new FolderListView({
 				account: userId
 			});
 			this.changePage(folderListView);
@@ -43,7 +46,7 @@
 
 		messagelist: function(userId, folder) {
 			var self = this;
-			var messageListView = new app.view.MessageListView({
+			var messageListView = new MessageListView({
 				account: userId,
 				folder: folder
 			});
@@ -55,7 +58,7 @@
 			var self = this,
 				readView;
 
-			readView = new app.view.ReadView({
+			readView = new ReadView({
 				account: userId,
 				folder: folder,
 				messageId: decodeURIComponent(messageId),
@@ -88,4 +91,5 @@
 
 	});
 
-}());
+	return Router;
+});

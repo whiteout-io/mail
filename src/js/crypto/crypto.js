@@ -3,8 +3,8 @@
  * gracefully degrades to JS crypto (if unavailable)
  */
 define(['cryptoLib/util', 'cryptoLib/aes-cbc', 'cryptoLib/rsa', 'cryptoLib/crypto-batch',
-		'js/crypto/pbkdf2'
-], function(util, aes, rsa, cryptoBatch, pbkdf2) {
+		'js/crypto/pbkdf2', 'js/app-config'
+], function(util, aes, rsa, cryptoBatch, pbkdf2, app) {
 	'use strict';
 
 	var self = {};

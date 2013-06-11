@@ -1,4 +1,4 @@
-define(['backbone', 'js/model/folder-model'], function(Backbone) {
+define(['backbone', 'js/app-config', 'js/model/folder-model'], function(Backbone, app) {
 	'use strict';
 
 	app.model.Account = Backbone.Model.extend({

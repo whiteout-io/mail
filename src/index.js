@@ -2,7 +2,7 @@ require(['require-config'], function() {
 	'use strict';
 
 	// Start the main app logic.
-	require(['jquery', 'js/app-controller', 'js/app-config'], function($, controller) {
+	require(['jquery', 'js/app-controller', 'js/app-config'], function($, controller, app) {
 
 		/**
 		 * Load templates and start the application

@@ -1,7 +1,7 @@
-(function() {
+define(['jquery', 'underscore', 'backbone', 'js/app-config'], function($, _, Backbone, app) {
 	'use strict';
 
-	app.view.LoginView = Backbone.View.extend({
+	var LoginView = Backbone.View.extend({
 
 		initialize: function() {
 			this.template = _.template(app.util.tpl.get('login'));
@@ -23,7 +23,7 @@
 
 		login: function() {
 			var page = $(this.el),
-				userId = page.find('#userId').val(),
+				userId = page.find('#userId').val() + '@mail.whiteout.io',
 				password = page.find('#password').val();
 
 			// show loading msg during init
@@ -35,7 +35,7 @@
 
 			// post message to main window
 			app.util.postMessage('login', {
-				userId: userId + '@mail.whiteout.io',
+				userId: userId,
 				password: password
 			}, function(resArgs) {
 				var err = resArgs.err;
@@ -51,4 +51,5 @@
 		}
 	});
 
-}());
+	return LoginView;
+});

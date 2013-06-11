@@ -1,13 +1,13 @@
-(function() {
+define(['jquery', 'underscore', 'backbone', 'js/app-config'], function($, _, Backbone, app) {
 	'use strict';
 
-	app.view.FolderListView = Backbone.View.extend({
+	var FolderListView = Backbone.View.extend({
 
 		initialize: function() {
 			this.template = _.template(app.util.tpl.get('folderlist'));
 		},
 
-		render: function(eventName) {
+		render: function() {
 			var page = $(this.el);
 
 			page.html(this.template(this.options));
@@ -23,4 +23,5 @@
 		}
 	});
 
-}());
+	return FolderListView;
+});

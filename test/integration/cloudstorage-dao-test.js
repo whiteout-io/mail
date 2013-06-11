@@ -1,6 +1,6 @@
 define(['js/dao/email-dao', 'js/dao/keychain-dao', 'js/dao/lawnchair-dao',
-		'js/dao/cloudstorage-dao'
-], function(EmailDAO, KeychainDAO, jsonDao, cloudstorage) {
+		'js/dao/cloudstorage-dao', 'js/app-config'
+], function(EmailDAO, KeychainDAO, jsonDao, cloudstorage, app) {
 	'use strict';
 
 	module("CloudStorage DAO");

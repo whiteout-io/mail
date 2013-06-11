@@ -4,7 +4,7 @@
 	/**
 	 * A Wrapper for Forge's RSA encryption
 	 */
-	var RSA = function(forge, util) {
+	var RSA = function(forge, util, app) {
 
 		var utl = forge.util;
 
@@ -129,8 +129,8 @@
 
 	if (typeof define !== 'undefined' && define.amd) {
 		// AMD
-		define(['forge', 'cryptoLib/util'], function(forge, util) {
-			return new RSA(forge, util);
+		define(['forge', 'cryptoLib/util', 'js/app-config'], function(forge, util, app) {
+			return new RSA(forge, util, app);
 		});
 	} else if (typeof module !== 'undefined' && module.exports) {
 		// node.js
