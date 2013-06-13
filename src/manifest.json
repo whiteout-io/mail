@@ -8,7 +8,7 @@
     "128": "css/images/key-128.png"
   },
   "permissions": [
-      "http://storage.whiteout.io/"
+      "https://storage.whiteout.io/"
   ],
   "app": {
     "background": {

@@ -13,7 +13,7 @@ define([], function() {
 	 * Global app configurations
 	 */
 	app.config = {
-		cloudUrl: 'http://storage.whiteout.io',
+		cloudUrl: 'https://storage.whiteout.io',
 		symKeySize: 128,
 		symIvSize: 128,
 		asymKeySize: 1024,
