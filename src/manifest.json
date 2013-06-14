@@ -1,6 +1,6 @@
 {
   "name": "Whiteout Mail",
-  "description": "Mail app with end-2-end encrypted messaging and client-side encrypted sync to the cloud. Your data belongs only to you.",
+  "description": "Email service with end-2-end encrypted messaging and client-side encrypted sync to the cloud. Your data belongs only to you.",
   "version": "0.0.3",
   "manifest_version": 2,
   "offline_enabled": true,
