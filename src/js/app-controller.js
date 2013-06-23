@@ -29,7 +29,7 @@ define(['jquery', 'js/dao/email-dao', 'js/dao/keychain-dao', 'js/dao/cloudstorag
 		];
 
 		// are we running in native app or in browser?
-		if (document.URL.indexOf("http") === 0 || document.URL.indexOf("chrome") === 0) {
+		if (document.URL.indexOf("http") === 0 || document.URL.indexOf("app") === 0 || document.URL.indexOf("chrome") === 0) {
 			console.log('Assuming Browser environment...');
 			onDeviceReady();
 		} else {

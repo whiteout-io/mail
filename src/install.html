@@ -2,8 +2,10 @@
   <body>
     <p>Packaged app installation page</p>
     <script>
-      // This URL must be a full url.
-      var manifestUrl = window.location.href.replace('install.html', 'manifest.webapp');
+      var base = window.location.href.split("#")[0]; // WORKAROUND: remove hash from url
+      base = base.replace("/install.html",""); // WORKAROUND: remove index.html
+      var manifestUrl = base + '/manifest.webapp';
+
       var req = navigator.mozApps.install(manifestUrl);
       req.onsuccess = function() {
         alert('Success: ' + this.result.origin);

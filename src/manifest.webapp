@@ -1,14 +1,14 @@
 {
 	"name": "Whiteout",
-	"description": "HTML5 Mail with an encrypted message store both locally and in the cloud",
-	"launch_path": "/mail-html5/src/",
+	"description": "Email service with end-2-end encrypted messaging and client-side encrypted sync to the cloud. Your data belongs only to you.",
+	"version": "0.1",
+	"launch_path": "/src/index.html",
 	"icons": {
-		"128": "/mail-html5/src/css/images/key-128.png"
+		"128": "/src/css/images/mail-128.png"
 	},
 	"developer": {
 		"name": "Whiteout Networks GmbH",
 		"url": "http://whiteout.io"
 	},
-	"csp": "default-src *; script-src 'self' 'unsafe-eval'; options eval-script; object-src 'none'; style-src 'self' 'unsafe-inline'",
 	"default_locale": "en"
 }
