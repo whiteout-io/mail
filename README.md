@@ -7,6 +7,6 @@ HTML5 Mail App with Client-side Encryption
 Required packages: nodejs, npm
 
     npm install
-    node server.js
+    grunt dev
     
 browse to http://localhost:8585
