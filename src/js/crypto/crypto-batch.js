@@ -97,7 +97,7 @@
 		 * Decrypt and verify a list of item keys using RSA
 		 * @param list [Array] The list of items to decrypt
 		 * @param senderPubkeys [Array] A list of public keys used to verify
-		 * @param receiverPrivkey [Array] The receiver's private key used to decrypt
+		 * @param receiverPrivkey [String] The receiver's private key used to decrypt
 		 */
 		this.decryptListKeysForUser = function(list, senderPubkeys, receiverPrivkey) {
 			var senderPk,
@@ -115,6 +115,27 @@
 
 				// decrypt item for user
 				self.decryptItemKeyForUser(i, senderPk.publicKey);
+			});
+
+			return list;
+		};
+
+		/**
+		 * Decrypt a list of item keys using RSA and the encrypt them again using AES
+		 * @param list [Array] The list of items to decrypt
+		 * @param senderPubkeys [Array] A list of public keys used to verify
+		 * @param receiverPrivkey [String] The receiver's private key used to decrypt
+		 * @param symKey [String] The symmetric key used to re-encrypt the item key
+		 */
+		this.reencryptListKeysForUser = function(list, senderPubkeys, receiverPrivkey, symKey) {
+			// verify and decrypt item keys using RSA
+			this.decryptListKeysForUser(list, senderPubkeys, receiverPrivkey);
+
+			list.forEach(function(i) {
+				// re-encrypt item key using aes
+				i.encryptedKey = aes.encrypt(i.key, symKey, i.iv);
+
+				delete i.key;
 			});
 
 			return list;
@@ -145,6 +166,32 @@
 				// decrypt item for user
 				self.decryptItem(i);
 			});
+
+			return list;
+		};
+
+		/**
+		 * Decrypt keys and items using AES
+		 * @param list [Array] The list of items to decrypt
+		 * @param symKey [String] The symmetric key used to re-encrypt the item key
+		 */
+		this.decryptKeysAndList = function(list, symKey) {
+			var self = this,
+				j;
+
+			list.forEach(function(i) {
+				// decrypt item key
+				i.key = aes.decrypt(i.encryptedKey, symKey, i.iv);
+				// decrypt item for user
+				self.decryptItem(i);
+
+				delete i.encryptedKey;
+			});
+
+			// set plaintext as list item
+			for (j = 0; j < list.length; j++) {
+				list[j] = list[j].plaintext;
+			}
 
 			return list;
 		};

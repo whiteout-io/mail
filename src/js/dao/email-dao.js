@@ -80,7 +80,7 @@ define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/lawnchair-da
 		 * @param num [Number] The number of items to fetch (null means fetch all)
 		 */
 		self.listItems = function(folderName, offset, num, callback) {
-			var collection, folder, already, pubkeyIds = [];
+			var collection, folder;
 
 			// check if items are in memory already (account.folders model)
 			folder = self.account.get('folders').where({
@@ -99,45 +99,23 @@ define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/lawnchair-da
 						return;
 					}
 
-					// gather public key ids required to verify signatures
-					encryptedList.forEach(function(i) {
-						already = null;
-						already = _.findWhere(pubkeyIds, {
-							_id: i.senderPk
-						});
-						if (!already) {
-							pubkeyIds.push({
-								_id: i.senderPk
-							});
-						}
-					});
-
-					// fetch public keys from keychain
-					keychain.getPublicKeys(pubkeyIds, function(err, senderPubkeys) {
+					// decrypt list
+					crypto.decryptKeysAndList(encryptedList, function(err, decryptedList) {
 						if (err) {
 							callback(err);
 							return;
 						}
 
-						// decrypt list
-						crypto.decryptListForUser(encryptedList, senderPubkeys, function(err, decryptedList) {
-							if (err) {
-								callback(err);
-								return;
-							}
+						// cache collection in folder memory
+						if (decryptedList.length > 0) {
+							folder = new app.model.Folder({
+								name: folderName
+							});
+							folder.set('items', decryptedList);
+							self.account.get('folders').add(folder);
+						}
 
-							// cache collection in folder memory
-							if (decryptedList.length > 0) {
-								folder = new app.model.Folder({
-									name: folderName
-								});
-								folder.set('items', decryptedList);
-								self.account.get('folders').add(folder);
-							}
-
-							callback(null, decryptedList);
-						});
-
+						callback(null, decryptedList);
 					});
 				});
 
@@ -153,9 +131,9 @@ define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/lawnchair-da
 		 * @param folderName [String] The name of the folder e.g. 'inbox'
 		 */
 		self.syncFromCloud = function(folderName, callback) {
-			var folder;
+			var folder, already, pubkeyIds = [];
 
-			cloudstorage.listEncryptedItems('email', self.account.get('emailAddress'), folderName, function(err, data) {
+			cloudstorage.listEncryptedItems('email', self.account.get('emailAddress'), folderName, function(err, encryptedList) {
 				// return if an error occured
 				if (err) {
 					callback({
@@ -164,19 +142,53 @@ define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/lawnchair-da
 					}); // error
 					return;
 				}
+				if (encryptedList.length === 0) {
+					callback();
+					return;
+				}
 
 				// TODO: remove old folder items from devicestorage
 
-				// persist encrypted list in device storage
-				devicestorage.storeEcryptedList(data, 'email_' + folderName, function() {
-					// remove cached folder in account model
-					folder = self.account.get('folders').where({
-						name: folderName
-					})[0];
-					if (folder) {
-						self.account.get('folders').remove(folder);
+				// gather public key ids required to verify signatures
+				encryptedList.forEach(function(i) {
+					already = null;
+					already = _.findWhere(pubkeyIds, {
+						_id: i.senderPk
+					});
+					if (!already) {
+						pubkeyIds.push({
+							_id: i.senderPk
+						});
 					}
-					callback();
+				});
+
+				// fetch public keys from keychain
+				keychain.getPublicKeys(pubkeyIds, function(err, senderPubkeys) {
+					if (err) {
+						callback(err);
+						return;
+					}
+
+					// verfiy signatures and re-encrypt item keys
+					crypto.reencryptListKeysForUser(encryptedList, senderPubkeys, function(err, encryptedKeyList) {
+						if (err) {
+							callback(err);
+							return;
+						}
+
+						// persist encrypted list in device storage
+						devicestorage.storeEcryptedList(encryptedKeyList, 'email_' + folderName, function() {
+							// remove cached folder in account model
+							folder = self.account.get('folders').where({
+								name: folderName
+							})[0];
+							if (folder) {
+								self.account.get('folders').remove(folder);
+							}
+							callback();
+						});
+					});
+
 				});
 			});
 		};

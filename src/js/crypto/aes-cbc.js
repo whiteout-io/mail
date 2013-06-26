@@ -16,6 +16,11 @@
 		 * @return [String] The base64 encoded ciphertext
 		 */
 		this.encrypt = function(plaintext, key, iv) {
+			// validate args
+			if (!plaintext || !key || !iv) {
+				throw new Error("Missing args for encryption!");
+			}
+
 			// decode args to utf8 and encrypt
 			var cipher = forge.aes.createEncryptionCipher(utl.decode64(key));
 			cipher.start(utl.decode64(iv));
@@ -34,6 +39,11 @@
 		 * @return [String] The decrypted plaintext in UTF-16
 		 */
 		this.decrypt = function(ciphertext, key, iv) {
+			// validate args
+			if (!ciphertext || !key || !iv) {
+				throw new Error("Missing args for decryption!");
+			}
+
 			// decode args input to utf8 decrypt
 			var cipher = forge.aes.createDecryptionCipher(utl.decode64(key));
 			cipher.start(utl.decode64(iv));

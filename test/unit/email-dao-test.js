@@ -17,7 +17,7 @@ define(['js/dao/email-dao', 'js/dao/keychain-dao', 'js/dao/lawnchair-dao',
 		// init dependencies
 		jsonDao.init(emaildaoTest.user);
 		// cloud storage stub
-		var cloudstorageStub = {
+		emaildaoTest.cloudstorageStub = {
 			putPublicKey: function(pk, callback) {
 				callback();
 			},
@@ -28,8 +28,8 @@ define(['js/dao/email-dao', 'js/dao/keychain-dao', 'js/dao/lawnchair-dao',
 				callback();
 			}
 		};
-		emaildaoTest.keychain = new KeychainDAO(cloudstorageStub);
-		emaildaoTest.emailDao = new EmailDAO(cloudstorageStub, emaildaoTest.keychain);
+		emaildaoTest.keychain = new KeychainDAO(emaildaoTest.cloudstorageStub);
+		emaildaoTest.emailDao = new EmailDAO(emaildaoTest.cloudstorageStub, emaildaoTest.keychain);
 
 		// generate test data
 		emaildaoTest.list = testData.getEmailCollection(100);
@@ -54,7 +54,7 @@ define(['js/dao/email-dao', 'js/dao/keychain-dao', 'js/dao/lawnchair-dao',
 		});
 	});
 
-	asyncTest("Persist test emails", 4, function() {
+	asyncTest("Persist test emails (stubbed sync from cloud)", 4, function() {
 		emaildaoTest.keychain.getUserKeyPair(emaildaoTest.user, function(err, keypair) {
 			ok(!err && keypair, 'Fetch keypair from keychain');
 
@@ -69,8 +69,13 @@ define(['js/dao/email-dao', 'js/dao/keychain-dao', 'js/dao/lawnchair-dao',
 					encryptedList[i].sentDate = emaildaoTest.list.at(i).get('sentDate');
 				}
 
-				storage.storeEcryptedList(encryptedList, 'email_inbox', function() {
-					ok(true, 'Store encrypted list');
+				// set encrypted test list as return value for cloud storage stub
+				emaildaoTest.cloudstorageStub.listEncryptedItems = function(type, emailAddress, folderName, callback) {
+					callback(null, encryptedList);
+				};
+
+				emaildaoTest.emailDao.syncFromCloud('inbox', function() {
+					ok(true, 'Stored encrypted list');
 
 					start();
 				});

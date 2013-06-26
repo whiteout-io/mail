@@ -9,6 +9,8 @@ define(['cryptoLib/util', 'cryptoLib/aes-cbc', 'cryptoLib/rsa', 'cryptoLib/crypt
 
 	var self = {};
 
+	var passBasedKey;
+
 	/**
 	 * Initializes the crypto modules by fetching the user's
 	 * encrypted secret key from storage and storing it in memory.
@@ -33,6 +35,9 @@ define(['cryptoLib/util', 'cryptoLib/aes-cbc', 'cryptoLib/rsa', 'cryptoLib/crypt
 				callback(err);
 				return;
 			}
+
+			// remember pbkdf2 for later use
+			passBasedKey = derivedKey;
 
 			// check if key exists
 			if (!args.storedKeypair) {
@@ -238,6 +243,42 @@ define(['cryptoLib/util', 'cryptoLib/aes-cbc', 'cryptoLib/rsa', 'cryptoLib/crypt
 			return cryptoBatch.decryptListForUser(list, senderPubkeys, receiverPrivkey);
 		});
 	};
+
+	//
+	// Re-encrypt keys item and items seperately
+	//
+
+	self.reencryptListKeysForUser = function(list, senderPubkeys, callback) {
+		var keypair = rsa.exportKeys();
+		var receiverPrivkey = {
+			_id: keypair._id,
+			privateKey: keypair.privkeyPem
+		};
+
+		startWorker('/crypto/crypto-batch-worker.js', {
+			type: 'reencrypt',
+			list: list,
+			receiverPrivkey: receiverPrivkey,
+			senderPubkeys: senderPubkeys,
+			symKey: passBasedKey
+		}, callback, function() {
+			return cryptoBatch.reencryptListKeysForUser(list, senderPubkeys, receiverPrivkey, passBasedKey);
+		});
+	};
+
+	self.decryptKeysAndList = function(list, callback) {
+		startWorker('/crypto/crypto-batch-worker.js', {
+			type: 'decryptItems',
+			list: list,
+			symKey: passBasedKey
+		}, callback, function() {
+			return cryptoBatch.decryptKeysAndList(list, passBasedKey);
+		});
+	};
+
+	//
+	// helper functions
+	//
 
 	function startWorker(script, args, callback, noWorker) {
 		// check for WebWorker support

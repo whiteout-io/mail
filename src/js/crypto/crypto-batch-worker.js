@@ -28,6 +28,14 @@
 					// start decryption
 					output = batch.decryptListForUser(i.list, i.senderPubkeys, i.receiverPrivkey);
 
+				} else if (i.type === 'reencrypt' && i.senderPubkeys && i.receiverPrivkey && i.list && i.symKey) {
+					// start validation and re-encryption
+					output = batch.reencryptListKeysForUser(i.list, i.senderPubkeys, i.receiverPrivkey, i.symKey);
+
+				} else if (i.type === 'decryptItems' && i.symKey && i.list) {
+					// start decryption
+					output = batch.decryptKeysAndList(i.list, i.symKey);
+
 				} else {
 					throw 'Not all arguments for web worker crypto are defined!';
 				}
