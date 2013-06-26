@@ -34,6 +34,8 @@
 			delete i.plaintext;
 			delete i.key;
 			delete i.receiverPk;
+
+			return i;
 		};
 
 		/**
@@ -87,6 +89,8 @@
 			delete i.signature;
 			delete i.encryptedKey;
 			delete i.senderPk;
+
+			return i;
 		};
 
 		/**
@@ -126,6 +130,8 @@
 
 			// delete ciphertext values
 			delete i.ciphertext;
+
+			return i;
 		};
 
 		/**
@@ -139,6 +145,8 @@
 				// decrypt item for user
 				self.decryptItem(i);
 			});
+
+			return list;
 		};
 
 		/**
@@ -152,6 +160,8 @@
 
 			// symmetrically decrypt JSON and parse to object literal
 			this.decryptItem(i);
+
+			return i;
 		};
 
 		/**
