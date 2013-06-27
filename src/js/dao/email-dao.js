@@ -133,22 +133,47 @@ define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/lawnchair-da
 		self.syncFromCloud = function(folderName, callback) {
 			var folder, already, pubkeyIds = [];
 
-			cloudstorage.listEncryptedItems('email', self.account.get('emailAddress'), folderName, function(err, encryptedList) {
-				// return if an error occured
+			// fetch most recent date
+			this.listItems(folderName, 0, 1, function(err, localItems) {
 				if (err) {
-					callback({
-						errMsg: 'Syncing encrypted items from cloud failed!',
-						err: err
-					}); // error
-					return;
-				}
-				if (encryptedList.length === 0) {
-					callback();
+					callback(err); // error
 					return;
 				}
 
-				// TODO: remove old folder items from devicestorage
+				var filter = '';
+				if (localItems && localItems.length > 0) {
+					// sync delta of last item sent date
+					filter = '?date=' + localItems[localItems.length - 1].sentDate;
+					startSync(filter);
+				} else {
+					// do a full sync of all items on the cloud
+					startSync(filter);
+				}
+			});
 
+			function startSync(filter) {
+				// fetch items from the cloud
+				cloudstorage.listEncryptedItems('email', self.account.get('emailAddress'), folderName + filter, function(err, encryptedList) {
+					// return if an error occured
+					if (err) {
+						callback({
+							errMsg: 'Syncing encrypted items from cloud failed!',
+							err: err
+						}); // error
+						return;
+					}
+					if (encryptedList.length === 0) {
+						callback();
+						return;
+					}
+
+					// TODO: remove old folder items from devicestorage
+
+					reencryptItems(encryptedList);
+				});
+			}
+
+			function reencryptItems(encryptedList) {
 				// gather public key ids required to verify signatures
 				encryptedList.forEach(function(i) {
 					already = null;
@@ -188,9 +213,8 @@ define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/lawnchair-da
 							callback();
 						});
 					});
-
 				});
-			});
+			}
 		};
 
 		/**
