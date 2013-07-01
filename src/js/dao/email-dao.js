@@ -142,9 +142,16 @@ define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/lawnchair-da
 
 				var filter = '';
 				if (localItems && localItems.length > 0) {
+					// get gmt date since that's what the storage service seems to use
+					var sentDate = localItems[localItems.length - 1].sentDate;
+					var date = util.parseDate(sentDate);
+					date.setHours(date.getHours() + (date.getTimezoneOffset() / 60));
+					var gmtDate = util.formatDate(date);
+
 					// sync delta of last item sent date
-					//filter = '?date=' + localItems[localItems.length - 1].sentDate;
+					filter = '?date=' + gmtDate;
 					startSync(filter);
+
 				} else {
 					// do a full sync of all items on the cloud
 					startSync(filter);
