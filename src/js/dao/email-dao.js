@@ -143,7 +143,7 @@ define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/lawnchair-da
 				var filter = '';
 				if (localItems && localItems.length > 0) {
 					// sync delta of last item sent date
-					filter = '?date=' + localItems[localItems.length - 1].sentDate;
+					//filter = '?date=' + localItems[localItems.length - 1].sentDate;
 					startSync(filter);
 				} else {
 					// do a full sync of all items on the cloud
@@ -225,9 +225,9 @@ define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/lawnchair-da
 
 			// validate email addresses
 			var invalidRecipient;
-			_.each(email.to, function(address) {
-				if (!validateEmail(address)) {
-					invalidRecipient = address;
+			_.each(email.to, function(i) {
+				if (!validateEmail(i.address)) {
+					invalidRecipient = i.address;
 				}
 			});
 			if (invalidRecipient) {
@@ -236,7 +236,7 @@ define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/lawnchair-da
 				});
 				return;
 			}
-			if (!validateEmail(email.from)) {
+			if (!validateEmail(email.from[0].address)) {
 				callback({
 					errMsg: 'Invalid sender: ' + email.from
 				});
@@ -245,11 +245,59 @@ define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/lawnchair-da
 
 			// generate a new UUID for the new email
 			email.id = util.UUID();
+			// set sent date
+			email.sentDate = util.formatDate(new Date());
 
-			// send email to cloud service
-			cloudstorage.putEncryptedItem(email, 'email', userId, 'outbox', function(err) {
-				callback(err);
+			// only support single recipient for e-2-e encryption
+			var recipient = email.to[0].address;
+
+			// check if receiver has a public key
+			keychain.getReveiverPublicKey(recipient, function(err, receiverPubkey) {
+				if (err) {
+					callback(err);
+					return;
+				}
+
+				if (receiverPubkey) {
+					// public key found... encrypt and send
+					encrypt(email, receiverPubkey);
+				} else {
+					// no public key found... send plaintext mail via SMTP
+					send(email);
+				}
 			});
+
+			function encrypt(email, receiverPubkey) {
+				// encrypt the email
+				crypto.encryptListForUser([email], [receiverPubkey], function(err, encryptedList) {
+					if (err) {
+						callback(err);
+						return;
+					}
+
+					var ct = encryptedList[0];
+
+					var envelope = {
+						id: email.id,
+						crypto: 'rsa-1024-sha-256-aes-128-cbc',
+						sentDate: email.sentDate,
+						ciphertext: ct.ciphertext,
+						encryptedKey: ct.encryptedKey,
+						iv: ct.iv,
+						signature: ct.signature,
+						senderPk: ct.senderPk
+					};
+
+					send(envelope);
+				});
+			}
+
+			function send(email) {
+				// send email to cloud service
+				cloudstorage.deliverEmail(email, userId, recipient, function(err) {
+					callback(err);
+				});
+			}
 		};
 	};
 

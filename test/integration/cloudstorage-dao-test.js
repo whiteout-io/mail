@@ -161,13 +161,40 @@ define(['js/dao/email-dao', 'js/dao/keychain-dao', 'js/dao/lawnchair-dao',
 		});
 	});
 
-	asyncTest("Send Plaintext Email item", 1, function() {
+	asyncTest("Send e-2-e Encrypted Email item", 1, function() {
 		var email = {
-			from: cloudstoragedaoTest.user, // sender address
-			to: [cloudstoragedaoTest.user], // list of receivers
 			subject: 'Client Email DAO Test', // Subject line
 			body: 'Hello world' // plaintext body
 		};
+		email.from = [{
+				address: cloudstoragedaoTest.user
+			}
+		];
+		email.to = [{
+				address: cloudstoragedaoTest.user
+			}
+		];
+
+		cloudstoragedaoTest.emailDao.sendEmail(email, function(err) {
+			ok(!err, 'Email sent');
+
+			start();
+		});
+	});
+
+	asyncTest("Send Plaintext Email item", 1, function() {
+		var email = {
+			subject: 'Client Email DAO Test', // Subject line
+			body: 'Hello world' // plaintext body
+		};
+		email.from = [{
+				address: cloudstoragedaoTest.user
+			}
+		];
+		email.to = [{
+				address: 'safewithme.testuser@gmail.com'
+			}
+		];
 
 		cloudstoragedaoTest.emailDao.sendEmail(email, function(err) {
 			ok(!err, 'Email sent');

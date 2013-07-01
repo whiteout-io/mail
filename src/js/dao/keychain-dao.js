@@ -47,6 +47,51 @@ define(['underscore', 'js/dao/lawnchair-dao'], function(_, jsonDao) {
 		};
 
 		/**
+		 * Look up a reveiver's public key by user id
+		 * @param userId [String] the receiver's email address
+		 */
+		self.getReveiverPublicKey = function(userId, callback) {
+			// search local keyring for public key
+			jsonDao.list('publickey', 0, null, function(allPubkeys) {
+				var pubkey = _.findWhere(allPubkeys, {
+					userId: userId
+				});
+
+				if (!pubkey || !pubkey._id) {
+					// no public key by that user id in storage
+					// find from cloud by email address
+					cloudstorage.getPublicKeyByUserId(userId, function(err, cloudPubkey) {
+						if (err || !cloudPubkey) {
+							callback();
+							return;
+						}
+
+						if (cloudPubkey && cloudPubkey._id) {
+							// there is a public key for that user already in the cloud...
+							// save to local storage
+							saveLocalPublicKey(cloudPubkey, function(err) {
+								if (err) {
+									callback(err);
+									return;
+								}
+
+								callback(null, cloudPubkey);
+							});
+						} else {
+							// no public key for that user
+							callback();
+							return;
+						}
+					});
+
+				} else {
+					// that user's public key is already in local storage
+					callback(null, pubkey);
+				}
+			});
+		};
+
+		/**
 		 * Gets the local user's key either from local storage
 		 * or fetches it from the cloud. The private key is encrypted.
 		 * If no key pair exists, null is returned.

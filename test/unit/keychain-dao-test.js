@@ -81,4 +81,13 @@ define(['js/dao/keychain-dao', 'js/dao/lawnchair-dao'], function(KeychainDAO, js
 		});
 	});
 
+	asyncTest("Get User Keypair", 2, function() {
+		keychaindaoTest.keychainDao.getReveiverPublicKey(keychaindaoTest.user, function(err, pubkey) {
+			ok(!err);
+			ok(pubkey && pubkey.publicKey);
+
+			start();
+		});
+	});
+
 });

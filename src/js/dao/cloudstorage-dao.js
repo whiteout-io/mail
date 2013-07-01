@@ -85,6 +85,14 @@ define(['jquery', 'js/app-config'], function($, app) {
 	};
 
 	/**
+	 * Deliver an email to the user's outbox
+	 */
+	self.deliverEmail = function(email, from, to, callback) {
+		var uri = app.config.cloudUrl + '/email/user/' + from + '/folder/outbox/' + email.id + '?to=' + to;
+		self.put(email, uri, callback);
+	};
+
+	/**
 	 * Delete an encrypted item from the cloud
 	 * @param type [String] The type of item e.g. 'email'
 	 */
