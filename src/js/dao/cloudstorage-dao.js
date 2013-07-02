@@ -152,9 +152,8 @@ define(['jquery', 'js/app-config'], function($, app) {
 			}
 
 			if (!keys || keys.length < 1) {
-				callback({
-					errMsg: 'No public key for that user!'
-				});
+				// 'No public key for that user!'
+				callback();
 				return;
 			}
 
