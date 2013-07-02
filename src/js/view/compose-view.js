@@ -102,7 +102,7 @@ define(['jquery', 'underscore', 'backbone', 'js/app-config'], function($, _, Bac
 				return;
 			}
 
-			var signature = '\n\nSent with whiteout mail - get your free mailbox for end-2-end encrypted messaging!\nhttps://mail.whiteout.io';
+			var signature = '\n\nSent with whiteout mail - get your free mailbox for end-2-end encrypted messaging!\nhttps://www.whiteout.io';
 
 			var email = {
 				to: [],
