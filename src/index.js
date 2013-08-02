@@ -1,6 +1,13 @@
 require(['jquery', 'js/app-controller', 'js/app-config'], function($, controller, app) {
 	'use strict';
 
+	chrome.identity.getAuthToken({
+		'interactive': true
+	}, function(token) {
+		console.log(token);
+		// Use the token.
+	});
+
 	/**
 	 * Load templates and start the application
 	 */
