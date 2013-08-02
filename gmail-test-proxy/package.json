@@ -9,7 +9,7 @@
 	},
 	"dependencies": {
 		"express": "~3.2.4",
-		"inbox": "https://github.com/whiteout-io/inbox/tarball/iconv-lite",
+		"inbox": "https://github.com/whiteout-io/inbox/tarball/chrome",
 		"nodemailer": "~0.4.3"
 	},
 	"devDependencies": {
