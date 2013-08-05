@@ -196,7 +196,7 @@ asn1.create = function(tagClass, type, constructed, value) {
     according to the ASN.1 data type. */
 
   // remove undefined values
-  if(value.constructor == Array) {
+  if(forge.util.isArray(value)) {
     var tmp = [];
     for(var i = 0; i < value.length; ++i) {
       if(value[i] !== undefined) {
@@ -210,7 +210,7 @@ asn1.create = function(tagClass, type, constructed, value) {
     tagClass: tagClass,
     type: type,
     constructed: constructed,
-    composed: constructed || (value.constructor == Array),
+    composed: constructed || forge.util.isArray(value),
     value: value
   };
 };
@@ -226,7 +226,7 @@ asn1.create = function(tagClass, type, constructed, value) {
  */
 var _getValueLength = function(b) {
   var b2 = b.getByte();
-  if(b2 == 0x80) {
+  if(b2 === 0x80) {
     return undefined;
   }
 
@@ -249,12 +249,18 @@ var _getValueLength = function(b) {
  * Parses an asn1 object from a byte buffer in DER format.
  *
  * @param bytes the byte buffer to parse from.
+ * @param strict true to be strict when checking value lengths, false to
+ *          allow truncated values (default: true).
  *
  * @return the parsed asn1 object.
  */
-asn1.fromDer = function(bytes) {
+asn1.fromDer = function(bytes, strict) {
+  if(strict === undefined) {
+    strict = true;
+  }
+
   // wrap in buffer if needed
-  if(bytes.constructor == String) {
+  if(typeof bytes === 'string') {
     bytes = forge.util.createBuffer(bytes);
   }
 
@@ -280,17 +286,21 @@ asn1.fromDer = function(bytes) {
 
   // ensure there are enough bytes to get the value
   if(bytes.length() < length) {
-    throw {
-      message: 'Too few bytes to read ASN.1 value.',
-      detail: bytes.length() + ' < ' + length
-    };
+    if(strict) {
+      throw {
+        message: 'Too few bytes to read ASN.1 value.',
+        detail: bytes.length() + ' < ' + length
+      };
+    }
+    // Note: be lenient with truncated values
+    length = bytes.length();
   }
 
   // prepare to get value
   var value;
 
   // constructed flag is bit 6 (32 = 0x20) of the first byte
-  var constructed = ((b1 & 0x20) == 0x20);
+  var constructed = ((b1 & 0x20) === 0x20);
 
   // determine if the value is composed of other ASN.1 objects (if its
   // constructed it will be and if its a BITSTRING it may be)
@@ -311,8 +321,7 @@ asn1.fromDer = function(bytes) {
       // and the length is valid, assume we've got an ASN.1 object
       b1 = bytes.getByte();
       var tc = (b1 & 0xC0);
-      if(tc === asn1.Class.UNIVERSAL ||
-        tc === asn1.Class.CONTEXT_SPECIFIC) {
+      if(tc === asn1.Class.UNIVERSAL || tc === asn1.Class.CONTEXT_SPECIFIC) {
         try {
           var len = _getValueLength(bytes);
           composed = (len === length - (bytes.read - read));
@@ -339,14 +348,14 @@ asn1.fromDer = function(bytes) {
           bytes.getBytes(2);
           break;
         }
-        value.push(asn1.fromDer(bytes));
+        value.push(asn1.fromDer(bytes, strict));
       }
     }
     else {
       // parsing asn1 object of definite length
       var start = bytes.length();
       while(length > 0) {
-        value.push(asn1.fromDer(bytes));
+        value.push(asn1.fromDer(bytes, strict));
         length -= start - bytes.length();
         start = bytes.length();
       }
@@ -520,7 +529,7 @@ asn1.derToOid = function(bytes) {
   var oid;
 
   // wrap in buffer if needed
-  if(bytes.constructor == String) {
+  if(typeof bytes === 'string') {
     bytes = forge.util.createBuffer(bytes);
   }
 
@@ -678,7 +687,7 @@ asn1.generalizedTimeToDate = function(gentime) {
   var offset = 0;
   var isUTC = false;
 
-  if(gentime.charAt(gentime.length - 1) == 'Z') {
+  if(gentime.charAt(gentime.length - 1) === 'Z') {
     isUTC = true;
   }
 
@@ -701,7 +710,7 @@ asn1.generalizedTimeToDate = function(gentime) {
   }
 
   // check for second fraction
-  if(gentime.charAt(14) == '.') {
+  if(gentime.charAt(14) === '.') {
     fff = parseFloat(gentime.substr(14), 10) * 1000;
   }
 
@@ -788,7 +797,7 @@ asn1.validate = function(obj, v, capture, errors) {
       rval = true;
 
       // handle sub values
-      if(v.value && v.value.constructor == Array) {
+      if(v.value && forge.util.isArray(v.value)) {
         var j = 0;
         for(var i = 0; rval && i < v.value.length; ++i) {
           rval = v.value[i].optional || false;
@@ -1012,12 +1021,11 @@ asn1.prettyPrint = function(obj, level, indentation) {
 
 /* ########## Begin module wrapper ########## */
 var name = 'asn1';
-var deps = ['./util', './oids'];
-var nodeDefine = null;
 if(typeof define !== 'function') {
   // NodeJS -> AMD
   if(typeof module === 'object' && module.exports) {
-    nodeDefine = function(ids, factory) {
+    var nodeJS = true;
+    define = function(ids, factory) {
       factory(require, module);
     };
   }
@@ -1026,30 +1034,40 @@ if(typeof define !== 'function') {
     if(typeof forge === 'undefined') {
       forge = {};
     }
-    initModule(forge);
+    return initModule(forge);
   }
 }
 // AMD
-if(nodeDefine || typeof define === 'function') {
-  // define module AMD style
-  (nodeDefine || define)(['require', 'module'].concat(deps),
-  function(require, module) {
-    module.exports = function(forge) {
-      var mods = deps.map(function(dep) {
-        return require(dep);
-      }).concat(initModule);
-      // handle circular dependencies
-      forge = forge || {};
-      forge.defined = forge.defined || {};
-      if(forge.defined[name]) {
-        return forge[name];
-      }
-      forge.defined[name] = true;
-      for(var i = 0; i < mods.length; ++i) {
-        mods[i](forge);
-      }
+var deps;
+var defineFunc = function(require, module) {
+  module.exports = function(forge) {
+    var mods = deps.map(function(dep) {
+      return require(dep);
+    }).concat(initModule);
+    // handle circular dependencies
+    forge = forge || {};
+    forge.defined = forge.defined || {};
+    if(forge.defined[name]) {
       return forge[name];
-    };
-  });
-}
+    }
+    forge.defined[name] = true;
+    for(var i = 0; i < mods.length; ++i) {
+      mods[i](forge);
+    }
+    return forge[name];
+  };
+};
+var tmpDefine = define;
+define = function(ids, factory) {
+  deps = (typeof ids === 'string') ? factory.slice(2) : ids.slice(2);
+  if(nodeJS) {
+    delete define;
+    return tmpDefine.apply(null, Array.prototype.slice.call(arguments, 0));
+  }
+  define = tmpDefine;
+  return define.apply(null, Array.prototype.slice.call(arguments, 0));
+};
+define(['require', 'module', './util', './oids'], function() {
+  defineFunc.apply(null, Array.prototype.slice.call(arguments, 0));
+});
 })();

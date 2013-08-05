@@ -901,6 +901,9 @@ http.createRequest = function(options) {
 
   // add custom headers
   var headers = options.headers || [];
+  if(!forge.util.isArray(headers)) {
+    headers = [headers];
+  }
   for(var i = 0; i < headers.length; ++i) {
     for(var name in headers[i]) {
       request.appendField(name, headers[i][name]);
@@ -1202,7 +1205,7 @@ http.createResponse = function() {
     if(contentLength !== null && contentLength >= 0) {
       response.body = response.body || '';
       response.body += b.getBytes(contentLength);
-      response.bodyReceived = (response.body.length == contentLength);
+      response.bodyReceived = (response.body.length === contentLength);
     }
     // read chunked encoding
     else if(transferEncoding !== null) {
@@ -1372,7 +1375,7 @@ http.withinCookieDomain = function(url, cookie) {
   var rval = false;
 
   // cookie may be null, a cookie object, or a domain string
-  var domain = (cookie === null || cookie.constructor == String) ?
+  var domain = (cookie === null || typeof cookie === 'string') ?
     cookie : cookie.domain;
 
   // any domain will do
@@ -1382,7 +1385,7 @@ http.withinCookieDomain = function(url, cookie) {
   // ensure domain starts with a '.'
   else if(domain.charAt(0) === '.') {
     // parse URL as necessary
-    if(url.constructor == String) {
+    if(typeof url === 'string') {
       url = http.parseUrl(url);
     }
 

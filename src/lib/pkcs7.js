@@ -33,8 +33,24 @@ var p7 = forge.pkcs7 = forge.pkcs7 || {};
  * @return the PKCS#7 message.
  */
 p7.messageFromPem = function(pem) {
-  var der = forge.pki.pemToDer(pem);
-  var obj = asn1.fromDer(der);
+  var msg = forge.pem.decode(pem)[0];
+
+  if(msg.type !== 'PKCS7') {
+    throw {
+      message: 'Could not convert PKCS#7 message from PEM; PEM header type ' +
+        'is not "PKCS#7".',
+      headerType: msg.type
+    };
+  }
+  if(msg.procType && msg.procType.type === 'ENCRYPTED') {
+    throw {
+      message: 'Could not convert PKCS#7 message from PEM; PEM is encrypted.'
+    };
+  }
+
+  // convert DER to ASN.1 object
+  var obj = asn1.fromDer(msg.body);
+
   return p7.messageFromAsn1(obj);
 };
 
@@ -47,12 +63,12 @@ p7.messageFromPem = function(pem) {
  * @return The PEM-formatted PKCS#7 message.
  */
 p7.messageToPem = function(msg, maxline) {
-  var out = asn1.toDer(msg.toAsn1());
-  out = forge.util.encode64(out.getBytes(), maxline || 64);
-  return (
-    '-----BEGIN PKCS7-----\r\n' +
-    out +
-    '\r\n-----END PKCS7-----');
+  // convert to ASN.1, then DER, then PEM-encode
+  var pemObj = {
+    type: 'PKCS7',
+    body: asn1.toDer(msg.toAsn1()).getBytes()
+  };
+  return forge.pem.encode(pemObj, {maxline: maxline});
 };
 
 /**
@@ -266,7 +282,7 @@ var _fromAsn1 = function(msg, obj, validator) {
 
   if(capture.encContent) {
     var content = '';
-    if(capture.encContent.constructor === Array) {
+    if(forge.util.isArray(capture.encContent)) {
       for(var i = 0; i < capture.encContent.length; ++i) {
         if(capture.encContent[i].type !== asn1.Type.OCTETSTRING) {
           throw {
@@ -289,7 +305,7 @@ var _fromAsn1 = function(msg, obj, validator) {
 
   if(capture.content) {
     var content = '';
-    if(capture.content.constructor === Array) {
+    if(forge.util.isArray(capture.content)) {
       for(var i = 0; i < capture.content.length; ++i) {
         if(capture.content[i].type !== asn1.Type.OCTETSTRING) {
           throw {
@@ -659,20 +675,11 @@ p7.createEnvelopedData = function() {
 
 /* ########## Begin module wrapper ########## */
 var name = 'pkcs7';
-var deps = [
-  './aes',
-  './asn1',
-  './des',
-  './pkcs7asn1',
-  './pki',
-  './random',
-  './util'
-];
-var nodeDefine = null;
 if(typeof define !== 'function') {
   // NodeJS -> AMD
   if(typeof module === 'object' && module.exports) {
-    nodeDefine = function(ids, factory) {
+    var nodeJS = true;
+    define = function(ids, factory) {
       factory(require, module);
     };
   }
@@ -681,30 +688,51 @@ if(typeof define !== 'function') {
     if(typeof forge === 'undefined') {
       forge = {};
     }
-    initModule(forge);
+    return initModule(forge);
   }
 }
 // AMD
-if(nodeDefine || typeof define === 'function') {
-  // define module AMD style
-  (nodeDefine || define)(['require', 'module'].concat(deps),
-  function(require, module) {
-    module.exports = function(forge) {
-      var mods = deps.map(function(dep) {
-        return require(dep);
-      }).concat(initModule);
-      // handle circular dependencies
-      forge = forge || {};
-      forge.defined = forge.defined || {};
-      if(forge.defined[name]) {
-        return forge[name];
-      }
-      forge.defined[name] = true;
-      for(var i = 0; i < mods.length; ++i) {
-        mods[i](forge);
-      }
+var deps;
+var defineFunc = function(require, module) {
+  module.exports = function(forge) {
+    var mods = deps.map(function(dep) {
+      return require(dep);
+    }).concat(initModule);
+    // handle circular dependencies
+    forge = forge || {};
+    forge.defined = forge.defined || {};
+    if(forge.defined[name]) {
       return forge[name];
-    };
-  });
-}
+    }
+    forge.defined[name] = true;
+    for(var i = 0; i < mods.length; ++i) {
+      mods[i](forge);
+    }
+    return forge[name];
+  };
+};
+var tmpDefine = define;
+define = function(ids, factory) {
+  deps = (typeof ids === 'string') ? factory.slice(2) : ids.slice(2);
+  if(nodeJS) {
+    delete define;
+    return tmpDefine.apply(null, Array.prototype.slice.call(arguments, 0));
+  }
+  define = tmpDefine;
+  return define.apply(null, Array.prototype.slice.call(arguments, 0));
+};
+define([
+  'require',
+  'module',
+  './aes',
+  './asn1',
+  './des',
+  './pem',
+  './pkcs7asn1',
+  './pki',
+  './random',
+  './util'
+], function() {
+  defineFunc.apply(null, Array.prototype.slice.call(arguments, 0));
+});
 })();

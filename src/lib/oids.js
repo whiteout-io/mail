@@ -16,14 +16,14 @@ var oids = forge.pki.oids = forge.oids = forge.oids || {};
 oids['1.2.840.113549.1.1.1'] = 'rsaEncryption';
 oids['rsaEncryption'] = '1.2.840.113549.1.1.1';
 // Note: md2 & md4 not implemented
-//oids['1.2.840.113549.1.1.2'] = 'md2withRSAEncryption';
-//oids['md2withRSAEncryption'] = '1.2.840.113549.1.1.2';
-//oids['1.2.840.113549.1.1.3'] = 'md4withRSAEncryption';
-//oids['md4withRSAEncryption'] = '1.2.840.113549.1.1.3';
-oids['1.2.840.113549.1.1.4'] = 'md5withRSAEncryption';
-oids['md5withRSAEncryption'] = '1.2.840.113549.1.1.4';
-oids['1.2.840.113549.1.1.5'] = 'sha1withRSAEncryption';
-oids['sha1withRSAEncryption'] = '1.2.840.113549.1.1.5';
+//oids['1.2.840.113549.1.1.2'] = 'md2WithRSAEncryption';
+//oids['md2WithRSAEncryption'] = '1.2.840.113549.1.1.2';
+//oids['1.2.840.113549.1.1.3'] = 'md4WithRSAEncryption';
+//oids['md4WithRSAEncryption'] = '1.2.840.113549.1.1.3';
+oids['1.2.840.113549.1.1.4'] = 'md5WithRSAEncryption';
+oids['md5WithRSAEncryption'] = '1.2.840.113549.1.1.4';
+oids['1.2.840.113549.1.1.5'] = 'sha1WithRSAEncryption';
+oids['sha1WithRSAEncryption'] = '1.2.840.113549.1.1.5';
 oids['1.2.840.113549.1.1.7'] = 'RSAES-OAEP';
 oids['RSAES-OAEP'] = '1.2.840.113549.1.1.7';
 oids['1.2.840.113549.1.1.8'] = 'mgf1';
@@ -65,19 +65,29 @@ oids['1.2.840.113549.1.7.6'] = 'encryptedData';
 oids['encryptedData'] = '1.2.840.113549.1.7.6';
 
 // pkcs#9 oids
+oids['1.2.840.113549.1.9.1'] = 'emailAddress';
+oids['emailAddress'] = '1.2.840.113549.1.9.1';
+oids['1.2.840.113549.1.9.2'] = 'unstructuredName';
+oids['unstructuredName'] = '1.2.840.113549.1.9.2';
+oids['1.2.840.113549.1.9.3'] = 'contentType';
+oids['contentType'] = '1.2.840.113549.1.9.3';
+oids['1.2.840.113549.1.9.4'] = 'messageDigest';
+oids['messageDigest'] = '1.2.840.113549.1.9.4';
+oids['1.2.840.113549.1.9.5'] = 'signingTime';
+oids['signingTime'] = '1.2.840.113549.1.9.5';
+oids['1.2.840.113549.1.9.6'] = 'counterSignature';
+oids['counterSignature'] = '1.2.840.113549.1.9.6';
+oids['1.2.840.113549.1.9.7'] = 'challengePassword';
+oids['challengePassword'] = '1.2.840.113549.1.9.7';
+oids['1.2.840.113549.1.9.8'] = 'unstructuredAddress';
+oids['unstructuredAddress'] = '1.2.840.113549.1.9.8';
+
 oids['1.2.840.113549.1.9.20'] = 'friendlyName';
 oids['friendlyName'] = '1.2.840.113549.1.9.20';
 oids['1.2.840.113549.1.9.21'] = 'localKeyId';
 oids['localKeyId'] = '1.2.840.113549.1.9.21';
 oids['1.2.840.113549.1.9.22.1'] = 'x509Certificate';
 oids['x509Certificate'] = '1.2.840.113549.1.9.22.1';
-
-oids['1.2.840.113549.1.9.4'] = 'messageDigest';
-oids['messageDigest'] = '1.2.840.113549.1.9.4';
-oids['1.2.840.113549.1.9.3'] = 'contentType';
-oids['contentType'] = '1.2.840.113549.1.9.3';
-oids['1.2.840.113549.1.9.5'] = 'signingTime';
-oids['signingTime'] = '1.2.840.113549.1.9.5';
 
 // pkcs#12 safe bags
 oids['1.2.840.113549.1.12.10.1.1'] = 'keyBag';
@@ -137,10 +147,10 @@ oids['2.5.4.10'] = 'organizationName';
 oids['organizationName'] = '2.5.4.10';
 oids['2.5.4.11'] = 'organizationalUnitName';
 oids['organizationalUnitName'] = '2.5.4.11';
-oids['1.2.840.113549.1.9.1'] = 'emailAddress';
-oids['emailAddress'] = '1.2.840.113549.1.9.1';
 
 // X.509 extension OIDs
+oids['2.16.840.1.113730.1.1'] = 'nsCertType';
+oids['nsCertType'] = '2.16.840.1.113730.1.1';
 oids['2.5.29.1'] = 'authorityKeyIdentifier'; // deprecated, use .35
 oids['2.5.29.2'] = 'keyAttributes'; // obsolete use .37 or .15
 oids['2.5.29.3'] = 'certificatePolicies'; // deprecated, use .32
@@ -187,16 +197,27 @@ oids['extKeyUsage'] = '2.5.29.37';
 oids['2.5.29.46'] = 'freshestCRL';
 oids['2.5.29.54'] = 'inhibitAnyPolicy';
 
+// extKeyUsage purposes
+oids['1.3.6.1.5.5.7.3.1'] = 'serverAuth';
+oids['serverAuth'] = '1.3.6.1.5.5.7.3.1';
+oids['1.3.6.1.5.5.7.3.2'] = 'clientAuth';
+oids['clientAuth'] = '1.3.6.1.5.5.7.3.2';
+oids['1.3.6.1.5.5.7.3.3'] = 'codeSigning';
+oids['codeSigning'] = '1.3.6.1.5.5.7.3.3';
+oids['1.3.6.1.5.5.7.3.4'] = 'emailProtection';
+oids['emailProtection'] = '1.3.6.1.5.5.7.3.4';
+oids['1.3.6.1.5.5.7.3.8'] = 'timeStamping';
+oids['timeStamping'] = '1.3.6.1.5.5.7.3.8';
+
 } // end module implementation
 
 /* ########## Begin module wrapper ########## */
 var name = 'oids';
-var deps = [];
-var nodeDefine = null;
 if(typeof define !== 'function') {
   // NodeJS -> AMD
   if(typeof module === 'object' && module.exports) {
-    nodeDefine = function(ids, factory) {
+    var nodeJS = true;
+    define = function(ids, factory) {
       factory(require, module);
     };
   }
@@ -205,30 +226,40 @@ if(typeof define !== 'function') {
     if(typeof forge === 'undefined') {
       forge = {};
     }
-    initModule(forge);
+    return initModule(forge);
   }
 }
 // AMD
-if(nodeDefine || typeof define === 'function') {
-  // define module AMD style
-  (nodeDefine || define)(['require', 'module'].concat(deps),
-  function(require, module) {
-    module.exports = function(forge) {
-      var mods = deps.map(function(dep) {
-        return require(dep);
-      }).concat(initModule);
-      // handle circular dependencies
-      forge = forge || {};
-      forge.defined = forge.defined || {};
-      if(forge.defined[name]) {
-        return forge[name];
-      }
-      forge.defined[name] = true;
-      for(var i = 0; i < mods.length; ++i) {
-        mods[i](forge);
-      }
+var deps;
+var defineFunc = function(require, module) {
+  module.exports = function(forge) {
+    var mods = deps.map(function(dep) {
+      return require(dep);
+    }).concat(initModule);
+    // handle circular dependencies
+    forge = forge || {};
+    forge.defined = forge.defined || {};
+    if(forge.defined[name]) {
       return forge[name];
-    };
-  });
-}
+    }
+    forge.defined[name] = true;
+    for(var i = 0; i < mods.length; ++i) {
+      mods[i](forge);
+    }
+    return forge[name];
+  };
+};
+var tmpDefine = define;
+define = function(ids, factory) {
+  deps = (typeof ids === 'string') ? factory.slice(2) : ids.slice(2);
+  if(nodeJS) {
+    delete define;
+    return tmpDefine.apply(null, Array.prototype.slice.call(arguments, 0));
+  }
+  define = tmpDefine;
+  return define.apply(null, Array.prototype.slice.call(arguments, 0));
+};
+define(['require', 'module'], function() {
+  defineFunc.apply(null, Array.prototype.slice.call(arguments, 0));
+});
 })();
