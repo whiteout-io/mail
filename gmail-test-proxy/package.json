@@ -9,7 +9,7 @@
 	},
 	"dependencies": {
 		"net-chromeify": "https://github.com/whiteout-io/net-chromeify/tarball/rewrite",
-		"tls-chromeify": "https://github.com/whiteout-io/tls-chromeify/tarball/node-test",
+		"tls-chromeify": "https://github.com/whiteout-io/tls-chromeify/tarball/master",
 		"inbox": "https://github.com/whiteout-io/inbox/tarball/iconv-lite",
 		"nodemailer": "~0.4.3"
 	},
