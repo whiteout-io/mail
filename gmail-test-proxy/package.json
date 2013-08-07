@@ -10,6 +10,7 @@
 	"dependencies": {
 		"express": "~3.2.4",
 		"inbox": "https://github.com/whiteout-io/inbox/tarball/chrome",
+		"net-chromeify": "https://github.com/whiteout-io/net-chromeify/tarball/rewrite",
 		"nodemailer": "~0.4.3"
 	},
 	"devDependencies": {
