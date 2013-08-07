@@ -2,8 +2,8 @@
 
 var inbox = require('inbox');
 
-var client = inbox.createConnection(143, "imapmail.t-online.de", {
-	secureConnection: false,
+var client = inbox.createConnection(false, "imap.gmail.com", {
+	secureConnection: true,
 	// auth: {
 	// 	XOAuth2: {
 	// 		user: "safewithme.testuser@gmail.com",
@@ -11,14 +11,14 @@ var client = inbox.createConnection(143, "imapmail.t-online.de", {
 	// 		accessToken: "ya29.AHES6ZTVj9_kCdP8zEYCA9OZ6fvTqT_TmCe4UsmYPF3ffYM8eGHX2uw"
 	// 	}
 	// }
-	// auth: {
-	// 	user: "safewithme.testuser@gmail.com",
-	// 	pass: "hellosafe"
-	// }
 	auth: {
-		user: 'whiteout.test@t-online.de',
-		pass: '@6IyFg1SIlWH91Co' // 'R2nUXJlh9JKV3ZEp1#jH'
+		user: "safewithme.testuser@gmail.com",
+		pass: "hellosafe"
 	}
+	// auth: {
+	// 	user: 'whiteout.test@t-online.de',
+	// 	pass: '@6IyFg1SIlWH91Co' // 'R2nUXJlh9JKV3ZEp1#jH'
+	// }
 });
 
 console.log("Connecting to server...");
@@ -32,17 +32,17 @@ client.on("connect", function() {
 		if (error) throw error;
 
 		// List newest 10 messages
-		client.listMessages(-10, function(err, messages) {
+		client.listMessages(-1, function(err, messages) {
 			console.log("Listing messages server...");
 			messages.forEach(function(message) {
 				console.log(message.UID);
 
 				var msgStream = client.createMessageStream(message.UID);
 				msgStream.on('data', function(chunk) {
-				  console.log(chunk.toString('utf8'));
+					console.log(chunk.toString('utf8'));
 				})
 				msgStream.on('end', function() {
-				  console.log('\n\nthere will be no more data.');
+					console.log('\n\nthere will be no more data.');
 				});
 			});
 
