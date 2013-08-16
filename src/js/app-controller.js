@@ -39,9 +39,10 @@ define(['jquery', 'ImapClient', 'SmtpClient', 'js/dao/email-dao', 'js/dao/keycha
 	self.execute = function(cmd, args, callback) {
 		if (cmd === 'login') {
 			// login user
-			fetchOAuthToken(args.userId, args.password, function(err) {
+			fetchOAuthToken(args.password, function(err, userId) {
 				callback({
-					err: err
+					err: err,
+					userId: userId
 				});
 			});
 
@@ -92,13 +93,32 @@ define(['jquery', 'ImapClient', 'SmtpClient', 'js/dao/email-dao', 'js/dao/keycha
 	// Helper methods
 	//
 
-	function fetchOAuthToken(userId, password, callback) {
+	function fetchOAuthToken(password, callback) {
 		// get OAuth Token from chrome
 		chrome.identity.getAuthToken({
 				'interactive': true
 			},
 			function(token) {
-				login(userId, password, token, callback);
+				// fetch gmail user's email address from the Google Authorization Server endpoint
+				$.ajax({
+					url: 'https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=' + token,
+					type: 'GET',
+					dataType: 'json',
+					success: function(info) {
+						// login using the received email address
+						login(info.email, password, token, function(err) {
+							// send email address to sandbox
+							callback(err, info.email);
+						});
+					},
+					error: function(xhr, textStatus, err) {
+						callback({
+							errMsg: xhr.status + ': ' + xhr.statusText,
+							err: err
+						});
+					}
+				});
+
 			}
 		);
 	}

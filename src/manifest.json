@@ -17,6 +17,7 @@
   "oauth2": {
     "client_id": "440907777130.apps.googleusercontent.com",
     "scopes": [
+      "https://www.googleapis.com/auth/userinfo.email",
       "https://mail.google.com/"
     ]
   },

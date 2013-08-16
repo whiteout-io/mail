@@ -46,7 +46,7 @@ define(['jquery', 'underscore', 'backbone', 'js/app-config'], function($, _, Bac
 					return;
 				}
 
-				window.location = '#accounts/' + userId + '/folders';
+				window.location = '#accounts/' + resArgs.userId + '/folders';
 			});
 		}
 	});
