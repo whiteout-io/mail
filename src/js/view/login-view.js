@@ -23,7 +23,7 @@ define(['jquery', 'underscore', 'backbone', 'js/app-config'], function($, _, Bac
 
 		login: function() {
 			var page = $(this.el),
-				userId = page.find('#userId').val() + '@mail.whiteout.io',
+				userId = page.find('#userId').val(),
 				password = page.find('#password').val();
 
 			// show loading msg during init

@@ -14,7 +14,9 @@
 			lawnchair: 'lawnchair/lawnchair-git',
 			lawnchairSQL: 'lawnchair/lawnchair-adapter-webkit-sqlite-git',
 			lawnchairIDB: 'lawnchair/lawnchair-adapter-indexed-db-git',
-			cordova: 'cordova-2.5.0'
+			cordova: 'cordova-2.5.0',
+			ImapClient: 'imap-client-browserified',
+			SmtpClient: 'smtp-client-browserified'
 		},
 		shim: {
 			lawnchair: {

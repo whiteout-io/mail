@@ -1,23 +1,13 @@
 /**
  * The main application controller
  */
-define(['jquery', 'js/dao/email-dao', 'js/dao/keychain-dao', 'js/dao/cloudstorage-dao',
-		'js/app-config', 'cordova'
-], function($, EmailDAO, KeychainDAO, cloudstorage, app) {
+define(['jquery', 'ImapClient', 'SmtpClient', 'js/dao/email-dao', 'js/dao/keychain-dao',
+	'js/dao/cloudstorage-dao', 'js/app-config', 'cordova'
+], function($, ImapClient, SmtpClient, EmailDAO, KeychainDAO, cloudstorage, app) {
 	'use strict';
 
-	var self = {};
-
-	var emailDao;
-
-	/**
-	 * Initializes modules through dependecy injection
-	 */
-	self.init = function(callback) {
-		var keychain = new KeychainDAO(cloudstorage);
-		emailDao = new EmailDAO(cloudstorage, keychain);
-		callback();
-	};
+	var self = {},
+		emailDao;
 
 	/**
 	 * Start the application by loading the view templates
@@ -25,7 +15,7 @@ define(['jquery', 'js/dao/email-dao', 'js/dao/keychain-dao', 'js/dao/cloudstorag
 	self.start = function(callback) {
 		// the views to load
 		var views = ['login', 'compose', 'folderlist', 'messagelist',
-				'messagelistitem', 'read'
+			'messagelistitem', 'read'
 		];
 
 		// are we running in native app or in browser?
@@ -49,7 +39,7 @@ define(['jquery', 'js/dao/email-dao', 'js/dao/keychain-dao', 'js/dao/cloudstorag
 	self.execute = function(cmd, args, callback) {
 		if (cmd === 'login') {
 			// login user
-			login(args.userId, args.password, function(err) {
+			fetchOAuthToken(args.userId, args.password, function(err) {
 				callback({
 					err: err
 				});
@@ -102,8 +92,52 @@ define(['jquery', 'js/dao/email-dao', 'js/dao/keychain-dao', 'js/dao/cloudstorag
 	// Helper methods
 	//
 
-	function login(userId, password, callback) {
+	function fetchOAuthToken(userId, password, callback) {
+		// get OAuth Token from chrome
+		chrome.identity.getAuthToken({
+				'interactive': true
+			},
+			function(token) {
+				login(userId, password, token, callback);
+			}
+		);
+	}
+
+	function login(userId, password, token, callback) {
+		var auth, imapOptions, smtpOptions,
+			keychain, imapClient, smtpClient;
+
+		// create mail credentials objects for imap/smtp
+		auth = {
+			XOAuth2: {
+				user: userId,
+				clientId: '440907777130.apps.googleusercontent.com',
+				accessToken: token
+			}
+		};
+		imapOptions = {
+			secure: true,
+			port: 993,
+			host: 'imap.gmail.com',
+			auth: auth
+		};
+		smtpOptions = {
+			secure: true,
+			port: 465,
+			host: 'smtp.gmail.com',
+			auth: auth
+		};
+
+		// init objects and inject dependencies
+		keychain = new KeychainDAO(cloudstorage);
+		imapClient = new ImapClient(imapOptions);
+		smtpClient = new SmtpClient(smtpOptions);
+		emailDao = new EmailDAO(cloudstorage, keychain, imapClient, smtpClient);
+
+		// init email dao
 		var account = new app.model.Account({
+			imapOptions: imapOptions,
+			smtpOptions: smtpOptions,
 			emailAddress: userId,
 			symKeySize: app.config.symKeySize,
 			symIvSize: app.config.symIvSize,

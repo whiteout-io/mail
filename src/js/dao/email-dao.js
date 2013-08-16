@@ -3,11 +3,11 @@
  * between the cloud service and the device's local storage
  */
 define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/lawnchair-dao',
-		'js/dao/devicestorage-dao', 'js/app-config', 'js/model/account-model'
+	'js/dao/devicestorage-dao', 'js/app-config', 'js/model/account-model'
 ], function(_, util, crypto, jsonDB, devicestorage, app) {
 	'use strict';
 
-	var EmailDAO = function(cloudstorage, keychain) {
+	var EmailDAO = function(cloudstorage, keychain, imapClient, smtpClient) {
 		var self = this;
 
 		/**
@@ -25,18 +25,30 @@ define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/lawnchair-da
 				return;
 			}
 
-			// init user's local database
-			jsonDB.init(emailAddress);
+			// login IMAP client if existent
+			if (imapClient) {
+				imapClient.login(function() {
+					console.log('logged into imap.');
+					initKeychain();
+				});
+			} else {
+				initKeychain();
+			}
 
-			// call getUserKeyPair to read/sync keypair with devicestorage/cloud
-			keychain.getUserKeyPair(emailAddress, function(err, storedKeypair) {
-				if (err) {
-					callback(err);
-					return;
-				}
-				// init crypto
-				initCrypto(storedKeypair);
-			});
+			function initKeychain() {
+				// init user's local database
+				jsonDB.init(emailAddress);
+
+				// call getUserKeyPair to read/sync keypair with devicestorage/cloud
+				keychain.getUserKeyPair(emailAddress, function(err, storedKeypair) {
+					if (err) {
+						callback(err);
+						return;
+					}
+					// init crypto
+					initCrypto(storedKeypair);
+				});
+			}
 
 			function initCrypto(storedKeypair) {
 				crypto.init({
@@ -300,10 +312,15 @@ define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/lawnchair-da
 			}
 
 			function send(email) {
-				// send email to cloud service
-				cloudstorage.deliverEmail(email, userId, recipient, function(err) {
-					callback(err);
-				});
+				if (smtpClient) {
+					// send email directly client side
+					smtpClient.send(email, callback);
+				} else {
+					// send email via cloud service
+					cloudstorage.deliverEmail(email, userId, recipient, function(err) {
+						callback(err);
+					});
+				}
 			}
 		};
 	};
