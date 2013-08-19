@@ -31,7 +31,16 @@
 			"start",
 			"chrome",
 			"define",
-			"self"
+			"self",
+			"describe",
+			"it",
+			"chai",
+			"sinon",
+			"mocha",
+            "before",
+            "beforeEach",
+            "after",
+            "afterEach"
 	],
 
 	"globals": {

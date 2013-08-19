@@ -1,16 +1,21 @@
-/**
- * A high-level Data-Access Api for handling Email synchronization
- * between the cloud service and the device's local storage
- */
-define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/lawnchair-dao',
-    'js/dao/devicestorage-dao', 'js/app-config', 'js/model/account-model'
-], function(_, util, crypto, jsonDB, devicestorage, app) {
+define(function(require) {
     'use strict';
 
-    var EmailDAO = function(cloudstorage, keychain, imapClient, smtpClient) {
+    var _ = require('underscore'),
+        util = require('cryptoLib/util'),
+        crypto = require('js/crypto/crypto'),
+        jsonDB = require('js/dao/lawnchair-dao'),
+        devicestorage = require('js/dao/devicestorage-dao'),
+        app = require('js/app-config');
+    require('js/model/account-model');
+
+    /**
+     * A high-level Data-Access Api for handling Email synchronization
+     * between the cloud service and the device's local storage
+     */
+    var EmailDAO = function(keychain, imapClient, smtpClient) {
         var self = this;
 
-        self._cloudstorage = cloudstorage;
         self._keychain = keychain;
         self._imapClient = imapClient;
         self._smtpClient = smtpClient;
@@ -35,8 +40,11 @@ define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/lawnchair-da
 
         // login IMAP client if existent
         if (self._imapClient) {
-            self._imapClient.login(function() {
-                console.log('logged into imap.');
+            self._imapClient.login(function(err) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
                 initKeychain();
             });
         } else {

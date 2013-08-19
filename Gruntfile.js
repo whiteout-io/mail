@@ -40,7 +40,7 @@ module.exports = function(grunt) {
         },
 
         jshint: {
-            all: ['Gruntfile.js', 'src/*.js', 'src/js/**/*.js', 'test/unit/*.js', 'test/integration/*.js'],
+            all: ['Gruntfile.js', 'src/*.js', 'src/js/**/*.js', 'test/new-unit/*.js', 'test/unit/*.js', 'test/integration/*.js'],
             options: {
                 jshintrc: '.jshintrc'
             }
@@ -56,6 +56,15 @@ module.exports = function(grunt) {
                     ]
                 }
             }
+        },
+
+        mocha: {
+            all: {
+                options: {
+                    urls: ['http://localhost:<%= connect.test.options.port %>/test/new-unit/index.html'],
+                    run: false
+                }
+            }
         }
     });
 
@@ -63,10 +72,11 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-connect');
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-qunit');
+    grunt.loadNpmTasks('grunt-mocha');
 
     // Default task(s).
     grunt.registerTask('dev', ['connect:dev']);
-    grunt.registerTask('test', ['jshint', 'connect:test', 'qunit']);
+    grunt.registerTask('test', ['jshint', 'connect:test', 'mocha', 'qunit']);
     grunt.registerTask('prod', ['connect:prod']);
 
 };

@@ -1,7 +1,6 @@
 'use strict';
 
 require(['../../src/require-config'], function() {
-
 	require.config({
 		baseUrl: '../../src/lib'
 	});
@@ -19,15 +18,15 @@ require(['../../src/require-config'], function() {
 });
 
 function startTests() {
-	require(['test/unit/forge-test',
-		'test/unit/aes-test',
-		'test/unit/rsa-test',
-		'test/unit/lawnchair-dao-test',
-		'test/unit/keychain-dao-test',
-		'test/unit/crypto-test',
-		'test/unit/devicestorage-dao-test'
-	], function() {
-		//Tests loaded, run tests
-		QUnit.start();
-	});
+	mocha.setup('bdd');
+
+	require(
+		[
+			'test/new-unit/email-dao-test',
+			'test/new-unit/cloudstorage-dao-test'
+		], function() {
+			//Tests loaded, run tests
+			mocha.run();
+		}
+	);
 }

@@ -156,8 +156,6 @@ define(['jquery', 'ImapClient', 'SmtpClient', 'js/dao/email-dao', 'js/dao/keycha
 
 		// init email dao
 		var account = new app.model.Account({
-			imapOptions: imapOptions,
-			smtpOptions: smtpOptions,
 			emailAddress: userId,
 			symKeySize: app.config.symKeySize,
 			symIvSize: app.config.symIvSize,

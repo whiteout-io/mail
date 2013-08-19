@@ -23,4 +23,5 @@ define(['backbone', 'js/app-config', 'js/model/folder-model'], function(Backbone
 
 	});
 
+	return app.model.Account;
 });

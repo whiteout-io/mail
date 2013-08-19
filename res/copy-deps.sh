@@ -19,4 +19,10 @@ cd ./node_modules/smtp-client/
 node build.js && cp ./src-gen/*.js ../../src/lib/
 cd ../../
 
+# copy test dependencies
+mkdir ./test/new-unit/lib/
+cp ./node_modules/mocha/mocha.css ./node_modules/mocha/mocha.js ./test/new-unit/lib/
+cp ./node_modules/chai/chai.js ./test/new-unit/lib/
+cp ./node_modules/sinon/pkg/sinon.js ./test/new-unit/lib/
+
 echo "\n--> finished copying dependencies.\n"
