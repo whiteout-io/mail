@@ -52,7 +52,6 @@ define(function(require) {
         });
 
         describe('execute', function() {
-
             describe('login', function() {
                 it('should work', function(done) {
                     controller.execute('login', {
@@ -79,7 +78,6 @@ define(function(require) {
                     });
                 });
             });
-
         });
 
     });
