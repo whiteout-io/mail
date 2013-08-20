@@ -102,7 +102,7 @@ define(['jquery', 'underscore', 'backbone', 'js/app-config'], function($, _, Bac
 				return;
 			}
 
-			var signature = '\n\nSent with whiteout mail - get your free mailbox for end-2-end encrypted messaging!\nhttps://www.whiteout.io';
+			var signature = '\n\nSent with whiteout mail - install the app today for easy end-2-end encrypted messaging!\nhttp://whiteout.io';
 
 			var email = {
 				to: [],
@@ -110,10 +110,9 @@ define(['jquery', 'underscore', 'backbone', 'js/app-config'], function($, _, Bac
 				body: page.find('#bodyTextarea').val() + signature
 			};
 			email.from = [{
-					name: '',
-					address: self.account
-				}
-			];
+				name: '',
+				address: self.account
+			}];
 			to.forEach(function(address) {
 				email.to.push({
 					name: '',

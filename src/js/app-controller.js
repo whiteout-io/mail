@@ -73,7 +73,7 @@ define(['jquery', 'ImapClient', 'SmtpClient', 'js/dao/email-dao', 'js/dao/keycha
 
 		} else if (cmd === 'sendEmail') {
 			// list emails from folder
-			emailDao.sendEmail(args.email, function(err) {
+			emailDao.smtpSend(args.email, function(err) {
 				callback({
 					err: err
 				});
