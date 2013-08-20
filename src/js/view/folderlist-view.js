@@ -1,4 +1,6 @@
-define(['jquery', 'underscore', 'backbone', 'js/app-config'], function($, _, Backbone, app) {
+define(['jquery', 'underscore', 'backbone', 'js/app-config',
+	'js/view/folderlistitem-view'
+], function($, _, Backbone, app, FolderListItemView) {
 	'use strict';
 
 	var FolderListView = Backbone.View.extend({
@@ -23,7 +25,10 @@ define(['jquery', 'underscore', 'backbone', 'js/app-config'], function($, _, Bac
 		},
 
 		listFolder: function() {
-			// var page = $(this.el);
+			var self = this,
+				page = $(this.el),
+				list = page.find('#folder-list'),
+				listItemArgs;
 
 			// show loading msg during init
 			$.mobile.loading('show', {
@@ -36,13 +41,27 @@ define(['jquery', 'underscore', 'backbone', 'js/app-config'], function($, _, Bac
 			app.util.postMessage('listFolders', {}, function(resArgs) {
 				var err = resArgs.err;
 
-				$.mobile.loading('hide');
-				if (err) {
-					window.alert(err.errMsg);
+				if (err || !resArgs.folders) {
+					$.mobile.loading('hide');
+					window.alert('Error listing folders: ' + err.errMsg);
 					return;
 				}
 
-				console.log(resArgs);
+				// clear list
+				list.html('');
+
+				// append folder to list
+				resArgs.folders.forEach(function(folder) {
+					listItemArgs = {
+						account: self.options.account,
+						model: folder
+					};
+					list.append(new FolderListItemView(listItemArgs).render().el);
+				});
+
+				// refresh list view
+				list.listview('refresh');
+				$.mobile.loading('hide');
 			});
 		}
 	});

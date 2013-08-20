@@ -4,33 +4,7 @@
 </div><!-- /header -->
 
 <div data-role="content">
-  <ul data-role="listview">
-    <li><a href="#accounts/<%- account %>/folders/inbox">
-      <img src="css/icons/glyphicons_130_inbox.png" class="ui-li-icon ui-corner-none">
-      Inbox
-      <!--<span class="ui-li-count">12</span>-->
-    </a></li>
-    <li><a href="#accounts/<%- account %>/folders/outbox">
-      <img src="css/icons/glyphicons_135_inbox_out.png" class="ui-li-icon ui-corner-none">
-      Outbox
-      <!--<span class="ui-li-count">0</span>-->
-    </a></li>
-    <li><a href="#accounts/<%- account %>/folders/drafts">
-      <img src="css/icons/glyphicons_030_pencil.png" class="ui-li-icon ui-corner-none">
-      Drafts
-      <!--<span class="ui-li-count">4</span>-->
-    </a></li>
-    <li><a href="#accounts/<%- account %>/folders/sent">
-      <img src="css/icons/glyphicons_010_envelope.png" class="ui-li-icon ui-corner-none">
-      Sent
-      <!--<span class="ui-li-count">328</span>-->
-    </a></li>
-    <li><a href="#accounts/<%- account %>/folders/trash">
-      <img src="css/icons/glyphicons_016_bin.png" class="ui-li-icon ui-corner-none">
-      Trash
-      <!--<span class="ui-li-count">62</span>-->
-    </a></li>
-  </ul>
+  <ul id="folder-list" data-role="listview"></ul>
 </div><!-- /content -->
 
 <div data-role="footer" data-position="fixed">
