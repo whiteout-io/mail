@@ -20,6 +20,30 @@ define(['jquery', 'underscore', 'backbone', 'js/app-config'], function($, _, Bac
 			});
 
 			return this;
+		},
+
+		listFolder: function() {
+			// var page = $(this.el);
+
+			// show loading msg during init
+			$.mobile.loading('show', {
+				text: 'Fetching folders...',
+				textVisible: true,
+				theme: 'c'
+			});
+
+			// post message to main window
+			app.util.postMessage('listFolders', {}, function(resArgs) {
+				var err = resArgs.err;
+
+				$.mobile.loading('hide');
+				if (err) {
+					window.alert(err.errMsg);
+					return;
+				}
+
+				console.log(resArgs);
+			});
 		}
 	});
 

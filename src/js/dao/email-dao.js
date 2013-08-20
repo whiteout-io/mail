@@ -122,9 +122,9 @@ define(function(require) {
      * List the folders in the user's IMAP mailbox.
      */
     EmailDAO.prototype.imapListFolders = function(callback) {
-        callback({
-            errMsg: 'Not yet implemented!'
-        });
+        var self = this;
+
+        self._imapClient.listFolders(callback);
     };
 
     /**

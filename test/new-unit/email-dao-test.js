@@ -108,20 +108,33 @@ define(function(require) {
                 });
             });
 
-            it('send an email via STMP bad case', function(done) {
-                emailDao.smtpSend({}, function(err) {
-                    expect(smtpClientStub.send.called).to.be.false;
-                    expect(err).to.exist;
-                    done();
+            describe('send email via SMTP', function() {
+                it('should fail due to back input', function(done) {
+                    emailDao.smtpSend({}, function(err) {
+                        expect(smtpClientStub.send.called).to.be.false;
+                        expect(err).to.exist;
+                        done();
+                    });
+                });
+
+                it('send an email via STMP good case', function(done) {
+                    smtpClientStub.send.yields();
+                    emailDao.smtpSend(dummyMail, function(err) {
+                        expect(smtpClientStub.send.calledOnce).to.be.true;
+                        expect(err).to.not.exist;
+                        done();
+                    });
                 });
             });
 
-            it('send an email via STMP good case', function(done) {
-                smtpClientStub.send.yields();
-                emailDao.smtpSend(dummyMail, function(err) {
-                    expect(smtpClientStub.send.calledOnce).to.be.true;
-                    expect(err).to.not.exist;
-                    done();
+            describe('list IMAP folders', function() {
+                it('should work', function(done) {
+                    imapClientStub.listFolders.yields();
+                    emailDao.imapListFolders(function(err) {
+                        expect(imapClientStub.listFolders.calledOnce).to.be.true;
+                        expect(err).to.not.exist;
+                        done();
+                    });
                 });
             });
         });

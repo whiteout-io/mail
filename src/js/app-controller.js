@@ -52,6 +52,15 @@ define(function(require) {
 				});
 			});
 
+		} else if (cmd === 'listFolders') {
+			// list folders in users mailbox
+			self._emailDao.imapListFolders(function(err, folders) {
+				callback({
+					err: err,
+					folders: folders
+				});
+			});
+
 		} else if (cmd === 'syncEmails') {
 			// list emails from folder
 			self._emailDao.syncFromCloud(args.folder, function(err) {

@@ -1,6 +1,6 @@
 define(['jquery', 'backbone', 'js/view/login-view', 'js/view/compose-view',
-		'js/view/folderlist-view', 'js/view/messagelist-view', 'js/view/read-view',
-		'jquerymobile'
+	'js/view/folderlist-view', 'js/view/messagelist-view', 'js/view/read-view',
+	'jquerymobile'
 ], function($, Backbone, LoginView, ComposeView, FolderListView, MessageListView, ReadView) {
 	'use strict';
 
@@ -42,6 +42,7 @@ define(['jquery', 'backbone', 'js/view/login-view', 'js/view/compose-view',
 				account: userId
 			});
 			this.changePage(folderListView);
+			folderListView.listFolder();
 		},
 
 		messagelist: function(userId, folder) {

@@ -78,6 +78,20 @@ define(function(require) {
                     });
                 });
             });
+
+            describe('listFolders', function() {
+                it('should work', function(done) {
+                    controller._emailDao.imapListFolders.yields(null, ['inbox', 'sent']);
+                    controller.execute('listFolders', {
+                        password: appControllerTest.passphrase
+                    }, function(resArgs) {
+                        expect(resArgs.err).to.not.exist;
+                        expect(resArgs.folders[1]).to.equal('sent');
+                        expect(controller._emailDao.imapListFolders.called).to.be.true;
+                        done();
+                    });
+                });
+            });
         });
 
     });
