@@ -59,8 +59,8 @@ define(function(require) {
                     }, function(resArgs) {
                         expect(resArgs.err).to.not.exist;
                         expect(resArgs.userId).to.equal(appControllerTest.user);
-                        expect($.ajax.called).to.be.true;
-                        expect(window.chrome.identity.getAuthToken.called).to.be.true;
+                        expect($.ajax.calledOnce).to.be.true;
+                        expect(window.chrome.identity.getAuthToken.calledOnce).to.be.true;
                         done();
                     });
                 });
@@ -73,7 +73,7 @@ define(function(require) {
                         password: appControllerTest.passphrase
                     }, function(resArgs) {
                         expect(resArgs.err).to.not.exist;
-                        expect(controller._emailDao.smtpSend.called).to.be.true;
+                        expect(controller._emailDao.smtpSend.calledOnce).to.be.true;
                         done();
                     });
                 });
@@ -87,7 +87,23 @@ define(function(require) {
                     }, function(resArgs) {
                         expect(resArgs.err).to.not.exist;
                         expect(resArgs.folders[1]).to.equal('sent');
-                        expect(controller._emailDao.imapListFolders.called).to.be.true;
+                        expect(controller._emailDao.imapListFolders.calledOnce).to.be.true;
+                        done();
+                    });
+                });
+            });
+
+            describe('listEmails', function() {
+                it('should work', function(done) {
+                    controller._emailDao.imapListMessages.yields(null, []);
+                    controller.execute('listEmails', {
+                        folder: 'INBOX',
+                        offset: 0,
+                        num: 10
+                    }, function(resArgs) {
+                        expect(resArgs.err).to.not.exist;
+                        expect(resArgs.emails).to.a('Array');
+                        expect(controller._emailDao.imapListMessages.calledOnce).to.be.true;
                         done();
                     });
                 });

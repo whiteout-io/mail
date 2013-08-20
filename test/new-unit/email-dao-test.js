@@ -137,6 +137,29 @@ define(function(require) {
                     });
                 });
             });
+
+            describe('list IMAP messages from folder', function() {
+                it('should fail due to bad options', function(done) {
+                    emailDao.imapListMessages({}, function(err) {
+                        expect(imapClientStub.listMessages.called).to.be.false;
+                        expect(err).to.exist;
+                        done();
+                    });
+                });
+
+                it('should work', function(done) {
+                    imapClientStub.listMessages.yields();
+                    emailDao.imapListMessages({
+                        folder: 'INBOX',
+                        offset: 0,
+                        num: 10
+                    }, function(err) {
+                        expect(imapClientStub.listMessages.calledOnce).to.be.true;
+                        expect(err).to.not.exist;
+                        done();
+                    });
+                });
+            });
         });
     });
 

@@ -130,13 +130,25 @@ define(function(require) {
     /**
      * List messages from an imap folder. This will not yet fetch the email body.
      * @param {String} options.folderName The name of the imap folder.
-     * @param {Number} offset The offset of items to fetch (0 is the last stored item)
-     * @param {Number} num The number of items to fetch (null means fetch all)
+     * @param {Number} options.offset The offset of items to fetch (0 is the last stored item)
+     * @param {Number} options.num The number of items to fetch (null means fetch all)
      */
     EmailDAO.prototype.imapListMessages = function(options, callback) {
-        callback({
-            errMsg: 'Not yet implemented!'
-        });
+        var self = this;
+
+        // validate options
+        if (!options.folder || typeof options.offset === 'undefined' || typeof options.num === 'undefined') {
+            callback({
+                errMsg: 'Invalid options!'
+            });
+            return;
+        }
+
+        self._imapClient.listMessages({
+            path: options.folder,
+            offset: options.offset,
+            length: options.num
+        }, callback);
     };
 
     /**
