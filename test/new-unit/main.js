@@ -7,9 +7,7 @@ require(['../../src/require-config'], function() {
 
 	// Start the main app logic.
 	require(['js/app-config', 'cordova'], function(app) {
-		// clear session storage of failed tests, so async order is correct after fail & refresh
-		window.sessionStorage.clear();
-		window.Worker = undefined;
+		window.Worker = undefined; // disable web workers since mocha doesn't support them
 
 		app.config.workerPath = '../../src/js';
 
