@@ -122,7 +122,9 @@ define(function(require) {
      * List the folders in the user's IMAP mailbox.
      */
     EmailDAO.prototype.imapListFolders = function(callback) {
-
+        callback({
+            errMsg: 'Not yet implemented!'
+        });
     };
 
     /**
@@ -132,7 +134,9 @@ define(function(require) {
      * @param {Number} num The number of items to fetch (null means fetch all)
      */
     EmailDAO.prototype.imapListMessages = function(options, callback) {
-
+        callback({
+            errMsg: 'Not yet implemented!'
+        });
     };
 
     /**
@@ -140,7 +144,9 @@ define(function(require) {
      * @param {String} options.messageId The
      */
     EmailDAO.prototype.imapGetMessage = function(options, callback) {
-
+        callback({
+            errMsg: 'Not yet implemented!'
+        });
     };
 
     //
