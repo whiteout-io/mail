@@ -1,13 +1,19 @@
 /**
  * The main application controller
  */
-define(['jquery', 'ImapClient', 'SmtpClient', 'js/dao/email-dao', 'js/dao/keychain-dao',
-	'js/dao/cloudstorage-dao', 'js/app-config', 'cordova'
-], function($, ImapClient, SmtpClient, EmailDAO, KeychainDAO, cloudstorage, app) {
+define(function(require) {
 	'use strict';
 
-	var self = {},
-		emailDao;
+	var $ = require('jquery'),
+		ImapClient = require('ImapClient'),
+		SmtpClient = require('SmtpClient'),
+		EmailDAO = require('js/dao/email-dao'),
+		KeychainDAO = require('js/dao/keychain-dao'),
+		cloudstorage = require('js/dao/cloudstorage-dao'),
+		app = require('js/app-config');
+	require('cordova');
+
+	var self = {};
 
 	/**
 	 * Start the application by loading the view templates
@@ -48,7 +54,7 @@ define(['jquery', 'ImapClient', 'SmtpClient', 'js/dao/email-dao', 'js/dao/keycha
 
 		} else if (cmd === 'syncEmails') {
 			// list emails from folder
-			emailDao.syncFromCloud(args.folder, function(err) {
+			self._emailDao.syncFromCloud(args.folder, function(err) {
 				callback({
 					err: err
 				});
@@ -56,7 +62,7 @@ define(['jquery', 'ImapClient', 'SmtpClient', 'js/dao/email-dao', 'js/dao/keycha
 
 		} else if (cmd === 'listEmails') {
 			// list emails from folder
-			emailDao.listItems(args.folder, args.offset, args.num, function(err, emails) {
+			self._emailDao.listItems(args.folder, args.offset, args.num, function(err, emails) {
 				callback({
 					err: err,
 					emails: emails
@@ -65,7 +71,7 @@ define(['jquery', 'ImapClient', 'SmtpClient', 'js/dao/email-dao', 'js/dao/keycha
 
 		} else if (cmd === 'getEmail') {
 			// list emails from folder
-			var mail = emailDao.getItem(args.folder, args.messageId);
+			var mail = self._emailDao.getItem(args.folder, args.messageId);
 			callback({
 				err: null,
 				email: mail
@@ -73,7 +79,7 @@ define(['jquery', 'ImapClient', 'SmtpClient', 'js/dao/email-dao', 'js/dao/keycha
 
 		} else if (cmd === 'sendEmail') {
 			// list emails from folder
-			emailDao.smtpSend(args.email, function(err) {
+			self._emailDao.smtpSend(args.email, function(err) {
 				callback({
 					err: err
 				});
@@ -106,7 +112,7 @@ define(['jquery', 'ImapClient', 'SmtpClient', 'js/dao/email-dao', 'js/dao/keycha
 					dataType: 'json',
 					success: function(info) {
 						// login using the received email address
-						login(info.email, password, token, function(err) {
+						self.login(info.email, password, token, function(err) {
 							// send email address to sandbox
 							callback(err, info.email);
 						});
@@ -123,7 +129,7 @@ define(['jquery', 'ImapClient', 'SmtpClient', 'js/dao/email-dao', 'js/dao/keycha
 		);
 	}
 
-	function login(userId, password, token, callback) {
+	self.login = function(userId, password, token, callback) {
 		var auth, imapOptions, smtpOptions,
 			keychain, imapClient, smtpClient;
 
@@ -152,7 +158,7 @@ define(['jquery', 'ImapClient', 'SmtpClient', 'js/dao/email-dao', 'js/dao/keycha
 		keychain = new KeychainDAO(cloudstorage);
 		imapClient = new ImapClient(imapOptions);
 		smtpClient = new SmtpClient(smtpOptions);
-		emailDao = new EmailDAO(keychain, imapClient, smtpClient);
+		self._emailDao = new EmailDAO(keychain, imapClient, smtpClient);
 
 		// init email dao
 		var account = {
@@ -161,8 +167,8 @@ define(['jquery', 'ImapClient', 'SmtpClient', 'js/dao/email-dao', 'js/dao/keycha
 			symIvSize: app.config.symIvSize,
 			asymKeySize: app.config.asymKeySize
 		};
-		emailDao.init(account, password, callback);
-	}
+		self._emailDao.init(account, password, callback);
+	};
 
 	function loadTemplates(names, callback) {
 		var loadTemplate = function(index) {
