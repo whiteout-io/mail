@@ -5,7 +5,6 @@ define(function(require) {
         EmailDAO = require('js/dao/email-dao'),
         SmtpClient = require('SmtpClient'),
         ImapClient = require('ImapClient'),
-        Account = require('js/model/account-model'),
         app = require('js/app-config'),
         expect = chai.expect;
 
@@ -15,18 +14,30 @@ define(function(require) {
         asymKeySize: 512
     };
 
+    var dummyMail = {
+        from: [{
+            name: 'Whiteout Test',
+            address: 'whiteout.test@t-online.de'
+        }], // sender address
+        to: [{
+            address: 'safewithme.testuser@gmail.com'
+        }], // list of receivers
+        subject: "Hello", // Subject line
+        body: "Hello world" // plaintext body
+    };
+
     describe('Email DAO unit tests', function() {
 
         var emailDao, account,
             keychainStub, imapClientStub, smtpClientStub;
 
         beforeEach(function() {
-            account = new Account({
+            account = {
                 emailAddress: emaildaoTest.user,
                 symKeySize: app.config.symKeySize,
                 symIvSize: app.config.symIvSize,
                 asymKeySize: emaildaoTest.asymKeySize
-            });
+            };
 
             keychainStub = sinon.createStubInstance(KeychainDAO);
             imapClientStub = sinon.createStubInstance(ImapClient);
@@ -38,7 +49,6 @@ define(function(require) {
         afterEach(function() {});
 
         describe('init', function() {
-
             it('should fail due to error in imap login', function(done) {
                 imapClientStub.login.yields(42);
 
@@ -59,7 +69,7 @@ define(function(require) {
                 });
             });
 
-            it('should initialize', function(done) {
+            it('should init with new keygen', function(done) {
                 imapClientStub.login.yields();
                 keychainStub.getUserKeyPair.yields();
                 keychainStub.putUserKeyPair.yields();
@@ -74,6 +84,47 @@ define(function(require) {
             });
         });
 
+        describe('IMAP/SMTP tests', function() {
+            beforeEach(function(done) {
+                imapClientStub.login.yields();
+                keychainStub.getUserKeyPair.yields();
+                keychainStub.putUserKeyPair.yields();
+
+                emailDao.init(account, emaildaoTest.passphrase, function(err) {
+                    expect(imapClientStub.login.calledOnce).to.be.true;
+                    expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
+                    expect(keychainStub.putUserKeyPair.calledOnce).to.be.true;
+                    expect(err).to.not.exist;
+                    done();
+                });
+            });
+
+            afterEach(function(done) {
+                imapClientStub.logout.yields();
+                emailDao.destroy(function(err) {
+                    expect(imapClientStub.logout.calledOnce).to.be.true;
+                    expect(err).to.not.exist;
+                    done();
+                });
+            });
+
+            it('send an email via STMP bad case', function(done) {
+                emailDao.smtpSend({}, function(err) {
+                    expect(smtpClientStub.send.called).to.be.false;
+                    expect(err).to.exist;
+                    done();
+                });
+            });
+
+            it('send an email via STMP good case', function(done) {
+                smtpClientStub.send.yields();
+                emailDao.smtpSend(dummyMail, function(err) {
+                    expect(smtpClientStub.send.calledOnce).to.be.true;
+                    expect(err).to.not.exist;
+                    done();
+                });
+            });
+        });
     });
 
 });

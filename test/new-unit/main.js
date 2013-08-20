@@ -21,7 +21,7 @@ function startTests() {
 	require(
 		[
 			'test/new-unit/email-dao-test',
-			'test/new-unit/cloudstorage-dao-test'
+			'test/new-unit/app-controller-test'
 		], function() {
 			//Tests loaded, run tests
 			mocha.run();

@@ -7,7 +7,6 @@ define(function(require) {
         jsonDB = require('js/dao/lawnchair-dao'),
         devicestorage = require('js/dao/devicestorage-dao'),
         app = require('js/app-config');
-    require('js/model/account-model');
 
     /**
      * A high-level Data-Access Api for handling Email synchronization
@@ -30,7 +29,7 @@ define(function(require) {
         self.account = account;
 
         // validate email address
-        var emailAddress = account.get('emailAddress');
+        var emailAddress = account.emailAddress;
         if (!validateEmail(emailAddress)) {
             callback({
                 errMsg: 'The user email address must be specified!'
@@ -70,8 +69,8 @@ define(function(require) {
             crypto.init({
                 emailAddress: emailAddress,
                 password: password,
-                keySize: account.get('symKeySize'),
-                rsaKeySize: account.get('asymKeySize'),
+                keySize: account.symKeySize,
+                rsaKeySize: account.asymKeySize,
                 storedKeypair: storedKeypair
             }, function(err, generatedKeypair) {
                 if (err) {
@@ -88,6 +87,65 @@ define(function(require) {
             });
         }
     };
+
+    //
+    // New IMAP/SMTP implementation
+    //
+
+    /**
+     * Cleanup by logging the user off.
+     */
+    EmailDAO.prototype.destroy = function(callback) {
+        var self = this;
+
+        self._imapClient.logout(callback);
+    };
+
+    /**
+     * Send an email client side via STMP.
+     */
+    EmailDAO.prototype.smtpSend = function(email, callback) {
+        var self = this;
+
+        // validate the email input
+        if (!email.to || !email.from || !email.to[0].address || !email.from[0].address) {
+            callback({
+                errMsg: 'Invalid email object!'
+            });
+            return;
+        }
+
+        self._smtpClient.send(email, callback);
+    };
+
+    /**
+     * List the folders in the user's IMAP mailbox.
+     */
+    EmailDAO.prototype.imapListFolders = function(callback) {
+
+    };
+
+    /**
+     * List messages from an imap folder. This will not yet fetch the email body.
+     * @param {String} options.folderName The name of the imap folder.
+     * @param {Number} offset The offset of items to fetch (0 is the last stored item)
+     * @param {Number} num The number of items to fetch (null means fetch all)
+     */
+    EmailDAO.prototype.imapListMessages = function(options, callback) {
+
+    };
+
+    /**
+     * Get an email messsage including the email body from imap
+     * @param {String} options.messageId The
+     */
+    EmailDAO.prototype.imapGetMessage = function(options, callback) {
+
+    };
+
+    //
+    // Old cloud storage implementation
+    //
 
     /**
      * Fetch an email with the following id
@@ -333,21 +391,20 @@ define(function(require) {
         }
 
         function send(email) {
-            if (self._smtpClient) {
-                // send email directly client side
-                self._smtpClient.send(email, callback);
-            } else {
-                // send email via cloud service
-                self._cloudstorage.deliverEmail(email, userId, recipient, function(err) {
-                    callback(err);
-                });
-            }
+            // send email via cloud service
+            self._cloudstorage.deliverEmail(email, userId, recipient, function(err) {
+                callback(err);
+            });
         }
     };
 
     //
     // helper functions
     //
+
+    /**
+     * Validates an email address
+     */
 
     function validateEmail(email) {
         var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;

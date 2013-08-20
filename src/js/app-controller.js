@@ -152,15 +152,15 @@ define(['jquery', 'ImapClient', 'SmtpClient', 'js/dao/email-dao', 'js/dao/keycha
 		keychain = new KeychainDAO(cloudstorage);
 		imapClient = new ImapClient(imapOptions);
 		smtpClient = new SmtpClient(smtpOptions);
-		emailDao = new EmailDAO(cloudstorage, keychain, imapClient, smtpClient);
+		emailDao = new EmailDAO(keychain, imapClient, smtpClient);
 
 		// init email dao
-		var account = new app.model.Account({
+		var account = {
 			emailAddress: userId,
 			symKeySize: app.config.symKeySize,
 			symIvSize: app.config.symIvSize,
 			asymKeySize: app.config.asymKeySize
-		});
+		};
 		emailDao.init(account, password, callback);
 	}
 

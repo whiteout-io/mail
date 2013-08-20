@@ -3,7 +3,7 @@ define(function() {
 
     var expect = chai.expect;
 
-    describe('Cloudstorage DAO unit tests', function() {
+    describe('App Controller unit tests', function() {
 
         beforeEach(function() {});
 
