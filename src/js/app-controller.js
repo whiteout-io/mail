@@ -85,10 +85,14 @@ define(function(require) {
 
         } else if (cmd === 'getEmail') {
             // list emails from folder
-            var mail = self._emailDao.getItem(args.folder, args.messageId);
-            callback({
-                err: null,
-                email: mail
+            self._emailDao.imapGetMessage({
+                folder: args.folder,
+                uid: args.messageId
+            }, function(err, email) {
+                callback({
+                    err: err,
+                    email: email
+                });
             });
 
         } else if (cmd === 'sendEmail') {

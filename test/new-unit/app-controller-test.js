@@ -108,6 +108,21 @@ define(function(require) {
                     });
                 });
             });
+
+            describe('getEmail', function() {
+                it('should work', function(done) {
+                    controller._emailDao.imapGetMessage.yields(null, {});
+                    controller.execute('getEmail', {
+                        folder: 'INBOX',
+                        messageId: 415
+                    }, function(resArgs) {
+                        expect(resArgs.err).to.not.exist;
+                        expect(resArgs.email).to.a('Object');
+                        expect(controller._emailDao.imapGetMessage.calledOnce).to.be.true;
+                        done();
+                    });
+                });
+            });
         });
 
     });

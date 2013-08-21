@@ -156,9 +156,30 @@ define(function(require) {
      * @param {String} options.messageId The
      */
     EmailDAO.prototype.imapGetMessage = function(options, callback) {
-        callback({
-            errMsg: 'Not yet implemented!'
-        });
+        var self = this,
+            message;
+
+        // validate options
+        if (!options.folder || !options.uid) {
+            callback({
+                errMsg: 'Invalid options!'
+            });
+            return;
+        }
+
+        function messageReady(err, gottenMessage) {
+            message = gottenMessage;
+        }
+
+        function attachmentReady(err, attmt) {
+            message.parsedAttachment = attmt;
+            callback(null, message);
+        }
+
+        self._imapClient.getMessage({
+            path: options.folder,
+            uid: options.uid
+        }, messageReady, attachmentReady);
     };
 
     //

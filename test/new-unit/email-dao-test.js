@@ -108,7 +108,7 @@ define(function(require) {
                 });
             });
 
-            describe('send email via SMTP', function() {
+            describe('SMTP: send email', function() {
                 it('should fail due to back input', function(done) {
                     emailDao.smtpSend({}, function(err) {
                         expect(smtpClientStub.send.called).to.be.false;
@@ -117,7 +117,7 @@ define(function(require) {
                     });
                 });
 
-                it('send an email via STMP good case', function(done) {
+                it('should work', function(done) {
                     smtpClientStub.send.yields();
                     emailDao.smtpSend(dummyMail, function(err) {
                         expect(smtpClientStub.send.calledOnce).to.be.true;
@@ -127,7 +127,7 @@ define(function(require) {
                 });
             });
 
-            describe('list IMAP folders', function() {
+            describe('IMAP: list folders', function() {
                 it('should work', function(done) {
                     imapClientStub.listFolders.yields();
                     emailDao.imapListFolders(function(err) {
@@ -138,7 +138,7 @@ define(function(require) {
                 });
             });
 
-            describe('list IMAP messages from folder', function() {
+            describe('IMAP: list messages from folder', function() {
                 it('should fail due to bad options', function(done) {
                     emailDao.imapListMessages({}, function(err) {
                         expect(imapClientStub.listMessages.called).to.be.false;
@@ -156,6 +156,46 @@ define(function(require) {
                     }, function(err) {
                         expect(imapClientStub.listMessages.calledOnce).to.be.true;
                         expect(err).to.not.exist;
+                        done();
+                    });
+                });
+            });
+
+            describe('IMAP: get message content from', function() {
+                it('should fail due to bad options', function(done) {
+                    emailDao.imapGetMessage({
+                        folder: 'INBOX'
+                    }, function(err) {
+                        expect(imapClientStub.getMessage.called).to.be.false;
+                        expect(err).to.exist;
+                        done();
+                    });
+                });
+
+                it('should parse message body and attachement', function(done) {
+                    var uid = 415,
+                        newImapClientStub = {
+                            getMessage: function() {}
+                        };
+                    sinon.stub(newImapClientStub, 'getMessage', function(options, messageReady, attachmentReady) {
+                        messageReady(null, {
+                            uid: uid
+                        });
+                        attachmentReady(null, {
+                            uint8Array: new Uint8Array(42)
+                        });
+                    });
+                    emailDao._imapClient = newImapClientStub;
+
+                    emailDao.imapGetMessage({
+                        folder: 'INBOX',
+                        uid: uid
+                    }, function(err, message) {
+                        expect(newImapClientStub.getMessage.calledOnce).to.be.true;
+                        expect(err).to.not.exist;
+                        expect(message.uid).to.equal(uid);
+                        expect(message.parsedAttachment.uint8Array.length).to.equal(42);
+                        emailDao._imapClient = imapClientStub;
                         done();
                     });
                 });
