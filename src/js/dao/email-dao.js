@@ -157,7 +157,9 @@ define(function(require) {
      */
     EmailDAO.prototype.imapGetMessage = function(options, callback) {
         var self = this,
-            message;
+            expectedItems,
+            itemCounter = 0,
+            message, attachments = [];
 
         // validate options
         if (!options.folder || !options.uid) {
@@ -169,10 +171,29 @@ define(function(require) {
 
         function messageReady(err, gottenMessage) {
             message = gottenMessage;
+            itemCounter++;
+            // remember how many items should be fetched before the callback fires
+            expectedItems = (message.attachments instanceof Array) ? message.attachments.length + 1 : 1;
+            check();
         }
 
-        function attachmentReady(err, attmt) {
-            message.parsedAttachment = attmt;
+        function attachmentReady(err, gottenAttachment) {
+            // parse uint8array to base to make it serializable for postMessage
+            gottenAttachment.base64 = btoa(gottenAttachment.uint8Array);
+            delete gottenAttachment.uint8Array;
+
+            attachments.push(gottenAttachment);
+            itemCounter++;
+            check();
+        }
+
+        function check() {
+            // go for another round you don't yet know how mich to fetch or you haven't fetch enough
+            if (!expectedItems || itemCounter < expectedItems) {
+                return;
+            }
+
+            message.attachments = (attachments.length > 0) ? attachments : undefined;
             callback(null, message);
         }
 

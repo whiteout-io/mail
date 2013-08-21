@@ -172,6 +172,24 @@ define(function(require) {
                     });
                 });
 
+                it('should parse message body without attachement', function(done) {
+                    var uid = 415;
+
+                    imapClientStub.getMessage.yields(null, {
+                        uid: uid
+                    });
+                    emailDao.imapGetMessage({
+                        folder: 'INBOX',
+                        uid: uid
+                    }, function(err, message) {
+                        expect(imapClientStub.getMessage.calledOnce).to.be.true;
+                        expect(err).to.not.exist;
+                        expect(message.uid).to.equal(uid);
+                        expect(message.attachments).to.not.exist;
+                        done();
+                    });
+                });
+
                 it('should parse message body and attachement', function(done) {
                     var uid = 415,
                         newImapClientStub = {
@@ -179,7 +197,8 @@ define(function(require) {
                         };
                     sinon.stub(newImapClientStub, 'getMessage', function(options, messageReady, attachmentReady) {
                         messageReady(null, {
-                            uid: uid
+                            uid: uid,
+                            attachments: ['file.txt']
                         });
                         attachmentReady(null, {
                             uint8Array: new Uint8Array(42)
@@ -194,7 +213,7 @@ define(function(require) {
                         expect(newImapClientStub.getMessage.calledOnce).to.be.true;
                         expect(err).to.not.exist;
                         expect(message.uid).to.equal(uid);
-                        expect(message.parsedAttachment.uint8Array.length).to.equal(42);
+                        expect(message.attachments[0].base64).to.exist;
                         emailDao._imapClient = imapClientStub;
                         done();
                     });
