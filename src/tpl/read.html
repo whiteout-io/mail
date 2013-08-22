@@ -1,31 +1,31 @@
 <div data-role="header" data-position="fixed">
   <a href="#accounts/<%- account %>/folders/<%- folder %>" data-role="button" data-icon="arrow-l" data-iconpos="left" class="ui-btn-left">Back</a>
   <h1><%- subject %></h1>
-  <a href="#accounts/<%- account %>/folders/<%- folder %>/reply/<%- id %>" data-role="button" data-icon="back" data-iconpos="right" class="ui-btn-right">Reply</a>
+  <a href="#accounts/<%- account %>/folders/<%- folder %>/reply/<%- uid %>" data-role="button" data-icon="back" data-iconpos="right" class="ui-btn-right">Reply</a>
 </div><!-- /header -->
 
 <div data-role="content" id="readViewContent">
   <ul data-role="listview" data-theme="d" data-divider-theme="d" id="idEmailList" data-mini="true">
     
     <li style="border: 0px">
-		  <h3>from: <%- from[0].name %> &lt;<%- from[0].address %>&gt;</h3>
-			<p>to:
-				<% _.each(to, function(o) { %>
-					<%- o.name %> &lt;<%- o.address %>&gt;
-				<% }); %>
-			</p>
-		</li>
-		
-		<li>
-			<h3 id="idMailSubject"><%- subject %></h3>
-			<p id="idMailDate"><%- sentDate %></p>
-		</li>
-		
-		<li id="bodyItem">
-		  <div id="mailContentDiv">
+      <h3>from: <%- from[0].name %> &lt;<%- from[0].address %>&gt;</h3>
+      <p>to:
+        <% _.each(to, function(o) { %>
+          <%- o.name %> &lt;<%- o.address %>&gt;
+        <% }); %>
+      </p>
+    </li>
+    
+    <li>
+      <h3 id="idMailSubject"><%- subject %></h3>
+      <p id="idMailDate"><%- sentDate %></p>
+    </li>
+    
+    <li id="bodyItem">
+      <div id="mailContentDiv">
         <iframe src="mail-content.html" sandbox="allow-scripts" id="mailContentFrame" frameborder="0"></iframe>
       </div>
     </li>
-		
+    
   </ul>  
 </div><!-- /content -->
