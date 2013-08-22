@@ -1,5 +1,5 @@
 define(['jquery', 'underscore', 'backbone', 'js/app-config',
-		'js/view/messagelistitem-view'
+	'js/view/messagelistitem-view'
 ], function($, _, Backbone, app, MessageListItemView) {
 	'use strict';
 
@@ -87,7 +87,7 @@ define(['jquery', 'underscore', 'backbone', 'js/app-config',
 				list.html('');
 
 				// append items to list in reverse order so mails with the most recent date will be displayed first
-				for (i = emails.length - 1; i >= 0; i--) {
+				for (i = 0; i < emails.length; i++) {
 					email = emails[i];
 					listItemArgs = {
 						account: self.options.account,
