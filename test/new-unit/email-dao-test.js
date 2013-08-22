@@ -256,7 +256,7 @@ define(function(require) {
                         expect(newImapClientStub.getMessage.calledOnce).to.be.true;
                         expect(err).to.not.exist;
                         expect(message.uid).to.equal(uid);
-                        expect(message.attachments[0].base64).to.exist;
+                        expect(message.attachments[0].uint8Array).to.exist;
                         emailDao._imapClient = imapClientStub;
                         done();
                     });
