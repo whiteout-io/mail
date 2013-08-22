@@ -188,10 +188,6 @@ define(function(require) {
         }
 
         function attachmentReady(err, gottenAttachment) {
-            // parse uint8array to base to make it serializable for postMessage
-            gottenAttachment.base64 = btoa(gottenAttachment.uint8Array);
-            delete gottenAttachment.uint8Array;
-
             attachments.push(gottenAttachment);
             itemCounter++;
             check();

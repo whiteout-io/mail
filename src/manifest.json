@@ -28,6 +28,6 @@
   },
   "sandbox": {
     "pages": ["sandbox.html", "mail-content.html"],
-    "content_security_policy": "sandbox allow-scripts; default-src 'self'; object-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src *"
+    "content_security_policy": "sandbox allow-scripts; default-src 'self'; object-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src *; frame-src *"
   }
 }

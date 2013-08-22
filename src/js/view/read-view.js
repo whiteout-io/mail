@@ -34,7 +34,31 @@ define(['jquery', 'underscore', 'backbone', 'js/app-config'], function($, _, Bac
 			$(this.el).html(this.template(params));
 			this.renderBody();
 
+			// set download link for attachment button
+			this.parseAttachments();
+
 			return this;
+		},
+
+		parseAttachments: function() {
+			var attachments = this.model.attachments;
+			if (!attachments) {
+				// remove link if no attachments are present
+				$(this.el).find('#attachmentItem').remove();
+				return;
+			}
+
+			var attmt = attachments[0];
+			var blob = new Blob([attmt.uint8Array], {
+				type: attmt.contentType
+			});
+			var url = window.URL.createObjectURL(blob);
+
+			// set download link
+			$(this.el).find('#attachmentBtn').attr({
+				href: url,
+				download: attmt.fileName
+			}).text(attmt.fileName);
 		},
 
 		renderBody: function(tryHtml) {
