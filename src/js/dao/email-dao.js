@@ -26,10 +26,10 @@ define(function(require) {
     EmailDAO.prototype.init = function(account, password, callback) {
         var self = this;
 
-        self.account = account;
+        self._account = account;
 
         // validate email address
-        var emailAddress = account.emailAddress;
+        var emailAddress = self._account.emailAddress;
         if (!validateEmail(emailAddress)) {
             callback({
                 errMsg: 'The user email address must be specified!'
@@ -69,8 +69,8 @@ define(function(require) {
             crypto.init({
                 emailAddress: emailAddress,
                 password: password,
-                keySize: account.symKeySize,
-                rsaKeySize: account.asymKeySize,
+                keySize: self._account.symKeySize,
+                rsaKeySize: self._account.asymKeySize,
                 storedKeypair: storedKeypair
             }, function(err, generatedKeypair) {
                 if (err) {
@@ -89,7 +89,7 @@ define(function(require) {
     };
 
     //
-    // New IMAP/SMTP implementation
+    // IMAP/SMTP Apis
     //
 
     /**
@@ -169,6 +169,16 @@ define(function(require) {
             return;
         }
 
+        // try fetching from cache before doing a roundtrip
+        message = self.readCache(options.folder, options.uid);
+        if (message) {
+            // message was fetched from cache successfully
+            callback(null, message);
+            return;
+        }
+
+        /* message was not found in cache... fetch from imap server */
+
         function messageReady(err, gottenMessage) {
             message = gottenMessage;
             itemCounter++;
@@ -193,7 +203,11 @@ define(function(require) {
                 return;
             }
 
+            // overwrite attachments array with the uint8array variant
             message.attachments = (attachments.length > 0) ? attachments : undefined;
+            // cache message object in memory
+            self.cacheItem(options.folder, message);
+
             callback(null, message);
         }
 
@@ -203,24 +217,46 @@ define(function(require) {
         }, messageReady, attachmentReady);
     };
 
-    //
-    // Old cloud storage implementation
-    //
-
     /**
-     * Fetch an email with the following id
+     * Checks if an item is already cached and if not, cache it.
      */
-    EmailDAO.prototype.getItem = function(folderName, itemId) {
+    EmailDAO.prototype.cacheItem = function(folderName, item) {
         var self = this;
 
-        var folder = self.account.get('folders').where({
-            name: folderName
-        })[0];
-        var mail = _.find(folder.get('items'), function(email) {
-            return email.id + '' === itemId + '';
-        });
-        return mail;
+        // check if account has a folders attribute
+        if (!self._account.folders) {
+            self._account.folders = {};
+        }
+        // create folder if not existant
+        if (!self._account.folders[folderName]) {
+            self._account.folders[folderName] = {};
+        }
+
+        // cache item
+        self._account.folders[folderName][item.uid] = item;
     };
+
+    /**
+     * Fetch an item from the cache with the following id
+     */
+    EmailDAO.prototype.readCache = function(folderName, itemId) {
+        var self = this;
+
+        // check if account has a folders attribute
+        if (!self._account.folders) {
+            return null;
+        }
+        // check folder
+        if (!self._account.folders[folderName]) {
+            return null;
+        }
+
+        return self._account.folders[folderName][itemId];
+    };
+
+    //
+    // Cloud storage Apis
+    //
 
     /**
      * Fetch a list of emails from the device's local storage
@@ -231,8 +267,8 @@ define(function(require) {
         var self = this,
             collection, folder;
 
-        // check if items are in memory already (account.folders model)
-        folder = self.account.get('folders').where({
+        // check if items are in memory already (_account.folders model)
+        folder = self._account.get('folders').where({
             name: folderName
         })[0];
 
@@ -261,7 +297,7 @@ define(function(require) {
                             name: folderName
                         });
                         folder.set('items', decryptedList);
-                        self.account.get('folders').add(folder);
+                        self._account.get('folders').add(folder);
                     }
 
                     callback(null, decryptedList);
@@ -310,7 +346,7 @@ define(function(require) {
 
         function startSync(filter) {
             // fetch items from the cloud
-            self._cloudstorage.listEncryptedItems('email', self.account.get('emailAddress'), folderName + filter, function(err, encryptedList) {
+            self._cloudstorage.listEncryptedItems('email', self._account.get('emailAddress'), folderName + filter, function(err, encryptedList) {
                 // return if an error occured
                 if (err) {
                     callback({
@@ -360,12 +396,12 @@ define(function(require) {
 
                     // persist encrypted list in device storage
                     devicestorage.storeEcryptedList(encryptedKeyList, 'email_' + folderName, function() {
-                        // remove cached folder in account model
-                        folder = self.account.get('folders').where({
+                        // remove cached folder in _account model
+                        folder = self._account.get('folders').where({
                             name: folderName
                         })[0];
                         if (folder) {
-                            self.account.get('folders').remove(folder);
+                            self._account.get('folders').remove(folder);
                         }
                         callback();
                     });
@@ -379,7 +415,7 @@ define(function(require) {
      */
     EmailDAO.prototype.sendEmail = function(email, callback) {
         var self = this,
-            userId = self.account.get('emailAddress');
+            userId = self._account.get('emailAddress');
 
         // validate email addresses
         var invalidRecipient;
