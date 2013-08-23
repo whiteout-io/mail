@@ -53,7 +53,7 @@ define(['js/dao/lawnchair-dao'], function(jsonDao) {
 
 								// should read empty
 								jsonDao.read(key, function(lastRead) {
-									equal(lastRead, null, 'Delete');
+									equal(lastRead, undefined, 'Delete');
 
 									start();
 								});

@@ -46,7 +46,7 @@ define(['lawnchair', 'lawnchairSQL', 'lawnchairIDB'], function(Lawnchair) {
             if (o) {
                 callback(o.object);
             } else {
-                callback(null);
+                callback();
             }
         });
     };
