@@ -240,11 +240,11 @@ define(function(require) {
 
         // check if account has a folders attribute
         if (!self._account.folders) {
-            return null;
+            return;
         }
         // check folder
         if (!self._account.folders[folderName]) {
-            return null;
+            return;
         }
 
         return self._account.folders[folderName][itemId];
