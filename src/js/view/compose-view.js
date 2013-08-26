@@ -43,6 +43,40 @@ define(['jquery', 'underscore', 'backbone', 'js/app-config'], function($, _, Bac
 				self.fillFields();
 			}
 
+			// handle file picker for attachments
+			page.find('#files').on('change', function(e) {
+				var files = e.target.files,
+					i, reader;
+
+				// check if files exist
+				if (!files || files.length < 1) {
+					return;
+				}
+
+				// init attachments array if non exists
+				if (!self._attachments) {
+					self._attachments = [];
+				}
+
+				function addAttachment(file) {
+					reader = new FileReader();
+
+					reader.onloadend = function(f) {
+						self._attachments.push({
+							fileName: file.name,
+							contentType: file.type,
+							uint8Array: new Uint8Array(f.target.result)
+						});
+					};
+
+					reader.readAsArrayBuffer(file);
+				}
+
+				for (i = 0; i < files.length; i++) {
+					addAttachment(files[i]);
+				}
+			});
+
 			// handle back button
 			page.find('#backBtn').on('vmousedown', function(e) {
 				e.preventDefault();
@@ -119,6 +153,9 @@ define(['jquery', 'underscore', 'backbone', 'js/app-config'], function($, _, Bac
 					address: address
 				});
 			});
+
+			// add attachments
+			email.attachments = self._attachments;
 
 			// post message to main window
 			app.util.postMessage('sendEmail', {
