@@ -109,17 +109,46 @@ define(function(require) {
             });
 
             describe('SMTP: send email', function() {
-                it('should fail due to back input', function(done) {
+                it('should fail due to bad input', function(done) {
                     emailDao.smtpSend({}, function(err) {
                         expect(smtpClientStub.send.called).to.be.false;
+                        expect(keychainStub.getReveiverPublicKey.called).to.be.false;
+                        expect(err).to.exist;
+                        done();
+                    });
+                });
+                it('should fail due to invalid email address input', function(done) {
+                    var badMail = {
+                        from: [{
+                            name: 'Whiteout Test',
+                            address: 'whiteout.test@t-online.de'
+                        }], // sender address
+                        to: [{
+                            address: 'asfd'
+                        }], // list of receivers
+                        subject: "Hello", // Subject line
+                        body: "Hello world" // plaintext body
+                    };
+                    emailDao.smtpSend(badMail, function(err) {
+                        expect(smtpClientStub.send.called).to.be.false;
+                        expect(keychainStub.getReveiverPublicKey.called).to.be.false;
                         expect(err).to.exist;
                         done();
                     });
                 });
 
                 it('should work', function(done) {
+                    var publicKey = "-----BEGIN PUBLIC KEY-----\r\n" + "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCxy+Te5dyeWd7g0P+8LNO7fZDQ\r\n" + "g96xTb1J6pYE/pPTMlqhB6BRItIYjZ1US5q2vk5Zk/5KasBHAc9RbCqvh9v4XFEY\r\n" + "JVmTXC4p8ft1LYuNWIaDk+R3dyYXmRNct/JC4tks2+8fD3aOvpt0WNn3R75/FGBt\r\n" + "h4BgojAXDE+PRQtcVQIDAQAB\r\n" + "-----END PUBLIC KEY-----";
+
+                    keychainStub.getReveiverPublicKey.yields(null, {
+                        _id: "fcf8b4aa-5d09-4089-8b4f-e3bc5091daf3",
+                        userId: "safewithme.testuser@gmail.com",
+                        publicKey: publicKey
+                    });
                     smtpClientStub.send.yields();
+
                     emailDao.smtpSend(dummyMail, function(err) {
+                        expect(keychainStub.getReveiverPublicKey.calledOnce).to.be.true;
                         expect(smtpClientStub.send.calledOnce).to.be.true;
                         expect(err).to.not.exist;
                         done();

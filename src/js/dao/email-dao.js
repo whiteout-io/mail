@@ -105,7 +105,8 @@ define(function(require) {
      * Send an email client side via STMP.
      */
     EmailDAO.prototype.smtpSend = function(email, callback) {
-        var self = this;
+        var self = this,
+            invalidRecipient;
 
         // validate the email input
         if (!email.to || !email.from || !email.to[0].address || !email.from[0].address) {
@@ -116,7 +117,6 @@ define(function(require) {
         }
 
         // validate email addresses
-        var invalidRecipient;
         _.each(email.to, function(i) {
             if (!validateEmail(i.address)) {
                 invalidRecipient = i.address;
@@ -139,10 +139,8 @@ define(function(require) {
         email.id = util.UUID();
 
         // only support single recipient for e-2-e encryption
-        var recipient = email.to[0].address;
-
         // check if receiver has a public key
-        self._keychain.getReveiverPublicKey(recipient, function(err, receiverPubkey) {
+        self._keychain.getReveiverPublicKey(email.to[0].address, function(err, receiverPubkey) {
             if (err) {
                 callback(err);
                 return;
@@ -169,10 +167,10 @@ define(function(require) {
             from = email.from[0].name || email.from[0].address;
 
             var NEW_SUBJECT = '[whiteout] Encrypted message';
-            var MESSAGE = 'Hi ' + to + ',\n\nthis is a private conversation just between the two of us. To read the encrypted message below, simply install Whiteout Mail for Chrome and encrypt your emails instantly: https://chrome.google.com/webstore/detail/whiteout-mail/jjgghafhamholjigjoghcfcekhkonijg\n\n\n';
+            var MESSAGE = 'Hi ' + to + ',\n\nthis is a private conversation just between the two of us. To read the encrypted message below, simply install Whiteout Mail for Chrome and encrypt your emails without any hassle: https://chrome.google.com/webstore/detail/whiteout-mail/jjgghafhamholjigjoghcfcekhkonijg\n\n\n';
             var PREFIX = '-----BEGIN ENCRYPTED MESSAGE-----\n';
             var SUFFIX = '\n-----END ENCRYPTED MESSAGE-----';
-            var SIGNATURE = '\n\n\nSent with whiteout mail, for easy end-to-end encrypted messaging\nhttp://whiteout.io\n\n';
+            var SIGNATURE = '\n\n\nSent from whiteout mail, for easy end-to-end encrypted messaging\nhttp://whiteout.io\n\n';
 
             // encrypt the email
             crypto.encryptListForUser(ptItems, receiverPubkeys, function(err, encryptedList) {
