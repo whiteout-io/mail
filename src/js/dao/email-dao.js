@@ -8,6 +8,12 @@ define(function(require) {
         devicestorage = require('js/dao/devicestorage-dao'),
         app = require('js/app-config');
 
+    var SUBJECT = '[whiteout] Encrypted message',
+        MESSAGE = 'this is a private conversation just between the two of us. To read the encrypted message below, simply install Whiteout Mail for Chrome and encrypt your emails without any hassle: https://chrome.google.com/webstore/detail/whiteout-mail/jjgghafhamholjigjoghcfcekhkonijg\n\n\n',
+        PREFIX = '-----BEGIN ENCRYPTED MESSAGE-----\n',
+        SUFFIX = '\n-----END ENCRYPTED MESSAGE-----',
+        SIGNATURE = '\n\n\nSent from whiteout mail, for easy end-to-end encrypted messaging\nhttp://whiteout.io\n\n';
+
     /**
      * A high-level Data-Access Api for handling Email synchronization
      * between the cloud service and the device's local storage
@@ -161,16 +167,10 @@ define(function(require) {
         function encrypt(email, receiverPubkey) {
             var ptItems = [email],
                 receiverPubkeys = [receiverPubkey],
-                from, to;
+                to, greeting;
 
             to = (email.to[0].name || email.to[0].address).split('@')[0].split('.')[0].split(' ')[0];
-            from = email.from[0].name || email.from[0].address;
-
-            var NEW_SUBJECT = '[whiteout] Encrypted message';
-            var MESSAGE = 'Hi ' + to + ',\n\nthis is a private conversation just between the two of us. To read the encrypted message below, simply install Whiteout Mail for Chrome and encrypt your emails without any hassle: https://chrome.google.com/webstore/detail/whiteout-mail/jjgghafhamholjigjoghcfcekhkonijg\n\n\n';
-            var PREFIX = '-----BEGIN ENCRYPTED MESSAGE-----\n';
-            var SUFFIX = '\n-----END ENCRYPTED MESSAGE-----';
-            var SIGNATURE = '\n\n\nSent from whiteout mail, for easy end-to-end encrypted messaging\nhttp://whiteout.io\n\n';
+            greeting = 'Hi ' + to + ',\n\n';
 
             // encrypt the email
             crypto.encryptListForUser(ptItems, receiverPubkeys, function(err, encryptedList) {
@@ -181,8 +181,8 @@ define(function(require) {
 
                 // build message envelope
                 var ct = btoa(JSON.stringify(encryptedList[0]));
-                email.body = MESSAGE + PREFIX + ct + SUFFIX + SIGNATURE;
-                email.subject = NEW_SUBJECT;
+                email.body = greeting + MESSAGE + PREFIX + ct + SUFFIX + SIGNATURE;
+                email.subject = SUBJECT;
 
                 send(email);
             });
