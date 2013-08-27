@@ -9,7 +9,7 @@ define(function(require) {
         app = require('js/app-config');
 
     var SUBJECT = '[whiteout] Encrypted message',
-        MESSAGE = 'this is a private conversation just between the two of us. To read the encrypted message below, simply install Whiteout Mail for Chrome. The app is really easy to use and allows end-to-end encryption of your emails without any hassle: https://chrome.google.com/webstore/detail/whiteout-mail/jjgghafhamholjigjoghcfcekhkonijg\n\n\n',
+        MESSAGE = 'this is a private conversation. To read my encrypted message below, simply install Whiteout Mail for Chrome. The app is really easy to use and automatically encrypts sent emails, so that only the two of us can read them: https://chrome.google.com/webstore/detail/whiteout-mail/jjgghafhamholjigjoghcfcekhkonijg\n\n\n',
         PREFIX = '-----BEGIN ENCRYPTED MESSAGE-----\n',
         SUFFIX = '\n-----END ENCRYPTED MESSAGE-----',
         SIGNATURE = '\n\n\nSent from whiteout mail, for easy end-to-end encrypted messaging\nhttp://whiteout.io\n\n';
