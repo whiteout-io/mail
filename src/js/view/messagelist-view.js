@@ -70,8 +70,8 @@ define(['jquery', 'underscore', 'backbone', 'js/app-config',
 			// post message to main window
 			app.util.postMessage('listEmails', {
 				folder: self.folder,
-				offset: 0,
-				num: 10
+				offset: -10,
+				num: 0
 			}, function(resArgs) {
 				var err = resArgs.err;
 				var emails = resArgs.emails;
