@@ -115,7 +115,85 @@ define(function(require) {
             return;
         }
 
-        self._smtpClient.send(email, callback);
+        // validate email addresses
+        var invalidRecipient;
+        _.each(email.to, function(i) {
+            if (!validateEmail(i.address)) {
+                invalidRecipient = i.address;
+            }
+        });
+        if (invalidRecipient) {
+            callback({
+                errMsg: 'Invalid recipient: ' + invalidRecipient
+            });
+            return;
+        }
+        if (!validateEmail(email.from[0].address)) {
+            callback({
+                errMsg: 'Invalid sender: ' + email.from
+            });
+            return;
+        }
+
+        // generate a new UUID for the new email
+        email.id = util.UUID();
+
+        // only support single recipient for e-2-e encryption
+        var recipient = email.to[0].address;
+
+        // check if receiver has a public key
+        self._keychain.getReveiverPublicKey(recipient, function(err, receiverPubkey) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            // validate public key
+            if (!receiverPubkey) {
+                callback({
+                    errMsg: 'No public key found for: ' + email.from
+                });
+                return;
+            }
+
+            // public key found... encrypt and send
+            encrypt(email, receiverPubkey);
+        });
+
+        function encrypt(email, receiverPubkey) {
+            var ptItems = [email],
+                receiverPubkeys = [receiverPubkey],
+                from, to;
+
+            to = (email.to[0].name || email.to[0].address).split('@')[0].split('.')[0].split(' ')[0];
+            from = email.from[0].name || email.from[0].address;
+
+            var NEW_SUBJECT = '[whiteout] Encrypted message';
+            var MESSAGE = 'Hi ' + to + ',\n\nthis is a private conversation just between the two of us. To read the encrypted message below, simply install Whiteout Mail for Chrome and encrypt your emails instantly: https://chrome.google.com/webstore/detail/whiteout-mail/jjgghafhamholjigjoghcfcekhkonijg\n\n\n';
+            var PREFIX = '-----BEGIN ENCRYPTED MESSAGE-----\n';
+            var SUFFIX = '\n-----END ENCRYPTED MESSAGE-----';
+            var SIGNATURE = '\n\n\nSent with whiteout mail, for easy end-to-end encrypted messaging\nhttp://whiteout.io\n\n';
+
+            // encrypt the email
+            crypto.encryptListForUser(ptItems, receiverPubkeys, function(err, encryptedList) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                // build message envelope
+                var ct = btoa(JSON.stringify(encryptedList[0]));
+                email.body = MESSAGE + PREFIX + ct + SUFFIX + SIGNATURE;
+                email.subject = NEW_SUBJECT;
+
+                send(email);
+            });
+        }
+
+        function send(email) {
+            self._smtpClient.send(email, callback);
+        }
+
     };
 
     /**
