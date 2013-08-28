@@ -307,8 +307,10 @@ define(function(require) {
 
         self._imapClient.getMessage({
             path: options.folder,
-            uid: options.uid
-        }, messageReady, attachmentReady);
+            uid: options.uid,
+            onMessageBody: messageReady,
+            onAttachment: attachmentReady
+        });
     };
 
     /**
