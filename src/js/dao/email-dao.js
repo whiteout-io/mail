@@ -12,7 +12,7 @@ define(function(require) {
         MESSAGE = 'this is a private conversation. To read my encrypted message below, simply install Whiteout Mail for Chrome. The app is really easy to use and automatically encrypts sent emails, so that only the two of us can read them: https://chrome.google.com/webstore/detail/whiteout-mail/jjgghafhamholjigjoghcfcekhkonijg\n\n\n',
         PREFIX = '-----BEGIN ENCRYPTED MESSAGE-----\n',
         SUFFIX = '\n-----END ENCRYPTED MESSAGE-----',
-        SIGNATURE = '\n\n\nSent from whiteout mail, for easy end-to-end encrypted messaging\nhttp://whiteout.io\n\n';
+        SIGNATURE = '\n\n\nSent securely from my whiteout account\nhttp://whiteout.io\n\n';
 
     /**
      * A high-level Data-Access Api for handling Email synchronization
