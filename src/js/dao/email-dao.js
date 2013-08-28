@@ -167,10 +167,16 @@ define(function(require) {
         function encrypt(email, receiverPubkey) {
             var ptItems = [email],
                 receiverPubkeys = [receiverPubkey],
-                to, greeting;
+                to, greeting, ct, i;
 
-            to = (email.to[0].name || email.to[0].address).split('@')[0].split('.')[0].split(' ')[0];
-            greeting = 'Hi ' + to + ',\n\n';
+            // add attachment to encryption batch and remove from email object
+            if (email.attachments) {
+                email.attachments.forEach(function(attachment) {
+                    attachment.id = email.id;
+                    ptItems.push(attachment);
+                });
+                delete email.attachments;
+            }
 
             // encrypt the email
             crypto.encryptListForUser(ptItems, receiverPubkeys, function(err, encryptedList) {
@@ -179,10 +185,26 @@ define(function(require) {
                     return;
                 }
 
-                // build message envelope
-                var ct = btoa(JSON.stringify(encryptedList[0]));
+                // get first name of recipient
+                to = (email.to[0].name || email.to[0].address).split('@')[0].split('.')[0].split(' ')[0];
+                greeting = 'Hi ' + to + ',\n\n';
+
+                // build encrypted text body
+                ct = btoa(JSON.stringify(encryptedList[0]));
                 email.body = greeting + MESSAGE + PREFIX + ct + SUFFIX + SIGNATURE;
                 email.subject = SUBJECT;
+
+                // add encrypted attachments
+                if (encryptedList.length > 1) {
+                    email.attachments = [];
+                }
+                for (i = 1; i < encryptedList.length; i++) {
+                    email.attachments.push({
+                        fileName: 'Encrypted Attachment ' + i,
+                        contentType: 'application/octet-stream',
+                        uint8Array: util.binStr2Uint8Arr(JSON.stringify(encryptedList[i]))
+                    });
+                }
 
                 send(email);
             });

@@ -65,11 +65,11 @@ define(['jquery', 'underscore', 'backbone', 'js/app-config'], function($, _, Bac
 						self._attachments.push({
 							fileName: file.name,
 							contentType: file.type,
-							uint8Array: new Uint8Array(f.target.result)
+							binStr: f.target.result
 						});
 					};
 
-					reader.readAsArrayBuffer(file);
+					reader.readAsBinaryString(file);
 				}
 
 				for (i = 0; i < files.length; i++) {
@@ -166,6 +166,9 @@ define(['jquery', 'underscore', 'backbone', 'js/app-config'], function($, _, Bac
 					window.alert(JSON.stringify(err));
 					return;
 				}
+
+				// break attachments reference from memory
+				delete self._attachments;
 
 				self.goBackToLastPage();
 			});
