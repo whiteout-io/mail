@@ -282,7 +282,63 @@ define(function(require) {
             itemCounter++;
             // remember how many items should be fetched before the callback fires
             expectedItems = (message.attachments instanceof Array) ? message.attachments.length + 1 : 1;
-            check();
+
+            // decrypt Message body
+            if (message.body.indexOf(PREFIX) !== -1 && message.body.indexOf(SUFFIX) !== -1) {
+                decryptMessageBody(message, function(err, ptMessage) {
+                    message = ptMessage;
+                    // return decrypted message
+                    callback(null, message);
+                });
+                return;
+            }
+
+            // return unencrypted message
+            callback(null, message);
+
+            //check();
+        }
+
+        function decryptMessageBody(email, callback) {
+            var ctMessageBase64, ctMessage, pubkeyIds;
+
+            // parse email body for encrypted message block
+            try {
+                ctMessageBase64 = email.body.split(PREFIX)[1].split(SUFFIX)[0];
+                ctMessage = JSON.parse(atob(ctMessageBase64));
+            } catch (e) {
+                callback({
+                    errMsg: 'Error parsing encrypted message block!'
+                });
+                return;
+            }
+
+            // gather public key ids required to verify signatures
+            pubkeyIds = [{
+                _id: ctMessage.senderPk
+            }];
+
+            // fetch public keys from keychain
+            self._keychain.getPublicKeys(pubkeyIds, function(err, senderPubkeys) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                // verfiy signatures and re-encrypt item keys
+                crypto.decryptListForUser([ctMessage], senderPubkeys, function(err, decryptedList) {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+
+                    var ptEmail = decryptedList[0];
+                    email.body = ptEmail.body;
+                    email.subject = ptEmail.subject;
+
+                    callback(null, email);
+                });
+            });
         }
 
         function attachmentReady(err, gottenAttachment) {
@@ -309,7 +365,7 @@ define(function(require) {
             path: options.folder,
             uid: options.uid,
             onMessageBody: messageReady,
-            onAttachment: attachmentReady
+            /*onAttachment: attachmentReady*/
         });
     };
 
