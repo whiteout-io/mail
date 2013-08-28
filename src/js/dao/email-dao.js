@@ -257,7 +257,7 @@ define(function(require) {
         var self = this,
             expectedItems,
             itemCounter = 0,
-            message, attachments = [];
+            message /*, attachments = []*/ ;
 
         // validate options
         if (!options.folder || !options.uid) {
@@ -341,25 +341,25 @@ define(function(require) {
             });
         }
 
-        function attachmentReady(err, gottenAttachment) {
-            attachments.push(gottenAttachment);
-            itemCounter++;
-            check();
-        }
+        // function attachmentReady(err, gottenAttachment) {
+        //     attachments.push(gottenAttachment);
+        //     itemCounter++;
+        //     check();
+        // }
 
-        function check() {
-            // go for another round you don't yet know how mich to fetch or you haven't fetch enough
-            if (!expectedItems || itemCounter < expectedItems) {
-                return;
-            }
+        // function check() {
+        //     // go for another round you don't yet know how mich to fetch or you haven't fetch enough
+        //     if (!expectedItems || itemCounter < expectedItems) {
+        //         return;
+        //     }
 
-            // overwrite attachments array with the uint8array variant
-            message.attachments = (attachments.length > 0) ? attachments : undefined;
-            // cache message object in memory
-            self.cacheItem(options.folder, message);
+        //     // overwrite attachments array with the uint8array variant
+        //     message.attachments = (attachments.length > 0) ? attachments : undefined;
+        //     // cache message object in memory
+        //     self.cacheItem(options.folder, message);
 
-            callback(null, message);
-        }
+        //     callback(null, message);
+        // }
 
         self._imapClient.getMessage({
             path: options.folder,
