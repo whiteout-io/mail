@@ -287,35 +287,35 @@ define(function(require) {
                     });
                 });
 
-                it('should parse message body and attachement', function(done) {
-                    var uid = 415,
-                        newImapClientStub = {
-                            getMessage: function() {}
-                        };
-                    sinon.stub(newImapClientStub, 'getMessage', function(options) {
-                        options.onMessageBody(null, {
-                            uid: uid,
-                            body: '',
-                            attachments: ['file.txt']
-                        });
-                        // options.onAttachment(null, {
-                        //     uint8Array: new Uint8Array(42)
-                        // });
-                    });
-                    emailDao._imapClient = newImapClientStub;
+                // it('should parse message body and attachement', function(done) {
+                //     var uid = 415,
+                //         newImapClientStub = {
+                //             getMessage: function() {}
+                //         };
+                //     sinon.stub(newImapClientStub, 'getMessage', function(options) {
+                //         options.onMessageBody(null, {
+                //             uid: uid,
+                //             body: '',
+                //             attachments: ['file.txt']
+                //         });
+                //         options.onAttachment(null, {
+                //             uint8Array: new Uint8Array(42)
+                //         });
+                //     });
+                //     emailDao._imapClient = newImapClientStub;
 
-                    emailDao.imapGetMessage({
-                        folder: 'INBOX',
-                        uid: uid
-                    }, function(err, message) {
-                        expect(newImapClientStub.getMessage.calledOnce).to.be.true;
-                        expect(err).to.not.exist;
-                        expect(message.uid).to.equal(uid);
-                        //expect(message.attachments[0].uint8Array).to.exist;
-                        emailDao._imapClient = imapClientStub;
-                        done();
-                    });
-                });
+                //     emailDao.imapGetMessage({
+                //         folder: 'INBOX',
+                //         uid: uid
+                //     }, function(err, message) {
+                //         expect(newImapClientStub.getMessage.calledOnce).to.be.true;
+                //         expect(err).to.not.exist;
+                //         expect(message.uid).to.equal(uid);
+                //         expect(message.attachments[0].uint8Array).to.exist;
+                //         emailDao._imapClient = imapClientStub;
+                //         done();
+                //     });
+                // });
             });
         });
     });
