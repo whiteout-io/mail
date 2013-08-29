@@ -166,6 +166,13 @@ define(function(require) {
     };
 
     /**
+     * Encrypt an email symmetrically
+     */
+    // EmailDAO.prototype.encryptForNewUser = function(email, callback) {
+
+    // };
+
+    /**
      * Encrypt an email asymmetrically for an exisiting user with their public key
      */
     EmailDAO.prototype.encryptForUser = function(email, receiverPubkey, callback) {
@@ -287,6 +294,11 @@ define(function(require) {
             itemCounter++;
             // remember how many items should be fetched before the callback fires
             expectedItems = (message.attachments instanceof Array) ? message.attachments.length + 1 : 1;
+
+            // TODO: remove once attachments work again
+            if (itemCounter > 1) {
+                return;
+            }
 
             // decrypt Message body
             if (message.body.indexOf(PREFIX) !== -1 && message.body.indexOf(SUFFIX) !== -1) {
