@@ -161,59 +161,64 @@ define(function(require) {
             }
 
             // public key found... encrypt and send
-            encrypt(email, receiverPubkey);
+            self.encryptForUser(email, receiverPubkey, callback);
         });
+    };
 
-        function encrypt(email, receiverPubkey) {
-            var ptItems = [email],
-                receiverPubkeys = [receiverPubkey],
-                to, greeting, ct, i;
+    /**
+     * Encrypt an email asymmetrically for an exisiting user with their public key
+     */
+    EmailDAO.prototype.encryptForUser = function(email, receiverPubkey, callback) {
+        var self = this,
+            ptItems = [email],
+            receiverPubkeys = [receiverPubkey],
+            to, greeting, ct, i;
 
-            // add attachment to encryption batch and remove from email object
-            if (email.attachments) {
-                email.attachments.forEach(function(attachment) {
-                    attachment.id = email.id;
-                    ptItems.push(attachment);
-                });
-                delete email.attachments;
+        // add attachment to encryption batch and remove from email object
+        if (email.attachments) {
+            email.attachments.forEach(function(attachment) {
+                attachment.id = email.id;
+                ptItems.push(attachment);
+            });
+            delete email.attachments;
+        }
+
+        // encrypt the email
+        crypto.encryptListForUser(ptItems, receiverPubkeys, function(err, encryptedList) {
+            if (err) {
+                callback(err);
+                return;
             }
 
-            // encrypt the email
-            crypto.encryptListForUser(ptItems, receiverPubkeys, function(err, encryptedList) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
+            // get first name of recipient
+            to = (email.to[0].name || email.to[0].address).split('@')[0].split('.')[0].split(' ')[0];
+            greeting = 'Hi ' + to + ',\n\n';
 
-                // get first name of recipient
-                to = (email.to[0].name || email.to[0].address).split('@')[0].split('.')[0].split(' ')[0];
-                greeting = 'Hi ' + to + ',\n\n';
+            // build encrypted text body
+            ct = btoa(JSON.stringify(encryptedList[0]));
+            email.body = greeting + MESSAGE + PREFIX + ct + SUFFIX + SIGNATURE;
+            email.subject = SUBJECT;
 
-                // build encrypted text body
-                ct = btoa(JSON.stringify(encryptedList[0]));
-                email.body = greeting + MESSAGE + PREFIX + ct + SUFFIX + SIGNATURE;
-                email.subject = SUBJECT;
+            // add encrypted attachments
+            if (encryptedList.length > 1) {
+                email.attachments = [];
+            }
+            for (i = 1; i < encryptedList.length; i++) {
+                email.attachments.push({
+                    fileName: 'Encrypted Attachment ' + i,
+                    contentType: 'application/octet-stream',
+                    uint8Array: util.binStr2Uint8Arr(JSON.stringify(encryptedList[i]))
+                });
+            }
 
-                // add encrypted attachments
-                if (encryptedList.length > 1) {
-                    email.attachments = [];
-                }
-                for (i = 1; i < encryptedList.length; i++) {
-                    email.attachments.push({
-                        fileName: 'Encrypted Attachment ' + i,
-                        contentType: 'application/octet-stream',
-                        uint8Array: util.binStr2Uint8Arr(JSON.stringify(encryptedList[i]))
-                    });
-                }
+            self.send(email, callback);
+        });
+    };
 
-                send(email);
-            });
-        }
+    EmailDAO.prototype.send = function(email, callback) {
+        var self = this;
 
-        function send(email) {
-            self._smtpClient.send(email, callback);
-        }
-
+        self._smtpClient.send(email, callback);
     };
 
     /**
