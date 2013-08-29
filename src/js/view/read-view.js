@@ -42,7 +42,7 @@ define(['jquery', 'underscore', 'backbone', 'js/app-config'], function($, _, Bac
 
 		parseAttachments: function() {
 			var attachments = this.model.attachments;
-			if (!attachments) {
+			if (!attachments || attachments.length < 1) {
 				// remove link if no attachments are present
 				$(this.el).find('#attachmentItem').remove();
 				return;

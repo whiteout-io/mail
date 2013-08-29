@@ -272,7 +272,7 @@ define(function(require) {
                 it('should parse message body without attachement', function(done) {
                     var uid = 415;
 
-                    imapClientStub.getMessage.yieldsTo('onMessageBody', null, {
+                    imapClientStub.getMessage.yieldsTo('onMessage', null, {
                         uid: uid,
                         body: ''
                     });

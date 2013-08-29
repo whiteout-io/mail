@@ -154,6 +154,7 @@ define(function(require) {
 
             // validate public key
             if (!receiverPubkey) {
+                // user hasn't registered a public key yet... invite
                 callback({
                     errMsg: 'No public key found for: ' + email.from
                 });
@@ -166,20 +167,13 @@ define(function(require) {
     };
 
     /**
-     * Encrypt an email symmetrically
-     */
-    // EmailDAO.prototype.encryptForNewUser = function(email, callback) {
-
-    // };
-
-    /**
      * Encrypt an email asymmetrically for an exisiting user with their public key
      */
     EmailDAO.prototype.encryptForUser = function(email, receiverPubkey, callback) {
         var self = this,
             ptItems = [email],
             receiverPubkeys = [receiverPubkey],
-            to, greeting, ct, i;
+            i;
 
         // add attachment to encryption batch and remove from email object
         if (email.attachments) {
@@ -197,14 +191,8 @@ define(function(require) {
                 return;
             }
 
-            // get first name of recipient
-            to = (email.to[0].name || email.to[0].address).split('@')[0].split('.')[0].split(' ')[0];
-            greeting = 'Hi ' + to + ',\n\n';
-
-            // build encrypted text body
-            ct = btoa(JSON.stringify(encryptedList[0]));
-            email.body = greeting + MESSAGE + PREFIX + ct + SUFFIX + SIGNATURE;
-            email.subject = SUBJECT;
+            // replace body and subject of the email with encrypted versions
+            email = self.frameEncryptedMessage(email, encryptedList[0]);
 
             // add encrypted attachments
             if (encryptedList.length > 1) {
@@ -222,6 +210,27 @@ define(function(require) {
         });
     };
 
+    /**
+     * Frames an encrypted message in base64 Format
+     */
+    EmailDAO.prototype.frameEncryptedMessage = function(email, ct) {
+        var to, greeting, ctBase64;
+
+        // get first name of recipient
+        to = (email.to[0].name || email.to[0].address).split('@')[0].split('.')[0].split(' ')[0];
+        greeting = 'Hi ' + to + ',\n\n';
+
+        // build encrypted text body
+        ctBase64 = btoa(JSON.stringify(ct));
+        email.body = greeting + MESSAGE + PREFIX + ctBase64 + SUFFIX + SIGNATURE;
+        email.subject = SUBJECT;
+
+        return email;
+    };
+
+    /**
+     * Send an actual message object via smtp
+     */
     EmailDAO.prototype.send = function(email, callback) {
         var self = this;
 
@@ -381,7 +390,7 @@ define(function(require) {
         self._imapClient.getMessage({
             path: options.folder,
             uid: options.uid,
-            onMessageBody: messageReady,
+            onMessage: messageReady,
             /*onAttachment: attachmentReady*/
         });
     };
