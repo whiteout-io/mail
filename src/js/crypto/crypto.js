@@ -2,305 +2,322 @@
  * High level crypto api that invokes native crypto (if available) and
  * gracefully degrades to JS crypto (if unavailable)
  */
-define(['cryptoLib/util', 'cryptoLib/aes-cbc', 'cryptoLib/rsa', 'cryptoLib/crypto-batch',
-		'js/crypto/pbkdf2', 'js/app-config'
-], function(util, aes, rsa, cryptoBatch, pbkdf2, app) {
-	'use strict';
+define(function(require) {
+    'use strict';
 
-	var self = {};
+    var util = require('cryptoLib/util'),
+        aes = require('cryptoLib/aes-cbc'),
+        rsa = require('cryptoLib/rsa'),
+        cryptoBatch = require('cryptoLib/crypto-batch'),
+        pbkdf2 = require('js/crypto/pbkdf2'),
+        app = require('js/app-config');
 
-	var passBasedKey;
+    var self = {},
+        passBasedKey;
 
-	/**
-	 * Initializes the crypto modules by fetching the user's
-	 * encrypted secret key from storage and storing it in memory.
-	 */
-	self.init = function(args, callback) {
-		// valdiate input
-		if (!args.emailAddress || !args.keySize || !args.rsaKeySize) {
-			callback({
-				errMsg: 'Crypto init failed. Not all args set!'
-			});
-			return;
-		}
+    /**
+     * Initializes the crypto modules by fetching the user's
+     * encrypted secret key from storage and storing it in memory.
+     */
+    self.init = function(args, callback) {
+        // valdiate input
+        if (!args.emailAddress || !args.keySize || !args.rsaKeySize) {
+            callback({
+                errMsg: 'Crypto init failed. Not all args set!'
+            });
+            return;
+        }
 
-		self.emailAddress = args.emailAddress;
-		self.keySize = args.keySize;
-		self.ivSize = args.keySize;
-		self.rsaKeySize = args.rsaKeySize;
+        self.emailAddress = args.emailAddress;
+        self.keySize = args.keySize;
+        self.ivSize = args.keySize;
+        self.rsaKeySize = args.rsaKeySize;
 
-		// derive PBKDF2 from password in web worker thread
-		self.deriveKey(args.password, self.keySize, function(err, derivedKey) {
-			if (err) {
-				callback(err);
-				return;
-			}
+        // derive PBKDF2 from password in web worker thread
+        self.deriveKey(args.password, self.keySize, function(err, derivedKey) {
+            if (err) {
+                callback(err);
+                return;
+            }
 
-			// remember pbkdf2 for later use
-			passBasedKey = derivedKey;
+            // remember pbkdf2 for later use
+            passBasedKey = derivedKey;
 
-			// check if key exists
-			if (!args.storedKeypair) {
-				// generate keys, encrypt and persist if none exists
-				generateKeypair(derivedKey);
-			} else {
-				// decrypt key
-				decryptKeypair(args.storedKeypair, derivedKey);
-			}
+            // check if key exists
+            if (!args.storedKeypair) {
+                // generate keys, encrypt and persist if none exists
+                generateKeypair(derivedKey);
+            } else {
+                // decrypt key
+                decryptKeypair(args.storedKeypair, derivedKey);
+            }
 
-		});
+        });
 
-		function generateKeypair(derivedKey) {
-			// generate RSA keypair in web worker
-			rsa.generateKeypair(self.rsaKeySize, function(err, generatedKeypair) {
-				if (err) {
-					callback(err);
-					return;
-				}
+        function generateKeypair(derivedKey) {
+            // generate RSA keypair in web worker
+            rsa.generateKeypair(self.rsaKeySize, function(err, generatedKeypair) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
 
-				// encrypt keypair
-				var iv = util.random(self.ivSize);
-				var encryptedPrivateKey = aes.encrypt(generatedKeypair.privkeyPem, derivedKey, iv);
+                // encrypt keypair
+                var iv = util.random(self.ivSize);
+                var encryptedPrivateKey = aes.encrypt(generatedKeypair.privkeyPem, derivedKey, iv);
 
-				// new encrypted keypair object
-				var newKeypair = {
-					publicKey: {
-						_id: generatedKeypair._id,
-						userId: self.emailAddress,
-						publicKey: generatedKeypair.pubkeyPem
-					},
-					privateKey: {
-						_id: generatedKeypair._id,
-						userId: self.emailAddress,
-						encryptedKey: encryptedPrivateKey,
-						iv: iv
-					}
-				};
+                // new encrypted keypair object
+                var newKeypair = {
+                    publicKey: {
+                        _id: generatedKeypair._id,
+                        userId: self.emailAddress,
+                        publicKey: generatedKeypair.pubkeyPem
+                    },
+                    privateKey: {
+                        _id: generatedKeypair._id,
+                        userId: self.emailAddress,
+                        encryptedKey: encryptedPrivateKey,
+                        iv: iv
+                    }
+                };
 
-				// return generated keypair for storage in keychain dao
-				callback(null, newKeypair);
-			});
-		}
+                // return generated keypair for storage in keychain dao
+                callback(null, newKeypair);
+            });
+        }
 
-		function decryptKeypair(storedKeypair, derivedKey) {
-			var decryptedPrivateKey;
+        function decryptKeypair(storedKeypair, derivedKey) {
+            var decryptedPrivateKey;
 
-			// validate input
-			if (!storedKeypair || !storedKeypair.privateKey || !storedKeypair.privateKey.encryptedKey || !storedKeypair.privateKey.iv) {
-				callback({
-					errMsg: 'Incomplete arguments for private key decryption!'
-				});
-				return;
-			}
+            // validate input
+            if (!storedKeypair || !storedKeypair.privateKey || !storedKeypair.privateKey.encryptedKey || !storedKeypair.privateKey.iv) {
+                callback({
+                    errMsg: 'Incomplete arguments for private key decryption!'
+                });
+                return;
+            }
 
-			// try to decrypt with derivedKey
-			try {
-				var prK = storedKeypair.privateKey;
-				decryptedPrivateKey = aes.decrypt(prK.encryptedKey, derivedKey, prK.iv);
-			} catch (ex) {
-				callback({
-					errMsg: 'Wrong password!'
-				});
-				return;
-			}
-			// set rsa keys
-			rsa.init(storedKeypair.publicKey.publicKey, decryptedPrivateKey, storedKeypair.publicKey._id);
+            // try to decrypt with derivedKey
+            try {
+                var prK = storedKeypair.privateKey;
+                decryptedPrivateKey = aes.decrypt(prK.encryptedKey, derivedKey, prK.iv);
+            } catch (ex) {
+                callback({
+                    errMsg: 'Wrong password!'
+                });
+                return;
+            }
+            // set rsa keys
+            rsa.init(storedKeypair.publicKey.publicKey, decryptedPrivateKey, storedKeypair.publicKey._id);
 
-			callback();
-		}
-	};
+            callback();
+        }
+    };
 
-	/**
-	 * Do PBKDF2 key derivation in a WebWorker thread
-	 */
-	self.deriveKey = function(password, keySize, callback) {
-		startWorker('/crypto/pbkdf2-worker.js', {
-			password: password,
-			keySize: keySize
-		}, callback, function() {
-			return pbkdf2.getKey(password, keySize);
-		});
-	};
+    /**
+     * Do PBKDF2 key derivation in a WebWorker thread
+     */
+    self.deriveKey = function(password, keySize, callback) {
+        startWorker('/crypto/pbkdf2-worker.js', {
+            password: password,
+            keySize: keySize
+        }, callback, function() {
+            return pbkdf2.getKey(password, keySize);
+        });
+    };
 
-	//
-	// En/Decrypts single item
-	//
+    //
+    // En/Decrypts single item
+    //
 
-	self.aesEncrypt = function(plaintext, key, iv, callback) {
-		startWorker('/crypto/aes-worker.js', {
-			type: 'encrypt',
-			plaintext: plaintext,
-			key: key,
-			iv: iv
-		}, callback, function() {
-			return self.aesEncryptSync(plaintext, key, iv);
-		});
-	};
+    self.aesEncrypt = function(plaintext, key, iv, callback) {
+        startWorker('/crypto/aes-worker.js', {
+            type: 'encrypt',
+            plaintext: plaintext,
+            key: key,
+            iv: iv
+        }, callback, function() {
+            return self.aesEncryptSync(plaintext, key, iv);
+        });
+    };
 
-	self.aesDecrypt = function(ciphertext, key, iv, callback) {
-		startWorker('/crypto/aes-worker.js', {
-			type: 'decrypt',
-			ciphertext: ciphertext,
-			key: key,
-			iv: iv
-		}, callback, function() {
-			return self.aesDecryptSync(ciphertext, key, iv);
-		});
-	};
+    self.aesDecrypt = function(ciphertext, key, iv, callback) {
+        startWorker('/crypto/aes-worker.js', {
+            type: 'decrypt',
+            ciphertext: ciphertext,
+            key: key,
+            iv: iv
+        }, callback, function() {
+            return self.aesDecryptSync(ciphertext, key, iv);
+        });
+    };
 
-	self.aesEncryptSync = function(plaintext, key, iv) {
-		return aes.encrypt(plaintext, key, iv);
-	};
+    self.aesEncryptSync = function(plaintext, key, iv) {
+        return aes.encrypt(plaintext, key, iv);
+    };
 
-	self.aesDecryptSync = function(ciphertext, key, iv) {
-		return aes.decrypt(ciphertext, key, iv);
-	};
+    self.aesDecryptSync = function(ciphertext, key, iv) {
+        return aes.decrypt(ciphertext, key, iv);
+    };
 
-	//
-	// En/Decrypt a list of items with AES in a WebWorker thread
-	//
+    //
+    // En/Decrypt a list of items with AES in a WebWorker thread
+    //
 
-	self.aesEncryptList = function(list, callback) {
-		startWorker('/crypto/aes-batch-worker.js', {
-			type: 'encrypt',
-			list: list
-		}, callback, function() {
-			return cryptoBatch.encryptList(list);
-		});
-	};
+    self.aesEncryptList = function(list, callback) {
+        startWorker('/crypto/aes-batch-worker.js', {
+            type: 'encrypt',
+            list: list
+        }, callback, function() {
+            return cryptoBatch.encryptList(list);
+        });
+    };
 
-	self.aesDecryptList = function(list, callback) {
-		startWorker('/crypto/aes-batch-worker.js', {
-			type: 'decrypt',
-			list: list
-		}, callback, function() {
-			return cryptoBatch.decryptList(list);
-		});
-	};
+    self.aesDecryptList = function(list, callback) {
+        startWorker('/crypto/aes-batch-worker.js', {
+            type: 'decrypt',
+            list: list
+        }, callback, function() {
+            return cryptoBatch.decryptList(list);
+        });
+    };
 
-	//
-	// En/Decrypt something speficially using the user's secret key
-	//
+    //
+    // En/Decrypt something speficially using the user's secret key
+    //
 
-	self.encryptListForUser = function(list, receiverPubkeys, callback) {
-		var envelope, envelopes = [];
+    self.encryptListForUser = function(list, receiverPubkeys, callback) {
+        var envelope, envelopes = [];
 
-		if (!receiverPubkeys || receiverPubkeys.length !== 1) {
-			callback({
-				errMsg: 'Encryption is currently implemented for only one receiver!'
-			});
-			return;
-		}
+        if (!receiverPubkeys || receiverPubkeys.length !== 1) {
+            callback({
+                errMsg: 'Encryption is currently implemented for only one receiver!'
+            });
+            return;
+        }
 
-		var keypair = rsa.exportKeys();
-		var senderPrivkey = {
-			_id: keypair._id,
-			privateKey: keypair.privkeyPem
-		};
+        var keypair = rsa.exportKeys();
+        var senderPrivkey = {
+            _id: keypair._id,
+            privateKey: keypair.privkeyPem
+        };
 
-		// package objects into batchable envelope format
-		list.forEach(function(i) {
-			envelope = {
-				id: i.id,
-				plaintext: i,
-				key: util.random(self.keySize),
-				iv: util.random(self.ivSize),
-				receiverPk: receiverPubkeys[0]._id
-			};
-			envelopes.push(envelope);
-		});
+        // package objects into batchable envelope format
+        list.forEach(function(i) {
+            envelope = {
+                id: i.id,
+                plaintext: i,
+                key: util.random(self.keySize),
+                iv: util.random(self.ivSize),
+                receiverPk: receiverPubkeys[0]._id
+            };
+            envelopes.push(envelope);
+        });
 
-		startWorker('/crypto/crypto-batch-worker.js', {
-			type: 'encrypt',
-			list: envelopes,
-			senderPrivkey: senderPrivkey,
-			receiverPubkeys: receiverPubkeys
-		}, callback, function() {
-			return cryptoBatch.encryptListForUser(envelopes, receiverPubkeys, senderPrivkey);
-		});
-	};
+        startWorker('/crypto/crypto-batch-worker.js', {
+            type: 'encrypt',
+            list: envelopes,
+            senderPrivkey: senderPrivkey,
+            receiverPubkeys: receiverPubkeys
+        }, callback, function() {
+            return cryptoBatch.encryptListForUser(envelopes, receiverPubkeys, senderPrivkey);
+        });
+    };
 
-	self.decryptListForUser = function(list, senderPubkeys, callback) {
-		if (!senderPubkeys || senderPubkeys < 1) {
-			callback({
-				errMsg: 'Sender public keys must be set!'
-			});
-			return;
-		}
+    self.decryptListForUser = function(list, senderPubkeys, callback) {
+        if (!senderPubkeys || senderPubkeys < 1) {
+            callback({
+                errMsg: 'Sender public keys must be set!'
+            });
+            return;
+        }
 
-		var keypair = rsa.exportKeys();
-		var receiverPrivkey = {
-			_id: keypair._id,
-			privateKey: keypair.privkeyPem
-		};
+        var keypair = rsa.exportKeys();
+        var receiverPrivkey = {
+            _id: keypair._id,
+            privateKey: keypair.privkeyPem
+        };
 
-		startWorker('/crypto/crypto-batch-worker.js', {
-			type: 'decrypt',
-			list: list,
-			receiverPrivkey: receiverPrivkey,
-			senderPubkeys: senderPubkeys
-		}, callback, function() {
-			return cryptoBatch.decryptListForUser(list, senderPubkeys, receiverPrivkey);
-		});
-	};
+        startWorker('/crypto/crypto-batch-worker.js', {
+            type: 'decrypt',
+            list: list,
+            receiverPrivkey: receiverPrivkey,
+            senderPubkeys: senderPubkeys
+        }, callback, function() {
+            return cryptoBatch.decryptListForUser(list, senderPubkeys, receiverPrivkey);
+        });
+    };
 
-	//
-	// Re-encrypt keys item and items seperately
-	//
+    //
+    // Re-encrypt keys item and items seperately
+    //
 
-	self.reencryptListKeysForUser = function(list, senderPubkeys, callback) {
-		var keypair = rsa.exportKeys();
-		var receiverPrivkey = {
-			_id: keypair._id,
-			privateKey: keypair.privkeyPem
-		};
+    self.reencryptListKeysForUser = function(list, senderPubkeys, callback) {
+        var keypair = rsa.exportKeys();
+        var receiverPrivkey = {
+            _id: keypair._id,
+            privateKey: keypair.privkeyPem
+        };
 
-		startWorker('/crypto/crypto-batch-worker.js', {
-			type: 'reencrypt',
-			list: list,
-			receiverPrivkey: receiverPrivkey,
-			senderPubkeys: senderPubkeys,
-			symKey: passBasedKey
-		}, callback, function() {
-			return cryptoBatch.reencryptListKeysForUser(list, senderPubkeys, receiverPrivkey, passBasedKey);
-		});
-	};
+        startWorker('/crypto/crypto-batch-worker.js', {
+            type: 'reencrypt',
+            list: list,
+            receiverPrivkey: receiverPrivkey,
+            senderPubkeys: senderPubkeys,
+            symKey: passBasedKey
+        }, callback, function() {
+            return cryptoBatch.reencryptListKeysForUser(list, senderPubkeys, receiverPrivkey, passBasedKey);
+        });
+    };
 
-	self.decryptKeysAndList = function(list, callback) {
-		startWorker('/crypto/crypto-batch-worker.js', {
-			type: 'decryptItems',
-			list: list,
-			symKey: passBasedKey
-		}, callback, function() {
-			return cryptoBatch.decryptKeysAndList(list, passBasedKey);
-		});
-	};
+    self.decryptKeysAndList = function(list, callback) {
+        startWorker('/crypto/crypto-batch-worker.js', {
+            type: 'decryptItems',
+            list: list,
+            symKey: passBasedKey
+        }, callback, function() {
+            return cryptoBatch.decryptKeysAndList(list, passBasedKey);
+        });
+    };
 
-	//
-	// helper functions
-	//
+    //
+    // helper functions
+    //
 
-	function startWorker(script, args, callback, noWorker) {
-		// check for WebWorker support
-		if (window.Worker) {
+    function startWorker(script, args, callback, noWorker) {
+        // check for WebWorker support
+        if (window.Worker) {
 
-			// init webworker thread
-			var worker = new Worker(app.config.workerPath + script);
+            // init webworker thread
+            var worker = new Worker(app.config.workerPath + script);
 
-			worker.onmessage = function(e) {
-				// return derived key from the worker
-				callback(null, e.data);
-			};
+            worker.onmessage = function(e) {
+                if (e.data.err) {
+                    callback(e.data.err);
+                    return;
+                }
+                // return result from the worker
+                callback(null, e.data);
+            };
 
-			// send data to the worker
-			worker.postMessage(args);
+            // send data to the worker
+            worker.postMessage(args);
 
-		} else {
-			// no WebWorker support... do synchronous call
-			var result = noWorker();
-			callback(null, result);
-		}
-	}
+        } else {
+            // no WebWorker support... do synchronous call
+            var result;
+            try {
+                result = noWorker();
+            } catch (e) {
+                callback({
+                    errMsg: (e.message) ? e.message : e
+                });
+                return;
+            }
 
-	return self;
+            callback(null, result);
+        }
+    }
+
+    return self;
 });

@@ -298,7 +298,7 @@ define(function(require) {
 
         /* message was not found in cache... fetch from imap server */
 
-        function messageReady(err, gottenMessage) {
+        function bodyReady(err, gottenMessage) {
             message = gottenMessage;
             itemCounter++;
             // remember how many items should be fetched before the callback fires
@@ -311,10 +311,10 @@ define(function(require) {
 
             // decrypt Message body
             if (message.body.indexOf(PREFIX) !== -1 && message.body.indexOf(SUFFIX) !== -1) {
-                decryptMessageBody(message, function(err, ptMessage) {
+                decryptBody(message, function(err, ptMessage) {
                     message = ptMessage;
                     // return decrypted message
-                    callback(null, message);
+                    callback(err, message);
                 });
                 return;
             }
@@ -325,7 +325,7 @@ define(function(require) {
             //check();
         }
 
-        function decryptMessageBody(email, callback) {
+        function decryptBody(email, callback) {
             var ctMessageBase64, ctMessage, pubkeyIds;
 
             // parse email body for encrypted message block
@@ -390,7 +390,8 @@ define(function(require) {
         self._imapClient.getMessage({
             path: options.folder,
             uid: options.uid,
-            onMessage: messageReady,
+            onBody: bodyReady,
+            onEnd: bodyReady
             /*onAttachment: attachmentReady*/
         });
     };
