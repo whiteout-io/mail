@@ -87,40 +87,11 @@
         var b = new ArrayBuffer(str.length);
         var buf = new Uint8Array(b);
 
-        for (var i = 0; i < b.byteLength; i++) {
+        for (var i = 0, len = b.byteLength; i < len; i++) {
             buf[i] = str.charCodeAt(i);
         }
 
         return b;
-    };
-
-    /**
-     * Creates a Blob from an ArrayBuffer using the BlobBuilder Api
-     * @param str [String] a binary string with integer values (0..255) per character
-     * @return [ArrayBuffer] either a data url or a filesystem url
-     */
-    Util.prototype.arrBuf2Blob = function(buf, mimeType) {
-        var b = new Uint8Array(buf);
-        var blob = new Blob([b], {
-            type: mimeType
-        });
-
-        return blob;
-    };
-
-    /**
-     * Creates a binary String from a Blob using the FileReader Api
-     * @param blob [Blob/File] a blob containing the the binary data
-     * @return [String] a binary string with integer values (0..255) per character
-     */
-    Util.prototype.blob2BinStr = function(blob, callback) {
-        var reader = new FileReader();
-
-        reader.onload = function(event) {
-            callback(event.target.result);
-        };
-
-        reader.readAsBinaryString(blob);
     };
 
     /**
@@ -134,7 +105,7 @@
         var b = new Uint8Array(buf);
         var str = '';
 
-        for (var i = 0; i < b.length; i++) {
+        for (var i = 0, len = b.length; i < len; i++) {
             str += String.fromCharCode(b[i]);
         }
 
@@ -149,7 +120,7 @@
     Util.prototype.uint8Arr2BinStr = function(buf) {
         var str = '';
 
-        for (var i = 0; i < buf.length; i++) {
+        for (var i = 0, len = buf.length; i < len; i++) {
             str += String.fromCharCode(buf[i]);
         }
 
@@ -164,7 +135,7 @@
     Util.prototype.binStr2Uint8Arr = function(str) {
         var c, buf = new Uint8Array(str.length);
 
-        for (var i = 0; i < buf.length; i++) {
+        for (var i = 0, len = buf.length; i < len; i++) {
             c = str.charCodeAt(i);
             buf[i] = (c & 0xff);
         }
