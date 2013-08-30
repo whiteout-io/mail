@@ -1,211 +1,220 @@
 (function() {
-	'use strict';
+    'use strict';
 
-	/**
-	 * Various utitity methods for crypto, encoding & decoding
-	 */
-	var Util = function(forge, uuid, crypt) {
+    /**
+     * Various utitity methods for crypto, encoding & decoding
+     */
+    var Util = function(forge, uuid, crypt) {
+        this._forge = forge;
+        this._uuid = uuid;
+        this._crypt = crypt;
+    };
 
-		/**
-		 * Generates a new RFC 4122 version 4 compliant random UUID
-		 */
-		this.UUID = function() {
-			return uuid.v4();
-		};
+    /**
+     * Generates a new RFC 4122 version 4 compliant random UUID
+     */
+    Util.prototype.UUID = function() {
+        return this._uuid.v4();
+    };
 
-		/**
-		 * Generates a cryptographically secure random base64-encoded key or IV
-		 * @param keySize [Number] The size of the key in bits (e.g. 128, 256)
-		 * @return [String] The base64 encoded key/IV
-		 */
-		this.random = function(keySize) {
-			var keyBase64, keyBuf;
+    /**
+     * Generates a cryptographically secure random base64-encoded key or IV
+     * @param keySize [Number] The size of the key in bits (e.g. 128, 256)
+     * @return [String] The base64 encoded key/IV
+     */
+    Util.prototype.random = function(keySize) {
+        var keyBase64, keyBuf;
 
-			if (typeof module !== 'undefined' && module.exports) {
-				// node.js
-				keyBuf = crypt.randomBytes(keySize / 8);
-				keyBase64 = new Buffer(keyBuf).toString('base64');
+        if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
+            // browser if secure rng exists
+            keyBuf = new Uint8Array(keySize / 8);
+            window.crypto.getRandomValues(keyBuf);
+            keyBase64 = window.btoa(this.uint8Arr2BinStr(keyBuf));
+        } else if (typeof module !== 'undefined' && module.exports) {
+            // node.js
+            keyBuf = this._crypt.randomBytes(keySize / 8);
+            keyBase64 = new Buffer(keyBuf).toString('base64');
+        } else {
+            // generate random bytes with fortuna algorithm from forge
+            keyBase64 = window.btoa(this._forge.random.getBytesSync(keySize / 8));
+        }
 
-			} else if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
-				// browser if secure rng exists
-				keyBuf = new Uint8Array(keySize / 8);
-				window.crypto.getRandomValues(keyBuf);
-				keyBase64 = window.btoa(this.uint8Arr2BinStr(keyBuf));
+        return keyBase64;
+    };
 
-			} else {
-				// generate random bytes with fortuna algorithm from forge
-				keyBase64 = window.btoa(forge.random.getBytesSync(keySize / 8));
-			}
+    /**
+     * Parse a date string with the following format "1900-01-31 18:17:53"
+     */
+    Util.prototype.parseDate = function(str) {
+        var parts = str.match(/(\d+)/g);
+        return new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5]);
+    };
 
-			return keyBase64;
-		};
+    /**
+     * Returns a string representation of a date in the format "1900-01-31 18:17:53"
+     */
+    Util.prototype.formatDate = function(date) {
+        var year = "" + date.getFullYear();
+        var month = "" + (date.getMonth() + 1);
+        if (month.length === 1) {
+            month = "0" + month;
+        }
+        var day = "" + date.getDate();
+        if (day.length === 1) {
+            day = "0" + day;
+        }
+        var hour = "" + date.getHours();
+        if (hour.length === 1) {
+            hour = "0" + hour;
+        }
+        var minute = "" + date.getMinutes();
+        if (minute.length === 1) {
+            minute = "0" + minute;
+        }
+        var second = "" + date.getSeconds();
+        if (second.length === 1) {
+            second = "0" + second;
+        }
+        return year + "-" + month + "-" + day + " " + hour + ":" + minute + ":" + second;
+    };
 
-		/**
-		 * Parse a date string with the following format "1900-01-31 18:17:53"
-		 */
-		this.parseDate = function(str) {
-			var parts = str.match(/(\d+)/g);
-			return new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5]);
-		};
+    /**
+     * Converts a binary String (e.g. from the FileReader Api) to an ArrayBuffer
+     * @param str [String] a binary string with integer values (0..255) per character
+     * @return [ArrayBuffer]
+     */
+    Util.prototype.binStr2ArrBuf = function(str) {
+        var b = new ArrayBuffer(str.length);
+        var buf = new Uint8Array(b);
 
-		/**
-		 * Returns a string representation of a date in the format "1900-01-31 18:17:53"
-		 */
-		this.formatDate = function(date) {
-			var year = "" + date.getFullYear();
-			var month = "" + (date.getMonth() + 1);
-			if (month.length === 1) {
-				month = "0" + month;
-			}
-			var day = "" + date.getDate();
-			if (day.length === 1) {
-				day = "0" + day;
-			}
-			var hour = "" + date.getHours();
-			if (hour.length === 1) {
-				hour = "0" + hour;
-			}
-			var minute = "" + date.getMinutes();
-			if (minute.length === 1) {
-				minute = "0" + minute;
-			}
-			var second = "" + date.getSeconds();
-			if (second.length === 1) {
-				second = "0" + second;
-			}
-			return year + "-" + month + "-" + day + " " + hour + ":" + minute + ":" + second;
-		};
+        for (var i = 0; i < b.byteLength; i++) {
+            buf[i] = str.charCodeAt(i);
+        }
 
-		/**
-		 * Converts a binary String (e.g. from the FileReader Api) to an ArrayBuffer
-		 * @param str [String] a binary string with integer values (0..255) per character
-		 * @return [ArrayBuffer]
-		 */
-		this.binStr2ArrBuf = function(str) {
-			var b = new ArrayBuffer(str.length);
-			var buf = new Uint8Array(b);
+        return b;
+    };
 
-			for (var i = 0; i < b.byteLength; i++) {
-				buf[i] = str.charCodeAt(i);
-			}
+    /**
+     * Creates a Blob from an ArrayBuffer using the BlobBuilder Api
+     * @param str [String] a binary string with integer values (0..255) per character
+     * @return [ArrayBuffer] either a data url or a filesystem url
+     */
+    Util.prototype.arrBuf2Blob = function(buf, mimeType) {
+        var b = new Uint8Array(buf);
+        var blob = new Blob([b], {
+            type: mimeType
+        });
 
-			return b;
-		};
+        return blob;
+    };
 
-		/**
-		 * Creates a Blob from an ArrayBuffer using the BlobBuilder Api
-		 * @param str [String] a binary string with integer values (0..255) per character
-		 * @return [ArrayBuffer] either a data url or a filesystem url
-		 */
-		this.arrBuf2Blob = function(buf, mimeType) {
-			var b = new Uint8Array(buf);
-			var blob = new Blob([b], {
-				type: mimeType
-			});
+    /**
+     * Creates a binary String from a Blob using the FileReader Api
+     * @param blob [Blob/File] a blob containing the the binary data
+     * @return [String] a binary string with integer values (0..255) per character
+     */
+    Util.prototype.blob2BinStr = function(blob, callback) {
+        var reader = new FileReader();
 
-			return blob;
-		};
+        reader.onload = function(event) {
+            callback(event.target.result);
+        };
 
-		/**
-		 * Creates a binary String from a Blob using the FileReader Api
-		 * @param blob [Blob/File] a blob containing the the binary data
-		 * @return [String] a binary string with integer values (0..255) per character
-		 */
-		this.blob2BinStr = function(blob, callback) {
-			var reader = new FileReader();
+        reader.readAsBinaryString(blob);
+    };
 
-			reader.onload = function(event) {
-				callback(event.target.result);
-			};
+    /**
+     * Converts an ArrayBuffer to a binary String. This is a slower alternative to
+     * conversion with arrBuf2Blob -> blob2BinStr, since these use native apis,
+     * but it can be used on browsers without the BlodBuilder Api
+     * @param buf [ArrayBuffer]
+     * @return [String] a binary string with integer values (0..255) per character
+     */
+    Util.prototype.arrBuf2BinStr = function(buf) {
+        var b = new Uint8Array(buf);
+        var str = '';
 
-			reader.readAsBinaryString(blob);
-		};
+        for (var i = 0; i < b.length; i++) {
+            str += String.fromCharCode(b[i]);
+        }
 
-		/**
-		 * Converts an ArrayBuffer to a binary String. This is a slower alternative to
-		 * conversion with arrBuf2Blob -> blob2BinStr, since these use native apis,
-		 * but it can be used on browsers without the BlodBuilder Api
-		 * @param buf [ArrayBuffer]
-		 * @return [String] a binary string with integer values (0..255) per character
-		 */
-		this.arrBuf2BinStr = function(buf) {
-			var b = new Uint8Array(buf);
-			var str = '';
+        return str;
+    };
 
-			for (var i = 0; i < b.length; i++) {
-				str += String.fromCharCode(b[i]);
-			}
+    /**
+     * Converts a UInt8Array to a binary String.
+     * @param buf [UInt8Array]
+     * @return [String] a binary string with integer values (0..255) per character
+     */
+    Util.prototype.uint8Arr2BinStr = function(buf) {
+        var str = '';
 
-			return str;
-		};
+        for (var i = 0; i < buf.length; i++) {
+            str += String.fromCharCode(buf[i]);
+        }
 
-		/**
-		 * Converts a UInt8Array to a binary String.
-		 * @param buf [UInt8Array]
-		 * @return [String] a binary string with integer values (0..255) per character
-		 */
-		this.uint8Arr2BinStr = function(buf) {
-			var str = '';
+        return str;
+    };
 
-			for (var i = 0; i < buf.length; i++) {
-				str += String.fromCharCode(buf[i]);
-			}
+    /**
+     * Converts a binary String (e.g. from the FileReader Api) to a UInt8Array
+     * @param str [String] a binary string with integer values (0..255) per character
+     * @return [UInt8Array]
+     */
+    Util.prototype.binStr2Uint8Arr = function(str) {
+        var c, buf = new Uint8Array(str.length);
 
-			return str;
-		};
+        for (var i = 0; i < buf.length; i++) {
+            c = str.charCodeAt(i);
+            buf[i] = (c & 0xff);
+        }
 
-		/**
-		 * Converts a binary String (e.g. from the FileReader Api) to a UInt8Array
-		 * @param str [String] a binary string with integer values (0..255) per character
-		 * @return [UInt8Array]
-		 */
-		this.binStr2Uint8Arr = function(str) {
-			var c, buf = new Uint8Array(str.length);
+        return buf;
+    };
 
-			for (var i = 0; i < buf.length; i++) {
-				c = str.charCodeAt(i);
-				buf[i] = (c & 0xff);
-			}
+    /**
+     * Convert a str to base64 in a browser and in node.js
+     */
+    Util.prototype.str2Base64 = function(str) {
+        if (typeof window !== 'undefined' && window.btoa) {
+            return window.btoa(str);
+        } else if (typeof module !== 'undefined' && module.exports) {
+            return new Buffer(str, 'binary').toString('base64');
+        } else {
+            return this._forge.util.encode64(str);
+        }
+    };
 
-			return buf;
-		};
+    /**
+     * Convert a base64 encoded string in a browser and in node.js
+     */
+    Util.prototype.base642Str = function(str) {
+        if (typeof window !== 'undefined' && window.atob) {
+            return window.atob(str);
+        } else if (typeof module !== 'undefined' && module.exports) {
+            return new Buffer(str, 'base64').toString('binary');
+        } else {
+            return this._forge.util.decode64(str);
+        }
+    };
 
-		/**
-		 * Convert a str to base64 in a browser and in node.js
-		 */
-		this.str2Base64 = function(str) {
-			if (typeof module !== 'undefined' && module.exports) {
-				return new Buffer(str, 'binary').toString('base64');
-			} else if (typeof window !== 'undefined' && window.btoa) {
-				return window.btoa(str);
-			} else {
-				return forge.util.encode64(str);
-			}
-		};
+    /**
+     * Validate an email address. This regex is taken from:
+     * http://stackoverflow.com/questions/46155/validate-email-address-in-javascript
+     */
+    Util.prototype.validateEmailAddress = function(emailAddress) {
+        var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+        return re.test(emailAddress);
+    };
 
-		/**
-		 * Convert a base64 encoded string in a browser and in node.js
-		 */
-		this.base642Str = function(str) {
-			if (typeof module !== 'undefined' && module.exports) {
-				return new Buffer(str, 'base64').toString('binary');
-			} else if (typeof window !== 'undefined' && window.atob) {
-				return window.atob(str);
-			} else {
-				return forge.util.decode64(str);
-			}
-		};
-
-	};
-
-	if (typeof define !== 'undefined' && define.amd) {
-		// AMD
-		define(['uuid', 'forge'], function(uuid, forge) {
-			return new Util(forge, uuid, undefined);
-		});
-	} else if (typeof module !== 'undefined' && module.exports) {
-		// node.js
-		module.exports = new Util(require('node-forge'), require('node-uuid'), require('crypto'));
-	}
+    if (typeof define !== 'undefined' && define.amd) {
+        // AMD
+        define(['uuid', 'forge'], function(uuid, forge) {
+            return new Util(forge, uuid, undefined);
+        });
+    } else if (typeof module !== 'undefined' && module.exports) {
+        // node.js
+        module.exports = new Util(require('node-forge'), require('node-uuid'), require('crypto'));
+    }
 
 })();

@@ -36,7 +36,7 @@ define(function(require) {
 
         // validate email address
         var emailAddress = self._account.emailAddress;
-        if (!validateEmail(emailAddress)) {
+        if (!util.validateEmailAddress(emailAddress)) {
             callback({
                 errMsg: 'The user email address must be specified!'
             });
@@ -124,7 +124,7 @@ define(function(require) {
 
         // validate email addresses
         _.each(email.to, function(i) {
-            if (!validateEmail(i.address)) {
+            if (!util.validateEmailAddress(i.address)) {
                 invalidRecipient = i.address;
             }
         });
@@ -134,7 +134,7 @@ define(function(require) {
             });
             return;
         }
-        if (!validateEmail(email.from[0].address)) {
+        if (!util.validateEmailAddress(email.from[0].address)) {
             callback({
                 errMsg: 'Invalid sender: ' + email.from
             });
@@ -598,7 +598,7 @@ define(function(require) {
         // validate email addresses
         var invalidRecipient;
         _.each(email.to, function(i) {
-            if (!validateEmail(i.address)) {
+            if (!util.validateEmailAddress(i.address)) {
                 invalidRecipient = i.address;
             }
         });
@@ -608,7 +608,7 @@ define(function(require) {
             });
             return;
         }
-        if (!validateEmail(email.from[0].address)) {
+        if (!util.validateEmailAddress(email.from[0].address)) {
             callback({
                 errMsg: 'Invalid sender: ' + email.from
             });
@@ -671,19 +671,6 @@ define(function(require) {
             });
         }
     };
-
-    //
-    // helper functions
-    //
-
-    /**
-     * Validates an email address
-     */
-
-    function validateEmail(email) {
-        var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-        return re.test(email);
-    }
 
     return EmailDAO;
 });
