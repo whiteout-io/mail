@@ -391,8 +391,8 @@ define(function(require) {
             path: options.folder,
             uid: options.uid,
             onBody: bodyReady,
-            onEnd: bodyReady
             /*onAttachment: attachmentReady*/
+            onEnd: bodyReady
         });
     };
 
