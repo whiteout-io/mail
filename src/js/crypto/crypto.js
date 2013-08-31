@@ -13,7 +13,9 @@ define(function(require) {
         app = require('js/app-config');
 
     var self = {},
-        passBasedKey;
+        passBasedKey,
+        BATCH_WORKER = '/crypto/crypto-batch-worker.js',
+        PBKDF2_WORKER = '/crypto/pbkdf2-worker.js';
 
     /**
      * Initializes the crypto modules by fetching the user's
@@ -118,11 +120,16 @@ define(function(require) {
      * Do PBKDF2 key derivation in a WebWorker thread
      */
     self.deriveKey = function(password, keySize, callback) {
-        startWorker('/crypto/pbkdf2-worker.js', {
-            password: password,
-            keySize: keySize
-        }, callback, function() {
-            return pbkdf2.getKey(password, keySize);
+        startWorker({
+            script: PBKDF2_WORKER,
+            args: {
+                password: password,
+                keySize: keySize
+            },
+            callback: callback,
+            noWorker: function() {
+                return pbkdf2.getKey(password, keySize);
+            }
         });
     };
 
@@ -147,27 +154,37 @@ define(function(require) {
             envelopes.push(envelope);
         });
 
-        startWorker('/crypto/crypto-batch-worker.js', {
-            type: 'symEncrypt',
-            list: envelopes
-        }, function(err, encryptedList) {
-            // return generated secret key
-            callback(err, {
-                key: key,
-                list: encryptedList
-            });
-        }, function() {
-            return cryptoBatch.authEncryptList(envelopes);
+        startWorker({
+            script: BATCH_WORKER,
+            args: {
+                type: 'symEncrypt',
+                list: envelopes
+            },
+            callback: function(err, encryptedList) {
+                // return generated secret key
+                callback(err, {
+                    key: key,
+                    list: encryptedList
+                });
+            },
+            noWorker: function() {
+                return cryptoBatch.authEncryptList(envelopes);
+            }
         });
     };
 
     self.symDecryptList = function(list, keys, callback) {
-        startWorker('/crypto/crypto-batch-worker.js', {
-            type: 'symDecrypt',
-            list: list,
-            keys: keys
-        }, callback, function() {
-            return cryptoBatch.authDecryptList(list, keys);
+        startWorker({
+            script: BATCH_WORKER,
+            args: {
+                type: 'symDecrypt',
+                list: list,
+                keys: keys
+            },
+            callback: callback,
+            noWorker: function() {
+                return cryptoBatch.authDecryptList(list, keys);
+            }
         });
     };
 
@@ -203,13 +220,18 @@ define(function(require) {
             envelopes.push(envelope);
         });
 
-        startWorker('/crypto/crypto-batch-worker.js', {
-            type: 'asymEncrypt',
-            list: envelopes,
-            senderPrivkey: senderPrivkey,
-            receiverPubkeys: receiverPubkeys
-        }, callback, function() {
-            return cryptoBatch.encryptListForUser(envelopes, receiverPubkeys, senderPrivkey);
+        startWorker({
+            script: BATCH_WORKER,
+            args: {
+                type: 'asymEncrypt',
+                list: envelopes,
+                senderPrivkey: senderPrivkey,
+                receiverPubkeys: receiverPubkeys
+            },
+            callback: callback,
+            noWorker: function() {
+                return cryptoBatch.encryptListForUser(envelopes, receiverPubkeys, senderPrivkey);
+            }
         });
     };
 
@@ -227,13 +249,18 @@ define(function(require) {
             privateKey: keypair.privkeyPem
         };
 
-        startWorker('/crypto/crypto-batch-worker.js', {
-            type: 'asymDecrypt',
-            list: list,
-            receiverPrivkey: receiverPrivkey,
-            senderPubkeys: senderPubkeys
-        }, callback, function() {
-            return cryptoBatch.decryptListForUser(list, senderPubkeys, receiverPrivkey);
+        startWorker({
+            script: BATCH_WORKER,
+            args: {
+                type: 'asymDecrypt',
+                list: list,
+                receiverPrivkey: receiverPrivkey,
+                senderPubkeys: senderPubkeys
+            },
+            callback: callback,
+            noWorker: function() {
+                return cryptoBatch.decryptListForUser(list, senderPubkeys, receiverPrivkey);
+            }
         });
     };
 
@@ -248,24 +275,34 @@ define(function(require) {
             privateKey: keypair.privkeyPem
         };
 
-        startWorker('/crypto/crypto-batch-worker.js', {
-            type: 'reencrypt',
-            list: list,
-            receiverPrivkey: receiverPrivkey,
-            senderPubkeys: senderPubkeys,
-            symKey: passBasedKey
-        }, callback, function() {
-            return cryptoBatch.reencryptListKeysForUser(list, senderPubkeys, receiverPrivkey, passBasedKey);
+        startWorker({
+            script: BATCH_WORKER,
+            args: {
+                type: 'reencrypt',
+                list: list,
+                receiverPrivkey: receiverPrivkey,
+                senderPubkeys: senderPubkeys,
+                symKey: passBasedKey
+            },
+            callback: callback,
+            noWorker: function() {
+                return cryptoBatch.reencryptListKeysForUser(list, senderPubkeys, receiverPrivkey, passBasedKey);
+            }
         });
     };
 
     self.decryptKeysAndList = function(list, callback) {
-        startWorker('/crypto/crypto-batch-worker.js', {
-            type: 'decryptItems',
-            list: list,
-            symKey: passBasedKey
-        }, callback, function() {
-            return cryptoBatch.decryptKeysAndList(list, passBasedKey);
+        startWorker({
+            script: BATCH_WORKER,
+            args: {
+                type: 'decryptItems',
+                list: list,
+                symKey: passBasedKey
+            },
+            callback: callback,
+            noWorker: function() {
+                return cryptoBatch.decryptKeysAndList(list, passBasedKey);
+            }
         });
     };
 
@@ -273,39 +310,36 @@ define(function(require) {
     // helper functions
     //
 
-    function startWorker(script, args, callback, noWorker) {
+    function startWorker(options) {
         // check for WebWorker support
         if (window.Worker) {
-
             // init webworker thread
-            var worker = new Worker(app.config.workerPath + script);
-
+            var worker = new Worker(app.config.workerPath + options.script);
             worker.onmessage = function(e) {
                 if (e.data.err) {
-                    callback(e.data.err);
+                    options.callback(e.data.err);
                     return;
                 }
                 // return result from the worker
-                callback(null, e.data);
+                options.callback(null, e.data);
             };
-
             // send data to the worker
-            worker.postMessage(args);
-
-        } else {
-            // no WebWorker support... do synchronous call
-            var result;
-            try {
-                result = noWorker();
-            } catch (e) {
-                callback({
-                    errMsg: (e.message) ? e.message : e
-                });
-                return;
-            }
-
-            callback(null, result);
+            worker.postMessage(options.args);
+            return;
         }
+
+        // no WebWorker support... do synchronous call
+        var result;
+        try {
+            result = options.noWorker();
+        } catch (e) {
+            // return error
+            options.callback({
+                errMsg: (e.message) ? e.message : e
+            });
+            return;
+        }
+        options.callback(null, result);
     }
 
     return self;
