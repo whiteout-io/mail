@@ -135,6 +135,21 @@ define(function(require) {
                     });
                 });
 
+                it('should work for a new user', function(done) {
+                    keychainStub.getReveiverPublicKey.yields(null, null);
+                    smtpClientStub.send.yields();
+
+                    emailDao.smtpSend(dummyMail, function(err) {
+                        expect(keychainStub.getReveiverPublicKey.calledOnce).to.be.true;
+                        expect(smtpClientStub.send.calledOnce).to.be.true;
+                        smtpClientStub.send.calledWith(sinon.match(function(o) {
+                            return typeof o.attachments === 'undefined';
+                        }));
+                        expect(err).to.not.exist;
+                        done();
+                    });
+                });
+
                 it('should work without attachments', function(done) {
                     keychainStub.getReveiverPublicKey.yields(null, {
                         _id: "fcf8b4aa-5d09-4089-8b4f-e3bc5091daf3",
