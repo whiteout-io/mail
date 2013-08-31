@@ -127,58 +127,47 @@ define(function(require) {
     };
 
     //
-    // En/Decrypts single item
-    //
-
-    self.aesEncrypt = function(plaintext, key, iv, callback) {
-        startWorker('/crypto/aes-worker.js', {
-            type: 'encrypt',
-            plaintext: plaintext,
-            key: key,
-            iv: iv
-        }, callback, function() {
-            return self.aesEncryptSync(plaintext, key, iv);
-        });
-    };
-
-    self.aesDecrypt = function(ciphertext, key, iv, callback) {
-        startWorker('/crypto/aes-worker.js', {
-            type: 'decrypt',
-            ciphertext: ciphertext,
-            key: key,
-            iv: iv
-        }, callback, function() {
-            return self.aesDecryptSync(ciphertext, key, iv);
-        });
-    };
-
-    self.aesEncryptSync = function(plaintext, key, iv) {
-        return aes.encrypt(plaintext, key, iv);
-    };
-
-    self.aesDecryptSync = function(ciphertext, key, iv) {
-        return aes.decrypt(ciphertext, key, iv);
-    };
-
-    //
     // En/Decrypt a list of items with AES in a WebWorker thread
     //
 
-    self.aesEncryptList = function(list, callback) {
-        startWorker('/crypto/aes-batch-worker.js', {
-            type: 'encrypt',
-            list: list
-        }, callback, function() {
-            return cryptoBatch.encryptList(list);
+    self.symEncryptList = function(list, callback) {
+        var key, envelope, envelopes = [];
+
+        // generate single secret key shared for all list items
+        key = util.random(self.keySize);
+
+        // package objects into batchable envelope format
+        list.forEach(function(i) {
+            envelope = {
+                id: i.id,
+                plaintext: i,
+                key: key,
+                iv: util.random(self.ivSize)
+            };
+            envelopes.push(envelope);
+        });
+
+        startWorker('/crypto/crypto-batch-worker.js', {
+            type: 'symEncrypt',
+            list: envelopes
+        }, function(err, encryptedList) {
+            // return generated secret key
+            callback(err, {
+                key: key,
+                list: encryptedList
+            });
+        }, function() {
+            return cryptoBatch.authEncryptList(envelopes);
         });
     };
 
-    self.aesDecryptList = function(list, callback) {
-        startWorker('/crypto/aes-batch-worker.js', {
-            type: 'decrypt',
-            list: list
+    self.symDecryptList = function(list, keys, callback) {
+        startWorker('/crypto/crypto-batch-worker.js', {
+            type: 'symDecrypt',
+            list: list,
+            keys: keys
         }, callback, function() {
-            return cryptoBatch.decryptList(list);
+            return cryptoBatch.authDecryptList(list, keys);
         });
     };
 
@@ -215,7 +204,7 @@ define(function(require) {
         });
 
         startWorker('/crypto/crypto-batch-worker.js', {
-            type: 'encrypt',
+            type: 'asymEncrypt',
             list: envelopes,
             senderPrivkey: senderPrivkey,
             receiverPubkeys: receiverPubkeys
@@ -239,7 +228,7 @@ define(function(require) {
         };
 
         startWorker('/crypto/crypto-batch-worker.js', {
-            type: 'decrypt',
+            type: 'asymDecrypt',
             list: list,
             receiverPrivkey: receiverPrivkey,
             senderPubkeys: senderPubkeys

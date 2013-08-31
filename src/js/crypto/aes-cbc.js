@@ -64,7 +64,7 @@
         var self = this;
 
         // validate args
-        if (!parts || !key) {
+        if (!parts || parts.length < 1 || !key) {
             throw new Error("Missing args for hmac processing!");
         }
 

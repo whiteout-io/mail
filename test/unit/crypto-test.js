@@ -56,22 +56,34 @@ define(['js/crypto/crypto', 'cryptoLib/util', 'test/test-data'], function(crypto
 		});
 	});
 
-	asyncTest("AES en/decrypt (Async/Worker)", 4, function() {
-		var secret = 'Big secret';
+	asyncTest("AES/HMAC encrypt batch (Async/Worker)", 2, function() {
+		// generate test data
+		var collection;
 
-		var key = util.random(cryptoTest.keySize);
-		var iv = util.random(cryptoTest.ivSize);
+		collection = testData.getEmailCollection(10);
+		cryptoTest.symlist = collection.toJSON();
 
-		crypto.aesEncrypt(secret, key, iv, function(err, ciphertext) {
-			ok(!err);
-			ok(ciphertext, 'Encrypt item');
+		crypto.symEncryptList(cryptoTest.symlist, function(err, result) {
+			ok(!err && result.key && result.list && result.list[0].hmac, 'Encrypt list for user');
+			equal(result.list.length, cryptoTest.symlist.length, 'Length of list');
+			cryptoTest.symEncryptedList = result.list;
+			cryptoTest.symKey = result.key;
 
-			crypto.aesDecrypt(ciphertext, key, iv, function(err, decrypted) {
-				ok(!err);
-				equal(decrypted, secret, 'Decrypt item');
+			start();
+		});
+	});
 
-				start();
-			});
+	asyncTest("AES/HMAC decrypt batch (Async/Worker)", 3, function() {
+		var keys = [];
+		for (var i = 0; i < cryptoTest.symEncryptedList.length; i++) {
+			keys.push(cryptoTest.symKey);
+		}
+		crypto.symDecryptList(cryptoTest.symEncryptedList, keys, function(err, decryptedList) {
+			ok(!err && decryptedList, 'Decrypt list');
+			equal(decryptedList.length, cryptoTest.symlist.length, 'Length of list');
+			deepEqual(decryptedList, cryptoTest.symlist, 'Decrypted list is correct');
+
+			start();
 		});
 	});
 

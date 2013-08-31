@@ -39,23 +39,47 @@
 	function doOperation(batch, i) {
 		var output;
 
-		if (i.type === 'encrypt' && i.receiverPubkeys && i.senderPrivkey && i.list) {
+		//
+		// Asymmetric encryption
+		//
+
+		if (i.type === 'asymEncrypt' && i.receiverPubkeys && i.senderPrivkey && i.list) {
 			// start encryption
 			output = batch.encryptListForUser(i.list, i.receiverPubkeys, i.senderPrivkey);
 
-		} else if (i.type === 'decrypt' && i.senderPubkeys && i.receiverPrivkey && i.list) {
+		} else if (i.type === 'asymDecrypt' && i.senderPubkeys && i.receiverPrivkey && i.list) {
 			// start decryption
 			output = batch.decryptListForUser(i.list, i.senderPubkeys, i.receiverPrivkey);
+		}
 
-		} else if (i.type === 'reencrypt' && i.senderPubkeys && i.receiverPrivkey && i.list && i.symKey) {
+		//
+		// Symmetric encryption
+		//
+		else if (i.type === 'symEncrypt' && i.list) {
+			// start encryption
+			output = batch.authEncryptList(i.list);
+
+		} else if (i.type === 'symDecrypt' && i.list && i.keys) {
+			// start decryption
+			output = batch.authDecryptList(i.list, i.keys);
+		}
+
+		//
+		// Reencryption of asymmetric items to symmetric items
+		//
+		else if (i.type === 'reencrypt' && i.senderPubkeys && i.receiverPrivkey && i.list && i.symKey) {
 			// start validation and re-encryption
 			output = batch.reencryptListKeysForUser(i.list, i.senderPubkeys, i.receiverPrivkey, i.symKey);
 
 		} else if (i.type === 'decryptItems' && i.symKey && i.list) {
 			// start decryption
 			output = batch.decryptKeysAndList(i.list, i.symKey);
+		}
 
-		} else {
+		//
+		// Error
+		//
+		else {
 			output = {
 				err: {
 					errMsg: 'Not all arguments for web worker crypto are defined!'
