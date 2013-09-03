@@ -31,7 +31,7 @@ body {
 
     @mixin marked {
         background-color: #00c6ff;
-        color: #ffffff;
+        color: #f9f9f9;
         .from {
             color: #ffffff;
         }
@@ -41,6 +41,17 @@ body {
         .from {
             color: #00c6ff;
         }
+    }
+
+    .unread {
+        position: absolute;
+        margin-top: 1.85em;
+        margin-left: 0.5em;
+        width: 0.9em;
+        height: 0.9em;
+        border-radius: 50%;
+        background: #00c6ff;
+        box-shadow: inset 0.5px 1px 0.5px #A4A4A4;
     }
 
     li {
@@ -79,6 +90,11 @@ body {
     }
     li.selected {
         @include marked;
+
+        .unread {
+            background: #f9f9f9;
+            box-shadow: inset 1px 1px 1px #D8D8D8;
+        }
     }
 }
 
