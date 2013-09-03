@@ -3,6 +3,8 @@
 $default-text-color: #333333;
 $blue-color: #00c6ff;
 $lightgrey-color: #f9f9f9;
+$blue-box-shadow-color: #A4A4A4;
+$lightgrey-box-shadow-color: #D8D8D8;
 
 /* global */
 
@@ -18,13 +20,32 @@ body {
     color: $default-text-color;
 }
 
-/* Inbox */
+/* folder name */
 
-.hamburger {
-    background-image:url('../img/Inbox.png');
-    background-repeat: no-repeat;
-    width: 55px;
-    height: 40px;
+.folder-name {
+    position: absolute;
+    padding: 13px 15px;
+
+    p {
+        font-size: 1.5em;
+    }
+}
+
+.hamburger-btn {
+    float: left;
+    background-color: $lightgrey-color;
+    height: 1em;
+    width: 1.3em;
+    margin-right: 10px;
+
+    .blue-box {
+        float: inherit;
+        background-color: $blue-color;
+        height: 5px;
+        width: 100%;
+        box-shadow: 1px 1px 1px $lightgrey-box-shadow-color;
+        margin-bottom: 0.16em;
+    }
 }
 
 /* message list */
@@ -54,7 +75,7 @@ body {
         height: 0.9em;
         border-radius: 50%;
         background: $blue-color;
-        box-shadow: inset 0.5px 1px 1px #A4A4A4;
+        box-shadow: inset 0.5px 1px 1px $blue-box-shadow-color;
     }
 
     li {
@@ -98,7 +119,7 @@ body {
 
         .unread {
             background: $lightgrey-color;
-            box-shadow: inset 1px 1px 1px #D8D8D8;
+            box-shadow: inset 1px 1px 1px $lightgrey-box-shadow-color;
         }
     }
 }
