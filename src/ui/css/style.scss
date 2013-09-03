@@ -67,7 +67,7 @@ body {
     @mixin marked {
         background-color: $blue-color;
         color: $lightgrey-color;
-        .from {
+         .sent-date, .from {
             color: $lightgrey-color;
         }
     }
@@ -119,16 +119,22 @@ body {
             margin-left: 32px;
             margin-right: 32px;
         }
-        p.from {
+        .from {
             font-size: 1.5em;
         }
-        p.subject {
+        .subject-line {
             font-size: 0.875em;
-            font-weight: bold;
             margin-top: 0.5em;
             margin-bottom: 0.5em;
         }
-        p.text-preview {
+        .subject {
+            font-weight: bold;
+        }
+        .sent-date {
+            float: right;
+            color: #D8D8D8;
+        }
+        .text-preview {
             font-size: 0.875em;
             height: 2em;
             overflow: hidden;
