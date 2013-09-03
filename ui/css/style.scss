@@ -2,7 +2,7 @@
     font-family: 'PT Sans';
     font-style: normal;
     font-weight: 400;
-    src: local('PT Sans'), local('PTSans-Regular'), url(../pt-sans.ttf) format('truetype');
+    src: local('PT Sans'), local('PTSans-Regular'), url(pt-sans.ttf) format('truetype');
 }
 
 body {
@@ -20,64 +20,65 @@ body {
 
 /* message list */
 
-@mixin marked {
-    background-color: #00c6ff;
-    color: #ffffff;
-    .from {
-        color: #ffffff;  
-    }
-}
-
-@mixin unmarked {
-    color: #000000;
-    .from {
-        color: #00c6ff;  
-    }
-}   
-
 .message-list {
     background-color: #f9f9f9;
     padding: 46px 15px;
     width: 314px;
 
     ul {
-        list-style-type: none;      
+        list-style-type: none;
+    }
 
-        .selected {    
-            @include marked;
-        }      
+    @mixin marked {
+        background-color: #00c6ff;
+        color: #ffffff;
+        .from {
+            color: #ffffff;
+        }
+    }
+    @mixin unmarked {
+        color: #000000;
+        .from {
+            color: #00c6ff;
+        }
     }
 
     li {
         background-color: #ffffff;
-        font-size: 14px;
         margin: 8px 0;
-        padding-top: 15px;
-        height: 105px;
+        padding: 10px 0;
+        height: 85px;
 
         @include unmarked;
 
         &:hover {
             background-color: #f9f9f9;
-            @include unmarked;
         }
         &:hover.selected {    
             @include marked;
         }
 
-        .from {
-            font-size: 24px;
-        }
-        .subject {            
-            font-weight: bold;
-        }
-        .text-preview {
-        }
-
         p {
-            margin-left: 30px;
-            margin-right: 30px;
+            margin-left: 32px;
+            margin-right: 32px;
         }
+        p.from {
+            font-size: 1.5em;
+        }
+        p.subject {
+            font-size: 0.875em;
+            font-weight: bold;
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+        }
+        p.text-preview {
+            font-size: 0.875em;
+            height: 2em;
+            overflow: hidden;
+        }
+    }
+    li.selected {
+        @include marked;
     }
 }
 
