@@ -67,15 +67,31 @@ body {
         }
     }
 
-    .unread {
+    @mixin read-bubble {
         position: absolute;
         margin-top: 1.85em;
         margin-left: 0.5em;
         width: 0.9em;
         height: 0.9em;
         border-radius: 50%;
+    }
+    @mixin read-bubble-grey {
+            background: $lightgrey-color;
+            box-shadow: inset 1px 1px 1px $lightgrey-box-shadow-color;
+    }
+    @mixin read-bubble-blue {
         background: $blue-color;
         box-shadow: inset 0.5px 1px 1px $blue-box-shadow-color;
+    }
+
+    .unread {
+        @include read-bubble;
+        @include read-bubble-blue;
+    }
+
+    .read {
+        @include read-bubble;
+        @include read-bubble-grey;
     }
 
     li {
@@ -118,8 +134,7 @@ body {
         @include marked;
 
         .unread {
-            background: $lightgrey-color;
-            box-shadow: inset 1px 1px 1px $lightgrey-box-shadow-color;
+            @include read-bubble-grey;
         }
     }
 }
