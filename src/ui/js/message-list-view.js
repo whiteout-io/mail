@@ -7,10 +7,14 @@ $(document).ready(function() {
 function setListeners() {
     var li = $('li');
 
-    li.mousedown(function() {
+    if ("ontouchstart" in window) {
+        li.on('touchstart', select);
+    } else {
+        li.mousedown(select);
+    }
+
+    function select() {
         li.toggleClass('selected', false);
         $(this).toggleClass('selected');
-    });
-
-    li.mouseup(function() {});
+    }
 }

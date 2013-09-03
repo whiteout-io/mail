@@ -55,6 +55,11 @@ body {
     padding: 46px 15px;
     width: 314px;
 
+    /* Landscape phone to portrait tablet */
+    @media (max-width: 767px) {
+        width: 100%;
+    }
+
     ul {
         list-style-type: none;
     }
@@ -69,7 +74,7 @@ body {
 
     @mixin read-bubble {
         position: absolute;
-        margin-top: 1.85em;
+        margin-top: 1.95em;
         margin-left: 0.5em;
         width: 0.9em;
         height: 0.9em;
@@ -138,4 +143,3 @@ body {
         }
     }
 }
-
