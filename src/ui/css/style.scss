@@ -1,3 +1,11 @@
+/* colors */
+
+$default-text-color: #333333;
+$blue-color: #00c6ff;
+$lightgrey-color: #f9f9f9;
+
+/* global */
+
 @font-face {
     font-family: 'PT Sans';
     font-style: normal;
@@ -7,6 +15,7 @@
 
 body {
     font-family: 'PT Sans', sans-serif;
+    color: $default-text-color;
 }
 
 /* Inbox */
@@ -21,7 +30,7 @@ body {
 /* message list */
 
 .message-list {
-    background-color: #f9f9f9;
+    background-color: $lightgrey-color;
     padding: 46px 15px;
     width: 314px;
 
@@ -30,16 +39,10 @@ body {
     }
 
     @mixin marked {
-        background-color: #00c6ff;
-        color: #f9f9f9;
+        background-color: $blue-color;
+        color: $lightgrey-color;
         .from {
-            color: #ffffff;
-        }
-    }
-    @mixin unmarked {
-        color: #000000;
-        .from {
-            color: #00c6ff;
+            color: $lightgrey-color;
         }
     }
 
@@ -50,20 +53,21 @@ body {
         width: 0.9em;
         height: 0.9em;
         border-radius: 50%;
-        background: #00c6ff;
-        box-shadow: inset 0.5px 1px 0.5px #A4A4A4;
+        background: $blue-color;
+        box-shadow: inset 0.5px 1px 1px #A4A4A4;
     }
 
     li {
-        background-color: #ffffff;
+        background-color: white;
         margin: 8px 0;
         padding: 10px 0;
         height: 85px;
-
-        @include unmarked;
+        .from {
+            color: $blue-color;
+        }
 
         &:hover {
-            background-color: #f9f9f9;
+            background-color: $lightgrey-color;
         }
         &:hover.selected {    
             @include marked;
@@ -88,11 +92,12 @@ body {
             overflow: hidden;
         }
     }
+
     li.selected {
         @include marked;
 
         .unread {
-            background: #f9f9f9;
+            background: $lightgrey-color;
             box-shadow: inset 1px 1px 1px #D8D8D8;
         }
     }
