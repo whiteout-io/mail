@@ -1,0 +1,24 @@
+<div class="folder-name">
+  <p>
+    <span class="hamburger-btn">
+      <span class="blue-box blue-box-margin"></span>
+      <span class="blue-box blue-box-margin"></span>
+      <span class="blue-box blue-box-margin"></span>
+    </span>
+    Inbox
+  </p>
+</div><!--/.folder-name-->
+
+<div class="message-list">
+  <ul>
+    <li ng-repeat="email in emails" ng-class="{selected: email === selected}" ng-click="select(email)">
+      <div ng-class="{unread: email.unread, read: !email.unread}"></div>
+      <p class="from">{{email.from[0].name}}</p>
+      <p class="subject-line">
+        <span class="subject">{{email.subject}}</span>
+        <span class="sent-date">{{email.sentDate}}</span>
+      </p>
+      <p class="text-preview">{{email.body}}</p>
+    </li>
+  </ul>
+</div><!--/.message-list-->
