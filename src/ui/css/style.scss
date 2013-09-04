@@ -60,10 +60,6 @@ body {
         width: 100%;
     }
 
-    ul {
-        list-style-type: none;
-    }
-
     @mixin marked {
         background-color: $blue-color;
         color: $lightgrey-color;
@@ -136,7 +132,8 @@ body {
         }
         .text-preview {
             font-size: 0.875em;
-            height: 2em;
+            line-height: 1.2em;
+            height: 2.4em;
             overflow: hidden;
         }
     }
