@@ -16,7 +16,7 @@ var Email = function(unread) {
 
 function MessageListCtrl($scope) {
     $scope.folderName = 'Inbox';
-    $scope.emails = [new Email(true), new Email(true), new Email(false)];
+    $scope.emails = [new Email(true), new Email(true), new Email(false), new Email(false), new Email(false), new Email(false)];
 
     $scope.select = function(email) {
         $scope.selected = email;
