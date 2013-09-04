@@ -1,5 +1,5 @@
 define(['js/dao/email-dao', 'js/dao/keychain-dao', 'js/dao/lawnchair-dao',
-		'js/crypto/crypto', 'js/dao/devicestorage-dao', 'test/test-data', 'js/app-config'
+	'js/crypto/crypto', 'js/dao/devicestorage-dao', 'test/test-data', 'js/app-config'
 ], function(EmailDAO, KeychainDAO, jsonDao, crypto, storage, testData, app) {
 	'use strict';
 
@@ -60,13 +60,13 @@ define(['js/dao/email-dao', 'js/dao/keychain-dao', 'js/dao/lawnchair-dao',
 
 			var receiverPubkeys = [keypair.publicKey];
 
-			crypto.encryptListForUser(emaildaoTest.list.toJSON(), receiverPubkeys, function(err, encryptedList) {
+			crypto.encryptListForUser(emaildaoTest.list, receiverPubkeys, function(err, encryptedList) {
 				ok(!err);
 				equal(encryptedList.length, emaildaoTest.list.length, 'Encrypt list');
 
 				// add sent date to encrypted items
 				for (var i = 0; i < encryptedList.length; i++) {
-					encryptedList[i].sentDate = emaildaoTest.list.at(i).get('sentDate');
+					encryptedList[i].sentDate = emaildaoTest.list[i].sentDate;
 				}
 
 				// set encrypted test list as return value for cloud storage stub
@@ -87,7 +87,7 @@ define(['js/dao/email-dao', 'js/dao/keychain-dao', 'js/dao/lawnchair-dao',
 		emaildaoTest.emailDao.listItems('inbox', 0, emaildaoTest.list.length, function(err, gotten) {
 			ok(!err);
 
-			var reference = emaildaoTest.list.toJSON();
+			var reference = emaildaoTest.list;
 
 			deepEqual(gotten, reference, 'Compare collection');
 
@@ -96,7 +96,7 @@ define(['js/dao/email-dao', 'js/dao/keychain-dao', 'js/dao/lawnchair-dao',
 	});
 
 	asyncTest("Get item", 1, function() {
-		var item = emaildaoTest.list.toJSON()[0];
+		var item = emaildaoTest.list[0];
 		var mail = emaildaoTest.emailDao.getItem('inbox', item.id);
 		deepEqual(mail, item, 'Item correct');
 		start();

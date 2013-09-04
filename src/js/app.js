@@ -1,10 +1,10 @@
 // hey Angular, we're bootstrapping manually!
 window.name = 'NG_DEFER_BOOTSTRAP!';
 
-require(['angular', 'js/controller/message-list', 'angularRoute', 'js/app-config'], function(angular, MessageListCtrl) {
+require(['angular', 'js/controller/message-list', 'angularRoute', 'angularTouch', 'js/app-config'], function(angular, MessageListCtrl) {
     'use strict';
 
-    var app = angular.module('mail', ['ngRoute']);
+    var app = angular.module('mail', ['ngRoute', 'ngTouch']);
     app.config(function($routeProvider) {
         $routeProvider.when('/', {
             templateUrl: 'tpl/message-list.html',

@@ -58,10 +58,7 @@ define(['js/crypto/crypto', 'cryptoLib/util', 'test/test-data'], function(crypto
 
 	asyncTest("AES/HMAC encrypt batch (Async/Worker)", 2, function() {
 		// generate test data
-		var collection;
-
-		collection = testData.getEmailCollection(10);
-		cryptoTest.symlist = collection.toJSON();
+		cryptoTest.symlist = testData.getEmailCollection(10);
 
 		crypto.symEncryptList(cryptoTest.symlist, function(err, result) {
 			ok(!err && result.key && result.list && result.list[0].hmac, 'Encrypt list for user');
@@ -89,10 +86,7 @@ define(['js/crypto/crypto', 'cryptoLib/util', 'test/test-data'], function(crypto
 
 	asyncTest("AES/RSA encrypt batch for User (Async/Worker)", 2, function() {
 		// generate test data
-		var collection;
-
-		collection = testData.getEmailCollection(10);
-		cryptoTest.list = collection.toJSON();
+		cryptoTest.list = testData.getEmailCollection(10);
 
 		var receiverPubkeys = [cryptoTest.generatedKeypair.publicKey];
 

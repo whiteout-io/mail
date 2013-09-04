@@ -5,7 +5,6 @@ define([], function() {
 	 * Create the application namespace
 	 */
 	var app = {
-		model: {},
 		util: {}
 	};
 

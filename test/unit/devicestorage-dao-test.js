@@ -1,5 +1,5 @@
 define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/lawnchair-dao',
-		'js/dao/devicestorage-dao', 'test/test-data'
+	'js/dao/devicestorage-dao', 'test/test-data'
 ], function(_, util, crypto, jsonDao, storage, testData) {
 	'use strict';
 
@@ -19,7 +19,7 @@ define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/lawnchair-da
 		ok(storage, 'DeviceStorageDAO');
 
 		// generate test data
-		devicestorageTest.list = testData.getEmailCollection(100).toJSON();
+		devicestorageTest.list = testData.getEmailCollection(100);
 
 		// init crypto
 		crypto.init({
