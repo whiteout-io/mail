@@ -19,12 +19,6 @@ define(function(require) {
      * Start the application by loading the view templates
      */
     self.start = function(callback) {
-        // the views to load
-        var views = [
-            'login', 'compose', 'folderlist', 'folderlistitem',
-            'messagelist', 'messagelistitem', 'read'
-        ];
-
         // are we running in native app or in browser?
         if (document.URL.indexOf("http") === 0 || document.URL.indexOf("app") === 0 || document.URL.indexOf("chrome") === 0) {
             console.log('Assuming Browser environment...');
@@ -36,7 +30,7 @@ define(function(require) {
 
         function onDeviceReady() {
             console.log('Starting app.');
-            loadTemplates(views, callback);
+            callback();
         }
     };
 
@@ -187,23 +181,6 @@ define(function(require) {
         };
         self._emailDao.init(account, password, callback);
     };
-
-    function loadTemplates(names, callback) {
-        var loadTemplate = function(index) {
-            var name = names[index];
-            console.log('Loading template: ' + name);
-            $.get('tpl/' + name + '.html', function(data) {
-                app.util.tpl.templates[name] = data;
-                index++;
-                if (index < names.length) {
-                    loadTemplate(index);
-                } else {
-                    callback();
-                }
-            });
-        };
-        loadTemplate(0);
-    }
 
     return self;
 });

@@ -16,9 +16,18 @@
 			lawnchairIDB: 'lawnchair/lawnchair-adapter-indexed-db-git',
 			cordova: 'cordova-2.5.0',
 			ImapClient: 'imap-client-browserified',
-			SmtpClient: 'smtp-client-browserified'
+			SmtpClient: 'smtp-client-browserified',
+			angular: 'angular/angular.min',
+			angularRoute: 'angular/angular-route.min'
 		},
 		shim: {
+			angular: {
+				exports: 'angular'
+			},
+			angularRoute: {
+				exports: 'angular',
+				deps: ['angular']
+			},
 			lawnchair: {
 				exports: 'Lawnchair'
 			},
@@ -38,7 +47,10 @@
 			jquerymobile: {
 				deps: ['jquery', 'js/jqm-config']
 			}
-		}
+		},
+		priority: [
+			"angular"
+		]
 	});
 
 }());

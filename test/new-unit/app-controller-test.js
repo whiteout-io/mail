@@ -42,9 +42,7 @@ define(function(require) {
 
         describe('start', function() {
             it('should not explode', function(done) {
-                $.get.yields('<div></div>');
                 controller.start(function(err) {
-                    expect($.get.called).to.be.true;
                     expect(err).to.not.exist;
                     done();
                 });

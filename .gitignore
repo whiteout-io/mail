@@ -3,3 +3,5 @@ npm-debug.log
 .DS_Store
 *-browserified.js
 test/new-unit/lib/
+.sass-cache
+src/css/style.css
