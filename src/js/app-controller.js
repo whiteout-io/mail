@@ -34,84 +34,7 @@ define(function(require) {
         }
     };
 
-    /**
-     * Executes a number of commands
-     */
-    self.execute = function(cmd, args, callback) {
-        if (cmd === 'login') {
-            // login user
-            fetchOAuthToken(args.password, function(err, userId) {
-                callback({
-                    err: err,
-                    userId: userId
-                });
-            });
-
-        } else if (cmd === 'listFolders') {
-            // list folders in users mailbox
-            self._emailDao.imapListFolders(function(err, folders) {
-                callback({
-                    err: err,
-                    folders: folders
-                });
-            });
-
-        } else if (cmd === 'syncEmails') {
-            // self._emailDao.syncFromCloud(args.folder, function(err) {
-            //  callback({
-            //      err: err
-            //  });
-            // });
-
-            // Syncing to local storage is not yet supported for imap
-            callback({
-                err: 'Not yet implemented!'
-            });
-
-        } else if (cmd === 'listEmails') {
-            // list emails from folder
-            self._emailDao.imapListMessages(args, function(err, emails) {
-                callback({
-                    err: err,
-                    emails: emails
-                });
-            });
-
-        } else if (cmd === 'getEmail') {
-            // list emails from folder
-            self._emailDao.imapGetMessage({
-                folder: args.folder,
-                uid: args.messageId
-            }, function(err, email) {
-                callback({
-                    err: err,
-                    email: email
-                });
-            });
-
-        } else if (cmd === 'sendEmail') {
-            // list emails from folder
-            self._emailDao.smtpSend(args.email, function(err) {
-                callback({
-                    err: err
-                });
-            });
-
-        } else {
-            // error: invalid message from sandbox
-            callback({
-                err: {
-                    errMsg: 'Invalid message posted from sandbox!'
-                }
-            });
-        }
-    };
-
-    //
-    // Helper methods
-    //
-
-    function fetchOAuthToken(password, callback) {
+    self.fetchOAuthToken = function(password, callback) {
         // get OAuth Token from chrome
         chrome.identity.getAuthToken({
                 'interactive': true
@@ -139,7 +62,7 @@ define(function(require) {
 
             }
         );
-    }
+    };
 
     self.login = function(userId, password, token, callback) {
         var auth, imapOptions, smtpOptions,

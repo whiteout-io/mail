@@ -49,76 +49,14 @@ define(function(require) {
             });
         });
 
-        describe('execute', function() {
-            describe('login', function() {
-                it('should work', function(done) {
-                    controller.execute('login', {
-                        password: appControllerTest.passphrase
-                    }, function(resArgs) {
-                        expect(resArgs.err).to.not.exist;
-                        expect(resArgs.userId).to.equal(appControllerTest.user);
-                        expect($.ajax.calledOnce).to.be.true;
-                        expect(window.chrome.identity.getAuthToken.calledOnce).to.be.true;
-                        done();
-                    });
-                });
-            });
-
-            describe('sendEmail', function() {
-                it('should work', function(done) {
-                    controller._emailDao.smtpSend.yields();
-                    controller.execute('sendEmail', {
-                        password: appControllerTest.passphrase
-                    }, function(resArgs) {
-                        expect(resArgs.err).to.not.exist;
-                        expect(controller._emailDao.smtpSend.calledOnce).to.be.true;
-                        done();
-                    });
-                });
-            });
-
-            describe('listFolders', function() {
-                it('should work', function(done) {
-                    controller._emailDao.imapListFolders.yields(null, ['inbox', 'sent']);
-                    controller.execute('listFolders', {
-                        password: appControllerTest.passphrase
-                    }, function(resArgs) {
-                        expect(resArgs.err).to.not.exist;
-                        expect(resArgs.folders[1]).to.equal('sent');
-                        expect(controller._emailDao.imapListFolders.calledOnce).to.be.true;
-                        done();
-                    });
-                });
-            });
-
-            describe('listEmails', function() {
-                it('should work', function(done) {
-                    controller._emailDao.imapListMessages.yields(null, []);
-                    controller.execute('listEmails', {
-                        folder: 'INBOX',
-                        offset: 0,
-                        num: 10
-                    }, function(resArgs) {
-                        expect(resArgs.err).to.not.exist;
-                        expect(resArgs.emails).to.a('Array');
-                        expect(controller._emailDao.imapListMessages.calledOnce).to.be.true;
-                        done();
-                    });
-                });
-            });
-
-            describe('getEmail', function() {
-                it('should work', function(done) {
-                    controller._emailDao.imapGetMessage.yields(null, {});
-                    controller.execute('getEmail', {
-                        folder: 'INBOX',
-                        messageId: 415
-                    }, function(resArgs) {
-                        expect(resArgs.err).to.not.exist;
-                        expect(resArgs.email).to.a('Object');
-                        expect(controller._emailDao.imapGetMessage.calledOnce).to.be.true;
-                        done();
-                    });
+        describe('login', function() {
+            it('should work', function(done) {
+                controller.fetchOAuthToken(appControllerTest.passphrase, function(err, userId) {
+                    expect(err).to.not.exist;
+                    expect(userId).to.equal(appControllerTest.user);
+                    expect($.ajax.calledOnce).to.be.true;
+                    expect(window.chrome.identity.getAuthToken.calledOnce).to.be.true;
+                    done();
                 });
             });
         });

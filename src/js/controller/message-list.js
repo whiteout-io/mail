@@ -1,28 +1,40 @@
-define(function() {
+define(function(require) {
     'use strict';
 
-    var Email = function(unread) {
-        this.from = [{
-            name: 'Whiteout Support',
-            address: 'support@whiteout.io'
-        }]; // sender address
-        this.to = [{
-            address: 'max.musterman@gmail.com'
-        }]; // list of receivers
-        this.unread = unread;
-        this.sentDate = '7:23 PM';
-        this.subject = "Welcome Max"; // Subject line
-        this.body = "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy."; // plaintext body
-    };
+    var appController = require('js/app-controller');
 
     var MessageListCtrl = function($scope) {
         $scope.folderName = 'Inbox';
-        $scope.emails = [new Email(true), new Email(true), new Email(false), new Email(false), new Email(false), new Email(false)];
 
         $scope.select = function(email) {
             $scope.selected = email;
         };
+
+        fetchList(function(err, emails) {
+            if (err) {
+                console.log(err);
+                return;
+            }
+
+            $scope.emails = emails;
+            $scope.$apply();
+        });
     };
+
+    function fetchList(callback) {
+        appController.fetchOAuthToken('passphrase', function(err) {
+            if (err) {
+                console.log(err);
+                return;
+            }
+
+            appController._emailDao.imapListMessages({
+                folder: 'INBOX',
+                offset: -6,
+                num: 0
+            }, callback);
+        });
+    }
 
     return MessageListCtrl;
 });
