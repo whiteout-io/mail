@@ -17,7 +17,8 @@
 			SmtpClient: 'smtp-client-browserified',
 			angular: 'angular/angular.min',
 			angularRoute: 'angular/angular-route.min',
-			angularTouch: 'angular/angular-touch.min'
+			angularTouch: 'angular/angular-touch.min',
+			moment: 'moment.min'
 		},
 		shim: {
 			angular: {

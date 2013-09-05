@@ -1,7 +1,8 @@
 define(function(require) {
     'use strict';
 
-    var appController = require('js/app-controller');
+    var appController = require('js/app-controller'),
+        moment = require('moment');
 
     var MessageListCtrl = function($scope) {
         $scope.folderName = 'Inbox';
@@ -10,12 +11,7 @@ define(function(require) {
             $scope.selected = email;
         };
 
-        fetchList(function(err, emails) {
-            if (err) {
-                console.log(err);
-                return;
-            }
-
+        fetchList(function(emails) {
             $scope.emails = emails;
             $scope.$apply();
         });
@@ -32,7 +28,19 @@ define(function(require) {
                 folder: 'INBOX',
                 offset: -6,
                 num: 0
-            }, callback);
+            }, function(err, emails) {
+                if (err) {
+                    console.log(err);
+                    return;
+                }
+
+                emails.forEach(function(email) {
+                    // set display date
+                    email.displayDate = moment(email.sentDate).format('DD.MM.YY');
+                });
+
+                callback(emails);
+            });
         });
     }
 
