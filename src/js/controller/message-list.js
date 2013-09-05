@@ -11,7 +11,15 @@ define(function(require) {
             $scope.selected = email;
         };
 
-        createDummyMails(function(emails) {
+        if (true) {
+            createDummyMails(function(emails) {
+                $scope.emails = emails;
+                $scope.$apply();
+            });
+            return;
+        }
+
+        fetchList(function(emails) {
             $scope.emails = emails;
             $scope.$apply();
         });
