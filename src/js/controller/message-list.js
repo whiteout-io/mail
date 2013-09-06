@@ -4,8 +4,9 @@ define(function(require) {
     var appController = require('js/app-controller'),
         moment = require('moment');
 
-    var MessageListCtrl = function($scope) {
-        $scope.folderName = 'Inbox';
+    var MessageListCtrl = function($scope, $routeParams) {
+        $scope.folder = $routeParams.folder;
+        $scope.messageId = $routeParams.messageId;
 
         $scope.select = function(email) {
             $scope.selected = email;
@@ -14,7 +15,7 @@ define(function(require) {
         if (true) {
             createDummyMails(function(emails) {
                 $scope.emails = emails;
-                $scope.$apply();
+                $scope.select($scope.emails[0]);
             });
             return;
         }
@@ -59,6 +60,7 @@ define(function(require) {
 
     function createDummyMails(callback) {
         var Email = function(unread) {
+            this.uid = '1';
             this.from = [{
                 name: 'Whiteout Support',
                 address: 'support@whiteout.io'
@@ -68,6 +70,7 @@ define(function(require) {
             }]; // list of receivers
             this.unread = unread;
             this.displayDate = '23.08.13';
+            this.longDisplayDate = 'Wednesday, 23.08.2013 19:23';
             this.subject = "Welcome Max"; // Subject line
             this.body = "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy."; // plaintext body
         };

@@ -1,0 +1,8 @@
+<div class="read-message">
+    <p>{{selected.subject}}</p>
+    <p>{{selected.longDisplayDate}}</p>
+    <p>From: {{selected.from[0].name}}</p>
+    <p>To: <span ng-repeat="t in selected.to">{{t.address}} </span></p>
+    <p>CC: <span ng-repeat="t in selected.cc">{{t.address}} </span></p>
+    <p>{{selected.body}}</p>
+</div>
