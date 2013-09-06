@@ -31,12 +31,7 @@
 .message-list {
     background-color: $lightgrey-color;
     padding: 46px 15px;
-    width: 314px;
-
-    /* Landscape phone to portrait tablet */
-    @media (max-width: 767px) {
-        width: inherit;
-    }
+    width: inherit;
 
     @mixin marked {
         background-color: $blue-color;
