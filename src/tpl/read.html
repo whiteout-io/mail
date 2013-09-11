@@ -10,7 +10,7 @@
   <div class="circle">
     <div class="icon-delete"></div>
   </div>
-</div>
+</div><!--/.buttons-->
 
 <div class="read-message">
   <p class="subject">{{selected.subject}}</p>
@@ -24,11 +24,11 @@
         CC: <span class="address" ng-repeat="t in selected.cc">{{t.address}} </span>
       </p>
     </div>
-  </div>
+  </div><!--/.address-headers-->
 
   <div class="seperator-line"></div>
 
   <div class="body">
     <p ng-repeat="part in selected.bodyDisplayParts">{{part}}</p>
   </div>
-</div>
+</div><!--/.read-message-->

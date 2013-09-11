@@ -62,7 +62,8 @@ module.exports = function(grunt) {
             all: {
                 options: {
                     urls: ['http://localhost:<%= connect.test.options.port %>/test/new-unit/index.html'],
-                    run: false
+                    run: false,
+                    timeout: 20000
                 }
             }
         }
