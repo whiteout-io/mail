@@ -18,11 +18,16 @@
         color: $header-text-color;
 
         p {
-            line-height: 1.9em;
+            line-height: 2.2em;
         }
 
         .address {
-            color: $blue-color;
+            margin-left: 0.3em;
+            color: $lightgrey-color;
+            background-color: $blue-color;
+            padding: 0.25em 1em;
+            border-radius: 1em;
+            box-shadow: 1px 1px 0px $blue-box-shadow-color;
         }
     }
 
