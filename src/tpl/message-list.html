@@ -13,6 +13,9 @@
   <ul>
     <li ng-repeat="email in emails" ng-class="{selected: email === selected}" ng-click="select(email)">
       <div ng-class="{unread: email.unread, read: !email.unread}"></div>
+      <div ng-switch="email.attachments !== undefined">
+        <div ng-switch-when="true" class="icon-attachment"></div>
+      </div>
       <p class="from">{{email.from[0].name}}</p>
       <p class="subject-line">
         <span class="subject">{{email.subject}}</span>

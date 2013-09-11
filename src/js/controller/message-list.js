@@ -60,7 +60,7 @@ define(function(require) {
     }
 
     function createDummyMails(callback) {
-        var Email = function(unread) {
+        var Email = function(unread, attachments) {
             this.uid = '1';
             this.from = [{
                 name: 'Whiteout Support',
@@ -69,9 +69,7 @@ define(function(require) {
             this.to = [{
                 address: 'max.musterman@gmail.com'
             }]; // list of receivers
-            this.cc = [{
-                address: 'hans.wurst@gmail.com'
-            }]; // list of receivers
+            this.attachments = attachments;
             this.unread = unread;
             this.displayDate = '23.08.13';
             this.longDisplayDate = 'Wednesday, 23.08.2013 19:23';
@@ -82,7 +80,7 @@ define(function(require) {
                 "Best regards\nYour whiteout team"; // plaintext body
         };
 
-        var dummys = [new Email(true), new Email(true), new Email(false), new Email(false), new Email(false), new Email(false)];
+        var dummys = [new Email(true, true), new Email(true), new Email(false, true), new Email(false), new Email(false), new Email(false)];
 
         callback(dummys);
     }
