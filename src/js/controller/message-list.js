@@ -15,8 +15,15 @@ define(function(require) {
         };
 
         $scope.write = function(replyTo) {
-            var replyToId = (replyTo) ? replyTo.uid : '';
-            chrome.app.window.create('index.html#/write/' + replyToId, {
+            var replyToId = (replyTo) ? replyTo.uid : '',
+                url = 'index.html#/write/' + replyToId;
+
+            if (!window.chrome) {
+                window.open(url, 'Compose Message', 'toolbar=no,width=800,height=600,left=500,top=200,status=no,scrollbars=no,resize=no');
+                return;
+            }
+
+            chrome.app.window.create(url, {
                 'bounds': {
                     'width': 800,
                     'height': 600
@@ -24,7 +31,7 @@ define(function(require) {
             });
         };
 
-        if (true) {
+        if (!window.chrome) {
             createDummyMails(function(emails) {
                 $scope.emails = emails;
                 $scope.select($scope.emails[0]);
