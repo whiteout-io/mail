@@ -18,30 +18,30 @@ define(function(require) {
             var replyToId = (replyTo) ? replyTo.uid : '',
                 url = 'index.html#/write/' + replyToId;
 
-            if (!window.chrome) {
-                window.open(url, 'Compose Message', 'toolbar=no,width=800,height=600,left=500,top=200,status=no,scrollbars=no,resize=no');
+            if (window.chrome && chrome.app.window) {
+                chrome.app.window.create(url, {
+                    'bounds': {
+                        'width': 800,
+                        'height': 600
+                    }
+                });
                 return;
             }
 
-            chrome.app.window.create(url, {
-                'bounds': {
-                    'width': 800,
-                    'height': 600
-                }
-            });
+            window.open(url, 'Compose Message', 'toolbar=no,width=800,height=600,left=500,top=200,status=no,scrollbars=no,resize=no');
         };
 
-        if (!window.chrome) {
-            createDummyMails(function(emails) {
+        if (window.chrome && window.chrome.identity) {
+            fetchList(function(emails) {
                 $scope.emails = emails;
-                $scope.select($scope.emails[0]);
+                $scope.$apply();
             });
             return;
         }
 
-        fetchList(function(emails) {
+        createDummyMails(function(emails) {
             $scope.emails = emails;
-            $scope.$apply();
+            $scope.select($scope.emails[0]);
         });
     };
 
