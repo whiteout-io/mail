@@ -2,4 +2,44 @@
 
 .read-message {
     padding: 10px 15px;
+
+    .subject {
+        font-size: 1.5em;
+    }
+
+    .date {
+        color: $grey-text-color;
+        font-size: 0.875em;
+        margin-top: 0.5em;
+        margin-bottom: 1.5em;
+    }
+
+    .address-headers {
+        color: $header-text-color;
+
+        p {
+            line-height: 1.9em;
+        }
+
+        .address {
+            color: $blue-color;
+        }
+    }
+
+    .seperator-line {
+        height: 1px;
+        color: $grey-border-color;
+        background-color: $grey-border-color;
+        border-color: $grey-border-color;
+        margin-top: 1em;
+        margin-bottom: 1.5em;
+    }
+
+    .body {
+        line-height: 1.5em;
+
+        p {
+            margin-bottom: 1em;
+        }
+    }
 }

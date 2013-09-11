@@ -9,6 +9,7 @@ define(function(require) {
         $scope.messageId = $routeParams.messageId;
 
         $scope.select = function(email) {
+            email.bodyDisplayParts = email.body.split('\n');
             $scope.selected = email;
         };
 
@@ -68,11 +69,17 @@ define(function(require) {
             this.to = [{
                 address: 'max.musterman@gmail.com'
             }]; // list of receivers
+            this.cc = [{
+                address: 'hans.wurst@gmail.com'
+            }]; // list of receivers
             this.unread = unread;
             this.displayDate = '23.08.13';
             this.longDisplayDate = 'Wednesday, 23.08.2013 19:23';
             this.subject = "Welcome Max"; // Subject line
-            this.body = "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy."; // plaintext body
+            this.body = "Hi Max,\n" +
+                "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.\n" +
+                "Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi. Lorem ipsum dolor sit amet,\n" +
+                "Best regards\nYour whiteout team"; // plaintext body
         };
 
         var dummys = [new Email(true), new Email(true), new Email(false), new Email(false), new Email(false), new Email(false)];

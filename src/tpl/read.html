@@ -1,8 +1,22 @@
 <div class="read-message">
-    <p>{{selected.subject}}</p>
-    <p>{{selected.longDisplayDate}}</p>
-    <p>From: {{selected.from[0].name}}</p>
-    <p>To: <span ng-repeat="t in selected.to">{{t.address}} </span></p>
-    <p>CC: <span ng-repeat="t in selected.cc">{{t.address}} </span></p>
-    <p>{{selected.body}}</p>
+
+  <p class="subject">{{selected.subject}}</p>
+  <p class="date">{{selected.longDisplayDate}}</p>
+
+  <div class="address-headers">
+    <p>From: <span class="address">{{selected.from[0].name}}</span></p>
+    <p>To: <span class="address" ng-repeat="t in selected.to">{{t.address}} </span></p>
+    <div ng-switch="selected.cc !== undefined">
+      <p ng-switch-when="true">
+        CC: <span class="address" ng-repeat="t in selected.cc">{{t.address}} </span>
+      </p>
+    </div>
+  </div>
+
+  <div class="seperator-line"></div>
+
+  <div class="body">
+    <p ng-repeat="part in selected.bodyDisplayParts">{{part}}</p>
+  </div>
+
 </div>
