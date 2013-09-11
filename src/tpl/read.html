@@ -17,7 +17,7 @@
   <p class="date">{{selected.longDisplayDate}}</p>
 
   <div class="address-headers">
-    <p>From: <span class="address">{{selected.from[0].name}}</span></p>
+    <p>From: <span class="address">{{selected.from[0].name || selected.from[0].address}}</span></p>
     <p>To: <span class="address" ng-repeat="t in selected.to">{{t.address}} </span></p>
     <div ng-switch="selected.cc !== undefined">
       <p ng-switch-when="true">

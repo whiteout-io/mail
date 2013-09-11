@@ -34,6 +34,7 @@ define(function(require) {
         if (window.chrome && window.chrome.identity) {
             fetchList(function(emails) {
                 $scope.emails = emails;
+                $scope.select($scope.emails[0]);
                 $scope.$apply();
             });
             return;
