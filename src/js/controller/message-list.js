@@ -13,6 +13,16 @@ define(function(require) {
             $scope.selected = email;
         };
 
+        $scope.write = function(replyTo) {
+            var replyToId = (replyTo) ? replyTo.uid : '';
+            chrome.app.window.create('index.html#/write/' + replyToId, {
+                'bounds': {
+                    'width': 800,
+                    'height': 600
+                }
+            });
+        };
+
         if (true) {
             createDummyMails(function(emails) {
                 $scope.emails = emails;
