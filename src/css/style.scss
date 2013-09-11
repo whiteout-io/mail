@@ -10,14 +10,18 @@ $lightgrey-color: #f9f9f9;
 $blue-box-shadow-color: #A4A4A4;
 $lightgrey-box-shadow-color: #D8D8D8;
 
-/* global */
+/* fonts */
 
 @font-face {
     font-family: 'PT Sans';
     font-style: normal;
     font-weight: 400;
-    src: local('PT Sans'), local('PTSans-Regular'), url(pt-sans.ttf) format('truetype');
+    src: local('PT Sans'), local('PTSans-Regular'), url('pt-sans.ttf') format('truetype');
 }
+
+@import "icon-font";
+
+/* global */
 
 body {
     font-family: 'PT Sans', sans-serif;

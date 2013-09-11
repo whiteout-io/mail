@@ -30,7 +30,6 @@
         height: 1px;
         color: $grey-border-color;
         background-color: $grey-border-color;
-        border-color: $grey-border-color;
         margin-top: 1em;
         margin-bottom: 1.5em;
     }
@@ -41,5 +40,34 @@
         p {
             margin-bottom: 1em;
         }
+    }
+}
+
+.buttons {
+    float: right;
+    margin: 10px 15px;
+    color: $blue-color;
+}
+
+.circle {
+    float: right;
+    width: 2em;
+    height: 2em;
+    border: 2px;
+    border-style: solid;
+    border-color: $blue-color;
+    border-radius: 50%;
+    margin-left: 0.5em;
+
+    &:hover {
+        box-shadow: 3px 3px 4px $blue-box-shadow-color;
+    }
+    &:active {
+        box-shadow: none;
+        margin-top: 0.2em;
+    }
+
+    div {
+        margin: 0.5em;
     }
 }
