@@ -24,7 +24,7 @@ define(function(require) {
             });
         };
 
-        if (false) {
+        if (true) {
             createDummyMails(function(emails) {
                 $scope.emails = emails;
                 $scope.select($scope.emails[0]);
@@ -109,7 +109,7 @@ define(function(require) {
             this.to = [{
                 address: 'max.musterman@gmail.com'
             }]; // list of receivers
-            this.attachments = attachments;
+            this.attachments = (attachments) ? [true] : undefined;
             this.unread = unread;
             this.displayDate = '23.08.13';
             this.longDisplayDate = 'Wednesday, 23.08.2013 19:23';
