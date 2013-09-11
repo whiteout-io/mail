@@ -1,7 +1,8 @@
 define(function(require) {
     'use strict';
 
-    var appController = require('js/app-controller'),
+    var _ = require('underscore'),
+        appController = require('js/app-controller'),
         moment = require('moment');
 
     var MessageListCtrl = function($scope, $routeParams) {
@@ -23,7 +24,7 @@ define(function(require) {
             });
         };
 
-        if (true) {
+        if (false) {
             createDummyMails(function(emails) {
                 $scope.emails = emails;
                 $scope.select($scope.emails[0]);
@@ -38,14 +39,17 @@ define(function(require) {
     };
 
     function fetchList(callback) {
+        var folder = 'INBOX';
+
         appController.fetchOAuthToken('passphrase', function(err) {
             if (err) {
                 console.log(err);
                 return;
             }
 
+            // fetch imap folder's message list
             appController._emailDao.imapListMessages({
-                folder: 'INBOX',
+                folder: folder,
                 offset: -6,
                 num: 0
             }, function(err, emails) {
@@ -54,8 +58,34 @@ define(function(require) {
                     return;
                 }
 
-                addDisplayDate(emails);
-                callback(emails);
+                // fetch message bodies
+                fetchBodies(emails, folder, function(messages) {
+                    addDisplayDate(messages);
+                    callback(messages);
+                });
+            });
+        });
+    }
+
+    function fetchBodies(messageList, folder, callback) {
+        var emails = [];
+
+        var after = _.after(messageList.length, function() {
+            callback(emails);
+        });
+
+        _.each(messageList, function(messageItem) {
+            appController._emailDao.imapGetMessage({
+                folder: folder,
+                uid: messageItem.uid
+            }, function(err, message) {
+                if (err) {
+                    console.log(err);
+                    return;
+                }
+
+                emails.push(message);
+                after();
             });
         });
     }

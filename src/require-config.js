@@ -15,9 +15,9 @@
 			cordova: 'cordova-2.5.0',
 			ImapClient: 'imap-client-browserified',
 			SmtpClient: 'smtp-client-browserified',
-			angular: 'angular/angular',
-			angularRoute: 'angular/angular-route',
-			angularTouch: 'angular/angular-touch',
+			angular: 'angular/angular.min',
+			angularRoute: 'angular/angular-route.min',
+			angularTouch: 'angular/angular-touch.min',
 			moment: 'moment.min'
 		},
 		shim: {

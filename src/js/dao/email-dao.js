@@ -339,7 +339,7 @@ define(function(require) {
 
         /* message was not found in cache... fetch from imap server */
 
-        function bodyReady(err, gottenMessage) {
+        function messageReady(err, gottenMessage) {
             message = gottenMessage;
             itemCounter++;
             // remember how many items should be fetched before the callback fires
@@ -431,10 +431,8 @@ define(function(require) {
         self._imapClient.getMessage({
             path: options.folder,
             uid: options.uid,
-            onBody: bodyReady,
-            /*onAttachment: attachmentReady*/
-            onEnd: bodyReady
-        });
+            textOnly: true
+        }, messageReady);
     };
 
     /**

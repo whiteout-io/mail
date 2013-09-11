@@ -104,6 +104,10 @@
         }
         .subject {
             font-weight: bold;
+            width: 13.571em;
+            height: 1em;
+            overflow: hidden;
+            display: inline-block;
         }
         .sent-date {
             float: right;
