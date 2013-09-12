@@ -23,6 +23,8 @@ body {
 }
 
 .btn-shadow {
+    cursor: pointer;
+
     &:hover {
         box-shadow: 2px 2px 4px $blue-box-shadow-color;
     }

@@ -7,18 +7,21 @@
   </div><!--/.address-headers-->
 
   <div class="subject-box">
-    <div class="subject-line">Subject: <span class="subject">Important Stuff!</span></div>
+    <div class="subject-line">Subject: <span class="subject">Important stuff</span></div>
     <div class="attachment-btn btn-shadow">
       <div class="icon-attachment"></div>
     </div>
-  </div>
+  </div><!--/.subject-box-->
 
   <div class="mail-text-body">
-    <p>Hi Max,</p>
-    <p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
-    <p>Frank</p>
-    <p>--</p>
-    <p>Sent securely from whiteout mail</p>
-  </div>
+    <p ng-repeat="part in bodyPlaintextParts">{{part}}</p>
 
+    <div class="encrypt-preview">
+      <p>-----BEGIN ENCRYPTED PREVIEW-----<br>{{bodyCiphertext}}<br>-----END ENCRYPTED PREVIEW-----</p>
+      <p>--<br>{{signature}}</p>
+    </div><!--/.encrypt-preview-->
+
+  </div><!--/.mail-text-body-->
+
+  <div class="send-btn btn-shadow">Send securely</div>
 </div>

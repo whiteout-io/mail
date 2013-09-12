@@ -1,7 +1,7 @@
 /* write view */
 
 .write-message {
-    padding: 10px 10px;
+    padding: 10px;
 
     .title {
         text-align: center;
@@ -37,11 +37,28 @@
         }
     }
 
-    .body {
-        line-height: 1.5em;
+    .encrypt-preview {
+        margin-top: 1.5em;
+        font-family: monospace;
+        color: $grey-text-color;
+        word-wrap: break-word;
+    }
 
-        p {
-            margin-bottom: 1em;
+    .send-btn {
+        background-color: $blue-color;
+        color: $lightgrey-color;
+        padding: 0.813em;
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        box-shadow: 1px 1px 0px $blue-box-shadow-color;
+
+        &:hover {
+            box-shadow: 2px 2px 4px $blue-box-shadow-color;
+        }
+        &:active {
+            box-shadow: none;
+            margin-top: 0.2em;
         }
     }
 }
