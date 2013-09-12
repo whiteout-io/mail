@@ -1,2 +1,47 @@
 /* write view */
 
+.write-message {
+    padding: 10px 10px;
+
+    .title {
+        text-align: center;
+        font-size: 1.5em;
+        margin-bottom: 20px;
+    }
+
+    .subject-box {
+        margin: 20px 0;
+        width: inherit;
+        border: 1px;
+        border-style: solid;
+        border-color: $grey-border-color;
+        height: 2.625em;
+
+        .subject-line {
+            float: left;
+            padding: 0.813em;
+            color: $header-text-color;
+        }
+
+        .subject {
+            font-weight: bold;
+            color: $default-text-color;
+        }
+
+        .attachment-btn {
+            float: right;
+            padding: 0.5em;
+            margin: 0.3125em;
+            color: $lightgrey-color;
+            background-color: $blue-color;
+        }
+    }
+
+    .body {
+        line-height: 1.5em;
+
+        p {
+            margin-bottom: 1em;
+        }
+    }
+}

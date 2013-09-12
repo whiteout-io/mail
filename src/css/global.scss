@@ -5,6 +5,14 @@ body {
     color: $default-text-color;
 }
 
+.address-headers {
+    color: $header-text-color;
+
+    p {
+        line-height: 2.2em;
+    }
+}
+
 .address {
     margin-left: 0.3em;
     color: $lightgrey-color;
@@ -12,4 +20,22 @@ body {
     padding: 0.25em 1em;
     border-radius: 1em;
     box-shadow: 1px 1px 0px $blue-box-shadow-color;
+}
+
+.btn-shadow {
+    &:hover {
+        box-shadow: 2px 2px 4px $blue-box-shadow-color;
+    }
+    &:active {
+        box-shadow: none;
+        margin-top: 0.2em;
+    }
+}
+
+.mail-text-body {
+    line-height: 1.5em;
+
+    p {
+        margin-bottom: 1em;
+    }
 }

@@ -14,28 +14,12 @@
         margin-bottom: 1.5em;
     }
 
-    .address-headers {
-        color: $header-text-color;
-
-        p {
-            line-height: 2.2em;
-        }
-    }
-
     .seperator-line {
         height: 1px;
         color: $grey-border-color;
         background-color: $grey-border-color;
         margin-top: 1em;
         margin-bottom: 1.5em;
-    }
-
-    .body {
-        line-height: 1.5em;
-
-        p {
-            margin-bottom: 1em;
-        }
     }
 }
 
@@ -54,14 +38,6 @@
     border-color: $blue-color;
     border-radius: 50%;
     margin-left: 0.5em;
-
-    &:hover {
-        box-shadow: 2px 2px 4px $blue-box-shadow-color;
-    }
-    &:active {
-        box-shadow: none;
-        margin-top: 0.2em;
-    }
 
     div {
         margin: 0.5em;

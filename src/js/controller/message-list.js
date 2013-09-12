@@ -21,14 +21,14 @@ define(function(require) {
             if (window.chrome && chrome.app.window) {
                 chrome.app.window.create(url, {
                     'bounds': {
-                        'width': 800,
+                        'width': 700,
                         'height': 600
                     }
                 });
                 return;
             }
 
-            window.open(url, 'Compose Message', 'toolbar=no,width=800,height=600,left=500,top=200,status=no,scrollbars=no,resize=no');
+            window.open(url, 'Compose Message', 'toolbar=no,width=700,height=600,left=500,top=200,status=no,scrollbars=no,resize=no');
         };
 
         if (window.chrome && window.chrome.identity) {
