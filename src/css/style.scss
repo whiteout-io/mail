@@ -21,15 +21,10 @@ $lightgrey-box-shadow-color: #D8D8D8;
 
 @import "icon-font";
 
-/* global */
-
-body {
-    font-family: 'PT Sans', sans-serif;
-    color: $default-text-color;
-}
-
 /* import view modules */
 
+@import "global";
 @import "message-list-desktop";
 @import "message-list";
 @import "read";
+@import "write";
