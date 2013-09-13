@@ -19,13 +19,18 @@
 
         .subject-line {
             float: left;
-            padding: 0.813em;
+            padding: 0.563em;
+            width: 80%;
             color: $header-text-color;
         }
 
         .subject {
+            border: 0!important;
             font-weight: bold;
+            font-size: 1em;
+            width: 100%;
             color: $default-text-color;
+            outline: 0px;
         }
 
         .attachment-btn {
@@ -37,8 +42,12 @@
         }
     }
 
+    *[contentEditable] {
+        outline: 0px;
+    }
+
     .encrypt-preview {
-        margin-top: 1.5em;
+        margin-top: 3em;
         font-family: monospace;
         color: $grey-text-color;
         word-wrap: break-word;

@@ -11,7 +11,7 @@ require([
 ], function(angular, MessageListCtrl, WriteCtrl) {
     'use strict';
 
-    var app = angular.module('mail', ['ngRoute', 'ngTouch']);
+    var app = angular.module('mail', ['ngRoute', 'ngTouch', 'write']);
     app.config(function($routeProvider) {
         $routeProvider.when('/folders/:folder', {
             templateUrl: 'tpl/message-list-desktop.html',

@@ -1,14 +1,63 @@
-define(function() {
+define(function(require) {
     'use strict';
 
-    var dummyText = 'Hi Max,\nLorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.\nFrank',
-        signature = 'Sent securely from whiteout mail';
+    var angular = require('angular'),
+        aes = require('cryptoLib/aes-cbc'),
+        util = require('cryptoLib/util'),
+        str = require('js/app-config').string;
+
+    //
+    // Controller
+    //
 
     var WriteCtrl = function($scope) {
-        $scope.bodyPlaintextParts = dummyText.split('\n');
-        $scope.bodyCiphertext = btoa(dummyText);
-        $scope.signature = signature;
+        $scope.signature = str.signature;
+
+        // generate key,iv for encryption preview
+        var key = util.random(128),
+            iv = util.random(128);
+
+        $scope.updatePreview = function() {
+            // Although this does encrypt live using AES, this is just for show. The plaintext is encrypted seperately using before sending the email.
+            $scope.ciphertextPreview = aes.encrypt($scope.subject + $scope.body, key, iv);
+        };
     };
+
+    //
+    // Directives
+    //
+
+    var ngModule = angular.module('write', []);
+    ngModule.directive('contenteditable', function() {
+        return {
+            require: 'ngModel',
+            link: function(scope, elm, attrs, ctrl) {
+                // view -> model
+                elm.on('keyup', function() {
+                    scope.$apply(function() {
+                        ctrl.$setViewValue(elm.html());
+                    });
+                });
+
+                // model -> view
+                ctrl.$render = function(value) {
+                    elm.html(value);
+                };
+
+                // load init value from DOM
+                ctrl.$setViewValue(elm.html());
+            }
+        };
+    });
+    ngModule.directive('focusMe', function($timeout) {
+        return {
+            link: function(scope, element) {
+                $timeout(function() {
+                    element[0].focus();
+                });
+            }
+        };
+    });
 
     return WriteCtrl;
 });

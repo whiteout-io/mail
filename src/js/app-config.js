@@ -19,5 +19,9 @@ define([], function() {
 		workerPath: 'js'
 	};
 
+	app.string = {
+		signature: 'Sent securely from whiteout mail'
+	};
+
 	return app;
 });

@@ -7,20 +7,21 @@
   </div><!--/.address-headers-->
 
   <div class="subject-box">
-    <div class="subject-line">Subject: <span class="subject">Important stuff</span></div>
+    <div class="subject-line">
+      <input ng-model="subject" class="subject" spellcheck="true" tabindex="1" placeholder="Subject" ng-change="updatePreview()">
+    </div>
     <div class="attachment-btn btn-shadow">
       <div class="icon-attachment"></div>
     </div>
   </div><!--/.subject-box-->
 
   <div class="mail-text-body">
-    <p ng-repeat="part in bodyPlaintextParts">{{part}}</p>
+    <p ng-model="body" contentEditable="true" ng-change="updatePreview()" focus-me ></p>
 
     <div class="encrypt-preview">
-      <p>-----BEGIN ENCRYPTED PREVIEW-----<br>{{bodyCiphertext}}<br>-----END ENCRYPTED PREVIEW-----</p>
-      <p>--<br>{{signature}}</p>
+      <p>-----BEGIN ENCRYPTED PREVIEW-----<br>{{ciphertextPreview}}<br>-----END ENCRYPTED PREVIEW-----</p>
+      <p>--</p><p>{{signature}}</p>
     </div><!--/.encrypt-preview-->
-
   </div><!--/.mail-text-body-->
 
   <div class="send-btn btn-shadow">Send securely</div>
