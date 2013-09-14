@@ -17,11 +17,11 @@
   <p class="date">{{selected.longDisplayDate}}</p>
 
   <div class="address-headers">
-    <p>From: <span class="address">{{selected.from[0].name || selected.from[0].address}}</span></p>
-    <p>To: <span class="address" ng-repeat="t in selected.to">{{t.address}} </span></p>
+    <p>From: <span class="address address-verified">{{selected.from[0].name || selected.from[0].address}}</span></p>
+    <p>To: <span class="address address-verified" ng-repeat="t in selected.to">{{t.address}} </span></p>
     <div ng-switch="selected.cc !== undefined">
       <p ng-switch-when="true">
-        CC: <span class="address" ng-repeat="t in selected.cc">{{t.address}} </span>
+        CC: <span class="address address-verified" ng-repeat="t in selected.cc">{{t.address}} </span>
       </p>
     </div>
   </div><!--/.address-headers-->
@@ -29,6 +29,11 @@
   <div class="seperator-line"></div>
 
   <div class="mail-text-body">
-    <p ng-repeat="part in selected.bodyDisplayParts">{{part}}</p>
+    <p ng-repeat="part in selected.bodyDisplayParts track by $index">
+      <span ng-switch="part.length === 0">
+        <span ng-switch-when="true"><br></span>
+        <span ng-switch-when="false">{{part}}</span>
+      </span>
+    </p>
   </div>
 </div><!--/.read-message-->

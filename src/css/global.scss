@@ -17,9 +17,12 @@ body, input, button {
 
 .address {
     margin-left: 0.3em;
+    padding: 0.25em 1em;
+}
+
+.address-verified {
     color: $lightgrey-color;
     background-color: $blue-color;
-    padding: 0.25em 1em;
     border-radius: 1em;
     box-shadow: 1px 1px 0px $blue-box-shadow-color;
 }
@@ -38,8 +41,4 @@ body, input, button {
 
 .mail-text-body {
     line-height: 1.5em;
-
-    p {
-        margin-bottom: 1em;
-    }
 }

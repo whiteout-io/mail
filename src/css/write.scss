@@ -9,6 +9,16 @@
         margin-bottom: 20px;
     }
 
+    input {
+        font-size: 1em;
+        border: 0!important;
+        outline: 0px;
+    }
+
+    .address-input {
+        width: 90%;
+    }
+
     .subject-box {
         margin: 20px 0;
         width: inherit;
@@ -25,12 +35,8 @@
         }
 
         .subject {
-            border: 0!important;
             font-weight: bold;
-            font-size: 1em;
             width: 100%;
-            color: $default-text-color;
-            outline: 0px;
         }
 
         .attachment-btn {

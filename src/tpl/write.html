@@ -2,13 +2,19 @@
   <p class="title">New Mail</p>
 
   <div class="address-headers">
-    <p>To: <span class="address">Max Musterman</span></p>
-    <p>CC: <span class="address">Alice Example</span> <span class="address">Hans Wurst</span></p>
+    <p>
+      <span>To:</span>
+      <input ng-model="to" class="address-input" tabindex="1">
+    </p>
+    <p>
+      <span>CC:</span>
+      <input ng-model="cc" class="address-input" tabindex="2">
+    </p>
   </div><!--/.address-headers-->
 
   <div class="subject-box">
     <div class="subject-line">
-      <input ng-model="subject" class="subject" spellcheck="true" tabindex="1" placeholder="Subject" ng-change="updatePreview()">
+      <input ng-model="subject" class="subject" spellcheck="true" tabindex="3" placeholder="Subject" ng-change="updatePreview()">
     </div>
     <div class="attachment-btn btn-shadow">
       <div class="icon-attachment"></div>
@@ -16,13 +22,13 @@
   </div><!--/.subject-box-->
 
   <div class="mail-text-body">
-    <p ng-model="body" contentEditable="true" ng-change="updatePreview()" focus-me ></p>
+    <p ng-model="body" contentEditable="true" ng-change="updatePreview()" focus-me tabindex="4"></p>
 
     <div class="encrypt-preview">
       <p>-----BEGIN ENCRYPTED PREVIEW-----<br>{{ciphertextPreview}}<br>-----END ENCRYPTED PREVIEW-----</p>
-      <p>--<br>{{signature}}</p>
+      <p><br>--<br>{{signature}}</p>
     </div><!--/.encrypt-preview-->
   </div><!--/.mail-text-body-->
 
-  <div class="send-btn btn-shadow">Send securely</div>
+  <div class="send-btn btn-shadow" tabindex="5">Send securely</div>
 </div>
