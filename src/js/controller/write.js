@@ -18,8 +18,24 @@ define(function(require) {
             iv = util.random(128);
 
         $scope.updatePreview = function() {
+            // remove generated html from body
+            var body = $scope.body;
+
+            function has(substr) {
+                return (body.indexOf(substr) !== -1);
+            }
+            while (has('<div>')) {
+                body = body.replace('<div>', '\n');
+            }
+            while (has('<br>')) {
+                body = body.replace('<br>', '\n');
+            }
+            while (has('</div>')) {
+                body = body.replace('</div>', '');
+            }
             // Although this does encrypt live using AES, this is just for show. The plaintext is encrypted seperately using before sending the email.
-            $scope.ciphertextPreview = aes.encrypt($scope.subject + $scope.body, key, iv);
+            var plaintext = ($scope.subject) ? $scope.subject + body : body;
+            $scope.ciphertextPreview = aes.encrypt(plaintext, key, iv);
         };
     };
 
