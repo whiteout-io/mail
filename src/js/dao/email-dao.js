@@ -5,13 +5,8 @@ define(function(require) {
         util = require('cryptoLib/util'),
         crypto = require('js/crypto/crypto'),
         jsonDB = require('js/dao/lawnchair-dao'),
-        devicestorage = require('js/dao/devicestorage-dao');
-
-    var SUBJECT = '[whiteout] Encrypted message',
-        MESSAGE = 'this is a private conversation. To read my encrypted message below, simply install Whiteout Mail for Chrome. The app is really easy to use and automatically encrypts sent emails, so that only the two of us can read them: https://chrome.google.com/webstore/detail/whiteout-mail/jjgghafhamholjigjoghcfcekhkonijg\n\n\n',
-        PREFIX = '-----BEGIN ENCRYPTED MESSAGE-----\n',
-        SUFFIX = '\n-----END ENCRYPTED MESSAGE-----',
-        SIGNATURE = '\n\n\nSent securely from whiteout mail\nhttp://whiteout.io\n\n';
+        devicestorage = require('js/dao/devicestorage-dao'),
+        str = require('js/app-config').string;
 
     /**
      * A high-level Data-Access Api for handling Email synchronization
@@ -256,6 +251,12 @@ define(function(require) {
     function frameEncryptedMessage(email, ct) {
         var to, greeting, ctBase64;
 
+        var SUBJECT = str.subject,
+            MESSAGE = str.message + '\n\n\n',
+            PREFIX = str.cryptPrefix + '\n',
+            SUFFIX = '\n' + str.cryptSuffix,
+            SIGNATURE = '\n\n\n' + str.signature + '\n' + str.webSite + '\n\n';
+
         // get first name of recipient
         to = (email.to[0].name || email.to[0].address).split('@')[0].split('.')[0].split(' ')[0];
         greeting = 'Hi ' + to + ',\n\n';
@@ -350,7 +351,7 @@ define(function(require) {
             }
 
             // decrypt Message body
-            if (message.body.indexOf(PREFIX) !== -1 && message.body.indexOf(SUFFIX) !== -1) {
+            if (message.body.indexOf(str.cryptPrefix) !== -1 && message.body.indexOf(str.cryptSuffix) !== -1) {
                 decryptBody(message, function(err, ptMessage) {
                     message = ptMessage;
                     // return decrypted message
@@ -366,12 +367,16 @@ define(function(require) {
         }
 
         function decryptBody(email, callback) {
-            var ctMessageBase64, ctMessage, pubkeyIds;
+            var ctMessageBase64, ctMessageJson, ctMessage, pubkeyIds;
 
             // parse email body for encrypted message block
             try {
-                ctMessageBase64 = email.body.split(PREFIX)[1].split(SUFFIX)[0];
-                ctMessage = JSON.parse(atob(ctMessageBase64));
+                // get base64 encoded message block
+                ctMessageBase64 = email.body.split(str.cryptPrefix)[1].split(str.cryptSuffix)[0].trim();
+                // decode bae64
+                ctMessageJson = atob(ctMessageBase64);
+                // parse json string to get ciphertext object
+                ctMessage = JSON.parse(ctMessageJson);
             } catch (e) {
                 callback({
                     errMsg: 'Error parsing encrypted message block!'
