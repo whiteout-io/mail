@@ -2,9 +2,11 @@ define(function(require) {
     'use strict';
 
     var angular = require('angular'),
+        appController = require('js/app-controller'),
         aes = require('cryptoLib/aes-cbc'),
         util = require('cryptoLib/util'),
-        str = require('js/app-config').string;
+        str = require('js/app-config').string,
+        emailDao;
 
     //
     // Controller
@@ -13,31 +15,93 @@ define(function(require) {
     var WriteCtrl = function($scope) {
         $scope.signature = str.signature;
 
+        if (window.chrome && chrome.identity) {
+            // start the main app controller
+            appController.fetchOAuthToken('passphrase', function(err) {
+                if (err) {
+                    console.log(err);
+                    return;
+                }
+
+                emailDao = appController._emailDao;
+            });
+        }
+
         // generate key,iv for encryption preview
         var key = util.random(128),
             iv = util.random(128);
 
         $scope.updatePreview = function() {
-            // remove generated html from body
             var body = $scope.body;
+            // remove generated html from body
+            body = parseBody(body);
 
-            function has(substr) {
-                return (body.indexOf(substr) !== -1);
-            }
-            while (has('<div>')) {
-                body = body.replace('<div>', '\n');
-            }
-            while (has('<br>')) {
-                body = body.replace('<br>', '\n');
-            }
-            while (has('</div>')) {
-                body = body.replace('</div>', '');
-            }
             // Although this does encrypt live using AES, this is just for show. The plaintext is encrypted seperately using before sending the email.
             var plaintext = ($scope.subject) ? $scope.subject + body : body;
             $scope.ciphertextPreview = aes.encrypt(plaintext, key, iv);
         };
+
+        $scope.sendEmail = function() {
+            var to, body, email;
+
+            // validate recipients
+            to = $scope.to.replace(/\s/g, '').split(/[,;]/);
+            if (!to || to.length < 1) {
+                console.log('Seperate recipients with a comma!');
+                return;
+            }
+
+            body = $scope.body;
+            // remove generated html from body
+            body = parseBody(body);
+
+            email = {
+                to: [], // list of receivers
+                subject: $scope.subject, // Subject line
+                body: body // plaintext body
+            };
+            email.from = [{
+                name: '',
+                address: emailDao._account.emailAddress
+            }];
+            to.forEach(function(address) {
+                email.to.push({
+                    name: '',
+                    address: address
+                });
+            });
+
+            emailDao.smtpSend(email, function(err) {
+                if (err) {
+                    console.log(err);
+                    return;
+                }
+
+                if (window.chrome && chrome.app.window) {
+                    // close the chrome window
+                    chrome.app.window.current().close();
+                    return;
+                }
+            });
+        };
     };
+
+    function parseBody(body) {
+        function has(substr) {
+            return (body.indexOf(substr) !== -1);
+        }
+        while (has('<div>')) {
+            body = body.replace('<div>', '\n');
+        }
+        while (has('<br>')) {
+            body = body.replace('<br>', '\n');
+        }
+        while (has('</div>')) {
+            body = body.replace('</div>', '');
+        }
+
+        return body;
+    }
 
     //
     // Directives

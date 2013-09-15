@@ -4,7 +4,7 @@
   <div class="address-headers">
     <p>
       <span>To:</span>
-      <input ng-model="to" class="address-input" tabindex="1">
+      <input ng-model="to" class="address-input" tabindex="1" focus-me >
     </p>
     <p>
       <span>CC:</span>
@@ -22,13 +22,14 @@
   </div><!--/.subject-box-->
 
   <div class="mail-text-body">
-    <p ng-model="body" contentEditable="true" ng-change="updatePreview()" focus-me tabindex="4"></p>
+    <p ng-model="body" contentEditable="true" ng-change="updatePreview()" tabindex="4"></p>
 
     <div class="encrypt-preview">
       <p>-----BEGIN ENCRYPTED PREVIEW-----<br>{{ciphertextPreview}}<br>-----END ENCRYPTED PREVIEW-----</p>
-      <p><br>--<br>{{signature}}</p>
+      <br>
+      <p>{{signature}}</p>
     </div><!--/.encrypt-preview-->
   </div><!--/.mail-text-body-->
 
-  <div class="send-btn btn-shadow" tabindex="5">Send securely</div>
+  <button ng-click="sendEmail()" class="send-btn btn-shadow" tabindex="5">Send securely</button>
 </div>

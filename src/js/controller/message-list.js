@@ -3,11 +3,13 @@ define(function(require) {
 
     var _ = require('underscore'),
         appController = require('js/app-controller'),
-        moment = require('moment');
+        moment = require('moment'),
+        emailDao;
 
     var MessageListCtrl = function($scope, $routeParams) {
         $scope.folder = $routeParams.folder;
         $scope.messageId = $routeParams.messageId;
+        emailDao = appController._emailDao;
 
         $scope.select = function(email) {
             email.bodyDisplayParts = email.body.split('\n');
@@ -48,7 +50,7 @@ define(function(require) {
 
     function fetchList(folder, callback) {
         // fetch imap folder's message list
-        appController._emailDao.imapListMessages({
+        emailDao.imapListMessages({
             folder: folder,
             offset: -6,
             num: 0
@@ -74,7 +76,7 @@ define(function(require) {
         });
 
         _.each(messageList, function(messageItem) {
-            appController._emailDao.imapGetMessage({
+            emailDao.imapGetMessage({
                 folder: folder,
                 uid: messageItem.uid
             }, function(err, message) {
