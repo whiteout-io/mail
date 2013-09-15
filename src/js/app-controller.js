@@ -10,7 +10,7 @@ define(function(require) {
         EmailDAO = require('js/dao/email-dao'),
         KeychainDAO = require('js/dao/keychain-dao'),
         cloudstorage = require('js/dao/cloudstorage-dao'),
-        app = require('js/app-config');
+        config = require('js/app-config').config;
     require('cordova');
 
     var self = {};
@@ -72,20 +72,20 @@ define(function(require) {
         auth = {
             XOAuth2: {
                 user: userId,
-                clientId: '440907777130.apps.googleusercontent.com',
+                clientId: config.gmail.clientId,
                 accessToken: token
             }
         };
         imapOptions = {
-            secure: true,
-            port: 993,
-            host: 'imap.gmail.com',
+            secure: config.gmail.imap.secure,
+            port: config.gmail.imap.port,
+            host: config.gmail.imap.host,
             auth: auth
         };
         smtpOptions = {
-            secure: true,
-            port: 465,
-            host: 'smtp.gmail.com',
+            secure: config.gmail.smtp.secure,
+            port: config.gmail.smtp.port,
+            host: config.gmail.smtp.host,
             auth: auth
         };
 
@@ -98,9 +98,9 @@ define(function(require) {
         // init email dao
         var account = {
             emailAddress: userId,
-            symKeySize: app.config.symKeySize,
-            symIvSize: app.config.symIvSize,
-            asymKeySize: app.config.asymKeySize
+            symKeySize: config.symKeySize,
+            symIvSize: config.symIvSize,
+            asymKeySize: config.asymKeySize
         };
         self._emailDao.init(account, password, callback);
     };
