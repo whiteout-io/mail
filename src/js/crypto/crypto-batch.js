@@ -25,6 +25,11 @@
         var receiverPk,
             self = this;
 
+        // validate presence of args
+        if (!list || !receiverPubkeys || !senderPrivkey || !senderPrivkey._id || !senderPrivkey.privateKey) {
+            throw new Error('Arguments missing!');
+        }
+
         // encrypt a list of items
         self.encryptList(list);
 
@@ -37,6 +42,11 @@
             receiverPk = self.__.findWhere(receiverPubkeys, {
                 _id: i.receiverPk
             });
+
+            // validate presence of args
+            if (!receiverPk || !receiverPk.publicKey || !i.key || !i.iv || !i.ciphertext) {
+                throw new Error('Arguments missing!');
+            }
 
             // encrypt item for user
             self.encryptItemKeyForUser(i, receiverPk.publicKey, senderPrivkey._id);
@@ -61,7 +71,7 @@
         // set sender's keypair id for later verification
         i.senderPk = senderKeyId;
         // sign the bundle
-        i.signature = self._rsa.sign([i.iv, self._util.str2Base64(i.senderPk), i.encryptedKey, i.ciphertext]);
+        i.signature = self._rsa.sign([i.iv, i.ciphertext]);
 
         // delete plaintext values
         delete i.key;
@@ -82,6 +92,11 @@
      */
     CryptoBatch.prototype.decryptListForUser = function(list, senderPubkeys, receiverPrivkey) {
         var j;
+
+        // validate presence of args
+        if (!list || !senderPubkeys || !receiverPrivkey || !receiverPrivkey._id || !receiverPrivkey.privateKey) {
+            throw new Error('Arguments missing!');
+        }
 
         // verify and decrypt a list of items using RSA
         this.decryptListKeysForUser(list, senderPubkeys, receiverPrivkey);
@@ -117,6 +132,11 @@
                 _id: i.senderPk
             });
 
+            // validate presence of args
+            if (!senderPk || !senderPk.publicKey || !i.encryptedKey || !i.iv || !i.ciphertext) {
+                throw new Error('Arguments missing!');
+            }
+
             // decrypt item for user
             self.decryptItemKeyForUser(i, senderPk.publicKey);
         });
@@ -136,7 +156,7 @@
         self._rsa.init(senderPubkey);
 
         // verify signature
-        if (!self._rsa.verify([i.iv, self._util.str2Base64(i.senderPk), i.encryptedKey, i.ciphertext], i.signature)) {
+        if (!self._rsa.verify([i.iv, i.ciphertext], i.signature)) {
             throw new Error('Verifying RSA signature failed!');
         }
         // decrypt symmetric item key for user
