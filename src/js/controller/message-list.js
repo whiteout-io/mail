@@ -32,7 +32,7 @@ define(function(require) {
         };
 
         if (window.chrome && chrome.identity) {
-            fetchList(function(emails) {
+            fetchList($scope.folder, function(emails) {
                 $scope.emails = emails;
                 $scope.select($scope.emails[0]);
                 $scope.$apply();
@@ -46,31 +46,22 @@ define(function(require) {
         });
     };
 
-    function fetchList(callback) {
-        var folder = 'INBOX';
-
-        appController.fetchOAuthToken('passphrase', function(err) {
+    function fetchList(folder, callback) {
+        // fetch imap folder's message list
+        appController._emailDao.imapListMessages({
+            folder: folder,
+            offset: -6,
+            num: 0
+        }, function(err, emails) {
             if (err) {
                 console.log(err);
                 return;
             }
 
-            // fetch imap folder's message list
-            appController._emailDao.imapListMessages({
-                folder: folder,
-                offset: -6,
-                num: 0
-            }, function(err, emails) {
-                if (err) {
-                    console.log(err);
-                    return;
-                }
-
-                // fetch message bodies
-                fetchBodies(emails, folder, function(messages) {
-                    addDisplayDate(messages);
-                    callback(messages);
-                });
+            // fetch message bodies
+            fetchBodies(emails, folder, function(messages) {
+                addDisplayDate(messages);
+                callback(messages);
             });
         });
     }

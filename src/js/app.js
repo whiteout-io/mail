@@ -3,16 +3,20 @@ window.name = 'NG_DEFER_BOOTSTRAP!';
 
 require([
     'angular',
+    'js/controller/login',
     'js/controller/message-list',
     'js/controller/write',
     'angularRoute',
-    'angularTouch',
-    'js/app-config'
-], function(angular, MessageListCtrl, WriteCtrl) {
+    'angularTouch'
+], function(angular, LoginCtrl, MessageListCtrl, WriteCtrl) {
     'use strict';
 
     var app = angular.module('mail', ['ngRoute', 'ngTouch', 'write']);
     app.config(function($routeProvider) {
+        $routeProvider.when('/login', {
+            templateUrl: 'tpl/login.html',
+            controller: LoginCtrl
+        });
         $routeProvider.when('/folders/:folder', {
             templateUrl: 'tpl/message-list-desktop.html',
             controller: MessageListCtrl
@@ -26,7 +30,7 @@ require([
             controller: WriteCtrl
         });
         $routeProvider.otherwise({
-            redirectTo: '/folders/Inbox'
+            redirectTo: '/login'
         });
     });
 
