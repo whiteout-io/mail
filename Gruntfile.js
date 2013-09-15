@@ -61,7 +61,6 @@ module.exports = function(grunt) {
         mocha: {
             all: {
                 options: {
-                    timeout: 20000,
                     urls: ['http://localhost:<%= connect.test.options.port %>/test/new-unit/index.html'],
                     run: false
                 }
