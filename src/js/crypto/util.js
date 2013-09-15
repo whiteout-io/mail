@@ -170,6 +170,22 @@
     };
 
     /**
+     * Convert a UTF-16 encoded string to UTF8
+     * @param str [String] a UTF-16 encoded string
+     */
+    Util.prototype.encodeUtf8 = function(str) {
+        return this._forge.util.encodeUtf8(str);
+    };
+
+    /**
+     * Convert a UTF-8 encoded string to UTF-16
+     * @param str [String] a UTF-8 encoded string
+     */
+    Util.prototype.decodeUtf8 = function(str) {
+        return this._forge.util.decodeUtf8(str);
+    };
+
+    /**
      * Validate an email address. This regex is taken from:
      * http://stackoverflow.com/questions/46155/validate-email-address-in-javascript
      */
