@@ -10,7 +10,7 @@ define(function(require) {
         rsa = require('cryptoLib/rsa'),
         cryptoBatch = require('cryptoLib/crypto-batch'),
         pbkdf2 = require('js/crypto/pbkdf2'),
-        app = require('js/app-config');
+        config = require('js/app-config').config;
 
     var self = {},
         passBasedKey,
@@ -314,7 +314,7 @@ define(function(require) {
         // check for WebWorker support
         if (window.Worker) {
             // init webworker thread
-            var worker = new Worker(app.config.workerPath + options.script);
+            var worker = new Worker(config.workerPath + options.script);
             worker.onmessage = function(e) {
                 if (e.data.err) {
                     options.callback(e.data.err);
