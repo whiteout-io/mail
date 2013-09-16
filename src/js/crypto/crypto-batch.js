@@ -30,11 +30,11 @@
             throw new Error('Arguments missing!');
         }
 
-        // encrypt a list of items
-        self.encryptList(list);
-
         // set sender private key
         self._rsa.init(null, senderPrivkey.privateKey);
+
+        // encrypt a list of items
+        self.encryptList(list);
 
         list.forEach(function(i) {
             // fetch correct public key for encryption
@@ -71,7 +71,7 @@
         // set sender's keypair id for later verification
         i.senderPk = senderKeyId;
         // sign the bundle
-        i.signature = self._rsa.sign([i.iv, i.ciphertext]);
+        i.signature = self._rsa.sign([i.iv, i.key, i.ciphertext]);
 
         // delete plaintext values
         delete i.key;
@@ -155,12 +155,13 @@
         // set rsa public key used to verify
         self._rsa.init(senderPubkey);
 
-        // verify signature
-        if (!self._rsa.verify([i.iv, i.ciphertext], i.signature)) {
-            throw new Error('Verifying RSA signature failed!');
-        }
         // decrypt symmetric item key for user
         i.key = self._rsa.decrypt(i.encryptedKey);
+
+        // verify signature
+        if (!self._rsa.verify([i.iv, i.key, i.ciphertext], i.signature)) {
+            throw new Error('Verifying RSA signature failed!');
+        }
 
         // delete ciphertext values
         delete i.signature;
