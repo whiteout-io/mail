@@ -1,0 +1,72 @@
+// Typography
+// -------------------------------------------
+$font-size-base:                    16px;
+$font-size-small:                   em(14);
+$font-size-smaller:                 em(12);
+$font-size-big:                     em(18);
+$font-size-bigger:                  em(24);
+
+$font-family-base:                  "PT Sans", Arial, sans-serif;
+$font-family-icons:                 "icons";
+
+$line-height-base:                  20 / 16;
+
+// Colors
+// -------------------------------------------
+
+$color-blue:                        #00c6ff;
+$color-black:                       #000;
+$color-white:                       #fff;
+$color-grey:                        #666;
+$color-grey-dark:                   #333;
+$color-grey-light:                  #ccc;
+$color-grey-lighter:                #ddd;
+$color-grey-lightest:               #f9f9f9;
+
+// Layout
+// -------------------------------------------
+
+$respond-size-desktop:              768px;
+
+$content-nav-width:                 344px;
+
+// Components
+// -------------------------------------------
+
+$nav-max-width:                     347px;
+$nav-width:                         80%;
+$nav-padding:                       10px;
+
+$lightbox-padding:                  15px;
+$lightbox-max-width:                662px;
+$lightbox-width:                    90%;
+$lightbox-min-height:               644px;
+$lightbox-top:                      10%;
+
+$btn-back-color:                    $color-blue;
+$btn-color:                         #fff;
+$btn-shadow-color:                  $color-grey-light;
+$btn-font-size:                     $font-size-big;
+$btn-padding-horizontal:            0.7em;
+$btn-padding-vertical:              0.5em;
+$btn-disabled-back-color:           $color-grey-lighter;
+$btn-disabled-color:                #fff;
+
+$btn-icon-color:                    $color-blue;
+$btn-icon-disabled-color:           $color-grey;
+
+$label-back-color:                  $color-blue;
+$label-color:                       #fff;
+$label-shadow-color:                $color-grey-light;
+$label-font-size:                   $font-size-small;
+$label-padding-horizontal:          0.8em;
+$label-padding-vertical:            0.3em;
+
+$label-primary-back-color:          #ff878d;
+$label-primary-color:               #fff;
+
+$label-light-back-color:            #fff;
+$label-light-color:                 $color-blue;
+$label-light-shadow-color:          $color-grey-lighter;
+$label-light-padding-horizontal:    0.3em;
+$label-light-padding-vertical:      0.1em;

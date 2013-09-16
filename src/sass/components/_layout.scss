@@ -1,0 +1,10 @@
+.main-content {
+    @include clearfix();
+    height: 100%;
+    overflow: hidden;
+}
+
+.column {
+    height: 100%;
+    overflow: hidden;
+}

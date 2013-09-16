@@ -1,0 +1,41 @@
+
+.label {
+    display: inline-block;
+    padding: $label-padding-vertical $label-padding-horizontal;
+    font-size: $label-font-size;
+    text-align: center;
+    vertical-align: middle;
+    border-radius: ($line-height-base * $label-font-size) + 2 * $label-padding-vertical;
+    white-space: nowrap;
+    user-select: none;
+    background-color: $label-back-color;
+    color: $label-color;
+    box-shadow: 0px 1px 0px $label-shadow-color;
+
+    &[data-icon]:before {
+        padding-right: 0.5em
+    }
+    &[data-icon-append]:after {
+        padding-left: 0.5em
+    }
+}
+
+.label-primary {
+    background-color: $label-primary-back-color;
+    color: $label-primary-color;
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAGCAYAAADgzO9IAAAAJUlEQVQIW2NkQABJIPM5lCvJCGMgC4LYIAkUlTAFMB0gjRQaBQCw8go5lVnl5wAAAABJRU5ErkJggg==);
+
+    @include respond-to(retina) {
+        background-size: 3px 3px;
+    }
+}
+
+.label-light {
+    background-color: $label-light-back-color;
+    color: $label-light-color;
+    box-shadow: inset 1px 1px 0px $label-light-shadow-color;
+    padding: $label-light-padding-vertical $label-light-padding-horizontal;
+    min-width: 2.5em;
+    font-weight: bold;
+    font-size: $font-size-base;
+}

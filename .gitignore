@@ -5,3 +5,4 @@ npm-debug.log
 test/new-unit/lib/
 .sass-cache
 src/css/style.css
+dist/

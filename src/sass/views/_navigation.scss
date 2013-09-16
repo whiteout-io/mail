@@ -1,0 +1,87 @@
+.nav-menu {
+    .content {
+        a {
+            color: #fff;
+            text-decoration: none;
+        }
+
+        header {
+            padding: 0 $nav-padding;
+            height: 84px;
+            h1 {
+                //@include hide-text();
+                // TODO: replace with svg background image
+                margin: 0px;
+                padding: 0px;
+                color: #fff;
+                font-weight: normal;
+            }
+        }
+
+        ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            li {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+            }
+        }
+
+        ul.nav-primary {
+            padding: 0 $nav-padding;
+            li {
+                display: block;
+
+                a {
+                    @include clearfix();
+                    display: block;
+                    font-size: $font-size-bigger;
+                    vertical-align: middle;
+                    border-bottom: 1px solid #fff;
+                    line-height: 1.8em;
+                    transition: background-color 0.3s;
+
+                    .label-wrapper {
+                        display: block;
+                        float: right;
+                    }
+                    span.label {
+                        line-height: 1.3em;
+                        vertical-align: middle;
+                    }
+                    &:hover, &:focus {
+                        background-color: mix($color-blue, $color-white, 80%);
+                    }
+                }
+            }
+            li:first-child {
+                border-top: 1px solid #fff;
+            }
+        }
+
+        ul.nav-secondary {
+            margin-top: em(50, 16);
+            padding: 0 $nav-padding;
+            li {
+                a {
+                    font-size: $font-size-big;
+                }
+            }
+        }
+
+        footer {
+            position: absolute;
+            bottom: 0px;
+            left: 0px;
+            padding: 0 $nav-padding;
+            background: darken($color-blue, 1%);
+            height: 28px;
+            width: 100%;
+            font-size: $font-size-smaller;
+            color: #fff;
+            line-height: em(28,12);
+        }
+    }
+}

@@ -1,0 +1,81 @@
+// Navigation
+// -------------------------
+.nav-container {
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+}
+
+.nav-pusher {
+    position: relative;
+    left: 0;
+    z-index: 99;
+    height: 100%;
+    transition: transform 0.5s;
+}
+
+.nav-menu-open .nav-pusher::after {
+    width: 100%;
+    height: 100%;
+    opacity: 1;
+    transition: opacity 0.5s;
+}
+
+.nav-pusher::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    background: rgba(0,0,0,0.2);
+    content: '';
+    opacity: 0;
+    transition: opacity 0.5s, width 0.1s 0.5s, height 0.1s 0.5s;
+}
+
+.nav-menu {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    visibility: hidden;
+    width: $nav-width;
+    max-width: $nav-max-width;
+    height: 100%;
+    background: $color-blue;
+    background-image: linear-gradient(to right ,$color-blue 98%, darken($color-blue, 1%) 100%);
+    transition: all 0.5s;
+    border-right: 1px solid $color-grey-light;
+}
+
+.nav-menu-open .nav-pusher::after {
+    width: 100%;
+    height: 100%;
+    opacity: 1;
+    transition: opacity 0.5s;
+}
+
+.nav-effect.nav-menu-open .nav-pusher {
+    transform: translate3d($nav-max-width, 0, 0);
+}
+@media(max-width: 450px) {
+    .nav-effect.nav-menu-open .nav-pusher {
+        transform: translate3d($nav-width, 0, 0);
+    }
+}
+
+
+.nav-effect.nav-menu {
+z-index: 1;
+    transform: translate3d(-50%, 0, 0);
+}
+
+.nav-effect.nav-menu-open .nav-effect.nav-menu {
+    visibility: visible;
+    transition: transform 0.5s;
+    transform: translate3d(0, 0, 0);
+}
+
+.nav-effects.nav-menu::after {
+    display: none;
+}

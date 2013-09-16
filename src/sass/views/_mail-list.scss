@@ -1,0 +1,32 @@
+.view-mail-list {
+    $padding-horizontal: 15px;
+    $padding-vertical: 10px;
+
+    float: left;
+    width: $content-nav-width;
+    background: $color-grey-lightest;
+    background-image: linear-gradient(to right ,$color-grey-lightest 98%, darken($color-grey-lightest, 1%) 100%);
+    border-right: 1px solid $color-grey-light;
+
+    header {
+
+        cursor: pointer;
+        padding: $padding-vertical $padding-horizontal;
+        text-shadow: 0px 1px 1px $color-grey-lighter;
+        &:before {
+            color: $color-blue;
+            font-size: $font-size-bigger;
+            margin-right: 0.5em;
+            vertical-align: middle;
+        }
+        h2 {
+            margin: 0;
+            display: inline;
+            color: $color-grey-dark;
+            font-size: $font-size-bigger;
+            font-weight: normal;
+            vertical-align: middle;
+        }
+
+    }
+}

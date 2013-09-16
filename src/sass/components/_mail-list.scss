@@ -1,0 +1,161 @@
+.mail-list {
+    $padding-vertical: 15px;
+    $padding-horizontal: 30px;
+
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    &:last-child {
+        margin-bottom: 0;
+    }
+
+    li {
+        display: block;
+        margin-bottom: 5px;
+        padding: $padding-vertical $padding-horizontal;
+        background: $color-white;
+        cursor: pointer;
+        transition: background-color 0.3s, color 0.3s;
+
+        h3 {
+            @include text-overflow;
+
+            color: $color-blue;
+            font-size: $font-size-bigger;
+            font-weight: normal;
+            margin: 0;
+        }
+        p {
+            font-size: $font-size-small;
+            margin: 0;
+        }
+        .head {
+            position: relative;
+            padding-right: 6.5em;
+
+            .subject {
+                @include text-overflow;
+
+                color: $color-grey-dark;
+                font-weight: bold;
+                line-height: 1.8em;
+            }
+            time {
+                position: absolute;
+                bottom: 0;
+                right: 0;
+                width: 6em * ($font-size-small / $font-size-smaller);
+                color: $color-grey-light;
+                font-size: $font-size-smaller;
+                text-align: right;
+                line-height: 1.8em * ($font-size-small / $font-size-smaller);
+            }
+            &:before {
+                content: "";
+                width: 0.8em;
+                height: 0.8em;
+                border-radius: 50%;
+                box-shadow: inset 0 2px 2px $color-grey-light;
+                position: absolute;
+                top: 0;
+                left: 0;
+                margin-top: 0.2em;
+                margin-left: -1.3em;
+                transition: background-color 0.3s, box-shadow 0.3s;
+            }
+        }
+        .body {
+            @include text-overflow;
+
+            color: $color-grey;
+        }
+
+        &:hover {
+            background-color: mix($color-white, $color-blue, 90%);
+        }
+
+        &.mail-list-attachment {
+            .head:after {
+                content: "\e003";
+                color: $color-grey-light;
+                font-family: $font-family-icons;
+                position: absolute;
+                right: 0;
+                top: 0;
+                margin-right: -1 * $padding-horizontal;
+                text-align: center;
+                line-height: 1.8em;
+                width: $padding-horizontal;
+            }
+        }
+
+        &.mail-list-unread {
+            .head:before {
+                background-color: $color-blue;
+                box-shadow: inset 0 1px 2px $color-grey;
+            }
+        }
+
+        &.mail-list-replied {
+            .head:before {
+                content: "\e002";
+                color: $color-grey-light;
+                font-family: $font-family-icons;
+                position: absolute;
+                left: 0;
+                top: 0;
+                margin-left: -1 * $padding-horizontal;
+                text-align: center;
+                line-height: 1.8em / 0.8em;
+                box-shadow: none;
+                width: $padding-horizontal;
+                height: auto;
+                font-size: 0.8em;
+            }
+        }
+
+        &.mail-list-active,
+        &.mail-list-active:hover {
+            background-color: $color-blue;
+            color: $color-white;
+
+            h3 {
+                color: $color-white;
+            }
+            .head {
+                .subject {
+                    color: $color-white;
+                }
+                time {
+                    color: $color-white;
+                }
+            }
+            .body {
+                color: $color-white;
+            }
+            .head:before {
+                box-shadow: inset 0 2px 2px $color-grey-light;
+                background-color: $color-white;
+            }
+            &.mail-list-attachment {
+                .head:after {
+                    color: $color-white;
+                }
+            }
+            &.mail-list-unread {
+                .head:before {
+                    box-shadow: inset 0 2px 2px $color-grey-light;
+                    background-color: $color-white;
+                }
+            }
+            &.mail-list-replied {
+                .head:before {
+                    color: $color-white;
+                    background: transparent;
+                    box-shadow: none;
+                }
+            }
+        }
+    }
+}

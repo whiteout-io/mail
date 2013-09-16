@@ -16,7 +16,7 @@ $lightgrey-box-shadow-color: #D8D8D8;
     font-family: 'PT Sans';
     font-style: normal;
     font-weight: 400;
-    src: local('PT Sans'), local('PTSans-Regular'), url('pt-sans.ttf') format('truetype');
+    src: local('PT Sans'), local('PTSans-Regular'), url('../font/pt-sans.ttf') format('truetype');
 }
 
 @import "icon-font";
