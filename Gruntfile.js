@@ -119,55 +119,57 @@ module.exports = function(grunt) {
             npm: {
                 expand: true,
                 flatten: true,
-                src: ['node_modules/crypto-lib/node_modules/node-forge/js/*.js'],
+                cwd: 'node_modules/',
+                src: ['crypto-lib/node_modules/node-forge/js/*.js'],
                 dest: 'src/lib/'
             },
             npmDev: {
                 expand: true,
                 flatten: true,
-                src: ['node_modules/mocha/mocha.css', 'node_modules/mocha/mocha.js', 'node_modules/chai/chai.js', 'node_modules/sinon/pkg/sinon.js'],
+                cwd: 'node_modules/',
+                src: ['mocha/mocha.css', 'mocha/mocha.js', 'chai/chai.js', 'sinon/pkg/sinon.js'],
                 dest: 'test/new-unit/lib/'
             },
             cryptoLib: {
                 expand: true,
-                flatten: true,
-                src: ['node_modules/crypto-lib/src/*.js'],
+                cwd: 'node_modules/crypto-lib/src/',
+                src: ['*.js'],
                 dest: 'src/js/crypto/'
             },
             lib: {
                 expand: true,
-                flatten: true,
-                src: ['src/lib/*'],
+                cwd: 'src/lib/',
+                src: ['**'],
                 dest: 'dist/lib/'
             },
             js: {
                 expand: true,
-                flatten: true,
-                src: ['src/js/*'],
+                cwd: 'src/js/',
+                src: ['**'],
                 dest: 'dist/js/'
             },
             font: {
                 expand: true,
-                flatten: true,
-                src: ['src/font/*'],
+                cwd: 'src/font/',
+                src: ['*'],
                 dest: 'dist/font/'
             },
             img: {
                 expand: true,
-                flatten: true,
-                src: ['src/img/*'],
+                cwd: 'src/img/',
+                src: ['*'],
                 dest: 'dist/img/'
             },
             tpl: {
                 expand: true,
-                flatten: true,
-                src: ['src/tpl/*'],
+                cwd: 'src/tpl/',
+                src: ['*'],
                 dest: 'dist/tpl/'
             },
             app: {
                 expand: true,
-                flatten: true,
-                src: ['src/*.html', 'src/*.js', 'src/manifest.json'],
+                cwd: 'src/',
+                src: ['*.html', '*.js', '*.json'],
                 dest: 'dist/'
             }
         }
