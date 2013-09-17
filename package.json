@@ -7,7 +7,7 @@
     "scripts": {
         "postinstall": "./res/copy-deps.sh",
         "test": "grunt test",
-        "start": "grunt prod"
+        "start": "grunt dev"
     },
     "dependencies": {
         "crypto-lib": "https://github.com/whiteout-io/crypto-lib/tarball/master",

@@ -101,6 +101,10 @@ module.exports = function(grunt) {
             css: {
                 files: ['src/sass/**/*.scss'],
                 tasks: ['dist-css']
+            },
+            code: {
+                files: ['src/**/*.js', 'src/**/*.html', 'src/**/*.json', 'src/img/*', 'src/font/*'],
+                tasks: ['dist-copy']
             }
         },
         copy: {
@@ -155,14 +159,15 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-copy');
 
-    // Default task(s).
-    grunt.registerTask('dev', ['connect:dev']);
-    grunt.registerTask('test', ['jshint', 'connect:test', 'mocha', 'qunit']);
-    grunt.registerTask('prod', ['connect:prod']);
-
+    // Build tasks
     grunt.registerTask('dist-css', ['sass', 'autoprefixer', 'csso']);
-    grunt.registerTask('dist-font', ['copy']);
-    grunt.registerTask('dist', ['clean', 'dist-css', 'dist-font']);
+    grunt.registerTask('dist-copy', ['copy']);
+    grunt.registerTask('dist', ['clean', 'dist-css', 'dist-copy']);
     grunt.registerTask('default', ['dist']);
+
+    // Test/Dev tasks
+    grunt.registerTask('dev', ['connect:dev']);
+    grunt.registerTask('test', ['jshint', 'connect:test', 'mocha', 'qunit', 'dist']);
+    grunt.registerTask('prod', ['connect:prod']);
 
 };
