@@ -5,8 +5,8 @@
         "node": ">=0.8"
     },
     "scripts": {
-        "postinstall": "./res/copy-deps.sh",
-        "test": "grunt test",
+        "postinstall": "./res/copy-deps.sh && grunt dist-npm",
+        "test": "grunt test && grunt dist",
         "start": "grunt dev"
     },
     "dependencies": {

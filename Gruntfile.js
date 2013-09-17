@@ -102,12 +102,50 @@ module.exports = function(grunt) {
                 files: ['src/sass/**/*.scss'],
                 tasks: ['dist-css']
             },
-            code: {
-                files: ['src/**/*.js', 'src/**/*.html', 'src/**/*.json', 'src/img/*', 'src/font/*'],
-                tasks: ['dist-copy']
+            js: {
+                files: ['src/js/**/*.js'],
+                tasks: ['copy:js']
+            },
+            lib: {
+                files: ['src/lib/**/*.js'],
+                tasks: ['copy:lib']
+            },
+            app: {
+                files: ['src/*.js', 'src/**/*.html', 'src/**/*.json', 'src/img/**/*', 'src/font/**/*'],
+                tasks: ['copy:app', 'copy:tpl', 'copy:img', 'copy:font']
             }
         },
         copy: {
+            npm: {
+                expand: true,
+                flatten: true,
+                src: ['node_modules/crypto-lib/node_modules/node-forge/js/*.js'],
+                dest: 'src/lib/'
+            },
+            npmDev: {
+                expand: true,
+                flatten: true,
+                src: ['node_modules/mocha/mocha.css', 'node_modules/mocha/mocha.js', 'node_modules/chai/chai.js', 'node_modules/sinon/pkg/sinon.js'],
+                dest: 'test/new-unit/lib/'
+            },
+            cryptoLib: {
+                expand: true,
+                flatten: true,
+                src: ['node_modules/crypto-lib/src/*.js'],
+                dest: 'src/js/crypto/'
+            },
+            lib: {
+                expand: true,
+                flatten: true,
+                src: ['src/lib/*'],
+                dest: 'dist/lib/'
+            },
+            js: {
+                expand: true,
+                flatten: true,
+                src: ['src/js/*'],
+                dest: 'dist/js/'
+            },
             font: {
                 expand: true,
                 flatten: true,
@@ -120,23 +158,11 @@ module.exports = function(grunt) {
                 src: ['src/img/*'],
                 dest: 'dist/img/'
             },
-            js: {
-                expand: true,
-                flatten: true,
-                src: ['src/js/*'],
-                dest: 'dist/js/'
-            },
             tpl: {
                 expand: true,
                 flatten: true,
                 src: ['src/tpl/*'],
                 dest: 'dist/tpl/'
-            },
-            lib: {
-                expand: true,
-                flatten: true,
-                src: ['src/lib/*'],
-                dest: 'dist/lib/'
             },
             app: {
                 expand: true,
@@ -160,14 +186,15 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-copy');
 
     // Build tasks
+    grunt.registerTask('dist-npm', ['copy:npm', 'copy:npmDev', 'copy:cryptoLib']);
     grunt.registerTask('dist-css', ['sass', 'autoprefixer', 'csso']);
     grunt.registerTask('dist-copy', ['copy']);
-    grunt.registerTask('dist', ['clean', 'dist-css', 'dist-copy']);
+    grunt.registerTask('dist', ['clean', 'dist-npm', 'dist-css', 'dist-copy']);
     grunt.registerTask('default', ['dist']);
 
     // Test/Dev tasks
     grunt.registerTask('dev', ['connect:dev']);
-    grunt.registerTask('test', ['jshint', 'connect:test', 'mocha', 'qunit', 'dist']);
+    grunt.registerTask('test', ['jshint', 'connect:test', 'mocha', 'qunit']);
     grunt.registerTask('prod', ['connect:prod']);
 
 };
