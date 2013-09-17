@@ -6,9 +6,10 @@ require([
     'js/controller/login',
     'js/controller/message-list',
     'js/controller/write',
+    'js/controller/navigation',
     'angularRoute',
     'angularTouch'
-], function(angular, LoginCtrl, MessageListCtrl, WriteCtrl) {
+], function(angular, LoginCtrl, MessageListCtrl, WriteCtrl, NavigationCtrl) {
     'use strict';
 
     var app = angular.module('mail', ['ngRoute', 'ngTouch', 'write']);
@@ -28,6 +29,10 @@ require([
         $routeProvider.when('/write/:replyToId', {
             templateUrl: 'tpl/write.html',
             controller: WriteCtrl
+        });
+        $routeProvider.when('/desktop', {
+            templateUrl: 'tpl/desktop.html',
+            controller: NavigationCtrl
         });
         $routeProvider.otherwise({
             redirectTo: '/login'
