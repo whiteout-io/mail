@@ -1,6 +1,6 @@
 .view-write {
     margin: 0px;
-    padding: 10px;
+    padding: 12px;
     color: $color-grey-dark;
 
     .title {
@@ -51,21 +51,25 @@
         }
     }
 
-    *[contentEditable] {
-        outline: 0px;
-    }
+    .body {
+        line-height: 1.5em;
 
-    .encrypt-preview {
-        font-size: 0.9em;
-        margin-top: 3em;
-        font-family: monospace;
-        color: $color-grey-light;
-        word-wrap: break-word;
+        *[contentEditable] {
+            outline: 0px;
+        }
+
+        .encrypt-preview {
+            font-size: 0.9em;
+            margin-top: 3em;
+            font-family: monospace;
+            color: $color-grey-light;
+            word-wrap: break-word;
+        }
     }
 
     .send-control {
         position: absolute;
-        bottom: 10px;
-        right: 10px;
+        bottom: 12px;
+        right: 12px;
     }
 }
