@@ -1,5 +1,5 @@
 .mail-list {
-    $padding-vertical: 15px;
+    $padding-vertical: 12px;
     $padding-horizontal: 30px;
 
     list-style: none;
@@ -12,7 +12,7 @@
 
     li {
         display: block;
-        margin-bottom: 5px;
+        margin-bottom: 7px;
         padding: $padding-vertical $padding-horizontal;
         background: $color-white;
         cursor: pointer;
@@ -33,13 +33,14 @@
         .head {
             position: relative;
             padding-right: 6.5em;
+            margin-bottom: 0.25em;
 
             .subject {
                 @include text-overflow;
 
                 color: $color-grey-dark;
                 font-weight: bold;
-                line-height: 1.8em;
+                line-height: 1.5em;
             }
             time {
                 position: absolute;
@@ -49,14 +50,14 @@
                 color: $color-grey-light;
                 font-size: $font-size-smaller;
                 text-align: right;
-                line-height: 1.8em * ($font-size-small / $font-size-smaller);
+                line-height: 1.5em * ($font-size-small / $font-size-smaller);
             }
             &:before {
                 content: "";
-                width: 0.8em;
-                height: 0.8em;
+                width: 1em;
+                height: 1em;
                 border-radius: 50%;
-                box-shadow: inset 0 2px 2px $color-grey-light;
+                box-shadow: inset 1px 1px 1px $color-grey-light;
                 position: absolute;
                 top: 0;
                 left: 0;
@@ -66,9 +67,9 @@
             }
         }
         .body {
-            @include text-overflow;
-
             color: $color-grey;
+            height: 2.5em;
+            overflow: hidden;
         }
 
         &:hover {
@@ -78,11 +79,12 @@
         &.mail-list-attachment {
             .head:after {
                 content: "\e003";
-                color: $color-grey-light;
+                color: $color-grey-medium;
                 font-family: $font-family-icons;
                 position: absolute;
                 right: 0;
                 top: 0;
+                margin-top: -0.3em;
                 margin-right: -1 * $padding-horizontal;
                 text-align: center;
                 line-height: 1.8em;
@@ -93,14 +95,14 @@
         &.mail-list-unread {
             .head:before {
                 background-color: $color-blue;
-                box-shadow: inset 0 1px 2px $color-grey;
+                box-shadow: inset 0.5px 1px 1px $color-grey-medium;
             }
         }
 
         &.mail-list-replied {
             .head:before {
                 content: "\e002";
-                color: $color-grey-light;
+                color: $color-grey-medium;
                 font-family: $font-family-icons;
                 position: absolute;
                 left: 0;
@@ -135,7 +137,7 @@
                 color: $color-white;
             }
             .head:before {
-                box-shadow: inset 0 2px 2px $color-grey-light;
+                box-shadow: inset 1px 1px 1px $color-grey-light;
                 background-color: $color-white;
             }
             &.mail-list-attachment {
@@ -145,7 +147,7 @@
             }
             &.mail-list-unread {
                 .head:before {
-                    box-shadow: inset 0 2px 2px $color-grey-light;
+                    box-shadow: inset 1px 1px 1px $color-grey-light;
                     background-color: $color-white;
                 }
             }
