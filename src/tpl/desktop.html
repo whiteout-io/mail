@@ -1,67 +1,16 @@
 <div class="nav-container nav-effect" ng-class="{'nav-menu-open': navOpen}">
 
   <!-- main navigation -->
-  <nav class="nav-menu nav-effect">
-    <div class="content">
-      <header>
-        <h1>WHITEOUT<span>.IO</span></h1>
-      </header>
-      <ul class="nav-primary">
-        <li>
-          <a href="#">
-            Inbox
-            <span class="label-wrapper"><span class="label label-light">1000+</span></span>
-          </a>
-        </li>
-        <li>
-          <a href="#">Sent</a>
-        </li>
-        <li>
-          <a href="#">Outbox</a>
-        </li>
-        <li>
-          <a href="#">
-            Drafts
-            <span class="label-wrapper"><span class="label label-light">2</span></span>
-          </a>
-        </li>
-        <li>
-          <a href="#">
-            Trash
-            <span class="label-wrapper"><span class="label label-light">100</span></span>
-          </a>
-        </li>
-      </ul>
-      <ul class="nav-secondary">
-        <li><a href="#">Account</a></li>
-        <li><a href="#">About whiteout.io</a></li>
-        <li><a href="#">Help</a></li>
-      </ul>
-      <footer>
-        Last update: 12:22 PM
-      </footer>
-    </div>
-  </nav><!--/.nav-menu-->
+  <nav class="nav-menu nav-effect" ng-include="'tpl/navigation.html'"></nav>
 
   <!-- content wrapper pushed right -->
   <div class="nav-pusher" ng-click="closeNav()">
     <section class="content main-content">
 
       <!-- left column: containing list view and navigation header -->
-      <div class="column view-mail-list">
-        <!-- nav controll and section headline -->
-        <header data-icon="&#xe004;" ng-click="openNav(); $event.stopPropagation()">
-          <h2>Inbox</h2>
-        </header>
+      <div class="column view-mail-list" ng-include="'tpl/mail-list.html'" ng-controller="MailListCtrl"></div>
 
-        <div class="">
-
-        </div>
-      </div>
-
-      <div class="column">
-
-      </div>
+      <div class="column" ng-include="'tpl/read.html'"></div>
 
     </section>
   </div><!--/.nav-pusher-->

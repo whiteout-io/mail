@@ -6,7 +6,7 @@ define(function(require) {
         moment = require('moment'),
         emailDao;
 
-    var MessageListCtrl = function($scope, $routeParams) {
+    var MailListCtrl = function($scope, $routeParams) {
         $scope.folder = $routeParams.folder;
         $scope.messageId = $routeParams.messageId;
         emailDao = appController._emailDao;
@@ -101,7 +101,7 @@ define(function(require) {
     }
 
     function createDummyMails(callback) {
-        var Email = function(unread, attachments) {
+        var Email = function(unread, attachments, replied) {
             this.uid = '1';
             this.from = [{
                 name: 'Whiteout Support',
@@ -112,6 +112,7 @@ define(function(require) {
             }]; // list of receivers
             this.attachments = (attachments) ? [true] : undefined;
             this.unread = unread;
+            this.replied = replied;
             this.displayDate = '23.08.13';
             this.longDisplayDate = 'Wednesday, 23.08.2013 19:23';
             this.subject = "Welcome Max"; // Subject line
@@ -121,10 +122,10 @@ define(function(require) {
                 "Best regards\nYour whiteout team"; // plaintext body
         };
 
-        var dummys = [new Email(true, true), new Email(true), new Email(false, true), new Email(false), new Email(false), new Email(false)];
+        var dummys = [new Email(true, true), new Email(true), new Email(false, true, true), new Email(false), new Email(false), new Email(false)];
 
         callback(dummys);
     }
 
-    return MessageListCtrl;
+    return MailListCtrl;
 });

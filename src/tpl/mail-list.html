@@ -1,0 +1,15 @@
+<!-- nav controll and section headline -->
+<header data-icon="&#xe004;" ng-click="openNav(); $event.stopPropagation()">
+  <h2>Inbox</h2>
+</header>
+
+<ul class="mail-list">
+  <li ng-class="{'mail-list-active': email === selected, 'mail-list-attachment': email.attachments !== undefined && email.attachments.length > 0, 'mail-list-unread': email.unread, 'mail-list-replied': email.replied}" ng-click="select(email)" ng-repeat="email in emails">
+    <h3>{{email.from[0].name || email.from[0].address}}</h3>
+    <div class="head">
+      <p class="subject">{{email.subject}}</p>
+      <time>{{email.displayDate}}</time>
+    </div>
+    <p class="body">{{email.body}}</p>
+  </li>
+</ul><!--/.mail-list-->
