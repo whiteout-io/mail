@@ -10,6 +10,7 @@
       <!-- left column: containing list view and navigation header -->
       <div class="column view-mail-list" ng-include="'tpl/mail-list.html'" ng-controller="MailListCtrl"></div>
 
+      <!-- right column: containing list read view -->
       <div class="column" ng-include="'tpl/read.html'"></div>
 
     </section>
@@ -18,18 +19,4 @@
 </div><!--/.nav-container-->
 
 <!-- lightbox  -->
-<div class="lightbox-overlay">
-  <div class="lightbox lightbox-effect">
-    <div class="lightbox-body">
-      <header>
-        <!-- add lightbox title -->
-        <h2>New email</h2>
-        <button class="close" data-action="lightbox-close">&#xe007;</button>
-      </header>
-      <div class="content">
-        <!-- add lightbox content here -->
-        some content
-      </div>
-    </div>
-  </div>
-</div><!--/.lightbox-->
+<div class="lightbox-overlay" ng-include="'tpl/lightbox.html'"></div>
