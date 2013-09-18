@@ -35,7 +35,7 @@ require([
             controller: NavigationCtrl
         });
         $routeProvider.otherwise({
-            redirectTo: '/login'
+            redirectTo: '/desktop'
         });
     });
 

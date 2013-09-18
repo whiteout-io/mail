@@ -1,20 +1,32 @@
 .nav-menu {
+
+    border: 1px;
+    border-right-style: solid;
+    border-color: $color-grey-medium;
+
     .content {
-        a {
+
+        h1, a {
             color: #fff;
             text-decoration: none;
+            text-shadow: 0 -1px 1px $color-grey-medium;
         }
 
         header {
             padding: 0 $nav-padding;
             height: 84px;
             h1 {
-                //@include hide-text();
-                // TODO: replace with svg background image
-                margin: 0px;
-                padding: 0px;
-                color: #fff;
+                font-family: 'Mensch';
                 font-weight: normal;
+                height: 100px;
+                width: 300px;
+                margin: 0px;
+                padding-top: 10px;
+                color: #fff;
+
+                span {
+                    font-family: 'Mensch Thin';
+                }
             }
         }
 
@@ -50,6 +62,7 @@
                     span.label {
                         line-height: 1.3em;
                         vertical-align: middle;
+                        text-shadow: none;
                     }
                     &:hover, &:focus {
                         background-color: mix($color-blue, $color-white, 80%);
