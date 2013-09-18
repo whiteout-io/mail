@@ -1,0 +1,71 @@
+.view-write {
+    margin: 0px;
+    padding: 10px;
+    color: $color-grey-dark;
+
+    .title {
+        text-align: center;
+        font-size: $font-size-bigger;
+        margin-bottom: 20px;
+    }
+
+    input {
+        border: 0!important;
+        outline: 0px;
+    }
+
+    button {
+        border: 0!important;
+    }
+
+    .address-input {
+        width: 90%;
+    }
+
+    .subject-box {
+        margin: 20px 0;
+        width: inherit;
+        border: 1px;
+        border-style: solid;
+        border-color: $color-grey-lighter;
+        height: em(44);
+
+        .subject-line {
+            float: left;
+            padding: 10px;
+            width: 80%;
+            color: $color-grey;
+        }
+
+        .subject {
+            font-weight: bold;
+            width: 100%;
+        }
+
+        .btn-attachment {
+            float: right;
+            padding: em(7.5) em(7.5) em(4) em(7.5);
+            margin: em(5);
+            color: $color-grey-lightest;
+            background-color: $color-blue;
+        }
+    }
+
+    *[contentEditable] {
+        outline: 0px;
+    }
+
+    .encrypt-preview {
+        font-size: 0.9em;
+        margin-top: 3em;
+        font-family: monospace;
+        color: $color-grey-light;
+        word-wrap: break-word;
+    }
+
+    .send-control {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+    }
+}

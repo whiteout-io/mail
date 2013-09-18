@@ -30,6 +30,8 @@ textarea {
     font-family: inherit;
     font-size: inherit;
     line-height: inherit;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 // Basic layout

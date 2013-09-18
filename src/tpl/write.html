@@ -1,4 +1,4 @@
-<div class="write-message">
+<div class="view-write">
   <p class="title">New Mail</p>
 
   <div class="address-headers">
@@ -16,9 +16,9 @@
     <div class="subject-line">
       <input ng-model="subject" class="subject" spellcheck="true" tabindex="3" placeholder="Subject" ng-change="updatePreview()">
     </div>
-    <div class="attachment-btn btn-shadow">
-      <div class="icon-attachment"></div>
-    </div>
+    <button class="btn-attachment">
+      <div data-icon="&#xe003;"></div>
+    </button>
   </div><!--/.subject-box-->
 
   <div class="mail-text-body">
@@ -31,5 +31,7 @@
     </div><!--/.encrypt-preview-->
   </div><!--/.mail-text-body-->
 
-  <button ng-click="sendEmail()" class="send-btn btn-shadow" tabindex="5">Send securely</button>
+  <div class="send-control">
+    <button ng-click="sendEmail()" class="btn" ng-disabled="!to" tabindex="5">Send securely</button>
+  </div>
 </div>
