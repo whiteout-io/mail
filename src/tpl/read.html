@@ -1,39 +1,29 @@
-<div class="buttons">
-  <div ng-click="write()" class="circle btn-shadow">
-    <div class="icon-new-mail"></div>
-  </div>
+<div class="controls">
+  <button class="btn-icon">&#xe005;</button>
+  <button class="btn-icon">&#xe002;</button>
+  <button ng-click="write()" class="btn-icon">&#xe006;</button>
+</div><!--/.controls-->
 
-  <div class="circle btn-shadow">
-    <div class="icon-reply"></div>
-  </div>
-
-  <div class="circle btn-shadow">
-    <div class="icon-delete"></div>
-  </div>
-</div><!--/.buttons-->
-
-<div class="read-message">
-  <p class="subject">{{selected.subject}}</p>
-  <p class="date">{{selected.longDisplayDate}}</p>
-
-  <div class="address-headers">
-    <p>From: <span class="address address-verified">{{selected.from[0].name || selected.from[0].address}}</span></p>
-    <p>To: <span class="address address-verified" ng-repeat="t in selected.to">{{t.address}} </span></p>
+<div class="view-read">
+  <div class="headers">
+    <p class="subject">{{selected.subject}}</p>
+    <p class="date">{{selected.longDisplayDate}}</p>
+    <p class="address">From: <span class="label">{{selected.from[0].name || selected.from[0].address}}</span></p>
+    <p class="address">To: <span class="label" ng-repeat="t in selected.to">{{t.address}} </span></p>
     <div ng-switch="selected.cc !== undefined">
-      <p ng-switch-when="true">
-        CC: <span class="address address-verified" ng-repeat="t in selected.cc">{{t.address}} </span>
+      <p class="address" ng-switch-when="true">
+        CC: <span class="label" ng-repeat="t in selected.cc">{{t.address}} </span>
       </p>
     </div>
-  </div><!--/.address-headers-->
+  </div><!--/.headers-->
 
   <div class="seperator-line"></div>
 
   <div class="mail-text-body">
     <p ng-repeat="part in selected.bodyDisplayParts track by $index">
-      <span ng-switch="part.length === 0">
-        <span ng-switch-when="true"><br></span>
-        <span ng-switch-when="false">{{part}}</span>
+      <span ng-switch="part.length !== 0">
+        <span ng-switch-when="true">{{part}}</span>
       </span>
     </p>
-  </div>
-</div><!--/.read-message-->
+  </div><!--/.mail-text-body-->
+</div><!--/.view-read-->

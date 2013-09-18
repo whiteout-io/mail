@@ -75,11 +75,6 @@ module.exports = function(grunt) {
                 files: {
                     'dist/css/all.css': 'src/sass/all.scss'
                 }
-            },
-            oldSass: {
-                files: {
-                    'dist/css/style.css': 'src/css/style.scss'
-                }
             }
         },
         autoprefixer: {
@@ -107,10 +102,6 @@ module.exports = function(grunt) {
                 files: ['src/sass/**/*.scss'],
                 tasks: ['dist-css']
             },
-            oldSass: {
-                files: ['src/css/**/*.scss'],
-                tasks: ['sass:oldSass']
-            },
             js: {
                 files: ['src/js/**/*.js'],
                 tasks: ['copy:js']
@@ -125,12 +116,6 @@ module.exports = function(grunt) {
             }
         },
         copy: {
-            oldSass: {
-                expand: true,
-                cwd: 'src/css/',
-                src: ['reset.css', 'icons.ttf'],
-                dest: 'dist/css/'
-            },
             npm: {
                 expand: true,
                 flatten: true,

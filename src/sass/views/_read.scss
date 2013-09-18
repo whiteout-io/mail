@@ -1,0 +1,44 @@
+.view-read {
+    padding: 10px 15px;
+    color: $color-grey-dark;
+
+    .headers {
+        p {
+            margin: 0px;
+            padding: 0px;            
+        }
+
+        .subject {
+            font-size: $font-size-bigger;
+        }
+
+        .date {
+            color: $color-grey-light;
+            font-size: $font-size-small;
+            margin-top: 0.5em;
+            margin-bottom: 1.5em;
+            padding: 0px;
+        }
+
+        .address {
+            padding: 0.2em 0;            
+        }
+    }
+
+    .seperator-line {
+        height: 1px;
+        color: $color-grey-lighter;
+        background-color: $color-grey-lighter;
+        margin-top: 1em;
+        margin-bottom: 1.5em;
+    }
+}
+
+.controls {
+    float: right;
+    margin: 10px 15px;
+
+    button {
+        margin-left: 7px;
+    }
+}

@@ -14,6 +14,8 @@ define(function(require) {
         $scope.select = function(email) {
             email.bodyDisplayParts = email.body.split('\n');
             $scope.selected = email;
+            // set selected in parent scope ro it can be displayed in the read view
+            $scope.$parent.selected = $scope.selected;
         };
 
         $scope.write = function(replyTo) {
