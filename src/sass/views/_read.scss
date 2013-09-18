@@ -22,7 +22,11 @@
         }
 
         .address {
-            padding: 0.2em 0;            
+            padding: 0.2em 0;
+
+            .label {
+                margin-left: 0.3em;
+            }
         }
     }
 
