@@ -1,8 +1,12 @@
-node_modules
+node_modules/
 npm-debug.log
 .DS_Store
 *-browserified.js
 test/new-unit/lib/
 .sass-cache
-src/css/style.css
 dist/
+src/lib/*.js
+src/js/crypto/aes-cbc.js
+src/js/crypto/crypto-batch.js
+src/js/crypto/rsa.js
+src/js/crypto/util.js
