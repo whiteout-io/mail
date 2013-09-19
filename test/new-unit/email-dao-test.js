@@ -3,8 +3,8 @@ define(function(require) {
 
     var KeychainDAO = require('js/dao/keychain-dao'),
         EmailDAO = require('js/dao/email-dao'),
-        SmtpClient = require('SmtpClient'),
-        ImapClient = require('ImapClient'),
+        SmtpClient = require('smtp-client'),
+        ImapClient = require('imap-client'),
         app = require('js/app-config'),
         expect = chai.expect;
 

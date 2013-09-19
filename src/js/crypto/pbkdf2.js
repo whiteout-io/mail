@@ -1,7 +1,7 @@
 /**
  * A Wrapper for Forge's PBKDF2 function
  */
-define(['forge'], function(forge) {
+define(['node-forge'], function(forge) {
 	'use strict';
 
 	var self = {};

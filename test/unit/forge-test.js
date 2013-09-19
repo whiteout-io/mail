@@ -1,4 +1,4 @@
-define(['forge', 'cryptoLib/util', 'test/test-data'], function(forge, util, testData) {
+define(['node-forge', 'cryptoLib/util', 'test/test-data'], function(forge, util, testData) {
 	'use strict';
 
 	module("Forge Crypto");

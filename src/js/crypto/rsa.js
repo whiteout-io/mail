@@ -129,7 +129,7 @@
 
 	if (typeof define !== 'undefined' && define.amd) {
 		// AMD
-		define(['forge', 'cryptoLib/util', 'js/app-config'], function(forge, util, app) {
+		define(['node-forge', 'cryptoLib/util', 'js/app-config'], function(forge, util, app) {
 			return new RSA(forge, util, app);
 		});
 	} else if (typeof module !== 'undefined' && module.exports) {

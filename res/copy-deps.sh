@@ -7,10 +7,6 @@ cd `dirname $0`
 cd ..
 
 # build imap/smtp modules and copy
-cd ./node_modules/imap-client/
-node build.js && cp ./src-gen/*.js ../../src/lib/
-cd ../../
-
 cd ./node_modules/smtp-client/
 node build.js && cp ./src-gen/*.js ../../src/lib/
 cd ../../

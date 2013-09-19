@@ -5,8 +5,8 @@ define(function(require) {
     'use strict';
 
     var $ = require('jquery'),
-        ImapClient = require('ImapClient'),
-        SmtpClient = require('SmtpClient'),
+        ImapClient = require('imap-client'),
+        SmtpClient = require('smtp-client'),
         EmailDAO = require('js/dao/email-dao'),
         KeychainDAO = require('js/dao/keychain-dao'),
         cloudstorage = require('js/dao/cloudstorage-dao'),

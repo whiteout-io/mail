@@ -196,7 +196,7 @@
 
     if (typeof define !== 'undefined' && define.amd) {
         // AMD
-        define(['uuid', 'forge'], function(uuid, forge) {
+        define(['uuid', 'node-forge'], function(uuid, forge) {
             return new Util(forge, uuid, undefined);
         });
     } else if (typeof module !== 'undefined' && module.exports) {

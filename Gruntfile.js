@@ -120,7 +120,22 @@ module.exports = function(grunt) {
                 expand: true,
                 flatten: true,
                 cwd: 'node_modules/',
-                src: ['crypto-lib/node_modules/node-forge/js/*.js'],
+                src: [
+                    'crypto-lib/node_modules/node-forge/js/*.js',
+                    'imap-client/src/*.js',
+                    'imap-client/node_modules/inbox/src/*.js',
+                    'imap-client/node_modules/setimmediate/setImmediate.js',
+                    'imap-client/node_modules/inbox/node_modules/node-shims/src/*.js',
+                    'imap-client/node_modules/inbox/node_modules/utf7/src/utf7.js',
+                    'imap-client/node_modules/inbox/node_modules/xoauth2/src/xoauth2.js',
+                    'imap-client/node_modules/mimelib/src/mimelib.js',
+                    'imap-client/node_modules/mimelib/node_modules/addressparser/src/addressparser.js',
+                    'imap-client/node_modules/mimelib/node_modules/encoding/src/encoding.js',
+                    'imap-client/node_modules/mimelib/node_modules/encoding/node_modules/iconv-lite/src/*.js',
+                    'imap-client/node_modules/mimelib/node_modules/encoding/node_modules/mime/src/*.js',
+                    'imap-client/node_modules/mailparser/src/*.js',
+                    'imap-client/node_modules/mailparser/node_modules/mime/src/mime.js'
+                ],
                 dest: 'src/lib/'
             },
             npmDev: {

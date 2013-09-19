@@ -6,6 +6,8 @@
 		paths: {
 			js: '../js',
 			test: '../../test',
+			'node-forge': 'forge',
+			'setimmediate': 'setImmediate',
 			cryptoLib: '../js/crypto',
 			jquery: 'jquery-1.8.2.min',
 			underscore: 'underscore-1.4.4.min',
@@ -13,8 +15,7 @@
 			lawnchairSQL: 'lawnchair/lawnchair-adapter-webkit-sqlite-git',
 			lawnchairIDB: 'lawnchair/lawnchair-adapter-indexed-db-git',
 			cordova: 'cordova-2.5.0',
-			ImapClient: 'imap-client-browserified',
-			SmtpClient: 'smtp-client-browserified',
+			'smtp-client': 'smtp-client-browserified',
 			angular: 'angular/angular.min',
 			angularRoute: 'angular/angular-route.min',
 			angularTouch: 'angular/angular-touch.min',
