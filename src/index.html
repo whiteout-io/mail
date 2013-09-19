@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8">
 
+    <!-- Theses CSP rules are used as a fallback in runtimes such as PhoneGap where setting http headers is not possbile. They get overidden if http headers are set, or in the case of chrome packaged apps. -->
     <meta http-equiv="X-WebKit-CSP" content="default-src 'self'; object-src 'none'; connect-src *; style-src 'self' data: chrome-extension-resource: 'unsafe-inline'; img-src 'self' data: chrome-extension-resource:; frame-src 'self' data: chrome-extension-resource:; font-src 'self' data: chrome-extension-resource:; media-src *;">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; connect-src *; style-src 'self' data: chrome-extension-resource: 'unsafe-inline'; img-src 'self' data: chrome-extension-resource:; frame-src 'self' data: chrome-extension-resource:; font-src 'self' data: chrome-extension-resource:; media-src *;">
 
