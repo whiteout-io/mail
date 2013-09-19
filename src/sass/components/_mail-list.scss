@@ -16,7 +16,7 @@
         padding: $padding-vertical $padding-horizontal;
         background: $color-white;
         cursor: pointer;
-        transition: background-color 0.3s, color 0.3s;
+        transition: background-color $time-li-fade, color $time-li-fade;
 
         h3 {
             @include text-overflow;
@@ -63,7 +63,7 @@
                 left: 0;
                 margin-top: 0.2em;
                 margin-left: -1.3em;
-                transition: background-color 0.3s, box-shadow 0.3s;
+                transition: background-color $time-li-fade, box-shadow $time-li-fade;
             }
         }
         .body {

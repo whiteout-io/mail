@@ -19,14 +19,14 @@ define(function() {
             if (window.chrome && chrome.app.window) {
                 chrome.app.window.create(url, {
                     'bounds': {
-                        'width': 800,
-                        'height': 700
+                        'width': 720,
+                        'height': 680
                     }
                 });
                 return;
             }
 
-            window.open(url, 'Compose Message', 'toolbar=no,width=800,height=700,left=500,top=200,status=no,scrollbars=no,resize=no');
+            window.open(url, 'Compose Message', 'toolbar=no,width=720,height=680,left=500,top=200,status=no,scrollbars=no,resize=no');
         };
     };
 

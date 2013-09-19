@@ -6,6 +6,7 @@
     .title {
         text-align: center;
         font-size: $font-size-bigger;
+        margin-top: 0px;
         margin-bottom: 20px;
     }
 
@@ -18,8 +19,14 @@
         border: 0!important;
     }
 
-    .address-input {
-        width: 90%;
+    .headers {
+        span {
+            color: $color-grey;
+        }
+
+        .address-input {
+            width: 90%;
+        }
     }
 
     .subject-box {

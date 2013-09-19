@@ -1,5 +1,6 @@
 // Navigation
 // -------------------------
+
 .nav-container {
     position: relative;
     overflow: hidden;
@@ -11,14 +12,14 @@
     left: 0;
     z-index: 99;
     height: 100%;
-    transition: transform 0.5s;
+    transition: transform $time-nav-animation;
 }
 
 .nav-menu-open .nav-pusher::after {
     width: 100%;
     height: 100%;
     opacity: 1;
-    transition: opacity 0.5s;
+    transition: opacity $time-nav-animation;
 }
 
 .nav-pusher::after {
@@ -30,7 +31,7 @@
     background: rgba(0,0,0,0.2);
     content: '';
     opacity: 0;
-    transition: opacity 0.5s, width 0.1s 0.5s, height 0.1s 0.5s;
+    transition: opacity $time-nav-animation, width 0.1s $time-nav-animation, height 0.1s $time-nav-animation;
 }
 
 .nav-menu {
@@ -44,7 +45,7 @@
     height: 100%;
     background: $color-blue;
     background-image: linear-gradient(to right ,$color-blue 98%, darken($color-blue, 1%) 100%);
-    transition: all 0.5s;
+    transition: all $time-nav-animation;
     border-right: 1px solid $color-grey-light;
 }
 
@@ -52,7 +53,7 @@
     width: 100%;
     height: 100%;
     opacity: 1;
-    transition: opacity 0.5s;
+    transition: opacity $time-nav-animation;
 }
 
 .nav-effect.nav-menu-open .nav-pusher {
@@ -72,7 +73,7 @@ z-index: 1;
 
 .nav-effect.nav-menu-open .nav-effect.nav-menu {
     visibility: visible;
-    transition: transform 0.5s;
+    transition: transform $time-nav-animation;
     transform: translate3d(0, 0, 0);
 }
 
