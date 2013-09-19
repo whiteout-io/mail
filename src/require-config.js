@@ -7,19 +7,20 @@
 			js: '../js',
 			test: '../../test',
 			'node-forge': 'forge',
-			'setimmediate': 'setImmediate',
 			cryptoLib: '../js/crypto',
-			jquery: 'jquery-1.8.2.min',
-			underscore: 'underscore-1.4.4.min',
+			'setimmediate': 'setImmediate',
+			'smtp-client': 'smtp-client-browserified',
+			underscore: 'underscore/underscore-min',
+			cordova: 'cordova/cordova-2.5.0',
 			lawnchair: 'lawnchair/lawnchair-git',
 			lawnchairSQL: 'lawnchair/lawnchair-adapter-webkit-sqlite-git',
 			lawnchairIDB: 'lawnchair/lawnchair-adapter-indexed-db-git',
-			cordova: 'cordova-2.5.0',
-			'smtp-client': 'smtp-client-browserified',
+			jquery: 'jquery/jquery-2.0.3.min',
 			angular: 'angular/angular.min',
 			angularRoute: 'angular/angular-route.min',
 			angularTouch: 'angular/angular-touch.min',
-			moment: 'moment.min'
+			moment: 'moment/moment.min',
+			uuid: 'uuid/uuid'
 		},
 		shim: {
 			angular: {

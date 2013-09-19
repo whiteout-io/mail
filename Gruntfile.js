@@ -121,6 +121,7 @@ module.exports = function(grunt) {
                 flatten: true,
                 cwd: 'node_modules/',
                 src: [
+                    'requirejs/require.js',
                     'crypto-lib/node_modules/node-forge/js/*.js',
                     'imap-client/src/*.js',
                     'imap-client/node_modules/inbox/src/*.js',
