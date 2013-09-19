@@ -4,7 +4,7 @@ define(function(require) {
     var appController = require('js/app-controller');
 
     var LoginCtrl = function($scope, $location) {
-        var nextPath = '/folders/INBOX';
+        var nextPath = '/desktop';
 
         if (window.chrome && chrome.identity) {
             // start the main app controller

@@ -7,7 +7,7 @@ define(function(require) {
         emailDao;
 
     var MailListCtrl = function($scope, $routeParams) {
-        $scope.folder = $routeParams.folder;
+        $scope.folder = $routeParams.folder || 'INBOX';
         $scope.messageId = $routeParams.messageId;
         emailDao = appController._emailDao;
 
@@ -18,7 +18,7 @@ define(function(require) {
             $scope.$parent.selected = $scope.selected;
         };
 
-        if (false && window.chrome && chrome.identity) {
+        if (window.chrome && chrome.identity) {
             fetchList($scope.folder, function(emails) {
                 $scope.emails = emails;
                 $scope.select($scope.emails[0]);
