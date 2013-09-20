@@ -241,9 +241,20 @@ define(function(require) {
 
             describe('IMAP: list folders', function() {
                 it('should work', function(done) {
-                    imapClientStub.listFolders.yields();
+                    imapClientStub.listAllFolders.yields();
                     emailDao.imapListFolders(function(err) {
-                        expect(imapClientStub.listFolders.calledOnce).to.be.true;
+                        expect(imapClientStub.listAllFolders.calledOnce).to.be.true;
+                        expect(err).to.not.exist;
+                        done();
+                    });
+                });
+            });
+
+            describe('IMAP: get unread messages for folder', function() {
+                it('should work', function(done) {
+                    imapClientStub.unreadMessages.yields();
+                    emailDao.unreadMessages(function(err) {
+                        expect(imapClientStub.unreadMessages.calledOnce).to.be.true;
                         expect(err).to.not.exist;
                         done();
                     });

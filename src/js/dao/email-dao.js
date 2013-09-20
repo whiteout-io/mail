@@ -284,7 +284,16 @@ define(function(require) {
     EmailDAO.prototype.imapListFolders = function(callback) {
         var self = this;
 
-        self._imapClient.listFolders(callback);
+        self._imapClient.listAllFolders(callback);
+    };
+
+    /**
+     * Get the number of unread message for a folder
+     */
+    EmailDAO.prototype.unreadMessages = function(path, callback) {
+        var self = this;
+
+        self._imapClient.unreadMessages(path, callback);
     };
 
     /**

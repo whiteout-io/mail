@@ -6,9 +6,8 @@ define(function(require) {
         moment = require('moment'),
         emailDao;
 
-    var MailListCtrl = function($scope, $routeParams) {
-        $scope.folder = $routeParams.folder || 'INBOX';
-        $scope.messageId = $routeParams.messageId;
+    var MailListCtrl = function($scope) {
+        $scope.folder = 'INBOX';
         emailDao = appController._emailDao;
 
         $scope.select = function(email) {
