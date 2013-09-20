@@ -323,6 +323,15 @@ define(function(require) {
                 // return result from the worker
                 options.callback(null, e.data);
             };
+            worker.onerror = function(e) {
+                // show error message in console
+                console.error('Error handling web worker: Line ' + e.lineno + ' in ' + e.filename + ': ' + e.message);
+                // return error
+                options.callback({
+                    errMsg: (e.message) ? e.message : e
+                });
+                return;
+            };
             // send data to the worker
             worker.postMessage(options.args);
             return;
