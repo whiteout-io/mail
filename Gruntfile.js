@@ -68,7 +68,7 @@ module.exports = function(grunt) {
         },
 
         clean: {
-            dist: ['dist']
+            dist: ['dist', 'src/lib/*.js', 'test/new-unit/lib']
         },
         sass: {
             dist: {
