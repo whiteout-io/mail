@@ -36,18 +36,8 @@ define(function(require) {
             return;
         }
 
-        // login IMAP client if existent
-        if (self._imapClient) {
-            self._imapClient.login(function(err) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-                initKeychain();
-            });
-        } else {
-            initKeychain();
-        }
+        // init keychain and then crypto module
+        initKeychain();
 
         function initKeychain() {
             // init user's local database
@@ -90,6 +80,16 @@ define(function(require) {
     //
     // IMAP/SMTP Apis
     //
+
+    /**
+     * Login the imap client
+     */
+    EmailDAO.prototype.imapLogin = function(callback) {
+        var self = this;
+
+        // login IMAP client if existent
+        self._imapClient.login(callback);
+    };
 
     /**
      * Cleanup by logging the user off.

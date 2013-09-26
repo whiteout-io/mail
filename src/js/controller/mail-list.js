@@ -39,29 +39,45 @@ define(function(require) {
                 offset: offset,
                 num: num
             }, function() {
-                // sync from imap to local db
-                syncImapFolder({
-                    folder: $scope.folder,
-                    offset: offset,
-                    num: num
-                }, function() {
-                    // list again from local db after syncing
-                    listLocalMessages({
+                // login to imap
+                loginImap(function() {
+                    // sync from imap to local db
+                    syncImapFolder({
                         folder: $scope.folder,
                         offset: offset,
                         num: num
                     }, function() {
-                        console.log('syncing ' + $scope.folder + ' complete');
+                        // list again from local db after syncing
+                        listLocalMessages({
+                            folder: $scope.folder,
+                            offset: offset,
+                            num: num
+                        }, function() {
+                            console.log('Syncing ' + $scope.folder + ' complete.');
+                        });
                     });
                 });
             });
         }
 
+        function loginImap(callback) {
+            emailDao.imapLogin(function(err) {
+                if (err) {
+                    console.error(err);
+                    return;
+                }
+
+                console.log('Logged in to IMAP.');
+                callback();
+            });
+        }
+
         function syncImapFolder(options, callback) {
+            console.log('Syncing IMAP...');
             // sync if emails are empty
             emailDao.imapSync(options, function(err) {
                 if (err) {
-                    console.log(err);
+                    console.error(err);
                     return;
                 }
 
@@ -72,7 +88,7 @@ define(function(require) {
         function listLocalMessages(options, callback) {
             emailDao.listMessages(options, function(err, emails) {
                 if (err) {
-                    console.log(err);
+                    console.error(err);
                     return;
                 }
                 // add display dates

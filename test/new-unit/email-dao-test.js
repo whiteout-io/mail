@@ -58,37 +58,24 @@ define(function(require) {
         afterEach(function() {});
 
         describe('init', function() {
-            it('should fail due to error in imap login', function(done) {
-                imapClientStub.login.yields(42);
-
-                emailDao.init(account, emaildaoTest.passphrase, function(err) {
-                    expect(err).to.equal(42);
-                    done();
-                });
-            });
-
             it('should fail due to error in getUserKeyPair', function(done) {
-                imapClientStub.login.yields();
                 devicestorageStub.init.yields();
                 keychainStub.getUserKeyPair.yields(42);
 
                 emailDao.init(account, emaildaoTest.passphrase, function(err) {
                     expect(devicestorageStub.init.calledOnce).to.be.true;
-                    expect(imapClientStub.login.calledOnce).to.be.true;
                     expect(err).to.equal(42);
                     done();
                 });
             });
 
             it('should init with new keygen', function(done) {
-                imapClientStub.login.yields();
                 devicestorageStub.init.yields();
                 keychainStub.getUserKeyPair.yields();
                 cryptoStub.init.yields(null, {});
                 keychainStub.putUserKeyPair.yields();
 
                 emailDao.init(account, emaildaoTest.passphrase, function(err) {
-                    expect(imapClientStub.login.calledOnce).to.be.true;
                     expect(devicestorageStub.init.calledOnce).to.be.true;
                     expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
                     expect(cryptoStub.init.calledOnce).to.be.true;
@@ -99,16 +86,34 @@ define(function(require) {
             });
         });
 
+        describe('login', function() {
+            it('should fail due to error in imap login', function(done) {
+                imapClientStub.login.yields(42);
+
+                emailDao.imapLogin(function(err) {
+                    expect(err).to.equal(42);
+                    done();
+                });
+            });
+
+            it('should work', function(done) {
+                imapClientStub.login.yields();
+
+                emailDao.imapLogin(function(err) {
+                    expect(err).to.not.exist;
+                    done();
+                });
+            });
+        });
+
         describe('IMAP/SMTP tests', function() {
             beforeEach(function(done) {
-                imapClientStub.login.yields();
                 devicestorageStub.init.yields();
                 keychainStub.getUserKeyPair.yields();
                 cryptoStub.init.yields(null, {});
                 keychainStub.putUserKeyPair.yields();
 
                 emailDao.init(account, emaildaoTest.passphrase, function(err) {
-                    expect(imapClientStub.login.calledOnce).to.be.true;
                     expect(devicestorageStub.init.calledOnce).to.be.true;
                     expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
                     expect(cryptoStub.init.calledOnce).to.be.true;

@@ -10,7 +10,7 @@ define(function(require) {
             // start the main app controller
             appController.fetchOAuthToken('passphrase', function(err) {
                 if (err) {
-                    console.log(err);
+                    console.error(err);
                     return;
                 }
 
