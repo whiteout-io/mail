@@ -3,10 +3,13 @@ define(function(require) {
 
     var _ = require('underscore'),
         appController = require('js/app-controller'),
-        moment = require('moment'),
         emailDao;
 
     var MailListCtrl = function($scope) {
+        var offset = -6,
+            num = 0;
+
+        // show inbox at the beginning
         $scope.folder = 'INBOX';
         emailDao = appController._emailDao;
 
@@ -17,72 +20,83 @@ define(function(require) {
             $scope.$parent.selected = $scope.selected;
         };
 
+        // production... in chrome packaged app
         if (window.chrome && chrome.identity) {
-            fetchList($scope.folder, function(emails) {
-                $scope.emails = emails;
-                $scope.select($scope.emails[0]);
-                $scope.$apply();
-            });
+            initList();
             return;
         }
 
+        // development
         createDummyMails(function(emails) {
             $scope.emails = emails;
             $scope.select($scope.emails[0]);
         });
-    };
 
-    function fetchList(folder, callback) {
-        // fetch imap folder's message list
-        emailDao.imapListMessages({
-            folder: folder,
-            offset: -6,
-            num: 0
-        }, function(err, emails) {
-            if (err) {
-                console.log(err);
-                return;
-            }
-
-            // fetch message bodies
-            fetchBodies(emails, folder, function(messages) {
-                addDisplayDate(messages);
-                callback(messages);
+        function initList() {
+            // list messaged from local db
+            listLocalMessages({
+                folder: $scope.folder,
+                offset: offset,
+                num: num
+            }, function() {
+                // sync from imap to local db
+                syncImapFolder({
+                    folder: $scope.folder,
+                    offset: offset,
+                    num: num
+                }, function() {
+                    // list again from local db after syncing
+                    listLocalMessages({
+                        folder: $scope.folder,
+                        offset: offset,
+                        num: num
+                    }, function() {
+                        console.log('syncing ' + $scope.folder + ' complete');
+                    });
+                });
             });
-        });
-    }
+        }
 
-    function fetchBodies(messageList, folder, callback) {
-        var emails = [];
-
-        var after = _.after(messageList.length, function() {
-            callback(emails);
-        });
-
-        _.each(messageList, function(messageItem) {
-            emailDao.imapGetMessage({
-                folder: folder,
-                uid: messageItem.uid
-            }, function(err, message) {
+        function syncImapFolder(options, callback) {
+            // sync if emails are empty
+            emailDao.imapSync(options, function(err) {
                 if (err) {
                     console.log(err);
                     return;
                 }
 
-                emails.push(message);
-                after();
+                callback();
             });
-        });
-    }
+        }
 
-    function addDisplayDate(emails) {
-        emails.forEach(function(email) {
-            // set display date
-            email.displayDate = moment(email.sentDate).format('DD.MM.YY');
-        });
+        function listLocalMessages(options, callback) {
+            emailDao.listMessages(options, function(err, emails) {
+                if (err) {
+                    console.log(err);
+                    return;
+                }
+                // add display dates
+                displayEmails(emails);
 
-        return emails;
-    }
+                callback(emails);
+            });
+        }
+
+        function displayEmails(emails) {
+            if (!emails || emails.length < 1) {
+                return;
+            }
+
+            // sort by uid
+            emails = _.sortBy(emails, function(e) {
+                return -e.uid;
+            });
+
+            $scope.emails = emails;
+            $scope.select($scope.emails[0]);
+            $scope.$apply();
+        }
+    };
 
     function createDummyMails(callback) {
         var Email = function(unread, attachments, replied) {
@@ -97,8 +111,7 @@ define(function(require) {
             this.attachments = (attachments) ? [true] : undefined;
             this.unread = unread;
             this.replied = replied;
-            this.displayDate = '23.08.13';
-            this.longDisplayDate = 'Wednesday, 23.08.2013 19:23';
+            this.sentDate = new Date('Thu Sep 19 2013 20:41:23 GMT+0200 (CEST)');
             this.subject = "Welcome Max"; // Subject line
             this.body = "Hi Max,\n\n" +
                 "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.\n\n" +

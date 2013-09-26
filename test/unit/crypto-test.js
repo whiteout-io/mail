@@ -1,4 +1,4 @@
-define(['js/crypto/crypto', 'cryptoLib/util', 'test/test-data'], function(crypto, util, testData) {
+define(['js/crypto/crypto', 'cryptoLib/util', 'test/test-data'], function(Crypto, util, testData) {
 	'use strict';
 
 	module("Crypto Api");
@@ -11,7 +11,10 @@ define(['js/crypto/crypto', 'cryptoLib/util', 'test/test-data'], function(crypto
 		rsaKeySize: 1024
 	};
 
+	var crypto;
+
 	asyncTest("Init without keypair", 4, function() {
+		crypto = new Crypto();
 		// init dependencies
 		ok(crypto, 'Crypto');
 

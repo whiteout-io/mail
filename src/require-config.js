@@ -19,7 +19,6 @@
 			angular: 'angular/angular.min',
 			angularRoute: 'angular/angular-route.min',
 			angularTouch: 'angular/angular-touch.min',
-			moment: 'moment/moment.min',
 			uuid: 'uuid/uuid'
 		},
 		shim: {

@@ -9,14 +9,15 @@ define(['js/dao/lawnchair-dao'], function(jsonDao) {
 
 	asyncTest("Init", 2, function() {
 		// init dependencies
-		jsonDao.init(lawnchairdaoTest.user);
-		ok(jsonDao, 'LanwchairDAO');
+		jsonDao.init(lawnchairdaoTest.user, function() {
+			ok(true, 'init db');
 
-		// clear db before test
-		jsonDao.clear(function() {
-			ok(true, 'cleared db');
+			// clear db before test
+			jsonDao.clear(function() {
+				ok(true, 'cleared db');
 
-			start();
+				start();
+			});
 		});
 	});
 

@@ -12,16 +12,21 @@ define(function(require) {
         pbkdf2 = require('js/crypto/pbkdf2'),
         config = require('js/app-config').config;
 
-    var self = {},
-        passBasedKey,
+    var passBasedKey,
         BATCH_WORKER = '/crypto/crypto-batch-worker.js',
         PBKDF2_WORKER = '/crypto/pbkdf2-worker.js';
+
+    var Crypto = function() {
+
+    };
 
     /**
      * Initializes the crypto modules by fetching the user's
      * encrypted secret key from storage and storing it in memory.
      */
-    self.init = function(args, callback) {
+    Crypto.prototype.init = function(args, callback) {
+        var self = this;
+
         // valdiate input
         if (!args.emailAddress || !args.keySize || !args.rsaKeySize) {
             callback({
@@ -119,7 +124,7 @@ define(function(require) {
     /**
      * Do PBKDF2 key derivation in a WebWorker thread
      */
-    self.deriveKey = function(password, keySize, callback) {
+    Crypto.prototype.deriveKey = function(password, keySize, callback) {
         startWorker({
             script: PBKDF2_WORKER,
             args: {
@@ -137,8 +142,9 @@ define(function(require) {
     // En/Decrypt a list of items with AES in a WebWorker thread
     //
 
-    self.symEncryptList = function(list, callback) {
-        var key, envelope, envelopes = [];
+    Crypto.prototype.symEncryptList = function(list, callback) {
+        var self = this,
+            key, envelope, envelopes = [];
 
         // generate single secret key shared for all list items
         key = util.random(self.keySize);
@@ -173,7 +179,7 @@ define(function(require) {
         });
     };
 
-    self.symDecryptList = function(list, keys, callback) {
+    Crypto.prototype.symDecryptList = function(list, keys, callback) {
         startWorker({
             script: BATCH_WORKER,
             args: {
@@ -192,8 +198,9 @@ define(function(require) {
     // En/Decrypt something speficially using the user's secret key
     //
 
-    self.encryptListForUser = function(list, receiverPubkeys, callback) {
-        var envelope, envelopes = [];
+    Crypto.prototype.encryptListForUser = function(list, receiverPubkeys, callback) {
+        var self = this,
+            envelope, envelopes = [];
 
         if (!receiverPubkeys || receiverPubkeys.length !== 1) {
             callback({
@@ -235,7 +242,7 @@ define(function(require) {
         });
     };
 
-    self.decryptListForUser = function(list, senderPubkeys, callback) {
+    Crypto.prototype.decryptListForUser = function(list, senderPubkeys, callback) {
         if (!senderPubkeys || senderPubkeys < 1) {
             callback({
                 errMsg: 'Sender public keys must be set!'
@@ -268,7 +275,7 @@ define(function(require) {
     // Re-encrypt keys item and items seperately
     //
 
-    self.reencryptListKeysForUser = function(list, senderPubkeys, callback) {
+    Crypto.prototype.reencryptListKeysForUser = function(list, senderPubkeys, callback) {
         var keypair = rsa.exportKeys();
         var receiverPrivkey = {
             _id: keypair._id,
@@ -291,7 +298,7 @@ define(function(require) {
         });
     };
 
-    self.decryptKeysAndList = function(list, callback) {
+    Crypto.prototype.decryptKeysAndList = function(list, callback) {
         startWorker({
             script: BATCH_WORKER,
             args: {
@@ -351,5 +358,5 @@ define(function(require) {
         options.callback(null, result);
     }
 
-    return self;
+    return Crypto;
 });

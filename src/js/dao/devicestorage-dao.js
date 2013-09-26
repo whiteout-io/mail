@@ -4,17 +4,26 @@
  * through transparent encryption. If not, the crypto API is
  * used to encrypt data on the fly before persisting via a JSON store.
  */
-define(['cryptoLib/util', 'js/crypto/crypto', 'js/dao/lawnchair-dao'], function(util, crypto, jsonDao) {
+define(function(require) {
     'use strict';
 
-    var self = {};
+    var util = require('cryptoLib/util'),
+        jsonDao = require('js/dao/lawnchair-dao');
+
+    var DeviceStorageDAO = function() {
+
+    };
+
+    DeviceStorageDAO.prototype.init = function(emailAddress, callback) {
+        jsonDao.init(emailAddress, callback);
+    };
 
     /**
      * Stores a list of encrypted items in the object store
      * @param list [Array] The list of items to be persisted
      * @param type [String] The type of item to be persisted e.g. 'email'
      */
-    self.storeEcryptedList = function(list, type, callback) {
+    DeviceStorageDAO.prototype.storeEcryptedList = function(list, type, callback) {
         var date, key, items = [];
 
         // nothing to store
@@ -25,9 +34,10 @@ define(['cryptoLib/util', 'js/crypto/crypto', 'js/dao/lawnchair-dao'], function(
 
         // format items for batch storing in dao
         list.forEach(function(i) {
-
-            // put date in key if available... for easy querying
-            if (i.sentDate) {
+            // put uid in key if available... for easy querying
+            if (i.uid) {
+                key = type + '_' + i.uid;
+            } else if (i.sentDate) {
                 date = util.parseDate(i.sentDate);
                 key = type + '_' + i.sentDate + '_' + i.id;
             } else {
@@ -38,7 +48,6 @@ define(['cryptoLib/util', 'js/crypto/crypto', 'js/dao/lawnchair-dao'], function(
                 key: key,
                 object: i
             });
-
         });
 
         jsonDao.batch(items, function() {
@@ -52,7 +61,7 @@ define(['cryptoLib/util', 'js/crypto/crypto', 'js/dao/lawnchair-dao'], function(
      * @param offset [Number] The offset of items to fetch (0 is the last stored item)
      * @param num [Number] The number of items to fetch (null means fetch all)
      */
-    self.listEncryptedItems = function(type, offset, num, callback) {
+    DeviceStorageDAO.prototype.listEncryptedItems = function(type, offset, num, callback) {
         // fetch all items of a certain type from the data-store
         jsonDao.list(type, offset, num, function(encryptedList) {
 
@@ -63,9 +72,9 @@ define(['cryptoLib/util', 'js/crypto/crypto', 'js/dao/lawnchair-dao'], function(
     /**
      * Clear the whole device data-store
      */
-    self.clear = function(callback) {
+    DeviceStorageDAO.prototype.clear = function(callback) {
         jsonDao.clear(callback);
     };
 
-    return self;
+    return DeviceStorageDAO;
 });

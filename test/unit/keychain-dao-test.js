@@ -28,11 +28,12 @@ define(['js/dao/keychain-dao', 'js/dao/lawnchair-dao'], function(KeychainDAO, js
 		ok(keychaindaoTest.keychainDao);
 
 		// init and clear db before test
-		jsonDao.init(keychaindaoTest.user);
-		jsonDao.clear(function() {
-			ok(true, 'cleared db');
+		jsonDao.init(keychaindaoTest.user, function() {
+			jsonDao.clear(function() {
+				ok(true, 'cleared db');
 
-			start();
+				start();
+			});
 		});
 	});
 
@@ -70,9 +71,8 @@ define(['js/dao/keychain-dao', 'js/dao/lawnchair-dao'], function(KeychainDAO, js
 
 	asyncTest("Get Public Keys", 2, function() {
 		var pubkeyIds = [{
-				_id: keychaindaoTest.keypair.publicKey._id
-			}
-		];
+			_id: keychaindaoTest.keypair.publicKey._id
+		}];
 		keychaindaoTest.keychainDao.getPublicKeys(pubkeyIds, function(err, pubkeys) {
 			ok(!err);
 			deepEqual(pubkeys[0], keychaindaoTest.keypair.publicKey, "Fetch public key");

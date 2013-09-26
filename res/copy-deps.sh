@@ -8,7 +8,7 @@ cd ..
 
 # build imap/smtp modules and copy
 cd ./node_modules/smtp-client/
-node build.js && cp ./src-gen/*.js ../../src/lib/
+node build.js
 cd ../../
 
 echo "\n--> finished building dependencies.\n"

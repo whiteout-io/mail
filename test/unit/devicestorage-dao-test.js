@@ -1,94 +1,97 @@
-define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/lawnchair-dao',
-	'js/dao/devicestorage-dao', 'test/test-data'
-], function(_, util, crypto, jsonDao, storage, testData) {
-	'use strict';
+define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/devicestorage-dao', 'test/test-data'], function(_, util, Crypto, DeviceStorageDAO, testData) {
+    'use strict';
 
-	module("DeviceStorage");
+    module("DeviceStorage");
 
-	var devicestorageTest = {
-		user: 'devicestorage_test@example.com',
-		password: 'Password',
-		keySize: 128,
-		ivSize: 128,
-		rsaKeySize: 1024
-	};
+    var devicestorageTest = {
+        user: 'devicestorage_test@example.com',
+        password: 'Password',
+        keySize: 128,
+        ivSize: 128,
+        rsaKeySize: 1024
+    };
 
-	asyncTest("Init", 3, function() {
-		// init dependencies
-		jsonDao.init(devicestorageTest.user);
-		ok(storage, 'DeviceStorageDAO');
+    var crypto, storage;
 
-		// generate test data
-		devicestorageTest.list = testData.getEmailCollection(100);
+    asyncTest("Init", 3, function() {
+        // init dependencies
+        storage = new DeviceStorageDAO();
+        storage.init(devicestorageTest.user, function() {
+            ok(storage, 'DeviceStorageDAO');
 
-		// init crypto
-		crypto.init({
-			emailAddress: devicestorageTest.user,
-			password: devicestorageTest.password,
-			keySize: devicestorageTest.keySize,
-			rsaKeySize: devicestorageTest.rsaKeySize
-		}, function(err, generatedKeypair) {
-			ok(!err && generatedKeypair, 'Init crypto');
-			devicestorageTest.generatedKeypair = generatedKeypair;
+            // generate test data
+            devicestorageTest.list = testData.getEmailCollection(100);
 
-			// clear db before tests
-			jsonDao.clear(function(err) {
-				ok(!err, 'DB cleared. Error status: ' + err);
+            // init crypto
+            crypto = new Crypto();
+            crypto.init({
+                emailAddress: devicestorageTest.user,
+                password: devicestorageTest.password,
+                keySize: devicestorageTest.keySize,
+                rsaKeySize: devicestorageTest.rsaKeySize
+            }, function(err, generatedKeypair) {
+                ok(!err && generatedKeypair, 'Init crypto');
+                devicestorageTest.generatedKeypair = generatedKeypair;
 
-				start();
-			});
+                // clear db before tests
+                storage.clear(function(err) {
+                    ok(!err, 'DB cleared. Error status: ' + err);
 
-		});
-	});
+                    start();
+                });
 
-	asyncTest("Encrypt list for user", 2, function() {
-		var receiverPubkeys = [devicestorageTest.generatedKeypair.publicKey];
+            });
+        });
+    });
 
-		crypto.encryptListForUser(devicestorageTest.list, receiverPubkeys, function(err, encryptedList) {
-			ok(!err);
-			equal(encryptedList.length, devicestorageTest.list.length, 'Encrypt list');
+    asyncTest("Encrypt list for user", 2, function() {
+        var receiverPubkeys = [devicestorageTest.generatedKeypair.publicKey];
 
-			encryptedList.forEach(function(i) {
-				i.sentDate = _.findWhere(devicestorageTest.list, {
-					id: i.id
-				}).sentDate;
-			});
+        crypto.encryptListForUser(devicestorageTest.list, receiverPubkeys, function(err, encryptedList) {
+            ok(!err);
+            equal(encryptedList.length, devicestorageTest.list.length, 'Encrypt list');
 
-			devicestorageTest.encryptedList = encryptedList;
-			start();
-		});
-	});
+            encryptedList.forEach(function(i) {
+                i.sentDate = _.findWhere(devicestorageTest.list, {
+                    id: i.id
+                }).sentDate;
+            });
 
-	asyncTest("Store encrypted list", 1, function() {
-		storage.storeEcryptedList(devicestorageTest.encryptedList, 'email_inbox', function() {
-			ok(true, 'Store encrypted list');
+            devicestorageTest.encryptedList = encryptedList;
+            start();
+        });
+    });
 
-			start();
-		});
-	});
+    asyncTest("Store encrypted list", 1, function() {
+        storage.storeEcryptedList(devicestorageTest.encryptedList, 'email_inbox', function() {
+            ok(true, 'Store encrypted list');
 
-	asyncTest("List items", 4, function() {
+            start();
+        });
+    });
 
-		var senderPubkeys = [devicestorageTest.generatedKeypair.publicKey];
+    asyncTest("List items", 4, function() {
 
-		var offset = 2,
-			num = 6;
+        var senderPubkeys = [devicestorageTest.generatedKeypair.publicKey];
 
-		// list encrypted items from storage
-		storage.listEncryptedItems('email_inbox', offset, num, function(err, encryptedList) {
-			ok(!err);
+        var offset = 2,
+            num = 6;
 
-			// decrypt list
-			crypto.decryptListForUser(encryptedList, senderPubkeys, function(err, decryptedList) {
-				ok(!err);
-				equal(decryptedList.length, num, 'Found ' + decryptedList.length + ' items in store (and decrypted)');
+        // list encrypted items from storage
+        storage.listEncryptedItems('email_inbox', offset, num, function(err, encryptedList) {
+            ok(!err);
 
-				var origSet = devicestorageTest.list.splice(92, num);
-				deepEqual(decryptedList, origSet, 'Messages decrypted correctly');
+            // decrypt list
+            crypto.decryptListForUser(encryptedList, senderPubkeys, function(err, decryptedList) {
+                ok(!err);
+                equal(decryptedList.length, num, 'Found ' + decryptedList.length + ' items in store (and decrypted)');
 
-				start();
-			});
-		});
-	});
+                var origSet = devicestorageTest.list.splice(92, num);
+                deepEqual(decryptedList, origSet, 'Messages decrypted correctly');
+
+                start();
+            });
+        });
+    });
 
 });

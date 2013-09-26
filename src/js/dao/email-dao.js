@@ -3,20 +3,20 @@ define(function(require) {
 
     var _ = require('underscore'),
         util = require('cryptoLib/util'),
-        crypto = require('js/crypto/crypto'),
-        jsonDB = require('js/dao/lawnchair-dao'),
         str = require('js/app-config').string;
 
     /**
      * A high-level Data-Access Api for handling Email synchronization
      * between the cloud service and the device's local storage
      */
-    var EmailDAO = function(keychain, imapClient, smtpClient) {
+    var EmailDAO = function(keychain, imapClient, smtpClient, crypto, devicestorage) {
         var self = this;
 
         self._keychain = keychain;
         self._imapClient = imapClient;
         self._smtpClient = smtpClient;
+        self._crypto = crypto;
+        self._devicestorage = devicestorage;
     };
 
     /**
@@ -51,21 +51,21 @@ define(function(require) {
 
         function initKeychain() {
             // init user's local database
-            jsonDB.init(emailAddress);
-
-            // call getUserKeyPair to read/sync keypair with devicestorage/cloud
-            self._keychain.getUserKeyPair(emailAddress, function(err, storedKeypair) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-                // init crypto
-                initCrypto(storedKeypair);
+            self._devicestorage.init(emailAddress, function() {
+                // call getUserKeyPair to read/sync keypair with devicestorage/cloud
+                self._keychain.getUserKeyPair(emailAddress, function(err, storedKeypair) {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+                    // init crypto
+                    initCrypto(storedKeypair);
+                });
             });
         }
 
         function initCrypto(storedKeypair) {
-            crypto.init({
+            self._crypto.init({
                 emailAddress: emailAddress,
                 password: password,
                 keySize: self._account.symKeySize,
@@ -144,8 +144,11 @@ define(function(require) {
 
             // validate public key
             if (!receiverPubkey) {
+                callback({
+                    errMsg: 'User has no public key yet!'
+                });
                 // user hasn't registered a public key yet... invite
-                self.encryptForNewUser(email, callback);
+                //self.encryptForNewUser(email, callback);
                 return;
             }
 
@@ -163,7 +166,7 @@ define(function(require) {
             receiverPubkeys = [receiverPubkey];
 
         // encrypt the email
-        crypto.encryptListForUser(ptItems, receiverPubkeys, function(err, encryptedList) {
+        self._crypto.encryptListForUser(ptItems, receiverPubkeys, function(err, encryptedList) {
             if (err) {
                 callback(err);
                 return;
@@ -183,7 +186,7 @@ define(function(require) {
         var self = this,
             ptItems = bundleForEncryption(email);
 
-        crypto.symEncryptList(ptItems, function(err, result) {
+        self._crypto.symEncryptList(ptItems, function(err, result) {
             if (err) {
                 callback(err);
                 return;
@@ -296,6 +299,168 @@ define(function(require) {
     };
 
     /**
+     * Fetch a list of emails from the device's local storage
+     */
+    EmailDAO.prototype.listMessages = function(options, callback) {
+        var self = this,
+            encryptedList = [];
+
+        // validate options
+        if (!options.folder || typeof options.offset === 'undefined' || typeof options.num === 'undefined') {
+            callback({
+                errMsg: 'Invalid options!'
+            });
+            return;
+        }
+
+        // fetch items from device storage
+        self._devicestorage.listEncryptedItems('email_' + options.folder, options.offset, options.num, function(err, emails) {
+            if (err) {
+                callback(err);
+                return;
+            }
+            if (emails.length === 0) {
+                callback(null, []);
+                return;
+            }
+
+            // find encrypted items
+            emails.forEach(function(i) {
+                if (i.body.indexOf(str.cryptPrefix) !== -1 && i.body.indexOf(str.cryptSuffix) !== -1) {
+                    // parse ct object from ascii armored message block
+                    encryptedList.push(parseMessageBlock(i));
+                }
+            });
+
+            // decrypt items
+            decryptList(encryptedList, function(err, decryptedList) {
+                // return only decrypted items
+                callback(null, decryptedList);
+            });
+        });
+
+        function parseMessageBlock(email) {
+            var ctMessageBase64, ctMessageJson, ctMessage;
+
+            // parse email body for encrypted message block
+            try {
+                // get base64 encoded message block
+                ctMessageBase64 = email.body.split(str.cryptPrefix)[1].split(str.cryptSuffix)[0].trim();
+                // decode bae64
+                ctMessageJson = atob(ctMessageBase64);
+                // parse json string to get ciphertext object
+                ctMessage = JSON.parse(ctMessageJson);
+            } catch (e) {
+                callback({
+                    errMsg: 'Error parsing encrypted message block!'
+                });
+                return;
+            }
+
+            return ctMessage;
+        }
+
+        function decryptList(encryptedList, callback) {
+            var already, pubkeyIds = [];
+
+            // gather public key ids required to verify signatures
+            encryptedList.forEach(function(i) {
+                already = null;
+                already = _.findWhere(pubkeyIds, {
+                    _id: i.senderPk
+                });
+                if (!already) {
+                    pubkeyIds.push({
+                        _id: i.senderPk
+                    });
+                }
+            });
+
+            // fetch public keys from keychain
+            self._keychain.getPublicKeys(pubkeyIds, function(err, senderPubkeys) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                // verfiy signatures and re-encrypt item keys
+                self._crypto.decryptListForUser(encryptedList, senderPubkeys, function(err, decryptedList) {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+
+                    callback(null, decryptedList);
+                });
+            });
+        }
+    };
+
+    /**
+     * High level sync operation for the delta from the user's IMAP inbox
+     */
+    EmailDAO.prototype.imapSync = function(options, callback) {
+        var self = this;
+
+        // validate options
+        if (!options.folder || typeof options.offset === 'undefined' || typeof options.num === 'undefined') {
+            callback({
+                errMsg: 'Invalid options!'
+            });
+            return;
+        }
+
+        fetchList(options, function(emails) {
+            // persist encrypted list in device storage
+            self._devicestorage.storeEcryptedList(emails, 'email_' + options.folder, function() {
+                callback();
+            });
+        });
+
+        function fetchList(folder, callback) {
+            // fetch imap folder's message list
+            self.imapListMessages({
+                folder: options.folder,
+                offset: options.offset,
+                num: options.num
+            }, function(err, emails) {
+                if (err) {
+                    console.log(err);
+                    return;
+                }
+
+                // fetch message bodies
+                fetchBodies(emails, folder, function(messages) {
+                    callback(messages);
+                });
+            });
+        }
+
+        function fetchBodies(messageList, folder, callback) {
+            var emails = [];
+
+            var after = _.after(messageList.length, function() {
+                callback(emails);
+            });
+
+            _.each(messageList, function(messageItem) {
+                self.imapGetMessage({
+                    folder: folder,
+                    uid: messageItem.uid
+                }, function(err, message) {
+                    if (err) {
+                        console.log(err);
+                        return;
+                    }
+
+                    emails.push(message);
+                    after();
+                });
+            });
+        }
+    };
+
+    /**
      * List messages from an imap folder. This will not yet fetch the email body.
      * @param {String} options.folderName The name of the imap folder.
      * @param {Number} options.offset The offset of items to fetch (0 is the last stored item)
@@ -337,16 +502,6 @@ define(function(require) {
             return;
         }
 
-        // try fetching from cache before doing a roundtrip
-        message = self.readCache(options.folder, options.uid);
-        if (message) {
-            // message was fetched from cache successfully
-            callback(null, message);
-            return;
-        }
-
-        /* message was not found in cache... fetch from imap server */
-
         function messageReady(err, gottenMessage) {
             message = gottenMessage;
             itemCounter++;
@@ -358,66 +513,10 @@ define(function(require) {
                 return;
             }
 
-            // decrypt Message body
-            if (message.body.indexOf(str.cryptPrefix) !== -1 && message.body.indexOf(str.cryptSuffix) !== -1) {
-                decryptBody(message, function(err, ptMessage) {
-                    message = ptMessage;
-                    // return decrypted message
-                    callback(err, message);
-                });
-                return;
-            }
-
-            // return unencrypted message
+            // return message
             callback(null, message);
 
             //check();
-        }
-
-        function decryptBody(email, callback) {
-            var ctMessageBase64, ctMessageJson, ctMessage, pubkeyIds;
-
-            // parse email body for encrypted message block
-            try {
-                // get base64 encoded message block
-                ctMessageBase64 = email.body.split(str.cryptPrefix)[1].split(str.cryptSuffix)[0].trim();
-                // decode bae64
-                ctMessageJson = atob(ctMessageBase64);
-                // parse json string to get ciphertext object
-                ctMessage = JSON.parse(ctMessageJson);
-            } catch (e) {
-                callback({
-                    errMsg: 'Error parsing encrypted message block!'
-                });
-                return;
-            }
-
-            // gather public key ids required to verify signatures
-            pubkeyIds = [{
-                _id: ctMessage.senderPk
-            }];
-
-            // fetch public keys from keychain
-            self._keychain.getPublicKeys(pubkeyIds, function(err, senderPubkeys) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-
-                // verfiy signatures and re-encrypt item keys
-                crypto.decryptListForUser([ctMessage], senderPubkeys, function(err, decryptedList) {
-                    if (err) {
-                        callback(err);
-                        return;
-                    }
-
-                    var ptEmail = decryptedList[0];
-                    email.body = ptEmail.body;
-                    email.subject = ptEmail.subject;
-
-                    callback(null, email);
-                });
-            });
         }
 
         // function attachmentReady(err, gottenAttachment) {

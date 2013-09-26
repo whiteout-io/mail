@@ -7,17 +7,22 @@ define(['lawnchair', 'lawnchairSQL', 'lawnchairIDB'], function(Lawnchair) {
     var self = {},
         db;
 
-    self.init = function(dbName) {
+    self.init = function(dbName, callback) {
+        var temp;
+
         if (!dbName) {
             throw new Error('Lawnchair DB name must be specified!');
         }
 
-        db = new Lawnchair({
+        temp = new Lawnchair({
             name: dbName
         }, function(lc) {
             if (!lc) {
                 throw new Error('Lawnchair init failed!');
             }
+
+            db = lc;
+            callback();
         });
     };
 

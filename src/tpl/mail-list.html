@@ -8,7 +8,7 @@
     <h3>{{email.from[0].name || email.from[0].address}}</h3>
     <div class="head">
       <p class="subject">{{email.subject}}</p>
-      <time>{{email.displayDate}}</time>
+      <time>{{email.sentDate | date:'mediumDate'}}</time>
     </div>
     <p class="body">{{email.body}}</p>
   </li>

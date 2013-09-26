@@ -5,7 +5,7 @@
   "manifest_version": 2,
   "offline_enabled": true,
   "icons": {
-    "128": "img/mail-128.png"
+    "128": "img/icon.png"
   },
   "permissions": [
     "https://storage.whiteout.io/",

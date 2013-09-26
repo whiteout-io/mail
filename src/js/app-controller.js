@@ -10,6 +10,8 @@ define(function(require) {
         EmailDAO = require('js/dao/email-dao'),
         KeychainDAO = require('js/dao/keychain-dao'),
         cloudstorage = require('js/dao/cloudstorage-dao'),
+        DeviceStorageDAO = require('js/dao/devicestorage-dao'),
+        Crypto = require('js/crypto/crypto'),
         config = require('js/app-config').config;
     require('cordova');
 
@@ -66,7 +68,7 @@ define(function(require) {
 
     self.login = function(userId, password, token, callback) {
         var auth, imapOptions, smtpOptions,
-            keychain, imapClient, smtpClient;
+            keychain, imapClient, smtpClient, crypto, deviceStorage;
 
         // create mail credentials objects for imap/smtp
         auth = {
@@ -93,7 +95,9 @@ define(function(require) {
         keychain = new KeychainDAO(cloudstorage);
         imapClient = new ImapClient(imapOptions);
         smtpClient = new SmtpClient(smtpOptions);
-        self._emailDao = new EmailDAO(keychain, imapClient, smtpClient);
+        crypto = new Crypto();
+        deviceStorage = new DeviceStorageDAO();
+        self._emailDao = new EmailDAO(keychain, imapClient, smtpClient, crypto, deviceStorage);
 
         // init email dao
         var account = {
