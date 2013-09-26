@@ -7,8 +7,7 @@
 define(function(require) {
     'use strict';
 
-    var util = require('cryptoLib/util'),
-        jsonDao = require('js/dao/lawnchair-dao');
+    var jsonDao = require('js/dao/lawnchair-dao');
 
     var DeviceStorageDAO = function() {
 
@@ -24,7 +23,7 @@ define(function(require) {
      * @param type [String] The type of item to be persisted e.g. 'email'
      */
     DeviceStorageDAO.prototype.storeList = function(list, type, callback) {
-        var date, key, items = [];
+        var key, items = [];
 
         // nothing to store
         if (!list || list.length === 0) {
@@ -46,7 +45,6 @@ define(function(require) {
             if (i.uid) {
                 key = type + '_' + i.uid;
             } else if (i.sentDate && i.id) {
-                date = util.parseDate(i.sentDate);
                 key = type + '_' + i.sentDate + '_' + i.id;
             } else if (i.id) {
                 key = type + '_' + i.id;
