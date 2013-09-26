@@ -314,7 +314,7 @@ define(function(require) {
         }
 
         // fetch items from device storage
-        self._devicestorage.listEncryptedItems('email_' + options.folder, options.offset, options.num, function(err, emails) {
+        self._devicestorage.listItems('email_' + options.folder, options.offset, options.num, function(err, emails) {
             if (err) {
                 callback(err);
                 return;
@@ -412,7 +412,7 @@ define(function(require) {
 
         fetchList(options, function(emails) {
             // persist encrypted list in device storage
-            self._devicestorage.storeEcryptedList(emails, 'email_' + options.folder, function() {
+            self._devicestorage.storeList(emails, 'email_' + options.folder, function() {
                 callback();
             });
         });

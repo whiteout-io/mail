@@ -63,7 +63,7 @@ define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/devicestorag
     });
 
     asyncTest("Store encrypted list", 1, function() {
-        storage.storeEcryptedList(devicestorageTest.encryptedList, 'email_inbox', function() {
+        storage.storeList(devicestorageTest.encryptedList, 'email_inbox', function() {
             ok(true, 'Store encrypted list');
 
             start();
@@ -78,7 +78,7 @@ define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/devicestorag
             num = 6;
 
         // list encrypted items from storage
-        storage.listEncryptedItems('email_inbox', offset, num, function(err, encryptedList) {
+        storage.listItems('email_inbox', offset, num, function(err, encryptedList) {
             ok(!err);
 
             // decrypt list

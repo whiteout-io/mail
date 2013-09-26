@@ -371,7 +371,7 @@ define(function(require) {
                     imapClientStub.getMessage.yields(null, {
                         body: 'asdf'
                     });
-                    devicestorageStub.storeEcryptedList.yields();
+                    devicestorageStub.storeList.yields();
 
                     emailDao.imapSync({
                         folder: 'INBOX',
@@ -381,7 +381,7 @@ define(function(require) {
                         expect(err).to.not.exist;
                         expect(imapClientStub.listMessages.calledOnce).to.be.true;
                         expect(imapClientStub.getMessage.calledTwice).to.be.true;
-                        expect(devicestorageStub.storeEcryptedList.calledOnce).to.be.true;
+                        expect(devicestorageStub.storeList.calledOnce).to.be.true;
                         done();
                     });
                 });
@@ -390,7 +390,7 @@ define(function(require) {
             describe('IMAP: list messages from local storage', function() {
                 it('should work', function(done) {
 
-                    devicestorageStub.listEncryptedItems.yields(null, [{
+                    devicestorageStub.listItems.yields(null, [{
                         body: ''
                     }]);
                     keychainStub.getPublicKeys.yields(null, [{
@@ -405,7 +405,7 @@ define(function(require) {
                         offset: 0,
                         num: 2
                     }, function(err, emails) {
-                        expect(devicestorageStub.listEncryptedItems.calledOnce).to.be.true;
+                        expect(devicestorageStub.listItems.calledOnce).to.be.true;
                         expect(keychainStub.getPublicKeys.calledOnce).to.be.true;
                         expect(cryptoStub.decryptListForUser.calledOnce).to.be.true;
                         expect(err).to.not.exist;

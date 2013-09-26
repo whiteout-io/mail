@@ -23,12 +23,20 @@ define(function(require) {
      * @param list [Array] The list of items to be persisted
      * @param type [String] The type of item to be persisted e.g. 'email'
      */
-    DeviceStorageDAO.prototype.storeEcryptedList = function(list, type, callback) {
+    DeviceStorageDAO.prototype.storeList = function(list, type, callback) {
         var date, key, items = [];
 
         // nothing to store
-        if (list.length === 0) {
+        if (!list || list.length === 0) {
             callback();
+            return;
+        }
+
+        // validate type
+        if (!type) {
+            callback({
+                errMsg: 'Type is not set!'
+            });
             return;
         }
 
@@ -37,11 +45,13 @@ define(function(require) {
             // put uid in key if available... for easy querying
             if (i.uid) {
                 key = type + '_' + i.uid;
-            } else if (i.sentDate) {
+            } else if (i.sentDate && i.id) {
                 date = util.parseDate(i.sentDate);
                 key = type + '_' + i.sentDate + '_' + i.id;
-            } else {
+            } else if (i.id) {
                 key = type + '_' + i.id;
+            } else {
+                key = type;
             }
 
             items.push({
@@ -61,7 +71,7 @@ define(function(require) {
      * @param offset [Number] The offset of items to fetch (0 is the last stored item)
      * @param num [Number] The number of items to fetch (null means fetch all)
      */
-    DeviceStorageDAO.prototype.listEncryptedItems = function(type, offset, num, callback) {
+    DeviceStorageDAO.prototype.listItems = function(type, offset, num, callback) {
         // fetch all items of a certain type from the data-store
         jsonDao.list(type, offset, num, function(encryptedList) {
 

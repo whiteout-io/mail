@@ -36,36 +36,66 @@ define(function(require) {
         }
     };
 
+    /**
+     * Request an OAuth token from chrome for gmail users
+     */
     self.fetchOAuthToken = function(password, callback) {
         // get OAuth Token from chrome
         chrome.identity.getAuthToken({
                 'interactive': true
             },
             function(token) {
-                // fetch gmail user's email address from the Google Authorization Server endpoint
-                $.ajax({
-                    url: 'https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=' + token,
-                    type: 'GET',
-                    dataType: 'json',
-                    success: function(info) {
-                        // login using the received email address
-                        self.login(info.email, password, token, function(err) {
-                            // send email address to sandbox
-                            callback(err, info.email);
-                        });
-                    },
-                    error: function(xhr, textStatus, err) {
+                if (!token) {
+                    callback({
+                        errMsg: 'Error fetching an OAuth token for the user!'
+                    });
+                    return;
+                }
+
+                // get email address for the token
+                self.queryEmailAddress(token, function(err, emailAddress) {
+                    if (err || !emailAddress) {
                         callback({
-                            errMsg: xhr.status + ': ' + xhr.statusText,
+                            errMsg: 'Error looking up email address on login!',
                             err: err
                         });
+                        return;
                     }
-                });
 
+                    // login using the received email address
+                    self.login(emailAddress, password, token, function(err) {
+                        // send email address to sandbox
+                        callback(err, emailAddress);
+                    });
+                });
             }
         );
     };
 
+    /**
+     * Lookup the user's email address. Check local cache if available, otherwise query google's token info api to learn the user's email address
+     */
+    self.queryEmailAddress = function(token, callback) {
+        // fetch gmail user's email address from the Google Authorization Server endpoint
+        $.ajax({
+            url: 'https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=' + token,
+            type: 'GET',
+            dataType: 'json',
+            success: function(info) {
+                callback(null, info.email);
+            },
+            error: function(xhr, textStatus, err) {
+                callback({
+                    errMsg: xhr.status + ': ' + xhr.statusText,
+                    err: err
+                });
+            }
+        });
+    };
+
+    /**
+     * Instanciate the mail email data access object and its dependencies. Login to imap on init.
+     */
     self.login = function(userId, password, token, callback) {
         var auth, imapOptions, smtpOptions,
             keychain, imapClient, smtpClient, crypto, deviceStorage;
