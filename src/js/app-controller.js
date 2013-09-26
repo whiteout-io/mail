@@ -76,21 +76,54 @@ define(function(require) {
      * Lookup the user's email address. Check local cache if available, otherwise query google's token info api to learn the user's email address
      */
     self.queryEmailAddress = function(token, callback) {
-        // fetch gmail user's email address from the Google Authorization Server endpoint
-        $.ajax({
-            url: 'https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=' + token,
-            type: 'GET',
-            dataType: 'json',
-            success: function(info) {
-                callback(null, info.email);
-            },
-            error: function(xhr, textStatus, err) {
-                callback({
-                    errMsg: xhr.status + ': ' + xhr.statusText,
-                    err: err
-                });
-            }
+        var deviceStorage, key = 'emailaddress';
+
+        // check device storage
+        deviceStorage = new DeviceStorageDAO();
+        deviceStorage.init('app-config', function() {
+            deviceStorage.listItems(key, 0, null, function(err, cachedItems) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                // do roundtrip to google api if no email address is cached yet
+                if (!cachedItems || cachedItems.length < 1) {
+                    queryGoogleApi();
+                    return;
+                }
+
+                callback(null, cachedItems[0]);
+            });
         });
+
+        function queryGoogleApi() {
+            // fetch gmail user's email address from the Google Authorization Server endpoint
+            $.ajax({
+                url: 'https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=' + token,
+                type: 'GET',
+                dataType: 'json',
+                success: function(info) {
+                    if (!info || !info.email) {
+                        callback({
+                            errMsg: 'Error looking up email address on google api!'
+                        });
+                        return;
+                    }
+
+                    // cache the email address on the device
+                    deviceStorage.storeList([info.email], key, function(err) {
+                        callback(err, info.email);
+                    });
+                },
+                error: function(xhr, textStatus, err) {
+                    callback({
+                        errMsg: xhr.status + ': ' + xhr.statusText,
+                        err: err
+                    });
+                }
+            });
+        }
     };
 
     /**

@@ -3,6 +3,7 @@ define(function(require) {
 
     var controller = require('js/app-controller'),
         EmailDAO = require('js/dao/email-dao'),
+        DeviceStorageDAO = require('js/dao/devicestorage-dao'),
         $ = require('jquery'),
         expect = chai.expect;
 
@@ -50,12 +51,30 @@ define(function(require) {
         });
 
         describe('login', function() {
-            it('should work', function(done) {
+            it('should work the first time', function(done) {
+                // clear db
+                var deviceStorage = new DeviceStorageDAO();
+                deviceStorage.init('app-config', function() {
+                    deviceStorage.clear(function() {
+
+                        // do test with fresh db
+                        controller.fetchOAuthToken(appControllerTest.passphrase, function(err, userId) {
+                            expect(err).to.not.exist;
+                            expect(userId).to.equal(appControllerTest.user);
+                            expect(window.chrome.identity.getAuthToken.calledOnce).to.be.true;
+                            expect($.ajax.calledOnce).to.be.true;
+                            done();
+                        });
+                    });
+                });
+            });
+
+            it('should work when the email address is cached', function(done) {
                 controller.fetchOAuthToken(appControllerTest.passphrase, function(err, userId) {
                     expect(err).to.not.exist;
                     expect(userId).to.equal(appControllerTest.user);
-                    expect($.ajax.calledOnce).to.be.true;
                     expect(window.chrome.identity.getAuthToken.calledOnce).to.be.true;
+                    expect($.ajax.called).to.be.false;
                     done();
                 });
             });
