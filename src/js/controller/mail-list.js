@@ -6,8 +6,8 @@ define(function(require) {
         emailDao;
 
     var MailListCtrl = function($scope) {
-        var offset = -6,
-            num = 0;
+        var offset = 0,
+            num = 100;
 
         // show inbox at the beginning
         $scope.folder = 'INBOX';
@@ -44,8 +44,8 @@ define(function(require) {
                     // sync from imap to local db
                     syncImapFolder({
                         folder: $scope.folder,
-                        offset: offset,
-                        num: num
+                        offset: -num,
+                        num: offset
                     }, function() {
                         // list again from local db after syncing
                         listLocalMessages({
