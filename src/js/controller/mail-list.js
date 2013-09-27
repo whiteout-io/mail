@@ -135,7 +135,7 @@ define(function(require) {
                 "Best regards\nYour whiteout team"; // plaintext body
         };
 
-        var dummys = [new Email(true, true), new Email(true), new Email(false, true, true), new Email(false), new Email(false), new Email(false)];
+        var dummys = [new Email(true, true), new Email(true), new Email(false, true, true), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false)];
 
         callback(dummys);
     }

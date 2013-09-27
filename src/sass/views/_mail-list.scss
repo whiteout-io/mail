@@ -8,6 +8,10 @@
     background-image: linear-gradient(to right ,$color-grey-lightest 98%, darken($color-grey-lightest, 1%) 100%);
     border-right: 1px solid $color-grey-light;
 
+    ::-webkit-scrollbar {
+        width: 0px;
+    }
+
     header {
 
         cursor: pointer;
@@ -32,5 +36,21 @@
 
     ul {
         padding: 0 $padding-horizontal;
+        max-height: 100%;
+        overflow-y: scroll;
+    }
+
+    footer {
+        position: absolute;
+        bottom: 0px;
+        left: 0px;
+        padding: 0 $nav-padding;
+        background: darken($color-grey-lightest, 1%);
+        height: 28px;
+        width: $content-nav-width;
+        border-right: 1px solid $color-grey-light;
+        font-size: $font-size-smaller;
+        color: $color-grey-dark;
+        line-height: em(28,12);
     }
 }
