@@ -9,7 +9,6 @@
 			'node-forge': 'forge',
 			cryptoLib: '../js/crypto',
 			'setimmediate': 'setImmediate',
-			'smtp-client': 'smtp-client-browserified',
 			underscore: 'underscore/underscore-min',
 			cordova: 'cordova/cordova-2.5.0',
 			lawnchair: 'lawnchair/lawnchair-git',

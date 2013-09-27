@@ -5,14 +5,14 @@
         "node": ">=0.8"
     },
     "scripts": {
-        "postinstall": "./res/copy-deps.sh && grunt dist-npm",
+        "postinstall": "grunt dist-npm",
         "test": "grunt test && grunt dist",
         "start": "grunt dist && grunt dev"
     },
     "dependencies": {
         "crypto-lib": "https://github.com/whiteout-io/crypto-lib/tarball/master",
         "imap-client": "git+ssh://git@github.com:whiteout-io/imap-client.git#master",
-        "smtp-client": "git+ssh://git@github.com:whiteout-io/smtp-client.git#master",
+        "smtp-client": "git+ssh://git@github.com:whiteout-io/smtp-client.git#amd",
         "requirejs": "2.1.8"
     },
     "devDependencies": {
