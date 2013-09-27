@@ -20,20 +20,20 @@ module.exports = function(grunt) {
             prod: {
                 options: {
                     port: process.env.PORT || 8585,
-                    base: './src/',
+                    base: './dist/',
                     keepalive: true,
                     middleware: function(connect, options) {
                         // Return array of whatever middlewares you want
-                        return [function(req, res, next) {
-                                res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-eval'; connect-src *; object-src 'none'; style-src 'self' 'unsafe-inline'");
-                                res.setHeader('X-Content-Security-Policy', "default-src *; script-src 'self' 'unsafe-eval'; options eval-script; object-src 'none'; style-src 'self' 'unsafe-inline'");
-                                res.setHeader('X-WebKit-CSP', "default-src 'self'; script-src 'self' 'unsafe-eval'; connect-src *; object-src 'none'; style-src 'self' 'unsafe-inline'");
+                        return [
+                            function(req, res, next) {
+                                res.setHeader('Content-Security-Policy', "default-src 'self'; connect-src *; object-src 'none'; style-src 'self' 'unsafe-inline'");
 
                                 return next();
                             },
 
                             // Serve static files.
-                            connect.static(options.base)];
+                            connect.static(options.base)
+                        ];
                     }
                 }
             }
