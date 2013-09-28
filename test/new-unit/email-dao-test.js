@@ -367,7 +367,7 @@ define(function(require) {
             });
 
             describe('IMAP: sync messages to local storage', function() {
-                it('should work', function(done) {
+                it('should not list unencrypted messages', function(done) {
                     imapClientStub.listMessages.yields(null, [{
                         uid: 413,
                     }, {
@@ -376,6 +376,35 @@ define(function(require) {
                     imapClientStub.getMessage.yields(null, {
                         body: 'asdf'
                     });
+                    devicestorageStub.removeList.yields();
+                    devicestorageStub.storeList.yields();
+
+                    emailDao.imapSync({
+                        folder: 'INBOX',
+                        offset: 0,
+                        num: 2
+                    }, function(err) {
+                        expect(err).to.not.exist;
+                        expect(imapClientStub.listMessages.calledOnce).to.be.true;
+                        expect(imapClientStub.getMessage.called).to.be.false;
+                        expect(devicestorageStub.removeList.calledOnce).to.be.true;
+                        expect(devicestorageStub.storeList.calledOnce).to.be.true;
+                        done();
+                    });
+                });
+
+                it('should work', function(done) {
+                    imapClientStub.listMessages.yields(null, [{
+                        uid: 413,
+                        subject: app.string.subject
+                    }, {
+                        uid: 414,
+                        subject: app.string.subject
+                    }]);
+                    imapClientStub.getMessage.yields(null, {
+                        body: 'asdf'
+                    });
+                    devicestorageStub.removeList.yields();
                     devicestorageStub.storeList.yields();
 
                     emailDao.imapSync({
@@ -386,6 +415,7 @@ define(function(require) {
                         expect(err).to.not.exist;
                         expect(imapClientStub.listMessages.calledOnce).to.be.true;
                         expect(imapClientStub.getMessage.calledTwice).to.be.true;
+                        expect(devicestorageStub.removeList.calledOnce).to.be.true;
                         expect(devicestorageStub.storeList.calledOnce).to.be.true;
                         done();
                     });

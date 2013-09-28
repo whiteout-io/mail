@@ -1,7 +1,7 @@
 /**
  * Handles generic caching of JSON objects in a lawnchair adapter
  */
-define(['lawnchair', 'lawnchairSQL', 'lawnchairIDB'], function(Lawnchair) {
+define(['underscore', 'lawnchair', 'lawnchairSQL', 'lawnchairIDB'], function(_, Lawnchair) {
     'use strict';
 
     var self = {},
@@ -116,6 +116,35 @@ define(['lawnchair', 'lawnchairSQL', 'lawnchairIDB'], function(Lawnchair) {
      */
     self.remove = function(key, callback) {
         db.remove(key, callback);
+    };
+
+    /**
+     * Removes an object liter from local storage by its key (delete)
+     */
+    self.removeList = function(type, callback) {
+        var matchingKeys = [],
+            after;
+
+        // get all keys
+        db.keys(function(keys) {
+            // check if key begins with type
+            keys.forEach(function(key) {
+                if (key.indexOf(type) === 0) {
+                    matchingKeys.push(key);
+                }
+            });
+
+            if (matchingKeys.length < 1) {
+                callback();
+                return;
+            }
+
+            // remove all matching keys
+            after = _.after(matchingKeys.length, callback);
+            _.each(matchingKeys, function(key) {
+                db.remove(key, after);
+            });
+        });
     };
 
     /**

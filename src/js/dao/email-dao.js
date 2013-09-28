@@ -400,7 +400,8 @@ define(function(require) {
      * High level sync operation for the delta from the user's IMAP inbox
      */
     EmailDAO.prototype.imapSync = function(options, callback) {
-        var self = this;
+        var self = this,
+            dbType = 'email_' + options.folder;
 
         // validate options
         if (!options.folder || typeof options.offset === 'undefined' || typeof options.num === 'undefined') {
@@ -411,13 +412,22 @@ define(function(require) {
         }
 
         fetchList(options, function(emails) {
-            // persist encrypted list in device storage
-            self._devicestorage.storeList(emails, 'email_' + options.folder, function() {
-                callback();
+            // delete old items from db
+            self._devicestorage.removeList(dbType, function(err) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+                // persist encrypted list in device storage
+                self._devicestorage.storeList(emails, dbType, function(err) {
+                    callback(err);
+                });
             });
         });
 
         function fetchList(folder, callback) {
+            var encryptedList = [];
+
             // fetch imap folder's message list
             self.imapListMessages({
                 folder: options.folder,
@@ -429,8 +439,15 @@ define(function(require) {
                     return;
                 }
 
+                // find encrypted messages by subject
+                emails.forEach(function(i) {
+                    if (i.subject === str.subject) {
+                        encryptedList.push(i);
+                    }
+                });
+
                 // fetch message bodies
-                fetchBodies(emails, folder, function(messages) {
+                fetchBodies(encryptedList, folder, function(messages) {
                     callback(messages);
                 });
             });
@@ -438,6 +455,11 @@ define(function(require) {
 
         function fetchBodies(messageList, folder, callback) {
             var emails = [];
+
+            if (messageList.length < 1) {
+                callback(emails);
+                return;
+            }
 
             var after = _.after(messageList.length, function() {
                 callback(emails);

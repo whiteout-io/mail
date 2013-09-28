@@ -52,6 +52,7 @@ define(function(require) {
 
         // development
         createDummyMails(function(emails) {
+            updateStatus('Last update: ', new Date());
             $scope.emails = emails;
             $scope.select($scope.emails[0]);
         });

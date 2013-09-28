@@ -71,7 +71,6 @@ define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/devicestorag
     });
 
     asyncTest("List items", 4, function() {
-
         var senderPubkeys = [devicestorageTest.generatedKeypair.publicKey];
 
         var offset = 2,
@@ -91,6 +90,15 @@ define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/devicestorag
 
                 start();
             });
+        });
+    });
+
+    asyncTest("Delete List items", 1, function() {
+        // list encrypted items from storage
+        storage.removeList('email_inbox', function(err) {
+            ok(!err);
+
+            start();
         });
     });
 

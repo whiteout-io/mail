@@ -21,12 +21,18 @@ define(['js/dao/lawnchair-dao'], function(jsonDao) {
 		});
 	});
 
-	asyncTest("CRUD object literal", 4, function() {
+	asyncTest("CRUD object literal", 5, function() {
 
-		var key = 'type_asdf';
+		var key = 'type_1';
 		var data = {
-			name: 'testName',
-			type: 'testType'
+			name: 'testName1',
+			type: 'testType1'
+		};
+
+		var key2 = 'type_2';
+		var data2 = {
+			name: 'testName2',
+			type: 'testType2'
 		};
 
 		// create
@@ -49,17 +55,28 @@ define(['js/dao/lawnchair-dao'], function(jsonDao) {
 						jsonDao.read(key, function(updated) {
 							equal(updated.name, newName, 'Update');
 
-							// delete
-							jsonDao.remove(key, function() {
+							// persist 2nd type
+							jsonDao.persist(key2, data2, function() {
 
-								// should read empty
-								jsonDao.read(key, function(lastRead) {
-									equal(lastRead, undefined, 'Delete');
+								// delete all items of 2nd type
+								jsonDao.removeList(key2, function() {
 
-									start();
+									jsonDao.list('type', 0, null, function(newList) {
+										ok(newList.length === 1, 'List');
+
+										// delete
+										jsonDao.remove(key, function() {
+
+											// should read empty
+											jsonDao.read(key, function(lastRead) {
+												equal(lastRead, undefined, 'Delete');
+
+												start();
+											});
+										});
+									});
 								});
 							});
-
 						});
 					});
 				});

@@ -35,8 +35,8 @@
     }
 
     ul {
-        padding: 0 $padding-horizontal;
-        max-height: 100%;
+        padding: 0 $padding-horizontal 90px $padding-horizontal;
+        height: 100%;
         overflow-y: scroll;
     }
 
