@@ -13,11 +13,35 @@ define(function(require) {
         $scope.folder = 'INBOX';
         emailDao = appController._emailDao;
 
+        //
+        // scope functions
+        //
+
         $scope.select = function(email) {
             email.bodyDisplayParts = email.body.split('\n');
             $scope.selected = email;
             // set selected in parent scope ro it can be displayed in the read view
             $scope.$parent.selected = $scope.selected;
+        };
+
+        $scope.synchronize = function() {
+            updateStatus('Syncing ...');
+
+            // sync from imap to local db
+            syncImapFolder({
+                folder: $scope.folder,
+                offset: -num,
+                num: offset
+            }, function() {
+                // list again from local db after syncing
+                listLocalMessages({
+                    folder: $scope.folder,
+                    offset: offset,
+                    num: num
+                }, function() {
+                    updateStatus('Last update: ', new Date());
+                });
+            });
         };
 
         // production... in chrome packaged app
@@ -32,30 +56,29 @@ define(function(require) {
             $scope.select($scope.emails[0]);
         });
 
+        //
+        // helper functions
+        //
+
         function initList() {
+            updateStatus('Read cache ...');
+
             // list messaged from local db
             listLocalMessages({
                 folder: $scope.folder,
                 offset: offset,
                 num: num
             }, function() {
+                updateStatus('Login ...');
+                $scope.$apply();
+
                 // login to imap
                 loginImap(function() {
-                    // sync from imap to local db
-                    syncImapFolder({
-                        folder: $scope.folder,
-                        offset: -num,
-                        num: offset
-                    }, function() {
-                        // list again from local db after syncing
-                        listLocalMessages({
-                            folder: $scope.folder,
-                            offset: offset,
-                            num: num
-                        }, function() {
-                            console.log('Syncing ' + $scope.folder + ' complete.');
-                        });
-                    });
+                    updateStatus('Syncing ...');
+                    $scope.$apply();
+
+                    // sync imap folder to local db
+                    $scope.synchronize();
                 });
             });
         }
@@ -67,14 +90,11 @@ define(function(require) {
                     return;
                 }
 
-                console.log('Logged in to IMAP.');
                 callback();
             });
         }
 
         function syncImapFolder(options, callback) {
-            console.log('Syncing IMAP...');
-            // sync if emails are empty
             emailDao.imapSync(options, function(err) {
                 if (err) {
                     console.error(err);
@@ -91,11 +111,18 @@ define(function(require) {
                     console.error(err);
                     return;
                 }
-                // add display dates
-                displayEmails(emails);
 
                 callback(emails);
+                // add display dates
+                displayEmails(emails);
             });
+        }
+
+        function updateStatus(lbl, time) {
+            $scope.lastUpdateLbl = lbl;
+            $scope.lastUpdate = (time) ? time : '';
+            $scope.$parent.lastUpdateLbl = $scope.lastUpdateLbl;
+            $scope.$parent.lastUpdate = $scope.lastUpdate;
         }
 
         function displayEmails(emails) {
