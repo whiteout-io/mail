@@ -303,6 +303,7 @@ define(function(require) {
      */
     EmailDAO.prototype.listMessages = function(options, callback) {
         var self = this,
+            plaintextItems = [],
             encryptedList = [];
 
         // validate options
@@ -327,6 +328,8 @@ define(function(require) {
             // find encrypted items
             emails.forEach(function(i) {
                 if (i.body.indexOf(str.cryptPrefix) !== -1 && i.body.indexOf(str.cryptSuffix) !== -1) {
+                    // add item to plaintext list for display later
+                    plaintextItems.push(i);
                     // parse ct object from ascii armored message block
                     encryptedList.push(parseMessageBlock(i));
                 }
@@ -334,8 +337,14 @@ define(function(require) {
 
             // decrypt items
             decryptList(encryptedList, function(err, decryptedList) {
+                // replace encrypted subject and body
+                for (var j = 0; j < plaintextItems.length; j++) {
+                    plaintextItems[j].subject = decryptedList[j].subject;
+                    plaintextItems[j].body = decryptedList[j].body;
+                }
+
                 // return only decrypted items
-                callback(null, decryptedList);
+                callback(null, plaintextItems);
             });
         });
 
