@@ -7,10 +7,9 @@ define(function(require) {
 
     var MailListCtrl = function($scope) {
         var offset = 0,
-            num = 100;
+            num = 100,
+            loggedIn = false;
 
-        // show inbox at the beginning
-        $scope.folder = 'INBOX';
         emailDao = appController._emailDao;
 
         //
@@ -18,7 +17,9 @@ define(function(require) {
         //
 
         $scope.select = function(email) {
-            email.bodyDisplayParts = email.body.split('\n');
+            if (email && typeof email.body === 'string') {
+                email.bodyDisplayParts = email.body.split('\n');
+            }
             $scope.selected = email;
             // set selected in parent scope ro it can be displayed in the read view
             $scope.$parent.selected = $scope.selected;
@@ -26,16 +27,15 @@ define(function(require) {
 
         $scope.synchronize = function() {
             updateStatus('Syncing ...');
-
             // sync from imap to local db
             syncImapFolder({
-                folder: $scope.folder,
+                folder: getFolder().path,
                 offset: -num,
                 num: offset
             }, function() {
                 // list again from local db after syncing
                 listLocalMessages({
-                    folder: $scope.folder,
+                    folder: getFolder().path,
                     offset: offset,
                     num: num
                 }, function() {
@@ -44,17 +44,18 @@ define(function(require) {
             });
         };
 
-        // production... in chrome packaged app
-        if (window.chrome && chrome.identity) {
-            initList();
-            return;
-        }
-
-        // development
-        createDummyMails(function(emails) {
-            updateStatus('Last update: ', new Date());
-            $scope.emails = emails;
-            $scope.select($scope.emails[0]);
+        $scope.$watch('currentFolder', function() {
+            // production... in chrome packaged app
+            if (window.chrome && chrome.identity) {
+                initList();
+                return;
+            }
+            // development... display dummy mail objects
+            createDummyMails(function(emails) {
+                updateStatus('Last update: ', new Date());
+                $scope.emails = emails;
+                $scope.select($scope.emails[0]);
+            });
         });
 
         //
@@ -66,25 +67,35 @@ define(function(require) {
 
             // list messaged from local db
             listLocalMessages({
-                folder: $scope.folder,
+                folder: getFolder().path,
                 offset: offset,
                 num: num
             }, function() {
-                updateStatus('Login ...');
-                $scope.$apply();
-
+                if (loggedIn) {
+                    // user is already logged in
+                    sync();
+                    return;
+                }
                 // login to imap
                 loginImap(function() {
-                    updateStatus('Syncing ...');
-                    $scope.$apply();
-
-                    // sync imap folder to local db
-                    $scope.synchronize();
+                    loggedIn = true;
+                    sync();
                 });
             });
+
+            function sync() {
+                updateStatus('Syncing ...');
+                $scope.$apply();
+
+                // sync imap folder to local db
+                $scope.synchronize();
+            }
         }
 
         function loginImap(callback) {
+            updateStatus('Login ...');
+            $scope.$apply();
+
             emailDao.imapLogin(function(err) {
                 if (err) {
                     console.error(err);
@@ -96,13 +107,23 @@ define(function(require) {
         }
 
         function syncImapFolder(options, callback) {
-            emailDao.imapSync(options, function(err) {
+            emailDao.unreadMessages(getFolder().path, function(err, unreadCount) {
                 if (err) {
                     console.error(err);
                     return;
                 }
+                // set unread count in folder model
+                getFolder().count = unreadCount;
+                $scope.$apply();
 
-                callback();
+                emailDao.imapSync(options, function(err) {
+                    if (err) {
+                        console.error(err);
+                        return;
+                    }
+
+                    callback();
+                });
             });
         }
 
@@ -114,7 +135,6 @@ define(function(require) {
                 }
 
                 callback(emails);
-                // add display dates
                 displayEmails(emails);
             });
         }
@@ -128,6 +148,9 @@ define(function(require) {
 
         function displayEmails(emails) {
             if (!emails || emails.length < 1) {
+                $scope.emails = [];
+                $scope.select();
+                $scope.$apply();
                 return;
             }
 
@@ -139,6 +162,10 @@ define(function(require) {
             $scope.emails = emails;
             $scope.select($scope.emails[0]);
             $scope.$apply();
+        }
+
+        function getFolder() {
+            return $scope.$parent.currentFolder;
         }
     };
 
