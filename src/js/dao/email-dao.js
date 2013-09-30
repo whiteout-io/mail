@@ -484,7 +484,13 @@ define(function(require) {
                         return;
                     }
 
-                    emails.push(message);
+                    // set gotten attributes like body to message object containing list meta data like 'unread' or 'replied'
+                    messageItem.id = message.id;
+                    messageItem.body = message.body;
+                    messageItem.html = message.html;
+                    messageItem.attachments = message.attachments;
+
+                    emails.push(messageItem);
                     after();
                 });
             });

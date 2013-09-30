@@ -143,7 +143,7 @@ define(function(require) {
     };
 
     function createDummyMails(callback) {
-        var Email = function(unread, attachments, replied) {
+        var Email = function(unread, attachments, answered) {
             this.uid = '1';
             this.from = [{
                 name: 'Whiteout Support',
@@ -154,7 +154,7 @@ define(function(require) {
             }]; // list of receivers
             this.attachments = (attachments) ? [true] : undefined;
             this.unread = unread;
-            this.replied = replied;
+            this.answered = answered;
             this.sentDate = new Date('Thu Sep 19 2013 20:41:23 GMT+0200 (CEST)');
             this.subject = "Welcome Max"; // Subject line
             this.body = "Hi Max,\n\n" +

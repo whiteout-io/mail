@@ -4,7 +4,7 @@
 </header>
 
 <ul class="mail-list">
-  <li ng-class="{'mail-list-active': email === selected, 'mail-list-attachment': email.attachments !== undefined && email.attachments.length > 0, 'mail-list-unread': email.unread, 'mail-list-replied': email.replied}" ng-click="select(email)" ng-repeat="email in emails">
+  <li ng-class="{'mail-list-active': email === selected, 'mail-list-attachment': email.attachments !== undefined && email.attachments.length > 0, 'mail-list-unread': email.unread, 'mail-list-replied': email.answered}" ng-click="select(email)" ng-repeat="email in emails">
     <h3>{{email.from[0].name || email.from[0].address}}</h3>
     <div class="head">
       <p class="subject">{{email.subject}}</p>
