@@ -68,7 +68,7 @@ module.exports = function(grunt) {
         },
 
         clean: {
-            dist: ['dist', 'src/lib/*.js', 'test/new-unit/lib']
+            dist: ['dist', 'src/lib/*.js', 'test/lib', 'test/integration/src']
         },
         sass: {
             dist: {
@@ -147,8 +147,8 @@ module.exports = function(grunt) {
                 expand: true,
                 flatten: true,
                 cwd: 'node_modules/',
-                src: ['mocha/mocha.css', 'mocha/mocha.js', 'chai/chai.js', 'sinon/pkg/sinon.js'],
-                dest: 'test/new-unit/lib/'
+                src: ['requirejs/require.js', 'mocha/mocha.css', 'mocha/mocha.js', 'chai/chai.js', 'sinon/pkg/sinon.js'],
+                dest: 'test/lib/'
             },
             cryptoLib: {
                 expand: true,
@@ -191,6 +191,12 @@ module.exports = function(grunt) {
                 cwd: 'src/',
                 src: ['*.html', '*.js', '*.json'],
                 dest: 'dist/'
+            },
+            integration: {
+                expand: true,
+                cwd: 'src/',
+                src: ['**'],
+                dest: 'test/integration/src/'
             }
         }
     });

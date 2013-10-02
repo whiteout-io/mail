@@ -1,0 +1,26 @@
+{
+  "name": "Whiteout Mail Integration Tests",
+  "description": "",
+  "version": "0.0.1",
+  "manifest_version": 2,
+  "offline_enabled": true,
+  "permissions": [
+    "https://storage.whiteout.io/",
+    "identity", {
+      "socket": ["tcp-connect"]
+    }
+  ],
+  "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDBXqC3/oX5fP/gLORcVN62Pf3Ph+pO4qEB+FynSMWMoqWUt7FDoaKuHrsP/KInuP/0PUZcqpij9kB9MytLTqYzGIoRsUd37i1Dt6R69fnNsIqAISgoWIRg4VyRdon9cTIniv3DVV45PPyNCvN+oQoBMv9NbojWnlL9W05bKYkABQIDAQAB",
+  "oauth2": {
+    "client_id": "440907777130.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/userinfo.email",
+      "https://mail.google.com/"
+    ]
+  },
+  "app": {
+    "background": {
+      "scripts": ["integration/background.js"]
+    }
+  }
+}
