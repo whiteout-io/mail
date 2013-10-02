@@ -26,7 +26,28 @@ define([], function() {
 				secure: true,
 				port: 465,
 				host: 'smtp.gmail.com'
-			}
+			},
+			folders: [{
+				type: 'Inbox',
+				count: undefined,
+				path: 'INBOX'
+			}, {
+				type: 'Sent',
+				count: undefined,
+				path: '[Gmail]/Gesendet'
+			}, {
+				type: 'Outbox',
+				count: undefined,
+				path: 'OUTBOX'
+			}, {
+				type: 'Drafts',
+				count: undefined,
+				path: '[Gmail]/Entw&APw-rfe'
+			}, {
+				type: 'Trash',
+				count: undefined,
+				path: '[Gmail]/Papierkorb'
+			}]
 		}
 	};
 

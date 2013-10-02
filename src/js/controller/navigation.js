@@ -1,29 +1,11 @@
-define(function() {
+define(function(require) {
     'use strict';
+
+    var folders = require('js/app-config').config.gmail.folders;
 
     var NavigationCtrl = function($scope) {
         $scope.navOpen = false;
-        $scope.folders = [{
-            type: 'Inbox',
-            count: undefined,
-            path: 'INBOX'
-        }, {
-            type: 'Sent',
-            count: undefined,
-            path: '[Gmail]/Gesendet'
-        }, {
-            type: 'Outbox',
-            count: undefined,
-            path: 'OUTBOX'
-        }, {
-            type: 'Drafts',
-            count: undefined,
-            path: '[Gmail]/Entw&APw-rfe'
-        }, {
-            type: 'Trash',
-            count: undefined,
-            path: '[Gmail]/Papierkorb'
-        }];
+        $scope.folders = folders;
 
         $scope.openNav = function() {
             $scope.navOpen = true;
