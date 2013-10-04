@@ -17,7 +17,10 @@ define(function(require) {
         //
 
         $scope.select = function(email) {
-            if (email && typeof email.body === 'string') {
+            if (!email) {
+                return;
+            }
+            if (typeof email.body === 'string') {
                 email.bodyDisplayParts = email.body.split('\n');
             }
             $scope.selected = email;

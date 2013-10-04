@@ -13,7 +13,7 @@ define([], function() {
 		cloudUrl: 'https://storage.whiteout.io',
 		symKeySize: 128,
 		symIvSize: 128,
-		asymKeySize: 1024,
+		asymKeySize: 2048,
 		workerPath: 'js',
 		gmail: {
 			clientId: '440907777130.apps.googleusercontent.com',
