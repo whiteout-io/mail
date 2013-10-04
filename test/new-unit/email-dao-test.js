@@ -426,14 +426,17 @@ define(function(require) {
                 it('should work', function(done) {
 
                     devicestorageStub.listItems.yields(null, [{
-                        body: ''
+                        body: app.string.cryptPrefix + btoa(JSON.stringify({})) + app.string.cryptSuffix
                     }]);
                     keychainStub.getPublicKeys.yields(null, [{
                         _id: "fcf8b4aa-5d09-4089-8b4f-e3bc5091daf3",
                         userId: "safewithme.testuser@gmail.com",
                         publicKey: publicKey
                     }]);
-                    cryptoStub.decryptListForUser.yields(null, []);
+                    cryptoStub.decryptListForUser.yields(null, [{
+                        body: 'test body',
+                        subject: 'test subject'
+                    }]);
 
                     emailDao.listMessages({
                         folder: 'INBOX',
@@ -444,7 +447,7 @@ define(function(require) {
                         expect(keychainStub.getPublicKeys.calledOnce).to.be.true;
                         expect(cryptoStub.decryptListForUser.calledOnce).to.be.true;
                         expect(err).to.not.exist;
-                        expect(emails.length).to.equal(0);
+                        expect(emails.length).to.equal(1);
                         done();
                     });
                 });

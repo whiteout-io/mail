@@ -320,20 +320,21 @@ define(function(require) {
                 callback(err);
                 return;
             }
-            if (emails.length === 0) {
-                callback(null, []);
-                return;
-            }
 
             // find encrypted items
             emails.forEach(function(i) {
-                if (i.body.indexOf(str.cryptPrefix) !== -1 && i.body.indexOf(str.cryptSuffix) !== -1) {
+                if (typeof i.body === 'string' && i.body.indexOf(str.cryptPrefix) !== -1 && i.body.indexOf(str.cryptSuffix) !== -1) {
                     // add item to plaintext list for display later
                     displayList.push(i);
                     // parse ct object from ascii armored message block
                     encryptedList.push(parseMessageBlock(i));
                 }
             });
+
+            if (encryptedList.length === 0) {
+                callback(null, []);
+                return;
+            }
 
             // decrypt items
             decryptList(encryptedList, function(err, decryptedList) {
@@ -425,17 +426,21 @@ define(function(require) {
             return;
         }
 
-        fetchList(function(emails) {
+        fetchList(function(err, emails) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
             // delete old items from db
             self._devicestorage.removeList(dbType, function(err) {
                 if (err) {
                     callback(err);
                     return;
                 }
+
                 // persist encrypted list in device storage
-                self._devicestorage.storeList(emails, dbType, function(err) {
-                    callback(err);
-                });
+                self._devicestorage.storeList(emails, dbType, callback);
             });
         });
 
@@ -449,7 +454,7 @@ define(function(require) {
                 num: options.num
             }, function(err, emails) {
                 if (err) {
-                    console.log(err);
+                    callback(err);
                     return;
                 }
 
@@ -461,9 +466,7 @@ define(function(require) {
                 });
 
                 // fetch message bodies
-                fetchBodies(encryptedList, function(messages) {
-                    callback(messages);
-                });
+                fetchBodies(encryptedList, callback);
             });
         }
 
@@ -471,12 +474,12 @@ define(function(require) {
             var emails = [];
 
             if (messageList.length < 1) {
-                callback(emails);
+                callback(null, emails);
                 return;
             }
 
             var after = _.after(messageList.length, function() {
-                callback(emails);
+                callback(null, emails);
             });
 
             _.each(messageList, function(messageItem) {
@@ -485,7 +488,7 @@ define(function(require) {
                     uid: messageItem.uid
                 }, function(err, message) {
                     if (err) {
-                        console.log(err);
+                        callback(err);
                         return;
                     }
 
