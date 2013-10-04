@@ -4,6 +4,7 @@ npm-debug.log
 test/lib/
 .sass-cache
 dist/
+dist.zip
 test/integration/src/
 src/lib/*.js
 src/js/crypto/aes-cbc.js
