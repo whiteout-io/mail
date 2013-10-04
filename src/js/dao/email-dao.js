@@ -384,6 +384,24 @@ define(function(require) {
         }, messageReady);
     };
 
+    EmailDAO.prototype.imapMarkMessageRead = function(options, callback) {
+        var self = this;
+
+        // validate options
+        if (!options.folder || !options.uid) {
+            callback({
+                errMsg: 'Invalid options!'
+            });
+            return;
+        }
+
+        self._imapClient.updateFlags({
+            path: options.folder,
+            uid: options.uid,
+            unread: false
+        }, callback);
+    };
+
     //
     // SMTP Apis
     //

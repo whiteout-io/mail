@@ -23,6 +23,9 @@ define(function(require) {
             $scope.selected = email;
             // set selected in parent scope ro it can be displayed in the read view
             $scope.$parent.selected = $scope.selected;
+
+            // mark selected message as 'read'
+            markAsRead(email);
         };
 
         $scope.synchronize = function() {
@@ -174,6 +177,27 @@ define(function(require) {
 
         function getFolder() {
             return $scope.$parent.currentFolder;
+        }
+
+        function markAsRead(email) {
+            email.unread = false;
+
+            // only update imap state if user is logged in
+            if (!loggedIn) {
+                return;
+            }
+
+            emailDao.imapMarkMessageRead({
+                folder: getFolder().path,
+                uid: email.uid
+            }, function(err) {
+                if (err) {
+                    console.log(err);
+                    updateStatus('Error marking read!');
+                    $scope.$apply();
+                    return;
+                }
+            });
         }
     };
 

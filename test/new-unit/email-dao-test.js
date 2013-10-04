@@ -228,7 +228,7 @@ define(function(require) {
                 });
             });
 
-            describe('IMAP: get unread messages for folder', function() {
+            describe('IMAP: get unread message count for folder', function() {
                 it('should work', function(done) {
                     imapClientStub.unreadMessages.yields();
                     emailDao.unreadMessages(function(err) {
@@ -409,8 +409,23 @@ define(function(require) {
                     });
                 });
             });
-
         });
+
+        describe('IMAP: mark message as read', function() {
+            it('should work', function(done) {
+                imapClientStub.updateFlags.yields();
+
+                emailDao.imapMarkMessageRead({
+                    folder: 'asdf',
+                    uid: 1
+                }, function(err) {
+                    expect(imapClientStub.updateFlags.calledOnce).to.be.true;
+                    expect(err).to.not.exist;
+                    done();
+                });
+            });
+        });
+
     });
 
 });
