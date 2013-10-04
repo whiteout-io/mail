@@ -217,49 +217,6 @@ define(function(require) {
                 });
             });
 
-            describe('IMAP Caching', function() {
-                describe('write cache', function() {
-                    it('should work if cache is empty', function() {
-                        expect(emailDao._account.folders).to.not.exist;
-                        emailDao.cacheItem('INBOX', {
-                            uid: 42
-                        });
-                        expect(emailDao._account.folders.INBOX[42]).to.exist;
-                    });
-
-                    it('should work if cache is not empty', function() {
-                        expect(emailDao._account.folders).to.not.exist;
-                        emailDao.cacheItem('INBOX', {
-                            uid: 42
-                        });
-                        emailDao.cacheItem('INBOX', {
-                            uid: 43
-                        });
-                        expect(emailDao._account.folders.INBOX[42]).to.exist;
-                        expect(emailDao._account.folders.INBOX[43]).to.exist;
-                    });
-                });
-
-                describe('read cache', function() {
-                    it('should work if cache is empty', function() {
-                        expect(emailDao._account.folders).to.not.exist;
-                        var item = emailDao.readCache('INBOX', 42);
-                        expect(item).to.not.exist;
-                    });
-
-                    it('should work if cache is not empty', function() {
-                        expect(emailDao._account.folders).to.not.exist;
-                        emailDao.cacheItem('INBOX', {
-                            uid: 42
-                        });
-                        expect(emailDao._account.folders.INBOX[42]).to.exist;
-
-                        var item = emailDao.readCache('INBOX', 42);
-                        expect(item.uid).to.equal(42);
-                    });
-                });
-            });
-
             describe('IMAP: list folders', function() {
                 it('should work', function(done) {
                     imapClientStub.listAllFolders.yields();

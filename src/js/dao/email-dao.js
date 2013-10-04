@@ -564,42 +564,5 @@ define(function(require) {
         }, messageReady);
     };
 
-    /**
-     * Checks if an item is already cached and if not, cache it.
-     */
-    EmailDAO.prototype.cacheItem = function(folderName, item) {
-        var self = this;
-
-        // check if account has a folders attribute
-        if (!self._account.folders) {
-            self._account.folders = {};
-        }
-        // create folder if not existant
-        if (!self._account.folders[folderName]) {
-            self._account.folders[folderName] = {};
-        }
-
-        // cache item
-        self._account.folders[folderName][item.uid] = item;
-    };
-
-    /**
-     * Fetch an item from the cache with the following id
-     */
-    EmailDAO.prototype.readCache = function(folderName, itemId) {
-        var self = this;
-
-        // check if account has a folders attribute
-        if (!self._account.folders) {
-            return;
-        }
-        // check folder
-        if (!self._account.folders[folderName]) {
-            return;
-        }
-
-        return self._account.folders[folderName][itemId];
-    };
-
     return EmailDAO;
 });
