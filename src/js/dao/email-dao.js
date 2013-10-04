@@ -377,10 +377,9 @@ define(function(require) {
             callback(null, gottenMessage);
         }
 
-        self._imapClient.getMessage({
+        self._imapClient.getMessagePreview({
             path: options.folder,
-            uid: options.uid,
-            textOnly: true
+            uid: options.uid
         }, messageReady);
     };
 

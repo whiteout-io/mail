@@ -262,12 +262,12 @@ define(function(require) {
                 });
             });
 
-            describe('IMAP: get message content', function() {
+            describe('IMAP: get message preview', function() {
                 it('should fail due to bad options', function(done) {
                     emailDao.imapGetMessage({
                         folder: 'INBOX'
                     }, function(err) {
-                        expect(imapClientStub.getMessage.called).to.be.false;
+                        expect(imapClientStub.getMessagePreview.called).to.be.false;
                         expect(err).to.exist;
                         done();
                     });
@@ -276,7 +276,7 @@ define(function(require) {
                 it('should parse message body without attachement', function(done) {
                     var uid = 415;
 
-                    imapClientStub.getMessage.yields(null, {
+                    imapClientStub.getMessagePreview.yields(null, {
                         uid: uid,
                         body: ''
                     });
@@ -284,7 +284,7 @@ define(function(require) {
                         folder: 'INBOX',
                         uid: uid
                     }, function(err, message) {
-                        expect(imapClientStub.getMessage.calledOnce).to.be.true;
+                        expect(imapClientStub.getMessagePreview.calledOnce).to.be.true;
                         expect(err).to.not.exist;
                         expect(message.uid).to.equal(uid);
                         expect(message.attachments).to.not.exist;
@@ -313,7 +313,7 @@ define(function(require) {
                 //         folder: 'INBOX',
                 //         uid: uid
                 //     }, function(err, message) {
-                //         expect(newImapClientStub.getMessage.calledOnce).to.be.true;
+                //         expect(newImapClientStub.getMessagePreview.calledOnce).to.be.true;
                 //         expect(err).to.not.exist;
                 //         expect(message.uid).to.equal(uid);
                 //         expect(message.attachments[0].uint8Array).to.exist;
@@ -330,7 +330,7 @@ define(function(require) {
                     }, {
                         uid: 414,
                     }]);
-                    imapClientStub.getMessage.yields(null, {
+                    imapClientStub.getMessagePreview.yields(null, {
                         body: 'asdf'
                     });
                     devicestorageStub.removeList.yields();
@@ -343,7 +343,7 @@ define(function(require) {
                     }, function(err) {
                         expect(err).to.not.exist;
                         expect(imapClientStub.listMessages.calledOnce).to.be.true;
-                        expect(imapClientStub.getMessage.called).to.be.false;
+                        expect(imapClientStub.getMessagePreview.called).to.be.false;
                         expect(devicestorageStub.removeList.calledOnce).to.be.true;
                         expect(devicestorageStub.storeList.calledOnce).to.be.true;
                         done();
@@ -358,7 +358,7 @@ define(function(require) {
                         uid: 414,
                         subject: app.string.subject
                     }]);
-                    imapClientStub.getMessage.yields(null, {
+                    imapClientStub.getMessagePreview.yields(null, {
                         body: 'asdf'
                     });
                     devicestorageStub.removeList.yields();
@@ -371,7 +371,7 @@ define(function(require) {
                     }, function(err) {
                         expect(err).to.not.exist;
                         expect(imapClientStub.listMessages.calledOnce).to.be.true;
-                        expect(imapClientStub.getMessage.calledTwice).to.be.true;
+                        expect(imapClientStub.getMessagePreview.calledTwice).to.be.true;
                         expect(devicestorageStub.removeList.calledOnce).to.be.true;
                         expect(devicestorageStub.storeList.calledOnce).to.be.true;
                         done();
