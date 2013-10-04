@@ -78,7 +78,7 @@ define(function(require) {
     };
 
     //
-    // IMAP/SMTP Apis
+    // IMAP Apis
     //
 
     /**
@@ -98,186 +98,6 @@ define(function(require) {
         var self = this;
 
         self._imapClient.logout(callback);
-    };
-
-    /**
-     * Send an email client side via STMP.
-     */
-    EmailDAO.prototype.smtpSend = function(email, callback) {
-        var self = this,
-            invalidRecipient;
-
-        // validate the email input
-        if (!email.to || !email.from || !email.to[0].address || !email.from[0].address) {
-            callback({
-                errMsg: 'Invalid email object!'
-            });
-            return;
-        }
-
-        // validate email addresses
-        _.each(email.to, function(i) {
-            if (!util.validateEmailAddress(i.address)) {
-                invalidRecipient = i.address;
-            }
-        });
-        if (invalidRecipient) {
-            callback({
-                errMsg: 'Invalid recipient: ' + invalidRecipient
-            });
-            return;
-        }
-        if (!util.validateEmailAddress(email.from[0].address)) {
-            callback({
-                errMsg: 'Invalid sender: ' + email.from
-            });
-            return;
-        }
-
-        // only support single recipient for e-2-e encryption
-        // check if receiver has a public key
-        self._keychain.getReveiverPublicKey(email.to[0].address, function(err, receiverPubkey) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            // validate public key
-            if (!receiverPubkey) {
-                callback({
-                    errMsg: 'User has no public key yet!'
-                });
-                // user hasn't registered a public key yet... invite
-                //self.encryptForNewUser(email, callback);
-                return;
-            }
-
-            // public key found... encrypt and send
-            self.encryptForUser(email, receiverPubkey, callback);
-        });
-    };
-
-    /**
-     * Encrypt an email asymmetrically for an exisiting user with their public key
-     */
-    EmailDAO.prototype.encryptForUser = function(email, receiverPubkey, callback) {
-        var self = this,
-            ptItems = bundleForEncryption(email),
-            receiverPubkeys = [receiverPubkey];
-
-        // encrypt the email
-        self._crypto.encryptListForUser(ptItems, receiverPubkeys, function(err, encryptedList) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            // bundle encrypted email together for sending
-            bundleEncryptedItems(email, encryptedList);
-
-            self.send(email, callback);
-        });
-    };
-
-    /**
-     * Encrypt an email symmetrically for a new user, write the secret one time key to the cloudstorage REST service, and send the email client side via SMTP.
-     */
-    EmailDAO.prototype.encryptForNewUser = function(email, callback) {
-        var self = this,
-            ptItems = bundleForEncryption(email);
-
-        self._crypto.symEncryptList(ptItems, function(err, result) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            // bundle encrypted email together for sending
-            bundleEncryptedItems(email, result.list);
-
-            // TODO: write result.key to REST endpoint
-
-            self.send(email, callback);
-        });
-    };
-
-    /**
-     * Give the email a newly generated UUID, remove its attachments, and bundle all plaintext items to a batchable array for encryption.
-     */
-
-    function bundleForEncryption(email) {
-        var ptItems = [email];
-
-        // generate a new UUID for the new email
-        email.id = util.UUID();
-
-        // add attachment to encryption batch and remove from email object
-        if (email.attachments) {
-            email.attachments.forEach(function(attachment) {
-                attachment.id = email.id;
-                ptItems.push(attachment);
-            });
-            delete email.attachments;
-        }
-
-        return ptItems;
-    }
-
-    /**
-     * Frame the encrypted email message and append the encrypted attachments.
-     */
-
-    function bundleEncryptedItems(email, encryptedList) {
-        var i;
-
-        // replace body and subject of the email with encrypted versions
-        email = frameEncryptedMessage(email, encryptedList[0]);
-
-        // add encrypted attachments
-        if (encryptedList.length > 1) {
-            email.attachments = [];
-        }
-        for (i = 1; i < encryptedList.length; i++) {
-            email.attachments.push({
-                fileName: 'Encrypted Attachment ' + i,
-                contentType: 'application/octet-stream',
-                uint8Array: util.binStr2Uint8Arr(JSON.stringify(encryptedList[i]))
-            });
-        }
-    }
-
-    /**
-     * Frames an encrypted message in base64 Format.
-     */
-
-    function frameEncryptedMessage(email, ct) {
-        var to, greeting, ctBase64;
-
-        var SUBJECT = str.subject,
-            MESSAGE = str.message + '\n\n\n',
-            PREFIX = str.cryptPrefix + '\n',
-            SUFFIX = '\n' + str.cryptSuffix,
-            SIGNATURE = '\n\n\n' + str.signature + '\n' + str.webSite + '\n\n';
-
-        // get first name of recipient
-        to = (email.to[0].name || email.to[0].address).split('@')[0].split('.')[0].split(' ')[0];
-        greeting = 'Hi ' + to + ',\n\n';
-
-        // build encrypted text body
-        ctBase64 = btoa(JSON.stringify(ct));
-        email.body = greeting + MESSAGE + PREFIX + ctBase64 + SUFFIX + SIGNATURE;
-        email.subject = SUBJECT;
-
-        return email;
-    }
-
-    /**
-     * Send an actual message object via smtp
-     */
-    EmailDAO.prototype.send = function(email, callback) {
-        var self = this;
-
-        self._smtpClient.send(email, callback);
     };
 
     /**
@@ -562,6 +382,190 @@ define(function(require) {
             uid: options.uid,
             textOnly: true
         }, messageReady);
+    };
+
+    //
+    // SMTP Apis
+    //
+
+    /**
+     * Send an email client side via STMP.
+     */
+    EmailDAO.prototype.smtpSend = function(email, callback) {
+        var self = this,
+            invalidRecipient;
+
+        // validate the email input
+        if (!email.to || !email.from || !email.to[0].address || !email.from[0].address) {
+            callback({
+                errMsg: 'Invalid email object!'
+            });
+            return;
+        }
+
+        // validate email addresses
+        _.each(email.to, function(i) {
+            if (!util.validateEmailAddress(i.address)) {
+                invalidRecipient = i.address;
+            }
+        });
+        if (invalidRecipient) {
+            callback({
+                errMsg: 'Invalid recipient: ' + invalidRecipient
+            });
+            return;
+        }
+        if (!util.validateEmailAddress(email.from[0].address)) {
+            callback({
+                errMsg: 'Invalid sender: ' + email.from
+            });
+            return;
+        }
+
+        // only support single recipient for e-2-e encryption
+        // check if receiver has a public key
+        self._keychain.getReveiverPublicKey(email.to[0].address, function(err, receiverPubkey) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            // validate public key
+            if (!receiverPubkey) {
+                callback({
+                    errMsg: 'User has no public key yet!'
+                });
+                // user hasn't registered a public key yet... invite
+                //self.encryptForNewUser(email, callback);
+                return;
+            }
+
+            // public key found... encrypt and send
+            self.encryptForUser(email, receiverPubkey, callback);
+        });
+    };
+
+    /**
+     * Encrypt an email asymmetrically for an exisiting user with their public key
+     */
+    EmailDAO.prototype.encryptForUser = function(email, receiverPubkey, callback) {
+        var self = this,
+            ptItems = bundleForEncryption(email),
+            receiverPubkeys = [receiverPubkey];
+
+        // encrypt the email
+        self._crypto.encryptListForUser(ptItems, receiverPubkeys, function(err, encryptedList) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            // bundle encrypted email together for sending
+            bundleEncryptedItems(email, encryptedList);
+
+            self.send(email, callback);
+        });
+    };
+
+    /**
+     * Encrypt an email symmetrically for a new user, write the secret one time key to the cloudstorage REST service, and send the email client side via SMTP.
+     */
+    EmailDAO.prototype.encryptForNewUser = function(email, callback) {
+        var self = this,
+            ptItems = bundleForEncryption(email);
+
+        self._crypto.symEncryptList(ptItems, function(err, result) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            // bundle encrypted email together for sending
+            bundleEncryptedItems(email, result.list);
+
+            // TODO: write result.key to REST endpoint
+
+            self.send(email, callback);
+        });
+    };
+
+    /**
+     * Give the email a newly generated UUID, remove its attachments, and bundle all plaintext items to a batchable array for encryption.
+     */
+
+    function bundleForEncryption(email) {
+        var ptItems = [email];
+
+        // generate a new UUID for the new email
+        email.id = util.UUID();
+
+        // add attachment to encryption batch and remove from email object
+        if (email.attachments) {
+            email.attachments.forEach(function(attachment) {
+                attachment.id = email.id;
+                ptItems.push(attachment);
+            });
+            delete email.attachments;
+        }
+
+        return ptItems;
+    }
+
+    /**
+     * Frame the encrypted email message and append the encrypted attachments.
+     */
+
+    function bundleEncryptedItems(email, encryptedList) {
+        var i;
+
+        // replace body and subject of the email with encrypted versions
+        email = frameEncryptedMessage(email, encryptedList[0]);
+
+        // add encrypted attachments
+        if (encryptedList.length > 1) {
+            email.attachments = [];
+        }
+        for (i = 1; i < encryptedList.length; i++) {
+            email.attachments.push({
+                fileName: 'Encrypted Attachment ' + i,
+                contentType: 'application/octet-stream',
+                uint8Array: util.binStr2Uint8Arr(JSON.stringify(encryptedList[i]))
+            });
+        }
+    }
+
+    /**
+     * Frames an encrypted message in base64 Format.
+     */
+
+    function frameEncryptedMessage(email, ct) {
+        var to, greeting, ctBase64;
+
+        var SUBJECT = str.subject,
+            MESSAGE = str.message + '\n\n\n',
+            PREFIX = str.cryptPrefix + '\n',
+            SUFFIX = '\n' + str.cryptSuffix,
+            SIGNATURE = '\n\n\n' + str.signature + '\n' + str.webSite + '\n\n';
+
+        // get first name of recipient
+        to = (email.to[0].name || email.to[0].address).split('@')[0].split('.')[0].split(' ')[0];
+        greeting = 'Hi ' + to + ',\n\n';
+
+        // build encrypted text body
+        ctBase64 = btoa(JSON.stringify(ct));
+        email.body = greeting + MESSAGE + PREFIX + ctBase64 + SUFFIX + SIGNATURE;
+        email.subject = SUBJECT;
+
+        return email;
+    }
+
+    /**
+     * Send an actual message object via smtp
+     */
+    EmailDAO.prototype.send = function(email, callback) {
+        var self = this;
+
+        self._smtpClient.send(email, callback);
     };
 
     return EmailDAO;
