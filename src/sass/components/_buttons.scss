@@ -87,6 +87,7 @@
     -webkit-font-smoothing: antialiased;
     transition: color 0.3s;
     transform: translate3d(0,0,0); // to prevent flickering
+    outline: none;
 
     &.disabled,
     &[disabled],
