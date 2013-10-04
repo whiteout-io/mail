@@ -98,7 +98,9 @@ define(function(require) {
 
             emailDao.imapLogin(function(err) {
                 if (err) {
-                    console.error(err);
+                    console.log(err);
+                    updateStatus('Error on login!');
+                    $scope.$apply();
                     return;
                 }
 
@@ -109,7 +111,9 @@ define(function(require) {
         function syncImapFolder(options, callback) {
             emailDao.unreadMessages(getFolder().path, function(err, unreadCount) {
                 if (err) {
-                    console.error(err);
+                    console.log(err);
+                    updateStatus('Error on sync!');
+                    $scope.$apply();
                     return;
                 }
                 // set unread count in folder model
@@ -118,7 +122,9 @@ define(function(require) {
 
                 emailDao.imapSync(options, function(err) {
                     if (err) {
-                        console.error(err);
+                        console.log(err);
+                        updateStatus('Error on sync!');
+                        $scope.$apply();
                         return;
                     }
 
@@ -130,7 +136,9 @@ define(function(require) {
         function listLocalMessages(options, callback) {
             emailDao.listMessages(options, function(err, emails) {
                 if (err) {
-                    console.error(err);
+                    console.log(err);
+                    updateStatus('Error listing cache!');
+                    $scope.$apply();
                     return;
                 }
 

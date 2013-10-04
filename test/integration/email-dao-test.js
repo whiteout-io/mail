@@ -35,7 +35,7 @@ define(function(require) {
             });
         });
 
-        describe('IMAP sync messages', function() {
+        describe('IMAP sync INBOX messages', function() {
             it('should work', function(done) {
                 emailDao.imapSync({
                     folder: 'INBOX',
@@ -48,7 +48,7 @@ define(function(require) {
             });
         });
 
-        describe('IMAP sync messages', function() {
+        describe('IMAP list INBOX messages', function() {
             it('should work', function(done) {
                 emailDao.listMessages({
                     folder: 'INBOX',
@@ -58,6 +58,34 @@ define(function(require) {
                     expect(err).to.not.exist;
                     expect(emails).to.exist;
                     expect(emails.length).to.be.at.least(1);
+                    done();
+                });
+            });
+        });
+
+        describe('IMAP sync SENT messages', function() {
+            it('should work', function(done) {
+                emailDao.imapSync({
+                    folder: '[Gmail]/Gesendet',
+                    offset: -num,
+                    num: offset
+                }, function(err) {
+                    expect(err).to.not.exist;
+                    done();
+                });
+            });
+        });
+
+        describe('IMAP list SENT messages', function() {
+            it('should work', function(done) {
+                emailDao.listMessages({
+                    folder: '[Gmail]/Gesendet',
+                    offset: offset,
+                    num: num
+                }, function(err, emails) {
+                    expect(err).to.not.exist;
+                    expect(emails).to.exist;
+                    expect(emails.length).to.be.at.least(0);
                     done();
                 });
             });

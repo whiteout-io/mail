@@ -337,6 +337,11 @@ define(function(require) {
 
             // decrypt items
             decryptList(encryptedList, function(err, decryptedList) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
                 // replace encrypted subject and body
                 for (var j = 0; j < displayList.length; j++) {
                     displayList[j].subject = decryptedList[j].subject;
@@ -420,7 +425,7 @@ define(function(require) {
             return;
         }
 
-        fetchList(options, function(emails) {
+        fetchList(function(emails) {
             // delete old items from db
             self._devicestorage.removeList(dbType, function(err) {
                 if (err) {
@@ -434,7 +439,7 @@ define(function(require) {
             });
         });
 
-        function fetchList(folder, callback) {
+        function fetchList(callback) {
             var encryptedList = [];
 
             // fetch imap folder's message list
@@ -456,13 +461,13 @@ define(function(require) {
                 });
 
                 // fetch message bodies
-                fetchBodies(encryptedList, folder, function(messages) {
+                fetchBodies(encryptedList, function(messages) {
                     callback(messages);
                 });
             });
         }
 
-        function fetchBodies(messageList, folder, callback) {
+        function fetchBodies(messageList, callback) {
             var emails = [];
 
             if (messageList.length < 1) {
@@ -476,7 +481,7 @@ define(function(require) {
 
             _.each(messageList, function(messageItem) {
                 self.imapGetMessage({
-                    folder: folder,
+                    folder: options.folder,
                     uid: messageItem.uid
                 }, function(err, message) {
                     if (err) {
@@ -526,10 +531,7 @@ define(function(require) {
      * @param {String} options.messageId The
      */
     EmailDAO.prototype.imapGetMessage = function(options, callback) {
-        var self = this,
-            expectedItems,
-            itemCounter = 0,
-            message /*, attachments = []*/ ;
+        var self = this;
 
         // validate options
         if (!options.folder || !options.uid) {
@@ -540,41 +542,17 @@ define(function(require) {
         }
 
         function messageReady(err, gottenMessage) {
-            message = gottenMessage;
-            itemCounter++;
-            // remember how many items should be fetched before the callback fires
-            expectedItems = (message.attachments instanceof Array) ? message.attachments.length + 1 : 1;
-
-            // TODO: remove once attachments work again
-            if (itemCounter > 1) {
+            if (err || !gottenMessage) {
+                callback({
+                    errMsg: 'Error fetching message body!',
+                    err: err
+                });
                 return;
             }
 
             // return message
-            callback(null, message);
-
-            //check();
+            callback(null, gottenMessage);
         }
-
-        // function attachmentReady(err, gottenAttachment) {
-        //     attachments.push(gottenAttachment);
-        //     itemCounter++;
-        //     check();
-        // }
-
-        // function check() {
-        //     // go for another round you don't yet know how mich to fetch or you haven't fetch enough
-        //     if (!expectedItems || itemCounter < expectedItems) {
-        //         return;
-        //     }
-
-        //     // overwrite attachments array with the uint8array variant
-        //     message.attachments = (attachments.length > 0) ? attachments : undefined;
-        //     // cache message object in memory
-        //     self.cacheItem(options.folder, message);
-
-        //     callback(null, message);
-        // }
 
         self._imapClient.getMessage({
             path: options.folder,
