@@ -21,6 +21,12 @@ define(['underscore', 'js/dao/lawnchair-dao'], function(_, jsonDao) {
         var self = this,
             after, already, pubkeys = [];
 
+        // return empty array if key ids are emtpy
+        if (ids.length < 1) {
+            callback(null, pubkeys);
+            return;
+        }
+
         after = _.after(ids.length, function() {
             callback(null, pubkeys);
         });
