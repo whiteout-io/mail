@@ -2,6 +2,8 @@
     margin: 0px;
     padding: 12px;
     color: $color-grey-dark;
+    height: 100%;
+    overflow-y: hidden;
 
     .title {
         text-align: center;
@@ -60,6 +62,8 @@
 
     .body {
         line-height: 1.5em;
+        height: 60%;
+        overflow-y: scroll;
 
         *[contentEditable] {
             outline: 0px;

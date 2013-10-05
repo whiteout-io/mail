@@ -37,4 +37,8 @@ textarea {
 // Basic layout
 .main-app-view {
     height: 100%;
+
+    ::-webkit-scrollbar {
+        width: 0px;
+    }
 }

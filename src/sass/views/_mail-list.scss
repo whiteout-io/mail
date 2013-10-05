@@ -8,10 +8,6 @@
     background-image: linear-gradient(to right ,$color-grey-lightest 98%, darken($color-grey-lightest, 1%) 100%);
     border-right: 1px solid $color-grey-light;
 
-    ::-webkit-scrollbar {
-        width: 0px;
-    }
-
     header {
 
         cursor: pointer;
