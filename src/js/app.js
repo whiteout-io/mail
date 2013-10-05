@@ -5,11 +5,12 @@ require([
     'angular',
     'js/controller/login',
     'js/controller/mail-list',
+    'js/controller/read',
     'js/controller/write',
     'js/controller/navigation',
     'angularRoute',
     'angularTouch'
-], function(angular, LoginCtrl, MailListCtrl, WriteCtrl, NavigationCtrl) {
+], function(angular, LoginCtrl, MailListCtrl, ReadCtrl, WriteCtrl, NavigationCtrl) {
     'use strict';
 
     var app = angular.module('mail', ['ngRoute', 'ngTouch', 'write', 'read']);
@@ -34,6 +35,7 @@ require([
     });
 
     // inject controllers from ng-included view templates
+    app.controller('ReadCtrl', ReadCtrl);
     app.controller('MailListCtrl', MailListCtrl);
 
     // manually bootstrap angular due to require.js

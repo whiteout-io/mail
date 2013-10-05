@@ -36,9 +36,9 @@ define(function(require) {
             // remove generated html from body
             body = parseBody(body);
 
-            // Although this does encrypt live using AES, this is just for show. The plaintext is encrypted seperately using before sending the email.
+            // Although this does encrypt live using AES, this is just for show. The plaintext is encrypted seperately before sending the email.
             var plaintext = ($scope.subject) ? $scope.subject + body : body;
-            $scope.ciphertextPreview = aes.encrypt(plaintext, key, iv);
+            $scope.ciphertextPreview = (plaintext) ? aes.encrypt(plaintext, key, iv) : '';
         };
 
         $scope.sendEmail = function() {
