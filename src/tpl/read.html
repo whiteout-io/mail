@@ -19,11 +19,15 @@
 
   <div class="seperator-line"></div>
 
-  <div class="body">
+  <div class="body" ng-switch="selected.html === true">
+    <!-- sandbox untrusted markup from html emails in an iframe. The "allow-same-origin" attribute is required to dynamically adjust the height of the iframe. Script execution is not allowed. -->
+    <iframe ng-switch-when="true" sandbox="allow-same-origin" srcdoc="{{selected.body}}" seamless frame-load></iframe>
+
+    <!-- Render parts of a text only email in paragraphs for easier styling -->
     <p ng-repeat="part in selected.bodyDisplayParts track by $index">
       <span ng-switch="part.length !== 0">
         <span ng-switch-when="true">{{part}}</span>
       </span>
     </p>
-  </div><!--/.mail-text-body-->
+  </div><!--/.body-->
 </div><!--/.view-read-->

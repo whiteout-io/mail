@@ -1,7 +1,8 @@
 define(function(require) {
     'use strict';
 
-    var folders = require('js/app-config').config.gmail.folders;
+    var angular = require('angular'),
+        folders = require('js/app-config').config.gmail.folders;
 
     var NavigationCtrl = function($scope) {
         $scope.navOpen = false;
@@ -39,6 +40,21 @@ define(function(require) {
             window.open(url, 'Compose Message', 'toolbar=no,width=720,height=640,left=500,top=200,status=no,scrollbars=no,resize=no');
         };
     };
+
+    //
+    // Directives
+    //
+
+    var ngModule = angular.module('read', []);
+    ngModule.directive('frameLoad', function() {
+        return function(scope, elm) {
+            var frame;
+            elm.bind('load', function() {
+                frame = elm[0];
+                frame.height = frame.contentWindow.document.body.scrollHeight + 'px';
+            });
+        };
+    });
 
     return NavigationCtrl;
 });

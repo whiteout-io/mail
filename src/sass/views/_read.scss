@@ -1,7 +1,12 @@
 .view-read {
     margin: 0px;
     padding: 10px 15px;
+    height: 100%;
     color: $color-grey-dark;
+
+    ::-webkit-scrollbar {
+        width: 0px;
+    }
 
     .headers {
         p {
@@ -40,7 +45,14 @@
     }
 
     .body {
+        padding-bottom: 200px;
         line-height: 1.5em;
+        height: 100%;
+        overflow-y: scroll;
+    }
+
+    iframe {
+        width: 100%;
     }
 }
 

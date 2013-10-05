@@ -20,7 +20,8 @@ define(function(require) {
             if (!email) {
                 return;
             }
-            if (typeof email.body === 'string') {
+            // split text only emails into parts for easier rendering
+            if (!email.html && typeof email.body === 'string') {
                 email.bodyDisplayParts = email.body.split('\n');
             }
             $scope.selected = email;
@@ -205,7 +206,7 @@ define(function(require) {
     };
 
     function createDummyMails(callback) {
-        var Email = function(unread, attachments, answered) {
+        var Email = function(unread, attachments, answered, html) {
             this.uid = '1';
             this.from = [{
                 name: 'Whiteout Support',
@@ -217,6 +218,7 @@ define(function(require) {
             this.attachments = (attachments) ? [true] : undefined;
             this.unread = unread;
             this.answered = answered;
+            this.html = html;
             this.sentDate = new Date('Thu Sep 19 2013 20:41:23 GMT+0200 (CEST)');
             this.subject = "Welcome Max"; // Subject line
             this.body = "Hi Max,\n\n" +
@@ -225,7 +227,7 @@ define(function(require) {
                 "Best regards\nYour whiteout team"; // plaintext body
         };
 
-        var dummys = [new Email(true, true), new Email(true), new Email(false, true, true), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false)];
+        var dummys = [new Email(true, true), new Email(true, false, false, true), new Email(false, true, true), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false)];
 
         callback(dummys);
     }
