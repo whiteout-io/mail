@@ -4,23 +4,37 @@ define(function(require) {
     var appController = require('js/app-controller');
 
     var LoginCtrl = function($scope, $location) {
-        var nextPath = '/desktop';
 
-        if (window.chrome && chrome.identity) {
-            // start the main app controller
-            appController.fetchOAuthToken('passphrase', function(err) {
+        // start the main app controller
+        appController.start(function(err) {
+            if (err) {
+                console.error(err);
+                return;
+            }
+
+            if (window.chrome && chrome.identity) {
+                login('passphrase', onLogin);
+                return;
+            }
+
+            onLogin();
+        });
+
+        function login(password, callback) {
+            appController.fetchOAuthToken(password, function(err) {
                 if (err) {
                     console.error(err);
                     return;
                 }
 
-                $location.path(nextPath);
-                $scope.$apply();
+                callback();
             });
-            return;
         }
 
-        $location.path(nextPath);
+        function onLogin() {
+            $location.path('/desktop');
+            $scope.$apply();
+        }
     };
 
     return LoginCtrl;

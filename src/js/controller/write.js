@@ -15,15 +15,29 @@ define(function(require) {
     var WriteCtrl = function($scope) {
         $scope.signature = str.signature;
 
-        if (window.chrome && chrome.identity) {
-            // start the main app controller
-            appController.fetchOAuthToken('passphrase', function(err) {
+        // start the main app controller
+        appController.start(function(err) {
+            if (err) {
+                console.error(err);
+                return;
+            }
+
+            if (window.chrome && chrome.identity) {
+                login('passphrase', function() {
+                    emailDao = appController._emailDao;
+                });
+                return;
+            }
+        });
+
+        function login(password, callback) {
+            appController.fetchOAuthToken(password, function(err) {
                 if (err) {
-                    console.log(err);
+                    console.error(err);
                     return;
                 }
 
-                emailDao = appController._emailDao;
+                callback();
             });
         }
 

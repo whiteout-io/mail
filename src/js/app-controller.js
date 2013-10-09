@@ -5,6 +5,7 @@ define(function(require) {
     'use strict';
 
     var $ = require('jquery'),
+        util = require('cryptoLib/util'),
         ImapClient = require('imap-client'),
         SmtpClient = require('smtp-client'),
         EmailDAO = require('js/dao/email-dao'),
@@ -18,7 +19,7 @@ define(function(require) {
     var self = {};
 
     /**
-     * Start the application by loading the view templates
+     * Start the application
      */
     self.start = function(callback) {
         // are we running in native app or in browser?
@@ -32,7 +33,9 @@ define(function(require) {
 
         function onDeviceReady() {
             console.log('Starting app.');
-            callback();
+            // init app config storage
+            self._appConfigStore = new DeviceStorageDAO();
+            self._appConfigStore.init('app-config', callback);
         }
     };
 
@@ -62,10 +65,17 @@ define(function(require) {
                         return;
                     }
 
-                    // login using the received email address
-                    self.login(emailAddress, password, token, function(err) {
-                        // send email address to sandbox
-                        callback(err, emailAddress);
+                    self.getSalt(function(err, salt) {
+                        if (err || !salt) {
+                            callback({
+                                errMsg: 'Error gettin salt on login!',
+                                err: err
+                            });
+                            return;
+                        }
+
+                        // login using the received email address
+                        self.login(emailAddress, password, salt, token, callback);
                     });
                 });
             }
@@ -76,25 +86,21 @@ define(function(require) {
      * Lookup the user's email address. Check local cache if available, otherwise query google's token info api to learn the user's email address
      */
     self.queryEmailAddress = function(token, callback) {
-        var deviceStorage, key = 'emailaddress';
+        var itemKey = 'emailaddress';
 
-        // check device storage
-        deviceStorage = new DeviceStorageDAO();
-        deviceStorage.init('app-config', function() {
-            deviceStorage.listItems(key, 0, null, function(err, cachedItems) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
+        self._appConfigStore.listItems(itemKey, 0, null, function(err, cachedItems) {
+            if (err) {
+                callback(err);
+                return;
+            }
 
-                // do roundtrip to google api if no email address is cached yet
-                if (!cachedItems || cachedItems.length < 1) {
-                    queryGoogleApi();
-                    return;
-                }
+            // do roundtrip to google api if no email address is cached yet
+            if (!cachedItems || cachedItems.length < 1) {
+                queryGoogleApi();
+                return;
+            }
 
-                callback(null, cachedItems[0]);
-            });
+            callback(null, cachedItems[0]);
         });
 
         function queryGoogleApi() {
@@ -112,7 +118,7 @@ define(function(require) {
                     }
 
                     // cache the email address on the device
-                    deviceStorage.storeList([info.email], key, function(err) {
+                    self._appConfigStore.storeList([info.email], itemKey, function(err) {
                         callback(err, info.email);
                     });
                 },
@@ -127,11 +133,44 @@ define(function(require) {
     };
 
     /**
+     * Fetch a random salt from the app storage or generate a new one
+     */
+    self.getSalt = function(callback) {
+        var itemKey = 'salt',
+            salt;
+
+        self._appConfigStore.listItems(itemKey, 0, null, function(err, cachedItems) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            // generate random salt if non exists
+            if (!cachedItems || cachedItems.length < 1) {
+                salt = util.random(config.symKeySize);
+
+                // store the salt locally
+                self._appConfigStore.storeList([salt], itemKey, function(err) {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+
+                    callback(null, salt);
+                });
+                return;
+            }
+
+            callback(null, cachedItems[0]);
+        });
+    };
+
+    /**
      * Instanciate the mail email data access object and its dependencies. Login to imap on init.
      */
-    self.login = function(userId, password, token, callback) {
+    self.login = function(userId, password, salt, token, callback) {
         var auth, imapOptions, smtpOptions,
-            keychain, imapClient, smtpClient, crypto, deviceStorage;
+            keychain, imapClient, smtpClient, crypto, userStorage;
 
         // create mail credentials objects for imap/smtp
         auth = {
@@ -159,15 +198,16 @@ define(function(require) {
         imapClient = new ImapClient(imapOptions);
         smtpClient = new SmtpClient(smtpOptions);
         crypto = new Crypto();
-        deviceStorage = new DeviceStorageDAO();
-        self._emailDao = new EmailDAO(keychain, imapClient, smtpClient, crypto, deviceStorage);
+        userStorage = new DeviceStorageDAO();
+        self._emailDao = new EmailDAO(keychain, imapClient, smtpClient, crypto, userStorage);
 
         // init email dao
         var account = {
             emailAddress: userId,
             symKeySize: config.symKeySize,
             symIvSize: config.symIvSize,
-            asymKeySize: config.asymKeySize
+            asymKeySize: config.asymKeySize,
+            salt: salt
         };
         self._emailDao.init(account, password, callback);
     };

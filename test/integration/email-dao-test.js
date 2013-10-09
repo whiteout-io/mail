@@ -21,15 +21,20 @@ define(function(require) {
         afterEach(function() {});
 
         describe('login', function() {
-            it('should work', function(done) {
-                appController.fetchOAuthToken(test.passphrase, function(err, userId) {
-                    expect(err).to.not.exist;
-                    expect(userId).to.exist;
-                    emailDao = appController._emailDao;
+            this.timeout(20000);
 
-                    emailDao.imapLogin(function(err) {
+            it('should work', function(done) {
+                appController.start(function(err) {
+                    expect(err).to.not.exist;
+
+                    appController.fetchOAuthToken(test.passphrase, function(err) {
                         expect(err).to.not.exist;
-                        done();
+                        emailDao = appController._emailDao;
+
+                        emailDao.imapLogin(function(err) {
+                            expect(err).to.not.exist;
+                            done();
+                        });
                     });
                 });
             });

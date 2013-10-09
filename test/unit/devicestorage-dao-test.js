@@ -27,6 +27,7 @@ define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/devicestorag
             crypto.init({
                 emailAddress: devicestorageTest.user,
                 password: devicestorageTest.password,
+                salt: util.random(devicestorageTest.keySize),
                 keySize: devicestorageTest.keySize,
                 rsaKeySize: devicestorageTest.rsaKeySize
             }, function(err, generatedKeypair) {

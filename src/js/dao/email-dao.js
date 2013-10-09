@@ -58,6 +58,7 @@ define(function(require) {
             self._crypto.init({
                 emailAddress: emailAddress,
                 password: password,
+                salt: self._account.salt,
                 keySize: self._account.symKeySize,
                 rsaKeySize: self._account.asymKeySize,
                 storedKeypair: storedKeypair

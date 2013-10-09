@@ -15,7 +15,7 @@ define(function(require) {
     describe('App Controller unit tests', function() {
 
         beforeEach(function() {
-            sinon.stub(controller, 'login', function(userId, password, token, callback) {
+            sinon.stub(controller, 'login', function(userId, password, salt, token, callback) {
                 controller._emailDao = sinon.createStubInstance(EmailDAO);
                 callback();
             });
@@ -50,29 +50,31 @@ define(function(require) {
             });
         });
 
-        describe('login', function() {
-            it('should work the first time', function(done) {
-                // clear db
-                var deviceStorage = new DeviceStorageDAO();
-                deviceStorage.init('app-config', function() {
-                    deviceStorage.clear(function() {
+        describe('fetchOAuthToken', function() {
+            beforeEach(function() {
+                controller._appConfigStore = sinon.createStubInstance(DeviceStorageDAO);
+            });
 
-                        // do test with fresh db
-                        controller.fetchOAuthToken(appControllerTest.passphrase, function(err, userId) {
-                            expect(err).to.not.exist;
-                            expect(userId).to.equal(appControllerTest.user);
-                            expect(window.chrome.identity.getAuthToken.calledOnce).to.be.true;
-                            expect($.ajax.calledOnce).to.be.true;
-                            done();
-                        });
-                    });
+            it('should work the first time', function(done) {
+                controller._appConfigStore.listItems.yields(null, []);
+                controller._appConfigStore.storeList.yields();
+
+                controller.fetchOAuthToken(appControllerTest.passphrase, function(err) {
+                    expect(err).to.not.exist;
+                    expect(controller._appConfigStore.listItems.calledTwice).to.be.true;
+                    expect(controller._appConfigStore.storeList.calledTwice).to.be.true;
+                    expect(window.chrome.identity.getAuthToken.calledOnce).to.be.true;
+                    expect($.ajax.calledOnce).to.be.true;
+                    done();
                 });
             });
 
             it('should work when the email address is cached', function(done) {
-                controller.fetchOAuthToken(appControllerTest.passphrase, function(err, userId) {
+                controller._appConfigStore.listItems.yields(null, ['asdf']);
+
+                controller.fetchOAuthToken(appControllerTest.passphrase, function(err) {
                     expect(err).to.not.exist;
-                    expect(userId).to.equal(appControllerTest.user);
+                    expect(controller._appConfigStore.listItems.calledTwice).to.be.true;
                     expect(window.chrome.identity.getAuthToken.calledOnce).to.be.true;
                     expect($.ajax.called).to.be.false;
                     done();

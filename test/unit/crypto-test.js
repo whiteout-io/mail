@@ -8,7 +8,8 @@ define(['js/crypto/crypto', 'cryptoLib/util', 'test/test-data'], function(Crypto
 		password: 'Password',
 		keySize: 128,
 		ivSize: 128,
-		rsaKeySize: 1024
+		rsaKeySize: 1024,
+		salt: util.random(128)
 	};
 
 	var crypto;
@@ -22,6 +23,7 @@ define(['js/crypto/crypto', 'cryptoLib/util', 'test/test-data'], function(Crypto
 		crypto.init({
 			emailAddress: cryptoTest.user,
 			password: cryptoTest.password,
+			salt: cryptoTest.salt,
 			keySize: cryptoTest.keySize,
 			rsaKeySize: cryptoTest.rsaKeySize
 		}, function(err, generatedKeypair) {
@@ -40,6 +42,7 @@ define(['js/crypto/crypto', 'cryptoLib/util', 'test/test-data'], function(Crypto
 		crypto.init({
 			emailAddress: cryptoTest.user,
 			password: cryptoTest.password,
+			salt: cryptoTest.salt,
 			keySize: cryptoTest.keySize,
 			rsaKeySize: cryptoTest.rsaKeySize,
 			storedKeypair: cryptoTest.generatedKeypair
@@ -51,7 +54,7 @@ define(['js/crypto/crypto', 'cryptoLib/util', 'test/test-data'], function(Crypto
 	});
 
 	asyncTest("PBKDF2 (Async/Worker)", 2, function() {
-		crypto.deriveKey(cryptoTest.password, cryptoTest.keySize, function(err, key) {
+		crypto.deriveKey(cryptoTest.password, cryptoTest.salt, cryptoTest.keySize, function(err, key) {
 			ok(!err);
 			equal(util.base642Str(key).length * 8, cryptoTest.keySize, 'Keysize ' + cryptoTest.keySize);
 

@@ -28,7 +28,7 @@ define(function(require) {
         var self = this;
 
         // valdiate input
-        if (!args.emailAddress || !args.keySize || !args.rsaKeySize) {
+        if (!args.emailAddress || !args.keySize || !args.rsaKeySize || typeof args.password !== 'string' || !args.salt) {
             callback({
                 errMsg: 'Crypto init failed. Not all args set!'
             });
@@ -41,7 +41,7 @@ define(function(require) {
         self.rsaKeySize = args.rsaKeySize;
 
         // derive PBKDF2 from password in web worker thread
-        self.deriveKey(args.password, self.keySize, function(err, derivedKey) {
+        self.deriveKey(args.password, args.salt, self.keySize, function(err, derivedKey) {
             if (err) {
                 callback(err);
                 return;
@@ -124,16 +124,17 @@ define(function(require) {
     /**
      * Do PBKDF2 key derivation in a WebWorker thread
      */
-    Crypto.prototype.deriveKey = function(password, keySize, callback) {
+    Crypto.prototype.deriveKey = function(password, salt, keySize, callback) {
         startWorker({
             script: PBKDF2_WORKER,
             args: {
                 password: password,
+                salt: salt,
                 keySize: keySize
             },
             callback: callback,
             noWorker: function() {
-                return pbkdf2.getKey(password, keySize);
+                return pbkdf2.getKey(password, salt, keySize);
             }
         });
     };
