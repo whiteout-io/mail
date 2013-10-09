@@ -57,12 +57,11 @@ define(function(require) {
                 initList();
                 return;
             }
+
             // development... display dummy mail objects
-            createDummyMails(function(emails) {
-                updateStatus('Last update: ', new Date());
-                $scope.emails = emails;
-                $scope.select($scope.emails[0]);
-            });
+            updateStatus('Last update: ', new Date());
+            $scope.emails = createDummyMails();
+            $scope.select($scope.emails[0]);
         });
 
         //
@@ -205,7 +204,7 @@ define(function(require) {
         }
     };
 
-    function createDummyMails(callback) {
+    function createDummyMails() {
         var Email = function(unread, attachments, answered, html) {
             this.uid = '1';
             this.from = [{
@@ -229,7 +228,7 @@ define(function(require) {
 
         var dummys = [new Email(true, true), new Email(true, false, false, true), new Email(false, true, true), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false)];
 
-        callback(dummys);
+        return dummys;
     }
 
     return MailListCtrl;
