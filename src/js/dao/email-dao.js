@@ -105,9 +105,57 @@ define(function(require) {
      * List the folders in the user's IMAP mailbox.
      */
     EmailDAO.prototype.imapListFolders = function(callback) {
-        var self = this;
+        var self = this,
+            dbType = 'folders';
 
-        self._imapClient.listAllFolders(callback);
+        // check local cache
+        self._devicestorage.listItems(dbType, 0, null, function(err, stored) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            if (!stored || stored.length < 1) {
+                // no folders cached... fetch from server
+                fetchFromServer();
+                return;
+            }
+
+            callback(null, stored[0]);
+        });
+
+        function fetchFromServer() {
+            var folders;
+
+            // fetch list from imap server
+            self._imapClient.listWellKnownFolders(function(err, wellKnownFolders) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                folders = [
+                    wellKnownFolders.inbox,
+                    wellKnownFolders.sent, {
+                        type: 'Outbox',
+                        path: 'OUTBOX'
+                    },
+                    wellKnownFolders.drafts,
+                    wellKnownFolders.trash
+                ];
+
+                // cache locally
+                // persist encrypted list in device storage
+                self._devicestorage.storeList([folders], dbType, function(err) {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+
+                    callback(null, folders);
+                });
+            });
+        }
     };
 
     /**

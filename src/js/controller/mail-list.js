@@ -52,6 +52,10 @@ define(function(require) {
         };
 
         $scope.$watch('currentFolder', function() {
+            if (!getFolder()) {
+                return;
+            }
+
             // production... in chrome packaged app
             if (window.chrome && chrome.identity) {
                 initList();

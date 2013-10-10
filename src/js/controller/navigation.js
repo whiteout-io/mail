@@ -1,11 +1,24 @@
 define(function(require) {
     'use strict';
 
-    var folders = require('js/app-config').config.gmail.folders;
+    var appController = require('js/app-controller'),
+        emailDao;
 
     var NavigationCtrl = function($scope) {
         $scope.navOpen = false;
-        $scope.folders = folders;
+
+        emailDao = appController._emailDao;
+
+        initFolders(function(folders) {
+            $scope.folders = folders;
+            $scope.apply();
+            // select inbox as the current folder on init
+            $scope.openFolder($scope.folders[0]);
+        });
+
+        //
+        // scope functions
+        //
 
         $scope.openNav = function() {
             $scope.navOpen = true;
@@ -19,8 +32,6 @@ define(function(require) {
             $scope.currentFolder = folder;
             $scope.closeNav();
         };
-        // select inbox as the current folder on init
-        $scope.openFolder($scope.folders[0]);
 
         $scope.write = function(replyTo) {
             var replyToId = (replyTo) ? replyTo.uid : '',
@@ -38,6 +49,21 @@ define(function(require) {
 
             window.open(url, 'Compose Message', 'toolbar=no,width=720,height=640,left=500,top=200,status=no,scrollbars=no,resize=no');
         };
+
+        //
+        // helper functions
+        //
+
+        function initFolders(callback) {
+            emailDao.imapListFolders(function(err, folders) {
+                if (err) {
+                    console.log(err);
+                    return;
+                }
+
+                callback(folders);
+            });
+        }
     };
 
     return NavigationCtrl;

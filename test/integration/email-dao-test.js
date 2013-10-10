@@ -40,6 +40,21 @@ define(function(require) {
             });
         });
 
+        describe('List well known folders', function() {
+            it('should work', function(done) {
+                // clear folders from cache
+                emailDao._devicestorage.removeList('folders', function(err) {
+                    expect(err).to.not.exist;
+
+                    emailDao.imapListFolders(function(err, folders) {
+                        expect(err).to.not.exist;
+                        expect(folders.length).to.be.at.least(1);
+                        done();
+                    });
+                });
+            });
+        });
+
         describe('IMAP sync INBOX messages', function() {
             it('should work', function(done) {
                 emailDao.imapSync({

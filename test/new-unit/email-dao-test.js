@@ -218,11 +218,38 @@ define(function(require) {
             });
 
             describe('IMAP: list folders', function() {
-                it('should work', function(done) {
-                    imapClientStub.listAllFolders.yields();
-                    emailDao.imapListFolders(function(err) {
-                        expect(imapClientStub.listAllFolders.calledOnce).to.be.true;
+                var dummyFolders = [{
+                    type: 'Inbox',
+                    path: 'INBOX'
+                }, {
+                    type: 'Outbox',
+                    path: 'OUTBOX'
+                }];
+
+                it('should work on empty local db', function(done) {
+                    devicestorageStub.listItems.yields(null, [dummyFolders]);
+
+                    emailDao.imapListFolders(function(err, folders) {
                         expect(err).to.not.exist;
+                        expect(devicestorageStub.listItems.calledOnce).to.be.true;
+                        expect(folders[0].type).to.equal('Inbox');
+                        done();
+                    });
+                });
+
+                it('should work with local cache', function(done) {
+                    devicestorageStub.listItems.yields(null, []);
+                    imapClientStub.listWellKnownFolders.yields(null, {
+                        inbox: dummyFolders[0]
+                    });
+                    devicestorageStub.storeList.yields();
+
+                    emailDao.imapListFolders(function(err, folders) {
+                        expect(err).to.not.exist;
+                        expect(devicestorageStub.listItems.calledOnce).to.be.true;
+                        expect(imapClientStub.listWellKnownFolders.calledOnce).to.be.true;
+                        expect(devicestorageStub.storeList.calledOnce).to.be.true;
+                        expect(folders[0].type).to.equal('Inbox');
                         done();
                     });
                 });
