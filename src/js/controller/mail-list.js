@@ -7,7 +7,8 @@ define(function(require) {
 
     var MailListCtrl = function($scope) {
         var offset = 0,
-            num = 100;
+            num = 100,
+            firstSelect = true;
 
         emailDao = appController._emailDao;
 
@@ -72,6 +73,7 @@ define(function(require) {
         //
 
         function initList() {
+            firstSelect = true;
             updateStatus('Read cache ...');
 
             // list messaged from local db
@@ -157,8 +159,13 @@ define(function(require) {
         }
 
         function markAsRead(email) {
-            email.unread = false;
+            // don't mark top selected email automatically
+            if (firstSelect) {
+                firstSelect = false;
+                return;
+            }
 
+            email.unread = false;
             emailDao.imapMarkMessageRead({
                 folder: getFolder().path,
                 uid: email.uid
