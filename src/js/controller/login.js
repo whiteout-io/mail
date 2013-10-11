@@ -21,13 +21,22 @@ define(function(require) {
         });
 
         function login(password, callback) {
+            // get OAuth token from chrome
             appController.fetchOAuthToken(password, function(err) {
                 if (err) {
                     console.error(err);
                     return;
                 }
 
-                callback();
+                // login to imap backend
+                appController._emailDao.imapLogin(function(err) {
+                    if (err) {
+                        console.error(err);
+                        return;
+                    }
+
+                    callback();
+                });
             });
         }
 
