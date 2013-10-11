@@ -5,8 +5,7 @@ define(function(require) {
     'use strict';
 
     var openpgp = require('openpgp').openpgp,
-        openpgpUtil = require('openpgp').util,
-        util = require('cryptoLib/util');
+        util = require('openpgp').util;
 
     var PGP = function() {
         openpgp.init();
@@ -18,7 +17,7 @@ define(function(require) {
     PGP.prototype.generateKeys = function(options, callback) {
         var userId, keys;
 
-        if (!util.validateEmailAddress(options.emailAddress) || !options.keySize || typeof options.passphrase !== 'string') {
+        if (!util.emailRegEx.test(options.emailAddress) || !options.keySize || typeof options.passphrase !== 'string') {
             callback({
                 errMsg: 'Crypto init failed. Not all options set!'
             });
@@ -30,7 +29,7 @@ define(function(require) {
         keys = openpgp.generate_key_pair(1, options.keySize, userId, options.passphrase);
 
         callback(null, {
-            keyId: openpgpUtil.hexstrdump(keys.privateKey.getKeyId()).toUpperCase(),
+            keyId: util.hexstrdump(keys.privateKey.getKeyId()).toUpperCase(),
             privateKeyArmored: keys.privateKeyArmored,
             publicKeyArmored: keys.publicKeyArmored
         });
@@ -40,6 +39,8 @@ define(function(require) {
      * Import the user's key pair
      */
     PGP.prototype.importKeys = function(options, callback) {
+        var publicKey, privateKey;
+
         // check passphrase
         if (typeof options.passphrase !== 'string' || !options.privateKeyArmored || !options.publicKeyArmored) {
             callback({
@@ -57,6 +58,19 @@ define(function(require) {
         }
         // import public key
         openpgp.keyring.importPublicKey(options.publicKeyArmored);
+
+        // check if keys have the same id
+        privateKey = openpgp.keyring.exportPrivateKey(0);
+        publicKey = openpgp.keyring.getPublicKeysForKeyId(privateKey.keyId)[0];
+        if (!privateKey || !privateKey.armored || !publicKey || !publicKey.armored || privateKey.keyId !== publicKey.keyId) {
+            // reset keyring
+            openpgp.keyring.init();
+            callback({
+                errMsg: 'Key IDs dont match!'
+            });
+            return;
+        }
+
         callback();
     };
 
@@ -71,7 +85,7 @@ define(function(require) {
 
         if (privateKey && privateKey.keyId && privateKey.armored && publicKey && publicKey.armored) {
             callback(null, {
-                keyId: openpgpUtil.hexstrdump(privateKey.keyId).toUpperCase(),
+                keyId: util.hexstrdump(privateKey.keyId).toUpperCase(),
                 privateKeyArmored: privateKey.armored,
                 publicKeyArmored: publicKey.armored
             });

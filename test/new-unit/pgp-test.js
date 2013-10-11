@@ -6,7 +6,7 @@ define(function(require) {
 
     describe('PGP Crypto Api unit tests', function() {
         var pgp,
-            user = "whiteout.test@t-online.de",
+            user = 'whiteout.test@t-online.de',
             passphrase = 'asdf',
             keySize = 512,
             keyId = 'F6F60E9B42CDFF4C',
@@ -45,6 +45,28 @@ define(function(require) {
         afterEach(function() {});
 
         describe('Generate key pair', function() {
+            it('should fail', function(done) {
+                pgp.generateKeys({
+                    emailAddress: 'whiteout.test@t-onlinede',
+                    keySize: keySize,
+                    passphrase: passphrase
+                }, function(err, keys) {
+                    expect(err).to.exist;
+                    expect(keys).to.not.exist;
+                    done();
+                });
+            });
+            it('should fail', function(done) {
+                pgp.generateKeys({
+                    emailAddress: 'whiteout.testt-online.de',
+                    keySize: keySize,
+                    passphrase: passphrase
+                }, function(err, keys) {
+                    expect(err).to.exist;
+                    expect(keys).to.not.exist;
+                    done();
+                });
+            });
             it('should work', function(done) {
                 pgp.generateKeys({
                     emailAddress: user,
