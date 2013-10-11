@@ -83,6 +83,21 @@ define(function(require) {
         });
 
         describe('Import/Export key pair', function() {
+            it('should fail', function(done) {
+                pgp.importKeys({
+                    passphrase: 'asd',
+                    privateKeyArmored: privkey,
+                    publicKeyArmored: pubkey
+                }, function(err) {
+                    expect(err).to.exist;
+
+                    pgp.exportKeys(function(err, keys) {
+                        expect(err).to.exist;
+                        expect(keys).to.not.exist;
+                        done();
+                    });
+                });
+            });
             it('should work', function(done) {
                 pgp.importKeys({
                     passphrase: passphrase,

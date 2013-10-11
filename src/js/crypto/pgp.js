@@ -51,6 +51,7 @@ define(function(require) {
 
         // unlock and import private key 
         if (!openpgp.keyring.importPrivateKey(options.privateKeyArmored, options.passphrase)) {
+            openpgp.keyring.init();
             callback({
                 errMsg: 'Incorrect passphrase!'
             });
@@ -81,19 +82,21 @@ define(function(require) {
         var publicKey, privateKey;
 
         privateKey = openpgp.keyring.exportPrivateKey(0);
-        publicKey = openpgp.keyring.getPublicKeysForKeyId(privateKey.keyId)[0];
+        if (privateKey && privateKey.keyId) {
+            publicKey = openpgp.keyring.getPublicKeysForKeyId(privateKey.keyId)[0];
+        }
 
-        if (privateKey && privateKey.keyId && privateKey.armored && publicKey && publicKey.armored) {
-            callback(null, {
-                keyId: util.hexstrdump(privateKey.keyId).toUpperCase(),
-                privateKeyArmored: privateKey.armored,
-                publicKeyArmored: publicKey.armored
+        if (!privateKey || !privateKey.keyId || !privateKey.armored || !publicKey || !publicKey.armored) {
+            callback({
+                errMsg: 'Could not export keys!'
             });
             return;
         }
 
-        callback({
-            errMsg: 'Could not export keys!'
+        callback(null, {
+            keyId: util.hexstrdump(privateKey.keyId).toUpperCase(),
+            privateKeyArmored: privateKey.armored,
+            publicKeyArmored: publicKey.armored
         });
     };
 
