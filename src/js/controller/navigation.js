@@ -11,7 +11,7 @@ define(function(require) {
 
         initFolders(function(folders) {
             $scope.folders = folders;
-            $scope.apply();
+            $scope.$apply();
             // select inbox as the current folder on init
             $scope.openFolder($scope.folders[0]);
         });

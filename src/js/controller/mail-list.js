@@ -7,8 +7,7 @@ define(function(require) {
 
     var MailListCtrl = function($scope) {
         var offset = 0,
-            num = 100,
-            loggedIn = false;
+            num = 100;
 
         emailDao = appController._emailDao;
 
@@ -80,41 +79,12 @@ define(function(require) {
                 folder: getFolder().path,
                 offset: offset,
                 num: num
-            }, function() {
-                if (loggedIn) {
-                    // user is already logged in
-                    sync();
-                    return;
-                }
-                // login to imap
-                loginImap(function() {
-                    loggedIn = true;
-                    sync();
-                });
-            });
-
-            function sync() {
+            }, function sync() {
                 updateStatus('Syncing ...');
                 $scope.$apply();
 
                 // sync imap folder to local db
                 $scope.synchronize();
-            }
-        }
-
-        function loginImap(callback) {
-            updateStatus('Login ...');
-            $scope.$apply();
-
-            emailDao.imapLogin(function(err) {
-                if (err) {
-                    console.log(err);
-                    updateStatus('Error on login!');
-                    $scope.$apply();
-                    return;
-                }
-
-                callback();
             });
         }
 
@@ -188,11 +158,6 @@ define(function(require) {
 
         function markAsRead(email) {
             email.unread = false;
-
-            // only update imap state if user is logged in
-            if (!loggedIn) {
-                return;
-            }
 
             emailDao.imapMarkMessageRead({
                 folder: getFolder().path,
