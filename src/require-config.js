@@ -19,11 +19,15 @@
 			angularRoute: 'angular/angular-route.min',
 			angularTouch: 'angular/angular-touch.min',
 			moment: 'moment/moment.min',
-			uuid: 'uuid/uuid'
+			uuid: 'uuid/uuid',
+			openpgp: 'openpgp/openpgp'
 		},
 		shim: {
 			angular: {
 				exports: 'angular'
+			},
+			openpgp: {
+				exports: 'window'
 			},
 			angularRoute: {
 				exports: 'angular',

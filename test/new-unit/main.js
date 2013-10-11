@@ -21,7 +21,8 @@ function startTests() {
 	require(
 		[
 			'test/new-unit/email-dao-test',
-			'test/new-unit/app-controller-test'
+			'test/new-unit/app-controller-test',
+			'test/new-unit/pgp-test'
 		], function() {
 			//Tests loaded, run tests
 			mocha.run();
