@@ -9,13 +9,6 @@ define(function(require) {
 
         emailDao = appController._emailDao;
 
-        initFolders(function(folders) {
-            $scope.folders = folders;
-            // select inbox as the current folder on init
-            $scope.openFolder($scope.folders[0]);
-            $scope.$apply();
-        });
-
         //
         // scope functions
         //
@@ -50,19 +43,41 @@ define(function(require) {
             window.open(url, 'Compose Message', 'toolbar=no,width=720,height=640,left=500,top=200,status=no,scrollbars=no,resize=no');
         };
 
+        initFolders(function(folders) {
+            $scope.folders = folders;
+            // select inbox as the current folder on init
+            $scope.openFolder($scope.folders[0]);
+        });
+
         //
         // helper functions
         //
 
         function initFolders(callback) {
-            emailDao.imapListFolders(function(err, folders) {
-                if (err) {
-                    console.log(err);
-                    return;
-                }
+            if (window.chrome && chrome.identity) {
+                emailDao.imapListFolders(function(err, folders) {
+                    if (err) {
+                        console.log(err);
+                        return;
+                    }
 
-                callback(folders);
-            });
+                    callback(folders);
+                    $scope.$apply();
+                });
+                return;
+            }
+
+            callback([{
+                type: 'Inbox'
+            }, {
+                type: 'Sent'
+            }, {
+                type: 'Outbox'
+            }, {
+                type: 'Drafts'
+            }, {
+                type: 'Trash'
+            }]);
         }
     };
 
