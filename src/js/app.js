@@ -21,7 +21,11 @@ require([
             templateUrl: 'tpl/login.html',
             controller: LoginCtrl
         });
-        $routeProvider.when('/write/:replyToId', {
+        $routeProvider.when('/write/:folder/:id', {
+            templateUrl: 'tpl/write.html',
+            controller: WriteCtrl
+        });
+        $routeProvider.when('/write', {
             templateUrl: 'tpl/write.html',
             controller: WriteCtrl
         });

@@ -41,7 +41,7 @@ define(function(require) {
     /**
      * Request an OAuth token from chrome for gmail users
      */
-    self.fetchOAuthToken = function(password, callback) {
+    self.fetchOAuthToken = function(passphrase, callback) {
         // get OAuth Token from chrome
         chrome.identity.getAuthToken({
                 'interactive': true
@@ -64,8 +64,8 @@ define(function(require) {
                         return;
                     }
 
-                    // login using the received email address
-                    self.login(emailAddress, password, token, callback);
+                    // init the email dao
+                    self.init(emailAddress, passphrase, token, callback);
                 });
             }
         );
@@ -124,7 +124,7 @@ define(function(require) {
     /**
      * Instanciate the mail email data access object and its dependencies. Login to imap on init.
      */
-    self.login = function(userId, password, token, callback) {
+    self.init = function(userId, passphrase, token, callback) {
         var auth, imapOptions, smtpOptions,
             keychain, imapClient, smtpClient, pgp, userStorage;
 
@@ -162,7 +162,7 @@ define(function(require) {
             emailAddress: userId,
             asymKeySize: config.asymKeySize
         };
-        self._emailDao.init(account, password, callback);
+        self._emailDao.init(account, passphrase, callback);
     };
 
     return self;

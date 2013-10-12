@@ -15,7 +15,7 @@ define(function(require) {
     describe('App Controller unit tests', function() {
 
         beforeEach(function() {
-            sinon.stub(controller, 'login', function(userId, password, token, callback) {
+            sinon.stub(controller, 'init', function(userId, password, token, callback) {
                 controller._emailDao = sinon.createStubInstance(EmailDAO);
                 callback();
             });
@@ -35,7 +35,7 @@ define(function(require) {
         });
 
         afterEach(function() {
-            controller.login.restore();
+            controller.init.restore();
             $.get.restore();
             $.ajax.restore();
             window.chrome.identity.getAuthToken.restore();

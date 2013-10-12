@@ -27,8 +27,8 @@ define(function(require) {
         };
 
         $scope.write = function(replyTo) {
-            var replyToId = (replyTo) ? replyTo.uid : '',
-                url = 'index.html#/write/' + replyToId;
+            var replyToPath = (replyTo) ? encodeURIComponent($scope.currentFolder.path) + '/' + replyTo.uid : '',
+                url = 'index.html#/write/' + replyToPath;
 
             if (window.chrome && chrome.app.window) {
                 chrome.app.window.create(url, {
@@ -68,15 +68,20 @@ define(function(require) {
             }
 
             callback([{
-                type: 'Inbox'
+                type: 'Inbox',
+                path: 'INBOX'
             }, {
-                type: 'Sent'
+                type: 'Sent',
+                path: 'SENT'
             }, {
-                type: 'Outbox'
+                type: 'Outbox',
+                path: 'OUTBOX'
             }, {
-                type: 'Drafts'
+                type: 'Drafts',
+                path: 'DRAFTS'
             }, {
-                type: 'Trash'
+                type: 'Trash',
+                path: 'TRASH'
             }]);
         }
     };

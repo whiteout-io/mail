@@ -12,8 +12,12 @@ define(function(require) {
     // Controller
     //
 
-    var WriteCtrl = function($scope) {
+    var WriteCtrl = function($scope, $routeParams) {
         $scope.signature = str.signature;
+
+        //
+        // Init
+        //
 
         // start the main app controller
         appController.start(function(err) {
@@ -23,15 +27,18 @@ define(function(require) {
             }
 
             if (window.chrome && chrome.identity) {
-                login('passphrase', function() {
+                init('passphrase', function() {
                     emailDao = appController._emailDao;
+                    getReplyTo($routeParams.folder, $routeParams.id, function() {
+                        $scope.$apply();
+                    });
                 });
                 return;
             }
         });
 
-        function login(password, callback) {
-            appController.fetchOAuthToken(password, function(err) {
+        function init(passphrase, callback) {
+            appController.fetchOAuthToken(passphrase, function(err) {
                 if (err) {
                     console.error(err);
                     return;
@@ -40,6 +47,51 @@ define(function(require) {
                 callback();
             });
         }
+
+        function getReplyTo(folder, id, callback) {
+            if (!folder || !id) {
+                callback();
+            }
+
+            emailDao.listMessages({
+                folder: folder + '_' + id
+            }, function(err, list) {
+                if (err) {
+                    console.error(err);
+                    return;
+                }
+
+                if (list.length > 0) {
+                    fillFields(list[0]);
+                }
+                callback();
+            });
+        }
+
+        function fillFields(re) {
+            if (!re) {
+                return;
+            }
+
+            // fille title
+            $scope.title = 'Reply';
+            // fill recipient field
+            $scope.to = re.from[0].address;
+            // fill subject
+            $scope.subject = 'Re: ' + ((re.subject) ? re.subject.replace('Re: ', '') : '');
+
+            // fill text body
+            var body = '<br><br>' + re.sentDate + ' ' + re.from[0].name + ' <' + re.from[0].address + '>';
+            var bodyRows = re.body.split('\n');
+            bodyRows.forEach(function(row) {
+                body += (!re.html) ? '<br> > ' + row : '';
+            });
+            $scope.body = body;
+        }
+
+        //
+        // Editing
+        //
 
         // generate key,iv for encryption preview
         var key = util.random(128),
@@ -127,15 +179,15 @@ define(function(require) {
             require: 'ngModel',
             link: function(scope, elm, attrs, ctrl) {
                 // view -> model
-                elm.on('keyup', function() {
+                elm.on('keyup keydown focus', function() {
                     scope.$apply(function() {
                         ctrl.$setViewValue(elm.html());
                     });
                 });
 
                 // model -> view
-                ctrl.$render = function(value) {
-                    elm.html(value);
+                ctrl.$render = function() {
+                    elm.html(ctrl.$viewValue);
                 };
 
                 // load init value from DOM
@@ -143,6 +195,7 @@ define(function(require) {
             }
         };
     });
+
     ngModule.directive('focusMe', function($timeout) {
         return {
             link: function(scope, element) {

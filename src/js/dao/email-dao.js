@@ -191,12 +191,14 @@ define(function(require) {
             encryptedList = [];
 
         // validate options
-        if (!options.folder || typeof options.offset === 'undefined' || typeof options.num === 'undefined') {
+        if (!options.folder) {
             callback({
                 errMsg: 'Invalid options!'
             });
             return;
         }
+        options.offset = (typeof options.offset === 'undefined') ? 0 : options.offset;
+        options.num = (typeof options.num === 'undefined') ? null : options.num;
 
         // fetch items from device storage
         self._devicestorage.listItems('email_' + options.folder, options.offset, options.num, function(err, emails) {

@@ -1,10 +1,10 @@
 <div class="view-write">
-  <p class="title">New Mail</p>
+  <p class="title">{{title || 'New Mail'}}</p>
 
   <div class="headers">
     <p>
       <span>To:</span>
-      <input type="email" ng-model="to" class="address-input" tabindex="1" focus-me >
+      <input type="email" ng-model="to" class="address-input" tabindex="1" focus-me>
     </p>
     <p>
       <span>Cc:</span>
