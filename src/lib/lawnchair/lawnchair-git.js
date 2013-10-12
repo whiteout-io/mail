@@ -161,6 +161,13 @@ Lawnchair.prototype = {
     }
 // --
 };
+
+/**
+ * Expose nodeJS module
+ */
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = Lawnchair;
+}
 // window.name code courtesy Remy Sharp: http://24ways.org/2009/breaking-out-the-edges-of-the-browser
 Lawnchair.adapter('window-name', (function() {
     if (typeof window==='undefined') {
@@ -290,4 +297,4 @@ Lawnchair.adapter('window-name', (function() {
         }
     }
 /////
-})())
+})());
