@@ -5,14 +5,13 @@ define(function(require) {
     'use strict';
 
     var $ = require('jquery'),
-        util = require('cryptoLib/util'),
         ImapClient = require('imap-client'),
         SmtpClient = require('smtp-client'),
         EmailDAO = require('js/dao/email-dao'),
         KeychainDAO = require('js/dao/keychain-dao'),
         cloudstorage = require('js/dao/cloudstorage-dao'),
         DeviceStorageDAO = require('js/dao/devicestorage-dao'),
-        Crypto = require('js/crypto/crypto'),
+        PGP = require('js/crypto/pgp'),
         config = require('js/app-config').config;
     require('cordova');
 
@@ -65,18 +64,8 @@ define(function(require) {
                         return;
                     }
 
-                    self.getSalt(function(err, salt) {
-                        if (err || !salt) {
-                            callback({
-                                errMsg: 'Error gettin salt on login!',
-                                err: err
-                            });
-                            return;
-                        }
-
-                        // login using the received email address
-                        self.login(emailAddress, password, salt, token, callback);
-                    });
+                    // login using the received email address
+                    self.login(emailAddress, password, token, callback);
                 });
             }
         );
@@ -133,44 +122,11 @@ define(function(require) {
     };
 
     /**
-     * Fetch a random salt from the app storage or generate a new one
-     */
-    self.getSalt = function(callback) {
-        var itemKey = 'salt',
-            salt;
-
-        self._appConfigStore.listItems(itemKey, 0, null, function(err, cachedItems) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            // generate random salt if non exists
-            if (!cachedItems || cachedItems.length < 1) {
-                salt = util.random(config.symKeySize);
-
-                // store the salt locally
-                self._appConfigStore.storeList([salt], itemKey, function(err) {
-                    if (err) {
-                        callback(err);
-                        return;
-                    }
-
-                    callback(null, salt);
-                });
-                return;
-            }
-
-            callback(null, cachedItems[0]);
-        });
-    };
-
-    /**
      * Instanciate the mail email data access object and its dependencies. Login to imap on init.
      */
-    self.login = function(userId, password, salt, token, callback) {
+    self.login = function(userId, password, token, callback) {
         var auth, imapOptions, smtpOptions,
-            keychain, imapClient, smtpClient, crypto, userStorage;
+            keychain, imapClient, smtpClient, pgp, userStorage;
 
         // create mail credentials objects for imap/smtp
         auth = {
@@ -197,17 +153,14 @@ define(function(require) {
         keychain = new KeychainDAO(cloudstorage);
         imapClient = new ImapClient(imapOptions);
         smtpClient = new SmtpClient(smtpOptions);
-        crypto = new Crypto();
+        pgp = new PGP();
         userStorage = new DeviceStorageDAO();
-        self._emailDao = new EmailDAO(keychain, imapClient, smtpClient, crypto, userStorage);
+        self._emailDao = new EmailDAO(keychain, imapClient, smtpClient, pgp, userStorage);
 
         // init email dao
         var account = {
             emailAddress: userId,
-            symKeySize: config.symKeySize,
-            symIvSize: config.symIvSize,
-            asymKeySize: config.asymKeySize,
-            salt: salt
+            asymKeySize: config.asymKeySize
         };
         self._emailDao.init(account, password, callback);
     };

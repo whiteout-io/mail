@@ -22,7 +22,7 @@ define(function(require) {
     /**
      * Inits all dependencies
      */
-    EmailDAO.prototype.init = function(account, password, callback) {
+    EmailDAO.prototype.init = function(account, passphrase, callback) {
         var self = this;
 
         self._account = account;
@@ -55,25 +55,41 @@ define(function(require) {
         }
 
         function initCrypto(storedKeypair) {
-            self._crypto.init({
-                emailAddress: emailAddress,
-                password: password,
-                salt: self._account.salt,
-                keySize: self._account.symKeySize,
-                rsaKeySize: self._account.asymKeySize,
-                storedKeypair: storedKeypair
+            if (storedKeypair && storedKeypair.privateKey && storedKeypair.publicKey) {
+                // import existing key pair into crypto module
+                self._crypto.importKeys({
+                    passphrase: passphrase,
+                    privateKeyArmored: storedKeypair.privateKey.encryptedKey,
+                    publicKeyArmored: storedKeypair.publicKey.publicKey
+                }, callback);
+                return;
+            }
+
+            // no keypair for is stored for the user... generate a new one
+            self._crypto.generateKeys({
+                emailAddress: self._account.emailAddress,
+                keySize: self._account.asymKeySize,
+                passphrase: passphrase
             }, function(err, generatedKeypair) {
                 if (err) {
                     callback(err);
                     return;
                 }
 
-                if (generatedKeypair) {
-                    // persist newly generated keypair
-                    self._keychain.putUserKeyPair(generatedKeypair, callback);
-                } else {
-                    callback();
-                }
+                // persist newly generated keypair
+                var newKeypair = {
+                    publicKey: {
+                        _id: generatedKeypair.keyId,
+                        userId: self._account.emailAddress,
+                        publicKey: generatedKeypair.publicKeyArmored
+                    },
+                    privateKey: {
+                        _id: generatedKeypair.keyId,
+                        userId: self._account.emailAddress,
+                        encryptedKey: generatedKeypair.privateKeyArmored
+                    }
+                };
+                self._keychain.putUserKeyPair(newKeypair, callback);
             });
         }
     };
@@ -172,7 +188,6 @@ define(function(require) {
      */
     EmailDAO.prototype.listMessages = function(options, callback) {
         var self = this,
-            displayList = [],
             encryptedList = [];
 
         // validate options
@@ -193,8 +208,6 @@ define(function(require) {
             // find encrypted items
             emails.forEach(function(i) {
                 if (typeof i.body === 'string' && i.body.indexOf(str.cryptPrefix) !== -1 && i.body.indexOf(str.cryptSuffix) !== -1) {
-                    // add item to plaintext list for display later
-                    displayList.push(i);
                     // parse ct object from ascii armored message block
                     encryptedList.push(parseMessageBlock(i));
                 }
@@ -206,34 +219,18 @@ define(function(require) {
             }
 
             // decrypt items
-            decryptList(encryptedList, function(err, decryptedList) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-
-                // replace encrypted subject and body
-                for (var j = 0; j < displayList.length; j++) {
-                    displayList[j].subject = decryptedList[j].subject;
-                    displayList[j].body = decryptedList[j].body;
-                }
-
-                // return only decrypted items
-                callback(null, displayList);
-            });
+            decryptList(encryptedList, callback);
         });
 
         function parseMessageBlock(email) {
-            var ctMessageBase64, ctMessageJson, ctMessage;
+            var messageBlock;
 
             // parse email body for encrypted message block
             try {
-                // get base64 encoded message block
-                ctMessageBase64 = email.body.split(str.cryptPrefix)[1].split(str.cryptSuffix)[0].trim();
-                // decode bae64
-                ctMessageJson = atob(ctMessageBase64);
-                // parse json string to get ciphertext object
-                ctMessage = JSON.parse(ctMessageJson);
+                // get ascii armored message block by prefix and suffix
+                messageBlock = email.body.split(str.cryptPrefix)[1].split(str.cryptSuffix)[0];
+                // add prefix and suffix again
+                email.body = str.cryptPrefix + messageBlock + str.cryptSuffix;
             } catch (e) {
                 callback({
                     errMsg: 'Error parsing encrypted message block!'
@@ -241,40 +238,32 @@ define(function(require) {
                 return;
             }
 
-            return ctMessage;
+            return email;
         }
 
-        function decryptList(encryptedList, callback) {
-            var already, pubkeyIds = [];
-
-            // gather public key ids required to verify signatures
-            encryptedList.forEach(function(i) {
-                already = null;
-                already = _.findWhere(pubkeyIds, {
-                    _id: i.senderPk
-                });
-                if (!already) {
-                    pubkeyIds.push({
-                        _id: i.senderPk
-                    });
-                }
+        function decryptList(list, callback) {
+            var after = _.after(list.length, function() {
+                callback(null, list);
             });
 
-            // fetch public keys from keychain
-            self._keychain.getPublicKeys(pubkeyIds, function(err, senderPubkeys) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
+            list.forEach(function(i) {
+                // gather public keys required to verify signatures
+                var sender = i.from[0].address;
+                self._keychain.getReveiverPublicKey(sender, function(err, senderPubkey) {
 
-                // verfiy signatures and re-encrypt item keys
-                self._crypto.decryptListForUser(encryptedList, senderPubkeys, function(err, decryptedList) {
-                    if (err) {
-                        callback(err);
-                        return;
-                    }
+                    // decrypt and verfiy signatures
+                    self._crypto.decrypt(i.body, senderPubkey.publicKey, function(err, decrypted) {
+                        if (err) {
+                            callback(err);
+                            return;
+                        }
 
-                    callback(null, decryptedList);
+                        decrypted = JSON.parse(decrypted);
+                        i.subject = decrypted.subject;
+                        i.body = decrypted.body;
+
+                        after();
+                    });
                 });
             });
         }
@@ -507,7 +496,7 @@ define(function(require) {
             }
 
             // public key found... encrypt and send
-            self.encryptForUser(email, receiverPubkey, callback);
+            self.encryptForUser(email, receiverPubkey.publicKey, callback);
         });
     };
 
@@ -516,101 +505,41 @@ define(function(require) {
      */
     EmailDAO.prototype.encryptForUser = function(email, receiverPubkey, callback) {
         var self = this,
-            ptItems = bundleForEncryption(email),
+            pt = JSON.stringify(email),
             receiverPubkeys = [receiverPubkey];
 
-        // encrypt the email
-        self._crypto.encryptListForUser(ptItems, receiverPubkeys, function(err, encryptedList) {
+        // get own public key so send message can be read
+        self._crypto.exportKeys(function(err, ownKeys) {
             if (err) {
                 callback(err);
                 return;
             }
 
-            // bundle encrypted email together for sending
-            bundleEncryptedItems(email, encryptedList);
+            // add own public key to receiver list
+            receiverPubkeys.push(ownKeys.publicKeyArmored);
+            // encrypt the email
+            self._crypto.encrypt(pt, receiverPubkeys, function(err, ct) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
 
-            self.send(email, callback);
+                // bundle encrypted email together for sending
+                frameEncryptedMessage(email, ct);
+
+                self.send(email, callback);
+            });
         });
     };
-
-    /**
-     * Encrypt an email symmetrically for a new user, write the secret one time key to the cloudstorage REST service, and send the email client side via SMTP.
-     */
-    EmailDAO.prototype.encryptForNewUser = function(email, callback) {
-        var self = this,
-            ptItems = bundleForEncryption(email);
-
-        self._crypto.symEncryptList(ptItems, function(err, result) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            // bundle encrypted email together for sending
-            bundleEncryptedItems(email, result.list);
-
-            // TODO: write result.key to REST endpoint
-
-            self.send(email, callback);
-        });
-    };
-
-    /**
-     * Give the email a newly generated UUID, remove its attachments, and bundle all plaintext items to a batchable array for encryption.
-     */
-
-    function bundleForEncryption(email) {
-        var ptItems = [email];
-
-        // generate a new UUID for the new email
-        email.id = util.UUID();
-
-        // add attachment to encryption batch and remove from email object
-        if (email.attachments) {
-            email.attachments.forEach(function(attachment) {
-                attachment.id = email.id;
-                ptItems.push(attachment);
-            });
-            delete email.attachments;
-        }
-
-        return ptItems;
-    }
-
-    /**
-     * Frame the encrypted email message and append the encrypted attachments.
-     */
-
-    function bundleEncryptedItems(email, encryptedList) {
-        var i;
-
-        // replace body and subject of the email with encrypted versions
-        email = frameEncryptedMessage(email, encryptedList[0]);
-
-        // add encrypted attachments
-        if (encryptedList.length > 1) {
-            email.attachments = [];
-        }
-        for (i = 1; i < encryptedList.length; i++) {
-            email.attachments.push({
-                fileName: 'Encrypted Attachment ' + i,
-                contentType: 'application/octet-stream',
-                uint8Array: util.binStr2Uint8Arr(JSON.stringify(encryptedList[i]))
-            });
-        }
-    }
 
     /**
      * Frames an encrypted message in base64 Format.
      */
 
     function frameEncryptedMessage(email, ct) {
-        var to, greeting, ctBase64;
+        var to, greeting;
 
-        var SUBJECT = str.subject,
-            MESSAGE = str.message + '\n\n\n',
-            PREFIX = str.cryptPrefix + '\n',
-            SUFFIX = '\n' + str.cryptSuffix,
+        var MESSAGE = str.message + '\n\n\n',
             SIGNATURE = '\n\n\n' + str.signature + '\n' + str.webSite + '\n\n';
 
         // get first name of recipient
@@ -618,9 +547,8 @@ define(function(require) {
         greeting = 'Hi ' + to + ',\n\n';
 
         // build encrypted text body
-        ctBase64 = btoa(JSON.stringify(ct));
-        email.body = greeting + MESSAGE + PREFIX + ctBase64 + SUFFIX + SIGNATURE;
-        email.subject = SUBJECT;
+        email.body = greeting + MESSAGE + ct + SIGNATURE;
+        email.subject = str.subject;
 
         return email;
     }

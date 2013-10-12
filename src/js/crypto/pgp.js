@@ -25,7 +25,15 @@ define(function(require) {
         }
 
         // generate keypair (keytype 1=RSA)
-        keys = openpgp.generate_key_pair(1, options.keySize, options.emailAddress, options.passphrase);
+        try {
+            keys = openpgp.generate_key_pair(1, options.keySize, options.emailAddress, options.passphrase);
+        } catch (e) {
+            callback({
+                errMsg: 'Keygeneration failed!',
+                err: e
+            });
+            return;
+        }
 
         callback(null, {
             keyId: util.hexstrdump(keys.privateKey.getKeyId()).toUpperCase(),

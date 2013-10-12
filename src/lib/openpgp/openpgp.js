@@ -7424,7 +7424,7 @@ function openpgp_config() {
 			keyserver: "keyserver.linux.it" // "pgp.mit.edu:11371"
 	};
 
-	this.versionstring ="OpenPGP.js v.1.20131011";
+	this.versionstring ="OpenPGP.js v.1.20131012";
 	this.commentstring ="http://openpgpjs.org";
 	/**
 	 * Reads the config out of the HTML5 local storage
@@ -7432,7 +7432,10 @@ function openpgp_config() {
 	 * if config is null the default config will be used
 	 */
 	function read() {
-		var cf = JSON.parse(window.localStorage.getItem("config"));
+		var cf = null;
+		if (typeof chrome === 'undefined' || typeof chrome.runtime === 'undefined') {
+			cf = JSON.parse(window.localStorage.getItem("config"));
+		}
 		if (cf == null) {
 			this.config = this.default_config;
 			this.write();
@@ -7450,7 +7453,9 @@ function openpgp_config() {
 	 * Writes the config to HTML5 local storage
 	 */
 	function write() {
-		window.localStorage.setItem("config",JSON.stringify(this.config));
+		if (typeof chrome === 'undefined' || typeof chrome.runtime === 'undefined') {
+			window.localStorage.setItem("config",JSON.stringify(this.config));
+		}
 	}
 
 	this.read = read;
@@ -8463,8 +8468,11 @@ function openpgp_keyring() {
 	 * This method is called by openpgp.init().
 	 */
 	function init() {
-		var sprivatekeys = JSON.parse(window.localStorage.getItem("privatekeys"));
-		var spublickeys = JSON.parse(window.localStorage.getItem("publickeys"));
+		var sprivatekeys, spublickeys;
+		if (typeof chrome === 'undefined' || typeof chrome.runtime === 'undefined') {
+			sprivatekeys = JSON.parse(window.localStorage.getItem("privatekeys"));
+			spublickeys = JSON.parse(window.localStorage.getItem("publickeys"));
+		}
 		if (sprivatekeys == null || sprivatekeys.length == 0) {
 			sprivatekeys = new Array();
 		}
@@ -8513,8 +8521,11 @@ function openpgp_keyring() {
 		for (var i = 0; i < this.publicKeys.length; i++) {
 			pub[i] = this.publicKeys[i].armored;
 		}
-		window.localStorage.setItem("privatekeys",JSON.stringify(priv));
-		window.localStorage.setItem("publickeys",JSON.stringify(pub));
+
+		if (typeof chrome === 'undefined' || typeof chrome.runtime === 'undefined') {
+			window.localStorage.setItem("privatekeys",JSON.stringify(priv));
+			window.localStorage.setItem("publickeys",JSON.stringify(pub));
+		}
 	}
 	this.store = store;
 	/**

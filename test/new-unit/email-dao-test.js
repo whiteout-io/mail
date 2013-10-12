@@ -6,7 +6,7 @@ define(function(require) {
         DeviceStorageDAO = require('js/dao/devicestorage-dao'),
         SmtpClient = require('smtp-client'),
         ImapClient = require('imap-client'),
-        Crypto = require('js/crypto/crypto'),
+        PGP = require('js/crypto/pgp'),
         app = require('js/app-config'),
         expect = chai.expect;
 
@@ -23,7 +23,7 @@ define(function(require) {
     describe('Email DAO unit tests', function() {
 
         var emailDao, account,
-            keychainStub, imapClientStub, smtpClientStub, cryptoStub, devicestorageStub;
+            keychainStub, imapClientStub, smtpClientStub, pgpStub, devicestorageStub;
 
         beforeEach(function() {
             // init dummy object
@@ -49,10 +49,10 @@ define(function(require) {
             keychainStub = sinon.createStubInstance(KeychainDAO);
             imapClientStub = sinon.createStubInstance(ImapClient);
             smtpClientStub = sinon.createStubInstance(SmtpClient);
-            cryptoStub = sinon.createStubInstance(Crypto);
+            pgpStub = sinon.createStubInstance(PGP);
             devicestorageStub = sinon.createStubInstance(DeviceStorageDAO);
 
-            emailDao = new EmailDAO(keychainStub, imapClientStub, smtpClientStub, cryptoStub, devicestorageStub);
+            emailDao = new EmailDAO(keychainStub, imapClientStub, smtpClientStub, pgpStub, devicestorageStub);
         });
 
         afterEach(function() {});
@@ -72,14 +72,39 @@ define(function(require) {
             it('should init with new keygen', function(done) {
                 devicestorageStub.init.yields();
                 keychainStub.getUserKeyPair.yields();
-                cryptoStub.init.yields(null, {});
+                pgpStub.generateKeys.yields(null, {});
                 keychainStub.putUserKeyPair.yields();
 
                 emailDao.init(account, emaildaoTest.passphrase, function(err) {
                     expect(devicestorageStub.init.calledOnce).to.be.true;
                     expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
-                    expect(cryptoStub.init.calledOnce).to.be.true;
+                    expect(pgpStub.generateKeys.calledOnce).to.be.true;
                     expect(keychainStub.putUserKeyPair.calledOnce).to.be.true;
+                    expect(err).to.not.exist;
+                    done();
+                });
+            });
+
+            it('should init with stored keygen', function(done) {
+                devicestorageStub.init.yields();
+                keychainStub.getUserKeyPair.yields(null, {
+                    publicKey: {
+                        _id: 'keyId',
+                        userId: emaildaoTest.user,
+                        publicKey: 'publicKeyArmored'
+                    },
+                    privateKey: {
+                        _id: 'keyId',
+                        userId: emaildaoTest.user,
+                        encryptedKey: 'privateKeyArmored'
+                    }
+                });
+                pgpStub.importKeys.yields();
+
+                emailDao.init(account, emaildaoTest.passphrase, function(err) {
+                    expect(devicestorageStub.init.calledOnce).to.be.true;
+                    expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
+                    expect(pgpStub.importKeys.calledOnce).to.be.true;
                     expect(err).to.not.exist;
                     done();
                 });
@@ -110,13 +135,13 @@ define(function(require) {
             beforeEach(function(done) {
                 devicestorageStub.init.yields();
                 keychainStub.getUserKeyPair.yields();
-                cryptoStub.init.yields(null, {});
+                pgpStub.generateKeys.yields(null, {});
                 keychainStub.putUserKeyPair.yields();
 
                 emailDao.init(account, emaildaoTest.passphrase, function(err) {
                     expect(devicestorageStub.init.calledOnce).to.be.true;
                     expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
-                    expect(cryptoStub.init.calledOnce).to.be.true;
+                    expect(pgpStub.generateKeys.calledOnce).to.be.true;
                     expect(keychainStub.putUserKeyPair.calledOnce).to.be.true;
                     expect(err).to.not.exist;
                     done();
@@ -175,11 +200,14 @@ define(function(require) {
                         userId: "safewithme.testuser@gmail.com",
                         publicKey: publicKey
                     });
+                    pgpStub.exportKeys.yields(null, {});
+                    pgpStub.encrypt.yields(null, 'asdfasfd');
                     smtpClientStub.send.yields();
-                    cryptoStub.encryptListForUser.yields(null, []);
 
                     emailDao.smtpSend(dummyMail, function(err) {
                         expect(keychainStub.getReveiverPublicKey.calledOnce).to.be.true;
+                        expect(pgpStub.exportKeys.calledOnce).to.be.true;
+                        expect(pgpStub.encrypt.calledOnce).to.be.true;
                         expect(smtpClientStub.send.calledOnce).to.be.true;
                         smtpClientStub.send.calledWith(sinon.match(function(o) {
                             return typeof o.attachments === 'undefined';
@@ -200,11 +228,14 @@ define(function(require) {
                         userId: "safewithme.testuser@gmail.com",
                         publicKey: publicKey
                     });
+                    pgpStub.exportKeys.yields(null, {});
+                    pgpStub.encrypt.yields(null, 'asdfasfd');
                     smtpClientStub.send.yields();
-                    cryptoStub.encryptListForUser.yields(null, [{}, {}]);
 
                     emailDao.smtpSend(dummyMail, function(err) {
                         expect(keychainStub.getReveiverPublicKey.calledOnce).to.be.true;
+                        expect(pgpStub.exportKeys.calledOnce).to.be.true;
+                        expect(pgpStub.encrypt.calledOnce).to.be.true;
                         expect(smtpClientStub.send.calledOnce).to.be.true;
                         smtpClientStub.send.calledWith(sinon.match(function(o) {
                             var ptAt = dummyMail.attachments[0];
@@ -408,19 +439,17 @@ define(function(require) {
 
             describe('IMAP: list messages from local storage', function() {
                 it('should work', function(done) {
-
-                    devicestorageStub.listItems.yields(null, [{
-                        body: app.string.cryptPrefix + btoa(JSON.stringify({})) + app.string.cryptSuffix
-                    }]);
-                    keychainStub.getPublicKeys.yields(null, [{
+                    dummyMail.body = app.string.cryptPrefix + btoa('asdf') + app.string.cryptSuffix;
+                    devicestorageStub.listItems.yields(null, [dummyMail, dummyMail]);
+                    keychainStub.getReveiverPublicKey.yields(null, {
                         _id: "fcf8b4aa-5d09-4089-8b4f-e3bc5091daf3",
                         userId: "safewithme.testuser@gmail.com",
                         publicKey: publicKey
-                    }]);
-                    cryptoStub.decryptListForUser.yields(null, [{
+                    });
+                    pgpStub.decrypt.yields(null, JSON.stringify({
                         body: 'test body',
                         subject: 'test subject'
-                    }]);
+                    }));
 
                     emailDao.listMessages({
                         folder: 'INBOX',
@@ -428,10 +457,10 @@ define(function(require) {
                         num: 2
                     }, function(err, emails) {
                         expect(devicestorageStub.listItems.calledOnce).to.be.true;
-                        expect(keychainStub.getPublicKeys.calledOnce).to.be.true;
-                        expect(cryptoStub.decryptListForUser.calledOnce).to.be.true;
+                        expect(keychainStub.getReveiverPublicKey.calledTwice).to.be.true;
+                        expect(pgpStub.decrypt.calledTwice).to.be.true;
                         expect(err).to.not.exist;
-                        expect(emails.length).to.equal(1);
+                        expect(emails.length).to.equal(2);
                         done();
                     });
                 });

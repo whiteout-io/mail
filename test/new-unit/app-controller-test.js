@@ -15,7 +15,7 @@ define(function(require) {
     describe('App Controller unit tests', function() {
 
         beforeEach(function() {
-            sinon.stub(controller, 'login', function(userId, password, salt, token, callback) {
+            sinon.stub(controller, 'login', function(userId, password, token, callback) {
                 controller._emailDao = sinon.createStubInstance(EmailDAO);
                 callback();
             });
@@ -61,8 +61,8 @@ define(function(require) {
 
                 controller.fetchOAuthToken(appControllerTest.passphrase, function(err) {
                     expect(err).to.not.exist;
-                    expect(controller._appConfigStore.listItems.calledTwice).to.be.true;
-                    expect(controller._appConfigStore.storeList.calledTwice).to.be.true;
+                    expect(controller._appConfigStore.listItems.calledOnce).to.be.true;
+                    expect(controller._appConfigStore.storeList.calledOnce).to.be.true;
                     expect(window.chrome.identity.getAuthToken.calledOnce).to.be.true;
                     expect($.ajax.calledOnce).to.be.true;
                     done();
@@ -74,7 +74,7 @@ define(function(require) {
 
                 controller.fetchOAuthToken(appControllerTest.passphrase, function(err) {
                     expect(err).to.not.exist;
-                    expect(controller._appConfigStore.listItems.calledTwice).to.be.true;
+                    expect(controller._appConfigStore.listItems.calledOnce).to.be.true;
                     expect(window.chrome.identity.getAuthToken.calledOnce).to.be.true;
                     expect($.ajax.called).to.be.false;
                     done();

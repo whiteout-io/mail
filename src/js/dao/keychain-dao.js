@@ -210,23 +210,7 @@ define(['underscore', 'js/dao/lawnchair-dao'], function(_, jsonDao) {
                 }
 
                 // store private key locally
-                self.saveLocalPrivateKey(keypair.privateKey, function(err) {
-                    if (err) {
-                        callback(err);
-                        return;
-                    }
-
-                    // persist private key in cloud storage
-                    self._cloudstorage.putPrivateKey(keypair.privateKey, function(err) {
-                        // validate result
-                        if (err) {
-                            callback(err);
-                            return;
-                        }
-
-                        callback(null);
-                    });
-                });
+                self.saveLocalPrivateKey(keypair.privateKey, callback);
             });
         });
     };
