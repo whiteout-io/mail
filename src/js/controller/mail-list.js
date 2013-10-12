@@ -99,7 +99,7 @@ define(function(require) {
                     return;
                 }
                 // set unread count in folder model
-                getFolder().count = unreadCount;
+                getFolder().count = (unreadCount && unreadCount > 0) ? unreadCount : undefined;
                 $scope.$apply();
 
                 emailDao.imapSync(options, function(err) {
