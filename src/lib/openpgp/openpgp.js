@@ -7433,9 +7433,10 @@ function openpgp_config() {
 	 */
 	function read() {
 		var cf = null;
-		if (typeof chrome === 'undefined' || typeof chrome.runtime === 'undefined') {
+		try {
 			cf = JSON.parse(window.localStorage.getItem("config"));
-		}
+		} catch(e) {}
+
 		if (cf == null) {
 			this.config = this.default_config;
 			this.write();
@@ -7453,9 +7454,9 @@ function openpgp_config() {
 	 * Writes the config to HTML5 local storage
 	 */
 	function write() {
-		if (typeof chrome === 'undefined' || typeof chrome.runtime === 'undefined') {
+		try {
 			window.localStorage.setItem("config",JSON.stringify(this.config));
-		}
+		} catch(e) {}
 	}
 
 	this.read = read;
@@ -8469,10 +8470,10 @@ function openpgp_keyring() {
 	 */
 	function init() {
 		var sprivatekeys, spublickeys;
-		if (typeof chrome === 'undefined' || typeof chrome.runtime === 'undefined') {
+		try {
 			sprivatekeys = JSON.parse(window.localStorage.getItem("privatekeys"));
 			spublickeys = JSON.parse(window.localStorage.getItem("publickeys"));
-		}
+		} catch(e) {}
 		if (sprivatekeys == null || sprivatekeys.length == 0) {
 			sprivatekeys = new Array();
 		}
@@ -8522,10 +8523,10 @@ function openpgp_keyring() {
 			pub[i] = this.publicKeys[i].armored;
 		}
 
-		if (typeof chrome === 'undefined' || typeof chrome.runtime === 'undefined') {
+		try {
 			window.localStorage.setItem("privatekeys",JSON.stringify(priv));
 			window.localStorage.setItem("publickeys",JSON.stringify(pub));
-		}
+		} catch(e) {}
 	}
 	this.store = store;
 	/**
