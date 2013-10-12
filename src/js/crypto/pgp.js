@@ -110,15 +110,15 @@ define(function(require) {
     /**
      * Encrypt and sign a pgp message for a list of receivers
      */
-    PGP.prototype.encrypt = function(plaintext, receiverPublicKeys, callback) {
+    PGP.prototype.encrypt = function(plaintext, receiverKeys, callback) {
         var ct, i,
             privateKey = openpgp.keyring.exportPrivateKey(0).obj;
 
-        for (i = 0; i < receiverPublicKeys.length; i++) {
-            receiverPublicKeys[i] = openpgp.read_publicKey(receiverPublicKeys[i])[0];
+        for (i = 0; i < receiverKeys.length; i++) {
+            receiverKeys[i] = openpgp.read_publicKey(receiverKeys[i])[0];
         }
 
-        ct = openpgp.write_signed_and_encrypted_message(privateKey, receiverPublicKeys, plaintext);
+        ct = openpgp.write_signed_and_encrypted_message(privateKey, receiverKeys, plaintext);
 
         callback(null, ct);
     };
@@ -126,9 +126,9 @@ define(function(require) {
     /**
      * Decrypt and verify a pgp message for a single sender
      */
-    PGP.prototype.decrypt = function(ciphertext, senderPublicKey, callback) {
+    PGP.prototype.decrypt = function(ciphertext, senderKey, callback) {
         var privateKey = openpgp.keyring.exportPrivateKey(0).obj;
-        senderPublicKey = openpgp.read_publicKey(senderPublicKey)[0];
+        senderKey = openpgp.read_publicKey(senderKey)[0];
 
         var msg = openpgp.read_message(ciphertext)[0];
         var keymat = null;
@@ -156,7 +156,7 @@ define(function(require) {
             }
         }
         if (keymat !== null) {
-            var decrypted = msg.decryptAndVerifySignature(keymat, sesskey, senderPublicKey);
+            var decrypted = msg.decryptAndVerifySignature(keymat, sesskey, senderKey);
             callback(null, decrypted.text);
 
         } else {
