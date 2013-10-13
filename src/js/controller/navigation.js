@@ -5,6 +5,10 @@ define(function(require) {
         appController = require('js/app-controller'),
         emailDao;
 
+    //
+    // Controller
+    //
+
     var NavigationCtrl = function($scope) {
         $scope.navOpen = false;
 
