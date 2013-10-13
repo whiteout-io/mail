@@ -13,7 +13,7 @@ require([
 ], function(angular, LoginCtrl, MailListCtrl, ReadCtrl, WriteCtrl, NavigationCtrl) {
     'use strict';
 
-    var app = angular.module('mail', ['ngRoute', 'ngTouch', 'write', 'read']);
+    var app = angular.module('mail', ['ngRoute', 'ngTouch', 'navigation', 'write', 'read']);
 
     // set router paths
     app.config(function($routeProvider) {

@@ -73,7 +73,6 @@ define(function(require) {
         //
 
         function initList() {
-            firstSelect = true;
             updateStatus('Read cache ...');
 
             // list messaged from local db
@@ -116,6 +115,7 @@ define(function(require) {
         }
 
         function listLocalMessages(options, callback) {
+            firstSelect = true;
             emailDao.listMessages(options, function(err, emails) {
                 if (err) {
                     console.log(err);

@@ -1,7 +1,8 @@
 define(function(require) {
     'use strict';
 
-    var appController = require('js/app-controller'),
+    var angular = require('angular'),
+        appController = require('js/app-controller'),
         emailDao;
 
     var NavigationCtrl = function($scope) {
@@ -85,6 +86,28 @@ define(function(require) {
             }]);
         }
     };
+
+    //
+    // Directives
+    //
+
+    var ngModule = angular.module('navigation', []);
+    ngModule.directive('keyShortcuts', function() {
+        return function(scope, elm) {
+            elm.bind('keydown', function(e) {
+                if (e.keyCode === 78 && scope.$$childTail && scope.$$childTail.write) {
+                    // n
+                    e.preventDefault();
+                    return scope.$$childTail.write();
+
+                } else if (e.keyCode === 82 && scope.$$childTail && scope.$$childTail.write && scope.$$childTail.selected) {
+                    // r
+                    e.preventDefault();
+                    return scope.$$childTail.write(scope.$$childTail.selected);
+                }
+            });
+        };
+    });
 
     return NavigationCtrl;
 });
