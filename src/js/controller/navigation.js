@@ -96,12 +96,12 @@ define(function(require) {
         return function(scope, elm) {
             elm.bind('keydown', function(e) {
                 if (e.keyCode === 78 && scope.$$childTail && scope.$$childTail.write) {
-                    // n
+                    // n -> new mail
                     e.preventDefault();
                     return scope.$$childTail.write();
 
                 } else if (e.keyCode === 82 && scope.$$childTail && scope.$$childTail.write && scope.$$childTail.selected) {
-                    // r
+                    // r -> reply
                     e.preventDefault();
                     return scope.$$childTail.write(scope.$$childTail.selected);
                 }
