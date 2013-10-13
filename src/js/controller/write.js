@@ -12,7 +12,7 @@ define(function(require) {
     // Controller
     //
 
-    var WriteCtrl = function($scope, $routeParams) {
+    var WriteCtrl = function($scope, $routeParams, $filter) {
         $scope.signature = str.signature;
 
         //
@@ -69,6 +69,8 @@ define(function(require) {
         }
 
         function fillFields(re) {
+            var from, body, bodyRows;
+
             if (!re) {
                 return;
             }
@@ -81,10 +83,11 @@ define(function(require) {
             $scope.subject = 'Re: ' + ((re.subject) ? re.subject.replace('Re: ', '') : '');
 
             // fill text body
-            var body = '<br><br>' + re.sentDate + ' ' + re.from[0].name + ' <' + re.from[0].address + '>';
-            var bodyRows = re.body.split('\n');
+            from = re.from[0].name || re.from[0].address;
+            body = '<br><br>' + $filter('date')(re.sentDate, 'EEEE, MMM d, yyyy h:mm a') + ' ' + from + ' wrote:';
+            bodyRows = re.body.split('\n');
             bodyRows.forEach(function(row) {
-                body += (!re.html) ? '<br> > ' + row : '';
+                body += (!re.html) ? '<br>' + row : '';
             });
             $scope.body = body;
         }
@@ -179,7 +182,7 @@ define(function(require) {
             require: 'ngModel',
             link: function(scope, elm, attrs, ctrl) {
                 // view -> model
-                elm.on('keyup keydown focus', function() {
+                elm.on('keyup keydown', function() {
                     scope.$apply(function() {
                         ctrl.$setViewValue(elm.html());
                     });
