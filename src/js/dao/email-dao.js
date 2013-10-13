@@ -76,20 +76,32 @@ define(function(require) {
                     return;
                 }
 
-                // persist newly generated keypair
-                var newKeypair = {
-                    publicKey: {
-                        _id: generatedKeypair.keyId,
-                        userId: self._account.emailAddress,
-                        publicKey: generatedKeypair.publicKeyArmored
-                    },
-                    privateKey: {
-                        _id: generatedKeypair.keyId,
-                        userId: self._account.emailAddress,
-                        encryptedKey: generatedKeypair.privateKeyArmored
+                // import the new key pair into crypto module
+                self._crypto.importKeys({
+                    passphrase: passphrase,
+                    privateKeyArmored: generatedKeypair.privateKeyArmored,
+                    publicKeyArmored: generatedKeypair.publicKeyArmored
+                }, function(err) {
+                    if (err) {
+                        callback(err);
+                        return;
                     }
-                };
-                self._keychain.putUserKeyPair(newKeypair, callback);
+
+                    // persist newly generated keypair
+                    var newKeypair = {
+                        publicKey: {
+                            _id: generatedKeypair.keyId,
+                            userId: self._account.emailAddress,
+                            publicKey: generatedKeypair.publicKeyArmored
+                        },
+                        privateKey: {
+                            _id: generatedKeypair.keyId,
+                            userId: self._account.emailAddress,
+                            encryptedKey: generatedKeypair.privateKeyArmored
+                        }
+                    };
+                    self._keychain.putUserKeyPair(newKeypair, callback);
+                });
             });
         }
     };

@@ -73,12 +73,14 @@ define(function(require) {
                 devicestorageStub.init.yields();
                 keychainStub.getUserKeyPair.yields();
                 pgpStub.generateKeys.yields(null, {});
+                pgpStub.importKeys.yields();
                 keychainStub.putUserKeyPair.yields();
 
                 emailDao.init(account, emaildaoTest.passphrase, function(err) {
                     expect(devicestorageStub.init.calledOnce).to.be.true;
                     expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
                     expect(pgpStub.generateKeys.calledOnce).to.be.true;
+                    expect(pgpStub.importKeys.calledOnce).to.be.true;
                     expect(keychainStub.putUserKeyPair.calledOnce).to.be.true;
                     expect(err).to.not.exist;
                     done();
@@ -136,12 +138,14 @@ define(function(require) {
                 devicestorageStub.init.yields();
                 keychainStub.getUserKeyPair.yields();
                 pgpStub.generateKeys.yields(null, {});
+                pgpStub.importKeys.yields();
                 keychainStub.putUserKeyPair.yields();
 
                 emailDao.init(account, emaildaoTest.passphrase, function(err) {
                     expect(devicestorageStub.init.calledOnce).to.be.true;
                     expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
                     expect(pgpStub.generateKeys.calledOnce).to.be.true;
+                    expect(pgpStub.importKeys.calledOnce).to.be.true;
                     expect(keychainStub.putUserKeyPair.calledOnce).to.be.true;
                     expect(err).to.not.exist;
                     done();
