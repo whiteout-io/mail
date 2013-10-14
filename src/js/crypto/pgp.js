@@ -15,7 +15,7 @@ define(function(require) {
      * Generate a key pair for the user
      */
     PGP.prototype.generateKeys = function(options, callback) {
-        var keys;
+        var keys, userId;
 
         if (!util.emailRegEx.test(options.emailAddress) || !options.keySize || typeof options.passphrase !== 'string') {
             callback({
@@ -26,7 +26,8 @@ define(function(require) {
 
         // generate keypair (keytype 1=RSA)
         try {
-            keys = openpgp.generate_key_pair(1, options.keySize, options.emailAddress, options.passphrase);
+            userId = 'Whiteout User <' + options.emailAddress + '>';
+            keys = openpgp.generate_key_pair(1, options.keySize, userId, options.passphrase);
         } catch (e) {
             callback({
                 errMsg: 'Keygeneration failed!',
@@ -56,6 +57,8 @@ define(function(require) {
             return;
         }
 
+        // clear any keypair already in the keychain
+        openpgp.keyring.init();
         // unlock and import private key 
         if (!openpgp.keyring.importPrivateKey(options.privateKeyArmored, options.passphrase)) {
             openpgp.keyring.init();
