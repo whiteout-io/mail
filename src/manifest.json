@@ -8,7 +8,7 @@
     "128": "img/icon.png"
   },
   "permissions": [
-    "https://storage.whiteout.io/",
+    "https://keys.whiteout.io/",
     "identity", {
       "socket": [
         "tcp-connect:imap.gmail.com:993",
