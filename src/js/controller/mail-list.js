@@ -2,7 +2,9 @@ define(function(require) {
     'use strict';
 
     var _ = require('underscore'),
+        angular = require('angular'),
         appController = require('js/app-controller'),
+        IScroll = require('iscroll'),
         emailDao;
 
     var MailListCtrl = function($scope) {
@@ -206,6 +208,26 @@ define(function(require) {
 
         return dummys;
     }
+
+    //
+    // Directives
+    //
+
+    var ngModule = angular.module('mail-list', []);
+    ngModule.directive('ngIscroll', function() {
+        return {
+            link: function(scope, elm) {
+                setTimeout(function() {
+                    var myScroll;
+                    // activate iscroll
+                    myScroll = new IScroll(elm[0], {
+                        mouseWheel: true
+                    });
+                }, 0);
+
+            }
+        };
+    });
 
     return MailListCtrl;
 });

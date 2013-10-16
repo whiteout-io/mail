@@ -39,10 +39,13 @@
 
     }
 
-    ul {
-        padding: 0 $padding-horizontal 78px $padding-horizontal;
+    .list-wrapper {
         height: 100%;
-        overflow-y: scroll;
+        padding: 0 $padding-horizontal 78px $padding-horizontal;
+        overflow-y: hidden;
+    }
+
+    ul {
     }
 
     footer {
