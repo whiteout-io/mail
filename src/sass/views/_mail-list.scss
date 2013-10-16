@@ -41,11 +41,12 @@
 
     .list-wrapper {
         height: 100%;
-        padding: 0 $padding-horizontal 78px $padding-horizontal;
+        padding: 0 $padding-horizontal;
         overflow-y: hidden;
     }
 
     ul {
+        padding-bottom: 78px;
     }
 
     footer {
