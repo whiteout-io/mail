@@ -3,6 +3,7 @@ define(function(require) {
 
     var angular = require('angular'),
         appController = require('js/app-controller'),
+        _ = require('underscore'),
         emailDao;
 
     //
@@ -29,6 +30,35 @@ define(function(require) {
         $scope.openFolder = function(folder) {
             $scope.currentFolder = folder;
             $scope.closeNav();
+        };
+
+        $scope.remove = function(email) {
+            var trashFolder = _.findWhere($scope.folders, {
+                type: 'Trash'
+            });
+
+            if ($scope.currentFolder === trashFolder) {
+                emailDao.imapDeleteMessage({
+                    path: $scope.currentFolder.path,
+                    uid: email.uid
+                }, moved);
+                return;
+            }
+
+            emailDao.imapMoveMessage({
+                path: $scope.currentFolder.path,
+                uid: email.uid,
+                destination: trashFolder.path
+            }, moved);
+
+            function moved(err) {
+                if (err) {
+                    console.error(err);
+                    return;
+                }
+                $scope.emails.splice($scope.emails.indexOf(email), 1);
+                $scope.$apply();
+            }
         };
 
         $scope.write = function(replyTo) {

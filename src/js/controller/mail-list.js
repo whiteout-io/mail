@@ -66,7 +66,7 @@ define(function(require) {
 
             // development... display dummy mail objects
             updateStatus('Last update: ', new Date());
-            $scope.emails = createDummyMails();
+            $scope.$parent.emails = $scope.emails = createDummyMails();
             $scope.select($scope.emails[0]);
         });
 
@@ -151,7 +151,7 @@ define(function(require) {
                 return -e.uid;
             });
 
-            $scope.emails = emails;
+            $scope.$parent.emails = $scope.emails = emails;
             $scope.select($scope.emails[0]);
             $scope.$apply();
         }
