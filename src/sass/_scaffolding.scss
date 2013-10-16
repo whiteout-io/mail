@@ -34,6 +34,11 @@ textarea {
     -moz-osx-font-smoothing: grayscale;
 }
 
+// add space at the top since ios7 apps are now fullscreen
+.ios-spacer {
+    padding-top: 20px;
+}
+
 // Basic layout
 .main-app-view {
     height: 100%;

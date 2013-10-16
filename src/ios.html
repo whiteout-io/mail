@@ -2,12 +2,12 @@
 <html ng-app="mail" ng-csp>
   <head>
     <meta charset="utf-8">
+    <title>Mail</title>
 
     <!-- Theses CSP rules are used as a fallback in runtimes such as PhoneGap where setting http headers is not possbile. They get overidden if http headers are set, or in the case of chrome packaged apps. -->
     <meta http-equiv="X-WebKit-CSP" content="default-src 'self'; object-src 'none'; connect-src *; style-src 'self' data: chrome-extension-resource: 'unsafe-inline'; img-src 'self' data: chrome-extension-resource:; frame-src 'self' data: chrome-extension-resource:; font-src 'self' data: chrome-extension-resource:; media-src *;">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; connect-src *; style-src 'self' data: chrome-extension-resource: 'unsafe-inline'; img-src 'self' data: chrome-extension-resource:; frame-src 'self' data: chrome-extension-resource:; font-src 'self' data: chrome-extension-resource:; media-src *;">
 
-    <title>Mail</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" media="all" href="css/all.css" type="text/css">
 
@@ -16,9 +16,8 @@
     <script src="require-config.js"></script>
     <script src="js/app.js"></script>
   </head>
-  <body key-shortcuts>
 
-    <div ng-view class="main-app-view"></div>
-
+  <body>
+    <div ng-view class="main-app-view ios-spacer"></div>
   </body>
 </html>

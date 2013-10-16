@@ -33,7 +33,7 @@ define(function(require) {
 
         $scope.write = function(replyTo) {
             var replyToPath = (replyTo) ? encodeURIComponent($scope.currentFolder.path) + '/' + replyTo.uid : '',
-                url = 'index.html#/write/' + replyToPath;
+                url = 'chrome.html#/write/' + replyToPath;
 
             if (window.chrome && chrome.app.window) {
                 chrome.app.window.create(url, {
