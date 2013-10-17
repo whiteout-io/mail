@@ -152,6 +152,11 @@ define(function(require) {
                     // r -> reply
                     e.preventDefault();
                     return scope.$$childTail.write(scope.$$childTail.selected);
+
+                } else if (e.keyCode === 83 && scope.$$childTail && scope.$$childTail.synchronize) {
+                    // s -> sync folder
+                    e.preventDefault();
+                    return scope.$$childTail.synchronize();
                 }
             });
         };

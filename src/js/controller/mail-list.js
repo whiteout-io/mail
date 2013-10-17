@@ -34,7 +34,7 @@ define(function(require) {
             markAsRead(email);
         };
 
-        $scope.synchronize = function() {
+        $scope.$parent.synchronize = $scope.synchronize = function() {
             updateStatus('Syncing ...');
             // sync from imap to local db
             syncImapFolder({
