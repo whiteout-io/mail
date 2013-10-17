@@ -6,7 +6,7 @@
 
 <div class="view-read">
   <div class="headers">
-    <p class="subject">{{selected.subject}}</p>
+    <p class="subject">{{selected.subject || 'No subject'}}</p>
     <p class="date">{{selected.sentDate | date:'EEEE, MMM d, yyyy h:mm a'}}</p>
     <p class="address">From: <span class="label">{{selected.from[0].name || selected.from[0].address}}</span></p>
     <p class="address">To: <span class="label" ng-repeat="t in selected.to">{{t.address}} </span></p>
