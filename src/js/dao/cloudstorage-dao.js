@@ -24,7 +24,8 @@ define(['jquery', 'js/app-config'], function($, app) {
 			},
 			error: function(xhr, textStatus, err) {
 				callback({
-					errMsg: xhr.status + ': ' + xhr.statusText,
+					code: xhr.status,
+					errMsg: xhr.statusText,
 					err: err
 				});
 			}
@@ -45,7 +46,8 @@ define(['jquery', 'js/app-config'], function($, app) {
 			},
 			error: function(xhr, textStatus, err) {
 				callback({
-					errMsg: xhr.status + ': ' + xhr.statusText,
+					code: xhr.status,
+					errMsg: xhr.statusText,
 					err: err
 				});
 			}
@@ -64,7 +66,8 @@ define(['jquery', 'js/app-config'], function($, app) {
 			},
 			error: function(xhr, textStatus, err) {
 				callback({
-					errMsg: xhr.status + ': ' + xhr.statusText,
+					code: xhr.status,
+					errMsg: xhr.statusText,
 					err: err
 				});
 			}
@@ -146,6 +149,12 @@ define(['jquery', 'js/app-config'], function($, app) {
 		var uri = app.config.cloudUrl + '/publickey/user/' + userId;
 
 		self.get(uri, function(err, keys) {
+			// not found
+			if (err && err.code === 404) {
+				callback();
+				return;
+			}
+
 			if (err) {
 				callback(err);
 				return;
@@ -181,48 +190,6 @@ define(['jquery', 'js/app-config'], function($, app) {
 	 */
 	self.removePublicKey = function(keyId, callback) {
 		var uri = app.config.cloudUrl + '/publickey/key/' + keyId;
-		self.remove(uri, callback);
-	};
-
-	//
-	// Ecrypted Private Key
-	//
-
-	/**
-	 * Fetch private key by id
-	 */
-	self.getPrivateKey = function(keyId, callback) {
-		var uri = app.config.cloudUrl + '/privatekey/key/' + keyId;
-		self.get(uri, function(err, key) {
-			if (err) {
-				callback(err);
-				return;
-			}
-
-			if (!key || !key._id) {
-				callback({
-					errMsg: 'No private key for that user!'
-				});
-				return;
-			}
-
-			callback(null, key);
-		});
-	};
-
-	/**
-	 * Persist encrypted private key to cloud service
-	 */
-	self.putPrivateKey = function(privkey, callback) {
-		var uri = app.config.cloudUrl + '/privatekey/user/' + privkey.userId + '/key/' + privkey._id;
-		self.put(privkey, uri, callback);
-	};
-
-	/**
-	 * Delete the private key from the cloud storage service
-	 */
-	self.removePrivateKey = function(keyId, callback) {
-		var uri = app.config.cloudUrl + '/privatekey/key/' + keyId;
 		self.remove(uri, callback);
 	};
 
