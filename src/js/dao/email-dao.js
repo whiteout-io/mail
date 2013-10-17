@@ -290,14 +290,6 @@ define(function(require) {
         var self = this,
             dbType = 'email_' + options.folder;
 
-        // validate options
-        if (!options.folder || typeof options.offset === 'undefined' || typeof options.num === 'undefined') {
-            callback({
-                errMsg: 'Invalid options!'
-            });
-            return;
-        }
-
         fetchList(function(err, emails) {
             if (err) {
                 callback(err);
@@ -386,14 +378,6 @@ define(function(require) {
     EmailDAO.prototype.imapListMessages = function(options, callback) {
         var self = this;
 
-        // validate options
-        if (!options.folder || typeof options.offset === 'undefined' || typeof options.num === 'undefined') {
-            callback({
-                errMsg: 'Invalid options!'
-            });
-            return;
-        }
-
         self._imapClient.listMessages({
             path: options.folder,
             offset: options.offset,
@@ -408,43 +392,53 @@ define(function(require) {
     EmailDAO.prototype.imapGetMessage = function(options, callback) {
         var self = this;
 
-        // validate options
-        if (!options.folder || !options.uid) {
-            callback({
-                errMsg: 'Invalid options!'
-            });
-            return;
-        }
-
-        function messageReady(err, gottenMessage) {
-            if (err || !gottenMessage) {
-                callback({
-                    errMsg: 'Error fetching message body!',
-                    err: err
-                });
-                return;
-            }
-
-            // return message
-            callback(null, gottenMessage);
-        }
-
         self._imapClient.getMessagePreview({
             path: options.folder,
             uid: options.uid
-        }, messageReady);
+        }, callback);
+    };
+
+    EmailDAO.prototype.imapMoveMessage = function(options, callback) {
+        var self = this;
+
+        self._imapClient.moveMessage({
+            path: options.folder,
+            uid: options.uid,
+            destination: options.destination
+        }, moved);
+
+        function moved(err) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            // delete from local db
+            self._devicestorage.removeList('email_' + options.folder + '_' + options.uid, callback);
+        }
+    };
+
+    EmailDAO.prototype.imapDeleteMessage = function(options, callback) {
+        var self = this;
+
+        self._imapClient.deleteMessage({
+            path: options.folder,
+            uid: options.uid
+        }, moved);
+
+        function moved(err) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            // delete from local db
+            self._devicestorage.removeList('email_' + options.folder + '_' + options.uid, callback);
+        }
     };
 
     EmailDAO.prototype.imapMarkMessageRead = function(options, callback) {
         var self = this;
-
-        // validate options
-        if (!options.folder || !options.uid) {
-            callback({
-                errMsg: 'Invalid options!'
-            });
-            return;
-        }
 
         self._imapClient.updateFlags({
             path: options.folder,

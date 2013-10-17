@@ -3,6 +3,7 @@ define(function(require) {
 
     var angular = require('angular'),
         appController = require('js/app-controller'),
+        _ = require('underscore'),
         emailDao;
 
     //
@@ -29,6 +30,49 @@ define(function(require) {
         $scope.openFolder = function(folder) {
             $scope.currentFolder = folder;
             $scope.closeNav();
+        };
+
+        $scope.remove = function(email) {
+            var trashFolder = _.findWhere($scope.folders, {
+                type: 'Trash'
+            });
+
+            if ($scope.currentFolder === trashFolder) {
+                emailDao.imapDeleteMessage({
+                    folder: $scope.currentFolder.path,
+                    uid: email.uid
+                }, moved);
+                return;
+            }
+
+            emailDao.imapMoveMessage({
+                folder: $scope.currentFolder.path,
+                uid: email.uid,
+                destination: trashFolder.path
+            }, moved);
+
+            function moved(err) {
+                var index;
+
+                if (err) {
+                    console.error(err);
+                    return;
+                }
+
+                index = $scope.emails.indexOf(email);
+                // show the next mail
+                if ($scope.emails.length > 1) {
+                    // if we're about to delete the last entry of the array, show the previous (i.e. the one below in the list), 
+                    // otherwise show the next one (i.e. the one above in the list)
+                    $scope.select(_.last($scope.emails) === email ? $scope.emails[index - 1] : $scope.emails[index + 1]);
+                } else {
+                    // if we have only one email in the array, show nothing
+                    $scope.select();
+                    $scope.selected = undefined;
+                }
+                $scope.emails.splice(index, 1);
+                $scope.$apply();
+            }
         };
 
         $scope.write = function(replyTo) {

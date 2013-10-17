@@ -302,14 +302,6 @@ define(function(require) {
             });
 
             describe('IMAP: list messages from folder', function() {
-                it('should fail due to bad options', function(done) {
-                    emailDao.imapListMessages({}, function(err) {
-                        expect(imapClientStub.listMessages.called).to.be.false;
-                        expect(err).to.exist;
-                        done();
-                    });
-                });
-
                 it('should work', function(done) {
                     imapClientStub.listMessages.yields();
                     emailDao.imapListMessages({
@@ -325,16 +317,6 @@ define(function(require) {
             });
 
             describe('IMAP: get message preview', function() {
-                it('should fail due to bad options', function(done) {
-                    emailDao.imapGetMessage({
-                        folder: 'INBOX'
-                    }, function(err) {
-                        expect(imapClientStub.getMessagePreview.called).to.be.false;
-                        expect(err).to.exist;
-                        done();
-                    });
-                });
-
                 it('should parse message body without attachement', function(done) {
                     var uid = 415;
 
@@ -383,6 +365,86 @@ define(function(require) {
                 //         done();
                 //     });
                 // });
+            });
+
+            describe('IMAP: move messages', function() {
+                it('should move messages and remove from local storage', function(done) {
+                    imapClientStub.moveMessage.yields();
+                    devicestorageStub.removeList.yields();
+
+                    emailDao.imapMoveMessage({
+                        folder: 'ORIGIN',
+                        uid: 1234,
+                        destination: 'DESTINATION'
+                    }, function(err) {
+                        expect(err).to.not.exist;
+                        expect(imapClientStub.moveMessage.calledWith({
+                            path: 'ORIGIN',
+                            uid: 1234,
+                            destination: 'DESTINATION'
+                        })).to.be.true;
+                        expect(imapClientStub.moveMessage.calledOnce).to.be.true;
+                        expect(devicestorageStub.removeList.calledOnce).to.be.true;
+                        done();
+                    });
+                });
+
+                it('should not remove from local storage after imap error', function(done) {
+                    imapClientStub.moveMessage.yields(new Error('tis a silly place...'));
+
+                    emailDao.imapMoveMessage({
+                        folder: 'ORIGIN',
+                        uid: 1234,
+                        destination: 'DESTINATION'
+                    }, function(err) {
+                        expect(err).to.exist;
+                        expect(imapClientStub.moveMessage.calledWith({
+                            path: 'ORIGIN',
+                            uid: 1234,
+                            destination: 'DESTINATION'
+                        })).to.be.true;
+                        expect(imapClientStub.moveMessage.calledOnce).to.be.true;
+                        done();
+                    });
+                });
+            });
+
+            describe('IMAP: delete messages', function() {
+                it('should delete messages and remove from local storage', function(done) {
+                    imapClientStub.deleteMessage.yields();
+                    devicestorageStub.removeList.yields();
+
+                    emailDao.imapDeleteMessage({
+                        folder: 'FOLDAAAA',
+                        uid: 1234
+                    }, function(err) {
+                        expect(err).to.not.exist;
+                        expect(imapClientStub.deleteMessage.calledWith({
+                            path: 'FOLDAAAA',
+                            uid: 1234
+                        })).to.be.true;
+                        expect(imapClientStub.deleteMessage.calledOnce).to.be.true;
+                        expect(devicestorageStub.removeList.calledOnce).to.be.true;
+                        done();
+                    });
+                });
+
+                it('should not remove from local storage after imap error', function(done) {
+                    imapClientStub.deleteMessage.yields(new Error('tis a silly place...'));
+
+                    emailDao.imapDeleteMessage({
+                        folder: 'FOLDAAAA',
+                        uid: 1234
+                    }, function(err) {
+                        expect(err).to.exist;
+                        expect(imapClientStub.deleteMessage.calledWith({
+                            path: 'FOLDAAAA',
+                            uid: 1234
+                        })).to.be.true;
+                        expect(imapClientStub.deleteMessage.calledOnce).to.be.true;
+                        done();
+                    });
+                });
             });
 
             describe('IMAP: sync messages to local storage', function() {
