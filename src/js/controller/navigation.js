@@ -52,11 +52,25 @@ define(function(require) {
             }, moved);
 
             function moved(err) {
+                var index;
+
                 if (err) {
                     console.error(err);
                     return;
                 }
-                $scope.emails.splice($scope.emails.indexOf(email), 1);
+
+                index = $scope.emails.indexOf(email);
+                // show the next mail
+                if ($scope.emails.length > 1) {
+                    // if we're about to delete the last entry of the array, show the previous (i.e. the one below in the list), 
+                    // otherwise show the next one (i.e. the one above in the list)
+                    $scope.select(_.last($scope.emails) === email ? $scope.emails[index - 1] : $scope.emails[index + 1]);
+                } else {
+                    // if we have only one email in the array, show nothing
+                    $scope.select();
+                    $scope.selected = undefined;
+                }
+                $scope.emails.splice(index, 1);
                 $scope.$apply();
             }
         };

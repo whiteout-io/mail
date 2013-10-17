@@ -18,7 +18,7 @@ define(function(require) {
         // scope functions
         //
 
-        $scope.select = function(email) {
+        $scope.$parent.select = $scope.select = function(email) {
             if (!email) {
                 return;
             }
