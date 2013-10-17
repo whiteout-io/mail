@@ -39,14 +39,14 @@ define(function(require) {
 
             if ($scope.currentFolder === trashFolder) {
                 emailDao.imapDeleteMessage({
-                    path: $scope.currentFolder.path,
+                    folder: $scope.currentFolder.path,
                     uid: email.uid
                 }, moved);
                 return;
             }
 
             emailDao.imapMoveMessage({
-                path: $scope.currentFolder.path,
+                folder: $scope.currentFolder.path,
                 uid: email.uid,
                 destination: trashFolder.path
             }, moved);
