@@ -118,12 +118,14 @@ define(function(require) {
 
             callback([{
                 type: 'Inbox',
+                count: 3,
                 path: 'INBOX'
             }, {
                 type: 'Sent',
                 path: 'SENT'
             }, {
                 type: 'Outbox',
+                count: 1,
                 path: 'OUTBOX'
             }, {
                 type: 'Drafts',
