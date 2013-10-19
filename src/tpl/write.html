@@ -1,37 +1,45 @@
-<div class="view-write">
-  <p class="title">{{title || 'New Mail'}}</p>
+<div class="lightbox-body">
+  <header>
+    <h2>{{writerTitle}}</h2>
+    <button class="close" ng-click="closeWriter()" data-action="lightbox-close">&#xe007;</button>
+  </header>
+  <div class="content">
 
-  <div class="headers">
-    <p>
-      <span>To:</span>
-      <input type="email" ng-model="to" class="address-input" tabindex="1" focus-me>
-    </p>
-    <p>
-      <span>Cc:</span>
-      <input type="email" ng-model="cc" class="address-input" tabindex="2" disabled>
-    </p>
-  </div><!--/.address-headers-->
+    <div class="view-write">
+      <div class="headers">
+        <p>
+          <span>To:</span>
+          <input type="email" ng-model="to" class="address-input" tabindex="1" focus-me>
+        </p>
+        <p>
+          <span>Cc:</span>
+          <input type="email" ng-model="cc" class="address-input" tabindex="2" disabled>
+        </p>
+      </div><!--/.address-headers-->
 
-  <div class="subject-box">
-    <div class="subject-line">
-      <input ng-model="subject" class="subject" spellcheck="true" tabindex="3" placeholder="Subject" ng-change="updatePreview()">
-    </div>
-    <button class="btn-attachment">
-      <div data-icon="&#xe003;"></div>
-    </button>
-  </div><!--/.subject-box-->
+      <div class="subject-box">
+        <div class="subject-line">
+          <input ng-model="subject" class="subject" spellcheck="true" tabindex="3" placeholder="Subject" ng-change="updatePreview()">
+        </div>
+        <button class="btn-attachment">
+          <div data-icon="&#xe003;"></div>
+        </button>
+      </div><!--/.subject-box-->
 
-  <div class="body">
-    <p ng-model="body" contentEditable="true" ng-change="updatePreview()" tabindex="4"></p>
+      <div class="body">
+        <p ng-model="body" contentEditable="true" ng-change="updatePreview()" tabindex="4"></p>
 
-    <div class="encrypt-preview">
-      <p>-----BEGIN ENCRYPTED PREVIEW-----<br>{{ciphertextPreview}}<br>-----END ENCRYPTED PREVIEW-----</p>
-      <br>
-      <p>{{signature}}</p>
-    </div><!--/.encrypt-preview-->
-  </div><!--/.body-->
+        <div class="encrypt-preview">
+          <p>-----BEGIN ENCRYPTED PREVIEW-----<br>{{ciphertextPreview}}<br>-----END ENCRYPTED PREVIEW-----</p>
+          <br>
+          <p>{{signature}}</p>
+        </div><!--/.encrypt-preview-->
+      </div><!--/.body-->
 
-  <div class="send-control">
-    <button ng-click="sendEmail()" class="btn" ng-disabled="!to" tabindex="5">Send securely</button>
-  </div>
-</div>
+      <div class="send-control">
+        <button ng-click="sendEmail()" class="btn" ng-disabled="!to" tabindex="5">Send securely</button>
+      </div>
+    </div><!--/.write-view-->
+
+  </div><!--/.content-->
+</div><!--/.lightbox-body-->

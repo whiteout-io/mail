@@ -18,6 +18,7 @@
     }
 
     .lightbox-body {
+        height: 100%;
         padding: $lightbox-padding;
         background: #fff;
         header {
@@ -34,6 +35,7 @@
                 padding: 0;
                 margin: 0;
                 color: $color-grey-dark;
+                outline: none;
             }
             h2 {
                 margin: 0;

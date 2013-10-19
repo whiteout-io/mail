@@ -19,54 +19,7 @@ define(function(require) {
         // Init
         //
 
-        // start the main app controller
-        appController.start(function(err) {
-            if (err) {
-                console.error(err);
-                return;
-            }
-
-            if (window.chrome && chrome.identity) {
-                init('passphrase', function() {
-                    emailDao = appController._emailDao;
-                    getReplyTo($routeParams.folder, $routeParams.id, function() {
-                        $scope.$apply();
-                    });
-                });
-                return;
-            }
-        });
-
-        function init(passphrase, callback) {
-            appController.fetchOAuthToken(passphrase, function(err) {
-                if (err) {
-                    console.error(err);
-                    return;
-                }
-
-                callback();
-            });
-        }
-
-        function getReplyTo(folder, id, callback) {
-            if (!folder || !id) {
-                callback();
-            }
-
-            emailDao.listMessages({
-                folder: folder + '_' + id
-            }, function(err, list) {
-                if (err) {
-                    console.error(err);
-                    return;
-                }
-
-                if (list.length > 0) {
-                    fillFields(list[0]);
-                }
-                callback();
-            });
-        }
+        emailDao = appController._emailDao;
 
         function fillFields(re) {
             var from, body, bodyRows;
@@ -101,13 +54,12 @@ define(function(require) {
             iv = util.random(128);
 
         $scope.updatePreview = function() {
-            var body = $scope.body;
+            var body = $scope.$$childTail.body;
             // remove generated html from body
             body = parseBody(body);
 
             // Although this does encrypt live using AES, this is just for show. The plaintext is encrypted seperately before sending the email.
-            var plaintext = ($scope.subject) ? $scope.subject + body : body;
-            $scope.ciphertextPreview = (plaintext) ? aes.encrypt(plaintext, key, iv) : '';
+            $scope.ciphertextPreview = (body) ? aes.encrypt(body, key, iv) : '';
         };
 
         $scope.sendEmail = function() {

@@ -21,14 +21,6 @@ require([
             templateUrl: 'tpl/login.html',
             controller: LoginCtrl
         });
-        $routeProvider.when('/write/:folder/:id', {
-            templateUrl: 'tpl/write.html',
-            controller: WriteCtrl
-        });
-        $routeProvider.when('/write', {
-            templateUrl: 'tpl/write.html',
-            controller: WriteCtrl
-        });
         $routeProvider.when('/desktop', {
             templateUrl: 'tpl/desktop.html',
             controller: NavigationCtrl
@@ -40,6 +32,7 @@ require([
 
     // inject controllers from ng-included view templates
     app.controller('ReadCtrl', ReadCtrl);
+    app.controller('WriteCtrl', WriteCtrl);
     app.controller('MailListCtrl', MailListCtrl);
 
     // manually bootstrap angular due to require.js

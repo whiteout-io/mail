@@ -1,15 +1,12 @@
 .view-write {
     margin: 0px;
-    padding: 12px;
+    padding: 0px;
     color: $color-grey-dark;
-    height: 100%;
     overflow-y: hidden;
 
-    .title {
-        text-align: center;
-        font-size: $font-size-bigger;
-        margin-top: 0px;
-        margin-bottom: 20px;
+    height: 100%;
+    @include respond-to(desktop) {
+        height: 600px;
     }
 
     input {
@@ -22,6 +19,7 @@
     }
 
     .headers {
+        margin-top: 10px;
         span {
             color: $color-grey;
         }
@@ -81,7 +79,7 @@
 
     .send-control {
         position: absolute;
-        bottom: 12px;
-        right: 12px;
+        bottom: 15px;
+        right: 15px;
     }
 }

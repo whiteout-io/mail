@@ -12,6 +12,7 @@ define(function(require) {
 
     var NavigationCtrl = function($scope) {
         $scope.navOpen = false;
+        $scope.writerOpen = false;
 
         emailDao = appController._emailDao;
 
@@ -25,6 +26,19 @@ define(function(require) {
 
         $scope.closeNav = function() {
             $scope.navOpen = false;
+        };
+
+        $scope.openWriter = function(replyTo) {
+            if (replyTo) {
+                $scope.writerTitle = 'Reply';
+            } else {
+                $scope.writerTitle = 'New email';
+            }
+            $scope.writerOpen = true;
+        };
+
+        $scope.closeWriter = function() {
+            $scope.writerOpen = false;
         };
 
         $scope.openFolder = function(folder) {
@@ -75,23 +89,6 @@ define(function(require) {
             }
         };
 
-        $scope.write = function(replyTo) {
-            var replyToPath = (replyTo) ? encodeURIComponent($scope.currentFolder.path) + '/' + replyTo.uid : '',
-                url = 'chrome.html#/write/' + replyToPath;
-
-            if (window.chrome && chrome.app.window) {
-                chrome.app.window.create(url, {
-                    'bounds': {
-                        'width': 720,
-                        'height': 640
-                    }
-                });
-                return;
-            }
-
-            window.open(url, 'Compose Message', 'toolbar=no,width=720,height=640,left=500,top=200,status=no,scrollbars=no,resize=no');
-        };
-
         initFolders(function(folders) {
             $scope.folders = folders;
             // select inbox as the current folder on init
@@ -110,6 +107,10 @@ define(function(require) {
                         return;
                     }
 
+                    folders.forEach(function(f) {
+                        f.count = 0;
+                    });
+
                     callback(folders);
                     $scope.$apply();
                 });
@@ -118,20 +119,23 @@ define(function(require) {
 
             callback([{
                 type: 'Inbox',
-                count: 3,
+                count: 2,
                 path: 'INBOX'
             }, {
                 type: 'Sent',
+                count: 0,
                 path: 'SENT'
             }, {
                 type: 'Outbox',
-                count: 1,
+                count: 0,
                 path: 'OUTBOX'
             }, {
                 type: 'Drafts',
+                count: 0,
                 path: 'DRAFTS'
             }, {
                 type: 'Trash',
+                count: 0,
                 path: 'TRASH'
             }]);
         }
@@ -145,21 +149,28 @@ define(function(require) {
     ngModule.directive('keyShortcuts', function() {
         return function(scope, elm) {
             elm.bind('keydown', function(e) {
-                if (e.keyCode === 78 && scope.$$childTail && scope.$$childTail.write) {
+                if (e.keyCode === 78 && !scope.$$childTail.writerOpen) {
                     // n -> new mail
                     e.preventDefault();
-                    return scope.$$childTail.write();
+                    scope.$$childTail.openWriter();
 
-                } else if (e.keyCode === 82 && scope.$$childTail && scope.$$childTail.write && scope.$$childTail.selected) {
+                } else if (e.keyCode === 82 && !scope.$$childTail.writerOpen && scope.$$childTail.selected) {
                     // r -> reply
                     e.preventDefault();
-                    return scope.$$childTail.write(scope.$$childTail.selected);
+                    scope.$$childTail.openWriter(scope.$$childTail.selected);
 
-                } else if (e.keyCode === 83 && scope.$$childTail && scope.$$childTail.synchronize) {
+                } else if (e.keyCode === 27 && scope.$$childTail.writerOpen) {
+                    // escape -> close writer
+                    e.preventDefault();
+                    scope.$$childTail.closeWriter();
+
+                } else if (e.keyCode === 83 && !scope.$$childTail.writerOpen && scope.$$childTail.synchronize) {
                     // s -> sync folder
                     e.preventDefault();
-                    return scope.$$childTail.synchronize();
+                    scope.$$childTail.synchronize();
                 }
+
+                scope.$apply();
             });
         };
     });
