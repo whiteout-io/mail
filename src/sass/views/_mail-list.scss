@@ -46,21 +46,27 @@
     }
 
     ul {
-        padding-bottom: 78px;
+        padding-bottom: 50px;
+        @include respond-to(desktop) {
+            padding-bottom: 78px;
+        }
     }
 
     footer {
-        cursor: pointer;
-        position: absolute;
-        bottom: 0px;
-        left: 0px;
-        padding: 0 $nav-padding;
-        background: darken($color-grey-lightest, 1%);
-        height: 28px;
-        width: $content-nav-width;
-        border-right: 1px solid $color-grey-light;
-        font-size: $font-size-smaller;
-        color: $color-grey-dark;
-        line-height: em(28,12);
+        height: 0px;
+        @include respond-to(desktop) {
+            height: 28px;
+            cursor: pointer;
+            position: absolute;
+            bottom: 0px;
+            left: 0px;
+            padding: 0 $nav-padding;
+            background: darken($color-grey-lightest, 1%);
+            width: $content-nav-width;
+            border-right: 1px solid $color-grey-light;
+            font-size: $font-size-smaller;
+            color: $color-grey-dark;
+            line-height: em(28,12);
+        }
     }
 }
