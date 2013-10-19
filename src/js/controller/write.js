@@ -12,14 +12,27 @@ define(function(require) {
     // Controller
     //
 
-    var WriteCtrl = function($scope, $routeParams, $filter) {
+    var WriteCtrl = function($scope, $filter) {
         $scope.signature = str.signature;
+        emailDao = appController._emailDao;
 
         //
         // Init
         //
 
-        emailDao = appController._emailDao;
+        $scope.$watch('writerOpen', function() {
+            resetFields();
+            if ($scope.writerReply) {
+                fillFields($scope.selected);
+            }
+        });
+
+        function resetFields() {
+            $scope.writerTitle = 'New email';
+            $scope.to = undefined;
+            $scope.subject = undefined;
+            $scope.body = undefined;
+        }
 
         function fillFields(re) {
             var from, body, bodyRows;
@@ -28,8 +41,7 @@ define(function(require) {
                 return;
             }
 
-            // fille title
-            $scope.title = 'Reply';
+            $scope.writerTitle = 'Reply';
             // fill recipient field
             $scope.to = re.from[0].address;
             // fill subject

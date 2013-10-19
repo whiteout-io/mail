@@ -29,11 +29,7 @@ define(function(require) {
         };
 
         $scope.openWriter = function(replyTo) {
-            if (replyTo) {
-                $scope.writerTitle = 'Reply';
-            } else {
-                $scope.writerTitle = 'New email';
-            }
+            $scope.writerReply = !! (replyTo);
             $scope.writerOpen = true;
         };
 
