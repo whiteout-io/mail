@@ -214,16 +214,16 @@ define(function(require) {
     //
 
     var ngModule = angular.module('mail-list', []);
-    ngModule.directive('ngIscroll', function() {
+    ngModule.directive('ngIscroll', function($timeout) {
         return {
             link: function(scope, elm) {
-                setTimeout(function() {
+                $timeout(function() {
                     var myScroll;
                     // activate iscroll
                     myScroll = new IScroll(elm[0], {
                         mouseWheel: true
                     });
-                }, 0);
+                });
 
             }
         };
