@@ -24,6 +24,7 @@ define(function(require) {
             resetFields();
             if ($scope.writerReply) {
                 fillFields($scope.selected);
+                $scope.updatePreview();
             }
         });
 
@@ -31,7 +32,10 @@ define(function(require) {
             $scope.writerTitle = 'New email';
             $scope.to = undefined;
             $scope.subject = undefined;
-            $scope.body = undefined;
+            if ($scope.$$childTail) {
+                $scope.$$childTail.body = '';
+            }
+            $scope.ciphertextPreview = undefined;
         }
 
         function fillFields(re) {
@@ -54,7 +58,7 @@ define(function(require) {
             bodyRows.forEach(function(row) {
                 body += (!re.html) ? '<br>' + row : '';
             });
-            $scope.body = body;
+            $scope.$$childTail.body = body;
         }
 
         //
