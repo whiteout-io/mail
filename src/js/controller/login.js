@@ -4,44 +4,52 @@ define(function(require) {
     var appController = require('js/app-controller');
 
     var LoginCtrl = function($scope, $location) {
-
-        // start the main app controller
         appController.start(function(err) {
             if (err) {
                 console.error(err);
                 return;
             }
 
-            if (window.chrome && chrome.identity) {
-                login('passphrase', onLogin);
+            if (!window.chrome || !chrome.identity) {
+                $location.path('/desktop');
+                $scope.$apply();
                 return;
             }
 
-            onLogin();
+            initializeUser();
         });
 
-        function login(password, callback) {
+        function initializeUser() {
             // get OAuth token from chrome
-            appController.fetchOAuthToken(password, function(err) {
+            appController.fetchOAuthToken(function(err, auth) {
                 if (err) {
                     console.error(err);
                     return;
                 }
 
-                // login to imap backend
-                appController._emailDao.imapLogin(function(err) {
+                appController.init(auth.emailAddress, auth.token, function(err, availableKeys) {
                     if (err) {
                         console.error(err);
                         return;
                     }
 
-                    callback();
+                    redirect(availableKeys);
                 });
             });
         }
 
-        function onLogin() {
-            $location.path('/desktop');
+        function redirect(availableKeys) {
+            // redirect if needed
+            if (!availableKeys.publicKey) {
+                // no public key available, start onboarding process
+                $location.path('/login-initial');
+            } else if (!availableKeys.privateKey) {
+                // no private key, import key
+                $location.path('/login-new-device');
+            } else {
+                // public and private key available, just login 
+                $location.path('/login-existing');
+            }
             $scope.$apply();
         }
     };

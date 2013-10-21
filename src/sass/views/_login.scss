@@ -1,0 +1,49 @@
+.view-login {
+    width: 100%;
+    height: 100%;
+    background-color: #F9F9F9;
+
+    h1, a {
+        color: #fff;
+        text-decoration: none;
+        text-shadow: 0 -1px 1px $color-grey-medium;
+    }
+
+    header {
+        padding: 0 $nav-padding;
+        height: 84px;
+        h1 {
+            font-family: 'Mensch';
+            font-weight: normal;
+            font-size: 5em;
+            height: 100px;
+            margin: 0px;
+            padding: 0px;
+            padding-top: 10px;
+            color: #00C6FF;
+
+            span {
+                font-family: 'Mensch Thin';
+            }
+        }
+    }
+
+    .content {
+        padding: 100px $nav-padding 0 $nav-padding;
+
+        input {
+            border: 0!important;
+            outline: none;
+            padding: 0;
+        }
+
+        .passphrase {}
+
+        .confirm-control {}
+
+        .info-text {
+            text-align:justify;
+            text-justify:inter-word;
+        }
+    }
+}

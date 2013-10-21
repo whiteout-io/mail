@@ -1,0 +1,15 @@
+<div class="view-login">
+  <header>
+    <h1>WHITEOUT<span>.IO</span></h1>
+  </header>
+
+  <div class="content">
+    <div class="passphrase">
+      <p><span>Please enter your passphrase: </span><input type="password" ng-model="passphrase" class="passphrase" placeholder="Passphrase" tabindex="1"></p>
+    </div>
+
+    <div class="confirm-control">
+      <button ng-click="confirmPassphrase()" class="btn" ng-disabled="!passphrase" tabindex="2">Confirm passphrase</button>
+    </div>
+  </div>
+</div>

@@ -59,7 +59,7 @@ define(function(require) {
                 controller._appConfigStore.listItems.yields(null, []);
                 controller._appConfigStore.storeList.yields();
 
-                controller.fetchOAuthToken(appControllerTest.passphrase, function(err) {
+                controller.fetchOAuthToken(function(err) {
                     expect(err).to.not.exist;
                     expect(controller._appConfigStore.listItems.calledOnce).to.be.true;
                     expect(controller._appConfigStore.storeList.calledOnce).to.be.true;
@@ -72,7 +72,7 @@ define(function(require) {
             it('should work when the email address is cached', function(done) {
                 controller._appConfigStore.listItems.yields(null, ['asdf']);
 
-                controller.fetchOAuthToken(appControllerTest.passphrase, function(err) {
+                controller.fetchOAuthToken(function(err) {
                     expect(err).to.not.exist;
                     expect(controller._appConfigStore.listItems.calledOnce).to.be.true;
                     expect(window.chrome.identity.getAuthToken.calledOnce).to.be.true;
