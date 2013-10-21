@@ -1,49 +1,44 @@
 .view-login {
-    width: 100%;
+    position: relative;
+    overflow: hidden;
     height: 100%;
-    background-color: #F9F9F9;
+    background-color: $color-grey-lightest;
+    color: $color-grey-dark;
 
-    h1, a {
-        color: #fff;
-        text-decoration: none;
-        text-shadow: 0 -1px 1px $color-grey-medium;
+    .logo-wrapper {
+        width: 320px;
+        height: 58px;
+        margin: 130px auto 75px;
     }
 
-    header {
-        padding: 0 $nav-padding;
-        height: 84px;
-        h1 {
-            font-family: 'Mensch';
-            font-weight: normal;
-            font-size: 5em;
-            height: 100px;
-            margin: 0px;
-            padding: 0px;
-            padding-top: 10px;
-            color: #00C6FF;
-
-            span {
-                font-family: 'Mensch Thin';
-            }
-        }
+    .logo {
+        background-image:url('../img/whiteout_logo.svg');
+        background-repeat: no-repeat;
+        background-size: 320px 58px;
+        width: 320px;
+        height: 58px;
     }
 
     .content {
-        padding: 100px $nav-padding 0 $nav-padding;
+        max-width: 400px;
+        margin-left: auto;
+        margin-right: auto;
 
-        input {
-            border: 0!important;
-            outline: none;
-            padding: 0;
+        p {
+            line-height: 150%
         }
 
-        .passphrase {}
+        div {
+            margin: 25px 0;
+        }
 
-        .confirm-control {}
-
-        .info-text {
-            text-align:justify;
-            text-justify:inter-word;
+        input {
+            margin-right: 5px;
+            border-radius: 5px;
+            border-width: 1px;
+            border-style: solid;
+            border-color: $color-grey-light;
+            padding: 5px;
         }
     }
 }

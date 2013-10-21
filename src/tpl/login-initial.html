@@ -1,23 +1,23 @@
 <div class="view-login">
-  <header>
-    <h1>WHITEOUT<span>.IO</span></h1>
-  </header>
+
+  <div class="logo-wrapper">
+    <div class="logo"></div>
+  </div><!--/logo-->
 
   <div class="content">
-    <div class="passphrase">
-      <p><span>Please enter your passphrase: </span><input type="password" ng-model="passphrase" class="passphrase" placeholder="Passphrase" tabindex="1"></p>
-    </div>
+    <h1>Set passphrase</h1>
 
-    <div class="info-text">
-      <p>Your passphrase protects the secrets that protect your privacy. You are the only person in charge of your privacy, which is a good thing and the way it should be. The passphrase will <b>never</b> be stored by this application. So you might want to write it down and put it into a <b>safe</b> place. You will need this passphrase when you re-open this application. If you lose the passphrase, your communication is irretrievably lost and <b>cannot be restored</b>.</p>
-    </div>
+    <p>The passphrase protects your private key. If you forget your passphrase, there is no way to restore your data. So it might be a good idea to write it down and keep it in a safe place.</p>
 
-    <div class="passphrase">
-      <p><span>Please confirm your passphrase: </span><input type="password" ng-model="confirmation" class="confirmation" placeholder="Confirmation" tabindex="2"></p>
-    </div>
+    <form>
+      <div>
+        <input type="password" ng-model="passphrase" placeholder="Enter passphrase" tabindex="1" focus-me="true">
+        <input type="password" ng-model="confirmation" placeholder="Confirm Passphrase" tabindex="2">
+      </div>
+      <div>
+        <button type="submit" ng-click="confirmPassphrase()" class="btn" ng-disabled="!passphrase || passphrase!==confirmation" tabindex="3">Generate keypair</button>
+      </div>
+    </form>
+  </div><!--/content-->
 
-    <div class="confirm-control">
-      <button ng-click="confirmPassphrase()" class="btn" ng-disabled="!passphrase || passphrase!==confirmation" tabindex="3">Confirm passphrase</button>
-    </div>
-  </div>
 </div>

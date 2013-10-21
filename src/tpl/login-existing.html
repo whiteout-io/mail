@@ -1,15 +1,22 @@
 <div class="view-login">
-  <header>
-    <h1>WHITEOUT<span>.IO</span></h1>
-  </header>
+
+  <div class="logo-wrapper">
+    <div class="logo"></div>
+  </div><!--/logo-->
 
   <div class="content">
-    <div class="passphrase">
-      <p><span>Please enter your passphrase: </span><input type="password" ng-model="passphrase" class="passphrase" placeholder="Passphrase" tabindex="1" focus-me="true"></p>
-    </div>
+    <h1>Unlock mailbox</h1>
 
-    <div class="confirm-control">
-      <button ng-click="confirmPassphrase()" class="btn" ng-disabled="!passphrase" tabindex="2">Confirm passphrase</button>
-    </div>
-  </div>
+    <p>Please enter your passphrase to unlock the mailbox.</p>
+
+    <form>
+      <div>
+       <input type="password" ng-model="passphrase" class="passphrase" placeholder="Passphrase" tabindex="1" focus-me="true">
+      </div>
+      <div>
+        <button type="submit" ng-click="confirmPassphrase()" class="btn" ng-disabled="!passphrase" tabindex="3">Unlock</button>
+      </div>
+    </form>
+  </div><!--/content-->
+
 </div>
