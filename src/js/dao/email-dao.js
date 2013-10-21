@@ -22,7 +22,7 @@ define(function(require) {
     /**
      * Inits all dependencies
      */
-    EmailDAO.prototype.init = function(account, passphrase, callback) {
+    EmailDAO.prototype.init = function(account, callback) {
         var self = this;
 
         self._account = account;
@@ -48,62 +48,63 @@ define(function(require) {
                         callback(err);
                         return;
                     }
-                    // init crypto
-                    initCrypto(storedKeypair);
+                    callback(null, storedKeypair);
                 });
             });
         }
+    };
 
-        function initCrypto(storedKeypair) {
-            if (storedKeypair && storedKeypair.privateKey && storedKeypair.publicKey) {
-                // import existing key pair into crypto module
-                self._crypto.importKeys({
-                    passphrase: passphrase,
-                    privateKeyArmored: storedKeypair.privateKey.encryptedKey,
-                    publicKeyArmored: storedKeypair.publicKey.publicKey
-                }, callback);
+    EmailDAO.prototype.unlock = function(keypair, passphrase, callback) {
+        var self = this;
+        
+        if (keypair && keypair.privateKey && keypair.publicKey) {
+            // import existing key pair into crypto module
+            self._crypto.importKeys({
+                passphrase: passphrase,
+                privateKeyArmored: keypair.privateKey.encryptedKey,
+                publicKeyArmored: keypair.publicKey.publicKey
+            }, callback);
+            return;
+        }
+
+        // no keypair for is stored for the user... generate a new one
+        self._crypto.generateKeys({
+            emailAddress: self._account.emailAddress,
+            keySize: self._account.asymKeySize,
+            passphrase: passphrase
+        }, function(err, generatedKeypair) {
+            if (err) {
+                callback(err);
                 return;
             }
 
-            // no keypair for is stored for the user... generate a new one
-            self._crypto.generateKeys({
-                emailAddress: self._account.emailAddress,
-                keySize: self._account.asymKeySize,
-                passphrase: passphrase
-            }, function(err, generatedKeypair) {
+            // import the new key pair into crypto module
+            self._crypto.importKeys({
+                passphrase: passphrase,
+                privateKeyArmored: generatedKeypair.privateKeyArmored,
+                publicKeyArmored: generatedKeypair.publicKeyArmored
+            }, function(err) {
                 if (err) {
                     callback(err);
                     return;
                 }
 
-                // import the new key pair into crypto module
-                self._crypto.importKeys({
-                    passphrase: passphrase,
-                    privateKeyArmored: generatedKeypair.privateKeyArmored,
-                    publicKeyArmored: generatedKeypair.publicKeyArmored
-                }, function(err) {
-                    if (err) {
-                        callback(err);
-                        return;
+                // persist newly generated keypair
+                var newKeypair = {
+                    publicKey: {
+                        _id: generatedKeypair.keyId,
+                        userId: self._account.emailAddress,
+                        publicKey: generatedKeypair.publicKeyArmored
+                    },
+                    privateKey: {
+                        _id: generatedKeypair.keyId,
+                        userId: self._account.emailAddress,
+                        encryptedKey: generatedKeypair.privateKeyArmored
                     }
-
-                    // persist newly generated keypair
-                    var newKeypair = {
-                        publicKey: {
-                            _id: generatedKeypair.keyId,
-                            userId: self._account.emailAddress,
-                            publicKey: generatedKeypair.publicKeyArmored
-                        },
-                        privateKey: {
-                            _id: generatedKeypair.keyId,
-                            userId: self._account.emailAddress,
-                            encryptedKey: generatedKeypair.privateKeyArmored
-                        }
-                    };
-                    self._keychain.putUserKeyPair(newKeypair, callback);
-                });
+                };
+                self._keychain.putUserKeyPair(newKeypair, callback);
             });
-        }
+        });
     };
 
     //

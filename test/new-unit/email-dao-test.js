@@ -53,61 +53,129 @@ define(function(require) {
             devicestorageStub = sinon.createStubInstance(DeviceStorageDAO);
 
             emailDao = new EmailDAO(keychainStub, imapClientStub, smtpClientStub, pgpStub, devicestorageStub);
+            emailDao._account = account;
         });
 
         afterEach(function() {});
 
         describe('init', function() {
+            beforeEach(function() {
+                delete emailDao._account;
+            });
+
             it('should fail due to error in getUserKeyPair', function(done) {
                 devicestorageStub.init.yields();
                 keychainStub.getUserKeyPair.yields(42);
 
-                emailDao.init(account, emaildaoTest.passphrase, function(err) {
+                emailDao.init(account, function(err) {
                     expect(devicestorageStub.init.calledOnce).to.be.true;
                     expect(err).to.equal(42);
                     done();
                 });
             });
 
-            it('should init with new keygen', function(done) {
+            it('should init', function(done) {
+                var mockKeyPair = {};
+
                 devicestorageStub.init.yields();
-                keychainStub.getUserKeyPair.yields();
+                keychainStub.getUserKeyPair.yields(null, mockKeyPair);
+
+                emailDao.init(account, function(err, keyPair) {
+                    expect(err).to.not.exist;
+
+                    expect(keyPair === mockKeyPair).to.be.true;
+                    expect(devicestorageStub.init.calledOnce).to.be.true;
+                    expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
+
+                    done();
+                });
+            });
+        });
+
+        describe('unlock', function() {
+            it('should unlock with new key', function(done) {
                 pgpStub.generateKeys.yields(null, {});
                 pgpStub.importKeys.yields();
                 keychainStub.putUserKeyPair.yields();
 
-                emailDao.init(account, emaildaoTest.passphrase, function(err) {
-                    expect(devicestorageStub.init.calledOnce).to.be.true;
-                    expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
+                emailDao.unlock({}, emaildaoTest.passphrase, function(err) {
+                    expect(err).to.not.exist;
+
                     expect(pgpStub.generateKeys.calledOnce).to.be.true;
                     expect(pgpStub.importKeys.calledOnce).to.be.true;
                     expect(keychainStub.putUserKeyPair.calledOnce).to.be.true;
-                    expect(err).to.not.exist;
+                    expect(pgpStub.generateKeys.calledWith({
+                        emailAddress: account.emailAddress,
+                        keySize: account.asymKeySize,
+                        passphrase: emaildaoTest.passphrase
+                    })).to.be.true;
+
                     done();
                 });
             });
 
-            it('should init with stored keygen', function(done) {
-                devicestorageStub.init.yields();
-                keychainStub.getUserKeyPair.yields(null, {
-                    publicKey: {
-                        _id: 'keyId',
-                        userId: emaildaoTest.user,
-                        publicKey: 'publicKeyArmored'
-                    },
-                    privateKey: {
-                        _id: 'keyId',
-                        userId: emaildaoTest.user,
-                        encryptedKey: 'privateKeyArmored'
-                    }
-                });
+            it('should unlock with existing key pair', function(done) {
                 pgpStub.importKeys.yields();
 
-                emailDao.init(account, emaildaoTest.passphrase, function(err) {
-                    expect(devicestorageStub.init.calledOnce).to.be.true;
-                    expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
-                    expect(pgpStub.importKeys.calledOnce).to.be.true;
+                emailDao.unlock({
+                    privateKey: {
+                        encryptedKey: 'cryptocrypto'
+                    },
+                    publicKey: {
+                        publicKey: 'omgsocrypto'
+                    }
+                }, emaildaoTest.passphrase, function(err) {
                     expect(err).to.not.exist;
+
+                    expect(pgpStub.importKeys.calledOnce).to.be.true;
+                    expect(pgpStub.importKeys.calledWith({
+                        passphrase: emaildaoTest.passphrase,
+                        privateKeyArmored: 'cryptocrypto',
+                        publicKeyArmored: 'omgsocrypto'
+                    })).to.be.true;
+
+                    done();
+                });
+            });
+
+            it('should not unlock with error during keygen', function(done) {
+                pgpStub.generateKeys.yields(new Error('fubar'));
+
+                emailDao.unlock({}, emaildaoTest.passphrase, function(err) {
+                    expect(err).to.exist;
+
+                    expect(pgpStub.generateKeys.calledOnce).to.be.true;
+
+                    done();
+                });
+            });
+
+            it('should not unloch with error during key import', function(done) {
+                pgpStub.generateKeys.yields(null, {});
+                pgpStub.importKeys.yields(new Error('fubar'));
+
+                emailDao.unlock({}, emaildaoTest.passphrase, function(err) {
+                    expect(err).to.exist;
+
+                    expect(pgpStub.generateKeys.calledOnce).to.be.true;
+                    expect(pgpStub.importKeys.calledOnce).to.be.true;
+
+                    done();
+                });
+            });
+
+            it('should not unlock with error during key store', function(done) {
+                pgpStub.generateKeys.yields(null, {});
+                pgpStub.importKeys.yields();
+                keychainStub.putUserKeyPair.yields(new Error('omgwtf'));
+
+                emailDao.unlock({}, emaildaoTest.passphrase, function(err) {
+                    expect(err).to.exist;
+
+                    expect(pgpStub.generateKeys.calledOnce).to.be.true;
+                    expect(pgpStub.importKeys.calledOnce).to.be.true;
+                    expect(keychainStub.putUserKeyPair.calledOnce).to.be.true;
+
                     done();
                 });
             });
@@ -141,14 +209,16 @@ define(function(require) {
                 pgpStub.importKeys.yields();
                 keychainStub.putUserKeyPair.yields();
 
-                emailDao.init(account, emaildaoTest.passphrase, function(err) {
-                    expect(devicestorageStub.init.calledOnce).to.be.true;
-                    expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
-                    expect(pgpStub.generateKeys.calledOnce).to.be.true;
-                    expect(pgpStub.importKeys.calledOnce).to.be.true;
-                    expect(keychainStub.putUserKeyPair.calledOnce).to.be.true;
-                    expect(err).to.not.exist;
-                    done();
+                emailDao.init(account, function(err, keyPair) {
+                    emailDao.unlock(keyPair, emaildaoTest.passphrase, function(err) {
+                        expect(devicestorageStub.init.calledOnce).to.be.true;
+                        expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
+                        expect(pgpStub.generateKeys.calledOnce).to.be.true;
+                        expect(pgpStub.importKeys.calledOnce).to.be.true;
+                        expect(keychainStub.putUserKeyPair.calledOnce).to.be.true;
+                        expect(err).to.not.exist;
+                        done();
+                    });
                 });
             });
 

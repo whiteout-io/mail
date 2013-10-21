@@ -155,24 +155,22 @@ define(['underscore', 'js/dao/lawnchair-dao'], function(_, jsonDao) {
 
                 // persist private key in local storage
                 self.lookupPrivateKey(keypairId, function(err, savedPrivkey) {
+                    var keys = {};
+
                     if (err) {
                         callback(err);
                         return;
                     }
 
-                    // validate fetched key
-                    if (savedPubkey && savedPubkey.publicKey && savedPrivkey && savedPrivkey.encryptedKey) {
-                        callback(null, {
-                            publicKey: savedPubkey,
-                            privateKey: savedPrivkey
-                        });
-                        return;
-
-                    } else {
-                        // continue without keypair... generate in crypto.js
-                        callback();
-                        return;
+                    if (savedPubkey && savedPubkey.publicKey) {
+                        keys.publicKey = savedPubkey;
                     }
+                    
+                    if (savedPrivkey && savedPrivkey.encryptedKey) {
+                        keys.privateKey = savedPrivkey;
+                    }
+
+                    callback(null, keys);
                 });
             });
         }
@@ -250,33 +248,9 @@ define(['underscore', 'js/dao/lawnchair-dao'], function(_, jsonDao) {
     };
 
     KeychainDAO.prototype.lookupPrivateKey = function(id, callback) {
-        var self = this;
-
         // lookup in local storage
         jsonDao.read('privatekey_' + id, function(privkey) {
-            if (!privkey) {
-                // fetch from cloud storage
-                self._cloudstorage.getPrivateKey(id, function(err, cloudPrivkey) {
-                    if (err) {
-                        callback(err);
-                        return;
-                    }
-
-                    // cache private key in cache
-                    self.saveLocalPrivateKey(cloudPrivkey, function(err) {
-                        if (err) {
-                            callback(err);
-                            return;
-                        }
-
-                        callback(null, cloudPrivkey);
-                    });
-
-                });
-
-            } else {
-                callback(null, privkey);
-            }
+            callback(null, privkey);
         });
     };
 
