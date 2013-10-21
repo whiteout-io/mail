@@ -30,12 +30,10 @@ define(function(require) {
 
         function resetFields() {
             $scope.writerTitle = 'New email';
-            $scope.to = undefined;
-            $scope.subject = undefined;
-            if ($scope.$$childTail) {
-                $scope.$$childTail.body = '';
-            }
-            $scope.ciphertextPreview = undefined;
+            $scope.to = '';
+            $scope.subject = '';
+            $scope.body = '';
+            $scope.ciphertextPreview = '';
         }
 
         function fillFields(re) {
@@ -58,7 +56,7 @@ define(function(require) {
             bodyRows.forEach(function(row) {
                 body += (!re.html) ? '<br>' + row : '';
             });
-            $scope.$$childTail.body = body;
+            $scope.body = body;
         }
 
         //
@@ -70,7 +68,7 @@ define(function(require) {
             iv = util.random(128);
 
         $scope.updatePreview = function() {
-            var body = $scope.$$childTail.body;
+            var body = $scope.body;
             // remove generated html from body
             body = parseBody(body);
 
@@ -114,11 +112,7 @@ define(function(require) {
                     return;
                 }
 
-                if (window.chrome && chrome.app.window) {
-                    // close the chrome window
-                    chrome.app.window.current().close();
-                    return;
-                }
+                $scope.$parent.$parent.closeWriter();
             });
         };
     };
