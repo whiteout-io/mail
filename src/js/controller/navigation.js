@@ -13,6 +13,7 @@ define(function(require) {
     var NavigationCtrl = function($scope) {
         $scope.navOpen = false;
         $scope.writerOpen = false;
+        $scope.accountOpen = false;
 
         emailDao = appController._emailDao;
 
@@ -40,6 +41,10 @@ define(function(require) {
         $scope.openFolder = function(folder) {
             $scope.currentFolder = folder;
             $scope.closeNav();
+        };
+
+        $scope.showAccountView = function() {
+            $scope.accountOpen = true;
         };
 
         $scope.remove = function(email) {
