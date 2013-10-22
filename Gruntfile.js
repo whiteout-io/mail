@@ -89,7 +89,7 @@ module.exports = function(grunt) {
         },
         csso: {
             options: {
-                banner: '<%= banner %>'
+                banner: '/*! Copyright © 2013, Whiteout Networks GmbH. All rights reserved.*/\n'
             },
             dist: {
                 files: {
