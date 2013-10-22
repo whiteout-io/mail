@@ -4,7 +4,8 @@ define(function(require) {
     var appController = require('js/app-controller');
 
     var LoginExistingCtrl = function($scope, $location) {
-        
+        $scope.buttonEnabled = true;
+
         $scope.confirmPassphrase = function() {
             var passphrase = $scope.passphrase,
                 emailDao = appController._emailDao;
@@ -13,6 +14,8 @@ define(function(require) {
                 return;
             }
 
+            // disable button once loggin has started
+            $scope.buttonEnabled = false;
             unlockCrypto(imapLogin);
 
             function unlockCrypto(callback) {
@@ -28,6 +31,7 @@ define(function(require) {
 
             function imapLogin(err) {
                 if (err) {
+                    $scope.buttonEnabled = true;
                     console.error(err);
                     return;
                 }
@@ -35,6 +39,7 @@ define(function(require) {
                 // login to imap backend
                 appController._emailDao.imapLogin(function(err) {
                     if (err) {
+                        $scope.buttonEnabled = true;
                         console.error(err);
                         return;
                     }
