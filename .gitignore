@@ -3,6 +3,7 @@ npm-debug.log
 .DS_Store
 test/lib/
 .sass-cache
+src/css/
 dist/
 dist.zip
 test/integration/src/

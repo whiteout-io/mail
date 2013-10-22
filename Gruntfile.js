@@ -73,7 +73,7 @@ module.exports = function(grunt) {
         sass: {
             dist: {
                 files: {
-                    'dist/css/all.css': 'src/sass/all.scss'
+                    'src/css/all.css': 'src/sass/all.scss'
                 }
             }
         },
@@ -83,7 +83,7 @@ module.exports = function(grunt) {
             },
             dist: {
                 files: {
-                    'dist/css/all.css': 'dist/css/all.css'
+                    'src/css/all.css': 'src/css/all.css'
                 }
             }
         },
@@ -93,7 +93,7 @@ module.exports = function(grunt) {
             },
             dist: {
                 files: {
-                    'dist/css/all.min.css': 'dist/css/all.css'
+                    'dist/css/all.min.css': 'src/css/all.css'
                 }
             }
         },
