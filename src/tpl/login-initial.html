@@ -13,7 +13,7 @@
     <form>
       <div>
         <input type="password" ng-model="passphrase" placeholder="Enter passphrase" tabindex="1" focus-me="true">
-        <input type="password" ng-model="confirmation" placeholder="Confirm Passphrase" tabindex="2">
+        <input type="password" ng-model="confirmation" ng-class="{error: confirmation !== passphrase}" placeholder="Confirm Passphrase" tabindex="2">
       </div>
       <div>
         <button type="submit" ng-click="confirmPassphrase()" class="btn" ng-disabled="!passphrase || passphrase!==confirmation" tabindex="3">Generate keypair</button>

@@ -39,6 +39,11 @@
             border-style: solid;
             border-color: $color-grey-light;
             padding: 5px;
+            outline: none;
+        }
+
+        .error {
+            border: 1px solid red;
         }
     }
 }

@@ -11,7 +11,7 @@
 
     <form>
       <div>
-       <input type="password" ng-model="passphrase" class="passphrase" placeholder="Passphrase" tabindex="1" focus-me="true">
+       <input type="password" ng-model="passphrase" ng-class="{error:incorrect}" placeholder="Passphrase" tabindex="1" focus-me="true">
       </div>
       <div>
         <button type="submit" ng-click="confirmPassphrase()" class="btn" ng-disabled="!buttonEnabled" tabindex="2">Unlock</button>
