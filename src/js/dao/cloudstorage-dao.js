@@ -19,6 +19,9 @@ define(['jquery', 'js/app-config'], function($, app) {
 			url: uri,
 			type: 'GET',
 			dataType: 'json',
+			headers: {
+				'Accept': 'application/json',
+			},
 			success: function(res) {
 				callback(null, res);
 			},

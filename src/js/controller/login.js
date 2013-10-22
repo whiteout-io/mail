@@ -40,7 +40,7 @@ define(function(require) {
 
         function redirect(availableKeys) {
             // redirect if needed
-            if (!availableKeys.publicKey) {
+            if (typeof availableKeys === 'undefined') {
                 // no public key available, start onboarding process
                 $location.path('/login-initial');
             } else if (!availableKeys.privateKey) {
