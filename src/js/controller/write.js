@@ -112,7 +112,9 @@ define(function(require) {
                     return;
                 }
 
-                $scope.$parent.$parent.closeWriter();
+                var ps = $scope.$parent.$parent;
+                ps.closeWriter();
+                ps.$apply();
             });
         };
     };
