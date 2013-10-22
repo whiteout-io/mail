@@ -37,13 +37,19 @@ define(function(require) {
 
         function download(content, filename, contentType) {
             contentType = contentType || 'application/octet-stream';
-            var a = document.createElement('a');
-            var blob = new Blob([content], {
-                'type': contentType
+            chrome.fileSystem.chooseEntry({
+                type: 'saveFile',
+                suggestedName: filename
+            }, function(file) {
+                if (!file) {
+                    return;
+                }
+                file.createWriter(function(writer) {
+                    writer.onerror = console.error;
+                    writer.onwriteend = function() {};
+                    writer.write(new Blob([content], { type: contentType }));
+                }, console.error);
             });
-            a.href = window.URL.createObjectURL(blob);
-            a.download = filename;
-            a.click();
         }
 
     };
