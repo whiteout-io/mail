@@ -15,10 +15,6 @@ define(function(require) {
         // scope functions
         //
 
-        $scope.hideAccountView = function() {
-            $scope.$parent.$parent.accountOpen = false;
-        };
-
         $scope.exportKeyFile = function() {
             emailDao._crypto.exportKeys(function(err, keys) {
                 if (err) {
@@ -26,7 +22,7 @@ define(function(require) {
                     return;
                 }
 
-                var id = keys.keyId.substring(8,keys.keyId.length);
+                var id = keys.keyId.substring(8, keys.keyId.length);
                 download(keys.publicKeyArmored + keys.privateKeyArmored, id + '.asc', 'text/plain');
             });
         };
@@ -47,7 +43,9 @@ define(function(require) {
                 file.createWriter(function(writer) {
                     writer.onerror = console.error;
                     writer.onwriteend = function() {};
-                    writer.write(new Blob([content], { type: contentType }));
+                    writer.write(new Blob([content], {
+                        type: contentType
+                    }));
                 }, console.error);
             });
         }

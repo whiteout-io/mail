@@ -24,7 +24,6 @@ define(function(require) {
         $scope.openNav = function() {
             $scope.navOpen = true;
         };
-
         $scope.closeNav = function() {
             $scope.navOpen = false;
         };
@@ -33,7 +32,6 @@ define(function(require) {
             $scope.writerReply = !! (replyTo);
             $scope.writerOpen = true;
         };
-
         $scope.closeWriter = function() {
             $scope.writerOpen = false;
         };
@@ -43,8 +41,11 @@ define(function(require) {
             $scope.closeNav();
         };
 
-        $scope.showAccountView = function() {
+        $scope.openAccount = function() {
             $scope.accountOpen = true;
+        };
+        $scope.closeAccount = function() {
+            $scope.accountOpen = false;
         };
 
         $scope.remove = function(email) {
@@ -150,25 +151,32 @@ define(function(require) {
     ngModule.directive('keyShortcuts', function() {
         return function(scope, elm) {
             elm.bind('keydown', function(e) {
-                if (e.keyCode === 78 && !scope.$$childTail.writerOpen) {
+                var cs = scope.$$childTail;
+
+                if (e.keyCode === 78 && !cs.writerOpen) {
                     // n -> new mail
                     e.preventDefault();
-                    scope.$$childTail.openWriter();
+                    cs.openWriter();
 
-                } else if (e.keyCode === 82 && !scope.$$childTail.writerOpen && scope.$$childTail.selected) {
+                } else if (e.keyCode === 82 && !cs.writerOpen && cs.selected) {
                     // r -> reply
                     e.preventDefault();
-                    scope.$$childTail.openWriter(scope.$$childTail.selected);
+                    cs.openWriter(cs.selected);
 
-                } else if (e.keyCode === 27 && scope.$$childTail.writerOpen) {
+                } else if (e.keyCode === 27 && cs.writerOpen) {
                     // escape -> close writer
                     e.preventDefault();
-                    scope.$$childTail.closeWriter();
+                    cs.closeWriter();
 
-                } else if (e.keyCode === 83 && !scope.$$childTail.writerOpen && scope.$$childTail.synchronize) {
+                } else if (e.keyCode === 27 && cs.accountOpen) {
+                    // escape -> close account view
+                    e.preventDefault();
+                    cs.closeAccount();
+
+                } else if (e.keyCode === 83 && !cs.writerOpen && cs.synchronize) {
                     // s -> sync folder
                     e.preventDefault();
-                    scope.$$childTail.synchronize();
+                    cs.synchronize();
                 }
 
                 scope.$apply();

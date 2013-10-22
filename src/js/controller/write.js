@@ -173,10 +173,6 @@ define(function(require) {
                         });
                     }
                 });
-                // set attribute value to 'false' on blur event:
-                element.bind('blur', function() {
-                    scope.$apply(model.assign(scope, false));
-                });
             }
         };
     });
