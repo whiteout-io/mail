@@ -7,11 +7,11 @@
   <div class="content">
     <h1>Import keyfile</h1>
 
-    <p>You are already registered on another device. To access your communication on this device, please import the encrypted key file.</p>
+    <p>You are already registered on another device. To access your emails on this device, please import your key file.</p>
     
     <form>
       <div><input type="file" file-reader tabindex="1"></div>
-      <div><input type="password" ng-model="passphrase" placeholder="Passphrase" tabindex="2"></div>
+      <div><input type="password" ng-model="passphrase" ng-class="{error:incorrect}" placeholder="Passphrase" tabindex="2"></div>
       <div><button type="submit" ng-click="confirmPassphrase()" class="btn" ng-disabled="!key" tabindex="3">Import</button>
     </form>
   </div>

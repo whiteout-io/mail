@@ -5,14 +5,18 @@ define(function(require) {
         appController = require('js/app-controller');
 
     var LoginExistingCtrl = function($scope, $location) {
+        $scope.incorrect = false;
+
         $scope.confirmPassphrase = function() {
             var passphrase = $scope.passphrase,
                 emailDao = appController._emailDao;
 
             if (!passphrase) {
+                $scope.incorrect = true;
                 return;
             }
 
+            $scope.incorrect = false;
             unlockCrypto(imapLogin);
 
             function unlockCrypto(callback) {
@@ -30,6 +34,8 @@ define(function(require) {
                     };
                     emailDao.unlock(keypair, passphrase, function(err) {
                         if (err) {
+                            $scope.incorrect = true;
+                            $scope.$apply();
                             callback(err);
                             return;
                         }
@@ -73,22 +79,21 @@ define(function(require) {
                     return;
                 }
 
-                reader.onload = (function(scope) {
-                    return function(e) {
-                        var rawKeys = e.target.result,
-                            index = rawKeys.indexOf('-----BEGIN PGP PRIVATE KEY BLOCK-----');
-                        
-                        if (index === -1) {
-                            console.error('Erroneous key file format!');
-                            return;
-                        }
+                reader.onload = function(e) {
+                    var rawKeys = e.target.result,
+                        index = rawKeys.indexOf('-----BEGIN PGP PRIVATE KEY BLOCK-----');
 
-                        scope.key = {
-                            publicKeyArmored: rawKeys.substring(0,index),
-                            privateKeyArmored: rawKeys.substring(index,rawKeys.length)
-                        };
+                    if (index === -1) {
+                        console.error('Erroneous key file format!');
+                        return;
+                    }
+
+                    scope.key = {
+                        publicKeyArmored: rawKeys.substring(0, index),
+                        privateKeyArmored: rawKeys.substring(index, rawKeys.length)
                     };
-                })(scope);
+                    scope.$apply();
+                };
                 reader.readAsText(files[0]);
             });
         };
