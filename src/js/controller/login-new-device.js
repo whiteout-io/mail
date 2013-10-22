@@ -26,7 +26,7 @@ define(function(require) {
                     keypair.privateKey = {
                         _id: keypair.publicKey._id,
                         userId: userId,
-                        encryptedKey: $scope.key
+                        encryptedKey: $scope.key.privateKeyArmored
                     };
                     emailDao.unlock(keypair, passphrase, function(err) {
                         if (err) {
@@ -75,7 +75,18 @@ define(function(require) {
 
                 reader.onload = (function(scope) {
                     return function(e) {
-                        scope.key = e.target.result;
+                        var rawKeys = e.target.result,
+                            index = rawKeys.indexOf('-----BEGIN PGP PRIVATE KEY BLOCK-----');
+                        
+                        if (index === -1) {
+                            console.error('Erroneous key file format!');
+                            return;
+                        }
+
+                        scope.key = {
+                            publicKeyArmored: rawKeys.substring(0,index),
+                            privateKeyArmored: rawKeys.substring(index,rawKeys.length)
+                        };
                     };
                 })(scope);
                 reader.readAsText(files[0]);

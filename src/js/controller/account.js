@@ -20,14 +20,14 @@ define(function(require) {
         };
 
         $scope.exportKeyFile = function() {
-            var userId = emailDao._account.emailAddress;
-            emailDao._keychain.getUserKeyPair(userId, function(err, keypair) {
+            emailDao._crypto.exportKeys(function(err, keys) {
                 if (err) {
                     console.error(err);
                     return;
                 }
 
-                download(keypair.privateKey.encryptedKey, 'key_' + userId + '.asc', 'text/plain');
+                var id = keys.keyId.substring(8,keys.keyId.length);
+                download(keys.publicKeyArmored + keys.privateKeyArmored, id + '.asc', 'text/plain');
             });
         };
 
