@@ -76,7 +76,7 @@ define(function(require) {
             $scope.ciphertextPreview = (body) ? aes.encrypt(body, key, iv) : '';
         };
 
-        $scope.sendEmail = function() {
+        $scope.sendToOutbox = function() {
             var to, body, email;
 
             // validate recipients
@@ -106,15 +106,18 @@ define(function(require) {
                 });
             });
 
-            emailDao.smtpSend(email, function(err) {
+            // set an id for the email and store in outbox
+            email.id = util.UUID();
+            emailDao._devicestorage.storeList([email], 'email_OUTBOX', function(err) {
                 if (err) {
-                    console.log(err);
+                    console.error(err);
                     return;
                 }
 
                 var ps = $scope.$parent.$parent;
                 ps.closeWriter();
                 ps.$apply();
+                ps.sendFirstFromOutbox();
             });
         };
     };

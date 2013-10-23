@@ -27,7 +27,8 @@ define([], function() {
 				port: 465,
 				host: 'smtp.gmail.com'
 			}
-		}
+		},
+		checkOutboxInterval: 30000
 	};
 
 	/**

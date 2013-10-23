@@ -4,7 +4,8 @@ define(function(require) {
     var angular = require('angular'),
         appController = require('js/app-controller'),
         _ = require('underscore'),
-        emailDao;
+        config = require('js/app-config').config,
+        emailDao, senderIntervalId;
 
     //
     // Controller
@@ -91,6 +92,69 @@ define(function(require) {
             }
         };
 
+        $scope.sendFirstFromOutbox = function() {
+            var dbType = 'email_OUTBOX',
+                outbox = _.findWhere($scope.folders, {
+                    type: 'Outbox'
+                });
+
+            checkStorage();
+
+            function checkStorage() {
+                // get last item from outbox
+                emailDao._devicestorage.listItems(dbType, 0, null, function(err, pending) {
+                    if (err) {
+                        console.error(err);
+                        return;
+                    }
+
+                    // update outbox folder count
+                    outbox.count = pending.length;
+                    $scope.$apply();
+                    if (pending.length < 1) {
+                        return;
+                    }
+
+                    // sending the first one pending
+                    send(pending[0]);
+                });
+            }
+
+            function send(email) {
+                emailDao.smtpSend(email, function(err) {
+                    if (err) {
+                        console.error(err);
+                        return;
+                    }
+
+                    removeFromStorage(email.id);
+                });
+            }
+
+            function removeFromStorage(id) {
+                if (!id) {
+                    console.error('Cannot remove email from storage without a valid id!');
+                    return;
+                }
+
+                // delete email from local storage
+                var key = dbType + '_' + id;
+                emailDao._devicestorage.removeList(key, function(err) {
+                    if (err) {
+                        console.error(err);
+                        return;
+                    }
+
+                    outbox.count = (outbox.count > 0) ? outbox.count - 1 : outbox.count;
+                    $scope.$apply();
+                });
+            }
+        };
+
+        //
+        // Start
+        //
+
         initFolders(function(folders) {
             $scope.folders = folders;
             // select inbox as the current folder on init
@@ -112,6 +176,9 @@ define(function(require) {
                     folders.forEach(function(f) {
                         f.count = 0;
                     });
+
+                    // start checking outbox periodically
+                    startOutboxSender();
 
                     callback(folders);
                     $scope.$apply();
@@ -140,6 +207,11 @@ define(function(require) {
                 count: 0,
                 path: 'TRASH'
             }]);
+        }
+
+        function startOutboxSender() {
+            // start periodic checking of outbox
+            senderIntervalId = setInterval($scope.sendFirstFromOutbox, config.checkOutboxInterval);
         }
     };
 
