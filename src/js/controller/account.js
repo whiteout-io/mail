@@ -2,6 +2,7 @@ define(function(require) {
     'use strict';
 
     var appController = require('js/app-controller'),
+        dl = require('js/util/download'),
         emailDao;
 
     //
@@ -23,33 +24,9 @@ define(function(require) {
                 }
 
                 var id = keys.keyId.substring(8, keys.keyId.length);
-                download(keys.publicKeyArmored + keys.privateKeyArmored, id + '.asc', 'text/plain');
+                dl.createDownload(keys.publicKeyArmored + keys.privateKeyArmored, id + '.asc', 'text/plain');
             });
         };
-
-        //
-        // helper functions
-        //
-
-        function download(content, filename, contentType) {
-            contentType = contentType || 'application/octet-stream';
-            chrome.fileSystem.chooseEntry({
-                type: 'saveFile',
-                suggestedName: filename
-            }, function(file) {
-                if (!file) {
-                    return;
-                }
-                file.createWriter(function(writer) {
-                    writer.onerror = console.error;
-                    writer.onwriteend = function() {};
-                    writer.write(new Blob([content], {
-                        type: contentType
-                    }));
-                }, console.error);
-            });
-        }
-
     };
 
     return AccountCtrl;
