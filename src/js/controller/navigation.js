@@ -5,7 +5,8 @@ define(function(require) {
         appController = require('js/app-controller'),
         _ = require('underscore'),
         config = require('js/app-config').config,
-        emailDao, senderIntervalId;
+        emailDao, senderIntervalId,
+        outboxBusy = false;
 
     //
     // Controller
@@ -101,10 +102,17 @@ define(function(require) {
             checkStorage();
 
             function checkStorage() {
+                if (outboxBusy) {
+                    return;
+                }
+
+                outboxBusy = true;
+
                 // get last item from outbox
                 emailDao._devicestorage.listItems(dbType, 0, null, function(err, pending) {
                     if (err) {
                         console.error(err);
+                        outboxBusy = false;
                         return;
                     }
 
@@ -119,6 +127,7 @@ define(function(require) {
 
             function send(emails) {
                 if (emails.length === 0) {
+                    outboxBusy = false;
                     return;
                 }
                 
@@ -126,6 +135,7 @@ define(function(require) {
                 emailDao.smtpSend(email, function(err) {
                     if (err) {
                         console.error(err);
+                        outboxBusy = false;
                         return;
                     }
 
@@ -137,6 +147,7 @@ define(function(require) {
             function removeFromStorage(id) {
                 if (!id) {
                     console.error('Cannot remove email from storage without a valid id!');
+                    outboxBusy = false;
                     return;
                 }
 
@@ -145,11 +156,13 @@ define(function(require) {
                 emailDao._devicestorage.removeList(key, function(err) {
                     if (err) {
                         console.error(err);
+                        outboxBusy = false;
                         return;
                     }
 
                     outbox.count = (outbox.count > 0) ? outbox.count - 1 : outbox.count;
                     $scope.$apply();
+                    outboxBusy = false;
                 });
             }
         };
