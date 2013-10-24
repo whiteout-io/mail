@@ -111,16 +111,18 @@ define(function(require) {
                     // update outbox folder count
                     outbox.count = pending.length;
                     $scope.$apply();
-                    if (pending.length < 1) {
-                        return;
-                    }
 
-                    // sending the first one pending
-                    send(pending[0]);
+                    // sending pending mails
+                    send(pending);
                 });
             }
 
-            function send(email) {
+            function send(emails) {
+                if (emails.length === 0) {
+                    return;
+                }
+                
+                var email = emails.shift();
                 emailDao.smtpSend(email, function(err) {
                     if (err) {
                         console.error(err);
@@ -128,6 +130,7 @@ define(function(require) {
                     }
 
                     removeFromStorage(email.id);
+                    send(emails);
                 });
             }
 
