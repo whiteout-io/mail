@@ -93,7 +93,7 @@ define(function(require) {
             }
         };
 
-        $scope.sendFirstFromOutbox = function() {
+        $scope.emptyOutbox = function() {
             var dbType = 'email_OUTBOX',
                 outbox = _.findWhere($scope.folders, {
                     type: 'Outbox'
@@ -130,7 +130,7 @@ define(function(require) {
                     outboxBusy = false;
                     return;
                 }
-                
+
                 var email = emails.shift();
                 emailDao.smtpSend(email, function(err) {
                     if (err) {
@@ -227,7 +227,7 @@ define(function(require) {
 
         function startOutboxSender() {
             // start periodic checking of outbox
-            senderIntervalId = setInterval($scope.sendFirstFromOutbox, config.checkOutboxInterval);
+            senderIntervalId = setInterval($scope.emptyOutbox, config.checkOutboxInterval);
         }
     };
 

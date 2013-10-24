@@ -117,7 +117,7 @@ define(function(require) {
                 var ps = $scope.$parent.$parent;
                 ps.closeWriter();
                 ps.$apply();
-                ps.sendFirstFromOutbox();
+                ps.emptyOutbox();
             });
         };
     };
