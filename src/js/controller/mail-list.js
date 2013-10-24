@@ -167,6 +167,10 @@ define(function(require) {
                 return;
             }
 
+            if (!email.unread) {
+                return;
+            }
+            
             email.unread = false;
             emailDao.imapMarkMessageRead({
                 folder: getFolder().path,

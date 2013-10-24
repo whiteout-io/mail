@@ -51,32 +51,15 @@ define(function(require) {
         };
 
         $scope.remove = function(email) {
-            var trashFolder = _.findWhere($scope.folders, {
-                type: 'Trash'
-            });
-
-            if ($scope.currentFolder === trashFolder) {
-                emailDao.imapDeleteMessage({
-                    folder: $scope.currentFolder.path,
-                    uid: email.uid
-                }, moved);
+            if (!email) {
                 return;
             }
 
-            emailDao.imapMoveMessage({
-                folder: $scope.currentFolder.path,
-                uid: email.uid,
-                destination: trashFolder.path
-            }, moved);
+            var index;
+            removeLocalAndShowNext();
+            removeRemote();
 
-            function moved(err) {
-                var index;
-
-                if (err) {
-                    console.error(err);
-                    return;
-                }
-
+            function removeLocalAndShowNext() {
                 index = $scope.emails.indexOf(email);
                 // show the next mail
                 if ($scope.emails.length > 1) {
@@ -89,7 +72,34 @@ define(function(require) {
                     $scope.selected = undefined;
                 }
                 $scope.emails.splice(index, 1);
-                $scope.$apply();
+            }
+
+            function removeRemote() {
+                var trashFolder = _.findWhere($scope.folders, {
+                    type: 'Trash'
+                });
+                if ($scope.currentFolder === trashFolder) {
+                    emailDao.imapDeleteMessage({
+                        folder: $scope.currentFolder.path,
+                        uid: email.uid
+                    }, moved);
+                    return;
+                }
+
+                emailDao.imapMoveMessage({
+                    folder: $scope.currentFolder.path,
+                    uid: email.uid,
+                    destination: trashFolder.path
+                }, moved);
+            }
+
+            function moved(err) {
+                if (err) {
+                    console.error(err);
+                    $scope.emails.splice(index, 0, email);
+                    $scope.$apply();
+                    return;
+                }
             }
         };
 
