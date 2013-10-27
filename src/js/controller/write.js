@@ -114,10 +114,9 @@ define(function(require) {
                     return;
                 }
 
-                var ps = $scope.$parent.$parent;
-                ps.closeWriter();
-                ps.$apply();
-                ps.emptyOutbox();
+                $scope.closeWriter();
+                $scope.$apply();
+                $scope.emptyOutbox();
             });
         };
     };

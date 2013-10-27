@@ -49,13 +49,6 @@
     border-right: 1px solid $color-grey-light;
 }
 
-.nav-menu-open .nav-pusher::after {
-    width: 100%;
-    height: 100%;
-    opacity: 1;
-    transition: opacity $time-nav-animation;
-}
-
 .nav-effect.nav-menu-open .nav-pusher {
     transform: translate3d($nav-max-width, 0, 0);
 }
@@ -65,9 +58,8 @@
     }
 }
 
-
 .nav-effect.nav-menu {
-z-index: 1;
+    z-index: 1;
     transform: translate3d(-50%, 0, 0);
 }
 

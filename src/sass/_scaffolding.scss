@@ -46,4 +46,9 @@ textarea {
     ::-webkit-scrollbar {
         width: 0px;
     }
+
+    // remove flickering on item touch selection in ios
+    * {
+        -webkit-tap-highlight-color: transparent !important;
+    }
 }

@@ -1,21 +1,23 @@
-<!-- nav controll and section headline -->
-<header data-icon="&#xe004;" ng-click="openNav(); $event.stopPropagation()">
-  <h2>{{currentFolder.type}}</h2>
-</header>
+<div class="view-mail-list">
+  <!-- nav controll and section headline -->
+  <header data-icon="&#xe004;" ng-click="openNav(); $event.stopPropagation()">
+    <h2>{{currentFolder.type}}</h2>
+  </header>
 
-<div class="list-wrapper" ng-iscroll>
-  <ul class="mail-list">
-    <li ng-class="{'mail-list-active': email === selected, 'mail-list-attachment': email.attachments !== undefined && email.attachments.length > 0, 'mail-list-unread': email.unread, 'mail-list-replied': email.answered}" ng-click="select(email)" ng-repeat="email in emails">
-      <h3>{{email.from[0].name || email.from[0].address}}</h3>
-      <div class="head">
-        <p class="subject">{{email.subject || 'No subject'}}</p>
-        <time>{{email.sentDate | date:'mediumDate'}}</time>
-      </div>
-      <p class="body">{{email.body}}</p>
-    </li>
-  </ul><!--/.mail-list-->
-</div>
+  <div class="list-wrapper" ng-iscroll>
+    <ul class="mail-list">
+      <li ng-class="{'mail-list-active': email === selected, 'mail-list-attachment': email.attachments !== undefined && email.attachments.length > 0, 'mail-list-unread': email.unread, 'mail-list-replied': email.answered}" ng-click="select(email)" ng-repeat="email in emails">
+        <h3>{{email.from[0].name || email.from[0].address}}</h3>
+        <div class="head">
+          <p class="subject">{{email.subject || 'No subject'}}</p>
+          <time>{{email.sentDate | date:'mediumDate'}}</time>
+        </div>
+        <p class="body">{{email.body}}</p>
+      </li>
+    </ul><!--/.mail-list-->
+  </div>
 
-<footer ng-click="synchronize()">
-  {{lastUpdateLbl}} {{lastUpdate | date:'shortTime'}}
-</footer>
+  <footer ng-click="synchronize()">
+    {{lastUpdateLbl}} {{lastUpdate | date:'shortTime'}}
+  </footer>
+</div><!--/.view-mail-list-->

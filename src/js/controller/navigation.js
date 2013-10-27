@@ -50,6 +50,13 @@ define(function(require) {
             $scope.accountOpen = false;
         };
 
+        $scope.openReadMode = function() {
+            $scope.readingMode = true;
+        };
+        $scope.closeReadMode = function() {
+            $scope.readingMode = false;
+        };
+
         $scope.remove = function(email) {
             if (!email) {
                 return;

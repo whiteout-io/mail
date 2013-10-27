@@ -5,10 +5,10 @@
 
   <!-- content wrapper pushed right -->
   <div class="nav-pusher" ng-click="closeNav()">
-    <section class="content main-content">
+    <section class="content main-content" ng-class="{'shift-right': readingMode}">
 
       <!-- left column: containing list view and navigation header -->
-      <div class="column view-mail-list" ng-include="'tpl/mail-list.html'" ng-controller="MailListCtrl"></div>
+      <div class="column column-left" ng-include="'tpl/mail-list.html'" ng-controller="MailListCtrl"></div>
 
       <!-- right column: containing list read view -->
       <div class="column" ng-include="'tpl/read.html'" ng-controller="ReadCtrl"></div>

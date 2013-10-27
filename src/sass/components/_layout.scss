@@ -2,9 +2,35 @@
     @include clearfix();
     height: 100%;
     overflow: hidden;
+
+    // double in modile to allow slide transition
+    @include respond-to(mobile) {
+        width: 200%; // this currently causes a smear effect bug on mail-list header in safari
+        transition: transform $time-nav-animation ease-in-out;
+    }
 }
 
 .column {
     height: 100%;
     overflow: hidden;
+
+    // half of main-content in mobile mode to allow slide transition
+    @include respond-to(mobile) {
+        width: 50%;
+    }
+}
+
+.column-left {
+    float: left;
+
+    @include respond-to(desktop) {
+        width: $content-nav-width;
+        border-right: 1px solid $color-grey-light;
+    }
+}
+
+.shift-right {
+    @include respond-to(mobile) {
+        transform: translateX(-50%);
+    }
 }

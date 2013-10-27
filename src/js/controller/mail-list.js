@@ -65,6 +65,7 @@ define(function(require) {
             }
 
             // development... display dummy mail objects
+            firstSelect = true;
             updateStatus('Last update: ', new Date());
             $scope.$parent.emails = $scope.emails = createDummyMails();
             $scope.select($scope.emails[0]);
@@ -167,10 +168,15 @@ define(function(require) {
                 return;
             }
 
+            $scope.openReadMode();
+            if (!window.chrome || !chrome.socket) {
+                return;
+            }
+
             if (!email.unread) {
                 return;
             }
-            
+
             email.unread = false;
             emailDao.imapMarkMessageRead({
                 folder: getFolder().path,

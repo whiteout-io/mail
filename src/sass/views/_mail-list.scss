@@ -1,21 +1,10 @@
 .view-mail-list {
     $padding-horizontal: 15px;
     $padding-vertical: 10px;
+    height: 100%;
 
     background: $color-grey-lightest;
     background-image: linear-gradient(to right ,$color-grey-lightest 98%, darken($color-grey-lightest, 1%) 100%);
-
-    // remove flickering on item touch selection in ios
-    * {
-        -webkit-tap-highlight-color: transparent !important;
-    }
-
-    width: 100%;
-    @include respond-to(desktop) {
-        float: left;
-        width: $content-nav-width;
-        border-right: 1px solid $color-grey-light;
-    }
 
     header {
 
