@@ -62,7 +62,8 @@ module.exports = function(grunt) {
             all: {
                 options: {
                     urls: ['http://localhost:<%= connect.test.options.port %>/test/new-unit/index.html'],
-                    run: false
+                    run: false,
+                    reporter: 'Spec'
                 }
             }
         },
@@ -222,7 +223,7 @@ module.exports = function(grunt) {
 
     // Test/Dev tasks
     grunt.registerTask('dev', ['connect:dev']);
-    grunt.registerTask('test', ['jshint', 'connect:test', 'mocha', 'qunit']);
+    grunt.registerTask('test', ['jshint', 'connect:test', 'mocha']);
     grunt.registerTask('prod', ['connect:prod']);
 
 };

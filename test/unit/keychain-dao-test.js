@@ -1,30 +1,29 @@
-define(['js/dao/keychain-dao', 'js/dao/lawnchair-dao'], function(KeychainDAO, jsonDao) {
+define(['js/dao/keychain-dao', 'js/dao/lawnchair-dao'], function(KeychainDAO, LawnchairDAO) {
 	'use strict';
 
 	module("Keychain DAO");
 
-	var keychaindaoTest = {
-		user: 'keychaindao_test@example.com',
-		password: 'Password',
-		keySize: 128,
-		ivSize: 128,
-		rsaKeySize: 512
-	};
+	var jsonDao,
+		keychaindaoTest = {
+			user: 'keychaindao_test@example.com',
+			password: 'Password',
+			keySize: 128,
+			ivSize: 128,
+			rsaKeySize: 512
+		};
 
 	asyncTest("Init", 2, function() {
 
 		// stubbing
-		var cloudstorageStub = {
-			putPublicKey: function(pk, callback) {
-				callback();
-			},
-			putPrivateKey: function(prk, callback) {
+		var pubkeyDaoStub = {
+			put: function(pk, callback) {
 				callback();
 			}
 		};
 
 		// module instancing
-		keychaindaoTest.keychainDao = new KeychainDAO(cloudstorageStub);
+		jsonDao = new LawnchairDAO();
+		keychaindaoTest.keychainDao = new KeychainDAO(jsonDao, pubkeyDaoStub);
 		ok(keychaindaoTest.keychainDao);
 
 		// init and clear db before test
@@ -82,7 +81,7 @@ define(['js/dao/keychain-dao', 'js/dao/lawnchair-dao'], function(KeychainDAO, js
 	});
 
 	asyncTest("Get User Keypair", 2, function() {
-		keychaindaoTest.keychainDao.getReveiverPublicKey(keychaindaoTest.user, function(err, pubkey) {
+		keychaindaoTest.keychainDao.getReceiverPublicKey(keychaindaoTest.user, function(err, pubkey) {
 			ok(!err);
 			ok(pubkey && pubkey.publicKey);
 

@@ -1,27 +1,34 @@
 /**
  * Handles generic caching of JSON objects in a lawnchair adapter
  */
-define(['underscore', 'lawnchair', 'lawnchairSQL', 'lawnchairIDB'], function(_, Lawnchair) {
+define(function(require) {
     'use strict';
 
-    var self = {},
-        db;
+    var _ = require('underscore'),
+        Lawnchair = require('lawnchair');
+    require('lawnchairSQL');
+    require('lawnchairIDB');
 
-    self.init = function(dbName, callback) {
-        var temp;
+    var LawnchairDAO = function() {};
 
+    LawnchairDAO.prototype.init = function(dbName, callback) {
         if (!dbName) {
-            throw new Error('Lawnchair DB name must be specified!');
+            callback({
+                errMsg: 'Lawnchair DB name must be specified!'
+            });
+            return;
         }
 
-        temp = new Lawnchair({
+        this._db = new Lawnchair({
             name: dbName
         }, function(lc) {
             if (!lc) {
-                throw new Error('Lawnchair init failed!');
+                callback({
+                    errMsg: 'Lawnchair init failed!'
+                });
+                return;
             }
 
-            db = lc;
             callback();
         });
     };
@@ -29,27 +36,66 @@ define(['underscore', 'lawnchair', 'lawnchairSQL', 'lawnchairIDB'], function(_, 
     /**
      * Create or update an object
      */
-    self.persist = function(key, object, callback) {
-        db.save({
+    LawnchairDAO.prototype.persist = function(key, object, callback) {
+        if (!key || !object) {
+            callback({
+                errMsg: 'Key and Object must be set!'
+            });
+            return;
+        }
+
+        this._db.save({
             key: key,
             object: object
-        }, callback);
+        }, function(persisted) {
+            if (persisted.key !== key) {
+                callback({
+                    errMsg: 'Persisting failed!'
+                });
+                return;
+            }
+
+            callback();
+        });
     };
 
     /**
      * Persist a bunch of items at once
      */
-    self.batch = function(list, callback) {
-        db.batch(list, callback);
+    LawnchairDAO.prototype.batch = function(list, callback) {
+        if (!(list instanceof Array)) {
+            callback({
+                errMsg: 'Input must be of type Array!'
+            });
+            return;
+        }
+
+        this._db.batch(list, function(res) {
+            if (!res) {
+                callback({
+                    errMsg: 'Persisting batch failed!'
+                });
+                return;
+            }
+
+            callback();
+        });
     };
 
     /**
      * Read a single item by its key
      */
-    self.read = function(key, callback) {
-        db.get(key, function(o) {
+    LawnchairDAO.prototype.read = function(key, callback) {
+        if (!key) {
+            callback({
+                errMsg: 'Key must be specified!'
+            });
+            return;
+        }
+
+        this._db.get(key, function(o) {
             if (o) {
-                callback(o.object);
+                callback(null, o.object);
             } else {
                 callback();
             }
@@ -62,14 +108,23 @@ define(['underscore', 'lawnchair', 'lawnchairSQL', 'lawnchairIDB'], function(_, 
      * @param offset [Number] The offset of items to fetch (0 is the last stored item)
      * @param num [Number] The number of items to fetch (null means fetch all)
      */
-    self.list = function(type, offset, num, callback) {
-        var i, from, to,
+    LawnchairDAO.prototype.list = function(type, offset, num, callback) {
+        var self = this,
+            i, from, to,
             matchingKeys = [],
             intervalKeys = [],
             list = [];
 
+        // validate input
+        if (!type || typeof offset === 'undefined' || typeof num === 'undefined') {
+            callback({
+                errMsg: 'Args not is not set!'
+            });
+            return;
+        }
+
         // get all keys
-        db.keys(function(keys) {
+        self._db.keys(function(keys) {
 
             // check if key begins with type
             keys.forEach(function(key) {
@@ -94,18 +149,18 @@ define(['underscore', 'lawnchair', 'lawnchairSQL', 'lawnchairIDB'], function(_, 
 
             // return if there are no matching keys
             if (intervalKeys.length === 0) {
-                callback(list);
+                callback(null, list);
                 return;
             }
 
             // fetch all items from data-store with matching key
-            db.get(intervalKeys, function(intervalList) {
+            self._db.get(intervalKeys, function(intervalList) {
                 intervalList.forEach(function(item) {
                     list.push(item.object);
                 });
 
                 // return only the interval between offset and num
-                callback(list);
+                callback(null, list);
             });
 
         });
@@ -114,19 +169,28 @@ define(['underscore', 'lawnchair', 'lawnchairSQL', 'lawnchairIDB'], function(_, 
     /**
      * Removes an object liter from local storage by its key (delete)
      */
-    self.remove = function(key, callback) {
-        db.remove(key, callback);
+    LawnchairDAO.prototype.remove = function(key, callback) {
+        this._db.remove(key, callback);
     };
 
     /**
      * Removes an object liter from local storage by its key (delete)
      */
-    self.removeList = function(type, callback) {
-        var matchingKeys = [],
+    LawnchairDAO.prototype.removeList = function(type, callback) {
+        var self = this,
+            matchingKeys = [],
             after;
 
+        // validate type
+        if (!type) {
+            callback({
+                errMsg: 'Type is not set!'
+            });
+            return;
+        }
+
         // get all keys
-        db.keys(function(keys) {
+        self._db.keys(function(keys) {
             // check if key begins with type
             keys.forEach(function(key) {
                 if (key.indexOf(type) === 0) {
@@ -142,7 +206,7 @@ define(['underscore', 'lawnchair', 'lawnchairSQL', 'lawnchairIDB'], function(_, 
             // remove all matching keys
             after = _.after(matchingKeys.length, callback);
             _.each(matchingKeys, function(key) {
-                db.remove(key, after);
+                self._db.remove(key, after);
             });
         });
     };
@@ -150,9 +214,9 @@ define(['underscore', 'lawnchair', 'lawnchairSQL', 'lawnchairIDB'], function(_, 
     /**
      * Clears the whole local storage cache
      */
-    self.clear = function(callback) {
-        db.nuke(callback);
+    LawnchairDAO.prototype.clear = function(callback) {
+        this._db.nuke(callback);
     };
 
-    return self;
+    return LawnchairDAO;
 });

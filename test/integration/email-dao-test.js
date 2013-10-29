@@ -27,13 +27,21 @@ define(function(require) {
                 appController.start(function(err) {
                     expect(err).to.not.exist;
 
-                    appController.fetchOAuthToken(test.passphrase, function(err) {
+                    appController.fetchOAuthToken(function(err, auth) {
                         expect(err).to.not.exist;
-                        emailDao = appController._emailDao;
 
-                        emailDao.imapLogin(function(err) {
+                        appController.init(auth.emailAddress, auth.token, function(err, availableKeys) {
                             expect(err).to.not.exist;
-                            done();
+
+                            emailDao = appController._emailDao;
+                            emailDao.unlock(availableKeys, test.passphrase, function(err) {
+                                expect(err).to.not.exist;
+
+                                emailDao.imapLogin(function(err) {
+                                    expect(err).to.not.exist;
+                                    done();
+                                });
+                            });
                         });
                     });
                 });

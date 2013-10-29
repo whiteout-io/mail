@@ -1,4 +1,4 @@
-define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/devicestorage-dao', 'test/test-data'], function(_, util, Crypto, DeviceStorageDAO, testData) {
+define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/devicestorage-dao', 'test/test-data', 'js/dao/lawnchair-dao'], function(_, util, Crypto, DeviceStorageDAO, testData, LawnchairDAO) {
     'use strict';
 
     module("DeviceStorage");
@@ -15,7 +15,7 @@ define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/devicestorag
 
     asyncTest("Init", 3, function() {
         // init dependencies
-        storage = new DeviceStorageDAO();
+        storage = new DeviceStorageDAO(new LawnchairDAO());
         storage.init(devicestorageTest.user, function() {
             ok(storage, 'DeviceStorageDAO');
 

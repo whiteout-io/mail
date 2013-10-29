@@ -8,8 +8,10 @@ define(function(require) {
         ImapClient = require('imap-client'),
         SmtpClient = require('smtp-client'),
         EmailDAO = require('js/dao/email-dao'),
+        RestDAO = require('js/dao/rest-dao'),
+        PublicKeyDAO = require('js/dao/publickey-dao'),
+        LawnchairDAO = require('js/dao/lawnchair-dao'),
         KeychainDAO = require('js/dao/keychain-dao'),
-        cloudstorage = require('js/dao/cloudstorage-dao'),
         DeviceStorageDAO = require('js/dao/devicestorage-dao'),
         PGP = require('js/crypto/pgp'),
         config = require('js/app-config').config;
@@ -33,7 +35,7 @@ define(function(require) {
         function onDeviceReady() {
             console.log('Starting app.');
             // init app config storage
-            self._appConfigStore = new DeviceStorageDAO();
+            self._appConfigStore = new DeviceStorageDAO(new LawnchairDAO());
             self._appConfigStore.init('app-config', callback);
         }
     };
@@ -129,6 +131,7 @@ define(function(require) {
      */
     self.init = function(userId, token, callback) {
         var auth, imapOptions, smtpOptions,
+            lawnchairDao, restDao, pubkeyDao,
             keychain, imapClient, smtpClient, pgp, userStorage;
 
         // create mail credentials objects for imap/smtp
@@ -153,11 +156,14 @@ define(function(require) {
         };
 
         // init objects and inject dependencies
-        keychain = new KeychainDAO(cloudstorage);
+        restDao = new RestDAO();
+        pubkeyDao = new PublicKeyDAO(restDao);
+        lawnchairDao = new LawnchairDAO();
+        keychain = new KeychainDAO(lawnchairDao, pubkeyDao);
         imapClient = new ImapClient(imapOptions);
         smtpClient = new SmtpClient(smtpOptions);
         pgp = new PGP();
-        userStorage = new DeviceStorageDAO();
+        userStorage = new DeviceStorageDAO(lawnchairDao);
         self._emailDao = new EmailDAO(keychain, imapClient, smtpClient, pgp, userStorage);
 
         // init email dao

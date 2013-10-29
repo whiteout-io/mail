@@ -4,17 +4,15 @@
  * through transparent encryption. If not, the crypto API is
  * used to encrypt data on the fly before persisting via a JSON store.
  */
-define(function(require) {
+define(function() {
     'use strict';
 
-    var jsonDao = require('js/dao/lawnchair-dao');
-
-    var DeviceStorageDAO = function() {
-
+    var DeviceStorageDAO = function(localDbDao) {
+        this._localDbDao = localDbDao;
     };
 
     DeviceStorageDAO.prototype.init = function(emailAddress, callback) {
-        jsonDao.init(emailAddress, callback);
+        this._localDbDao.init(emailAddress, callback);
     };
 
     /**
@@ -48,26 +46,14 @@ define(function(require) {
             });
         });
 
-        jsonDao.batch(items, function() {
-            callback();
-        });
+        this._localDbDao.batch(items, callback);
     };
 
     /**
      *  Deletes items of a certain type from storage
      */
     DeviceStorageDAO.prototype.removeList = function(type, callback) {
-        // validate type
-        if (!type) {
-            callback({
-                errMsg: 'Type is not set!'
-            });
-            return;
-        }
-
-        jsonDao.removeList(type, function() {
-            callback();
-        });
+        this._localDbDao.removeList(type, callback);
     };
 
     /**
@@ -77,26 +63,15 @@ define(function(require) {
      * @param num [Number] The number of items to fetch (null means fetch all)
      */
     DeviceStorageDAO.prototype.listItems = function(type, offset, num, callback) {
-
-        // validate type
-        if (!type || typeof offset === 'undefined' || typeof num === 'undefined') {
-            callback({
-                errMsg: 'Args not is not set!'
-            });
-            return;
-        }
-
         // fetch all items of a certain type from the data-store
-        jsonDao.list(type, offset, num, function(matchingList) {
-            callback(null, matchingList);
-        });
+        this._localDbDao.list(type, offset, num, callback);
     };
 
     /**
      * Clear the whole device data-store
      */
     DeviceStorageDAO.prototype.clear = function(callback) {
-        jsonDao.clear(callback);
+        this._localDbDao.clear(callback);
     };
 
     //

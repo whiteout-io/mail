@@ -56,7 +56,7 @@ define(function(require) {
 
     EmailDAO.prototype.unlock = function(keypair, passphrase, callback) {
         var self = this;
-        
+
         if (keypair && keypair.privateKey && keypair.publicKey) {
             // import existing key pair into crypto module
             self._crypto.importKeys({
@@ -264,7 +264,7 @@ define(function(require) {
             list.forEach(function(i) {
                 // gather public keys required to verify signatures
                 var sender = i.from[0].address;
-                self._keychain.getReveiverPublicKey(sender, function(err, senderPubkey) {
+                self._keychain.getReceiverPublicKey(sender, function(err, senderPubkey) {
 
                     // decrypt and verfiy signatures
                     self._crypto.decrypt(i.body, senderPubkey.publicKey, function(err, decrypted) {
@@ -488,7 +488,7 @@ define(function(require) {
 
         // only support single recipient for e-2-e encryption
         // check if receiver has a public key
-        self._keychain.getReveiverPublicKey(email.to[0].address, function(err, receiverPubkey) {
+        self._keychain.getReceiverPublicKey(email.to[0].address, function(err, receiverPubkey) {
             if (err) {
                 callback(err);
                 return;

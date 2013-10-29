@@ -235,7 +235,7 @@ define(function(require) {
                 it('should fail due to bad input', function(done) {
                     emailDao.smtpSend({}, function(err) {
                         expect(smtpClientStub.send.called).to.be.false;
-                        expect(keychainStub.getReveiverPublicKey.called).to.be.false;
+                        expect(keychainStub.getReceiverPublicKey.called).to.be.false;
                         expect(err).to.exist;
                         done();
                     });
@@ -247,18 +247,18 @@ define(function(require) {
                     }];
                     emailDao.smtpSend(dummyMail, function(err) {
                         expect(smtpClientStub.send.called).to.be.false;
-                        expect(keychainStub.getReveiverPublicKey.called).to.be.false;
+                        expect(keychainStub.getReceiverPublicKey.called).to.be.false;
                         expect(err).to.exist;
                         done();
                     });
                 });
 
                 it('should work for a new user', function(done) {
-                    keychainStub.getReveiverPublicKey.yields(null, null);
+                    keychainStub.getReceiverPublicKey.yields(null, null);
                     smtpClientStub.send.yields();
 
                     emailDao.smtpSend(dummyMail, function(err) {
-                        expect(keychainStub.getReveiverPublicKey.calledOnce).to.be.true;
+                        expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
                         // expect(smtpClientStub.send.called).to.be.true;
                         // smtpClientStub.send.calledWith(sinon.match(function(o) {
                         //     return typeof o.attachments === 'undefined';
@@ -269,7 +269,7 @@ define(function(require) {
                 });
 
                 it('should work without attachments', function(done) {
-                    keychainStub.getReveiverPublicKey.yields(null, {
+                    keychainStub.getReceiverPublicKey.yields(null, {
                         _id: "fcf8b4aa-5d09-4089-8b4f-e3bc5091daf3",
                         userId: "safewithme.testuser@gmail.com",
                         publicKey: publicKey
@@ -279,7 +279,7 @@ define(function(require) {
                     smtpClientStub.send.yields();
 
                     emailDao.smtpSend(dummyMail, function(err) {
-                        expect(keychainStub.getReveiverPublicKey.calledOnce).to.be.true;
+                        expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
                         expect(pgpStub.exportKeys.calledOnce).to.be.true;
                         expect(pgpStub.encrypt.calledOnce).to.be.true;
                         expect(smtpClientStub.send.calledOnce).to.be.true;
@@ -297,7 +297,7 @@ define(function(require) {
                 //         contentType: 'text/plain',
                 //         binStr: 'barbarbarbarbar'
                 //     }];
-                //     keychainStub.getReveiverPublicKey.yields(null, {
+                //     keychainStub.getReceiverPublicKey.yields(null, {
                 //         _id: "fcf8b4aa-5d09-4089-8b4f-e3bc5091daf3",
                 //         userId: "safewithme.testuser@gmail.com",
                 //         publicKey: publicKey
@@ -307,7 +307,7 @@ define(function(require) {
                 //     smtpClientStub.send.yields();
 
                 //     emailDao.smtpSend(dummyMail, function(err) {
-                //         expect(keychainStub.getReveiverPublicKey.calledOnce).to.be.true;
+                //         expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
                 //         expect(pgpStub.exportKeys.calledOnce).to.be.true;
                 //         expect(pgpStub.encrypt.calledOnce).to.be.true;
                 //         expect(smtpClientStub.send.calledOnce).to.be.true;
@@ -577,7 +577,7 @@ define(function(require) {
                 it('should work', function(done) {
                     dummyMail.body = app.string.cryptPrefix + btoa('asdf') + app.string.cryptSuffix;
                     devicestorageStub.listItems.yields(null, [dummyMail, dummyMail]);
-                    keychainStub.getReveiverPublicKey.yields(null, {
+                    keychainStub.getReceiverPublicKey.yields(null, {
                         _id: "fcf8b4aa-5d09-4089-8b4f-e3bc5091daf3",
                         userId: "safewithme.testuser@gmail.com",
                         publicKey: publicKey
@@ -593,7 +593,7 @@ define(function(require) {
                         num: 2
                     }, function(err, emails) {
                         expect(devicestorageStub.listItems.calledOnce).to.be.true;
-                        expect(keychainStub.getReveiverPublicKey.calledTwice).to.be.true;
+                        expect(keychainStub.getReceiverPublicKey.calledTwice).to.be.true;
                         expect(pgpStub.decrypt.calledTwice).to.be.true;
                         expect(err).to.not.exist;
                         expect(emails.length).to.equal(2);

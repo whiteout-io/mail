@@ -2,13 +2,14 @@
  * A high-level Data-Access Api for handling Keypair synchronization
  * between the cloud service and the device's local storage
  */
-define(['underscore', 'js/dao/lawnchair-dao'], function(_, jsonDao) {
+define(function(require) {
     'use strict';
 
-    var KeychainDAO = function(cloudstorage) {
-        var self = this;
+    var _ = require('underscore');
 
-        self._cloudstorage = cloudstorage;
+    var KeychainDAO = function(localDbDao, publicKeyDao) {
+        this._localDbDao = localDbDao;
+        this._publicKeyDao = publicKeyDao;
     };
 
     /**
@@ -60,47 +61,54 @@ define(['underscore', 'js/dao/lawnchair-dao'], function(_, jsonDao) {
      * Look up a reveiver's public key by user id
      * @param userId [String] the receiver's email address
      */
-    KeychainDAO.prototype.getReveiverPublicKey = function(userId, callback) {
+    KeychainDAO.prototype.getReceiverPublicKey = function(userId, callback) {
         var self = this;
 
         // search local keyring for public key
-        jsonDao.list('publickey', 0, null, function(allPubkeys) {
+        self._localDbDao.list('publickey', 0, null, function(err, allPubkeys) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
             var pubkey = _.findWhere(allPubkeys, {
                 userId: userId
             });
 
-            if (!pubkey || !pubkey._id) {
-                // no public key by that user id in storage
-                // find from cloud by email address
-                self._cloudstorage.getPublicKeyByUserId(userId, function(err, cloudPubkey) {
-                    if (err || !cloudPubkey) {
-                        callback();
-                        return;
-                    }
-
-                    if (cloudPubkey && cloudPubkey._id) {
-                        // there is a public key for that user already in the cloud...
-                        // save to local storage
-                        self.saveLocalPublicKey(cloudPubkey, function(err) {
-                            if (err) {
-                                callback(err);
-                                return;
-                            }
-
-                            callback(null, cloudPubkey);
-                        });
-                    } else {
-                        // no public key for that user
-                        callback();
-                        return;
-                    }
-                });
-
-            } else {
+            if (pubkey && pubkey._id) {
                 // that user's public key is already in local storage
                 callback(null, pubkey);
+                return;
             }
+
+            // no public key by that user id in storage
+            // find from cloud by email address
+            self._publicKeyDao.getByUserId(userId, onKeyGotten);
         });
+
+        function onKeyGotten(err, cloudPubkey) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            if (!cloudPubkey) {
+                // no public key for that user
+                callback();
+                return;
+            }
+
+            // there is a public key for that user already in the cloud...
+            // save to local storage
+            self.saveLocalPublicKey(cloudPubkey, function(err) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                callback(null, cloudPubkey);
+            });
+        }
     };
 
     /**
@@ -113,36 +121,41 @@ define(['underscore', 'js/dao/lawnchair-dao'], function(_, jsonDao) {
         var self = this;
 
         // search for user's public key locally
-        jsonDao.list('publickey', 0, null, function(allPubkeys) {
+        self._localDbDao.list('publickey', 0, null, function(err, allPubkeys) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
             var pubkey = _.findWhere(allPubkeys, {
                 userId: userId
             });
 
-            if (!pubkey || !pubkey._id) {
-                // no public key by that user id in storage
-                // find from cloud by email address
-                self._cloudstorage.getPublicKeyByUserId(userId, function(err, cloudPubkey) {
-                    if (err) {
-                        callback(err);
-                        return;
-                    }
-
-                    if (cloudPubkey && cloudPubkey._id) {
-                        // there is a public key for that user already in the cloud...
-                        // sync keypair to local storage
-                        syncKeypair(cloudPubkey._id);
-                    } else {
-                        // continue without keypair... generate in crypto.js
-                        callback();
-                        return;
-                    }
-                });
-
-            } else {
+            if (pubkey && pubkey._id) {
                 // that user's public key is already in local storage...
                 // sync keypair to the cloud
                 syncKeypair(pubkey._id);
+                return;
             }
+
+            // no public key by that user id in storage
+            // find from cloud by email address
+            self._publicKeyDao.getByUserId(userId, function(err, cloudPubkey) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                if (cloudPubkey && cloudPubkey._id) {
+                    // there is a public key for that user already in the cloud...
+                    // sync keypair to local storage
+                    syncKeypair(cloudPubkey._id);
+                    return;
+                }
+
+                // continue without keypair... generate in crypto.js
+                callback();
+            });
         });
 
         function syncKeypair(keypairId) {
@@ -165,7 +178,7 @@ define(['underscore', 'js/dao/lawnchair-dao'], function(_, jsonDao) {
                     if (savedPubkey && savedPubkey.publicKey) {
                         keys.publicKey = savedPubkey;
                     }
-                    
+
                     if (savedPrivkey && savedPrivkey.encryptedKey) {
                         keys.privateKey = savedPrivkey;
                     }
@@ -200,7 +213,7 @@ define(['underscore', 'js/dao/lawnchair-dao'], function(_, jsonDao) {
             }
 
             // persist public key in cloud storage
-            self._cloudstorage.putPublicKey(keypair.publicKey, function(err) {
+            self._publicKeyDao.put(keypair.publicKey, function(err) {
                 // validate result
                 if (err) {
                     callback(err);
@@ -220,11 +233,23 @@ define(['underscore', 'js/dao/lawnchair-dao'], function(_, jsonDao) {
     KeychainDAO.prototype.lookupPublicKey = function(id, callback) {
         var self = this;
 
+        if (!id) {
+            callback({
+                errMsg: 'ID must be set for public key query!'
+            });
+            return;
+        }
+
         // lookup in local storage
-        jsonDao.read('publickey_' + id, function(pubkey) {
+        self._localDbDao.read('publickey_' + id, function(err, pubkey) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
             if (!pubkey) {
                 // fetch from cloud storage
-                self._cloudstorage.getPublicKey(id, function(err, cloudPubkey) {
+                self._publicKeyDao.get(id, function(err, cloudPubkey) {
                     if (err) {
                         callback(err);
                         return;
@@ -249,43 +274,19 @@ define(['underscore', 'js/dao/lawnchair-dao'], function(_, jsonDao) {
 
     KeychainDAO.prototype.lookupPrivateKey = function(id, callback) {
         // lookup in local storage
-        jsonDao.read('privatekey_' + id, function(privkey) {
-            callback(null, privkey);
-        });
+        this._localDbDao.read('privatekey_' + id, callback);
     };
 
     KeychainDAO.prototype.saveLocalPublicKey = function(pubkey, callback) {
         // persist public key (email, _id)
         var pkLookupKey = 'publickey_' + pubkey._id;
-
-        jsonDao.persist(pkLookupKey, pubkey, function(res1) {
-            // validate result
-            if (res1.key !== pkLookupKey) {
-                callback({
-                    errMsg: 'Persisting public key in local storage went wrong!'
-                });
-                return;
-            }
-
-            callback();
-        });
+        this._localDbDao.persist(pkLookupKey, pubkey, callback);
     };
 
     KeychainDAO.prototype.saveLocalPrivateKey = function(privkey, callback) {
         // persist private key (email, _id)
         var prkLookupKey = 'privatekey_' + privkey._id;
-
-        jsonDao.persist(prkLookupKey, privkey, function(res1) {
-            // validate result
-            if (res1.key !== prkLookupKey) {
-                callback({
-                    errMsg: 'Persisting private key in local storage went wrong!'
-                });
-                return;
-            }
-
-            callback();
-        });
+        this._localDbDao.persist(prkLookupKey, privkey, callback);
     };
 
     return KeychainDAO;
