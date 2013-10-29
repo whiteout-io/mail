@@ -35,7 +35,7 @@ define([], function() {
 	 * Strings are maintained here
 	 */
 	app.string = {
-		subject: '[whiteout] Encrypted message',
+		subjectPrefix: '[whiteout] ',
 		message: 'this is a private conversation. To read my encrypted message below, simply install Whiteout Mail for Chrome. The app is really easy to use and automatically encrypts sent emails, so that only the two of us can read them: https://chrome.google.com/webstore/detail/whiteout-mail/jjgghafhamholjigjoghcfcekhkonijg',
 		cryptPrefix: '-----BEGIN PGP MESSAGE-----',
 		cryptSuffix: '-----END PGP MESSAGE-----',

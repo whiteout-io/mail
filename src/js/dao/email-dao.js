@@ -246,6 +246,7 @@ define(function(require) {
                 messageBlock = email.body.split(str.cryptPrefix)[1].split(str.cryptSuffix)[0];
                 // add prefix and suffix again
                 email.body = str.cryptPrefix + messageBlock + str.cryptSuffix;
+                email.subject = email.subject.split(str.subjectPrefix)[1];
             } catch (e) {
                 callback({
                     errMsg: 'Error parsing encrypted message block!'
@@ -273,9 +274,7 @@ define(function(require) {
                             return;
                         }
 
-                        decrypted = JSON.parse(decrypted);
-                        i.subject = decrypted.subject;
-                        i.body = decrypted.body;
+                        i.body = decrypted;
 
                         after();
                     });
@@ -310,7 +309,7 @@ define(function(require) {
         });
 
         function fetchList(callback) {
-            var encryptedList = [];
+            var headers = [];
 
             // fetch imap folder's message list
             self.imapListMessages({
@@ -325,45 +324,50 @@ define(function(require) {
 
                 // find encrypted messages by subject
                 emails.forEach(function(i) {
-                    if (i.subject === str.subject) {
-                        encryptedList.push(i);
+                    if (i.subject.indexOf(str.subjectPrefix) !== -1) {
+                        headers.push(i);
                     }
                 });
 
                 // fetch message bodies
-                fetchBodies(encryptedList, callback);
+                fetchBodies(headers, callback);
             });
         }
 
-        function fetchBodies(messageList, callback) {
+        function fetchBodies(headers, callback) {
             var emails = [];
 
-            if (messageList.length < 1) {
+            if (headers.length < 1) {
                 callback(null, emails);
                 return;
             }
 
-            var after = _.after(messageList.length, function() {
+            var after = _.after(headers.length, function() {
                 callback(null, emails);
             });
 
-            _.each(messageList, function(messageItem) {
+            _.each(headers, function(header) {
                 self.imapGetMessage({
                     folder: options.folder,
-                    uid: messageItem.uid
+                    uid: header.uid
                 }, function(err, message) {
                     if (err) {
                         callback(err);
                         return;
                     }
 
-                    // set gotten attributes like body to message object containing list meta data like 'unread' or 'replied'
-                    messageItem.id = message.id;
-                    messageItem.body = message.body;
-                    messageItem.html = message.html;
-                    messageItem.attachments = message.attachments;
+                    if (typeof message.body !== 'string' || message.body.indexOf(str.cryptPrefix) === -1 || message.body.indexOf(str.cryptSuffix) === -1) {
+                        after();
+                        return;
+                    }
 
-                    emails.push(messageItem);
+                    // set gotten attributes like body to message object containing list meta data like 'unread' or 'replied'
+                    header.id = message.id;
+                    header.body = message.body;
+                    header.html = message.html;
+                    header.attachments = message.attachments;
+
+                    emails.push(header);
                     after();
                 });
             });
@@ -514,7 +518,7 @@ define(function(require) {
      */
     EmailDAO.prototype.encryptForUser = function(email, receiverPubkey, callback) {
         var self = this,
-            pt = JSON.stringify(email),
+            pt = email.body,
             receiverPubkeys = [receiverPubkey];
 
         // get own public key so send message can be read
@@ -557,7 +561,7 @@ define(function(require) {
 
         // build encrypted text body
         email.body = greeting + MESSAGE + ct + SIGNATURE;
-        email.subject = str.subject;
+        email.subject = str.subjectPrefix + email.subject;
 
         return email;
     }
