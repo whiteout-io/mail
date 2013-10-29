@@ -35,7 +35,7 @@ define(function(require) {
                 to: [{
                     address: 'safewithme.testuser@gmail.com'
                 }], // list of receivers
-                subject: "Hello", // Subject line
+                subject: "[whiteout] Hello", // Subject line
                 body: "Hello world" // plaintext body
             };
 
@@ -521,8 +521,10 @@ define(function(require) {
                 it('should not list unencrypted messages', function(done) {
                     imapClientStub.listMessages.yields(null, [{
                         uid: 413,
+                        subject: ''
                     }, {
                         uid: 414,
+                        subject: ''
                     }]);
                     imapClientStub.getMessagePreview.yields(null, {
                         body: 'asdf'
@@ -547,13 +549,13 @@ define(function(require) {
                 it('should work', function(done) {
                     imapClientStub.listMessages.yields(null, [{
                         uid: 413,
-                        subject: app.string.subject
+                        subject: app.string.subjectPrefix + 'asd'
                     }, {
                         uid: 414,
-                        subject: app.string.subject
+                        subject: app.string.subjectPrefix + 'asd'
                     }]);
                     imapClientStub.getMessagePreview.yields(null, {
-                        body: 'asdf'
+                        body: app.string.cryptPrefix + '\nasdf\n' + app.string.cryptSuffix
                     });
                     devicestorageStub.removeList.yields();
                     devicestorageStub.storeList.yields();
@@ -582,20 +584,17 @@ define(function(require) {
                         userId: "safewithme.testuser@gmail.com",
                         publicKey: publicKey
                     });
-                    pgpStub.decrypt.yields(null, JSON.stringify({
-                        body: 'test body',
-                        subject: 'test subject'
-                    }));
+                    pgpStub.decrypt.yields(null, 'test body');
 
                     emailDao.listMessages({
                         folder: 'INBOX',
                         offset: 0,
                         num: 2
                     }, function(err, emails) {
+                        expect(err).to.not.exist;
                         expect(devicestorageStub.listItems.calledOnce).to.be.true;
                         expect(keychainStub.getReceiverPublicKey.calledTwice).to.be.true;
                         expect(pgpStub.decrypt.calledTwice).to.be.true;
-                        expect(err).to.not.exist;
                         expect(emails.length).to.equal(2);
                         done();
                     });
