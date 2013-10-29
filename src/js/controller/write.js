@@ -125,6 +125,9 @@ define(function(require) {
         function has(substr) {
             return (body.indexOf(substr) !== -1);
         }
+        while (has('<div><br>')) {
+            body = body.replace('<div><br>', '\n');
+        }
         while (has('<div>')) {
             body = body.replace('<div>', '\n');
         }
