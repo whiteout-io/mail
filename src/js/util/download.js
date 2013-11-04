@@ -3,23 +3,40 @@ define(function() {
 
     var dl = {};
 
-    dl.createDownload = function(content, filename, contentType) {
-        contentType = contentType || 'application/octet-stream';
+    dl.createDownload = function(options, callback) {
+        var contentType = options.contentType || 'application/octet-stream';
+
         chrome.fileSystem.chooseEntry({
             type: 'saveFile',
-            suggestedName: filename
-        }, function(file) {
+            suggestedName: options.filename
+        }, onEntry);
+
+        function onEntry(file) {
             if (!file) {
+                callback();
                 return;
             }
-            file.createWriter(function(writer) {
-                writer.onerror = console.error;
-                writer.onwriteend = function() {};
-                writer.write(new Blob([content], {
-                    type: contentType
-                }));
-            }, console.error);
-        });
+            file.createWriter(onWriter, onError);
+        }
+
+        function onWriter(writer) {
+            writer.onerror = onError;
+            writer.onwriteend = onEnd;
+            writer.write(new Blob([options.content], {
+                type: contentType
+            }));
+        }
+
+        function onError(e) {
+            console.error(e);
+            callback({
+                errMsg: 'Error exporting keypair to file!'
+            });
+        }
+
+        function onEnd() {
+            callback();
+        }
     };
 
     return dl;

@@ -51,26 +51,26 @@ define(function(require) {
                 }
 
                 var id = keys.keyId.substring(8, keys.keyId.length);
-                dl.createDownload(keys.publicKeyArmored + keys.privateKeyArmored, id + '.asc', 'text/plain');
-                $scope.exported = true;
+                dl.createDownload({
+                    content: keys.publicKeyArmored + keys.privateKeyArmored,
+                    filename: id + '.asc',
+                    contentType: 'text/plain'
+                }, onSave);
             });
-        };
 
-        $scope.proceed = function() {
-            // login to imap backend
-            appController._emailDao.imapLogin(function(err) {
+            function onSave(err) {
                 if (err) {
                     console.error(err);
                     return;
                 }
-                onLogin();
-            });
+                $scope.proceed();
+                $scope.$apply();
+            }
         };
 
-        function onLogin() {
+        $scope.proceed = function() {
             $location.path('/desktop');
-            $scope.$apply();
-        }
+        };
 
         function setState(state, async) {
             $scope.state = state;

@@ -1,4 +1,4 @@
-<div class="view-login">
+<div class="view-login" ng-class="{'waiting-cursor': state === states.PROCESSING}">
 
   <div class="logo-wrapper">
     <div class="logo"></div>
@@ -7,7 +7,7 @@
   <div class="content" ng-show="state === states.IDLE">
     <h1>Set passphrase</h1>
 
-    <p>If you forget your passphrase, there is no way to restore your data. So it might be a good idea to write it down and keep it in a safe place.</p>
+    <p>This is used to protect your keypair. If you forget your passphrase, there is no way to restore your data.</p>
 
     <form>
       <div>
@@ -23,15 +23,15 @@
   <div class="content" ng-show="state === states.PROCESSING">
     <h1>Generating keypair</h1>
 
-    <p>A batch of highly trained monkeys has been dispatched to collect entropy for your personal keypair. Please stand by...</p>
+    <p>Please stand by. This can take a while...</p>
   </div><!--/content-->
 
   <div class="content" ng-show="state === states.DONE">
     <h1>Keypair generated</h1>
 
-    <p>A keypair has been generated for you. Please store this key pair in a safe location before you proceed.</p>
-    <button ng-click="exportKeypair()" class="btn" tabindex="4">Export keypair</button>
-    <button ng-click="proceed()" ng-disabled="!exported" class="btn" tabindex="4">Proceed</button>
+    <p>Your personal keypair has been generated. You can export it (e.g. to a USB flash drive) to setup whiteout on another computer or as a backup.</p>
+    <button ng-click="exportKeypair()" class="btn" tabindex="4">Export now</button>
+    <button ng-click="proceed()" class="btn" tabindex="5">Do it later</button>
   </div><!--/content-->
 
 </div>

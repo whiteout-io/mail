@@ -22,7 +22,7 @@ require([
     // set router paths
     app.config(function($routeProvider) {
         $routeProvider.when('/login', {
-            templateUrl: 'tpl/loading.html',
+            templateUrl: 'tpl/login.html',
             controller: LoginCtrl
         });
         $routeProvider.when('/login-existing', {
