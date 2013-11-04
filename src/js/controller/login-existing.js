@@ -9,6 +9,10 @@ define(function(require) {
         $scope.buttonEnabled = true;
         $scope.incorrect = false;
 
+        $scope.change = function() {
+            $scope.incorrect = false;
+        };
+
         $scope.confirmPassphrase = function() {
             if (!$scope.passphrase) {
                 return;
