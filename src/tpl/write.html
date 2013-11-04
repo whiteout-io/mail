@@ -9,11 +9,11 @@
       <div class="headers">
         <p>
           <span>To:</span>
-          <input type="email" ng-model="to" class="address-input" tabindex="1" focus-me="writerOpen">
+          <input type="email" ng-model="to" ng-change="verifyTo()" ng-class="{'label': toSecure === true, 'label label-primary': toSecure === false}" tabindex="1" focus-me="writerOpen" auto-size="to" spellcheck="false">
         </p>
         <p>
           <span>Cc:</span>
-          <input type="email" ng-model="cc" class="address-input" tabindex="2" disabled>
+          <input type="email" ng-model="cc" tabindex="2" disabled>
         </p>
       </div><!--/.address-headers-->
 
@@ -37,7 +37,7 @@
       </div><!--/.body-->
 
       <div class="send-control">
-        <button ng-click="sendToOutbox()" class="btn" ng-disabled="!to" tabindex="5">Send securely</button>
+        <button ng-click="sendToOutbox()" class="btn" data-icon="{{(toSecure === false) ? '&#xe001;' : (toSecure === true) ? '&#xe009;' : ''}}" ng-disabled="!to" tabindex="5">{{sendBtnText || 'Send'}}</button>
       </div>
     </div><!--/.write-view-->
 

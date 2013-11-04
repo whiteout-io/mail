@@ -24,9 +24,20 @@ define(function(require) {
                 }
 
                 var id = keys.keyId.substring(8, keys.keyId.length);
-                dl.createDownload(keys.publicKeyArmored + keys.privateKeyArmored, id + '.asc', 'text/plain');
+                dl.createDownload({
+                    content: keys.publicKeyArmored + keys.privateKeyArmored,
+                    filename: id + '.asc',
+                    contentType: 'text/plain'
+                }, onSave);
             });
         };
+
+        function onSave(err) {
+            if (err) {
+                console.error(err);
+                return;
+            }
+        }
     };
 
     return AccountCtrl;

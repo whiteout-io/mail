@@ -26,6 +26,7 @@ define(function(require) {
                 fillFields($scope.selected);
                 $scope.updatePreview();
             }
+            $scope.verifyTo();
         });
 
         function resetFields() {
@@ -60,7 +61,49 @@ define(function(require) {
         }
 
         //
-        // Editing
+        // Editing headers
+        //
+
+        $scope.verifyTo = function() {
+            if (!$scope.to) {
+                resetDisplay();
+                return;
+            }
+
+            // set display to insecure while fetching keys
+            displayInsecure();
+            // check if to address is contained in known public keys
+            emailDao._keychain.getReceiverPublicKey($scope.to, function(err, key) {
+                if (err) {
+                    console.error(err);
+                    return;
+                }
+
+                // compare again since model could have changed during the roundtrip
+                if (key && key.userId === $scope.to) {
+                    displaySecure();
+                    $scope.$apply();
+                }
+            });
+        };
+
+        function resetDisplay() {
+            $scope.toSecure = undefined;
+            $scope.sendBtnText = undefined;
+        }
+
+        function displaySecure() {
+            $scope.toSecure = true;
+            $scope.sendBtnText = 'Send securely';
+        }
+
+        function displayInsecure() {
+            $scope.toSecure = false;
+            $scope.sendBtnText = 'Invite & send securely';
+        }
+
+        //
+        // Editing email body
         //
 
         // generate key,iv for encryption preview
@@ -179,6 +222,23 @@ define(function(require) {
                             element[0].focus();
                         });
                     }
+                });
+            }
+        };
+    });
+
+    ngModule.directive('autoSize', function($parse) {
+        return {
+            require: 'ngModel',
+            link: function(scope, elm, attrs) {
+                var model = $parse(attrs.autoSize);
+                scope.$watch(model, function(value) {
+                    if (!value) {
+                        return;
+                    }
+
+                    var width = ((value.length + 2) * 8) + 'px';
+                    elm.css('width', width);
                 });
             }
         };

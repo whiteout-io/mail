@@ -11,6 +11,7 @@
     background-color: $label-back-color;
     color: $label-color;
     box-shadow: 0px 1px 0px $label-shadow-color;
+    transition: background-color 0.3s;
 
     &[data-icon]:before {
         padding-right: 0.5em

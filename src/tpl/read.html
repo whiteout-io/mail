@@ -8,8 +8,8 @@
   <div class="headers">
     <p class="subject" ng-click="closeReadMode()">{{selected.subject || 'No subject'}}</p>
     <p class="date">{{selected.sentDate | date:'EEEE, MMM d, yyyy h:mm a'}}</p>
-    <p class="address">From: <span class="label">{{selected.from[0].name || selected.from[0].address}}</span></p>
-    <p class="address">To: <span class="label" ng-repeat="t in selected.to">{{t.address}} </span></p>
+    <p class="address">From: <span class="label" data-icon-append="&#xe009;">{{selected.from[0].name || selected.from[0].address}}</span></p>
+    <p class="address">To: <span class="label" data-icon-append="&#xe009;" ng-repeat="t in selected.to">{{t.address}} </span></p>
     <div ng-switch="selected.cc !== undefined">
       <p class="address" ng-switch-when="true">
         CC: <span class="label" ng-repeat="t in selected.cc">{{t.address}} </span>
