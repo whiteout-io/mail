@@ -5,64 +5,53 @@ define(function(require) {
         appController = require('js/app-controller');
 
     var LoginExistingCtrl = function($scope, $location) {
+        var emailDao = appController._emailDao;
+
         $scope.incorrect = false;
 
         $scope.confirmPassphrase = function() {
-            var passphrase = $scope.passphrase,
-                emailDao = appController._emailDao;
-
-            if (!passphrase) {
+            if (!$scope.passphrase) {
                 $scope.incorrect = true;
                 return;
             }
 
             $scope.incorrect = false;
-            unlockCrypto(imapLogin);
+            unlockCrypto();
+        };
 
-            function unlockCrypto(callback) {
-                var userId = emailDao._account.emailAddress;
-                emailDao._keychain.getUserKeyPair(userId, function(err, keypair) {
-                    if (err) {
-                        callback(err);
-                        return;
-                    }
-
-                    keypair.privateKey = {
-                        _id: keypair.publicKey._id,
-                        userId: userId,
-                        encryptedKey: $scope.key.privateKeyArmored
-                    };
-                    emailDao.unlock(keypair, passphrase, function(err) {
-                        if (err) {
-                            $scope.incorrect = true;
-                            $scope.$apply();
-                            callback(err);
-                            return;
-                        }
-
-                        emailDao._keychain.putUserKeyPair(keypair, callback);
-                    });
-                });
-            }
-
-            function imapLogin(err) {
+        function unlockCrypto() {
+            var userId = emailDao._account.emailAddress;
+            emailDao._keychain.getUserKeyPair(userId, function(err, keypair) {
                 if (err) {
                     console.error(err);
                     return;
                 }
 
-                // login to imap backend
-                appController._emailDao.imapLogin(function(err) {
+                keypair.privateKey = {
+                    _id: keypair.publicKey._id,
+                    userId: userId,
+                    encryptedKey: $scope.key.privateKeyArmored
+                };
+
+                emailDao.unlock(keypair, $scope.passphrase, function(err) {
                     if (err) {
+                        $scope.incorrect = true;
+                        $scope.$apply();
                         console.error(err);
                         return;
                     }
-                    onLogin();
-                });
-            }
-        };
 
-        function onLogin() {
+                    emailDao._keychain.putUserKeyPair(keypair, onUnlock);
+                });
+            });
+        }
+
+        function onUnlock(err) {
+            if (err) {
+                console.error(err);
+                return;
+            }
+
             $location.path('/desktop');
             $scope.$apply();
         }

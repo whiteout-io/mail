@@ -4,60 +4,52 @@ define(function(require) {
     var appController = require('js/app-controller');
 
     var LoginExistingCtrl = function($scope, $location) {
+        var emailDao = appController._emailDao;
+
         $scope.buttonEnabled = true;
         $scope.incorrect = false;
 
-        $scope.confirmPassphrase = function() {
-            var passphrase = $scope.passphrase,
-                emailDao = appController._emailDao;
+        $scope.change = function() {
+            $scope.incorrect = false;
+        };
 
-            if (!passphrase) {
+        $scope.confirmPassphrase = function() {
+            if (!$scope.passphrase) {
                 return;
             }
 
             // disable button once loggin has started
             $scope.buttonEnabled = false;
             $scope.incorrect = false;
-            unlockCrypto(imapLogin);
+            unlockCrypto();
+        };
 
-            function unlockCrypto(callback) {
-                var userId = emailDao._account.emailAddress;
-                emailDao._keychain.getUserKeyPair(userId, function(err, keypair) {
-                    if (err) {
-                        callback(err);
-                        return;
-                    }
-                    emailDao.unlock(keypair, passphrase, callback);
-                });
-            }
-
-            function imapLogin(err) {
+        function unlockCrypto() {
+            var userId = emailDao._account.emailAddress;
+            appController._emailDao._keychain.getUserKeyPair(userId, function(err, keypair) {
                 if (err) {
                     handleError(err);
                     return;
                 }
+                emailDao.unlock(keypair, $scope.passphrase, onUnlock);
+            });
+        }
 
-                // login to imap backend
-                appController._emailDao.imapLogin(function(err) {
-                    if (err) {
-                        handleError(err);
-                        return;
-                    }
-                    onLogin();
-                });
+        function onUnlock(err) {
+            if (err) {
+                handleError(err);
+                return;
             }
-        };
+
+            $location.path('/desktop');
+            $scope.$apply();
+        }
 
         function handleError(err) {
             $scope.incorrect = true;
             $scope.buttonEnabled = true;
             $scope.$apply();
             console.error(err);
-        }
-
-        function onLogin() {
-            $location.path('/desktop');
-            $scope.$apply();
         }
     };
 

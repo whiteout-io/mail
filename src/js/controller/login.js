@@ -27,13 +27,22 @@ define(function(require) {
                     return;
                 }
 
+                // initiate controller by creating email dao
                 appController.init(auth.emailAddress, auth.token, function(err, availableKeys) {
                     if (err) {
                         console.error(err);
                         return;
                     }
 
-                    redirect(availableKeys);
+                    // login to imap backend
+                    appController._emailDao.imapLogin(function(err) {
+                        if (err) {
+                            console.error(err);
+                            console.log('Error logging into IMAP... proceeding in offline mode.');
+                        }
+
+                        redirect(availableKeys);
+                    });
                 });
             });
         }
