@@ -24,10 +24,6 @@
     <iframe ng-switch-when="true" sandbox="allow-same-origin" srcdoc="{{selected.body}}" seamless frame-load></iframe>
 
     <!-- Render parts of a text only email in paragraphs for easier styling -->
-    <p ng-repeat="part in selected.bodyDisplayParts track by $index">
-      <span ng-switch="part.length !== 0">
-        <span ng-switch-when="true">{{part}}</span>
-      </span>
-    </p>
+    <p ng-repeat="part in selected.bodyDisplayParts track by $index">{{part}}</p>
   </div><!--/.body-->
 </div><!--/.view-read-->

@@ -15,18 +15,20 @@ define(function(require) {
             firstSelect = true;
 
         emailDao = appController._emailDao;
+        if (emailDao) {
+            emailDao.onIncomingMessage = function(email) {
+                if (email.subject.indexOf(str.subjectPrefix) === -1) {
+                    return;
+                }
 
-        emailDao.onIncomingMessage = function(email) {
-            if (email.subject.indexOf(str.subjectPrefix) === -1) {
-                return;
-            }
-
-            // sync
-            $scope.synchronize(function() {
-                // show notification
-                notificationForEmail(email);
-            });
-        };
+                // sync
+                $scope.synchronize(function() {
+                    // show notification
+                    notificationForEmail(email);
+                });
+            };
+            chrome.notifications.onClicked.addListener(notificationClicked);
+        }
 
         function notificationClicked(uidString) {
             var email, uid = parseInt(uidString, 10);
@@ -43,7 +45,6 @@ define(function(require) {
                 $scope.select(email);
             }
         }
-        chrome.notifications.onClicked.addListener(notificationClicked);
 
         //
         // scope functions
@@ -55,7 +56,13 @@ define(function(require) {
             }
             // split text only emails into parts for easier rendering
             if (!email.html && typeof email.body === 'string') {
-                email.bodyDisplayParts = email.body.split('\n');
+                email.bodyDisplayParts = [];
+                var parts = email.body.split('\n');
+                parts.forEach(function(part) {
+                    if (part.trim().length > 0) {
+                        email.bodyDisplayParts.push(part);
+                    }
+                });
             }
             $scope.selected = email;
             // set selected in parent scope ro it can be displayed in the read view

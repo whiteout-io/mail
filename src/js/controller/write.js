@@ -6,6 +6,7 @@ define(function(require) {
         aes = require('cryptoLib/aes-cbc'),
         util = require('cryptoLib/util'),
         str = require('js/app-config').string,
+        $ = require('jquery'),
         emailDao;
 
     //
@@ -129,9 +130,8 @@ define(function(require) {
                 return;
             }
 
-            body = $scope.body;
             // remove generated html from body
-            body = parseBody(body);
+            body = parseBody($scope.body);
 
             email = {
                 to: [], // list of receivers
@@ -165,23 +165,12 @@ define(function(require) {
     };
 
     function parseBody(body) {
-        function has(substr) {
-            return (body.indexOf(substr) !== -1);
-        }
-        while (has('<div><br>')) {
-            body = body.replace('<div><br>', '\n');
-        }
-        while (has('<div>')) {
-            body = body.replace('<div>', '\n');
-        }
-        while (has('<br>')) {
-            body = body.replace('<br>', '\n');
-        }
-        while (has('</div>')) {
-            body = body.replace('</div>', '');
-        }
+        var regex = /(\r\n|\n|\r)/gm;
 
-        return body;
+        var text = body.replace(regex, '').split('<div><br>').join('\n').split('<div>').join('\n').split('<br>').join('\n');
+        var html = '<p>' + text + '</p>';
+
+        return $(html).text();
     }
 
     //
