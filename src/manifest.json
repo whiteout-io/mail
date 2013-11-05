@@ -10,6 +10,7 @@
   "permissions": [{
       "fileSystem": ["write"]
     },
+    "notifications",
     "https://keys.whiteout.io/",
     "identity", {
       "socket": [

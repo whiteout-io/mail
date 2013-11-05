@@ -28,7 +28,8 @@ define([], function() {
 				host: 'smtp.gmail.com'
 			}
 		},
-		checkOutboxInterval: 30000
+		checkOutboxInterval: 30000,
+		iconPath: '/img/icon.png'
 	};
 
 	/**

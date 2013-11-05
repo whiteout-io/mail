@@ -5,6 +5,8 @@ define(function(require) {
         angular = require('angular'),
         appController = require('js/app-controller'),
         IScroll = require('iscroll'),
+        str = require('js/app-config').string,
+        cfg = require('js/app-config').config,
         emailDao;
 
     var MailListCtrl = function($scope) {
@@ -13,6 +15,35 @@ define(function(require) {
             firstSelect = true;
 
         emailDao = appController._emailDao;
+
+        emailDao.onIncomingMessage = function(email) {
+            if (email.subject.indexOf(str.subjectPrefix) === -1) {
+                return;
+            }
+
+            // sync
+            $scope.synchronize(function() {
+                // show notification
+                notificationForEmail(email);
+            });
+        };
+
+        function notificationClicked(uidString) {
+            var email, uid = parseInt(uidString, 10);
+
+            if (isNaN(uid)) {
+                return;
+            }
+
+            email = _.findWhere($scope.emails, {
+                uid: uid
+            });
+
+            if (email) {
+                $scope.select(email);
+            }
+        }
+        chrome.notifications.onClicked.addListener(notificationClicked);
 
         //
         // scope functions
@@ -34,7 +65,7 @@ define(function(require) {
             markAsRead(email);
         };
 
-        $scope.$parent.synchronize = $scope.synchronize = function() {
+        $scope.$parent.synchronize = $scope.synchronize = function(callback) {
             updateStatus('Syncing ...');
             // sync from imap to local db
             syncImapFolder({
@@ -49,6 +80,9 @@ define(function(require) {
                     num: num
                 }, function() {
                     updateStatus('Last update: ', new Date());
+                    if (callback) {
+                        callback();
+                    }
                 });
             });
         };
@@ -74,6 +108,15 @@ define(function(require) {
         //
         // helper functions
         //
+
+        function notificationForEmail(email) {
+            chrome.notifications.create('' + email.uid, {
+                type: 'basic',
+                title: email.from[0].address,
+                message: email.subject.split(str.subjectPrefix)[1],
+                iconUrl: chrome.runtime.getURL(cfg.iconPath)
+            }, function() {});
+        }
 
         function initList() {
             updateStatus('Read cache ...');

@@ -17,6 +17,13 @@ define(function(require) {
         self._smtpClient = smtpClient;
         self._crypto = crypto;
         self._devicestorage = devicestorage;
+
+        // delegation-esque pattern to mitigate between node-style events and plain js
+        self._imapClient.onIncomingMessage = function(message) {
+            if (typeof self.onIncomingMessage === 'function') {
+                self.onIncomingMessage(message);
+            }
+        };
     };
 
     /**
