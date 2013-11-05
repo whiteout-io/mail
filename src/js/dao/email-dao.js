@@ -331,7 +331,7 @@ define(function(require) {
 
                 // find encrypted messages by subject
                 emails.forEach(function(i) {
-                    if (i.subject.indexOf(str.subjectPrefix) !== -1) {
+                    if (typeof i.subject === 'string' && i.subject.indexOf(str.subjectPrefix) !== -1) {
                         headers.push(i);
                     }
                 });
