@@ -39,7 +39,7 @@ define(function(require) {
         }
 
         function fillFields(re) {
-            var from, body, bodyRows;
+            var from, body;
 
             if (!re) {
                 return;
@@ -53,12 +53,13 @@ define(function(require) {
 
             // fill text body
             from = re.from[0].name || re.from[0].address;
-            body = '<br><br>' + $filter('date')(re.sentDate, 'EEEE, MMM d, yyyy h:mm a') + ' ' + from + ' wrote:';
-            bodyRows = re.body.split('\n');
-            bodyRows.forEach(function(row) {
-                body += (!re.html) ? '<br>' + row : '';
-            });
-            $scope.body = body;
+            body = '<br><br>' + $filter('date')(re.sentDate, 'EEEE, MMM d, yyyy h:mm a') + ' ' + from + ' wrote:<br>';
+
+            // clean text from markup if to prevent injection in contenteditable
+            if (!re.html) {
+                body += $('<p>' + re.body + '</p>').text().split('\n').join('<br>');
+                $scope.body = body;
+            }
         }
 
         //
@@ -168,9 +169,8 @@ define(function(require) {
         var regex = /(\r\n|\n|\r)/gm;
 
         var text = body.replace(regex, '').split('<div><br>').join('\n').split('<div>').join('\n').split('<br>').join('\n');
-        var html = '<p>' + text + '</p>';
 
-        return $(html).text();
+        return $('<p>' + text + '</p>').text();
     }
 
     //
