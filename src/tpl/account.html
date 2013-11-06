@@ -5,6 +5,28 @@
   </header>
 
   <div class="content">
-    <button ng-click="exportKeyFile()" class="btn">Export keypair</button>
-  </div>
-</div>
+    <div class="view-account">
+        <table summary="Kontakt">
+            <tbody>
+                <tr>
+                    <td>Account</td>
+                    <td>{{eMail}}</td>
+                </tr>
+                <tr>
+                    <td>PGP Key ID</td>
+                    <td>{{keyId}}</td>
+                </tr>
+                <tr>
+                    <td>PGP Key Fingerprint</td>
+                    <td><span>{{fingerprint}}</span></td>
+                </tr>
+                <tr>
+                    <td>PGP Key Size</td>
+                    <td>{{keysize}} bit</td>
+                </tr>
+            </tbody>
+        </table>
+        <button ng-click="exportKeyFile()" class="btn">Export keypair</button>
+    </div><!-- /.view-account -->
+  </div><!-- /.content -->
+</div><!-- /.lightbox-body -->

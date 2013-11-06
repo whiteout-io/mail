@@ -132,6 +132,20 @@ define(function(require) {
                 });
             });
 
+            describe('Get KeyId', function() {
+                it('should work', function() {
+                    var keyId = pgp.getKeyId();
+                    expect(keyId).to.equal('F6F60E9B42CDFF4C');
+                });
+            });
+
+            describe('Get Fingerprint', function() {
+                it('should work', function() {
+                    var fingerprint = pgp.getFingerprint();
+                    expect(fingerprint).to.equal('5856CEF789C3A307E8A1B976F6F60E9B42CDFF4C');
+                });
+            });
+
             describe('Encrypt', function() {
                 it('should work', function(done) {
                     pgp.encrypt(message, [pubkey], function(err, ct) {
