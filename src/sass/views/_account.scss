@@ -1,0 +1,29 @@
+.view-account {
+    padding: 0px;
+    color: $color-grey-dark;
+
+    @include respond-to(mobile) {
+        height: 100%;
+    }
+
+    table {
+        margin: 50px auto 100px auto;
+        
+        td {
+            padding-top: 15px;
+
+            &:first-child {
+                text-align: right;
+                padding-right: 15px;
+                font-weight: bold;
+            }
+        }
+    }
+
+    button {
+        border: 0!important;
+        position: absolute;
+        bottom: 15px;
+        right: 15px;
+    }
+}

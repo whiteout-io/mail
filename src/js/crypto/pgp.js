@@ -44,6 +44,38 @@ define(function(require) {
     };
 
     /**
+     * Show a user's fingerprint
+     */
+    PGP.prototype.getFingerprint = function() {
+        var publicKey, privateKey;
+
+        privateKey = openpgp.keyring.exportPrivateKey(0);
+        if (privateKey && privateKey.keyId) {
+            publicKey = openpgp.keyring.getPublicKeysForKeyId(privateKey.keyId)[0];
+        }
+
+        if (!privateKey || !privateKey.keyId || !privateKey.armored || !publicKey || !publicKey.armored) {
+            console.error('Public key not available!');
+            return '';
+        }
+
+        return util.hexstrdump(publicKey.obj.getFingerprint()).toUpperCase();
+    };
+
+    /**
+     * Show a user's key id
+     */
+    PGP.prototype.getKeyId = function() {
+        var privateKey = openpgp.keyring.exportPrivateKey(0);
+        if (!privateKey || !privateKey.keyId) {
+            console.error('Public key not available!');
+            return '';
+        }
+
+        return util.hexstrdump(privateKey.keyId).toUpperCase();
+    };
+
+    /**
      * Import the user's key pair
      */
     PGP.prototype.importKeys = function(options, callback) {
