@@ -6,7 +6,6 @@ define(function(require) {
         aes = require('cryptoLib/aes-cbc'),
         util = require('cryptoLib/util'),
         str = require('js/app-config').string,
-        $ = require('jquery'),
         emailDao;
 
     //
@@ -39,7 +38,7 @@ define(function(require) {
         }
 
         function fillFields(re) {
-            var from, body;
+            var from, cleaned, body;
 
             if (!re) {
                 return;
@@ -57,7 +56,8 @@ define(function(require) {
 
             // clean text from markup if to prevent injection in contenteditable
             if (!re.html) {
-                body += $('<p>' + re.body + '</p>').text().split('\n').join('<br>');
+                cleaned = angular.element('<p>' + re.body + '</p>').text();
+                body += cleaned.split('\n').join('<br>');
                 $scope.body = body;
             }
         }
@@ -170,7 +170,7 @@ define(function(require) {
 
         var text = body.replace(regex, '').split('<div><br>').join('\n').split('<div>').join('\n').split('<br>').join('\n');
 
-        return $('<p>' + text + '</p>').text();
+        return angular.element('<p>' + text + '</p>').text();
     }
 
     //
