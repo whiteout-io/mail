@@ -9,7 +9,7 @@
       <div class="headers">
         <p>
           <span>To:</span>
-          <input type="email" ng-model="to" ng-change="verifyTo()" ng-class="{'label': toSecure === true, 'label label-primary': toSecure === false}" tabindex="1" focus-me="writerOpen" auto-size="to" spellcheck="false">
+          <input type="email" ng-model="to" ng-change="verifyTo()" ng-class="{'label': toSecure === true, 'label label-primary': toSecure === false}" tabindex="1" focus-me="writerOpen && !writerReply" auto-size="to" spellcheck="false">
         </p>
         <p>
           <span>Cc:</span>
@@ -27,7 +27,7 @@
       </div><!--/.subject-box-->
 
       <div class="body">
-        <p ng-model="body" contentEditable="true" ng-change="updatePreview()" tabindex="4"></p>
+        <p ng-model="body" contentEditable="true" ng-change="updatePreview()" tabindex="4" focus-me="writerOpen && writerReply"></p>
 
         <div class="encrypt-preview">
           <p>-----BEGIN ENCRYPTED PREVIEW-----<br>{{ciphertextPreview}}<br>-----END ENCRYPTED PREVIEW-----</p>
