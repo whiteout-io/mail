@@ -243,6 +243,7 @@ define(function(require) {
         });
 
         function handleMail(email, localCallback) {
+            // remove subject filter prefix
             email.subject = email.subject.split(str.subjectPrefix)[1];
 
             // encrypted mail

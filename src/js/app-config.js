@@ -41,8 +41,7 @@ define([], function() {
 		cryptPrefix: '-----BEGIN PGP MESSAGE-----',
 		cryptSuffix: '-----END PGP MESSAGE-----',
 		signature: 'Sent securely from whiteout mail',
-		webSite: 'http://whiteout.io',
-		
+		webSite: 'http://whiteout.io'
 	};
 
 	/**
