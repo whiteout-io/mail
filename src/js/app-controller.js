@@ -40,6 +40,23 @@ define(function(require) {
         }
     };
 
+    self.checkForUpdate = function() {
+        // check for update and restart app automatically
+        chrome.runtime.onUpdateAvailable.addListener(function(details) {
+            console.log("Updating to version " + details.version);
+            chrome.runtime.reload();
+        });
+        chrome.runtime.requestUpdateCheck(function(status) {
+            if (status === "update_found") {
+                console.log("Update pending...");
+            } else if (status === "no_update") {
+                console.log("No update found.");
+            } else if (status === "throttled") {
+                console.log("Checking updates too frequently.");
+            }
+        });
+    };
+
     /**
      * Request an OAuth token from chrome for gmail users
      */
