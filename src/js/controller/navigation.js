@@ -50,6 +50,10 @@ define(function(require) {
             $scope.accountOpen = false;
         };
 
+        //
+        // Outbox checker
+        //
+
         $scope.emptyOutbox = function() {
             var dbType = 'email_OUTBOX',
                 outbox = _.findWhere($scope.folders, {
