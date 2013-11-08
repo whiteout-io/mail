@@ -39,7 +39,7 @@ define(function(require) {
         };
 
         $scope.openFolder = function(folder) {
-            $scope.currentFolder = folder;
+            $scope.state.nav.currentFolder = folder;
             $scope.state.nav.toggle(false);
         };
 
@@ -48,59 +48,6 @@ define(function(require) {
         };
         $scope.closeAccount = function() {
             $scope.accountOpen = false;
-        };
-
-        $scope.remove = function(email) {
-            if (!email) {
-                return;
-            }
-
-            var index;
-            removeLocalAndShowNext();
-            removeRemote();
-
-            function removeLocalAndShowNext() {
-                index = $scope.emails.indexOf(email);
-                // show the next mail
-                if ($scope.emails.length > 1) {
-                    // if we're about to delete the last entry of the array, show the previous (i.e. the one below in the list), 
-                    // otherwise show the next one (i.e. the one above in the list)
-                    $scope.select(_.last($scope.emails) === email ? $scope.emails[index - 1] : $scope.emails[index + 1]);
-                } else {
-                    // if we have only one email in the array, show nothing
-                    $scope.select();
-                    $scope.selected = undefined;
-                }
-                $scope.emails.splice(index, 1);
-            }
-
-            function removeRemote() {
-                var trashFolder = _.findWhere($scope.folders, {
-                    type: 'Trash'
-                });
-                if ($scope.currentFolder === trashFolder) {
-                    emailDao.imapDeleteMessage({
-                        folder: $scope.currentFolder.path,
-                        uid: email.uid
-                    }, moved);
-                    return;
-                }
-
-                emailDao.imapMoveMessage({
-                    folder: $scope.currentFolder.path,
-                    uid: email.uid,
-                    destination: trashFolder.path
-                }, moved);
-            }
-
-            function moved(err) {
-                if (err) {
-                    console.error(err);
-                    $scope.emails.splice(index, 0, email);
-                    $scope.$apply();
-                    return;
-                }
-            }
         };
 
         $scope.emptyOutbox = function() {
@@ -267,15 +214,20 @@ define(function(require) {
             elm.bind('keydown', function(e) {
                 var cs = scope.$$childTail;
 
-                if (e.keyCode === 78 && !scope.state.writer.open) {
+                // global state is not yet set, ignore keybaord shortcuts
+                if (!scope.state) {
+                    return;
+                }
+
+                if (e.keyCode === 78 && scope.state.writer && !scope.state.writer.open) {
                     // n -> new mail
                     e.preventDefault();
                     scope.state.writer.write();
 
-                } else if (e.keyCode === 82 && !scope.state.writer.open && cs.selected) {
+                } else if (e.keyCode === 82 && scope.state.writer && !scope.state.writer.open && scope.state.mailList.selected) {
                     // r -> reply
                     e.preventDefault();
-                    scope.state.writer.write(cs.selected);
+                    scope.state.writer.write(scope.state.mailList.selected);
 
                 } else if (e.keyCode === 27 && scope.state.writer.open) {
                     // escape -> close writer
@@ -287,10 +239,10 @@ define(function(require) {
                     e.preventDefault();
                     cs.closeAccount();
 
-                } else if (e.keyCode === 83 && !scope.state.writer.open && cs.synchronize) {
+                } else if (e.keyCode === 83 && scope.state.writer && !scope.state.writer.open && scope.state.mailList.synchronize) {
                     // s -> sync folder
                     e.preventDefault();
-                    cs.synchronize();
+                    scope.state.mailList.synchronize();
                 }
 
                 scope.$apply();

@@ -1,29 +1,29 @@
 <div class="controls">
-  <button ng-click="remove(selected)" class="btn-icon" title="Delete mail">&#xe005;</button>
-  <button ng-click="state.writer.write(selected)" class="btn-icon" title="Reply to">&#xe002;</button>
+  <button ng-click="state.mailList.remove(state.mailList.selected)" class="btn-icon" title="Delete mail">&#xe005;</button>
+  <button ng-click="state.writer.write(state.mailList.selected)" class="btn-icon" title="Reply to">&#xe002;</button>
   <button ng-click="state.writer.write()" class="btn-icon" title="New mail">&#xe006;</button>
 </div><!--/.controls-->
 
 <div class="view-read" ng-controller="ReadCtrl">
   <div class="headers">
-    <p class="subject" ng-click="state.read.toggle(false)">{{selected.subject || 'No subject'}}</p>
-    <p class="date">{{selected.sentDate | date:'EEEE, MMM d, yyyy h:mm a'}}</p>
-    <p class="address">From: <span class="label" data-icon-append="&#xe009;">{{selected.from[0].name || selected.from[0].address}}</span></p>
-    <p class="address">To: <span class="label" data-icon-append="&#xe009;" ng-repeat="t in selected.to">{{t.address}} </span></p>
-    <div ng-switch="selected.cc !== undefined">
+    <p class="subject" ng-click="state.read.toggle(false)">{{state.mailList.selected.subject || 'No subject'}}</p>
+    <p class="date">{{state.mailList.selected.sentDate | date:'EEEE, MMM d, yyyy h:mm a'}}</p>
+    <p class="address">From: <span class="label" data-icon-append="&#xe009;">{{state.mailList.selected.from[0].name || state.mailList.selected.from[0].address}}</span></p>
+    <p class="address">To: <span class="label" data-icon-append="&#xe009;" ng-repeat="t in state.mailList.selected.to">{{t.address}} </span></p>
+    <div ng-switch="state.mailList.selected.cc !== undefined">
       <p class="address" ng-switch-when="true">
-        CC: <span class="label" ng-repeat="t in selected.cc">{{t.address}} </span>
+        CC: <span class="label" ng-repeat="t in state.mailList.selected.cc">{{t.address}} </span>
       </p>
     </div>
   </div><!--/.headers-->
 
   <div class="seperator-line"></div>
 
-  <div class="body" ng-switch="selected.html === true">
+  <div class="body" ng-switch="state.mailList.selected.html === true">
     <!-- sandbox untrusted markup from html emails in an iframe. The "allow-same-origin" attribute is required to dynamically adjust the height of the iframe. Script execution is not allowed. -->
-    <iframe ng-switch-when="true" sandbox="allow-same-origin" srcdoc="{{selected.body}}" seamless frame-load></iframe>
+    <iframe ng-switch-when="true" sandbox="allow-same-origin" srcdoc="{{state.mailList.selected.body}}" seamless frame-load></iframe>
 
     <!-- Render parts of a text only email in paragraphs for easier styling -->
-    <p ng-repeat="part in selected.bodyDisplayParts track by $index">{{part}}</p>
+    <p ng-repeat="part in state.mailList.selected.bodyDisplayParts track by $index">{{part}}</p>
   </div><!--/.body-->
 </div><!--/.view-read-->

@@ -14,6 +14,10 @@ define(function(require) {
             num = 100,
             firstSelect = true;
 
+        //
+        // Init
+        //
+
         emailDao = appController._emailDao;
         if (emailDao) {
             emailDao.onIncomingMessage = function(email) {
@@ -50,7 +54,7 @@ define(function(require) {
         // scope functions
         //
 
-        $scope.$parent.select = $scope.select = function(email) {
+        $scope.select = function(email) {
             if (!email) {
                 return;
             }
@@ -64,15 +68,14 @@ define(function(require) {
                     }
                 });
             }
-            $scope.selected = email;
-            // set selected in parent scope ro it can be displayed in the read view
-            $scope.$parent.selected = $scope.selected;
+
+            $scope.state.mailList.selected = email;
 
             // mark selected message as 'read'
             markAsRead(email);
         };
 
-        $scope.$parent.synchronize = $scope.synchronize = function(callback) {
+        $scope.synchronize = function(callback) {
             updateStatus('Syncing ...');
             // sync from imap to local db
             syncImapFolder({
@@ -94,7 +97,60 @@ define(function(require) {
             });
         };
 
-        $scope.$watch('currentFolder', function() {
+        $scope.remove = function(email) {
+            if (!email) {
+                return;
+            }
+
+            var index;
+            removeLocalAndShowNext();
+            removeRemote();
+
+            function removeLocalAndShowNext() {
+                index = $scope.emails.indexOf(email);
+                // show the next mail
+                if ($scope.emails.length > 1) {
+                    // if we're about to delete the last entry of the array, show the previous (i.e. the one below in the list), 
+                    // otherwise show the next one (i.e. the one above in the list)
+                    $scope.select(_.last($scope.emails) === email ? $scope.emails[index - 1] : $scope.emails[index + 1]);
+                } else {
+                    // if we have only one email in the array, show nothing
+                    $scope.select();
+                    $scope.state.mailList.selected = undefined;
+                }
+                $scope.emails.splice(index, 1);
+            }
+
+            function removeRemote() {
+                var trashFolder = _.findWhere($scope.folders, {
+                    type: 'Trash'
+                });
+                if (getFolder() === trashFolder) {
+                    emailDao.imapDeleteMessage({
+                        folder: getFolder().path,
+                        uid: email.uid
+                    }, moved);
+                    return;
+                }
+
+                emailDao.imapMoveMessage({
+                    folder: getFolder().path,
+                    uid: email.uid,
+                    destination: trashFolder.path
+                }, moved);
+            }
+
+            function moved(err) {
+                if (err) {
+                    console.error(err);
+                    $scope.emails.splice(index, 0, email);
+                    $scope.$apply();
+                    return;
+                }
+            }
+        };
+
+        $scope.$watch('state.nav.currentFolder', function() {
             if (!getFolder()) {
                 return;
             }
@@ -108,9 +164,15 @@ define(function(require) {
             // development... display dummy mail objects
             firstSelect = true;
             updateStatus('Last update: ', new Date());
-            $scope.$parent.emails = $scope.emails = createDummyMails();
+            $scope.emails = createDummyMails();
             $scope.select($scope.emails[0]);
         });
+
+        // share local scope functions with root state
+        $scope.state.mailList = {
+            remove: $scope.remove,
+            synchronize: $scope.synchronize
+        };
 
         //
         // helper functions
@@ -185,8 +247,6 @@ define(function(require) {
         function updateStatus(lbl, time) {
             $scope.lastUpdateLbl = lbl;
             $scope.lastUpdate = (time) ? time : '';
-            $scope.$parent.lastUpdateLbl = $scope.lastUpdateLbl;
-            $scope.$parent.lastUpdate = $scope.lastUpdate;
         }
 
         function displayEmails(emails) {
@@ -202,13 +262,13 @@ define(function(require) {
                 return -e.uid;
             });
 
-            $scope.$parent.emails = $scope.emails = emails;
+            $scope.emails = emails;
             $scope.select($scope.emails[0]);
             $scope.$apply();
         }
 
         function getFolder() {
-            return $scope.$parent.currentFolder;
+            return $scope.state.nav.currentFolder;
         }
 
         function markAsRead(email) {

@@ -166,7 +166,7 @@ define(function(require) {
                     return;
                 }
 
-                $scope.closeWriter();
+                $scope.state.writer.close();
                 $scope.$apply();
                 $scope.emptyOutbox();
             });

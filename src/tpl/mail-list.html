@@ -1,12 +1,12 @@
-<div class="view-mail-list">
+<div class="view-mail-list" ng-controller="MailListCtrl">
   <!-- nav controll and section headline -->
   <header data-icon="&#xe004;" ng-click="state.nav.toggle(true); $event.stopPropagation()">
-    <h2>{{currentFolder.type}}</h2>
+    <h2>{{state.nav.currentFolder.type}}</h2>
   </header>
 
   <div class="list-wrapper" ng-iscroll>
     <ul class="mail-list">
-      <li ng-class="{'mail-list-active': email === selected, 'mail-list-attachment': email.attachments !== undefined && email.attachments.length > 0, 'mail-list-unread': email.unread, 'mail-list-replied': email.answered}" ng-click="select(email)" ng-repeat="email in emails">
+      <li ng-class="{'mail-list-active': email === state.mailList.selected, 'mail-list-attachment': email.attachments !== undefined && email.attachments.length > 0, 'mail-list-unread': email.unread, 'mail-list-replied': email.answered}" ng-click="select(email)" ng-repeat="email in emails">
         <h3>{{email.from[0].name || email.from[0].address}}</h3>
         <div class="head">
           <p class="subject">{{email.subject || 'No subject'}}</p>
