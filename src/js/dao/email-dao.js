@@ -3,7 +3,8 @@ define(function(require) {
 
     var _ = require('underscore'),
         util = require('cryptoLib/util'),
-        str = require('js/app-config').string;
+        str = require('js/app-config').string,
+        consts = require('js/app-config').constants;
 
     /**
      * A high-level Data-Access Api for handling Email synchronization
@@ -208,7 +209,7 @@ define(function(require) {
      */
     EmailDAO.prototype.listMessages = function(options, callback) {
         var self = this,
-            encryptedList = [];
+            cleartextList = [];
 
         // validate options
         if (!options.folder) {
@@ -227,63 +228,123 @@ define(function(require) {
                 return;
             }
 
-            // find encrypted items
-            emails.forEach(function(i) {
-                if (typeof i.body === 'string' && i.body.indexOf(str.cryptPrefix) !== -1 && i.body.indexOf(str.cryptSuffix) !== -1) {
-                    // parse ct object from ascii armored message block
-                    encryptedList.push(parseMessageBlock(i));
-                }
-            });
-
-            if (encryptedList.length === 0) {
-                callback(null, []);
+            if (emails.length === 0) {
+                callback(null, cleartextList);
                 return;
             }
 
-            // decrypt items
-            decryptList(encryptedList, callback);
+            var after = _.after(emails.length, function() {
+                callback(null, cleartextList);
+            });
+
+            _.each(emails, function(email) {
+                handleMail(email, after);
+            });
         });
+
+        function handleMail(email, localCallback) {
+            email.subject = email.subject.split(str.subjectPrefix)[1];
+
+            // encrypted mail
+            if (isPGPMail(email)) {
+                email = parseMessageBlock(email);
+                decrypt(email, localCallback);
+                return;
+            }
+
+            // verification mail
+            if (isVerificationMail(email)) {
+                verify(email, localCallback);
+                return;
+            }
+
+            // cleartext mail
+            cleartextList.push(email);
+            localCallback();
+        }
+
+        function isPGPMail(email) {
+            return typeof email.body === 'string' && email.body.indexOf(str.cryptPrefix) !== -1 && email.body.indexOf(str.cryptSuffix) !== -1;
+        }
+
+        function isVerificationMail(email) {
+            return email.subject === consts.verificationSubject;
+        }
 
         function parseMessageBlock(email) {
             var messageBlock;
 
             // parse email body for encrypted message block
-            try {
-                // get ascii armored message block by prefix and suffix
-                messageBlock = email.body.split(str.cryptPrefix)[1].split(str.cryptSuffix)[0];
-                // add prefix and suffix again
-                email.body = str.cryptPrefix + messageBlock + str.cryptSuffix;
-                email.subject = email.subject.split(str.subjectPrefix)[1];
-            } catch (e) {
-                callback({
-                    errMsg: 'Error parsing encrypted message block!'
-                });
-                return;
-            }
+            // get ascii armored message block by prefix and suffix
+            messageBlock = email.body.split(str.cryptPrefix)[1].split(str.cryptSuffix)[0];
+            // add prefix and suffix again
+            email.body = str.cryptPrefix + messageBlock + str.cryptSuffix;
 
             return email;
         }
 
-        function decryptList(list, callback) {
-            var after = _.after(list.length, function() {
-                callback(null, list);
+        function decrypt(email, localCallback) {
+            // fetch public key required to verify signatures
+            var sender = email.from[0].address;
+            self._keychain.getReceiverPublicKey(sender, function(err, senderPubkey) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                // decrypt and verfiy signatures
+                self._crypto.decrypt(email.body, senderPubkey.publicKey, function(err, decrypted) {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+
+                    email.body = decrypted;
+                    cleartextList.push(email);
+                    localCallback();
+                });
             });
+        }
 
-            list.forEach(function(i) {
-                // gather public keys required to verify signatures
-                var sender = i.from[0].address;
-                self._keychain.getReceiverPublicKey(sender, function(err, senderPubkey) {
+        function verify(email, localCallback) {
+            var uuid, index;
 
-                    // decrypt and verfiy signatures
-                    self._crypto.decrypt(i.body, senderPubkey.publicKey, function(err, decrypted) {
-                        if (err) {
-                            callback(err);
-                            return;
-                        }
+            if (!email.unread) {
+                // don't bother if the email was already marked as read
+                localCallback();
+                return;
+            }
 
-                        i.body = decrypted;
+            index = email.body.indexOf(consts.verificationUrlPrefix);
+            if (index === -1) {
+                localCallback();
+                return;
+            }
 
-                        after();
+            uuid = email.body.substr(index + consts.verificationUrlPrefix.length, consts.verificationUuidLength);
+            self._keychain.verifyPublicKey(uuid, function(err) {
+                if (err) {
+                    console.error('Unable to verify public key: ' + err.errMsg);
+                    localCallback();
+                    return;
+                }
+
+                // public key has been verified, mark the message as read, delete it, and ignore it in the future
+                self.imapMarkMessageRead({
+                    folder: options.folder,
+                    uid: email.uid
+                }, function(err) {
+                    if (err) {
+                        // if marking the mail as read failed, don't bother
+                        localCallback();
+                        return;
+                    }
+
+                    self.imapDeleteMessage({
+                        folder: options.folder,
+                        uid: email.uid
+                    }, function() {
+                        localCallback();
                     });
                 });
             });
@@ -360,11 +421,6 @@ define(function(require) {
                 }, function(err, message) {
                     if (err) {
                         callback(err);
-                        return;
-                    }
-
-                    if (typeof message.body !== 'string' || message.body.indexOf(str.cryptPrefix) === -1 || message.body.indexOf(str.cryptSuffix) === -1) {
-                        after();
                         return;
                     }
 

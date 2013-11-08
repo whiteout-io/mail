@@ -41,7 +41,17 @@ define([], function() {
 		cryptPrefix: '-----BEGIN PGP MESSAGE-----',
 		cryptSuffix: '-----END PGP MESSAGE-----',
 		signature: 'Sent securely from whiteout mail',
-		webSite: 'http://whiteout.io'
+		webSite: 'http://whiteout.io',
+		
+	};
+
+	/**
+	 * Contants are maintained here.
+	 */
+	app.constants = {
+		verificationSubject: 'New public key uploaded',
+		verificationUrlPrefix: 'https://keys.whiteout.io/verify/',
+		verificationUuidLength: 36
 	};
 
 	return app;
