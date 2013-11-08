@@ -13,6 +13,15 @@ define(function(require) {
     };
 
     /**
+     * Verifies the public key of a user o nthe public key store
+     * @param {String} uuid The uuid to verify the key
+     * @param {Function} callback(error) Callback with an optional error object when the verification is done. If the was an error, the error object contains the information for it.
+     */
+    KeychainDAO.prototype.verifyPublicKey = function(uuid, callback) {
+        this._publicKeyDao.verify(uuid, callback);
+    };
+
+    /**
      * Get an array of public keys by looking in local storage and
      * fetching missing keys from the cloud service.
      * @param ids [Array] the key ids as [{_id, userId}]

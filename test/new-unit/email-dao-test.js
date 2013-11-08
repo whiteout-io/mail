@@ -16,7 +16,7 @@ define(function(require) {
         asymKeySize: 512
     };
 
-    var dummyMail;
+    var dummyMail, verificationMail, plaintextMail;
 
     var publicKey = "-----BEGIN PUBLIC KEY-----\r\n" + "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCxy+Te5dyeWd7g0P+8LNO7fZDQ\r\n" + "g96xTb1J6pYE/pPTMlqhB6BRItIYjZ1US5q2vk5Zk/5KasBHAc9RbCqvh9v4XFEY\r\n" + "JVmTXC4p8ft1LYuNWIaDk+R3dyYXmRNct/JC4tks2+8fD3aOvpt0WNn3R75/FGBt\r\n" + "h4BgojAXDE+PRQtcVQIDAQAB\r\n" + "-----END PUBLIC KEY-----";
 
@@ -37,6 +37,28 @@ define(function(require) {
                 }], // list of receivers
                 subject: "[whiteout] Hello", // Subject line
                 body: "Hello world" // plaintext body
+            }, verificationMail = {
+                from: [{
+                    name: 'Whiteout Test',
+                    address: 'whiteout.test@t-online.de'
+                }], // sender address
+                to: [{
+                    address: 'safewithme.testuser@gmail.com'
+                }], // list of receivers
+                subject: "[whiteout] New public key uploaded", // Subject line
+                body: "https://keys.whiteout.io/verify/OMFG_FUCKING_BASTARD_UUID_FROM_HELL!", // plaintext body
+                unread: true
+            }, plaintextMail = {
+                from: [{
+                    name: 'Whiteout Test',
+                    address: 'whiteout.test@t-online.de'
+                }], // sender address
+                to: [{
+                    address: 'safewithme.testuser@gmail.com'
+                }], // list of receivers
+                subject: "OMG SO PLAIN TEXT", // Subject line
+                body: "yo dawg, we be all plaintext and stuff...", // plaintext body
+                unread: true
             };
 
             account = {
@@ -578,7 +600,7 @@ define(function(require) {
             describe('IMAP: list messages from local storage', function() {
                 it('should work', function(done) {
                     dummyMail.body = app.string.cryptPrefix + btoa('asdf') + app.string.cryptSuffix;
-                    devicestorageStub.listItems.yields(null, [dummyMail, dummyMail]);
+                    devicestorageStub.listItems.yields(null, [dummyMail]);
                     keychainStub.getReceiverPublicKey.yields(null, {
                         _id: "fcf8b4aa-5d09-4089-8b4f-e3bc5091daf3",
                         userId: "safewithme.testuser@gmail.com",
@@ -589,13 +611,124 @@ define(function(require) {
                     emailDao.listMessages({
                         folder: 'INBOX',
                         offset: 0,
-                        num: 2
+                        num: 1
                     }, function(err, emails) {
                         expect(err).to.not.exist;
                         expect(devicestorageStub.listItems.calledOnce).to.be.true;
-                        expect(keychainStub.getReceiverPublicKey.calledTwice).to.be.true;
-                        expect(pgpStub.decrypt.calledTwice).to.be.true;
-                        expect(emails.length).to.equal(2);
+                        expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
+                        expect(pgpStub.decrypt.calledOnce).to.be.true;
+                        expect(emails.length).to.equal(1);
+                        done();
+                    });
+                });
+            });
+
+            describe('Plain text', function() {
+                it('should display plaintext mails with [whiteout] prefix', function(done) {
+                    devicestorageStub.listItems.yields(null, [plaintextMail]);
+
+                    emailDao.listMessages({
+                        folder: 'INBOX',
+                        offset: 0,
+                        num: 1
+                    }, function(err, emails) {
+                        expect(err).to.not.exist;
+                        expect(emails.length).to.equal(1);
+                        expect(devicestorageStub.listItems.calledOnce).to.be.true;
+                        done();
+                    });
+                });
+            });
+
+            describe('Verification', function() {
+                it('should verify pending public keys', function(done) {
+                    devicestorageStub.listItems.yields(null, [verificationMail]);
+                    keychainStub.verifyPublicKey.yields();
+                    imapClientStub.updateFlags.yields();
+                    imapClientStub.deleteMessage.yields();
+                    devicestorageStub.removeList.yields();
+
+                    emailDao.listMessages({
+                        folder: 'INBOX',
+                        offset: 0,
+                        num: 1
+                    }, function(err, emails) {
+                        expect(err).to.not.exist;
+                        expect(emails.length).to.equal(0);
+                        expect(devicestorageStub.listItems.calledOnce).to.be.true;
+                        expect(keychainStub.verifyPublicKey.calledOnce).to.be.true;
+                        expect(imapClientStub.updateFlags.calledOnce).to.be.true;
+                        expect(imapClientStub.deleteMessage.calledOnce).to.be.true;
+                        expect(devicestorageStub.removeList.calledOnce).to.be.true;
+                        done();
+                    });
+                });
+
+                it('should not verify pending public keys if the mail was read', function(done) {
+                    verificationMail.unread = false;
+                    devicestorageStub.listItems.yields(null, [verificationMail]);
+
+                    emailDao.listMessages({
+                        folder: 'INBOX',
+                        offset: 0,
+                        num: 1
+                    }, function(err) {
+                        expect(err).to.not.exist;
+                        expect(devicestorageStub.listItems.calledOnce).to.be.true;
+                        verificationMail.unread = true;
+                        done();
+                    });
+                });
+
+                it('should not verify pending public keys if the mail contains erroneous links', function(done) {
+                    var properBody = verificationMail.body;
+                    verificationMail.body = 'UGA UGA!';
+                    devicestorageStub.listItems.yields(null, [verificationMail]);
+
+                    emailDao.listMessages({
+                        folder: 'INBOX',
+                        offset: 0,
+                        num: 1
+                    }, function(err) {
+                        expect(err).to.not.exist;
+                        expect(devicestorageStub.listItems.calledOnce).to.be.true;
+                        verificationMail.body = properBody;
+                        done();
+                    });
+                });
+                it('should not mark verification mails read if verification fails', function(done) {
+                    devicestorageStub.listItems.yields(null, [verificationMail]);
+                    keychainStub.verifyPublicKey.yields({
+                        errMsg: 'snafu.'
+                    });
+
+                    emailDao.listMessages({
+                        folder: 'INBOX',
+                        offset: 0,
+                        num: 1
+                    }, function(err) {
+                        expect(err).to.not.exist;
+                        expect(devicestorageStub.listItems.calledOnce).to.be.true;
+                        expect(keychainStub.verifyPublicKey.calledOnce).to.be.true;
+                        done();
+                    });
+                });
+                it('should not delete verification mails read if marking read fails', function(done) {
+                    devicestorageStub.listItems.yields(null, [verificationMail]);
+                    keychainStub.verifyPublicKey.yields();
+                    imapClientStub.updateFlags.yields({
+                        errMsg: 'snafu.'
+                    });
+
+                    emailDao.listMessages({
+                        folder: 'INBOX',
+                        offset: 0,
+                        num: 1
+                    }, function(err) {
+                        expect(err).to.not.exist;
+                        expect(devicestorageStub.listItems.calledOnce).to.be.true;
+                        expect(keychainStub.verifyPublicKey.calledOnce).to.be.true;
+                        expect(imapClientStub.updateFlags.calledOnce).to.be.true;
                         done();
                     });
                 });

@@ -20,6 +20,18 @@ define(function(require) {
 
         afterEach(function() {});
 
+        describe('verify public key', function() {
+            it('should verify public key', function(done) {
+                var uuid = 'asdfasdfasdfasdf';
+                pubkeyDaoStub.verify.yields();
+
+                keychainDao.verifyPublicKey(uuid, function() {
+                    expect(pubkeyDaoStub.verify.calledWith(uuid)).to.be.true;
+                    done();
+                });
+            });
+        });
+
         describe('lookup public key', function() {
             it('should fail', function(done) {
                 keychainDao.lookupPublicKey(undefined, function(err, key) {

@@ -6,12 +6,33 @@ define(function() {
     };
 
     /**
+     * Verify the public key behind the given uuid
+     */
+    PublicKeyDAO.prototype.verify = function(uuid, callback) {
+        var uri = '/verify/' + uuid;
+
+        this._restDao.get({
+            uri: uri,
+            type: 'text'
+        }, function(err) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            callback();
+        });
+    };
+
+    /**
      * Find the user's corresponding public key
      */
     PublicKeyDAO.prototype.get = function(keyId, callback) {
         var uri = '/publickey/key/' + keyId;
 
-        this._restDao.get(uri, function(err, key) {
+        this._restDao.get({
+            uri: uri
+        }, function(err, key) {
             if (err) {
                 callback(err);
                 return;
@@ -34,7 +55,9 @@ define(function() {
     PublicKeyDAO.prototype.getByUserId = function(userId, callback) {
         var uri = '/publickey/user/' + userId;
 
-        this._restDao.get(uri, function(err, keys) {
+        this._restDao.get({
+            uri: uri
+        }, function(err, keys) {
             // not found
             if (err && err.code === 404) {
                 callback();

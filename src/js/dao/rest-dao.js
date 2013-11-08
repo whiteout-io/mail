@@ -14,14 +14,42 @@ define(function(require) {
 
     /**
      * GET (read) request
+     * @param {String} options.uri URI relative to the base uri to perform the GET request with.
+     * @param {String} options.type (optional) The type of data that you're expecting back from the server: json, xml, text. Default: json.
      */
-    RestDAO.prototype.get = function(uri, callback) {
+    RestDAO.prototype.get = function(options, callback) {
+        var acceptHeader;
+
+        if (typeof options.uri === 'undefined') {
+            callback({
+                code: 400,
+                errMsg: 'Bad Request! URI is a mandatory parameter.'
+            });
+            return;
+        }
+
+        options.type = options.type || 'json';
+
+        if (options.type === 'json') {
+            acceptHeader = 'application/json';
+        } else if (options.type === 'xml') {
+            acceptHeader = 'application/xml';
+        } else if (options.type === 'text') {
+            acceptHeader = 'text/plain';
+        } else {
+            callback({
+                code: 400,
+                errMsg: 'Bad Request! Unhandled data type.'
+            });
+            return;
+        }
+
         $.ajax({
-            url: this._baseUri + uri,
+            url: this._baseUri + options.uri,
             type: 'GET',
-            dataType: 'json',
+            dataType: options.type,
             headers: {
-                'Accept': 'application/json',
+                'Accept': acceptHeader
             },
             success: function(res) {
                 callback(null, res);

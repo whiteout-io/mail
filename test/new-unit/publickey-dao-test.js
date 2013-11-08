@@ -45,6 +45,30 @@ define(function(require) {
             });
         });
 
+        describe('verify', function() {
+            it('should fail', function(done) {
+                restDaoStub.get.yields(42);
+
+                pubkeyDao.get('id', function(err) {
+                    expect(err).to.exist;
+                    done();
+                });
+            });
+
+            it('should work', function(done) {
+                var uuid = 'c621e328-8548-40a1-8309-adf1955e98a9';
+                restDaoStub.get.yields(null);
+
+                pubkeyDao.verify(uuid, function(err) {
+                    expect(err).to.not.exist;
+                    expect(restDaoStub.get.calledWith(sinon.match(function(arg){
+                        return arg.uri === '/verify/' + uuid && arg.type === 'text';
+                    }))).to.be.true;
+                    done();
+                });
+            });
+        });
+
         describe('get by userId', function() {
             it('should fail', function(done) {
                 restDaoStub.get.yields(42);
