@@ -14,8 +14,6 @@ define(function(require) {
 
     var NavigationCtrl = function($scope) {
         $scope.$root.state = {};
-        $scope.navOpen = false;
-        $scope.writerOpen = false;
         $scope.accountOpen = false;
 
         emailDao = appController._emailDao;
@@ -50,13 +48,6 @@ define(function(require) {
         };
         $scope.closeAccount = function() {
             $scope.accountOpen = false;
-        };
-
-        $scope.openReadMode = function() {
-            $scope.readingMode = true;
-        };
-        $scope.closeReadMode = function() {
-            $scope.readingMode = false;
         };
 
         $scope.remove = function(email) {

@@ -218,7 +218,7 @@ define(function(require) {
                 return;
             }
 
-            $scope.openReadMode();
+            $scope.state.read.toggle(true);
             if (!window.chrome || !chrome.socket) {
                 return;
             }

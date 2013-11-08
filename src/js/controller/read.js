@@ -7,7 +7,14 @@ define(function(require) {
     // Controller
     //
 
-    var ReadCtrl = function() {};
+    var ReadCtrl = function($scope) {
+        $scope.state.read = {
+            open: false,
+            toggle: function(to) {
+                this.open = to;
+            }
+        };
+    };
 
     //
     // Directives

@@ -4,9 +4,9 @@
   <button ng-click="state.writer.write()" class="btn-icon" title="New mail">&#xe006;</button>
 </div><!--/.controls-->
 
-<div class="view-read">
+<div class="view-read" ng-controller="ReadCtrl">
   <div class="headers">
-    <p class="subject" ng-click="closeReadMode()">{{selected.subject || 'No subject'}}</p>
+    <p class="subject" ng-click="state.read.toggle(false)">{{selected.subject || 'No subject'}}</p>
     <p class="date">{{selected.sentDate | date:'EEEE, MMM d, yyyy h:mm a'}}</p>
     <p class="address">From: <span class="label" data-icon-append="&#xe009;">{{selected.from[0].name || selected.from[0].address}}</span></p>
     <p class="address">To: <span class="label" data-icon-append="&#xe009;" ng-repeat="t in selected.to">{{t.address}} </span></p>
