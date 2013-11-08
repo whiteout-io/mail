@@ -43,13 +43,6 @@ define(function(require) {
             $scope.state.nav.toggle(false);
         };
 
-        $scope.openAccount = function() {
-            $scope.accountOpen = true;
-        };
-        $scope.closeAccount = function() {
-            $scope.accountOpen = false;
-        };
-
         //
         // Outbox checker
         //
@@ -216,8 +209,6 @@ define(function(require) {
     ngModule.directive('keyShortcuts', function() {
         return function(scope, elm) {
             elm.bind('keydown', function(e) {
-                var cs = scope.$$childTail;
-
                 // global state is not yet set, ignore keybaord shortcuts
                 if (!scope.state) {
                     return;
@@ -238,10 +229,10 @@ define(function(require) {
                     e.preventDefault();
                     scope.state.writer.close();
 
-                } else if (e.keyCode === 27 && cs.accountOpen) {
+                } else if (e.keyCode === 27 && scope.state.account.open) {
                     // escape -> close account view
                     e.preventDefault();
-                    cs.closeAccount();
+                    scope.state.account.toggle(false);
 
                 } else if (e.keyCode === 83 && scope.state.writer && !scope.state.writer.open && scope.state.mailList.synchronize) {
                     // s -> sync folder

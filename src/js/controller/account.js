@@ -12,6 +12,13 @@ define(function(require) {
     var AccountCtrl = function($scope) {
         emailDao = appController._emailDao;
 
+        $scope.state.account = {
+            open: false,
+            toggle: function(to) {
+                this.open = to;
+            }
+        };
+
         //
         // scope variables
         //
