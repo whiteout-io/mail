@@ -20,14 +20,22 @@ define(function(require) {
         // Init
         //
 
-        $scope.$watch('writerOpen', function() {
-            resetFields();
-            if ($scope.writerReply) {
-                fillFields($scope.selected);
-                $scope.updatePreview();
+        $scope.state.writer = {
+            open: false,
+            write: function(replyTo) {
+                this.open = true;
+
+                resetFields();
+                if (replyTo) {
+                    fillFields(replyTo);
+                    $scope.updatePreview();
+                }
+                $scope.verifyTo();
+            },
+            close: function() {
+                this.open = false;
             }
-            $scope.verifyTo();
-        });
+        };
 
         function resetFields() {
             $scope.writerTitle = 'New email';

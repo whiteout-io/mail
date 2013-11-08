@@ -40,14 +40,6 @@ define(function(require) {
             }
         };
 
-        $scope.openWriter = function(replyTo) {
-            $scope.writerReply = !! (replyTo);
-            $scope.writerOpen = true;
-        };
-        $scope.closeWriter = function() {
-            $scope.writerOpen = false;
-        };
-
         $scope.openFolder = function(folder) {
             $scope.currentFolder = folder;
             $scope.state.nav.toggle(false);
@@ -284,27 +276,27 @@ define(function(require) {
             elm.bind('keydown', function(e) {
                 var cs = scope.$$childTail;
 
-                if (e.keyCode === 78 && !cs.writerOpen) {
+                if (e.keyCode === 78 && !scope.state.writer.open) {
                     // n -> new mail
                     e.preventDefault();
-                    cs.openWriter();
+                    scope.state.writer.write();
 
-                } else if (e.keyCode === 82 && !cs.writerOpen && cs.selected) {
+                } else if (e.keyCode === 82 && !scope.state.writer.open && cs.selected) {
                     // r -> reply
                     e.preventDefault();
-                    cs.openWriter(cs.selected);
+                    scope.state.writer.write(cs.selected);
 
-                } else if (e.keyCode === 27 && cs.writerOpen) {
+                } else if (e.keyCode === 27 && scope.state.writer.open) {
                     // escape -> close writer
                     e.preventDefault();
-                    cs.closeWriter();
+                    scope.state.writer.close();
 
                 } else if (e.keyCode === 27 && cs.accountOpen) {
                     // escape -> close account view
                     e.preventDefault();
                     cs.closeAccount();
 
-                } else if (e.keyCode === 83 && !cs.writerOpen && cs.synchronize) {
+                } else if (e.keyCode === 83 && !scope.state.writer.open && cs.synchronize) {
                     // s -> sync folder
                     e.preventDefault();
                     cs.synchronize();
