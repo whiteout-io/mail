@@ -16,8 +16,6 @@ define(function(require) {
                 return;
             }
 
-            // check for app update
-            appController.checkForUpdate();
             // login to imap
             initializeUser();
         });

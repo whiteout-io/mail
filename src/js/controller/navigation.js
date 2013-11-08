@@ -13,6 +13,7 @@ define(function(require) {
     //
 
     var NavigationCtrl = function($scope) {
+        $scope.$root.state = {};
         $scope.navOpen = false;
         $scope.writerOpen = false;
         $scope.accountOpen = false;
@@ -23,11 +24,20 @@ define(function(require) {
         // scope functions
         //
 
-        $scope.openNav = function() {
-            $scope.navOpen = true;
+        $scope.$root.onError = function(options) {
+            console.error(options);
+            $scope.state.dialog = {
+                open: true,
+                title: options.title || 'Error',
+                message: options.message || options.errMsg
+            };
         };
-        $scope.closeNav = function() {
-            $scope.navOpen = false;
+
+        $scope.state.nav = {
+            open: false,
+            toggle: function(to) {
+                this.open = to;
+            }
         };
 
         $scope.openWriter = function(replyTo) {
@@ -40,7 +50,7 @@ define(function(require) {
 
         $scope.openFolder = function(folder) {
             $scope.currentFolder = folder;
-            $scope.closeNav();
+            $scope.state.nav.toggle(false);
         };
 
         $scope.openAccount = function() {
@@ -188,6 +198,22 @@ define(function(require) {
         // Start
         //
 
+        function onUpdateAvailable(doUpdate) {
+            $scope.state.dialog = {
+                open: true,
+                title: 'Update available',
+                message: 'Would you like to update the application now?',
+                callback: function(confirm) {
+                    if (confirm) {
+                        doUpdate();
+                    }
+                }
+            };
+        }
+        // check for app update
+        appController.checkForUpdate(onUpdateAvailable);
+
+        // init folders
         initFolders(function(folders) {
             $scope.folders = folders;
             // select inbox as the current folder on init

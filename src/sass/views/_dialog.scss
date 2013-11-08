@@ -1,0 +1,29 @@
+.view-dialog {
+    padding: 0px;
+    color: $color-grey-dark;    
+    max-width: 350px;
+    height: auto;
+    top: 30%;
+
+    @include respond-to(mobile) {
+        top: 0;
+        max-width: 100%;
+    }
+
+    p {
+        text-align: center;
+        max-width: 80%;
+        margin: 50px auto 90px auto;
+    }
+
+    .control {
+        position: absolute;
+        bottom: 15px;
+        right: 15px;
+
+        button {
+            width: 100px;
+            border: 0!important;
+        }
+    }
+}

@@ -3,6 +3,7 @@ window.name = 'NG_DEFER_BOOTSTRAP!';
 
 require([
     'angular',
+    'js/controller/dialog',
     'js/controller/account',
     'js/controller/login',
     'js/controller/login-initial',
@@ -14,7 +15,7 @@ require([
     'js/controller/navigation',
     'angularRoute',
     'angularTouch'
-], function(angular, AccountCtrl, LoginCtrl, LoginInitialCtrl, LoginNewDeviceCtrl, LoginExistingCtrl, MailListCtrl, ReadCtrl, WriteCtrl, NavigationCtrl) {
+], function(angular, DialogCtrl, AccountCtrl, LoginCtrl, LoginInitialCtrl, LoginNewDeviceCtrl, LoginExistingCtrl, MailListCtrl, ReadCtrl, WriteCtrl, NavigationCtrl) {
     'use strict';
 
     var app = angular.module('mail', ['ngRoute', 'ngTouch', 'navigation', 'mail-list', 'write', 'read', 'login-new-device']);
@@ -51,6 +52,7 @@ require([
     app.controller('WriteCtrl', WriteCtrl);
     app.controller('MailListCtrl', MailListCtrl);
     app.controller('AccountCtrl', AccountCtrl);
+    app.controller('DialogCtrl', DialogCtrl);
 
     // manually bootstrap angular due to require.js
     angular.element().ready(function() {

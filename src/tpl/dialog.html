@@ -1,0 +1,13 @@
+<div class="lightbox-body" ng-controller="DialogCtrl">
+  <header>
+    <h2>{{state.dialog.title}}</h2>
+    <button class="close" ng-click="confirm(false)" data-action="lightbox-close">&#xe007;</button>
+  </header>
+
+  <div class="content">
+    <p>{{state.dialog.message}}</p>
+    <div class="control">
+      <button ng-click="confirm(true)" class="btn">Ok</button>
+    </div>
+  </div><!-- /.content -->
+</div><!-- /.lightbox-body -->

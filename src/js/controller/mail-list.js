@@ -145,7 +145,7 @@ define(function(require) {
         function syncImapFolder(options, callback) {
             emailDao.unreadMessages(getFolder().path, function(err, unreadCount) {
                 if (err) {
-                    console.log(err);
+                    $scope.onError(err);
                     updateStatus('Error on sync!');
                     $scope.$apply();
                     return;
@@ -156,7 +156,7 @@ define(function(require) {
 
                 emailDao.imapSync(options, function(err) {
                     if (err) {
-                        console.log(err);
+                        $scope.onError(err);
                         updateStatus('Error on sync!');
                         $scope.$apply();
                         return;
@@ -171,7 +171,7 @@ define(function(require) {
             firstSelect = true;
             emailDao.listMessages(options, function(err, emails) {
                 if (err) {
-                    console.log(err);
+                    $scope.onError(err);
                     updateStatus('Error listing cache!');
                     $scope.$apply();
                     return;
@@ -233,7 +233,7 @@ define(function(require) {
                 uid: email.uid
             }, function(err) {
                 if (err) {
-                    console.log(err);
+                    $scope.onError(err);
                     updateStatus('Error marking read!');
                     $scope.$apply();
                     return;
