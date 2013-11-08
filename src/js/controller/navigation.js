@@ -125,21 +125,6 @@ define(function(require) {
         // Start
         //
 
-        function onUpdateAvailable(doUpdate) {
-            $scope.state.dialog = {
-                open: true,
-                title: 'Update available',
-                message: 'Would you like to update the application now?',
-                callback: function(confirm) {
-                    if (confirm) {
-                        doUpdate();
-                    }
-                }
-            };
-        }
-        // check for app update
-        appController.checkForUpdate(onUpdateAvailable);
-
         // init folders
         initFolders(function(folders) {
             $scope.folders = folders;

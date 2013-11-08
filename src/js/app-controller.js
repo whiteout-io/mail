@@ -40,17 +40,15 @@ define(function(require) {
         }
     };
 
-    self.checkForUpdate = function(callback) {
+    self.checkForUpdate = function() {
         if (!chrome || !chrome.runtime || !chrome.runtime.onUpdateAvailable) {
             return;
         }
 
-        // check for update and restart on confirmation
+        // check for update and restart
         chrome.runtime.onUpdateAvailable.addListener(function(details) {
-            callback(function() {
-                console.log("Updating to version " + details.version);
-                chrome.runtime.reload();
-            });
+            console.log("Updating to version " + details.version);
+            chrome.runtime.reload();
         });
         chrome.runtime.requestUpdateCheck(function(status) {
             if (status === "update_found") {
