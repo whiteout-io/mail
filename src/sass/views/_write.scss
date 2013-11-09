@@ -53,8 +53,12 @@
             float: right;
             padding: em(7.5) em(7.5) em(4) em(7.5);
             margin: em(5);
-            color: $color-grey-lightest;
-            background-color: $color-blue;
+            outline: none;
+            //color: $color-grey-lightest;
+            //background-color: $color-blue;
+            color: $btn-disabled-color;
+            background-color: $btn-disabled-back-color;
+            background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAGCAYAAADgzO9IAAAAJUlEQVQIW2NkQABJIPM5lCvJCGMgC4LYIAkUlTAFMB0gjRQaBQCw8go5lVnl5wAAAABJRU5ErkJggg==);
         }
     }
 

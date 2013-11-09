@@ -219,6 +219,11 @@ define(function(require) {
                     e.preventDefault();
                     scope.state.account.toggle(false);
 
+                } else if (e.keyCode === 27 && scope.state.nav.open) {
+                    // escape -> close nav view
+                    e.preventDefault();
+                    scope.state.nav.toggle(false);
+
                 } else if (e.keyCode === 83 && scope.state.writer && !scope.state.writer.open && scope.state.mailList.synchronize) {
                     // s -> sync folder
                     e.preventDefault();
