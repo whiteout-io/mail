@@ -56,6 +56,7 @@ define(function(require) {
 
         $scope.select = function(email) {
             if (!email) {
+                $scope.state.mailList.selected = undefined;
                 return;
             }
             // split text only emails into parts for easier rendering
