@@ -13,8 +13,8 @@ define(function(require) {
     //
 
     var NavigationCtrl = function($scope) {
+        // global state... inherits to all child scopes
         $scope.$root.state = {};
-        $scope.accountOpen = false;
 
         emailDao = appController._emailDao;
 
