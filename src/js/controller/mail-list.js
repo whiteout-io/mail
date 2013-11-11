@@ -112,8 +112,8 @@ define(function(require) {
             if (getFolder() === trashFolder) {
                 $scope.state.dialog = {
                     open: true,
-                    title: 'Remove permanently?',
-                    message: 'Do you want to remove this message permanently?',
+                    title: 'Delete',
+                    message: 'Delete this message permanently?',
                     callback: function(ok) {
                         $scope.state.dialog.open = false;
 
