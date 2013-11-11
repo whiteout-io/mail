@@ -27,12 +27,6 @@
 			angular: {
 				exports: 'angular'
 			},
-			openpgp: {
-				exports: 'window'
-			},
-			iscroll: {
-				exports: 'IScroll'
-			},
 			angularRoute: {
 				exports: 'angular',
 				deps: ['angular']
@@ -40,6 +34,12 @@
 			angularTouch: {
 				exports: 'angular',
 				deps: ['angular']
+			},
+			openpgp: {
+				exports: 'window'
+			},
+			iscroll: {
+				exports: 'IScroll'
 			},
 			lawnchair: {
 				exports: 'Lawnchair'
