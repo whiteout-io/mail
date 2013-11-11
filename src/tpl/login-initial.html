@@ -1,21 +1,21 @@
-<div class="view-login" ng-class="{'waiting-cursor': state === states.PROCESSING}">
+<div class="view-login" ng-class="{'waiting-cursor': state.ui === 2}">
 
   <div class="logo-wrapper">
     <div class="logo"></div>
   </div><!--/logo-->
 
-  <div class="content" ng-switch on="state">
+  <div class="content" ng-switch on="state.ui">
 
     <div ng-switch-when="1">
       <h1>Set passphrase</h1>
       <p>This is used to protect your keypair. If you forget your passphrase, there is no way to restore your data.</p>
       <form>
         <div>
-          <input type="password" ng-model="passphrase" placeholder="Enter passphrase" tabindex="1" focus-me="true">
-          <input type="password" ng-model="confirmation" ng-class="{error: confirmation !== passphrase}" placeholder="Confirm passphrase" tabindex="2">
+          <input type="password" ng-model="state.passphrase" placeholder="Enter passphrase" tabindex="1" focus-me="true">
+          <input type="password" ng-model="state.confirmation" ng-class="{error: state.confirmation !== state.passphrase}" placeholder="Confirm passphrase" tabindex="2">
         </div>
         <div>
-          <button type="submit" ng-click="confirmPassphrase()" class="btn" ng-disabled="!passphrase || passphrase!==confirmation" tabindex="3">Generate keypair</button>
+          <button type="submit" ng-click="confirmPassphrase()" class="btn" ng-disabled="!state.passphrase || state.passphrase !== state.confirmation" tabindex="3">Generate keypair</button>
         </div>
       </form>
     </div>

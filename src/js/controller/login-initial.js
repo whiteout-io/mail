@@ -8,12 +8,15 @@ define(function(require) {
         var emailDao = appController._emailDao,
             states;
 
-        $scope.states = states = {
+        // global state... inherited to all child scopes
+        $scope.$root.state = {};
+
+        states = {
             IDLE: 1,
             PROCESSING: 2,
             DONE: 4
         };
-        $scope.state = states.IDLE; // initial state
+        $scope.state.ui = states.IDLE; // initial state
 
 
         //
@@ -21,8 +24,8 @@ define(function(require) {
         //
 
         $scope.confirmPassphrase = function() {
-            var passphrase = $scope.passphrase,
-                confirmation = $scope.confirmation;
+            var passphrase = $scope.state.passphrase,
+                confirmation = $scope.state.confirmation;
 
             if (!passphrase || passphrase !== confirmation) {
                 return;
@@ -73,7 +76,7 @@ define(function(require) {
         };
 
         function setState(state, async) {
-            $scope.state = state;
+            $scope.state.ui = state;
 
             if (async) {
                 $scope.$apply();
