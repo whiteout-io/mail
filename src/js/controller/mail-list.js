@@ -103,7 +103,31 @@ define(function(require) {
                 return;
             }
 
-            var index;
+            var index, trashFolder;
+
+            trashFolder = _.findWhere($scope.folders, {
+                type: 'Trash'
+            });
+
+            if (getFolder() === trashFolder) {
+                $scope.state.dialog = {
+                    open: true,
+                    title: 'Remove permanently?',
+                    message: 'Do you want to remove this message permanently?',
+                    callback: function(ok) {
+                        $scope.state.dialog.open = false;
+
+                        if (!ok) {
+                            return;
+                        }
+
+                        removeLocalAndShowNext();
+                        removeRemote();
+                    }
+                };
+                return;
+            }
+
             removeLocalAndShowNext();
             removeRemote();
 
@@ -123,9 +147,6 @@ define(function(require) {
             }
 
             function removeRemote() {
-                var trashFolder = _.findWhere($scope.folders, {
-                    type: 'Trash'
-                });
                 if (getFolder() === trashFolder) {
                     emailDao.imapDeleteMessage({
                         folder: getFolder().path,
