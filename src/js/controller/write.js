@@ -81,6 +81,7 @@ define(function(require) {
             }
 
             // set display to insecure while fetching keys
+            $scope.toKey = undefined;
             displayInsecure();
             // check if to address is contained in known public keys
             emailDao._keychain.getReceiverPublicKey($scope.to, function(err, key) {
@@ -91,6 +92,7 @@ define(function(require) {
 
                 // compare again since model could have changed during the roundtrip
                 if (key && key.userId === $scope.to) {
+                    $scope.toKey = key;
                     displaySecure();
                     $scope.$apply();
                 }
@@ -135,7 +137,17 @@ define(function(require) {
             // validate recipients
             to = $scope.to.replace(/\s/g, '').split(/[,;]/);
             if (!to || to.length < 1) {
-                console.log('Seperate recipients with a comma!');
+                $scope.onError({
+                    errMsg: 'Seperate recipients with a comma!'
+                });
+                return;
+            }
+
+            // only allow secure recipients until invitation is implemented
+            if (!$scope.toKey) {
+                $scope.onError({
+                    errMsg: 'Invitations not yet supported!'
+                });
                 return;
             }
 
