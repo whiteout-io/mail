@@ -115,8 +115,6 @@ define(function(require) {
                     title: 'Delete',
                     message: 'Delete this message permanently?',
                     callback: function(ok) {
-                        $scope.state.dialog.open = false;
-
                         if (!ok) {
                             return;
                         }
