@@ -6,8 +6,13 @@
 
   <div class="content">
     <h1>Login</h1>
-
     <p>Authenticating with the mail server...</p>
   </div><!--/content-->
 
 </div>
+
+<!-- lightbox -->
+<div class="lightbox-overlay" ng-class="{'show': state.dialog.open}">
+  <div class="lightbox lightbox-effect view-dialog" ng-include="'tpl/dialog.html'"></div>
+</div>
+<!--/.lightbox-overlay-->

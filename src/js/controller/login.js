@@ -4,9 +4,21 @@ define(function(require) {
     var appController = require('js/app-controller');
 
     var LoginCtrl = function($scope, $location) {
+        // global state... inherited to all child scopes
+        $scope.$root.state = {};
+
+        $scope.$root.onError = function(options) {
+            console.error(options);
+            $scope.state.dialog = {
+                open: true,
+                title: options.title || 'Error',
+                message: options.message || options.errMsg
+            };
+        };
+
         appController.start(function(err) {
             if (err) {
-                console.error(err);
+                $scope.onError(err);
                 return;
             }
 
@@ -27,22 +39,22 @@ define(function(require) {
             // get OAuth token from chrome
             appController.fetchOAuthToken(function(err, auth) {
                 if (err) {
-                    console.error(err);
+                    $scope.onError(err);
                     return;
                 }
 
                 // initiate controller by creating email dao
                 appController.init(auth.emailAddress, auth.token, function(err, availableKeys) {
                     if (err) {
-                        console.error(err);
+                        $scope.onError(err);
                         return;
                     }
 
                     // login to imap backend
                     appController._emailDao.imapLogin(function(err) {
                         if (err) {
-                            console.error(err);
-                            console.log('Error logging into IMAP... proceeding in offline mode.');
+                            $scope.onError(err);
+                            return;
                         }
 
                         redirect(availableKeys);
