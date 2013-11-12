@@ -1,6 +1,8 @@
 module.exports = function(grunt) {
     'use strict';
 
+    var version = grunt.option('release');
+
     // Project configuration.
     grunt.initConfig({
         connect: {
@@ -199,6 +201,18 @@ module.exports = function(grunt) {
                 src: ['**'],
                 dest: 'test/integration/src/'
             }
+        },
+        compress: {
+            main: {
+                options: {
+                    mode: 'zip',
+                    archive: (version) ? version + '.zip' : 'release.zip'
+                },
+                expand: true,
+                cwd: 'dist/',
+                src: ['**/*'],
+                dest: 'release/'
+            }
         }
     });
 
@@ -213,6 +227,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-autoprefixer');
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-copy');
+    grunt.loadNpmTasks('grunt-contrib-compress');
 
     // Build tasks
     grunt.registerTask('dist-npm', ['copy:npm', 'copy:npmDev', 'copy:cryptoLib']);
@@ -225,5 +240,49 @@ module.exports = function(grunt) {
     grunt.registerTask('dev', ['connect:dev']);
     grunt.registerTask('test', ['jshint', 'connect:test', 'mocha', 'qunit']);
     grunt.registerTask('prod', ['connect:prod']);
+
+    //
+    // Release tasks for Chrome App Release Channels
+    //
+
+    grunt.registerTask('manifest-dev', function() {
+        patchManifest({
+            suffix: ' (DEV)',
+            client_id: '440907777130-bfpgo5fbo4f7hetrg3hn57qolrtubs0u.apps.googleusercontent.com'
+        });
+    });
+    grunt.registerTask('manifest-test', function() {
+        patchManifest({
+            suffix: ' (Alpha)'
+        });
+    });
+    grunt.registerTask('manifest-stable', function() {
+        patchManifest({});
+    });
+
+    function patchManifest(options) {
+        var fs = require('fs'),
+            path = './dist/manifest.json',
+            manifest = require(path);
+
+        if (!version) {
+            throw new Error('You must specify the version: "--release=1.0"');
+        }
+
+        manifest.version = version;
+        if (options.suffix) {
+            manifest.name += options.suffix;
+        }
+        if (options.client_id) {
+            manifest.oauth2.client_id = options.client_id;
+        }
+        delete manifest.key;
+
+        fs.writeFileSync(path, JSON.stringify(manifest, null, 2));
+    }
+
+    grunt.registerTask('release-dev', ['dist', 'manifest-dev', 'compress']);
+    grunt.registerTask('release-test', ['dist', 'manifest-test', 'compress']);
+    grunt.registerTask('release-stable', ['dist', 'manifest-stable', 'compress']);
 
 };

@@ -5,7 +5,7 @@ test/lib/
 .sass-cache
 src/css/
 dist/
-dist.zip
+*.zip
 test/integration/src/
 src/lib/*.js
 src/js/crypto/aes-cbc.js
