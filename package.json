@@ -6,8 +6,8 @@
     },
     "scripts": {
         "postinstall": "grunt dist-npm",
-        "test": "grunt test && grunt dist",
-        "start": "grunt dist && grunt dev"
+        "test": "grunt test && grunt",
+        "start": "grunt && grunt dev"
     },
     "dependencies": {
         "crypto-lib": "https://github.com/whiteout-io/crypto-lib/tarball/master",
