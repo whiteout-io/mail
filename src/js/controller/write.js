@@ -24,12 +24,14 @@ define(function(require) {
             open: false,
             write: function(replyTo) {
                 this.open = true;
+                $scope.replyTo = replyTo;
 
                 resetFields();
-                if (replyTo) {
-                    fillFields(replyTo);
-                    $scope.updatePreview();
-                }
+
+                // fill fields depending on replyTo
+                fillFields(replyTo);
+                $scope.updatePreview();
+
                 $scope.verifyTo();
             },
             close: function() {
@@ -86,7 +88,7 @@ define(function(require) {
             // check if to address is contained in known public keys
             emailDao._keychain.getReceiverPublicKey($scope.to, function(err, key) {
                 if (err) {
-                    console.error(err);
+                    $scope.onError(err);
                     return;
                 }
 
@@ -174,15 +176,29 @@ define(function(require) {
             email.id = util.UUID();
             emailDao._devicestorage.storeList([email], 'email_OUTBOX', function(err) {
                 if (err) {
-                    console.error(err);
+                    $scope.onError(err);
                     return;
                 }
 
                 $scope.state.writer.close();
                 $scope.$apply();
                 $scope.emptyOutbox();
+
+                markAnwsered();
             });
         };
+
+        function markAnwsered() {
+            // mark replyTo as answered
+            if (!$scope.replyTo) {
+                return;
+            }
+
+            emailDao.imapMarkAnswered({
+                uid: $scope.replyTo.uid,
+                folder: $scope.state.nav.currentFolder.path
+            }, $scope.onError);
+        }
     };
 
     function parseBody(body) {

@@ -23,6 +23,10 @@ define(function(require) {
         //
 
         $scope.$root.onError = function(options) {
+            if (!options) {
+                return;
+            }
+
             console.error(options);
             $scope.state.dialog = {
                 open: true,

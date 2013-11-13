@@ -516,6 +516,16 @@ define(function(require) {
         }, callback);
     };
 
+    EmailDAO.prototype.imapMarkAnswered = function(options, callback) {
+        var self = this;
+
+        self._imapClient.updateFlags({
+            path: options.folder,
+            uid: options.uid,
+            answered: true
+        }, callback);
+    };
+
     //
     // SMTP Apis
     //
