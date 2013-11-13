@@ -750,6 +750,21 @@ define(function(require) {
             });
         });
 
+        describe('IMAP: mark message as answered', function() {
+            it('should work', function(done) {
+                imapClientStub.updateFlags.yields();
+
+                emailDao.imapMarkAnswered({
+                    folder: 'asdf',
+                    uid: 1
+                }, function(err) {
+                    expect(imapClientStub.updateFlags.calledOnce).to.be.true;
+                    expect(err).to.not.exist;
+                    done();
+                });
+            });
+        });
+
     });
 
 });
