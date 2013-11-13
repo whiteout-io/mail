@@ -259,7 +259,8 @@ module.exports = function(grunt) {
         patchManifest({
             suffix: ' (TEST)',
             client_id: '440907777130-bfpgo5fbo4f7hetrg3hn57qolrtubs0u.apps.googleusercontent.com',
-            version: version
+            version: version,
+            deleteKey: true
         });
     });
     grunt.registerTask('manifest-stable', function() {
@@ -269,7 +270,8 @@ module.exports = function(grunt) {
 
         patchManifest({
             suffix: ' (Alpha)',
-            version: version
+            version: version,
+            deleteKey: true
         });
     });
 
@@ -287,7 +289,9 @@ module.exports = function(grunt) {
         if (options.client_id) {
             manifest.oauth2.client_id = options.client_id;
         }
-        delete manifest.key;
+        if (options.deleteKey) {
+            delete manifest.key;
+        }
 
         fs.writeFileSync(path, JSON.stringify(manifest, null, 2));
     }
