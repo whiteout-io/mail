@@ -70,9 +70,10 @@ define(function(require) {
                 'interactive': true
             },
             function(token) {
-                if (!token) {
+                if ((chrome && chrome.runtime && chrome.runtime.lastError) || !token) {
                     callback({
-                        errMsg: 'Error fetching an OAuth token for the user!'
+                        errMsg: 'Error fetching an OAuth token for the user!',
+                        err: chrome.runtime.lastError
                     });
                     return;
                 }
