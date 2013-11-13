@@ -1,7 +1,8 @@
 module.exports = function(grunt) {
     'use strict';
 
-    var version = grunt.option('release');
+    var version = grunt.option('release'),
+        zipName = (version) ? version : 'DEV';
 
     // Project configuration.
     grunt.initConfig({
@@ -206,7 +207,7 @@ module.exports = function(grunt) {
             main: {
                 options: {
                     mode: 'zip',
-                    archive: (version) ? version + '.zip' : 'release.zip'
+                    archive: zipName + '.zip'
                 },
                 expand: true,
                 cwd: 'dist/',
@@ -234,7 +235,6 @@ module.exports = function(grunt) {
     grunt.registerTask('dist-css', ['sass', 'autoprefixer', 'csso']);
     grunt.registerTask('dist-copy', ['copy']);
     grunt.registerTask('dist', ['clean', 'dist-npm', 'dist-css', 'dist-copy']);
-    grunt.registerTask('default', ['dist']);
 
     // Test/Dev tasks
     grunt.registerTask('dev', ['connect:dev']);
@@ -248,16 +248,29 @@ module.exports = function(grunt) {
     grunt.registerTask('manifest-dev', function() {
         patchManifest({
             suffix: ' (DEV)',
-            client_id: '440907777130-bfpgo5fbo4f7hetrg3hn57qolrtubs0u.apps.googleusercontent.com'
+            version: '9999.9999.9999.9999'
         });
     });
     grunt.registerTask('manifest-test', function() {
+        if (!version) {
+            throw new Error('You must specify the version: "--release=1.0"');
+        }
+
         patchManifest({
-            suffix: ' (Alpha)'
+            suffix: ' (TEST)',
+            client_id: '440907777130-bfpgo5fbo4f7hetrg3hn57qolrtubs0u.apps.googleusercontent.com',
+            version: version
         });
     });
     grunt.registerTask('manifest-stable', function() {
-        patchManifest({});
+        if (!version) {
+            throw new Error('You must specify the version: "--release=1.0"');
+        }
+
+        patchManifest({
+            suffix: ' (Alpha)',
+            version: version
+        });
     });
 
     function patchManifest(options) {
@@ -265,11 +278,9 @@ module.exports = function(grunt) {
             path = './dist/manifest.json',
             manifest = require(path);
 
-        if (!version) {
-            throw new Error('You must specify the version: "--release=1.0"');
+        if (options.version) {
+            manifest.version = options.version;
         }
-
-        manifest.version = version;
         if (options.suffix) {
             manifest.name += options.suffix;
         }
@@ -284,5 +295,6 @@ module.exports = function(grunt) {
     grunt.registerTask('release-dev', ['dist', 'manifest-dev', 'compress']);
     grunt.registerTask('release-test', ['dist', 'manifest-test', 'compress']);
     grunt.registerTask('release-stable', ['dist', 'manifest-stable', 'compress']);
+    grunt.registerTask('default', ['release-dev']);
 
 };
