@@ -13,13 +13,13 @@
     p {
         text-align: center;
         max-width: 80%;
-        margin: 50px auto 90px auto;
+        margin: 30px auto 70px auto;
     }
 
     .control {
         position: absolute;
-        bottom: 15px;
-        right: 15px;
+        bottom: $lightbox-padding;
+        right: $lightbox-padding;
 
         button {
             width: 100px;
