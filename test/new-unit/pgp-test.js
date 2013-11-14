@@ -147,6 +147,16 @@ define(function(require) {
             });
 
             describe('Encrypt', function() {
+                it('should fail', function(done) {
+                    var input = null;
+
+                    pgp.encrypt(input, [pubkey], function(err, ct) {
+                        expect(err).to.exist;
+                        expect(ct).to.not.exist;
+                        done();
+                    });
+                });
+
                 it('should work', function(done) {
                     pgp.encrypt(message, [pubkey], function(err, ct) {
                         expect(err).to.not.exist;
@@ -158,6 +168,16 @@ define(function(require) {
             });
 
             describe('Decrypt', function() {
+                it('should fail', function(done) {
+                    var input = 'asdfa\rsdf';
+
+                    pgp.decrypt(input, pubkey, function(err, pt) {
+                        expect(err).to.exist;
+                        expect(pt).to.not.exist;
+                        done();
+                    });
+                });
+
                 it('should work', function(done) {
                     pgp.decrypt(ciphertext, pubkey, function(err, pt) {
                         expect(err).to.not.exist;

@@ -296,8 +296,7 @@ define(function(require) {
                 // decrypt and verfiy signatures
                 self._crypto.decrypt(email.body, senderPubkey.publicKey, function(err, decrypted) {
                     if (err) {
-                        callback(err);
-                        return;
+                        decrypted = err.errMsg;
                     }
 
                     email.body = decrypted;

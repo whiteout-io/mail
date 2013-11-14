@@ -153,7 +153,16 @@ define(function(require) {
             receiverKeys[i] = openpgp.read_publicKey(receiverKeys[i])[0];
         }
 
-        ct = openpgp.write_signed_and_encrypted_message(privateKey, receiverKeys, plaintext);
+        // encrypt and sign the plaintext
+        try {
+            ct = openpgp.write_signed_and_encrypted_message(privateKey, receiverKeys, plaintext);
+        } catch (err) {
+            callback({
+                errMsg: 'Error encrypting plaintext!',
+                err: err
+            });
+            return;
+        }
 
         callback(null, ct);
     };
@@ -162,12 +171,20 @@ define(function(require) {
      * Decrypt and verify a pgp message for a single sender
      */
     PGP.prototype.decrypt = function(ciphertext, senderKey, callback) {
-        var privateKey = openpgp.keyring.exportPrivateKey(0).obj;
+        var privateKey, msg, keymat, sesskey, decrypted;
+
+        privateKey = openpgp.keyring.exportPrivateKey(0).obj;
         senderKey = openpgp.read_publicKey(senderKey)[0];
 
-        var msg = openpgp.read_message(ciphertext)[0];
-        var keymat = null;
-        var sesskey = null;
+        try {
+            msg = openpgp.read_message(ciphertext)[0];
+        } catch (err) {
+            callback({
+                errMsg: 'Error decrypting PGP message!',
+                err: err
+            });
+            return;
+        }
 
         // Find the private (sub)key for the session key of the message
         for (var i = 0; i < msg.sessionKeys.length; i++) {
@@ -190,15 +207,26 @@ define(function(require) {
                 }
             }
         }
-        if (keymat !== null) {
-            var decrypted = msg.decryptAndVerifySignature(keymat, sesskey, senderKey);
-            callback(null, decrypted.text);
 
-        } else {
+        if (!keymat) {
             callback({
                 errMsg: 'No private key found!'
             });
+            return;
         }
+
+        // decrypt and verify ciphertext
+        try {
+            decrypted = msg.decryptAndVerifySignature(keymat, sesskey, senderKey);
+        } catch (err) {
+            callback({
+                errMsg: 'Error decrypting PGP message!',
+                err: err
+            });
+            return;
+        }
+
+        callback(null, decrypted.text);
     };
 
     return PGP;
