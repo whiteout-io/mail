@@ -19,10 +19,7 @@
 
   <div class="seperator-line"></div>
 
-  <div class="body" ng-switch="state.mailList.selected.html === true">
-    <!-- sandbox untrusted markup from html emails in an iframe. The "allow-same-origin" attribute is required to dynamically adjust the height of the iframe. Script execution is not allowed. -->
-    <iframe ng-switch-when="true" sandbox="allow-same-origin" srcdoc="{{state.mailList.selected.body}}" seamless frame-load></iframe>
-
+  <div class="body">
     <!-- Render parts of a text only email in paragraphs for easier styling -->
     <p ng-repeat="part in state.mailList.selected.bodyDisplayParts track by $index">{{part}}</p>
   </div><!--/.body-->
