@@ -46,12 +46,7 @@ define(function(require) {
                     content: keys.publicKeyArmored + keys.privateKeyArmored,
                     filename: id + '.asc',
                     contentType: 'text/plain'
-                }, function onSave(err) {
-                    if (err) {
-                        $scope.onError(err);
-                        return;
-                    }
-                });
+                }, $scope.onError);
             });
         };
     };

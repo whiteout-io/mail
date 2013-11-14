@@ -146,16 +146,18 @@ define(function(require) {
                 expect(scope.sendBtnText).to.equal('Send securely');
             });
 
-            it('should verify the recipient as not secure', function() {
+            it('should verify the recipient as not secure', function(done) {
                 var id = scope.to = 'pity@da.fool';
                 keychainMock.getReceiverPublicKey.withArgs(id).yields({
                     errMsg: '404 not found yadda yadda'
                 });
+                scope.onError = function() {
+                    expect(scope.toSecure).to.be.false;
+                    expect(scope.sendBtnText).to.equal('Invite & send securely');
+                    done();
+                };
 
                 scope.verifyTo();
-
-                expect(scope.toSecure).to.be.false;
-                expect(scope.sendBtnText).to.equal('Invite & send securely');
             });
 
             it('should reset display if there is no recipient', function() {
@@ -170,6 +172,7 @@ define(function(require) {
                 scope.to = 'a, b, c';
                 scope.body = 'asd';
                 scope.subject = 'yaddablabla';
+                scope.toKey = 'Public Key';
 
                 deviceStorageMock.storeList.withArgs(sinon.match(function(mail) {
                     return mail[0].from[0].address === emailAddress && mail[0].to.length === 3;
@@ -183,11 +186,28 @@ define(function(require) {
                 scope.sendToOutbox();
             });
 
-            it('should not work and not close the write view', function() {
+            it('should not work if recipient does not have a public key', function(done) {
                 scope.state.writer.open = true;
                 scope.to = 'a, b, c';
                 scope.body = 'asd';
                 scope.subject = 'yaddablabla';
+
+                scope.onError = function(err) {
+                    expect(err).to.exist;
+                    expect(scope.state.writer.open).to.be.true;
+                    expect(deviceStorageMock.storeList.called).to.be.false;
+                    done();
+                };
+
+                scope.sendToOutbox();
+            });
+
+            it('should not work and not close the write view', function(done) {
+                scope.state.writer.open = true;
+                scope.to = 'a, b, c';
+                scope.body = 'asd';
+                scope.subject = 'yaddablabla';
+                scope.toKey = 'Public Key';
 
                 deviceStorageMock.storeList.withArgs(sinon.match(function(mail) {
                     return mail[0].from[0].address === emailAddress && mail[0].to.length === 3;
@@ -195,10 +215,14 @@ define(function(require) {
                     errMsg: 'snafu'
                 });
 
-                scope.sendToOutbox();
+                scope.onError = function(err) {
+                    expect(err).to.exist;
+                    expect(scope.state.writer.open).to.be.true;
+                    expect(deviceStorageMock.storeList.calledOnce).to.be.true;
+                    done();
+                };
 
-                expect(scope.state.writer.open).to.be.true;
-                expect(deviceStorageMock.storeList.calledOnce).to.be.true;
+                scope.sendToOutbox();
             });
         });
     });

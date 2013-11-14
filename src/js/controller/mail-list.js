@@ -162,7 +162,7 @@ define(function(require) {
 
             function moved(err) {
                 if (err) {
-                    console.error(err);
+                    $scope.onError(err);
                     $scope.emails.splice(index, 0, email);
                     $scope.$apply();
                     return;

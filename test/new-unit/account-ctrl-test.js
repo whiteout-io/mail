@@ -63,7 +63,7 @@ define(function(require) {
             });
         });
         describe('export to key file', function() {
-            it('should work', function() {
+            it('should work', function(done) {
                 var createDownloadMock = sinon.stub(dl, 'createDownload');
                 cryptoMock.exportKeys.yields(null, {
                     publicKeyArmored: 'a',
@@ -73,12 +73,14 @@ define(function(require) {
                 createDownloadMock.withArgs(sinon.match(function(arg) {
                     return arg.content === 'ab' && arg.filename === expectedKeyId + '.asc' && arg.contentType === 'text/plain';
                 })).yields();
+                scope.onError = function() {
+                    expect(cryptoMock.exportKeys.calledOnce).to.be.true;
+                    expect(dl.createDownload.calledOnce).to.be.true;
+                    dl.createDownload.restore();
+                    done();
+                };
 
                 scope.exportKeyFile();
-
-                expect(cryptoMock.exportKeys.calledOnce).to.be.true;
-                expect(dl.createDownload.calledOnce).to.be.true;
-                dl.createDownload.restore();
             });
 
             it('should not work when key export failed', function(done) {

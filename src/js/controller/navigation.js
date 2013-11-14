@@ -69,7 +69,7 @@ define(function(require) {
                 // get last item from outbox
                 emailDao._devicestorage.listItems(dbType, 0, null, function(err, pending) {
                     if (err) {
-                        console.error(err);
+                        $scope.onError(err);
                         outboxBusy = false;
                         return;
                     }
@@ -92,7 +92,7 @@ define(function(require) {
                 var email = emails.shift();
                 emailDao.smtpSend(email, function(err) {
                     if (err) {
-                        console.error(err);
+                        $scope.onError(err);
                         outboxBusy = false;
                         return;
                     }
@@ -104,7 +104,9 @@ define(function(require) {
 
             function removeFromStorage(id) {
                 if (!id) {
-                    console.error('Cannot remove email from storage without a valid id!');
+                    $scope.onError({
+                        errMsg: 'Cannot remove email from storage without a valid id!'
+                    });
                     outboxBusy = false;
                     return;
                 }
@@ -113,7 +115,7 @@ define(function(require) {
                 var key = dbType + '_' + id;
                 emailDao._devicestorage.removeList(key, function(err) {
                     if (err) {
-                        console.error(err);
+                        $scope.onError(err);
                         outboxBusy = false;
                         return;
                     }
@@ -144,7 +146,7 @@ define(function(require) {
             if (window.chrome && chrome.identity) {
                 emailDao.imapListFolders(function(err, folders) {
                     if (err) {
-                        console.log(err);
+                        $scope.onError(err);
                         return;
                     }
 
