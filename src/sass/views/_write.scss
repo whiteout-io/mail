@@ -65,8 +65,11 @@
 
     .body {
         line-height: 1.5em;
-        height: 68%;
-        overflow-y: scroll;
+
+        @include respond-to(desktop) {
+            height: 445px;
+            overflow-y: scroll;
+        }
 
         *[contentEditable] {
             outline: 0px;
