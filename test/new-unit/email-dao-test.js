@@ -696,6 +696,7 @@ define(function(require) {
                         done();
                     });
                 });
+
                 it('should not mark verification mails read if verification fails', function(done) {
                     devicestorageStub.listItems.yields(null, [verificationMail]);
                     keychainStub.verifyPublicKey.yields({
@@ -707,7 +708,7 @@ define(function(require) {
                         offset: 0,
                         num: 1
                     }, function(err) {
-                        expect(err).to.not.exist;
+                        expect(err).to.exist;
                         expect(devicestorageStub.listItems.calledOnce).to.be.true;
                         expect(keychainStub.verifyPublicKey.calledOnce).to.be.true;
                         done();

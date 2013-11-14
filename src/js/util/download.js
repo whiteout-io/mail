@@ -28,9 +28,9 @@ define(function() {
         }
 
         function onError(e) {
-            console.error(e);
             callback({
-                errMsg: 'Error exporting keypair to file!'
+                errMsg: 'Error exporting keypair to file!',
+                err: e
             });
         }
 

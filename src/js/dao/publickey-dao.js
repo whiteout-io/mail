@@ -14,14 +14,7 @@ define(function() {
         this._restDao.get({
             uri: uri,
             type: 'text'
-        }, function(err) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            callback();
-        });
+        }, callback);
     };
 
     /**

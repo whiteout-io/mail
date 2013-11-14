@@ -324,8 +324,9 @@ define(function(require) {
             uuid = email.body.substr(index + consts.verificationUrlPrefix.length, consts.verificationUuidLength);
             self._keychain.verifyPublicKey(uuid, function(err) {
                 if (err) {
-                    console.error('Unable to verify public key: ' + err.errMsg);
-                    localCallback();
+                    callback({
+                        errMsg: 'Verifying your public key failed: ' + err.errMsg
+                    });
                     return;
                 }
 
