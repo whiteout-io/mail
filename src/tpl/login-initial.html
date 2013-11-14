@@ -1,5 +1,4 @@
 <div class="view-login" ng-class="{'waiting-cursor': state.ui === 2}">
-
   <div class="logo-wrapper">
     <div class="logo"></div>
   </div><!--/logo-->
@@ -33,4 +32,9 @@
     </div>
 
   </div><!--/content-->
+</div>
+
+<!-- lightbox -->
+<div class="lightbox-overlay" ng-class="{'show': state.dialog.open}">
+  <div class="lightbox lightbox-effect view-dialog" ng-include="'tpl/dialog.html'"></div>
 </div>

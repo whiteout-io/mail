@@ -2,6 +2,7 @@ define(function(require) {
     'use strict';
 
     var appController = require('js/app-controller'),
+        errorUtil = require('js/util/error'),
         dl = require('js/util/download');
 
     var LoginInitialCtrl = function($scope, $location) {
@@ -10,6 +11,8 @@ define(function(require) {
 
         // global state... inherited to all child scopes
         $scope.$root.state = {};
+        // attach global error handler
+        errorUtil.attachHandler($scope);
 
         states = {
             IDLE: 1,
@@ -35,7 +38,7 @@ define(function(require) {
             setTimeout(function() {
                 emailDao.unlock({}, passphrase, function(err) {
                     if (err) {
-                        console.error(err);
+                        $scope.onError(err);
                         $scope.setState(states.IDLE, true);
                         return;
                     }
@@ -49,7 +52,7 @@ define(function(require) {
             // export keys from keychain
             emailDao._crypto.exportKeys(function(err, keys) {
                 if (err) {
-                    console.error(err);
+                    $scope.onError(err);
                     return;
                 }
 
@@ -63,7 +66,7 @@ define(function(require) {
 
             function onSave(err) {
                 if (err) {
-                    console.error(err);
+                    $scope.onError(err);
                     return;
                 }
                 $scope.proceed();

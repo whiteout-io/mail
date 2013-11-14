@@ -1,5 +1,4 @@
 <div class="view-login">
-
   <div class="logo-wrapper">
     <div class="logo"></div>
   </div><!--/logo-->
@@ -11,8 +10,13 @@
     
     <form>
       <div><input type="file" file-reader tabindex="1"></div>
-      <div><input type="password" ng-model="passphrase" ng-class="{error:incorrect}" placeholder="Passphrase" tabindex="2"></div>
+      <div><input type="password" ng-model="passphrase" ng-class="{error:incorrect}" placeholder="Passphrase" tabindex="2" focus-me="true"></div>
       <div><button type="submit" ng-click="confirmPassphrase()" class="btn" ng-disabled="!key" tabindex="3">Import</button>
     </form>
   </div>
+</div>
+
+<!-- lightbox -->
+<div class="lightbox-overlay" ng-class="{'show': state.dialog.open}">
+  <div class="lightbox lightbox-effect view-dialog" ng-include="'tpl/dialog.html'"></div>
 </div>

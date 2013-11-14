@@ -2,9 +2,15 @@ define(function(require) {
     'use strict';
 
     var angular = require('angular'),
+        errorUtil = require('js/util/error'),
         appController = require('js/app-controller');
 
     var LoginExistingCtrl = function($scope, $location) {
+        // global state... inherited to all child scopes
+        $scope.$root.state = {};
+        // attach global error handler
+        errorUtil.attachHandler($scope);
+
         var emailDao = appController._emailDao;
 
         $scope.incorrect = false;
@@ -23,7 +29,7 @@ define(function(require) {
             var userId = emailDao._account.emailAddress;
             emailDao._keychain.getUserKeyPair(userId, function(err, keypair) {
                 if (err) {
-                    console.error(err);
+                    $scope.onError(err);
                     return;
                 }
 
@@ -36,8 +42,8 @@ define(function(require) {
                 emailDao.unlock(keypair, $scope.passphrase, function(err) {
                     if (err) {
                         $scope.incorrect = true;
+                        $scope.onError(err);
                         $scope.$apply();
-                        console.error(err);
                         return;
                     }
 
@@ -48,7 +54,7 @@ define(function(require) {
 
         function onUnlock(err) {
             if (err) {
-                console.error(err);
+                $scope.onError(err);
                 return;
             }
 

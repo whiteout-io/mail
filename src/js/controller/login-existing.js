@@ -1,9 +1,15 @@
 define(function(require) {
     'use strict';
 
-    var appController = require('js/app-controller');
+    var appController = require('js/app-controller'),
+        errorUtil = require('js/util/error');
 
     var LoginExistingCtrl = function($scope, $location) {
+        // global state... inherited to all child scopes
+        $scope.$root.state = {};
+        // attach global error handler
+        errorUtil.attachHandler($scope);
+
         var emailDao = appController._emailDao;
 
         $scope.buttonEnabled = true;
@@ -48,8 +54,8 @@ define(function(require) {
         function handleError(err) {
             $scope.incorrect = true;
             $scope.buttonEnabled = true;
+            $scope.onError(err);
             $scope.$apply();
-            console.error(err);
         }
     };
 

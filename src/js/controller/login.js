@@ -1,21 +1,19 @@
 define(function(require) {
     'use strict';
 
-    var appController = require('js/app-controller');
+    var appController = require('js/app-controller'),
+        errorUtil = require('js/util/error');
 
     var LoginCtrl = function($scope, $location) {
         // global state... inherited to all child scopes
         $scope.$root.state = {};
+        // attach global error handler
+        errorUtil.attachHandler($scope);
 
-        $scope.$root.onError = function(options) {
-            console.error(options);
-            $scope.state.dialog = {
-                open: true,
-                title: options.title || 'Error',
-                message: options.message || options.errMsg
-            };
-        };
+        // check for app update
+        appController.checkForUpdate();
 
+        // start main application controller
         appController.start(function(err) {
             if (err) {
                 $scope.onError(err);
@@ -27,9 +25,6 @@ define(function(require) {
                 $scope.$apply();
                 return;
             }
-
-            // check for app update
-            appController.checkForUpdate();
 
             // login to imap
             initializeUser();

@@ -3,6 +3,7 @@ define(function(require) {
 
     var angular = require('angular'),
         appController = require('js/app-controller'),
+        errorUtil = require('js/util/error'),
         _ = require('underscore'),
         config = require('js/app-config').config,
         emailDao, senderIntervalId,
@@ -15,25 +16,14 @@ define(function(require) {
     var NavigationCtrl = function($scope) {
         // global state... inherited to all child scopes
         $scope.$root.state = {};
+        // attach global error handler
+        errorUtil.attachHandler($scope);
 
         emailDao = appController._emailDao;
 
         //
         // scope functions
         //
-
-        $scope.$root.onError = function(options) {
-            if (!options) {
-                return;
-            }
-
-            console.error(options);
-            $scope.state.dialog = {
-                open: true,
-                title: options.title || 'Error',
-                message: options.message || options.errMsg
-            };
-        };
 
         $scope.state.nav = {
             open: false,
