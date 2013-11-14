@@ -16,6 +16,7 @@
         "requirejs": "2.1.8"
     },
     "devDependencies": {
+        "angular": "https://github.com/angular/angular.js/tarball/v1.2.0",
         "grunt": "0.4.1",
         "mocha": "1.13.0",
         "phantomjs": "1.9.1-9",

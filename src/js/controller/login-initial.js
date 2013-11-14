@@ -31,16 +31,16 @@ define(function(require) {
                 return;
             }
 
-            setState(states.PROCESSING);
+            $scope.setState(states.PROCESSING);
             setTimeout(function() {
                 emailDao.unlock({}, passphrase, function(err) {
                     if (err) {
                         console.error(err);
-                        setState(states.IDLE, true);
+                        $scope.setState(states.IDLE, true);
                         return;
                     }
 
-                    setState(states.DONE, true);
+                    $scope.setState(states.DONE, true);
                 });
             }, 500);
         };
@@ -75,13 +75,13 @@ define(function(require) {
             $location.path('/desktop');
         };
 
-        function setState(state, async) {
+        $scope.setState = function(state, async) {
             $scope.state.ui = state;
 
             if (async) {
                 $scope.$apply();
             }
-        }
+        };
     };
 
     return LoginInitialCtrl;

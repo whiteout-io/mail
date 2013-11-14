@@ -151,7 +151,7 @@ module.exports = function(grunt) {
                 expand: true,
                 flatten: true,
                 cwd: 'node_modules/',
-                src: ['requirejs/require.js', 'mocha/mocha.css', 'mocha/mocha.js', 'chai/chai.js', 'sinon/pkg/sinon.js'],
+                src: ['requirejs/require.js', 'mocha/mocha.css', 'mocha/mocha.js', 'chai/chai.js', 'sinon/pkg/sinon.js', 'angularjs/src/ngMock/angular-mocks.js'],
                 dest: 'test/lib/'
             },
             cryptoLib: {
