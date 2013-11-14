@@ -162,9 +162,8 @@ define(function(require) {
 
             function moved(err) {
                 if (err) {
-                    $scope.onError(err);
                     $scope.emails.splice(index, 0, email);
-                    $scope.$apply();
+                    $scope.onError(err);
                     return;
                 }
             }
@@ -227,9 +226,8 @@ define(function(require) {
         function syncImapFolder(options, callback) {
             emailDao.unreadMessages(getFolder().path, function(err, unreadCount) {
                 if (err) {
-                    $scope.onError(err);
                     updateStatus('Error on sync!');
-                    $scope.$apply();
+                    $scope.onError(err);
                     return;
                 }
                 // set unread count in folder model
@@ -238,9 +236,8 @@ define(function(require) {
 
                 emailDao.imapSync(options, function(err) {
                     if (err) {
-                        $scope.onError(err);
                         updateStatus('Error on sync!');
-                        $scope.$apply();
+                        $scope.onError(err);
                         return;
                     }
 
@@ -253,9 +250,8 @@ define(function(require) {
             firstSelect = true;
             emailDao.listMessages(options, function(err, emails) {
                 if (err) {
-                    $scope.onError(err);
                     updateStatus('Error listing cache!');
-                    $scope.$apply();
+                    $scope.onError(err);
                     return;
                 }
 
@@ -313,9 +309,8 @@ define(function(require) {
                 uid: email.uid
             }, function(err) {
                 if (err) {
-                    $scope.onError(err);
                     updateStatus('Error marking read!');
-                    $scope.$apply();
+                    $scope.onError(err);
                     return;
                 }
             });

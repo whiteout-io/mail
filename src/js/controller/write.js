@@ -140,7 +140,8 @@ define(function(require) {
             to = $scope.to.replace(/\s/g, '').split(/[,;]/);
             if (!to || to.length < 1) {
                 $scope.onError({
-                    errMsg: 'Seperate recipients with a comma!'
+                    errMsg: 'Seperate recipients with a comma!',
+                    sync: true
                 });
                 return;
             }
@@ -148,7 +149,8 @@ define(function(require) {
             // only allow secure recipients until invitation is implemented
             if (!$scope.toKey) {
                 $scope.onError({
-                    errMsg: 'Invitations not yet supported!'
+                    errMsg: 'Invitations not yet supported!',
+                    sync: true
                 });
                 return;
             }

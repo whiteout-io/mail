@@ -38,12 +38,13 @@ define(function(require) {
             setTimeout(function() {
                 emailDao.unlock({}, passphrase, function(err) {
                     if (err) {
+                        $scope.setState(states.IDLE);
                         $scope.onError(err);
-                        $scope.setState(states.IDLE, true);
                         return;
                     }
 
-                    $scope.setState(states.DONE, true);
+                    $scope.setState(states.DONE);
+                    $scope.$apply();
                 });
             }, 500);
         };
@@ -78,12 +79,8 @@ define(function(require) {
             $location.path('/desktop');
         };
 
-        $scope.setState = function(state, async) {
+        $scope.setState = function(state) {
             $scope.state.ui = state;
-
-            if (async) {
-                $scope.$apply();
-            }
         };
     };
 

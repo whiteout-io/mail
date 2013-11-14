@@ -55,7 +55,6 @@ define(function(require) {
             $scope.incorrect = true;
             $scope.buttonEnabled = true;
             $scope.onError(err);
-            $scope.$apply();
         }
     };
 

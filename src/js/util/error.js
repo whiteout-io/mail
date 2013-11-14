@@ -16,6 +16,10 @@ define(function() {
                 title: options.title || 'Error',
                 message: options.errMsg || options.message
             };
+            // don't call apply for synchronous calls
+            if (!options.sync) {
+                scope.$apply();
+            }
         };
     };
 

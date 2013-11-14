@@ -43,7 +43,6 @@ define(function(require) {
                     if (err) {
                         $scope.incorrect = true;
                         $scope.onError(err);
-                        $scope.$apply();
                         return;
                     }
 
