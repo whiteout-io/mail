@@ -116,7 +116,7 @@ module.exports = function(grunt) {
             },
             app: {
                 files: ['src/*.js', 'src/**/*.html', 'src/**/*.json', 'src/img/**/*', 'src/font/**/*'],
-                tasks: ['copy:app', 'copy:tpl', 'copy:img', 'copy:font', 'manifest-dev']
+                tasks: ['copy:app', 'copy:ca', 'copy:tpl', 'copy:img', 'copy:font', 'manifest-dev']
             }
         },
         copy: {
@@ -189,6 +189,12 @@ module.exports = function(grunt) {
                 cwd: 'src/tpl/',
                 src: ['*'],
                 dest: 'dist/tpl/'
+            },
+            ca: {
+                expand: true,
+                cwd: 'src/ca/',
+                src: ['*'],
+                dest: 'dist/ca/'
             },
             app: {
                 expand: true,
