@@ -627,7 +627,7 @@ define(function(require) {
         var to, greeting;
 
         var MESSAGE = str.message + '\n\n\n',
-            SIGNATURE = '\n\n\n' + str.signature + '\n' + str.webSite + '\n\n';
+            SIGNATURE = '\n\n' + str.signature + '\n\n';
 
         // get first name of recipient
         to = (email.to[0].name || email.to[0].address).split('@')[0].split('.')[0].split(' ')[0];
