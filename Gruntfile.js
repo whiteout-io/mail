@@ -29,7 +29,7 @@ module.exports = function(grunt) {
                         // Return array of whatever middlewares you want
                         return [
                             function(req, res, next) {
-                                res.setHeader('Content-Security-Policy', "default-src 'self'; connect-src *; object-src 'none'; style-src 'self' 'unsafe-inline'");
+                                res.setHeader('Content-Security-Policy', "default-src 'self'; object-src 'none'; connect-src 'self' https://keys.whiteout.io; img-src 'self' data:;");
 
                                 return next();
                             },
