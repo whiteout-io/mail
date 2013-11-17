@@ -29,7 +29,8 @@ define([], function() {
 			}
 		},
 		checkOutboxInterval: 30000,
-		iconPath: '/img/icon.png'
+		iconPath: '/img/icon.png',
+		verificationUrl: '/verify/'
 	};
 
 	/**
@@ -41,16 +42,8 @@ define([], function() {
 		cryptPrefix: '-----BEGIN PGP MESSAGE-----',
 		cryptSuffix: '-----END PGP MESSAGE-----',
 		signature: 'Sent securely from whiteout mail',
-		webSite: 'http://whiteout.io'
-	};
-
-	/**
-	 * Contants are maintained here.
-	 */
-	app.constants = {
-		verificationSubject: 'New public key uploaded',
-		verificationUrlPrefix: 'https://keys.whiteout.io/verify/',
-		verificationUuidLength: 36
+		webSite: 'http://whiteout.io',
+		verificationSubject: 'New public key uploaded'
 	};
 
 	return app;

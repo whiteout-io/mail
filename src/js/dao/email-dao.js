@@ -4,7 +4,7 @@ define(function(require) {
     var _ = require('underscore'),
         util = require('cryptoLib/util'),
         str = require('js/app-config').string,
-        consts = require('js/app-config').constants;
+        config = require('js/app-config').config;
 
     /**
      * A high-level Data-Access Api for handling Email synchronization
@@ -269,7 +269,7 @@ define(function(require) {
         }
 
         function isVerificationMail(email) {
-            return email.subject === consts.verificationSubject;
+            return email.subject === str.verificationSubject;
         }
 
         function parseMessageBlock(email) {
@@ -307,7 +307,8 @@ define(function(require) {
         }
 
         function verify(email, localCallback) {
-            var uuid, index;
+            var uuid, index,
+                verifiyUrlPrefix = config.cloudUrl + config.verificationUrl;
 
             if (!email.unread) {
                 // don't bother if the email was already marked as read
@@ -315,13 +316,13 @@ define(function(require) {
                 return;
             }
 
-            index = email.body.indexOf(consts.verificationUrlPrefix);
+            index = email.body.indexOf(verifiyUrlPrefix);
             if (index === -1) {
                 localCallback();
                 return;
             }
 
-            uuid = email.body.substr(index + consts.verificationUrlPrefix.length, consts.verificationUuidLength);
+            uuid = email.body.split(config.verificationUrl)[1];
             self._keychain.verifyPublicKey(uuid, function(err) {
                 if (err) {
                     callback({
