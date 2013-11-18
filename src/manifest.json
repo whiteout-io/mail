@@ -1,6 +1,6 @@
 {
   "name": "Whiteout Mail",
-  "description": "Simple & elegant email client with integrated end-to-end encryption. Keeping your emails safe has never been so easy.",
+  "description": "Simple and elegant email client with integrated end-to-end encryption. Keeping your emails safe has never been so easy.",
   "version": "x.x.x.x",
   "manifest_version": 2,
   "offline_enabled": true,

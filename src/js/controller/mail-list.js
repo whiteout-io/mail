@@ -59,18 +59,13 @@ define(function(require) {
                 $scope.state.mailList.selected = undefined;
                 return;
             }
-            // split text only emails into parts for easier rendering
-            if (!email.html && typeof email.body === 'string') {
-                email.bodyDisplayParts = [];
-                var parts = email.body.split('\n');
-                parts.forEach(function(part) {
-                    if (part.trim().length > 0) {
-                        email.bodyDisplayParts.push(part);
-                    }
-                });
-            }
 
             $scope.state.mailList.selected = email;
+
+            // split text only emails into parts for easier rendering
+            if (!email.html && typeof email.body === 'string') {
+                email.bodyDisplayLines = email.body.split('\n');
+            }
 
             // mark selected message as 'read'
             markAsRead(email);
@@ -332,11 +327,8 @@ define(function(require) {
             this.answered = answered;
             this.html = html;
             this.sentDate = new Date('Thu Sep 19 2013 20:41:23 GMT+0200 (CEST)');
-            this.subject = "Welcome Max"; // Subject line
-            this.body = "Hi Max,\n\n" +
-                "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.\n\n" +
-                "Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi. Lorem ipsum dolor sit amet.\n\n" +
-                "Best regards\nYour whiteout team"; // plaintext body
+            this.subject = 'Getting started'; // Subject line
+            this.body = 'Here are a few pointers to help you get started with Whiteout Mail.\n\n# Write encrypted message\n- You can compose a message by clicking on the compose button on the upper right (keyboard shortcut is "n" for a new message or "r" to reply).\n- When typing the recipient\'s email address, secure recipients are marked with a blue label and insecure recipients are red.\n- When sending an email to insecure recipients, the default behavior for Whiteout Mail is to invite them to the service and only send the message content in an encrypted form, once they have joined.\n\n# Advanced features\n- To verify a recipient\'s PGP key, you can hover over the blue label containing their email address and their key fingerprint will be displayed.\n- To view your own key fingerprint, open the account view in the navigation bar on the left. You can compare these with your correspondants over a second channel such as a phonecall.\n\nWe hope this helped you to get started with Whiteout Mail.\n\nYour Whiteout Networks team'; // plaintext body
         };
 
         var dummys = [new Email(true, true), new Email(true, false, false, true), new Email(false, true, true), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false)];

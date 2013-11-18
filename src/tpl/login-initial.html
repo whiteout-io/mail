@@ -7,7 +7,7 @@
 
     <div ng-switch-when="1">
       <h1>Set passphrase</h1>
-      <p>This is used to protect your keypair. If you forget your passphrase, there is no way to restore your data.</p>
+      <p>The passphrase protects your keypair. If you forget your passphrase you will not be able to recover your messages.</p>
       <form>
         <div>
           <input type="password" ng-model="state.passphrase" placeholder="Enter passphrase" tabindex="1" focus-me="true">
@@ -26,7 +26,7 @@
 
     <div ng-switch-when="4">
       <h1>Keypair generated</h1>
-      <p>Your personal keypair has been generated. You can export it (e.g. to a USB flash drive) to setup whiteout on another computer or as a backup.</p>
+      <p>Your personal keypair has been generated. You can export it (e.g. to a USB flash drive) to setup Whiteout Mail on another computer or as a backup.</p>
       <button ng-click="exportKeypair()" class="btn" tabindex="4">Export now</button>
       <button ng-click="proceed()" class="btn" tabindex="5">Do it later</button>
     </div>

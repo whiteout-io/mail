@@ -180,7 +180,7 @@ define(function(require) {
             msg = openpgp.read_message(ciphertext)[0];
         } catch (err) {
             callback({
-                errMsg: 'Error decrypting PGP message!',
+                errMsg: 'Error reading PGP message!',
                 err: err
             });
             return;
@@ -220,7 +220,7 @@ define(function(require) {
             decrypted = msg.decryptAndVerifySignature(keymat, sesskey, senderKey);
         } catch (err) {
             callback({
-                errMsg: 'Error decrypting PGP message!',
+                errMsg: 'Error reading PGP message!',
                 err: err
             });
             return;

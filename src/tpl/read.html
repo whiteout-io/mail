@@ -21,6 +21,8 @@
 
   <div class="body">
     <!-- Render parts of a text only email in paragraphs for easier styling -->
-    <p ng-repeat="part in state.mailList.selected.bodyDisplayParts track by $index">{{part}}</p>
+    <span ng-repeat="line in state.mailList.selected.bodyDisplayLines track by $index">
+      {{line}}<br>
+    </span>
   </div><!--/.body-->
 </div><!--/.view-read-->
