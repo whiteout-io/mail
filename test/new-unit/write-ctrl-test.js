@@ -126,7 +126,7 @@ define(function(require) {
 
                 scope.state.writer.write(re);
 
-                expect(scope.body).to.contain('<br>markupmoreMarkup');
+                expect(scope.body).to.contain('<br>> markupmoreMarkup');
 
                 scope.verifyTo.restore();
             });
