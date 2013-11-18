@@ -62,12 +62,12 @@ define(function(require) {
 
             // fill text body
             from = re.from[0].name || re.from[0].address;
-            body = '<br><br>' + $filter('date')(re.sentDate, 'EEEE, MMM d, yyyy h:mm a') + ' ' + from + ' wrote:<br><br>';
+            body = '<br><br>' + $filter('date')(re.sentDate, 'EEEE, MMM d, yyyy h:mm a') + ' ' + from + ' wrote:<br>> ';
 
             // clean text from markup if to prevent injection in contenteditable
             if (!re.html) {
                 cleaned = angular.element('<p>' + re.body + '</p>').text();
-                body += cleaned.split('\n').join('<br>');
+                body += cleaned.split('\n').join('<br>> ');
                 $scope.body = body;
             }
         }

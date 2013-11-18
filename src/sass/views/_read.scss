@@ -17,7 +17,7 @@
         .date {
             color: $color-grey-light;
             font-size: $font-size-small;
-            margin-top: 0.5em;
+            margin-top: 0.25em;
             margin-bottom: 1.5em;
             padding: 0px;
         }
@@ -37,7 +37,7 @@
         color: $color-grey-lighter;
         background-color: $color-grey-lighter;
         margin-top: 1em;
-        margin-bottom: 1.5em;
+        margin-bottom: 1.75em;
     }
 
     .body {
@@ -46,6 +46,10 @@
         line-height: 1.5em;
         height: 100%;
         overflow-y: scroll;
+
+        .empty-line {
+            line-height: 1em;
+        }
     }
 
     iframe {

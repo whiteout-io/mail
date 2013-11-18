@@ -62,11 +62,6 @@ define(function(require) {
 
             $scope.state.mailList.selected = email;
 
-            // split text only emails into parts for easier rendering
-            if (!email.html && typeof email.body === 'string') {
-                email.bodyDisplayLines = email.body.split('\n');
-            }
-
             // mark selected message as 'read'
             markAsRead(email);
         };

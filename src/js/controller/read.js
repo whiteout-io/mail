@@ -14,6 +14,10 @@ define(function(require) {
                 this.open = to;
             }
         };
+
+        $scope.lineEmpty = function(line) {
+            return line.replace(/>/g, '').trim().length === 0;
+        };
     };
 
     //

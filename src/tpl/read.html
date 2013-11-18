@@ -20,9 +20,9 @@
   <div class="seperator-line"></div>
 
   <div class="body">
-    <!-- Render parts of a text only email in paragraphs for easier styling -->
-    <span ng-repeat="line in state.mailList.selected.bodyDisplayLines track by $index">
+    <!-- Render lines of a text-email in divs for easier styling -->
+    <div ng-repeat="line in state.mailList.selected.body.split('\n') track by $index" ng-class="{'empty-line': lineEmpty(line)}">
       {{line}}<br>
-    </span>
+    </div>
   </div><!--/.body-->
 </div><!--/.view-read-->
