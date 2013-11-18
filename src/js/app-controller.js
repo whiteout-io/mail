@@ -152,48 +152,72 @@ define(function(require) {
      * Instanciate the mail email data access object and its dependencies. Login to imap on init.
      */
     self.init = function(userId, token, callback) {
-        var auth, imapOptions, smtpOptions,
+        var auth, imapOptions, smtpOptions, certificate,
             lawnchairDao, restDao, pubkeyDao,
-            keychain, imapClient, smtpClient, pgp, userStorage;
+            keychain, imapClient, smtpClient, pgp, userStorage, xhr;
 
-        // create mail credentials objects for imap/smtp
-        auth = {
-            XOAuth2: {
-                user: userId,
-                clientId: config.gmail.clientId,
-                accessToken: token
+        // fetch pinned local ssl certificate
+        xhr = new XMLHttpRequest();
+        xhr.open('GET', '/ca/Google_Internet_Authority_G2.pem');
+        xhr.onload = function() {
+            if (xhr.readyState === 4 && xhr.status === 200 && xhr.responseText) {
+                certificate = xhr.responseText;
+                setupDaos();
+            } else {
+                callback({
+                    errMsg: 'Could not fetch pinned certificate!'
+                });
             }
         };
-        imapOptions = {
-            secure: config.gmail.imap.secure,
-            port: config.gmail.imap.port,
-            host: config.gmail.imap.host,
-            auth: auth
+        xhr.onerror = function() {
+            callback({
+                errMsg: 'Could not fetch pinned certificate!'
+            });
         };
-        smtpOptions = {
-            secure: config.gmail.smtp.secure,
-            port: config.gmail.smtp.port,
-            host: config.gmail.smtp.host,
-            auth: auth
-        };
+        xhr.send();
 
-        // init objects and inject dependencies
-        restDao = new RestDAO();
-        pubkeyDao = new PublicKeyDAO(restDao);
-        lawnchairDao = new LawnchairDAO();
-        keychain = new KeychainDAO(lawnchairDao, pubkeyDao);
-        imapClient = new ImapClient(imapOptions);
-        smtpClient = new SmtpClient(smtpOptions);
-        pgp = new PGP();
-        userStorage = new DeviceStorageDAO(lawnchairDao);
-        self._emailDao = new EmailDAO(keychain, imapClient, smtpClient, pgp, userStorage);
+        function setupDaos() {
+            // create mail credentials objects for imap/smtp
+            auth = {
+                XOAuth2: {
+                    user: userId,
+                    clientId: config.gmail.clientId,
+                    accessToken: token
+                }
+            };
+            imapOptions = {
+                secure: config.gmail.imap.secure,
+                port: config.gmail.imap.port,
+                host: config.gmail.imap.host,
+                auth: auth,
+                ca: [certificate]
+            };
+            smtpOptions = {
+                secure: config.gmail.smtp.secure,
+                port: config.gmail.smtp.port,
+                host: config.gmail.smtp.host,
+                auth: auth
+            };
 
-        // init email dao
-        var account = {
-            emailAddress: userId,
-            asymKeySize: config.asymKeySize
-        };
-        self._emailDao.init(account, callback);
+            // init objects and inject dependencies
+            restDao = new RestDAO();
+            pubkeyDao = new PublicKeyDAO(restDao);
+            lawnchairDao = new LawnchairDAO();
+            keychain = new KeychainDAO(lawnchairDao, pubkeyDao);
+            imapClient = new ImapClient(imapOptions);
+            smtpClient = new SmtpClient(smtpOptions);
+            pgp = new PGP();
+            userStorage = new DeviceStorageDAO(lawnchairDao);
+            self._emailDao = new EmailDAO(keychain, imapClient, smtpClient, pgp, userStorage);
+
+            // init email dao
+            var account = {
+                emailAddress: userId,
+                asymKeySize: config.asymKeySize
+            };
+
+            self._emailDao.init(account, callback);
+        }
     };
 
     return self;
