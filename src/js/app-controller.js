@@ -196,7 +196,8 @@ define(function(require) {
                 secure: config.gmail.smtp.secure,
                 port: config.gmail.smtp.port,
                 host: config.gmail.smtp.host,
-                auth: auth
+                auth: auth,
+                ca: [certificate]
             };
 
             // init objects and inject dependencies
