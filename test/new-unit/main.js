@@ -47,7 +47,8 @@ function startTests() {
 			'test/new-unit/read-ctrl-test',
 			'test/new-unit/navigation-ctrl-test',
 			'test/new-unit/mail-list-ctrl-test',
-			'test/new-unit/write-ctrl-test'
+			'test/new-unit/write-ctrl-test',
+			'test/new-unit/outbox-bo-test'
 		], function() {
 			//Tests loaded, run tests
 			mocha.run();

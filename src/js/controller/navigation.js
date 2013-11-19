@@ -5,9 +5,7 @@ define(function(require) {
         appController = require('js/app-controller'),
         errorUtil = require('js/util/error'),
         _ = require('underscore'),
-        config = require('js/app-config').config,
-        emailDao, senderIntervalId,
-        outboxBusy = false;
+        emailDao, outboxBo;
 
     //
     // Controller
@@ -20,6 +18,7 @@ define(function(require) {
         errorUtil.attachHandler($scope);
 
         emailDao = appController._emailDao;
+        outboxBo = appController._outboxBo;
 
         //
         // scope functions
@@ -35,86 +34,6 @@ define(function(require) {
         $scope.openFolder = function(folder) {
             $scope.state.nav.currentFolder = folder;
             $scope.state.nav.toggle(false);
-        };
-
-        //
-        // Outbox checker
-        //
-
-        $scope.emptyOutbox = function() {
-            var dbType = 'email_OUTBOX',
-                outbox = _.findWhere($scope.folders, {
-                    type: 'Outbox'
-                });
-
-            checkStorage();
-
-            function checkStorage() {
-                if (outboxBusy) {
-                    return;
-                }
-
-                outboxBusy = true;
-
-                // get last item from outbox
-                emailDao._devicestorage.listItems(dbType, 0, null, function(err, pending) {
-                    if (err) {
-                        outboxBusy = false;
-                        $scope.onError(err);
-                        return;
-                    }
-
-                    // update outbox folder count
-                    outbox.count = pending.length;
-                    $scope.$apply();
-
-                    // sending pending mails
-                    send(pending);
-                });
-            }
-
-            function send(emails) {
-                if (emails.length === 0) {
-                    outboxBusy = false;
-                    return;
-                }
-
-                var email = emails.shift();
-                emailDao.smtpSend(email, function(err) {
-                    if (err) {
-                        outboxBusy = false;
-                        $scope.onError(err);
-                        return;
-                    }
-
-                    removeFromStorage(email.id);
-                    send(emails);
-                });
-            }
-
-            function removeFromStorage(id) {
-                if (!id) {
-                    outboxBusy = false;
-                    $scope.onError({
-                        errMsg: 'Cannot remove email from storage without a valid id!'
-                    });
-                    return;
-                }
-
-                // delete email from local storage
-                var key = dbType + '_' + id;
-                emailDao._devicestorage.removeList(key, function(err) {
-                    if (err) {
-                        outboxBusy = false;
-                        $scope.onError(err);
-                        return;
-                    }
-
-                    outbox.count = (outbox.count > 0) ? outbox.count - 1 : outbox.count;
-                    $scope.$apply();
-                    outboxBusy = false;
-                });
-            }
         };
 
         //
@@ -145,7 +64,7 @@ define(function(require) {
                     });
 
                     // start checking outbox periodically
-                    startOutboxSender();
+                    outboxBo.startChecking(onOutboxUpdate);
 
                     callback(folders);
                     $scope.$apply();
@@ -176,10 +95,21 @@ define(function(require) {
             }]);
         }
 
-        function startOutboxSender() {
-            // start periodic checking of outbox
-            senderIntervalId = setInterval($scope.emptyOutbox, config.checkOutboxInterval);
+        // update outbox count
+
+        function onOutboxUpdate(err, count) {
+            if (err) {
+                $scope.onError(err);
+                return;
+            }
+
+            var outbox = _.findWhere($scope.folders, {
+                type: 'Outbox'
+            });
+            outbox.count = count;
+            $scope.$apply();
         }
+
     };
 
     //

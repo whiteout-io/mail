@@ -13,6 +13,8 @@ define(function(require) {
         LawnchairDAO = require('js/dao/lawnchair-dao'),
         KeychainDAO = require('js/dao/keychain-dao'),
         DeviceStorageDAO = require('js/dao/devicestorage-dao'),
+        InvitationDAO = require('js/dao/invitation-dao'),
+        OutboxBO = require('js/bo/outbox'),
         PGP = require('js/crypto/pgp'),
         config = require('js/app-config').config;
     require('cordova');
@@ -153,7 +155,7 @@ define(function(require) {
      */
     self.init = function(userId, token, callback) {
         var auth, imapOptions, smtpOptions, certificate,
-            lawnchairDao, restDao, pubkeyDao,
+            lawnchairDao, restDao, pubkeyDao, invitationDao,
             keychain, imapClient, smtpClient, pgp, userStorage, xhr;
 
         // fetch pinned local ssl certificate
@@ -210,6 +212,9 @@ define(function(require) {
             pgp = new PGP();
             userStorage = new DeviceStorageDAO(lawnchairDao);
             self._emailDao = new EmailDAO(keychain, imapClient, smtpClient, pgp, userStorage);
+
+            invitationDao = new InvitationDAO(restDao);
+            self._outboxBo = new OutboxBO(self._emailDao, invitationDao);
 
             // init email dao
             var account = {

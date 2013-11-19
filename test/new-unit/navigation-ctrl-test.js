@@ -6,25 +6,31 @@ define(function(require) {
         mocks = require('angularMocks'),
         NavigationCtrl = require('js/controller/navigation'),
         EmailDAO = require('js/dao/email-dao'),
-        DeviceStorageDAO = require('js/dao/devicestorage-dao'),
+        OutboxBO = require('js/bo/outbox'),
         appController = require('js/app-controller');
 
     describe('Navigation Controller unit test', function() {
-        var scope, ctrl, origEmailDao, emailDaoMock, deviceStorageMock, tempChrome;
+        var scope, ctrl, origEmailDao, emailDaoMock, outboxBoMock, hasIdentity, outboxFolder;
 
         beforeEach(function() {
-            if (window.chrome.identity) {
-                tempChrome = window.chrome.identity;
-                delete window.chrome.identity;
+            hasIdentity = !! window.chrome.identity;
+            if (!hasIdentity) {
+                window.chrome.identity = {};
             }
             // remember original module to restore later
             origEmailDao = appController._emailDao;
 
             emailDaoMock = sinon.createStubInstance(EmailDAO);
             appController._emailDao = emailDaoMock;
+            outboxBoMock = sinon.createStubInstance(OutboxBO);
+            appController._outboxBo = outboxBoMock;
 
-            deviceStorageMock = sinon.createStubInstance(DeviceStorageDAO);
-            appController._emailDao._devicestorage = deviceStorageMock;
+            // for outbox checking
+            outboxFolder = {
+                type: 'Outbox'
+            };
+            emailDaoMock.imapListFolders.yields(null, [outboxFolder]);
+            outboxBoMock.startChecking.returns();
 
             angular.module('navigationtest', []);
             mocks.module('navigationtest');
@@ -40,8 +46,8 @@ define(function(require) {
         afterEach(function() {
             // restore the module
             appController._emailDao = origEmailDao;
-            if (tempChrome) {
-                window.chrome.identity = tempChrome;
+            if (hasIdentity) {
+                delete window.chrome.identity;
             }
         });
 
@@ -53,7 +59,6 @@ define(function(require) {
 
                 expect(scope.onError).to.exist;
                 expect(scope.openFolder).to.exist;
-                expect(scope.emptyOutbox).to.exist;
             });
         });
 
@@ -79,41 +84,17 @@ define(function(require) {
 
         describe('empty outbox', function() {
             it('should work', function() {
-                deviceStorageMock.listItems.yields(null, [{
-                    id: 1
-                }, {
-                    id: 2
-                }, {
-                    id: 3
-                }]);
-                emailDaoMock.smtpSend.yields();
-                deviceStorageMock.removeList.yields();
+                var callback;
 
-                scope.emptyOutbox();
+                expect(emailDaoMock.imapListFolders.callCount).to.equal(1);
+                expect(outboxBoMock.startChecking.callCount).to.equal(1);
 
-                expect(deviceStorageMock.listItems.calledOnce).to.be.true;
-                expect(emailDaoMock.smtpSend.calledThrice).to.be.true;
-                expect(deviceStorageMock.removeList.calledThrice).to.be.true;
-            });
+                outboxBoMock.startChecking.calledWith(sinon.match(function(cb) {
+                    callback = cb;
+                }));
 
-            it('should not work when device storage errors', function() {
-                deviceStorageMock.listItems.yields({errMsg: 'error'});
-
-                scope.emptyOutbox();
-
-                expect(deviceStorageMock.listItems.calledOnce).to.be.true;
-            });
-
-            it('should not work when smtp send fails', function() {
-                deviceStorageMock.listItems.yields(null, [{
-                    id: 1
-                }]);
-                emailDaoMock.smtpSend.yields({errMsg: 'error'});
-
-                scope.emptyOutbox();
-
-                expect(deviceStorageMock.listItems.calledOnce).to.be.true;
-                expect(emailDaoMock.smtpSend.calledOnce).to.be.true;
+                callback(null, 5);
+                expect(outboxFolder.count).to.equal(5);
             });
         });
     });
