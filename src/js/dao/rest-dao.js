@@ -51,8 +51,8 @@ define(function(require) {
             headers: {
                 'Accept': acceptHeader
             },
-            success: function(res) {
-                callback(null, res);
+            success: function(res, textStatus, xhr) {
+                callback(null, res, xhr.status);
             },
             error: function(xhr, textStatus, err) {
                 callback({
@@ -73,8 +73,8 @@ define(function(require) {
             type: 'PUT',
             data: JSON.stringify(item),
             contentType: 'application/json',
-            success: function() {
-                callback();
+            success: function(res, textStatus, xhr) {
+                callback(null, res, xhr.status);
             },
             error: function(xhr, textStatus, err) {
                 callback({
@@ -93,8 +93,8 @@ define(function(require) {
         $.ajax({
             url: this._baseUri + uri,
             type: 'DELETE',
-            success: function() {
-                callback();
+            success: function(res, textStatus, xhr) {
+                callback(null, res, xhr.status);
             },
             error: function(xhr, textStatus, err) {
                 callback({

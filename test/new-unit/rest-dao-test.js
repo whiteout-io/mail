@@ -10,14 +10,13 @@ define(function(require) {
         var restDao;
 
         beforeEach(function() {
-            sinon.stub($, 'ajax').yieldsTo('success', {
-                foo: 'bar'
-            });
             restDao = new RestDAO();
         });
 
         afterEach(function() {
-            $.ajax.restore();
+            if (typeof $.ajax.callCount !== 'undefined') {
+                $.ajax.restore();
+            }
         });
 
         describe('contructor', function() {
@@ -40,73 +39,81 @@ define(function(require) {
 
         describe('get', function() {
             it('should work with json as default type', function(done) {
-                $.ajax.restore();
                 var spy = sinon.stub($, 'ajax').yieldsTo('success', {
                     foo: 'bar'
+                }, 'success', {
+                    status: 200
                 });
 
                 restDao.get({
                     uri: '/asdf',
                     type: 'json'
-                }, function(err, data) {
+                }, function(err, data, status) {
                     expect(err).to.not.exist;
                     expect(data.foo).to.equal('bar');
                     expect(spy.calledWith(sinon.match(function(request) {
                         return request.headers.Accept === 'application/json' && request.dataType === 'json';
                     }))).to.be.true;
+                    expect(status).to.equal(200);
                     done();
                 });
             });
 
             it('should work with json', function(done) {
-                $.ajax.restore();
                 var spy = sinon.stub($, 'ajax').yieldsTo('success', {
                     foo: 'bar'
+                }, 'success', {
+                    status: 200
                 });
 
                 restDao.get({
                     uri: '/asdf',
                     type: 'json'
-                }, function(err, data) {
+                }, function(err, data, status) {
                     expect(err).to.not.exist;
                     expect(data.foo).to.equal('bar');
                     expect(spy.calledWith(sinon.match(function(request) {
                         return request.headers.Accept === 'application/json' && request.dataType === 'json';
                     }))).to.be.true;
+                    expect(status).to.equal(200);
                     done();
                 });
             });
 
             it('should work with plain text', function(done) {
-                $.ajax.restore();
-                var spy = sinon.stub($, 'ajax').yieldsTo('success', 'foobar!');
+                var spy = sinon.stub($, 'ajax').yieldsTo('success', 'foobar!', 'success', {
+                    status: 200
+                });
 
                 restDao.get({
                     uri: '/asdf',
                     type: 'text'
-                }, function(err, data) {
+                }, function(err, data, status) {
                     expect(err).to.not.exist;
                     expect(data).to.equal('foobar!');
                     expect(spy.calledWith(sinon.match(function(request) {
                         return request.headers.Accept === 'text/plain' && request.dataType === 'text';
                     }))).to.be.true;
+                    expect(status).to.equal(200);
                     done();
                 });
             });
 
             it('should work with xml', function(done) {
-                $.ajax.restore();
-                var spy = sinon.stub($, 'ajax').yieldsTo('success', '<foo>bar</foo>');
+                var spy = sinon.stub($, 'ajax').yieldsTo('success', '<foo>bar</foo>', 'success', {
+                    status: 200
+                });
 
                 restDao.get({
                     uri: '/asdf',
                     type: 'xml'
-                }, function(err, data) {
+                }, function(err, data, status) {
                     expect(err).to.not.exist;
                     expect(data).to.equal('<foo>bar</foo>'); // that's probably not right, but in the unit test, it is :)
                     expect(spy.calledWith(sinon.match(function(request) {
                         return request.headers.Accept === 'application/xml' && request.dataType === 'xml';
                     }))).to.be.true;
+                    expect(status).to.equal(200);
                     done();
                 });
             });
@@ -133,7 +140,6 @@ define(function(require) {
             });
 
             it('should fail for server error', function(done) {
-                $.ajax.restore();
                 sinon.stub($, 'ajax').yieldsTo('error', {
                     status: 500
                 }, {
@@ -153,7 +159,6 @@ define(function(require) {
 
         describe('put', function() {
             it('should fail', function(done) {
-                $.ajax.restore();
                 sinon.stub($, 'ajax').yieldsTo('error', {
                     status: 500
                 }, {
@@ -168,8 +173,15 @@ define(function(require) {
             });
 
             it('should work', function(done) {
-                restDao.put('/asdf', {}, function(err) {
+                var spy = sinon.stub($, 'ajax').yieldsTo('success', undefined, 'success', {
+                    status: 201
+                });
+
+                restDao.put('/asdf', {}, function(err, res, status) {
                     expect(err).to.not.exist;
+                    expect(res).to.not.exist;
+                    expect(spy.callCount).to.equal(1);
+                    expect(status).to.equal(201);
                     done();
                 });
             });
@@ -177,7 +189,6 @@ define(function(require) {
 
         describe('remove', function() {
             it('should fail', function(done) {
-                $.ajax.restore();
                 sinon.stub($, 'ajax').yieldsTo('error', {
                     status: 500
                 }, {
@@ -192,8 +203,14 @@ define(function(require) {
             });
 
             it('should work', function(done) {
-                restDao.remove('/asdf', function(err) {
+                var spy = sinon.stub($, 'ajax').yieldsTo('success', undefined, 'success', {
+                    status: 204
+                });
+                restDao.remove('/asdf', function(err, res, status) {
                     expect(err).to.not.exist;
+                    expect(res).to.not.exist;
+                    expect(spy.callCount).to.equal(1);
+                    expect(status).to.equal(204);
                     done();
                 });
             });
