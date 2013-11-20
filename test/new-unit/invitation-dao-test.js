@@ -30,7 +30,10 @@ define(function(require) {
             it('should invite the recipient', function(done) {
                 restDaoStub.put.yieldsAsync(null, undefined, 201);
 
-                invitationDao.invite(alice, bob, function(err, status) {
+                invitationDao.invite({
+                    recipient: alice,
+                    sender: bob
+                }, function(err, status) {
                     expect(err).to.not.exist;
                     expect(status).to.equal(InvitationDAO.INVITE_SUCCESS);
                     expect(restDaoStub.put.calledWith(null, expectedUri)).to.be.true;
@@ -41,7 +44,10 @@ define(function(require) {
             it('should point out already invited recipient', function(done) {
                 restDaoStub.put.yieldsAsync(null, undefined, 304);
 
-                invitationDao.invite(alice, bob, function(err, status) {
+                invitationDao.invite({
+                    recipient: alice,
+                    sender: bob
+                }, function(err, status) {
                     expect(err).to.not.exist;
                     expect(status).to.equal(InvitationDAO.INVITE_PENDING);
                     done();
@@ -53,7 +59,10 @@ define(function(require) {
                     errMsg: 'jawollja.'
                 });
 
-                invitationDao.invite(alice, bob, function(err, status) {
+                invitationDao.invite({
+                    recipient: alice,
+                    sender: bob
+                }, function(err, status) {
                     expect(err).to.exist;
                     expect(status).to.not.exist;
                     done();
@@ -63,11 +72,36 @@ define(function(require) {
             it('should not work for unexpected response', function(done) {
                 restDaoStub.put.yieldsAsync(null, undefined, 1337);
 
-                invitationDao.invite(alice, bob, function(err, status) {
+                invitationDao.invite({
+                    recipient: alice,
+                    sender: bob
+                }, function(err, status) {
                     expect(err).to.exist;
                     expect(status).to.not.exist;
                     done();
                 });
+            });
+
+            it('should report erroneous usage', function() {
+                invitationDao.invite({
+                    sender: bob
+                }, expectError);
+
+                invitationDao.invite({
+                    recipient: alice,
+                }, expectError);
+                
+                invitationDao.invite({
+                    recipient: 123,
+                    sender: 123
+                }, expectError);
+                
+                invitationDao.invite('asd', expectError);
+
+                function expectError(err, status) {
+                    expect(err).to.exist;
+                    expect(status).to.not.exist;
+                }
             });
         });
 
@@ -75,7 +109,10 @@ define(function(require) {
             it('should return pending invite', function(done) {
                 restDaoStub.get.yieldsAsync(null, undefined, 200);
 
-                invitationDao.check(alice, bob, function(err, status) {
+                invitationDao.check({
+                    recipient: alice,
+                    sender: bob
+                }, function(err, status) {
                     expect(err).to.not.exist;
                     expect(status).to.equal(InvitationDAO.INVITE_PENDING);
                     expect(restDaoStub.get.calledWith(null, expectedUri)).to.be.true;
@@ -88,7 +125,10 @@ define(function(require) {
                     code: 404
                 });
 
-                invitationDao.check(alice, bob, function(err, status) {
+                invitationDao.check({
+                    recipient: alice,
+                    sender: bob
+                }, function(err, status) {
                     expect(err).to.not.exist;
                     expect(status).to.equal(InvitationDAO.INVITE_MISSING);
                     done();
@@ -101,7 +141,10 @@ define(function(require) {
                     errMsg: 'jawollja.'
                 });
 
-                invitationDao.check(alice, bob, function(err, status) {
+                invitationDao.check({
+                    recipient: alice,
+                    sender: bob
+                }, function(err, status) {
                     expect(err).to.exist;
                     expect(status).to.not.exist;
                     done();
@@ -111,11 +154,36 @@ define(function(require) {
             it('should not work for unexpected response', function(done) {
                 restDaoStub.get.yieldsAsync(null, undefined, 1337);
 
-                invitationDao.check(alice, bob, function(err, status) {
+                invitationDao.check({
+                    recipient: alice,
+                    sender: bob
+                }, function(err, status) {
                     expect(err).to.exist;
                     expect(status).to.not.exist;
                     done();
                 });
+            });
+
+            it('should report erroneous usage', function() {
+                invitationDao.check({
+                    sender: bob
+                }, expectError);
+
+                invitationDao.check({
+                    recipient: alice,
+                }, expectError);
+                
+                invitationDao.check({
+                    recipient: 123,
+                    sender: 123
+                }, expectError);
+                
+                invitationDao.check('asd', expectError);
+
+                function expectError(err, status) {
+                    expect(err).to.exist;
+                    expect(status).to.not.exist;
+                }
             });
         });
     });

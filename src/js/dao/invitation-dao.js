@@ -23,12 +23,19 @@ define(function() {
 
     /**
      * Notes an invite for the recipient by the sender in the invitation web service
-     * @param {String} recipient User ID of the recipient
-     * @param {String} sender User ID of the sender
+     * @param {String} options.recipient User ID of the recipient
+     * @param {String} options.sender User ID of the sender
      * @param {Function} callback(error, status) Returns information if the invitation worked (INVITE_SUCCESS), if an invitation is already pendin (INVITE_PENDING), or information if an error occurred.
      */
-    InvitationDAO.prototype.invite = function(recipient, sender, callback) {
-        this._restDao.put(null, uri(recipient, sender), completed);
+    InvitationDAO.prototype.invite = function(options, callback) {
+        if (typeof options !== 'object' || typeof options.recipient !== 'string' || typeof options.recipient !== 'string') {
+            callback({
+                errMsg: 'erroneous usage of api: incorrect parameters!'
+            });
+            return;
+        }
+
+        this._restDao.put(null, uri(options.recipient, options.sender), completed);
 
         function completed(error, res, status) {
             if (error) {
@@ -52,12 +59,19 @@ define(function() {
 
     /**
      * Checks if an invitation for the recipient by the sender is present in the invitation web service
-     * @param {String} recipient User ID of the recipient
-     * @param {String} sender User ID of the sender
+     * @param {String} options.recipient User ID of the recipient
+     * @param {String} options.sender User ID of the sender
      * @param {Function} callback(error, status) Returns information about the invitation status, either an invitation is already on place (INVITE_PENDING), or not (INVITE_MISSING), or information if an error occurred.
      */
-    InvitationDAO.prototype.check = function(recipient, sender, callback) {
-        this._restDao.get(null, uri(recipient, sender), completed);
+    InvitationDAO.prototype.check = function(options, callback) {
+        if (typeof options !== 'object' || typeof options.recipient !== 'string' || typeof options.recipient !== 'string') {
+            callback({
+                errMsg: 'erroneous usage of api: incorrect parameters!'
+            });
+            return;
+        }
+
+        this._restDao.get(null, uri(options.recipient, options.sender), completed);
 
         function completed(error, res, status) {
             // 404 is a meaningful return value from the web service
