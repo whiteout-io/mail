@@ -578,8 +578,6 @@ define(function(require) {
                 callback({
                     errMsg: 'User has no public key yet!'
                 });
-                // user hasn't registered a public key yet... invite
-                //self.encryptForNewUser(email, callback);
                 return;
             }
 
