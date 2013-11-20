@@ -255,7 +255,7 @@ define(function(require) {
 
             describe('SMTP: send email', function() {
                 it('should fail due to bad input', function(done) {
-                    emailDao.smtpSend({}, function(err) {
+                    emailDao.encryptedSend({}, function(err) {
                         expect(smtpClientStub.send.called).to.be.false;
                         expect(keychainStub.getReceiverPublicKey.called).to.be.false;
                         expect(err).to.exist;
@@ -267,7 +267,7 @@ define(function(require) {
                     dummyMail.to = [{
                         address: 'asfd'
                     }];
-                    emailDao.smtpSend(dummyMail, function(err) {
+                    emailDao.encryptedSend(dummyMail, function(err) {
                         expect(smtpClientStub.send.called).to.be.false;
                         expect(keychainStub.getReceiverPublicKey.called).to.be.false;
                         expect(err).to.exist;
@@ -279,7 +279,7 @@ define(function(require) {
                     keychainStub.getReceiverPublicKey.yields(null, null);
                     smtpClientStub.send.yields();
 
-                    emailDao.smtpSend(dummyMail, function(err) {
+                    emailDao.encryptedSend(dummyMail, function(err) {
                         expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
                         // expect(smtpClientStub.send.called).to.be.true;
                         // smtpClientStub.send.calledWith(sinon.match(function(o) {
@@ -300,7 +300,7 @@ define(function(require) {
                     pgpStub.encrypt.yields(null, 'asdfasfd');
                     smtpClientStub.send.yields();
 
-                    emailDao.smtpSend(dummyMail, function(err) {
+                    emailDao.encryptedSend(dummyMail, function(err) {
                         expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
                         expect(pgpStub.exportKeys.calledOnce).to.be.true;
                         expect(pgpStub.encrypt.calledOnce).to.be.true;
@@ -328,7 +328,7 @@ define(function(require) {
                 //     pgpStub.encrypt.yields(null, 'asdfasfd');
                 //     smtpClientStub.send.yields();
 
-                //     emailDao.smtpSend(dummyMail, function(err) {
+                //     emailDao.encryptedSend(dummyMail, function(err) {
                 //         expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
                 //         expect(pgpStub.exportKeys.calledOnce).to.be.true;
                 //         expect(pgpStub.encrypt.calledOnce).to.be.true;

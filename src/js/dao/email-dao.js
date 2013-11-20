@@ -534,7 +534,7 @@ define(function(require) {
     /**
      * Send an email client side via STMP.
      */
-    EmailDAO.prototype.smtpSend = function(email, callback) {
+    EmailDAO.prototype.encryptedSend = function(email, callback) {
         var self = this,
             invalidRecipient;
 

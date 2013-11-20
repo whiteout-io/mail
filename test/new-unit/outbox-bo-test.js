@@ -47,14 +47,14 @@ define(function(require) {
                 devicestorageStub.listItems.yields(null, [{
                     id: '12345'
                 }]);
-                emailDaoStub.smtpSend.yields();
+                emailDaoStub.encryptedSend.yields();
                 devicestorageStub.removeList.yields();
 
                 function onOutboxUpdate(err, count) {
                     expect(err).to.not.exist;
                     if (count === 0) {
                         expect(devicestorageStub.listItems.callCount).to.equal(1);
-                        expect(emailDaoStub.smtpSend.callCount).to.equal(1);
+                        expect(emailDaoStub.encryptedSend.callCount).to.equal(1);
                         expect(devicestorageStub.removeList.callCount).to.equal(1);
                         done();
                     }

@@ -62,7 +62,7 @@ define(function(require) {
             }
 
             var email = emails.shift();
-            self._emailDao.smtpSend(email, function(err) {
+            self._emailDao.encryptedSend(email, function(err) {
                 if (err) {
                     self._outboxBusy = false;
                     callback(err);
