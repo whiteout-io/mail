@@ -608,8 +608,9 @@ define(function(require) {
                         offset: 0,
                         num: 1
                     }, function(err, emails) {
-                        expect(err).to.exist;
-                        expect(emails).to.not.exist;
+                        expect(err).to.not.exist;
+                        expect(emails).to.exist;
+                        expect(emails[0].body).to.equal('Public key for sender not found!');
                         expect(devicestorageStub.listItems.calledOnce).to.be.true;
                         expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
                         done();

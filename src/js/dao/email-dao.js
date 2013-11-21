@@ -295,9 +295,7 @@ define(function(require) {
 
                 if (!senderPubkey) {
                     // this should only happen if a mail from another channel is in the inbox
-                    callback({
-                        errMsg: 'No public key for the sender'
-                    });
+                    setBodyAndContinue('Public key for sender not found!');
                     return;
                 }
 
@@ -307,11 +305,15 @@ define(function(require) {
                         decrypted = err.errMsg;
                     }
 
-                    email.body = decrypted;
-                    cleartextList.push(email);
-                    localCallback();
+                    setBodyAndContinue(decrypted);
                 });
             });
+
+            function setBodyAndContinue(text) {
+                email.body = text;
+                cleartextList.push(email);
+                localCallback();
+            }
         }
 
         function verify(email, localCallback) {
