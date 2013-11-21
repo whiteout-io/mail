@@ -7,17 +7,29 @@ define(function(require) {
         InvitationDAO = require('js/dao/invitation-dao'),
         dbType = 'email_OUTBOX';
 
+    /**
+     * High level business object that orchestrates the local outbox. 
+     * The local outbox takes care of the emails before they are being sent. 
+     * It also checks periodically if there are any mails in the local device storage to be sent.
+     */
     var OutboxBO = function(emailDao, invitationDao) {
         this._emailDao = emailDao;
         this._invitationDao = invitationDao;
         this._outboxBusy = false;
     };
 
+    /** 
+     * This function activates the periodic checking of the local device storage for pending mails.
+     * @param {Function} callback(error, pendingMailsCount) Callback that informs you about the count of pending mails.
+     */
     OutboxBO.prototype.startChecking = function(callback) {
         // start periodic checking of outbox
         this._intervalId = setInterval(this._processOutbox.bind(this, callback), config.checkOutboxInterval);
     };
 
+    /**
+     * Outbox stops the periodic checking of the local device storage for pending mails.
+     */
     OutboxBO.prototype.stopChecking = function() {
         if (!this._intervalId) {
             return;
@@ -27,6 +39,10 @@ define(function(require) {
         delete this._intervalId;
     };
 
+    /**
+     * Checks the local device storage for pending mails.
+     * @param {Function} callback(error, pendingMailsCount) Callback that informs you about the count of pending mails.
+     */
     OutboxBO.prototype._processOutbox = function(callback) {
         var self = this,
             emails;
