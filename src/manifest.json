@@ -12,7 +12,7 @@
       "fileSystem": ["write"]
     },
     "notifications",
-    "https://keys.whiteout.io/",
+    "https://keys-test.whiteout.io",
     "identity", {
       "socket": [
         "tcp-connect:imap.gmail.com:993",

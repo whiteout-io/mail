@@ -35,7 +35,7 @@ define(function() {
             return;
         }
 
-        this._restDao.put(null, uri(options.recipient, options.sender), completed);
+        this._restDao.put({}, uri(options.recipient, options.sender), completed);
 
         function completed(error, res, status) {
             if (error) {
@@ -71,7 +71,10 @@ define(function() {
             return;
         }
 
-        this._restDao.get(null, uri(options.recipient, options.sender), completed);
+        this._restDao.get({
+            uri: uri(options.recipient, options.sender),
+            type: 'text'
+        }, completed);
 
         function completed(error, res, status) {
             // 404 is a meaningful return value from the web service

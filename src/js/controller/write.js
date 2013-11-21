@@ -146,15 +146,6 @@ define(function(require) {
                 return;
             }
 
-            // only allow secure recipients until invitation is implemented
-            if (!$scope.toKey) {
-                $scope.onError({
-                    errMsg: 'Invitations not yet supported!',
-                    sync: true
-                });
-                return;
-            }
-
             // remove generated html from body
             body = parseBody($scope.body);
 
@@ -184,7 +175,7 @@ define(function(require) {
 
                 $scope.state.writer.close();
                 $scope.$apply();
-                $scope.emptyOutbox();
+                $scope.emptyOutbox($scope.onOutboxUpdate);
 
                 markAnwsered();
             });

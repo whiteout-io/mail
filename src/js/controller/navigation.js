@@ -36,6 +36,19 @@ define(function(require) {
             $scope.state.nav.toggle(false);
         };
 
+        $scope.onOutboxUpdate = function(err, count) {
+            if (err) {
+                $scope.onError(err);
+                return;
+            }
+
+            var outbox = _.findWhere($scope.folders, {
+                type: 'Outbox'
+            });
+            outbox.count = count;
+            $scope.$apply();
+        };
+
         //
         // Start
         //
@@ -64,7 +77,9 @@ define(function(require) {
                     });
 
                     // start checking outbox periodically
-                    outboxBo.startChecking(onOutboxUpdate);
+                    outboxBo.startChecking($scope.onOutboxUpdate);
+                    // make function available globally for write controller
+                    $scope.emptyOutbox = outboxBo._processOutbox;
 
                     callback(folders);
                     $scope.$apply();
@@ -94,22 +109,6 @@ define(function(require) {
                 path: 'TRASH'
             }]);
         }
-
-        // update outbox count
-
-        function onOutboxUpdate(err, count) {
-            if (err) {
-                $scope.onError(err);
-                return;
-            }
-
-            var outbox = _.findWhere($scope.folders, {
-                type: 'Outbox'
-            });
-            outbox.count = count;
-            $scope.$apply();
-        }
-
     };
 
     //
