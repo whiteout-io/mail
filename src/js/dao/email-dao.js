@@ -293,6 +293,14 @@ define(function(require) {
                     return;
                 }
 
+                if (!senderPubkey) {
+                    // this should only happen if a mail from another channel is in the inbox
+                    callback({
+                        errMsg: 'No public key for the sender'
+                    });
+                    return;
+                }
+
                 // decrypt and verfiy signatures
                 self._crypto.decrypt(email.body, senderPubkey.publicKey, function(err, decrypted) {
                     if (err) {

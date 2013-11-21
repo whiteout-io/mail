@@ -598,6 +598,24 @@ define(function(require) {
             });
 
             describe('IMAP: list messages from local storage', function() {
+                it('should fail for empty public key', function(done) {
+                    dummyMail.body = app.string.cryptPrefix + btoa('asdf') + app.string.cryptSuffix;
+                    devicestorageStub.listItems.yields(null, [dummyMail]);
+                    keychainStub.getReceiverPublicKey.yields();
+
+                    emailDao.listMessages({
+                        folder: 'INBOX',
+                        offset: 0,
+                        num: 1
+                    }, function(err, emails) {
+                        expect(err).to.exist;
+                        expect(emails).to.not.exist;
+                        expect(devicestorageStub.listItems.calledOnce).to.be.true;
+                        expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
+                        done();
+                    });
+                });
+
                 it('should work', function(done) {
                     dummyMail.body = app.string.cryptPrefix + btoa('asdf') + app.string.cryptSuffix;
                     devicestorageStub.listItems.yields(null, [dummyMail]);
