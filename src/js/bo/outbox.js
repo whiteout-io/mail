@@ -182,7 +182,7 @@ define(function(require) {
                     invitationMail = {
                         from: [sender],
                         to: [recipient],
-                        subject: str.subjectPrefix + str.invitationSubject,
+                        subject: str.invitationSubject,
                         body: 'Hi ' + to + ',\n\n' + str.invitationMessage + '\n\n\n' + str.signature
                     };
 
