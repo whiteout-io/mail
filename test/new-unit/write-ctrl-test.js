@@ -186,22 +186,6 @@ define(function(require) {
                 scope.sendToOutbox();
             });
 
-            it('should not work if recipient does not have a public key', function(done) {
-                scope.state.writer.open = true;
-                scope.to = 'a, b, c';
-                scope.body = 'asd';
-                scope.subject = 'yaddablabla';
-
-                scope.onError = function(err) {
-                    expect(err).to.exist;
-                    expect(scope.state.writer.open).to.be.true;
-                    expect(deviceStorageMock.storeList.called).to.be.false;
-                    done();
-                };
-
-                scope.sendToOutbox();
-            });
-
             it('should not work and not close the write view', function(done) {
                 scope.state.writer.open = true;
                 scope.to = 'a, b, c';

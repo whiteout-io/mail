@@ -36,7 +36,7 @@ define(function(require) {
                 }, function(err, status) {
                     expect(err).to.not.exist;
                     expect(status).to.equal(InvitationDAO.INVITE_SUCCESS);
-                    expect(restDaoStub.put.calledWith(null, expectedUri)).to.be.true;
+                    expect(restDaoStub.put.calledWith({}, expectedUri)).to.be.true;
                     done();
                 });
             });
@@ -90,12 +90,12 @@ define(function(require) {
                 invitationDao.invite({
                     recipient: alice,
                 }, expectError);
-                
+
                 invitationDao.invite({
                     recipient: 123,
                     sender: 123
                 }, expectError);
-                
+
                 invitationDao.invite('asd', expectError);
 
                 function expectError(err, status) {
@@ -115,7 +115,10 @@ define(function(require) {
                 }, function(err, status) {
                     expect(err).to.not.exist;
                     expect(status).to.equal(InvitationDAO.INVITE_PENDING);
-                    expect(restDaoStub.get.calledWith(null, expectedUri)).to.be.true;
+                    expect(restDaoStub.get.calledWith({
+                        uri: expectedUri,
+                        type: 'text'
+                    })).to.be.true;
                     done();
                 });
             });
@@ -172,12 +175,12 @@ define(function(require) {
                 invitationDao.check({
                     recipient: alice,
                 }, expectError);
-                
+
                 invitationDao.check({
                     recipient: 123,
                     sender: 123
                 }, expectError);
-                
+
                 invitationDao.check('asd', expectError);
 
                 function expectError(err, status) {
