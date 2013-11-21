@@ -79,7 +79,7 @@ define(function(require) {
                     // start checking outbox periodically
                     outboxBo.startChecking($scope.onOutboxUpdate);
                     // make function available globally for write controller
-                    $scope.emptyOutbox = outboxBo._processOutbox;
+                    $scope.emptyOutbox = outboxBo._processOutbox.bind(outboxBo);
 
                     callback(folders);
                     $scope.$apply();

@@ -165,9 +165,7 @@ define(function(require) {
                 });
             });
 
-            // set an id for the email and store in outbox
-            email.id = util.UUID();
-            emailDao._devicestorage.storeList([email], 'email_OUTBOX', function(err) {
+            emailDao.store(email, function(err) {
                 if (err) {
                     $scope.onError(err);
                     return;

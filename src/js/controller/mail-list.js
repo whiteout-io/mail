@@ -7,7 +7,7 @@ define(function(require) {
         IScroll = require('iscroll'),
         str = require('js/app-config').string,
         cfg = require('js/app-config').config,
-        emailDao;
+        emailDao, outboxBo;
 
     var MailListCtrl = function($scope) {
         var offset = 0,
@@ -19,6 +19,8 @@ define(function(require) {
         //
 
         emailDao = appController._emailDao;
+        outboxBo = appController._outboxBo;
+
         if (emailDao) {
             emailDao.onIncomingMessage = function(email) {
                 if (email.subject.indexOf(str.subjectPrefix) === -1) {
@@ -67,6 +69,13 @@ define(function(require) {
         };
 
         $scope.synchronize = function(callback) {
+            // if we're in the outbox, don't do an imap sync
+            if (getFolder().type === 'Outbox') {
+                updateStatus('Last update: ', new Date());
+                displayEmails(outboxBo.pendingEmails);
+                return;
+            }
+
             updateStatus('Syncing ...');
             // sync from imap to local db
             syncImapFolder({
@@ -93,13 +102,26 @@ define(function(require) {
                 return;
             }
 
-            var index, trashFolder;
+            var index, currentFolder, trashFolder, outboxFolder;
+
+            currentFolder = getFolder();
 
             trashFolder = _.findWhere($scope.folders, {
                 type: 'Trash'
             });
 
-            if (getFolder() === trashFolder) {
+            outboxFolder = _.findWhere($scope.folders, {
+                type: 'Outbox'
+            });
+
+            if (currentFolder === outboxFolder) {
+                $scope.onError({
+                    errMsg: 'Deleting messages from the outbox is not yet supported.'
+                });
+                return;
+            }
+
+            if (currentFolder === trashFolder) {
                 $scope.state.dialog = {
                     open: true,
                     title: 'Delete',
@@ -159,22 +181,44 @@ define(function(require) {
             }
         };
 
-        $scope.$watch('state.nav.currentFolder', function() {
+        $scope._stopWatchTask = $scope.$watch('state.nav.currentFolder', function() {
             if (!getFolder()) {
                 return;
             }
 
-            // production... in chrome packaged app
-            if (window.chrome && chrome.identity) {
-                initList();
+            // development... display dummy mail objects
+            if (!window.chrome || !chrome.identity) {
+                firstSelect = true;
+                updateStatus('Last update: ', new Date());
+                $scope.emails = createDummyMails();
+                $scope.select($scope.emails[0]);
                 return;
             }
 
-            // development... display dummy mail objects
-            firstSelect = true;
-            updateStatus('Last update: ', new Date());
-            $scope.emails = createDummyMails();
-            $scope.select($scope.emails[0]);
+            // production... in chrome packaged app
+
+            // if we're in the outbox, read directly from there.
+            if (getFolder().type === 'Outbox') {
+                updateStatus('Last update: ', new Date());
+                displayEmails(outboxBo.pendingEmails);
+                return;
+            }
+
+            updateStatus('Read cache ...');
+
+            // list messaged from local db
+            listLocalMessages({
+                folder: getFolder().path,
+                offset: offset,
+                num: num
+            }, function sync() {
+                updateStatus('Syncing ...');
+                $scope.$apply();
+
+                // sync imap folder to local db
+                $scope.synchronize();
+            });
+
         });
 
         // share local scope functions with root state
@@ -194,23 +238,6 @@ define(function(require) {
                 message: email.subject.split(str.subjectPrefix)[1],
                 iconUrl: chrome.runtime.getURL(cfg.iconPath)
             }, function() {});
-        }
-
-        function initList() {
-            updateStatus('Read cache ...');
-
-            // list messaged from local db
-            listLocalMessages({
-                folder: getFolder().path,
-                offset: offset,
-                num: num
-            }, function sync() {
-                updateStatus('Syncing ...');
-                $scope.$apply();
-
-                // sync imap folder to local db
-                $scope.synchronize();
-            });
         }
 
         function syncImapFolder(options, callback) {
@@ -270,7 +297,12 @@ define(function(require) {
 
             $scope.emails = emails;
             $scope.select($scope.emails[0]);
-            $scope.$apply();
+
+            // syncing from the outbox is a synchronous call, so we mustn't call $scope.$apply
+            // for every other IMAP folder, this call is asynchronous, hence we have to call $scope.$apply...
+            if (getFolder().type !== 'Outbox') {
+                $scope.$apply();
+            }
         }
 
         function getFolder() {
@@ -278,6 +310,11 @@ define(function(require) {
         }
 
         function markAsRead(email) {
+            // marking mails as read is meaningless in the outbox
+            if (getFolder().type === 'Outbox') {
+                return;
+            }
+
             // don't mark top selected email automatically
             if (firstSelect) {
                 firstSelect = false;

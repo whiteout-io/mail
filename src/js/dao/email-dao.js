@@ -592,17 +592,27 @@ define(function(require) {
             }
 
             // public key found... encrypt and send
-            self.encryptForUser(email, receiverPubkey.publicKey, callback);
+            self.encryptForUser({
+                email: email,
+                receiverPubkey: receiverPubkey.publicKey
+            }, function(err, email) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                self.send(email, callback);
+            });
         });
     };
 
     /**
      * Encrypt an email asymmetrically for an exisiting user with their public key
      */
-    EmailDAO.prototype.encryptForUser = function(email, receiverPubkey, callback) {
+    EmailDAO.prototype.encryptForUser = function(options, callback) {
         var self = this,
-            pt = email.body,
-            receiverPubkeys = [receiverPubkey];
+            pt = options.email.body,
+            receiverPubkeys = options.receiverPubkey ? [options.receiverPubkey] : [];
 
         // get own public key so send message can be read
         self._crypto.exportKeys(function(err, ownKeys) {
@@ -621,9 +631,8 @@ define(function(require) {
                 }
 
                 // bundle encrypted email together for sending
-                frameEncryptedMessage(email, ct);
-
-                self.send(email, callback);
+                frameEncryptedMessage(options.email, ct);
+                callback(null, options.email);
             });
         });
     };
@@ -631,7 +640,6 @@ define(function(require) {
     /**
      * Frames an encrypted message in base64 Format.
      */
-
     function frameEncryptedMessage(email, ct) {
         var to, greeting;
 
@@ -645,8 +653,6 @@ define(function(require) {
         // build encrypted text body
         email.body = greeting + MESSAGE + ct + SIGNATURE;
         email.subject = str.subjectPrefix + email.subject;
-
-        return email;
     }
 
     /**
@@ -656,6 +662,64 @@ define(function(require) {
         var self = this;
 
         self._smtpClient.send(email, callback);
+    };
+
+    EmailDAO.prototype.store = function(email, callback) {
+        var self = this,
+            dbType = 'email_OUTBOX';
+
+        email.id = util.UUID();
+
+        // encrypt
+        self.encryptForUser({
+            email: email
+        }, function(err, email) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            // store to local storage
+            self._devicestorage.storeList([email], dbType, callback);
+        });
+    };
+
+    EmailDAO.prototype.list = function(callback) {
+        var self = this,
+            dbType = 'email_OUTBOX';
+
+        self._devicestorage.listItems(dbType, 0, null, function(err, mails) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            if (mails.length === 0) {
+                callback(null, []);
+                return;
+            }
+
+            self._crypto.exportKeys(function(err, ownKeys) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                var after = _.after(mails.length, function() {
+                    callback(null, mails);
+                });
+
+                mails.forEach(function(mail) {
+                    mail.body = str.cryptPrefix + mail.body.split(str.cryptPrefix)[1].split(str.cryptSuffix)[0] + str.cryptSuffix;
+                    self._crypto.decrypt(mail.body, ownKeys.publicKeyArmored, function(err, decrypted) {
+                        mail.body = err ? err.errMsg : decrypted;
+                        mail.subject = mail.subject.split(str.subjectPrefix)[1];
+                        after();
+                    });
+                });
+
+            });
+        });
     };
 
     return EmailDAO;

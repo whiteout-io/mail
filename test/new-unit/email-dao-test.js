@@ -785,6 +785,55 @@ define(function(require) {
             });
         });
 
+        describe('store', function() {
+            it('should work', function(done) {
+                pgpStub.exportKeys.yields(null, {
+                    publicKeyArmored: 'omgsocrypto'
+                });
+                pgpStub.encrypt.yields(null, 'asdfasfd');
+                devicestorageStub.storeList.yields();
+
+                emailDao.store(dummyMail, function(err) {
+                    expect(err).to.not.exist;
+                    expect(pgpStub.exportKeys.calledOnce).to.be.true;
+                    expect(pgpStub.encrypt.calledOnce).to.be.true;
+                    expect(devicestorageStub.storeList.calledOnce).to.be.true;
+
+                    done();
+                });
+            });
+        });
+
+        describe('list', function() {
+            it('should work', function(done) {
+                devicestorageStub.listItems.yields(null, [{
+                    body: app.string.cryptPrefix + btoa('asdf') + app.string.cryptSuffix,
+                    subject: '[whiteout] ZOMG!'
+                }, {
+                    body: app.string.cryptPrefix + btoa('asdf') + app.string.cryptSuffix,
+                    subject: '[whiteout] WTF!'
+                }]);
+                pgpStub.exportKeys.yields(null, {
+                    publicKeyArmored: 'omgsocrypto'
+                });
+                pgpStub.decrypt.yields(null, 'asdfasfd');
+
+                emailDao.list(function(err, mails) {
+                    expect(err).to.not.exist;
+                    
+                    expect(devicestorageStub.listItems.calledOnce).to.be.true;
+                    expect(pgpStub.exportKeys.calledOnce).to.be.true;
+                    expect(pgpStub.decrypt.calledTwice).to.be.true;
+                    expect(mails.length).to.equal(2);
+                    expect(mails[0].body).to.equal('asdfasfd');
+                    expect(mails[0].subject).to.equal('ZOMG!');
+                    expect(mails[1].body).to.equal('asdfasfd');
+                    expect(mails[1].subject).to.equal('WTF!');
+
+                    done();
+                });
+            });
+        });
     });
 
 });
