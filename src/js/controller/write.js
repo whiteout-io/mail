@@ -48,7 +48,7 @@ define(function(require) {
         }
 
         function fillFields(re) {
-            var from, cleaned, body;
+            var from, body;
 
             if (!re) {
                 return;
@@ -62,12 +62,11 @@ define(function(require) {
 
             // fill text body
             from = re.from[0].name || re.from[0].address;
-            body = '<br><br>' + $filter('date')(re.sentDate, 'EEEE, MMM d, yyyy h:mm a') + ' ' + from + ' wrote:<br>> ';
+            body = '\n\n' + $filter('date')(re.sentDate, 'EEEE, MMM d, yyyy h:mm a') + ' ' + from + ' wrote:\n> ';
 
-            // clean text from markup if to prevent injection in contenteditable
+            // only display non html mails in reply part
             if (!re.html) {
-                cleaned = angular.element('<p>' + re.body + '</p>').text();
-                body += cleaned.split('\n').join('<br>> ');
+                body += re.body.split('\n').join('\n> ');
                 $scope.body = body;
             }
         }
@@ -126,15 +125,13 @@ define(function(require) {
 
         $scope.updatePreview = function() {
             var body = $scope.body;
-            // remove generated html from body
-            body = parseBody(body);
 
             // Although this does encrypt live using AES, this is just for show. The plaintext is encrypted seperately before sending the email.
             $scope.ciphertextPreview = (body) ? aes.encrypt(body, key, iv) : '';
         };
 
         $scope.sendToOutbox = function() {
-            var to, body, email;
+            var to, email;
 
             // validate recipients
             to = $scope.to.replace(/\s/g, '').split(/[,;]/);
@@ -146,13 +143,10 @@ define(function(require) {
                 return;
             }
 
-            // remove generated html from body
-            body = parseBody($scope.body);
-
             email = {
                 to: [], // list of receivers
                 subject: $scope.subject, // Subject line
-                body: body // plaintext body
+                body: $scope.body // use parsed plaintext body
             };
             email.from = [{
                 name: '',
@@ -198,14 +192,6 @@ define(function(require) {
         }
     };
 
-    function parseBody(body) {
-        var regex = /(\r\n|\n|\r)/gm;
-
-        var text = body.replace(regex, '').split('<div><br>').join('\n').split('<div>').join('\n').split('<br>').join('\n');
-
-        return angular.element('<p>' + text + '</p>').text();
-    }
-
     //
     // Directives
     //
@@ -218,17 +204,18 @@ define(function(require) {
                 // view -> model
                 elm.on('keyup keydown', function() {
                     scope.$apply(function() {
-                        ctrl.$setViewValue(elm.html());
+                        // set model
+                        ctrl.$setViewValue(elm[0].innerText);
                     });
                 });
 
                 // model -> view
                 ctrl.$render = function() {
-                    elm.html(ctrl.$viewValue);
+                    elm[0].innerText = ctrl.$viewValue;
                 };
 
                 // load init value from DOM
-                ctrl.$setViewValue(elm.html());
+                ctrl.$setViewValue(elm[0].innerText);
             }
         };
     });
