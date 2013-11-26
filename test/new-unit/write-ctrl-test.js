@@ -108,29 +108,6 @@ define(function(require) {
                 scope.verifyTo.restore();
             });
 
-            it('should prevent markup injection', function() {
-                var address = 'pity@dafool',
-                    subject = 'Ermahgerd!',
-                    body = '<div>markup</div><div>moreMarkup<div>',
-                    re = {
-                        from: [{
-                            address: address
-                        }],
-                        subject: subject,
-                        sentDate: new Date(),
-                        body: body,
-                        html: false
-                    };
-
-                sinon.stub(scope, 'verifyTo');
-
-                scope.state.writer.write(re);
-
-                expect(scope.body).to.contain('<br>> markupmoreMarkup');
-
-                scope.verifyTo.restore();
-            });
-
         });
 
         describe('verifyTo', function() {
