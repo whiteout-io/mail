@@ -124,7 +124,7 @@ define(function(require) {
             iv = util.random(128);
 
         $scope.updatePreview = function() {
-            var body = $scope.body;
+            var body = $scope.body.trim();
 
             // Although this does encrypt live using AES, this is just for show. The plaintext is encrypted seperately before sending the email.
             $scope.ciphertextPreview = (body) ? aes.encrypt(body, key, iv) : '';
@@ -232,6 +232,17 @@ define(function(require) {
                         }, 100);
                     }
                 });
+            }
+        };
+    });
+
+    ngModule.directive('focusChild', function() {
+        return {
+            //scope: true,   // optionally create a child scope
+            link: function(scope, element) {
+                element[0].onclick = function() {
+                    element[0].children[0].focus();
+                };
             }
         };
     });

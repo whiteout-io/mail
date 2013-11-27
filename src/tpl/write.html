@@ -26,10 +26,10 @@
         </button>
       </div><!--/.subject-box-->
 
-      <div class="body">
+      <div class="body" focus-child>
         <p ng-model="body" contentEditable="true" ng-change="updatePreview()" tabindex="4" focus-me="state.writer.open && writerTitle === 'Reply'"></p>
 
-        <div class="encrypt-preview" ng-class="{'invisible': !body}">
+        <div class="encrypt-preview" ng-class="{'invisible': !ciphertextPreview}">
           <p>-----BEGIN ENCRYPTED PREVIEW-----<br>{{ciphertextPreview}}<br>-----END ENCRYPTED PREVIEW-----</p>
           <br>
           <p>{{signature}}</p>
