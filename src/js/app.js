@@ -13,11 +13,16 @@ require([
     'js/controller/read',
     'js/controller/write',
     'js/controller/navigation',
+    'cryptoLib/util',
     'angularRoute',
     'angularTouch'
-], function(angular, DialogCtrl, AccountCtrl, LoginCtrl, LoginInitialCtrl, LoginNewDeviceCtrl, LoginExistingCtrl, MailListCtrl, ReadCtrl, WriteCtrl, NavigationCtrl) {
+], function(angular, DialogCtrl, AccountCtrl, LoginCtrl, LoginInitialCtrl, LoginNewDeviceCtrl, LoginExistingCtrl, MailListCtrl, ReadCtrl, WriteCtrl, NavigationCtrl, util) {
     'use strict';
 
+    // reset window.name
+    window.name = util.UUID();
+
+    // init main angular module including dependencies
     var app = angular.module('mail', ['ngRoute', 'ngTouch', 'navigation', 'mail-list', 'write', 'read', 'login-new-device']);
 
     // set router paths
