@@ -82,6 +82,11 @@
             font-family: monospace;
             color: $color-grey-light;
             word-wrap: break-word;
+            transition: opacity 0.5s;
+        }
+
+        .invisible {
+            opacity: 0;
         }
     }
 

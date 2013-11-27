@@ -29,7 +29,7 @@
       <div class="body">
         <p ng-model="body" contentEditable="true" ng-change="updatePreview()" tabindex="4" focus-me="state.writer.open && writerTitle === 'Reply'"></p>
 
-        <div class="encrypt-preview">
+        <div class="encrypt-preview" ng-class="{'invisible': !body}">
           <p>-----BEGIN ENCRYPTED PREVIEW-----<br>{{ciphertextPreview}}<br>-----END ENCRYPTED PREVIEW-----</p>
           <br>
           <p>{{signature}}</p>
