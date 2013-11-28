@@ -58,8 +58,17 @@ define(function(require) {
             });
 
             it('should init', function(done) {
+                var loginStub, listFolderStub;
+
+                // initKeychain
                 devicestorageStub.init.withArgs(emailAddress).yields();
                 keychainStub.getUserKeyPair.yields(null, mockKeyPair);
+
+                // initFolders
+                loginStub = sinon.stub(dao, '_imapLogin');
+                listFolderStub = sinon.stub(dao, '_imapListFolders');
+                loginStub.yields();
+                listFolderStub.yields();
 
                 dao.init({
                     account: account
@@ -70,6 +79,65 @@ define(function(require) {
                     expect(dao._account).to.equal(account);
                     expect(devicestorageStub.init.calledOnce).to.be.true;
                     expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
+
+                    expect(loginStub.calledOnce).to.be.true;
+                    expect(listFolderStub.calledOnce).to.be.true;
+
+                    done();
+                });
+            });
+
+            it('should fail due to error while listing folders', function(done) {
+                var loginStub, listFolderStub;
+
+                // initKeychain
+                devicestorageStub.init.withArgs(emailAddress).yields();
+                keychainStub.getUserKeyPair.yields(null, mockKeyPair);
+
+                // initFolders
+                loginStub = sinon.stub(dao, '_imapLogin');
+                listFolderStub = sinon.stub(dao, '_imapListFolders');
+                loginStub.yields();
+                listFolderStub.yields({});
+
+                dao.init({
+                    account: account
+                }, function(err, keyPair) {
+                    expect(err).to.exist;
+                    expect(keyPair).to.not.exist;
+
+                    expect(dao._account).to.equal(account);
+                    expect(devicestorageStub.init.calledOnce).to.be.true;
+                    expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
+
+                    expect(loginStub.calledOnce).to.be.true;
+                    expect(listFolderStub.calledOnce).to.be.true;
+
+                    done();
+                });
+            });
+
+            it('should fail due to error during imap login', function(done) {
+                var loginStub = sinon.stub(dao, '_imapLogin');
+
+                // initKeychain
+                devicestorageStub.init.withArgs(emailAddress).yields();
+                keychainStub.getUserKeyPair.yields(null, mockKeyPair);
+
+                // initFolders
+                loginStub.yields({});
+
+                dao.init({
+                    account: account
+                }, function(err, keyPair) {
+                    expect(err).to.exist;
+                    expect(keyPair).to.not.exist;
+
+                    expect(dao._account).to.equal(account);
+                    expect(devicestorageStub.init.calledOnce).to.be.true;
+                    expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
+
+                    expect(loginStub.calledOnce).to.be.true;
 
                     done();
                 });
@@ -218,11 +286,11 @@ define(function(require) {
             });
         });
 
-        describe('login', function() {
+        describe('_imapLogin', function() {
             it('should work', function(done) {
                 imapClientStub.login.yields();
 
-                dao.login(function(err) {
+                dao._imapLogin(function(err) {
                     expect(err).to.not.exist;
                     done();
                 });
@@ -231,18 +299,18 @@ define(function(require) {
             it('should fail due to error in imap login', function(done) {
                 imapClientStub.login.yields({});
 
-                dao.login(function(err) {
+                dao._imapLogin(function(err) {
                     expect(err).to.exist;
                     done();
                 });
             });
         });
 
-        describe('destroy', function() {
+        describe('_imapLogout', function() {
             it('should work', function(done) {
                 imapClientStub.logout.yields();
 
-                dao.destroy(function(err) {
+                dao._imapLogout(function(err) {
                     expect(err).to.not.exist;
                     done();
                 });
@@ -251,8 +319,89 @@ define(function(require) {
             it('should fail due to error in imap login', function(done) {
                 imapClientStub.logout.yields({});
 
-                dao.destroy(function(err) {
+                dao._imapLogout(function(err) {
                     expect(err).to.exist;
+                    done();
+                });
+            });
+        });
+
+        describe('_imapListFolders', function() {
+            var dummyFolders = [{
+                type: 'Inbox',
+                path: 'INBOX'
+            }, {
+                type: 'Outbox',
+                path: 'OUTBOX'
+            }];
+
+            it('should list from storage', function(done) {
+                devicestorageStub.listItems.withArgs('folders').yields(null, [dummyFolders]);
+
+                dao._imapListFolders(function(err, folders) {
+                    expect(err).to.not.exist;
+                    expect(devicestorageStub.listItems.calledOnce).to.be.true;
+                    expect(folders[0].type).to.equal('Inbox');
+                    done();
+                });
+            });
+
+            it('should not list from storage due to error', function(done) {
+                devicestorageStub.listItems.yields({});
+
+                dao._imapListFolders(function(err, folders) {
+                    expect(err).to.exist;
+                    expect(folders).to.not.exist;
+                    expect(devicestorageStub.listItems.calledOnce).to.be.true;
+                    expect(imapClientStub.listWellKnownFolders.called).to.be.false;
+                    done();
+                });
+            });
+
+            it('should list from imap', function(done) {
+                devicestorageStub.listItems.yields(null, []);
+                imapClientStub.listWellKnownFolders.yields(null, {
+                    inbox: dummyFolders[0]
+                });
+                devicestorageStub.storeList.yields();
+
+                dao._imapListFolders(function(err, folders) {
+                    expect(err).to.not.exist;
+                    expect(devicestorageStub.listItems.calledOnce).to.be.true;
+                    expect(imapClientStub.listWellKnownFolders.calledOnce).to.be.true;
+                    expect(devicestorageStub.storeList.calledOnce).to.be.true;
+                    expect(folders[0].type).to.equal('Inbox');
+                    done();
+                });
+            });
+
+            it('should not list from imap due to store error', function(done) {
+                devicestorageStub.listItems.yields(null, []);
+                imapClientStub.listWellKnownFolders.yields(null, {
+                    inbox: dummyFolders[0]
+                });
+                devicestorageStub.storeList.yields({});
+
+                dao._imapListFolders(function(err, folders) {
+                    expect(err).to.exist;
+                    expect(folders).to.not.exist;
+                    expect(devicestorageStub.listItems.calledOnce).to.be.true;
+                    expect(imapClientStub.listWellKnownFolders.calledOnce).to.be.true;
+                    expect(devicestorageStub.storeList.calledOnce).to.be.true;
+                    done();
+                });
+            });
+
+            it('should not list from imap due to imap error', function(done) {
+                devicestorageStub.listItems.yields(null, []);
+                imapClientStub.listWellKnownFolders.yields({});
+
+                dao._imapListFolders(function(err, folders) {
+                    expect(err).to.exist;
+                    expect(folders).to.not.exist;
+                    expect(devicestorageStub.listItems.calledOnce).to.be.true;
+                    expect(imapClientStub.listWellKnownFolders.calledOnce).to.be.true;
+                    expect(devicestorageStub.storeList.called).to.be.false;
                     done();
                 });
             });

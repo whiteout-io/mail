@@ -2,9 +2,9 @@ define(function(require) {
     'use strict';
 
     var util = require('cryptoLib/util');
-        // _ = require('underscore'),
-        // str = require('js/app-config').string,
-        // config = require('js/app-config').config;
+    // _ = require('underscore'),
+    // str = require('js/app-config').string,
+    // config = require('js/app-config').config;
 
     var EmailDAO = function(keychain, imapClient, smtpClient, crypto, devicestorage) {
         var self = this;
@@ -28,7 +28,8 @@ define(function(require) {
     //
 
     EmailDAO.prototype.init = function(options, callback) {
-        var self = this;
+        var self = this,
+            keypair;
 
         self._account = options.account;
 
@@ -53,7 +54,28 @@ define(function(require) {
                         callback(err);
                         return;
                     }
-                    callback(null, storedKeypair);
+
+                    keypair = storedKeypair;
+                    initFolders();
+                });
+            });
+        }
+
+        function initFolders() {
+            self._imapLogin(function(err) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                self._imapListFolders(function(err, folders) {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+
+                    self._account.folders = folders;
+                    callback(null, keypair);
                 });
             });
         }
@@ -113,11 +135,14 @@ define(function(require) {
         });
     };
 
-    // //
-    // // IMAP Apis
-    // //
+    //
+    // IMAP Apis
+    //
 
-    EmailDAO.prototype.login = function(callback) {
+    /**
+     * Login the imap client
+     */
+    EmailDAO.prototype._imapLogin = function(callback) {
         var self = this;
 
         // login IMAP client if existent
@@ -127,72 +152,69 @@ define(function(require) {
     /**
      * Cleanup by logging the user off.
      */
-    EmailDAO.prototype.destroy = function(callback) {
+    EmailDAO.prototype._imapLogout = function(callback) {
         var self = this;
 
         self._imapClient.logout(callback);
     };
-    
-    // /**
-    //  * Login the imap client
-    //  */
 
-    // /**
-    //  * List the folders in the user's IMAP mailbox.
-    //  */
-    // EmailDAO.prototype.imapListFolders = function(callback) {
-    //     var self = this,
-    //         dbType = 'folders';
 
-    //     // check local cache
-    //     self._devicestorage.listItems(dbType, 0, null, function(err, stored) {
-    //         if (err) {
-    //             callback(err);
-    //             return;
-    //         }
+    /**
+     * List the folders in the user's IMAP mailbox.
+     */
+    EmailDAO.prototype._imapListFolders = function(callback) {
+        var self = this,
+            dbType = 'folders';
 
-    //         if (!stored || stored.length < 1) {
-    //             // no folders cached... fetch from server
-    //             fetchFromServer();
-    //             return;
-    //         }
+        // check local cache
+        self._devicestorage.listItems(dbType, 0, null, function(err, stored) {
+            if (err) {
+                callback(err);
+                return;
+            }
 
-    //         callback(null, stored[0]);
-    //     });
+            if (!stored || stored.length < 1) {
+                // no folders cached... fetch from server
+                fetchFromServer();
+                return;
+            }
 
-    //     function fetchFromServer() {
-    //         var folders;
+            callback(null, stored[0]);
+        });
 
-    //         // fetch list from imap server
-    //         self._imapClient.listWellKnownFolders(function(err, wellKnownFolders) {
-    //             if (err) {
-    //                 callback(err);
-    //                 return;
-    //             }
+        function fetchFromServer() {
+            var folders;
 
-    //             folders = [
-    //                 wellKnownFolders.inbox,
-    //                 wellKnownFolders.sent, {
-    //                     type: 'Outbox',
-    //                     path: 'OUTBOX'
-    //                 },
-    //                 wellKnownFolders.drafts,
-    //                 wellKnownFolders.trash
-    //             ];
+            // fetch list from imap server
+            self._imapClient.listWellKnownFolders(function(err, wellKnownFolders) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
 
-    //             // cache locally
-    //             // persist encrypted list in device storage
-    //             self._devicestorage.storeList([folders], dbType, function(err) {
-    //                 if (err) {
-    //                     callback(err);
-    //                     return;
-    //                 }
+                folders = [
+                    wellKnownFolders.inbox,
+                    wellKnownFolders.sent, {
+                        type: 'Outbox',
+                        path: 'OUTBOX'
+                    },
+                    wellKnownFolders.drafts,
+                    wellKnownFolders.trash
+                ];
 
-    //                 callback(null, folders);
-    //             });
-    //         });
-    //     }
-    // };
+                // cache locally
+                // persist encrypted list in device storage
+                self._devicestorage.storeList([folders], dbType, function(err) {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+
+                    callback(null, folders);
+                });
+            });
+        }
+    };
 
     // /**
     //  * Get the number of unread message for a folder
