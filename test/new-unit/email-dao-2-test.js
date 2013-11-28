@@ -217,5 +217,46 @@ define(function(require) {
                 });
             });
         });
+
+        describe('login', function() {
+            it('should work', function(done) {
+                imapClientStub.login.yields();
+
+                dao.login(function(err) {
+                    expect(err).to.not.exist;
+                    done();
+                });
+            });
+
+            it('should fail due to error in imap login', function(done) {
+                imapClientStub.login.yields({});
+
+                dao.login(function(err) {
+                    expect(err).to.exist;
+                    done();
+                });
+            });
+        });
+
+        describe('destroy', function() {
+            it('should work', function(done) {
+                imapClientStub.logout.yields();
+
+                dao.destroy(function(err) {
+                    expect(err).to.not.exist;
+                    done();
+                });
+            });
+
+            it('should fail due to error in imap login', function(done) {
+                imapClientStub.logout.yields({});
+
+                dao.destroy(function(err) {
+                    expect(err).to.exist;
+                    done();
+                });
+            });
+        });
+
     });
 });

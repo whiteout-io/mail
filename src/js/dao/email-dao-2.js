@@ -117,24 +117,25 @@ define(function(require) {
     // // IMAP Apis
     // //
 
+    EmailDAO.prototype.login = function(callback) {
+        var self = this;
+
+        // login IMAP client if existent
+        self._imapClient.login(callback);
+    };
+
+    /**
+     * Cleanup by logging the user off.
+     */
+    EmailDAO.prototype.destroy = function(callback) {
+        var self = this;
+
+        self._imapClient.logout(callback);
+    };
+    
     // /**
     //  * Login the imap client
     //  */
-    // EmailDAO.prototype.imapLogin = function(callback) {
-    //     var self = this;
-
-    //     // login IMAP client if existent
-    //     self._imapClient.login(callback);
-    // };
-
-    // /**
-    //  * Cleanup by logging the user off.
-    //  */
-    // EmailDAO.prototype.destroy = function(callback) {
-    //     var self = this;
-
-    //     self._imapClient.logout(callback);
-    // };
 
     // /**
     //  * List the folders in the user's IMAP mailbox.
