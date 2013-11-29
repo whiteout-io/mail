@@ -58,7 +58,9 @@ define(function(require) {
             });
 
             it('should init', function(done) {
-                var loginStub, listFolderStub;
+                var loginStub, listFolderStub, folders;
+
+                folders = [];
 
                 // initKeychain
                 devicestorageStub.init.withArgs(emailAddress).yields();
@@ -68,7 +70,7 @@ define(function(require) {
                 loginStub = sinon.stub(dao, '_imapLogin');
                 listFolderStub = sinon.stub(dao, '_imapListFolders');
                 loginStub.yields();
-                listFolderStub.yields();
+                listFolderStub.yields(null, folders);
 
                 dao.init({
                     account: account
@@ -77,6 +79,7 @@ define(function(require) {
                     expect(keyPair).to.equal(mockKeyPair);
 
                     expect(dao._account).to.equal(account);
+                    expect(dao._account.folders).to.equal(folders);
                     expect(devicestorageStub.init.calledOnce).to.be.true;
                     expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
 
