@@ -1,9 +1,9 @@
 define(function(require) {
     'use strict';
 
-    var util = require('cryptoLib/util');
-    // _ = require('underscore'),
-    // str = require('js/app-config').string,
+    var util = require('cryptoLib/util'),
+        _ = require('underscore'),
+        str = require('js/app-config').string;
     // config = require('js/app-config').config;
 
     var EmailDAO = function(keychain, imapClient, smtpClient, crypto, devicestorage) {
@@ -135,6 +135,307 @@ define(function(require) {
         });
     };
 
+    EmailDAO.prototype.sync = function(options, callback) {
+        /*
+         * Here's how delta sync works:
+         * delta1: storage > memory  => we deleted messages, remove from remote
+         * delta2:  memory > storage => we added messages, push to remote
+         * delta3:  memory > imap    => we deleted messages directly from the remote, remove from memory and storage
+         * delta4:    imap > memory  => we have new messages available, fetch to memory and storage
+         */
+        // TODO: error handling
+
+        var self = this,
+            folder,
+            delta1 /*, delta2 */ , delta3, delta4,
+            isFolderInitialized;
+
+
+        // validate options
+        if (!options.folder) {
+            callback({
+                errMsg: 'Invalid options!'
+            });
+            return;
+        }
+
+        folder = _.findWhere(self._account.folders, {
+            path: options.path
+        });
+        isFolderInitialized = !! folder.messages;
+
+        // initial filling from local storage is an exception from the normal sync
+        if (!isFolderInitialized) {
+            folder.messages = [];
+            self._localListMessages({
+                folder: folder.path
+            }, function(err, messages) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                if (_.isEmpty(messages)) {
+                    // if there's nothing here, we're good
+                    callback();
+                    return;
+                }
+
+                var after = _.after(messages.length, function() {
+                    callback();
+                });
+
+                messages.forEach(function(message) {
+                    handleMessage(message, function(cleartextMessage) {
+                        folder.messages.push(cleartextMessage);
+                        after();
+                    });
+                });
+            });
+
+            return;
+        }
+
+        doLocalDelta();
+
+        function doLocalDelta() {
+            self._localListMessages({
+                folder: folder.path
+            }, function(err, messages) {
+                /*
+                 * Reminder:
+                 * delta1: storage > memory  => we deleted messages, remove from remote
+                 * delta2:  memory > storage => we added messages, push to remote
+                 */
+                delta1 = checkDelta(messages, folder.messages);
+                // delta2 = checkDelta(folder.messages, messages); // not supported yet
+
+                if (_.isEmpty(delta1) /* && _.isEmpty(delta2)*/ ) {
+                    // if there is no delta, head directly to imap sync
+                    doImapDelta();
+                    callback();
+                    return;
+                }
+
+                var after = _.after(delta1.length, function() {
+                    doImapDelta();
+                    callback();
+                });
+
+                delta1.forEach(function(message) {
+                    var deleteMe = {
+                        folder: folder.path,
+                        uid: message.uid
+                    };
+
+                    self._imapDeleteMessage(deleteMe, function() {
+                        self._localDeleteMessage(deleteMe, function() {
+                            after();
+                        });
+                    });
+                });
+            });
+        }
+
+        function doImapDelta() {
+            self._imapListMessages({
+                folder: folder.path
+            }, function(err, headers) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                /*
+                 * Reminder:
+                 * delta3:  memory > imap    => we deleted messages directly from the remote, remove from memory and storage
+                 * delta4:    imap > memory  => we have new messages available, fetch to memory and storage
+                 */
+                delta3 = checkDelta(folder.messages, headers);
+                delta4 = checkDelta(headers, folder.messages);
+
+                if (_.isEmpty(delta3) && _.isEmpty(delta4)) {
+                    // if there is no delta, we're done
+                    callback();
+                    return;
+                }
+
+                doDelta3();
+
+                function doDelta3() {
+                    if (_.isEmpty(delta3)) {
+                        doDelta4();
+                        return;
+                    }
+
+                    var after = _.after(delta1.length, function() {
+                        doDelta4();
+                    });
+
+                    delta3.forEach(function(header) {
+                        // remove delta3 from memory
+                        var idx = folder.messages.indexOf(header);
+                        folder.messages.splice(idx, 1);
+
+                        // remove delta3 from local storage
+                        self._localDeleteMessage({
+                            folder: folder.path,
+                            uid: header.uid
+                        }, function(err) {
+                            if (err) {
+                                callback(err);
+                                return;
+                            }
+
+                            after();
+                        });
+                    });
+                }
+
+                function doDelta4() {
+                    if (_.isEmpty(delta4)) {
+                        callback();
+                    }
+
+                    var after = _.after(delta1.length, function() {
+                        callback();
+                    });
+
+                    delta4.forEach(function(header) {
+                        self._imapGetMessage({
+                            folder: folder.path,
+                            uid: header.uid
+                        }, function(err, message) {
+                            if (err) {
+                                callback(err);
+                                return;
+                            }
+
+                            self._localStoreMessages({
+                                folder: folder.path,
+                                emails: [message]
+                            }, function(err) {
+                                if (err) {
+                                    callback(err);
+                                    return;
+                                }
+
+                                handleMessage(message, function(err, cleartextMessage) {
+                                    if (err) {
+                                        callback(err);
+                                        return;
+                                    }
+
+                                    folder.messages.push(cleartextMessage);
+                                    after();
+                                });
+                            });
+                        });
+                    });
+                }
+            });
+        }
+
+
+        /*
+         * Checks which messages are included in a, but not in b
+         */
+        function checkDelta(a, b) {
+            var i, msg, exists,
+                delta = [];
+
+            // find the delta
+            for (i = a.length - 1; i >= 0; i--) {
+                msg = a[i];
+                exists = !! _.findWhere(b, {
+                    uid: msg.uid,
+                    subject: msg.subject
+                });
+                if (!exists) {
+                    delta.push(msg);
+                }
+            }
+
+            return delta;
+        }
+
+        function handleMessage(message, localCallback) {
+            if (containsArmoredCiphertext(message)) {
+                decrypt(message, localCallback);
+                return;
+            }
+
+            // cleartext mail
+            localCallback(null, message);
+            after();
+        }
+
+        function containsArmoredCiphertext(email) {
+            return typeof email.body === 'string' && email.body.indexOf(str.cryptPrefix) !== -1 && email.body.indexOf(str.cryptSuffix) !== -1;
+        }
+
+        function decrypt(email, localCallback) {
+            var sender;
+
+            extractArmoredContent(email);
+
+            // fetch public key required to verify signatures
+            sender = email.from[0].address;
+            self._keychain.getReceiverPublicKey(sender, function(err, senderPubkey) {
+                if (err) {
+                    localCallback(err);
+                    return;
+                }
+
+                if (!senderPubkey) {
+                    // this should only happen if a mail from another channel is in the inbox
+                    setBodyAndContinue('Public key for sender not found!');
+                    return;
+                }
+
+                // decrypt and verfiy signatures
+                self._pgp.decrypt(email.body, senderPubkey.publicKey, function(err, decrypted) {
+                    if (err) {
+                        decrypted = err.errMsg;
+                    }
+
+                    setBodyAndContinue(decrypted);
+                });
+            });
+
+            function extractArmoredContent(email) {
+                var start = email.body.indexOf(str.cryptPrefix),
+                    end = email.body.indexOf(str.cryptSuffix) + str.cryptSuffix.length;
+
+                // parse email body for encrypted message block
+                email.body = email.body.substring(start, end);
+            }
+
+            function setBodyAndContinue(text) {
+                email.body = text;
+                localCallback(null, email);
+            }
+        }
+    };
+
+    //
+    // Local Storage Apis
+    //
+
+    EmailDAO.prototype._localListMessages = function(options, callback) {
+        this._devicestorage.listItems('email_' + options.folder, 0, null, callback);
+    };
+
+    EmailDAO.prototype._localStoreMessages = function(options, callback) {
+        var dbType = 'email_' + options.folder;
+        self._devicestorage.storeList(options.emails, dbType, callback);
+    };
+
+    EmailDAO.prototype._localDeleteMessage = function(options, callback) {
+        self._devicestorage.removeList('email_' + options.folder + '_' + options.uid, callback);
+    };
+
+
     //
     // IMAP Apis
     //
@@ -156,6 +457,38 @@ define(function(require) {
         var self = this;
 
         self._imapClient.logout(callback);
+    };
+
+    /**
+     * List messages from an imap folder. This will not yet fetch the email body.
+     * @param {String} options.folderName The name of the imap folder.
+     */
+    EmailDAO.prototype._imapListMessages = function(options, callback) {
+        var self = this;
+
+        self._imapClient.listMessages({
+            path: options.folder,
+            offset: 0,
+            length: 100
+        }, callback);
+    };
+
+    EmailDAO.prototype._imapDeleteMessage = function(options, callback) {
+        this._imapClient.deleteMessage({
+            path: options.folder,
+            uid: options.uid
+        }, callback);
+    };
+
+    /**
+     * Get an email messsage including the email body from imap
+     * @param {String} options.messageId The
+     */
+    EmailDAO.prototype._imapGetMessage = function(options, callback) {
+        this._imapClient.getMessagePreview({
+            path: options.folder,
+            uid: options.uid
+        }, callback);
     };
 
 
@@ -215,6 +548,8 @@ define(function(require) {
             });
         }
     };
+
+
 
     // /**
     //  * Get the number of unread message for a folder
@@ -470,34 +805,7 @@ define(function(require) {
     //     }
     // };
 
-    // /**
-    //  * List messages from an imap folder. This will not yet fetch the email body.
-    //  * @param {String} options.folderName The name of the imap folder.
-    //  * @param {Number} options.offset The offset of items to fetch (0 is the last stored item)
-    //  * @param {Number} options.num The number of items to fetch (null means fetch all)
-    //  */
-    // EmailDAO.prototype.imapListMessages = function(options, callback) {
-    //     var self = this;
 
-    //     self._imapClient.listMessages({
-    //         path: options.folder,
-    //         offset: options.offset,
-    //         length: options.num
-    //     }, callback);
-    // };
-
-    // /**
-    //  * Get an email messsage including the email body from imap
-    //  * @param {String} options.messageId The
-    //  */
-    // EmailDAO.prototype.imapGetMessage = function(options, callback) {
-    //     var self = this;
-
-    //     self._imapClient.getMessagePreview({
-    //         path: options.folder,
-    //         uid: options.uid
-    //     }, callback);
-    // };
 
     // EmailDAO.prototype.imapMoveMessage = function(options, callback) {
     //     var self = this;
@@ -506,25 +814,6 @@ define(function(require) {
     //         path: options.folder,
     //         uid: options.uid,
     //         destination: options.destination
-    //     }, moved);
-
-    //     function moved(err) {
-    //         if (err) {
-    //             callback(err);
-    //             return;
-    //         }
-
-    //         // delete from local db
-    //         self._devicestorage.removeList('email_' + options.folder + '_' + options.uid, callback);
-    //     }
-    // };
-
-    // EmailDAO.prototype.imapDeleteMessage = function(options, callback) {
-    //     var self = this;
-
-    //     self._imapClient.deleteMessage({
-    //         path: options.folder,
-    //         uid: options.uid
     //     }, moved);
 
     //     function moved(err) {
