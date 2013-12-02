@@ -32,6 +32,7 @@ define(function(require) {
             keypair;
 
         self._account = options.account;
+        self._account.busy = false;
 
         // validate email address
         var emailAddress = self._account.emailAddress;
@@ -162,6 +163,15 @@ define(function(require) {
             return;
         }
 
+        if (self._account.busy) {
+            callback({
+                errMsg: 'Sync aborted: Previous sync still in progress'
+            });
+            return;
+        }
+
+        self._account.busy = true;
+
         folder = _.findWhere(self._account.folders, {
             path: options.folder
         });
@@ -182,6 +192,7 @@ define(function(require) {
                 folder: folder.path
             }, function(err, messages) {
                 if (err) {
+                    self._account.busy = false;
                     callback(err);
                     return;
                 }
@@ -189,6 +200,7 @@ define(function(require) {
                 if (_.isEmpty(messages)) {
                     // if there's nothing here, we're good
                     callback();
+                    doImapDelta();
                     return;
                 }
 
@@ -198,7 +210,13 @@ define(function(require) {
                 });
 
                 messages.forEach(function(message) {
-                    handleMessage(message, function(cleartextMessage) {
+                    handleMessage(message, function(err, cleartextMessage) {
+                        if (err) {
+                            self._account.busy = false;
+                            callback(err);
+                            return;
+                        }
+
                         folder.messages.push(cleartextMessage);
                         after();
                     });
@@ -210,6 +228,12 @@ define(function(require) {
             self._localListMessages({
                 folder: folder.path
             }, function(err, messages) {
+                if (err) {
+                    self._account.busy = false;
+                    callback(err);
+                    return;
+                }
+
                 /*
                  * delta1: storage > memory  => we deleted messages, remove from remote
                  * delta2:  memory > storage => we added messages, push to remote
@@ -219,8 +243,8 @@ define(function(require) {
 
                 if (_.isEmpty(delta1) /* && _.isEmpty(delta2)*/ ) {
                     // if there is no delta, head directly to imap sync
-                    doImapDelta();
                     callback();
+                    doImapDelta();
                     return;
                 }
 
@@ -229,8 +253,8 @@ define(function(require) {
                 function doDelta1() {
                     var after = _.after(delta1.length, function() {
                         // doDelta2(); when it is implemented
-                        doImapDelta();
                         callback();
+                        doImapDelta();
                     });
 
                     delta1.forEach(function(message) {
@@ -241,12 +265,14 @@ define(function(require) {
 
                         self._imapDeleteMessage(deleteMe, function(err) {
                             if (err) {
+                                self._account.busy = false;
                                 callback(err);
                                 return;
                             }
 
                             self._localDeleteMessage(deleteMe, function(err) {
                                 if (err) {
+                                    self._account.busy = false;
                                     callback(err);
                                     return;
                                 }
@@ -264,6 +290,7 @@ define(function(require) {
                 folder: folder.path
             }, function(err, headers) {
                 if (err) {
+                    self._account.busy = false;
                     callback(err);
                     return;
                 }
@@ -282,6 +309,7 @@ define(function(require) {
 
                 if (_.isEmpty(delta3) && _.isEmpty(delta4)) {
                     // if there is no delta, we're done
+                    self._account.busy = false;
                     callback();
                     return;
                 }
@@ -311,6 +339,7 @@ define(function(require) {
                             uid: header.uid
                         }, function(err) {
                             if (err) {
+                                self._account.busy = false;
                                 callback(err);
                                 return;
                             }
@@ -325,10 +354,12 @@ define(function(require) {
                 function doDelta4() {
                     // no delta, we're done here
                     if (_.isEmpty(delta4)) {
+                        self._account.busy = false;
                         callback();
                     }
 
                     var after = _.after(delta4.length, function() {
+                        self._account.busy = false;
                         callback();
                     });
 
@@ -339,6 +370,7 @@ define(function(require) {
                             uid: header.uid
                         }, function(err, message) {
                             if (err) {
+                                self._account.busy = false;
                                 callback(err);
                                 return;
                             }
@@ -349,6 +381,7 @@ define(function(require) {
                                 emails: [message]
                             }, function(err) {
                                 if (err) {
+                                    self._account.busy = false;
                                     callback(err);
                                     return;
                                 }
@@ -356,6 +389,7 @@ define(function(require) {
                                 // decrypt and add to folder in memory
                                 handleMessage(message, function(err, cleartextMessage) {
                                     if (err) {
+                                        self._account.busy = false;
                                         callback(err);
                                         return;
                                     }
