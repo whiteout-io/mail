@@ -29,10 +29,10 @@ define(function(require) {
         describe('init', function() {
             it('should work', function() {
                 expect(outbox).to.exist;
-                expect(outbox._email).to.equal(emailDaoStub);
+                expect(outbox._emailDao).to.equal(emailDaoStub);
                 expect(outbox._keychain).to.equal(keychainStub);
                 expect(outbox._devicestorage).to.equal(devicestorageStub);
-                expect(outbox._invitation).to.equal(invitationDaoStub);
+                expect(outbox._invitationDao).to.equal(invitationDaoStub);
                 expect(outbox._outboxBusy).to.be.false;
                 expect(outbox.pendingEmails).to.be.empty;
             });

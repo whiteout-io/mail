@@ -12,9 +12,9 @@ define(function(require) {
      * The local outbox takes care of the emails before they are being sent.
      * It also checks periodically if there are any mails in the local device storage to be sent.
      */
-    var OutboxBO = function(email, keychain, devicestorage, invitation) {
+    var OutboxBO = function(emailDao, keychain, devicestorage, invitationDao) {
         /** @private */
-        this._email = email;
+        this._emailDao = emailDao;
 
         /** @private */
         this._keychain = keychain;
@@ -24,7 +24,7 @@ define(function(require) {
 
 
         /** @private */
-        this._invitation = invitation;
+        this._invitationDao = invitationDao;
 
         /**
          * Semaphore-esque flag to avoid 'concurrent' calls to _processOutbox when the timeout fires, but a call is still in process.
@@ -79,7 +79,7 @@ define(function(require) {
             self._outboxBusy = true;
 
             // get last item from outbox
-            self._email.list(function(err, pending) {
+            self._emailDao.list(function(err, pending) {
                 if (err) {
                     self._outboxBusy = false;
                     callback(err);
@@ -147,7 +147,7 @@ define(function(require) {
 
         // invite the unregistered receivers, if necessary
         function invite(addresses) {
-            var sender = self._email._account.emailAddress;
+            var sender = self._emailDao._account.emailAddress;
 
             var invitationFinished = _.after(addresses.length, function() {
                 // after all of the invitations are checked and sent (if necessary),
@@ -158,7 +158,7 @@ define(function(require) {
             addresses.forEach(function(recipient) {
                 var recipientAddress = recipient.address;
 
-                self._invitation.check({
+                self._invitationDao.check({
                     recipient: recipientAddress,
                     sender: sender
                 }, function(err, status) {
@@ -175,7 +175,7 @@ define(function(require) {
                     }
 
                     // the recipient is not yet invited, so let's do that
-                    self._invitation.invite({
+                    self._invitationDao.invite({
                         recipient: recipientAddress,
                         sender: sender
                     }, function(err, status) {
@@ -209,7 +209,7 @@ define(function(require) {
                     };
 
                 // send invitation mail
-                self._email.send(invitationMail, function(err) {
+                self._emailDao.send(invitationMail, function(err) {
                     if (err) {
                         self._outboxBusy = false;
                         callback(err);
@@ -222,7 +222,7 @@ define(function(require) {
 
         function sendEncrypted(email) {
             removeFromPendingMails(email);
-            self._email.encryptedSend(email, function(err) {
+            self._emailDao.encryptedSend(email, function(err) {
                 if (err) {
                     self._outboxBusy = false;
                     callback(err);

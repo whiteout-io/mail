@@ -106,6 +106,10 @@ define(function(require) {
                 return;
             }
 
+            handleGenerated(generatedKeypair);
+        });
+
+        function handleGenerated(generatedKeypair) {
             // import the new key pair into crypto module
             self._crypto.importKeys({
                 passphrase: options.passphrase,
@@ -132,7 +136,7 @@ define(function(require) {
                 };
                 self._keychain.putUserKeyPair(newKeypair, callback);
             });
-        });
+        }
     };
 
     EmailDAO.prototype.sync = function(options, callback) {
@@ -166,6 +170,13 @@ define(function(require) {
         // initial filling from local storage is an exception from the normal sync.
         // after reading from local storage, do imap sync
         if (!isFolderInitialized) {
+            initFolderMessages();
+            return;
+        }
+
+        doLocalDelta();
+
+        function initFolderMessages() {
             folder.messages = [];
             self._localListMessages({
                 folder: folder.path
@@ -193,11 +204,7 @@ define(function(require) {
                     });
                 });
             });
-
-            return;
         }
-
-        doLocalDelta();
 
         function doLocalDelta() {
             self._localListMessages({
@@ -232,8 +239,18 @@ define(function(require) {
                             uid: message.uid
                         };
 
-                        self._imapDeleteMessage(deleteMe, function() {
-                            self._localDeleteMessage(deleteMe, function() {
+                        self._imapDeleteMessage(deleteMe, function(err) {
+                            if (err) {
+                                callback(err);
+                                return;
+                            }
+
+                            self._localDeleteMessage(deleteMe, function(err) {
+                                if (err) {
+                                    callback(err);
+                                    return;
+                                }
+
                                 after();
                             });
                         });
@@ -336,7 +353,7 @@ define(function(require) {
                                     return;
                                 }
 
-                                // encrypt and add to folder in memory
+                                // decrypt and add to folder in memory
                                 handleMessage(message, function(err, cleartextMessage) {
                                     if (err) {
                                         callback(err);
@@ -364,8 +381,7 @@ define(function(require) {
             for (i = a.length - 1; i >= 0; i--) {
                 msg = a[i];
                 exists = _.findWhere(b, {
-                    uid: msg.uid,
-                    subject: msg.subject
+                    uid: msg.uid
                 });
                 if (!exists) {
                     delta.push(msg);
@@ -450,7 +466,7 @@ define(function(require) {
         }, callback);
     };
 
-    EmailDAO.prototype.encryptedSend = function(options, callback) {
+    EmailDAO.prototype.sendEncrypted = function(options, callback) {
         var self = this,
             email = options.email;
 
@@ -505,14 +521,12 @@ define(function(require) {
                     return;
                 }
 
-                self.send({
-                    email: email
-                }, callback);
+                self._smtpClient.send(email, callback);
             });
         });
     };
 
-    EmailDAO.prototype.send = function(options, callback) {
+    EmailDAO.prototype.sendPlaintext = function(options, callback) {
         this._smtpClient.send(options.email, callback);
     };
 
@@ -577,6 +591,12 @@ define(function(require) {
     };
 
     EmailDAO.prototype._localDeleteMessage = function(options, callback) {
+        if (!options.folder || !options.uid) {
+            callback({
+                errMsg: 'Invalid options!'
+            });
+            return;
+        }
         var dbType = 'email_' + options.folder + '_' + options.uid;
         this._devicestorage.removeList(dbType, callback);
     };

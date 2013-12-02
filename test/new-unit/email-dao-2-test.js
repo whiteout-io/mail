@@ -523,6 +523,17 @@ define(function(require) {
                     uid: uid
                 }, done);
             });
+
+            it('should fail when uid is missing', function(done) {
+                var folder = 'FOLDAAAA';
+
+                dao._localDeleteMessage({
+                    folder: folder
+                }, function(err) {
+                    expect(err).to.exist;
+                    done();
+                });
+            });
         });
 
         describe('sync', function() {
@@ -727,11 +738,11 @@ define(function(require) {
             });
         });
 
-        describe('send', function() {
+        describe('sendPlaintext', function() {
             it('should work', function(done) {
                 smtpClientStub.send.withArgs(dummyEncryptedMail).yields();
 
-                dao.send({
+                dao.sendPlaintext({
                     email: dummyEncryptedMail
                 }, function(err) {
                     expect(err).to.not.exist;
@@ -741,7 +752,7 @@ define(function(require) {
             });
         });
 
-        describe('encryptedSend', function() {
+        describe('sendEncrypted', function() {
             it('should work', function(done) {
                 var encryptStub = sinon.stub(dao, '_encrypt').yields(null, {});
                 keychainStub.getReceiverPublicKey.withArgs(dummyDecryptedMail.to[0].address).yields(null, {
@@ -751,7 +762,7 @@ define(function(require) {
                 });
                 smtpClientStub.send.yields();
 
-                dao.encryptedSend({
+                dao.sendEncrypted({
                     email: dummyDecryptedMail
                 }, function(err) {
                     expect(err).to.not.exist;
@@ -771,7 +782,7 @@ define(function(require) {
                     publicKey: publicKey
                 });
 
-                dao.encryptedSend({
+                dao.sendEncrypted({
                     email: dummyDecryptedMail
                 }, function(err) {
                     expect(err).to.exist;
@@ -787,7 +798,7 @@ define(function(require) {
                 var encryptStub = sinon.stub(dao, '_encrypt');
                 keychainStub.getReceiverPublicKey.withArgs(dummyDecryptedMail.to[0].address).yields({});
 
-                dao.encryptedSend({
+                dao.sendEncrypted({
                     email: dummyDecryptedMail
                 }, function(err) {
                     expect(err).to.exist;
@@ -803,7 +814,7 @@ define(function(require) {
                 var encryptStub = sinon.stub(dao, '_encrypt');
                 dummyDecryptedMail.to[0].address = 'asd@asd';
 
-                dao.encryptedSend({
+                dao.sendEncrypted({
                     email: dummyDecryptedMail
                 }, function(err) {
                     expect(err).to.exist;
@@ -819,7 +830,7 @@ define(function(require) {
                 var encryptStub = sinon.stub(dao, '_encrypt');
                 dummyDecryptedMail.from[0].address = 'asd@asd';
 
-                dao.encryptedSend({
+                dao.sendEncrypted({
                     email: dummyDecryptedMail
                 }, function(err) {
                     expect(err).to.exist;
@@ -835,7 +846,7 @@ define(function(require) {
                 var encryptStub = sinon.stub(dao, '_encrypt');
                 delete dummyDecryptedMail.to;
 
-                dao.encryptedSend({
+                dao.sendEncrypted({
                     email: dummyDecryptedMail
                 }, function(err) {
                     expect(err).to.exist;
@@ -851,7 +862,7 @@ define(function(require) {
                 var encryptStub = sinon.stub(dao, '_encrypt');
                 delete dummyDecryptedMail.from;
 
-                dao.encryptedSend({
+                dao.sendEncrypted({
                     email: dummyDecryptedMail
                 }, function(err) {
                     expect(err).to.exist;
