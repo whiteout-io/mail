@@ -434,9 +434,135 @@ define(function(require) {
         }
     };
 
+    EmailDAO.prototype.markRead = function(options, callback) {
+        this._imapClient.updateFlags({
+            path: options.folder,
+            uid: options.uid,
+            unread: false
+        }, callback);
+    };
+
+    EmailDAO.prototype.markAnswered = function(options, callback) {
+        this._imapClient.updateFlags({
+            path: options.folder,
+            uid: options.uid,
+            answered: true
+        }, callback);
+    };
+
+    EmailDAO.prototype.encryptedSend = function(options, callback) {
+        var self = this,
+            email = options.email;
+
+        // validate the email input
+        if (!email.to || !email.from || !email.to[0].address || !email.from[0].address) {
+            callback({
+                errMsg: 'Invalid email object!'
+            });
+            return;
+        }
+
+        // validate email addresses
+        for (var i = email.to.length - 1; i >= 0; i--) {
+            if (!util.validateEmailAddress(email.to[i].address)) {
+                callback({
+                    errMsg: 'Invalid recipient: ' + email.to[i].address
+                });
+                return;
+            }
+        }
+
+        if (!util.validateEmailAddress(email.from[0].address)) {
+            callback({
+                errMsg: 'Invalid sender: ' + email.from
+            });
+            return;
+        }
+
+        // only support single recipient for e-2-e encryption
+        // check if receiver has a public key
+        self._keychain.getReceiverPublicKey(email.to[0].address, function(err, receiverPubkey) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            // validate public key
+            if (!receiverPubkey) {
+                callback({
+                    errMsg: 'User has no public key yet!'
+                });
+                return;
+            }
+
+            // public key found... encrypt and send
+            self._encrypt({
+                email: email,
+                keys: receiverPubkey.publicKey
+            }, function(err, email) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                self.send({
+                    email: email
+                }, callback);
+            });
+        });
+    };
+
+    EmailDAO.prototype.send = function(options, callback) {
+        this._smtpClient.send(options.email, callback);
+    };
+
     //
     // Internal API
     //
+
+    // Encryption API
+
+    EmailDAO.prototype._encrypt = function(options, callback) {
+        var self = this,
+            pt = options.email.body;
+
+        options.keys = [options.keys] || [];
+
+        // get own public key so send message can be read
+        self._crypto.exportKeys(function(err, ownKeys) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            // add own public key to receiver list
+            options.keys.push(ownKeys.publicKeyArmored);
+            // encrypt the email
+            self._crypto.encrypt(pt, options.keys, function(err, ct) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                // bundle encrypted email together for sending
+                frameEncryptedMessage(options.email, ct);
+                callback(null, options.email);
+            });
+        });
+
+        function frameEncryptedMessage(email, ct) {
+            var greeting,
+                message = str.message + '\n\n\n',
+                signature = '\n\n' + str.signature + '\n\n';
+
+            // get first name of recipient
+            greeting = 'Hi ' + (email.to[0].name || email.to[0].address).split('@')[0].split('.')[0].split(' ')[0] + ',\n\n';
+
+            // build encrypted text body
+            email.body = greeting + message + ct + signature;
+            email.subject = email.subject;
+        }
+    };
 
     // Local Storage API
 

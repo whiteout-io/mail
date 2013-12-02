@@ -15,7 +15,7 @@ define(function(require) {
         var dao, keychainStub, imapClientStub, smtpClientStub, pgpStub, devicestorageStub;
 
         var emailAddress, passphrase, asymKeySize, mockkeyId, dummyEncryptedMail,
-            dummyDecryptedMail, mockKeyPair, account;
+            dummyDecryptedMail, mockKeyPair, account, publicKey;
 
         beforeEach(function() {
             emailAddress = 'asdf@asdf.com';
@@ -60,6 +60,7 @@ define(function(require) {
                 emailAddress: emailAddress,
                 asymKeySize: asymKeySize,
             };
+            publicKey = "-----BEGIN PUBLIC KEY-----\r\n" + "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCxy+Te5dyeWd7g0P+8LNO7fZDQ\r\n" + "g96xTb1J6pYE/pPTMlqhB6BRItIYjZ1US5q2vk5Zk/5KasBHAc9RbCqvh9v4XFEY\r\n" + "JVmTXC4p8ft1LYuNWIaDk+R3dyYXmRNct/JC4tks2+8fD3aOvpt0WNn3R75/FGBt\r\n" + "h4BgojAXDE+PRQtcVQIDAQAB\r\n" + "-----END PUBLIC KEY-----";
 
             keychainStub = sinon.createStubInstance(KeychainDAO);
             imapClientStub = sinon.createStubInstance(ImapClient);
@@ -694,7 +695,198 @@ define(function(require) {
                     folder: folder
                 }, after);
             });
+        });
 
+        describe('markAsRead', function() {
+            it('should work', function(done) {
+                imapClientStub.updateFlags.yields();
+
+                dao.markRead({
+                    folder: 'asdf',
+                    uid: 1
+                }, function(err) {
+                    expect(imapClientStub.updateFlags.calledOnce).to.be.true;
+                    expect(err).to.not.exist;
+                    done();
+                });
+            });
+        });
+
+        describe('markAsAnswered', function() {
+            it('should work', function(done) {
+                imapClientStub.updateFlags.yields();
+
+                dao.markAnswered({
+                    folder: 'asdf',
+                    uid: 1
+                }, function(err) {
+                    expect(imapClientStub.updateFlags.calledOnce).to.be.true;
+                    expect(err).to.not.exist;
+                    done();
+                });
+            });
+        });
+
+        describe('send', function() {
+            it('should work', function(done) {
+                smtpClientStub.send.withArgs(dummyEncryptedMail).yields();
+
+                dao.send({
+                    email: dummyEncryptedMail
+                }, function(err) {
+                    expect(err).to.not.exist;
+                    expect(smtpClientStub.send.calledOnce).to.be.true;
+                    done();
+                });
+            });
+        });
+
+        describe('encryptedSend', function() {
+            it('should work', function(done) {
+                var encryptStub = sinon.stub(dao, '_encrypt').yields(null, {});
+                keychainStub.getReceiverPublicKey.withArgs(dummyDecryptedMail.to[0].address).yields(null, {
+                    _id: "fcf8b4aa-5d09-4089-8b4f-e3bc5091daf3",
+                    userId: dummyDecryptedMail.to[0].address,
+                    publicKey: publicKey
+                });
+                smtpClientStub.send.yields();
+
+                dao.encryptedSend({
+                    email: dummyDecryptedMail
+                }, function(err) {
+                    expect(err).to.not.exist;
+
+                    expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
+                    expect(encryptStub.calledOnce).to.be.true;
+                    expect(smtpClientStub.send.calledOnce).to.be.true;
+
+                    done();
+                });
+            });
+            it('should not work when encryption fails', function(done) {
+                var encryptStub = sinon.stub(dao, '_encrypt').yields({});
+                keychainStub.getReceiverPublicKey.withArgs(dummyDecryptedMail.to[0].address).yields(null, {
+                    _id: "fcf8b4aa-5d09-4089-8b4f-e3bc5091daf3",
+                    userId: dummyDecryptedMail.to[0].address,
+                    publicKey: publicKey
+                });
+
+                dao.encryptedSend({
+                    email: dummyDecryptedMail
+                }, function(err) {
+                    expect(err).to.exist;
+
+                    expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
+                    expect(encryptStub.calledOnce).to.be.true;
+                    expect(smtpClientStub.send.called).to.be.false;
+
+                    done();
+                });
+            });
+            it('should not work when key retrieval fails', function(done) {
+                var encryptStub = sinon.stub(dao, '_encrypt');
+                keychainStub.getReceiverPublicKey.withArgs(dummyDecryptedMail.to[0].address).yields({});
+
+                dao.encryptedSend({
+                    email: dummyDecryptedMail
+                }, function(err) {
+                    expect(err).to.exist;
+
+                    expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
+                    expect(encryptStub.called).to.be.false;
+                    expect(smtpClientStub.send.called).to.be.false;
+
+                    done();
+                });
+            });
+            it('should not work invalid recipients', function(done) {
+                var encryptStub = sinon.stub(dao, '_encrypt');
+                dummyDecryptedMail.to[0].address = 'asd@asd';
+
+                dao.encryptedSend({
+                    email: dummyDecryptedMail
+                }, function(err) {
+                    expect(err).to.exist;
+
+                    expect(keychainStub.getReceiverPublicKey.called).to.be.false;
+                    expect(encryptStub.called).to.be.false;
+                    expect(smtpClientStub.send.called).to.be.false;
+
+                    done();
+                });
+            });
+            it('should not work with without sender', function(done) {
+                var encryptStub = sinon.stub(dao, '_encrypt');
+                dummyDecryptedMail.from[0].address = 'asd@asd';
+
+                dao.encryptedSend({
+                    email: dummyDecryptedMail
+                }, function(err) {
+                    expect(err).to.exist;
+
+                    expect(keychainStub.getReceiverPublicKey.called).to.be.false;
+                    expect(encryptStub.called).to.be.false;
+                    expect(smtpClientStub.send.called).to.be.false;
+
+                    done();
+                });
+            });
+            it('should not work without recipients', function(done) {
+                var encryptStub = sinon.stub(dao, '_encrypt');
+                delete dummyDecryptedMail.to;
+
+                dao.encryptedSend({
+                    email: dummyDecryptedMail
+                }, function(err) {
+                    expect(err).to.exist;
+
+                    expect(keychainStub.getReceiverPublicKey.called).to.be.false;
+                    expect(encryptStub.called).to.be.false;
+                    expect(smtpClientStub.send.called).to.be.false;
+
+                    done();
+                });
+            });
+            it('should not work with without sender', function(done) {
+                var encryptStub = sinon.stub(dao, '_encrypt');
+                delete dummyDecryptedMail.from;
+
+                dao.encryptedSend({
+                    email: dummyDecryptedMail
+                }, function(err) {
+                    expect(err).to.exist;
+
+                    expect(keychainStub.getReceiverPublicKey.called).to.be.false;
+                    expect(encryptStub.called).to.be.false;
+                    expect(smtpClientStub.send.called).to.be.false;
+
+                    done();
+                });
+            });
+        });
+
+        describe('_encrypt', function() {
+            it('should work without attachments', function(done) {
+                var ct = 'OMGSOENCRYPTED';
+
+                pgpStub.exportKeys.yields(null, {
+                    privateKeyArmored: mockKeyPair.privateKey.encryptedKey,
+                    publicKeyArmored: mockKeyPair.publicKey.publicKey
+                });
+                pgpStub.encrypt.yields(null, ct);
+
+                dao._encrypt({
+                    email: dummyDecryptedMail
+                }, function(err) {
+                    expect(err).to.not.exist;
+
+                    expect(pgpStub.exportKeys.calledOnce).to.be.true;
+                    expect(pgpStub.encrypt.calledOnce).to.be.true;
+                    expect(dummyDecryptedMail.body).to.contain(ct);
+
+                    done();
+                });
+            });
         });
     });
 });
