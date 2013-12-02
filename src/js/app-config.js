@@ -9,7 +9,7 @@ define(function(require) {
     try {
         var manifest = chrome.runtime.getManifest();
         cloudUrl = _.find(manifest.permissions, function(permission) {
-            return typeof permission === 'string' && permission.indexOf('http') === 0;
+            return typeof permission === 'string' && permission.indexOf('https://keys') === 0;
         });
         clientId = manifest.oauth2.client_id;
     } catch (e) {}
