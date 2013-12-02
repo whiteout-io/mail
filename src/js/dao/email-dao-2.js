@@ -500,6 +500,14 @@ define(function(require) {
         }, callback);
     };
 
+    EmailDAO.prototype.move = function(options, callback) {
+        this._imapClient.moveMessage({
+            path: options.folder,
+            uid: options.uid,
+            destination: options.destination
+        }, callback);
+    };
+
     EmailDAO.prototype.sendEncrypted = function(options, callback) {
         var self = this,
             email = options.email;

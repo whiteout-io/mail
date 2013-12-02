@@ -1139,7 +1139,11 @@ define(function(require) {
 
         describe('markAsRead', function() {
             it('should work', function(done) {
-                imapClientStub.updateFlags.yields();
+                imapClientStub.updateFlags.withArgs({
+                    path: 'asdf',
+                    uid: 1,
+                    unread: false
+                }).yields();
 
                 dao.markRead({
                     folder: 'asdf',
@@ -1154,13 +1158,37 @@ define(function(require) {
 
         describe('markAsAnswered', function() {
             it('should work', function(done) {
-                imapClientStub.updateFlags.yields();
+                imapClientStub.updateFlags.withArgs({
+                    path: 'asdf',
+                    uid: 1,
+                    answered: true
+                }).yields();
 
                 dao.markAnswered({
                     folder: 'asdf',
                     uid: 1
                 }, function(err) {
                     expect(imapClientStub.updateFlags.calledOnce).to.be.true;
+                    expect(err).to.not.exist;
+                    done();
+                });
+            });
+        });
+
+        describe('move', function() {
+            it('should work', function(done) {
+                imapClientStub.moveMessage.withArgs({
+                    path: 'asdf',
+                    uid: 1,
+                    destination: 'asdasd'
+                }).yields();
+
+                dao.move({
+                    folder: 'asdf',
+                    uid: 1,
+                    destination: 'asdasd'
+                }, function(err) {
+                    expect(imapClientStub.moveMessage.calledOnce).to.be.true;
                     expect(err).to.not.exist;
                     done();
                 });
