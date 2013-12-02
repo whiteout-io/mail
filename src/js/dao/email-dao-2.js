@@ -24,7 +24,7 @@ define(function(require) {
     };
 
     //
-    // Housekeeping APIs
+    // External API
     //
 
     EmailDAO.prototype.init = function(options, callback) {
@@ -139,11 +139,10 @@ define(function(require) {
         /*
          * Here's how delta sync works:
          * delta1: storage > memory  => we deleted messages, remove from remote
-         * delta2:  memory > storage => we added messages, push to remote
+         * delta2:  memory > storage => we added messages, push to remote <<< not supported yet
          * delta3:  memory > imap    => we deleted messages directly from the remote, remove from memory and storage
          * delta4:    imap > memory  => we have new messages available, fetch to memory and storage
          */
-        // TODO: error handling
 
         var self = this,
             folder,
@@ -160,11 +159,12 @@ define(function(require) {
         }
 
         folder = _.findWhere(self._account.folders, {
-            path: options.path
+            path: options.folder
         });
         isFolderInitialized = !! folder.messages;
 
-        // initial filling from local storage is an exception from the normal sync
+        // initial filling from local storage is an exception from the normal sync.
+        // after reading from local storage, do imap sync
         if (!isFolderInitialized) {
             folder.messages = [];
             self._localListMessages({
@@ -183,6 +183,7 @@ define(function(require) {
 
                 var after = _.after(messages.length, function() {
                     callback();
+                    doImapDelta();
                 });
 
                 messages.forEach(function(message) {
@@ -203,7 +204,6 @@ define(function(require) {
                 folder: folder.path
             }, function(err, messages) {
                 /*
-                 * Reminder:
                  * delta1: storage > memory  => we deleted messages, remove from remote
                  * delta2:  memory > storage => we added messages, push to remote
                  */
@@ -217,23 +217,28 @@ define(function(require) {
                     return;
                 }
 
-                var after = _.after(delta1.length, function() {
-                    doImapDelta();
-                    callback();
-                });
+                doDelta1();
 
-                delta1.forEach(function(message) {
-                    var deleteMe = {
-                        folder: folder.path,
-                        uid: message.uid
-                    };
+                function doDelta1() {
+                    var after = _.after(delta1.length, function() {
+                        // doDelta2(); when it is implemented
+                        doImapDelta();
+                        callback();
+                    });
 
-                    self._imapDeleteMessage(deleteMe, function() {
-                        self._localDeleteMessage(deleteMe, function() {
-                            after();
+                    delta1.forEach(function(message) {
+                        var deleteMe = {
+                            folder: folder.path,
+                            uid: message.uid
+                        };
+
+                        self._imapDeleteMessage(deleteMe, function() {
+                            self._localDeleteMessage(deleteMe, function() {
+                                after();
+                            });
                         });
                     });
-                });
+                }
             });
         }
 
@@ -246,8 +251,12 @@ define(function(require) {
                     return;
                 }
 
+                // ignore non-whiteout mails
+                headers = _.without(headers, _.filter(headers, function(header) {
+                    return header.subject.indexOf(str.subjectPrefix) === -1;
+                }));
+
                 /*
-                 * Reminder:
                  * delta3:  memory > imap    => we deleted messages directly from the remote, remove from memory and storage
                  * delta4:    imap > memory  => we have new messages available, fetch to memory and storage
                  */
@@ -262,13 +271,15 @@ define(function(require) {
 
                 doDelta3();
 
+                // we deleted messages directly from the remote, remove from memory and storage
                 function doDelta3() {
                     if (_.isEmpty(delta3)) {
                         doDelta4();
                         return;
                     }
 
-                    var after = _.after(delta1.length, function() {
+                    var after = _.after(delta3.length, function() {
+                        // we're done with delta 3, so let's continue
                         doDelta4();
                     });
 
@@ -292,16 +303,20 @@ define(function(require) {
                     });
                 }
 
+                // we have new messages available, fetch to memory and storage
+                // (downstream sync)
                 function doDelta4() {
+                    // no delta, we're done here
                     if (_.isEmpty(delta4)) {
                         callback();
                     }
 
-                    var after = _.after(delta1.length, function() {
+                    var after = _.after(delta4.length, function() {
                         callback();
                     });
 
                     delta4.forEach(function(header) {
+                        // get the whole message
                         self._imapGetMessage({
                             folder: folder.path,
                             uid: header.uid
@@ -311,6 +326,7 @@ define(function(require) {
                                 return;
                             }
 
+                            // add the encrypted message to the local storage
                             self._localStoreMessages({
                                 folder: folder.path,
                                 emails: [message]
@@ -320,6 +336,7 @@ define(function(require) {
                                     return;
                                 }
 
+                                // encrypt and add to folder in memory
                                 handleMessage(message, function(err, cleartextMessage) {
                                     if (err) {
                                         callback(err);
@@ -336,7 +353,6 @@ define(function(require) {
             });
         }
 
-
         /*
          * Checks which messages are included in a, but not in b
          */
@@ -347,7 +363,7 @@ define(function(require) {
             // find the delta
             for (i = a.length - 1; i >= 0; i--) {
                 msg = a[i];
-                exists = !! _.findWhere(b, {
+                exists = _.findWhere(b, {
                     uid: msg.uid,
                     subject: msg.subject
                 });
@@ -394,7 +410,7 @@ define(function(require) {
                 }
 
                 // decrypt and verfiy signatures
-                self._pgp.decrypt(email.body, senderPubkey.publicKey, function(err, decrypted) {
+                self._crypto.decrypt(email.body, senderPubkey.publicKey, function(err, decrypted) {
                     if (err) {
                         decrypted = err.errMsg;
                     }
@@ -419,44 +435,42 @@ define(function(require) {
     };
 
     //
-    // Local Storage Apis
+    // Internal API
     //
 
+    // Local Storage API
+
     EmailDAO.prototype._localListMessages = function(options, callback) {
-        this._devicestorage.listItems('email_' + options.folder, 0, null, callback);
+        var dbType = 'email_' + options.folder;
+        this._devicestorage.listItems(dbType, 0, null, callback);
     };
 
     EmailDAO.prototype._localStoreMessages = function(options, callback) {
         var dbType = 'email_' + options.folder;
-        self._devicestorage.storeList(options.emails, dbType, callback);
+        this._devicestorage.storeList(options.emails, dbType, callback);
     };
 
     EmailDAO.prototype._localDeleteMessage = function(options, callback) {
-        self._devicestorage.removeList('email_' + options.folder + '_' + options.uid, callback);
+        var dbType = 'email_' + options.folder + '_' + options.uid;
+        this._devicestorage.removeList(dbType, callback);
     };
 
 
-    //
-    // IMAP Apis
-    //
+    // IMAP API
 
     /**
      * Login the imap client
      */
     EmailDAO.prototype._imapLogin = function(callback) {
-        var self = this;
-
         // login IMAP client if existent
-        self._imapClient.login(callback);
+        this._imapClient.login(callback);
     };
 
     /**
      * Cleanup by logging the user off.
      */
     EmailDAO.prototype._imapLogout = function(callback) {
-        var self = this;
-
-        self._imapClient.logout(callback);
+        this._imapClient.logout(callback);
     };
 
     /**
@@ -464,9 +478,7 @@ define(function(require) {
      * @param {String} options.folderName The name of the imap folder.
      */
     EmailDAO.prototype._imapListMessages = function(options, callback) {
-        var self = this;
-
-        self._imapClient.listMessages({
+        this._imapClient.listMessages({
             path: options.folder,
             offset: 0,
             length: 100
@@ -490,7 +502,6 @@ define(function(require) {
             uid: options.uid
         }, callback);
     };
-
 
     /**
      * List the folders in the user's IMAP mailbox.
