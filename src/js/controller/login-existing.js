@@ -43,7 +43,9 @@ define(function(require) {
 
         function onUnlock(err) {
             if (err) {
-                handleError(err);
+                $scope.incorrect = true;
+                $scope.buttonEnabled = true;
+                $scope.$apply();
                 return;
             }
 

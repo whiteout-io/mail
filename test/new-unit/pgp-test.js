@@ -140,8 +140,13 @@ define(function(require) {
             });
 
             describe('Get Fingerprint', function() {
-                it('should work', function() {
+                it('should work without param', function() {
                     var fingerprint = pgp.getFingerprint();
+                    expect(fingerprint).to.equal('5856CEF789C3A307E8A1B976F6F60E9B42CDFF4C');
+                });
+
+                it('should work with param', function() {
+                    var fingerprint = pgp.getFingerprint(pubkey);
                     expect(fingerprint).to.equal('5856CEF789C3A307E8A1B976F6F60E9B42CDFF4C');
                 });
             });

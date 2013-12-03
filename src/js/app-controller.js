@@ -207,9 +207,11 @@ define(function(require) {
             pubkeyDao = new PublicKeyDAO(restDao);
             lawnchairDao = new LawnchairDAO();
             keychain = new KeychainDAO(lawnchairDao, pubkeyDao);
+            self._keychain = keychain;
             imapClient = new ImapClient(imapOptions);
             smtpClient = new SmtpClient(smtpOptions);
             pgp = new PGP();
+            self._crypto = pgp;
             userStorage = new DeviceStorageDAO(lawnchairDao);
             self._emailDao = new EmailDAO(keychain, imapClient, smtpClient, pgp, userStorage);
 

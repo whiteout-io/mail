@@ -46,8 +46,14 @@ define(function(require) {
     /**
      * Show a user's fingerprint
      */
-    PGP.prototype.getFingerprint = function() {
+    PGP.prototype.getFingerprint = function(publicKeyArmored) {
         var publicKey, privateKey;
+
+        if (publicKeyArmored) {
+            // parse the optional public key parameter
+            publicKey = openpgp.read_publicKey(publicKeyArmored)[0];
+            return util.hexstrdump(publicKey.getFingerprint()).toUpperCase();
+        }
 
         privateKey = openpgp.keyring.exportPrivateKey(0);
         if (privateKey && privateKey.keyId) {

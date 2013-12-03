@@ -9,14 +9,14 @@
     <p class="subject" ng-click="state.read.toggle(false)">{{state.mailList.selected.subject || 'No subject'}}</p>
     <p class="date">{{state.mailList.selected.sentDate | date:'EEEE, MMM d, yyyy h:mm a'}}</p>
     <p class="address">
-      From: <span class="label" data-icon-append="&#xe009;" ng-repeat="f in state.mailList.selected.from">{{f.name || f.address}}</span>
+      From: <span class="label" data-icon-append="&#xe009;" ng-repeat="f in state.mailList.selected.from" ng-mouseover="getFingerprint(f.address)" popover="fingerprint" popover-title="Fingerprint">{{f.name || f.address}}</span>
     </p>
     <p class="address">
-      To: <span class="label" data-icon-append="&#xe009;" ng-repeat="t in state.mailList.selected.to">{{t.address}}</span>
+      To: <span class="label" data-icon-append="&#xe009;" ng-repeat="t in state.mailList.selected.to" ng-mouseover="getFingerprint(t.address)" popover="fingerprint" popover-title="Fingerprint">{{t.address}}</span>
     </p>
     <div ng-switch="state.mailList.selected.cc !== undefined">
       <p class="address" ng-switch-when="true">
-        CC: <span class="label" ng-repeat="t in state.mailList.selected.cc">{{t.address}}</span>
+        CC: <span class="label" ng-repeat="t in state.mailList.selected.cc" ng-mouseover="getFingerprint(t.address)" popover="fingerprint" popover-title="Fingerprint">{{t.address}}</span>
       </p>
     </div>
   </div><!--/.headers-->

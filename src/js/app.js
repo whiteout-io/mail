@@ -4,6 +4,7 @@ window.name = 'NG_DEFER_BOOTSTRAP!';
 require([
     'angular',
     'js/controller/dialog',
+    'js/controller/popover',
     'js/controller/account',
     'js/controller/login',
     'js/controller/login-initial',
@@ -16,14 +17,14 @@ require([
     'cryptoLib/util',
     'angularRoute',
     'angularTouch'
-], function(angular, DialogCtrl, AccountCtrl, LoginCtrl, LoginInitialCtrl, LoginNewDeviceCtrl, LoginExistingCtrl, MailListCtrl, ReadCtrl, WriteCtrl, NavigationCtrl, util) {
+], function(angular, DialogCtrl, PopoverCtrl, AccountCtrl, LoginCtrl, LoginInitialCtrl, LoginNewDeviceCtrl, LoginExistingCtrl, MailListCtrl, ReadCtrl, WriteCtrl, NavigationCtrl, util) {
     'use strict';
 
     // reset window.name
     window.name = util.UUID();
 
     // init main angular module including dependencies
-    var app = angular.module('mail', ['ngRoute', 'ngTouch', 'navigation', 'mail-list', 'write', 'read', 'login-new-device']);
+    var app = angular.module('mail', ['ngRoute', 'ngTouch', 'navigation', 'mail-list', 'write', 'read', 'login-new-device', 'popover']);
 
     // set router paths
     app.config(function($routeProvider) {
@@ -58,6 +59,7 @@ require([
     app.controller('MailListCtrl', MailListCtrl);
     app.controller('AccountCtrl', AccountCtrl);
     app.controller('DialogCtrl', DialogCtrl);
+    app.controller('PopoverCtrl', PopoverCtrl);
 
     // manually bootstrap angular due to require.js
     angular.element().ready(function() {
