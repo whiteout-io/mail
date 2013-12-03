@@ -809,5 +809,64 @@ define(function(require) {
         }
     };
 
+    // to be removed and solved with IMAP!
+    EmailDAO.prototype.store = function(email, callback) {
+        var self = this,
+            dbType = 'email_OUTBOX';
+
+        email.id = util.UUID();
+
+        // encrypt
+        self._encrypt({
+            email: email
+        }, function(err, email) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            // store to local storage
+            self._devicestorage.storeList([email], dbType, callback);
+        });
+    };
+
+    // to be removed and solved with IMAP!
+    EmailDAO.prototype.list = function(callback) {
+        var self = this,
+            dbType = 'email_OUTBOX';
+
+        self._devicestorage.listItems(dbType, 0, null, function(err, mails) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            if (mails.length === 0) {
+                callback(null, []);
+                return;
+            }
+
+            self._crypto.exportKeys(function(err, ownKeys) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                var after = _.after(mails.length, function() {
+                    callback(null, mails);
+                });
+
+                mails.forEach(function(mail) {
+                    mail.body = str.cryptPrefix + mail.body.split(str.cryptPrefix)[1].split(str.cryptSuffix)[0] + str.cryptSuffix;
+                    self._crypto.decrypt(mail.body, ownKeys.publicKeyArmored, function(err, decrypted) {
+                        mail.body = err ? err.errMsg : decrypted;
+                        after();
+                    });
+                });
+
+            });
+        });
+    };
+
     return EmailDAO;
 });

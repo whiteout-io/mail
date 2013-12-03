@@ -1636,5 +1636,48 @@ define(function(require) {
                 });
             });
         });
+
+        describe('store', function() {
+            it('should work', function(done) {
+                pgpStub.exportKeys.yields(null, {
+                    publicKeyArmored: 'omgsocrypto'
+                });
+                pgpStub.encrypt.yields(null, 'asdfasfd');
+                devicestorageStub.storeList.yields();
+
+                dao.store(dummyDecryptedMail, function(err) {
+                    expect(err).to.not.exist;
+                    expect(pgpStub.exportKeys.calledOnce).to.be.true;
+                    expect(pgpStub.encrypt.calledOnce).to.be.true;
+                    expect(devicestorageStub.storeList.calledOnce).to.be.true;
+
+                    done();
+                });
+            });
+        });
+
+        describe('list', function() {
+            it('should work', function(done) {
+                devicestorageStub.listItems.yields(null, [dummyEncryptedMail]);
+                pgpStub.exportKeys.yields(null, {
+                    publicKeyArmored: 'omgsocrypto'
+                });
+                pgpStub.decrypt.yields(null, dummyDecryptedMail.body);
+
+                dao.list(function(err, mails) {
+                    expect(err).to.not.exist;
+
+                    expect(devicestorageStub.listItems.calledOnce).to.be.true;
+                    expect(pgpStub.exportKeys.calledOnce).to.be.true;
+                    expect(pgpStub.decrypt.calledOnce).to.be.true;
+                    expect(mails.length).to.equal(1);
+                    expect(mails[0].body).to.equal(dummyDecryptedMail.body);
+                    expect(mails[0].subject).to.equal(dummyDecryptedMail.subject);
+
+                    done();
+                });
+            });
+        });
+
     });
 });
