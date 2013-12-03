@@ -45,15 +45,7 @@ define(function(require) {
                         return;
                     }
 
-                    // login to imap backend
-                    appController._emailDao.imapLogin(function(err) {
-                        if (err) {
-                            $scope.onError(err);
-                            return;
-                        }
-
-                        redirect(availableKeys);
-                    });
+                    redirect(availableKeys);
                 });
             });
         }

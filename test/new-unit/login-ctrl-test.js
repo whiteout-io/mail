@@ -21,8 +21,8 @@ define(function(require) {
             var hasChrome, hasIdentity;
 
             beforeEach(function() {
-                hasChrome = !!window.chrome;
-                hasIdentity = !!window.chrome.identity;
+                hasChrome = !! window.chrome;
+                hasIdentity = !! window.chrome.identity;
                 window.chrome = window.chrome || {};
                 window.chrome.identity = window.chrome.identity || {};
 
@@ -66,15 +66,12 @@ define(function(require) {
                     publicKey: 'b'
                 });
 
-                emailDaoMock.imapLogin.yields();
-
                 angular.module('logintest', []);
                 mocks.module('logintest');
                 mocks.inject(function($controller, $rootScope, $location) {
                     location = $location;
                     sinon.stub(location, 'path', function(path) {
                         expect(path).to.equal('/login-existing');
-                        expect(emailDaoMock.imapLogin.calledOnce).to.be.true;
                         expect(startAppStub.calledOnce).to.be.true;
                         expect(checkForUpdateStub.calledOnce).to.be.true;
                         expect(fetchOAuthStub.calledOnce).to.be.true;
@@ -103,15 +100,12 @@ define(function(require) {
                     publicKey: 'b'
                 });
 
-                emailDaoMock.imapLogin.yields();
-
                 angular.module('logintest', []);
                 mocks.module('logintest');
                 mocks.inject(function($controller, $rootScope, $location) {
                     location = $location;
                     sinon.stub(location, 'path', function(path) {
                         expect(path).to.equal('/login-new-device');
-                        expect(emailDaoMock.imapLogin.calledOnce).to.be.true;
                         expect(startAppStub.calledOnce).to.be.true;
                         expect(checkForUpdateStub.calledOnce).to.be.true;
                         expect(fetchOAuthStub.calledOnce).to.be.true;
@@ -138,15 +132,12 @@ define(function(require) {
                 initStub = sinon.stub(appController, 'init');
                 initStub.yields();
 
-                emailDaoMock.imapLogin.yields();
-
                 angular.module('logintest', []);
                 mocks.module('logintest');
                 mocks.inject(function($controller, $rootScope, $location) {
                     location = $location;
                     sinon.stub(location, 'path', function(path) {
                         expect(path).to.equal('/login-initial');
-                        expect(emailDaoMock.imapLogin.calledOnce).to.be.true;
                         expect(startAppStub.calledOnce).to.be.true;
                         expect(checkForUpdateStub.calledOnce).to.be.true;
                         expect(fetchOAuthStub.calledOnce).to.be.true;

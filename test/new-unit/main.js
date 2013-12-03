@@ -31,7 +31,6 @@ function startTests() {
 	require(
 		[
 			'test/new-unit/email-dao-test',
-			'test/new-unit/email-dao-2-test',
 			'test/new-unit/app-controller-test',
 			'test/new-unit/pgp-test',
 			'test/new-unit/rest-dao-test',

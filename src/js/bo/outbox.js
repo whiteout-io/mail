@@ -209,7 +209,7 @@ define(function(require) {
                     };
 
                 // send invitation mail
-                self._emailDao.send(invitationMail, function(err) {
+                self._emailDao.sendPlaintext(invitationMail, function(err) {
                     if (err) {
                         self._outboxBusy = false;
                         callback(err);
@@ -222,7 +222,7 @@ define(function(require) {
 
         function sendEncrypted(email) {
             removeFromPendingMails(email);
-            self._emailDao.encryptedSend(email, function(err) {
+            self._emailDao.sendEncrypted(email, function(err) {
                 if (err) {
                     self._outboxBusy = false;
                     callback(err);

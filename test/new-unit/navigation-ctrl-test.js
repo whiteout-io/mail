@@ -21,15 +21,21 @@ define(function(require) {
             origEmailDao = appController._emailDao;
 
             emailDaoMock = sinon.createStubInstance(EmailDAO);
+            emailDaoMock._account = {
+                folders: [{
+                    type: 'Inbox',
+                    count: 2,
+                    path: 'INBOX'
+                }, {
+                    type: 'Outbox',
+                    count: 0,
+                    path: 'OUTBOX'
+                }]
+            };
+            outboxFolder = emailDaoMock._account.folders[1];
             appController._emailDao = emailDaoMock;
             outboxBoMock = sinon.createStubInstance(OutboxBO);
             appController._outboxBo = outboxBoMock;
-
-            // for outbox checking
-            outboxFolder = {
-                type: 'Outbox'
-            };
-            emailDaoMock.imapListFolders.yields(null, [outboxFolder]);
             outboxBoMock.startChecking.returns();
 
             angular.module('navigationtest', []);
@@ -55,7 +61,7 @@ define(function(require) {
             it('should be well defined', function() {
                 expect(scope.state).to.exist;
                 expect(scope.state.nav.open).to.be.false;
-                expect(scope.folders).to.not.be.empty;
+                expect(scope.account.folders).to.not.be.empty;
 
                 expect(scope.onError).to.exist;
                 expect(scope.openFolder).to.exist;
@@ -86,7 +92,6 @@ define(function(require) {
             it('should work', function() {
                 var callback;
 
-                expect(emailDaoMock.imapListFolders.callCount).to.equal(1);
                 expect(outboxBoMock.startChecking.callCount).to.equal(1);
 
                 outboxBoMock.startChecking.calledWith(sinon.match(function(cb) {

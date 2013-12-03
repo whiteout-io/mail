@@ -37,7 +37,11 @@ define(function(require) {
                     handleError(err);
                     return;
                 }
-                emailDao.unlock(keypair, $scope.passphrase, onUnlock);
+
+                emailDao.unlock({
+                    keypair: keypair,
+                    passphrase: $scope.passphrase
+                }, onUnlock);
             });
         }
 

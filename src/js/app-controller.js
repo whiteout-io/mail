@@ -222,7 +222,9 @@ define(function(require) {
                 asymKeySize: config.asymKeySize
             };
 
-            self._emailDao.init(account, callback);
+            self._emailDao.init({
+                account: account
+            }, callback);
         }
     };
 

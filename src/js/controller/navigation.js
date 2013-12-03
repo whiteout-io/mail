@@ -42,7 +42,7 @@ define(function(require) {
                 return;
             }
 
-            var outbox = _.findWhere($scope.folders, {
+            var outbox = _.findWhere($scope.account.folders, {
                 type: 'Outbox'
             });
             outbox.count = count;
@@ -54,40 +54,29 @@ define(function(require) {
         //
 
         // init folders
-        initFolders(function(folders) {
-            $scope.folders = folders;
-            // select inbox as the current folder on init
-            $scope.openFolder($scope.folders[0]);
-        });
+        initFolders();
+        // select inbox as the current folder on init
+        $scope.openFolder($scope.account.folders[0]);
 
         //
         // helper functions
         //
 
-        function initFolders(callback) {
+        function initFolders() {
             if (window.chrome && chrome.identity) {
-                emailDao.imapListFolders(function(err, folders) {
-                    if (err) {
-                        $scope.onError(err);
-                        return;
-                    }
+                // get pointer to account/folder/message tree on root scope
+                $scope.$root.account = emailDao._account;
 
-                    folders.forEach(function(f) {
-                        f.count = 0;
-                    });
-
-                    // start checking outbox periodically
-                    outboxBo.startChecking($scope.onOutboxUpdate);
-                    // make function available globally for write controller
-                    $scope.emptyOutbox = outboxBo._processOutbox.bind(outboxBo);
-
-                    callback(folders);
-                    $scope.$apply();
-                });
+                // start checking outbox periodically
+                outboxBo.startChecking($scope.onOutboxUpdate);
+                // make function available globally for write controller
+                $scope.emptyOutbox = outboxBo._processOutbox.bind(outboxBo);
                 return;
             }
 
-            callback([{
+            // attach dummy folders for development
+            $scope.$root.account = {};
+            $scope.account.folders = [{
                 type: 'Inbox',
                 count: 2,
                 path: 'INBOX'
@@ -107,7 +96,7 @@ define(function(require) {
                 type: 'Trash',
                 count: 0,
                 path: 'TRASH'
-            }]);
+            }];
         }
     };
 

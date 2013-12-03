@@ -80,8 +80,8 @@ define(function(require) {
                 dummyMails = [member, invited, notinvited];
 
                 emailDaoStub.list.yieldsAsync(null, dummyMails);
-                emailDaoStub.encryptedSend.yieldsAsync();
-                emailDaoStub.send.yieldsAsync();
+                emailDaoStub.sendEncrypted.yieldsAsync();
+                emailDaoStub.sendPlaintext.yieldsAsync();
                 devicestorageStub.removeList.yieldsAsync();
                 invitationDaoStub.check.withArgs(sinon.match(function(o) {
                     return o.recipient === 'invited@whiteout.io';
@@ -102,8 +102,8 @@ define(function(require) {
                 var check = _.after(dummyMails.length + 1, function() {
                     expect(unsentCount).to.equal(2);
                     expect(emailDaoStub.list.callCount).to.equal(1);
-                    expect(emailDaoStub.encryptedSend.callCount).to.equal(1);
-                    expect(emailDaoStub.send.callCount).to.equal(1);
+                    expect(emailDaoStub.sendEncrypted.callCount).to.equal(1);
+                    expect(emailDaoStub.sendPlaintext.callCount).to.equal(1);
                     expect(devicestorageStub.removeList.callCount).to.equal(1);
                     expect(invitationDaoStub.check.callCount).to.equal(2);
                     expect(invitationDaoStub.invite.callCount).to.equal(1);
