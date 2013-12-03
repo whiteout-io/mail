@@ -311,17 +311,17 @@ define(function(require) {
     //
 
     var ngModule = angular.module('mail-list', []);
-    ngModule.directive('ngIscroll', function($parse) {
+    ngModule.directive('ngIscroll', function() {
         return {
             link: function(scope, elm, attrs) {
-                var model = $parse(attrs.ngIscroll);
+                var model = attrs.ngIscroll;
                 scope.$watch(model, function() {
                     var myScroll;
                     // activate iscroll
                     myScroll = new IScroll(elm[0], {
                         mouseWheel: true
                     });
-                });
+                }, true);
             }
         };
     });
