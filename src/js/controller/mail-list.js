@@ -88,9 +88,10 @@ define(function(require) {
 
                 // sort emails
                 displayEmails(getFolder().messages);
-
                 // display last update
                 updateStatus('Last update: ', new Date());
+
+                $scope.$apply();
             });
         };
 
