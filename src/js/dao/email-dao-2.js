@@ -3,8 +3,8 @@ define(function(require) {
 
     var util = require('cryptoLib/util'),
         _ = require('underscore'),
-        str = require('js/app-config').string;
-    // config = require('js/app-config').config;
+        str = require('js/app-config').string,
+        config = require('js/app-config').config;
 
     var EmailDAO = function(keychain, imapClient, smtpClient, crypto, devicestorage) {
         var self = this;
@@ -375,6 +375,19 @@ define(function(require) {
                                 return;
                             }
 
+                            if (isVerificationMail(message)) {
+                                verify(message, function(err) {
+                                    if (err) {
+                                        self._account.busy = false;
+                                        callback(err);
+                                        return;
+                                    }
+
+                                    after();
+                                });
+                                return;
+                            }
+
                             // add the encrypted message to the local storage
                             self._localStoreMessages({
                                 folder: folder.path,
@@ -423,6 +436,54 @@ define(function(require) {
             }
 
             return delta;
+        }
+
+        function isVerificationMail(email) {
+            return email.subject === str.subjectPrefix + str.verificationSubject;
+        }
+
+        function verify(email, localCallback) {
+            var uuid, index, verifyUrlPrefix = config.cloudUrl + config.verificationUrl;
+
+            if (!email.unread) {
+                // don't bother if the email was already marked as read
+                localCallback();
+                return;
+            }
+
+            index = email.body.indexOf(verifyUrlPrefix);
+            if (index === -1) {
+                // there's no url in the email, so forget about that.
+                localCallback();
+                return;
+            }
+
+
+            uuid = email.body.substr(index + verifyUrlPrefix.length, config.verificationUuidLength);
+            self._keychain.verifyPublicKey(uuid, function(err) {
+                if (err) {
+                    localCallback({
+                        errMsg: 'Verifying your public key failed: ' + err.errMsg
+                    });
+                    return;
+                }
+
+                // public key has been verified, mark the message as read, delete it, and ignore it in the future
+                self.markRead({
+                    folder: options.folder,
+                    uid: email.uid
+                }, function(err) {
+                    if (err) {
+                        localCallback(err);
+                        return;
+                    }
+
+                    self._imapDeleteMessage({
+                        folder: options.folder,
+                        uid: email.uid
+                    }, localCallback);
+                });
+            });
         }
 
         function handleMessage(message, localCallback) {

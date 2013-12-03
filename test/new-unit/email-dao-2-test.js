@@ -14,7 +14,7 @@ define(function(require) {
         var dao, keychainStub, imapClientStub, smtpClientStub, pgpStub, devicestorageStub;
 
         var emailAddress, passphrase, asymKeySize, mockkeyId, dummyEncryptedMail,
-            dummyDecryptedMail, mockKeyPair, account, publicKey;
+            dummyDecryptedMail, mockKeyPair, account, publicKey, verificationMail, verificationUuid;
 
         beforeEach(function() {
             emailAddress = 'asdf@asdf.com';
@@ -31,6 +31,19 @@ define(function(require) {
                 }],
                 subject: '[whiteout] qweasd',
                 body: '-----BEGIN PGP MESSAGE-----\nasd\n-----END PGP MESSAGE-----'
+            };
+            verificationUuid = 'OMFG_FUCKING_BASTARD_UUID_FROM_HELL!';
+            verificationMail = {
+                from: [{
+                    name: 'Whiteout Test',
+                    address: 'whiteout.test@t-online.de'
+                }], // sender address
+                to: [{
+                    address: 'safewithme.testuser@gmail.com'
+                }], // list of receivers
+                subject: "[whiteout] New public key uploaded", // Subject line
+                body: 'yadda yadda bla blabla foo bar https://keys.whiteout.io/verify/' + verificationUuid, // plaintext body
+                unread: true
             };
             dummyDecryptedMail = {
                 uid: 1234,
@@ -1057,6 +1070,7 @@ define(function(require) {
                     done();
                 });
             });
+
             it('should error while storing messages from the remote locally', function(done) {
                 var invocations, folder, localListStub, imapListStub, imapGetStub, localStoreStub;
 
@@ -1096,6 +1110,7 @@ define(function(require) {
                     done();
                 });
             });
+
             it('should error while fetching messages from the remote', function(done) {
                 var invocations, folder, localListStub, imapListStub, imapGetStub, localStoreStub;
 
@@ -1132,6 +1147,271 @@ define(function(require) {
                     expect(localStoreStub.called).to.be.false;
                     expect(keychainStub.getReceiverPublicKey.called).to.be.false;
                     expect(pgpStub.decrypt.called).to.be.false;
+                    done();
+                });
+            });
+
+            it('should verify an authentication mail', function(done) {
+                var invocations, folder, localListStub, imapListStub,
+                    imapGetStub, markReadStub, imapDeleteStub;
+
+                invocations = 0;
+                folder = 'FOLDAAAA';
+                dao._account.folders = [{
+                    type: 'Folder',
+                    path: folder,
+                    messages: []
+                }];
+
+                localListStub = sinon.stub(dao, '_localListMessages').yields(null, []);
+                imapListStub = sinon.stub(dao, '_imapListMessages').yields(null, [verificationMail]);
+                imapGetStub = sinon.stub(dao, '_imapGetMessage').yields(null, verificationMail);
+                keychainStub.verifyPublicKey.withArgs(verificationUuid).yields();
+                markReadStub = sinon.stub(dao, 'markRead').withArgs({
+                    folder: folder,
+                    uid: verificationMail.uid
+                }).yields();
+                imapDeleteStub = sinon.stub(dao, '_imapDeleteMessage').withArgs({
+                    folder: folder,
+                    uid: verificationMail.uid
+                }).yields();
+
+                dao.sync({
+                    folder: folder
+                }, function(err) {
+                    expect(err).to.not.exist;
+
+                    if (invocations === 0) {
+                        expect(dao._account.busy).to.be.true;
+                        invocations++;
+                        return;
+                    }
+
+                    expect(dao._account.busy).to.be.false;
+                    expect(dao._account.folders[0].messages).to.be.empty;
+                    expect(localListStub.calledOnce).to.be.true;
+                    expect(imapListStub.calledOnce).to.be.true;
+                    expect(imapGetStub.calledOnce).to.be.true;
+                    expect(keychainStub.verifyPublicKey.calledOnce).to.be.true;
+                    expect(markReadStub.calledOnce).to.be.true;
+                    expect(imapDeleteStub.calledOnce).to.be.true;
+
+                    done();
+                });
+            });
+
+            it('should fail during deletion of an authentication mail', function(done) {
+                var invocations, folder, localListStub, imapListStub,
+                    imapGetStub, markReadStub, imapDeleteStub;
+
+                invocations = 0;
+                folder = 'FOLDAAAA';
+                dao._account.folders = [{
+                    type: 'Folder',
+                    path: folder,
+                    messages: []
+                }];
+
+                localListStub = sinon.stub(dao, '_localListMessages').yields(null, []);
+                imapListStub = sinon.stub(dao, '_imapListMessages').yields(null, [verificationMail]);
+                imapGetStub = sinon.stub(dao, '_imapGetMessage').yields(null, verificationMail);
+                keychainStub.verifyPublicKey.yields();
+                markReadStub = sinon.stub(dao, 'markRead').yields();
+                imapDeleteStub = sinon.stub(dao, '_imapDeleteMessage').yields({});
+
+                dao.sync({
+                    folder: folder
+                }, function(err) {
+
+                    if (invocations === 0) {
+                        expect(err).to.not.exist;
+                        expect(dao._account.busy).to.be.true;
+                        invocations++;
+                        return;
+                    }
+
+                    expect(err).to.exist;
+                    expect(dao._account.busy).to.be.false;
+                    expect(dao._account.folders[0].messages).to.be.empty;
+                    expect(localListStub.calledOnce).to.be.true;
+                    expect(imapListStub.calledOnce).to.be.true;
+                    expect(imapGetStub.calledOnce).to.be.true;
+                    expect(keychainStub.verifyPublicKey.calledOnce).to.be.true;
+                    expect(markReadStub.calledOnce).to.be.true;
+                    expect(imapDeleteStub.calledOnce).to.be.true;
+
+                    done();
+                });
+            });
+            it('should fail during marking an authentication mail read', function(done) {
+                var invocations, folder, localListStub, imapListStub,
+                    imapGetStub, markReadStub, imapDeleteStub;
+
+                invocations = 0;
+                folder = 'FOLDAAAA';
+                dao._account.folders = [{
+                    type: 'Folder',
+                    path: folder,
+                    messages: []
+                }];
+
+                localListStub = sinon.stub(dao, '_localListMessages').yields(null, []);
+                imapListStub = sinon.stub(dao, '_imapListMessages').yields(null, [verificationMail]);
+                imapGetStub = sinon.stub(dao, '_imapGetMessage').yields(null, verificationMail);
+                keychainStub.verifyPublicKey.yields();
+                markReadStub = sinon.stub(dao, 'markRead').yields({});
+                imapDeleteStub = sinon.stub(dao, '_imapDeleteMessage');
+
+                dao.sync({
+                    folder: folder
+                }, function(err) {
+
+                    if (invocations === 0) {
+                        expect(err).to.not.exist;
+                        expect(dao._account.busy).to.be.true;
+                        invocations++;
+                        return;
+                    }
+
+                    expect(err).to.exist;
+                    expect(dao._account.busy).to.be.false;
+                    expect(dao._account.folders[0].messages).to.be.empty;
+                    expect(localListStub.calledOnce).to.be.true;
+                    expect(imapListStub.calledOnce).to.be.true;
+                    expect(imapGetStub.calledOnce).to.be.true;
+                    expect(keychainStub.verifyPublicKey.calledOnce).to.be.true;
+                    expect(markReadStub.calledOnce).to.be.true;
+                    expect(imapDeleteStub.called).to.be.false;
+
+                    done();
+                });
+            });
+            it('should fail during verifying authentication', function(done) {
+                var invocations, folder, localListStub, imapListStub,
+                    imapGetStub, markReadStub, imapDeleteStub;
+
+                invocations = 0;
+                folder = 'FOLDAAAA';
+                dao._account.folders = [{
+                    type: 'Folder',
+                    path: folder,
+                    messages: []
+                }];
+
+                localListStub = sinon.stub(dao, '_localListMessages').yields(null, []);
+                imapListStub = sinon.stub(dao, '_imapListMessages').yields(null, [verificationMail]);
+                imapGetStub = sinon.stub(dao, '_imapGetMessage').yields(null, verificationMail);
+                keychainStub.verifyPublicKey.yields({});
+                markReadStub = sinon.stub(dao, 'markRead');
+                imapDeleteStub = sinon.stub(dao, '_imapDeleteMessage');
+
+                dao.sync({
+                    folder: folder
+                }, function(err) {
+
+                    if (invocations === 0) {
+                        expect(err).to.not.exist;
+                        expect(dao._account.busy).to.be.true;
+                        invocations++;
+                        return;
+                    }
+
+                    expect(err).to.exist;
+                    expect(dao._account.busy).to.be.false;
+                    expect(dao._account.folders[0].messages).to.be.empty;
+                    expect(localListStub.calledOnce).to.be.true;
+                    expect(imapListStub.calledOnce).to.be.true;
+                    expect(imapGetStub.calledOnce).to.be.true;
+                    expect(keychainStub.verifyPublicKey.calledOnce).to.be.true;
+                    expect(markReadStub.called).to.be.false;
+                    expect(imapDeleteStub.called).to.be.false;
+
+                    done();
+                });
+            });
+            it('should not bother about read authentication mails', function(done) {
+                var invocations, folder, localListStub, imapListStub,
+                    imapGetStub, markReadStub, imapDeleteStub;
+
+                invocations = 0;
+                folder = 'FOLDAAAA';
+                dao._account.folders = [{
+                    type: 'Folder',
+                    path: folder,
+                    messages: []
+                }];
+
+                verificationMail.unread = false;
+
+                localListStub = sinon.stub(dao, '_localListMessages').yields(null, []);
+                imapListStub = sinon.stub(dao, '_imapListMessages').yields(null, [verificationMail]);
+                imapGetStub = sinon.stub(dao, '_imapGetMessage').yields(null, verificationMail);
+                markReadStub = sinon.stub(dao, 'markRead');
+                imapDeleteStub = sinon.stub(dao, '_imapDeleteMessage');
+
+                dao.sync({
+                    folder: folder
+                }, function(err) {
+                    expect(err).to.not.exist;
+
+                    if (invocations === 0) {
+                        expect(dao._account.busy).to.be.true;
+                        invocations++;
+                        return;
+                    }
+
+                    expect(dao._account.busy).to.be.false;
+                    expect(dao._account.folders[0].messages).to.be.empty;
+                    expect(localListStub.calledOnce).to.be.true;
+                    expect(imapListStub.calledOnce).to.be.true;
+                    expect(imapGetStub.calledOnce).to.be.true;
+                    expect(keychainStub.verifyPublicKey.called).to.be.false;
+                    expect(markReadStub.called).to.be.false;
+                    expect(imapDeleteStub.called).to.be.false;
+
+                    done();
+                });
+            });
+            it('should not bother about read authentication mails', function(done) {
+                var invocations, folder, localListStub, imapListStub,
+                    imapGetStub, markReadStub, imapDeleteStub;
+
+                invocations = 0;
+                folder = 'FOLDAAAA';
+                dao._account.folders = [{
+                    type: 'Folder',
+                    path: folder,
+                    messages: []
+                }];
+
+                verificationMail.body = 'url? there is no url.';
+
+                localListStub = sinon.stub(dao, '_localListMessages').yields(null, []);
+                imapListStub = sinon.stub(dao, '_imapListMessages').yields(null, [verificationMail]);
+                imapGetStub = sinon.stub(dao, '_imapGetMessage').yields(null, verificationMail);
+                markReadStub = sinon.stub(dao, 'markRead');
+                imapDeleteStub = sinon.stub(dao, '_imapDeleteMessage');
+
+                dao.sync({
+                    folder: folder
+                }, function(err) {
+                    expect(err).to.not.exist;
+
+                    if (invocations === 0) {
+                        expect(dao._account.busy).to.be.true;
+                        invocations++;
+                        return;
+                    }
+
+                    expect(dao._account.busy).to.be.false;
+                    expect(dao._account.folders[0].messages).to.be.empty;
+                    expect(localListStub.calledOnce).to.be.true;
+                    expect(imapListStub.calledOnce).to.be.true;
+                    expect(imapGetStub.calledOnce).to.be.true;
+                    expect(keychainStub.verifyPublicKey.called).to.be.false;
+                    expect(markReadStub.called).to.be.false;
+                    expect(imapDeleteStub.called).to.be.false;
+
                     done();
                 });
             });

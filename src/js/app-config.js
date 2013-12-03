@@ -38,7 +38,8 @@ define(function(require) {
         },
         checkOutboxInterval: 5000,
         iconPath: '/img/icon.png',
-        verificationUrl: '/verify/'
+        verificationUrl: '/verify/',
+        verificationUuidLength: 36
     };
 
     /**
