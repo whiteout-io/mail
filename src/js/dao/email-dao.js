@@ -295,10 +295,13 @@ define(function(require) {
                     return;
                 }
 
-                // ignore non-whiteout mails
-                headers = _.without(headers, _.filter(headers, function(header) {
+                // ignore non-whitelisted mails
+                var nonWhitelisted = _.filter(headers, function(header) {
                     return header.subject.indexOf(str.subjectPrefix) === -1;
-                }));
+                });
+                nonWhitelisted.forEach(function(i) {
+                    headers.splice(headers.indexOf(i), 1);
+                });
 
                 /*
                  * delta3:  memory > imap    => we deleted messages directly from the remote, remove from memory and storage

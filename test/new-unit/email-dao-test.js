@@ -14,7 +14,8 @@ define(function(require) {
         var dao, keychainStub, imapClientStub, smtpClientStub, pgpStub, devicestorageStub;
 
         var emailAddress, passphrase, asymKeySize, mockkeyId, dummyEncryptedMail,
-            dummyDecryptedMail, mockKeyPair, account, publicKey, verificationMail, verificationUuid;
+            dummyDecryptedMail, mockKeyPair, account, publicKey, verificationMail, verificationUuid,
+            nonWhitelistedMail;
 
         beforeEach(function() {
             emailAddress = 'asdf@asdf.com';
@@ -54,6 +55,17 @@ define(function(require) {
                     address: 'qwe@qwe.de'
                 }],
                 subject: '[whiteout] qweasd',
+                body: 'asd'
+            };
+            nonWhitelistedMail = {
+                uid: 1234,
+                from: [{
+                    address: 'asd@asd.de'
+                }],
+                to: [{
+                    address: 'qwe@qwe.de'
+                }],
+                subject: 'qweasd',
                 body: 'asd'
             };
             mockKeyPair = {
@@ -1026,6 +1038,45 @@ define(function(require) {
                     expect(localStoreStub.calledOnce).to.be.true;
                     expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
                     expect(pgpStub.decrypt.calledOnce).to.be.true;
+                    done();
+                });
+            });
+
+            it('should not fetch non-whitelisted mails', function(done) {
+                var invocations, folder, localListStub, imapListStub, imapGetStub, localStoreStub;
+
+                invocations = 0;
+                folder = 'FOLDAAAA';
+                dao._account.folders = [{
+                    type: 'Folder',
+                    path: folder,
+                    messages: []
+                }];
+
+                localListStub = sinon.stub(dao, '_localListMessages').yields(null, []);
+                imapListStub = sinon.stub(dao, '_imapListMessages').yields(null, [nonWhitelistedMail]);
+                imapGetStub = sinon.stub(dao, '_imapGetMessage').yields(null, nonWhitelistedMail);
+                localStoreStub = sinon.stub(dao, '_localStoreMessages').yields();
+
+                dao.sync({
+                    folder: folder
+                }, function(err) {
+                    expect(err).to.not.exist;
+
+                    if (invocations === 0) {
+                        expect(dao._account.busy).to.be.true;
+                        invocations++;
+                        return;
+                    }
+
+                    expect(dao._account.busy).to.be.false;
+                    expect(dao._account.folders[0].messages).to.be.empty;
+                    expect(localListStub.calledOnce).to.be.true;
+                    expect(imapListStub.calledOnce).to.be.true;
+                    expect(imapGetStub.called).to.be.false;
+                    expect(localStoreStub.called).to.be.false;
+                    expect(keychainStub.getReceiverPublicKey.called).to.be.false;
+                    expect(pgpStub.decrypt.called).to.be.false;
                     done();
                 });
             });
