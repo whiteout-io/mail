@@ -45,6 +45,10 @@ define(function(require) {
 
         $scope.$watch('state.mailList.selected', function() {
             var mail = $scope.state.mailList.selected;
+            if (!mail) {
+                return;
+            }
+
             // display sender security status
             mail.from.forEach(checkPublicKey);
             // display recipient security status
