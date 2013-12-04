@@ -2,6 +2,7 @@ define(function(require) {
     'use strict';
 
     var angular = require('angular'),
+        _ = require('underscore'),
         appController = require('js/app-controller'),
         IScroll = require('iscroll'),
         str = require('js/app-config').string,
@@ -9,8 +10,6 @@ define(function(require) {
         emailDao, outboxBo;
 
     var MailListCtrl = function($scope) {
-        var firstSelect = true;
-
         //
         // Init
         //
@@ -18,37 +17,37 @@ define(function(require) {
         emailDao = appController._emailDao;
         outboxBo = appController._outboxBo;
 
-        // // push handler
-        // if (emailDao) {
-        //     emailDao.onIncomingMessage = function(email) {
-        //         if (email.subject.indexOf(str.subjectPrefix) === -1) {
-        //             return;
-        //         }
+        // push handler
+        if (emailDao) {
+            emailDao.onIncomingMessage = function(email) {
+                if (email.subject.indexOf(str.subjectPrefix) === -1) {
+                    return;
+                }
 
-        //         // sync
-        //         $scope.synchronize(function() {
-        //             // show notification
-        //             notificationForEmail(email);
-        //         });
-        //     };
-        //     chrome.notifications.onClicked.addListener(notificationClicked);
-        // }
+                // sync
+                $scope.synchronize(function() {
+                    // show notification
+                    notificationForEmail(email);
+                });
+            };
+            chrome.notifications.onClicked.addListener(notificationClicked);
+        }
 
-        // function notificationClicked(uidString) {
-        //     var email, uid = parseInt(uidString, 10);
+        function notificationClicked(uidString) {
+            var email, uid = parseInt(uidString, 10);
 
-        //     if (isNaN(uid)) {
-        //         return;
-        //     }
+            if (isNaN(uid)) {
+                return;
+            }
 
-        //     email = _.findWhere(getFolder().messages, {
-        //         uid: uid
-        //     });
+            email = _.findWhere(getFolder().messages, {
+                uid: uid
+            });
 
-        //     if (email) {
-        //         $scope.select(email);
-        //     }
-        // }
+            if (email) {
+                $scope.select(email);
+            }
+        }
 
         //
         // scope functions
@@ -66,7 +65,7 @@ define(function(require) {
             // markAsRead(email);
         };
 
-        $scope.synchronize = function() {
+        $scope.synchronize = function(callback) {
             // if we're in the outbox, don't do an imap sync
             if (getFolder().type === 'Outbox') {
                 updateStatus('Last update: ', new Date());
@@ -90,8 +89,11 @@ define(function(require) {
                 displayEmails(getFolder().messages);
                 // display last update
                 updateStatus('Last update: ', new Date());
-
                 $scope.$apply();
+
+                if (callback) {
+                    callback();
+                }
             });
         };
 
@@ -100,83 +102,40 @@ define(function(require) {
                 return;
             }
 
-            // var index, currentFolder, trashFolder, outboxFolder;
+            var index, currentFolder, outboxFolder;
 
-            // currentFolder = getFolder();
-
+            currentFolder = getFolder();
             // trashFolder = _.findWhere($scope.folders, {
             //     type: 'Trash'
             // });
+            outboxFolder = _.findWhere($scope.account.folders, {
+                type: 'Outbox'
+            });
 
-            // outboxFolder = _.findWhere($scope.folders, {
-            //     type: 'Outbox'
-            // });
+            if (currentFolder === outboxFolder) {
+                $scope.onError({
+                    errMsg: 'Deleting messages from the outbox is not yet supported.'
+                });
+                return;
+            }
 
-            // if (currentFolder === outboxFolder) {
-            //     $scope.onError({
-            //         errMsg: 'Deleting messages from the outbox is not yet supported.'
-            //     });
-            //     return;
-            // }
+            removeAndShowNext();
+            $scope.synchronize();
 
-            // if (currentFolder === trashFolder) {
-            //     $scope.state.dialog = {
-            //         open: true,
-            //         title: 'Delete',
-            //         message: 'Delete this message permanently?',
-            //         callback: function(ok) {
-            //             if (!ok) {
-            //                 return;
-            //             }
-
-            //             removeLocalAndShowNext();
-            //             removeRemote();
-            //         }
-            //     };
-            //     return;
-            // }
-
-            // removeLocalAndShowNext();
-            // removeRemote();
-
-            // function removeLocalAndShowNext() {
-            //     index = getFolder().messages.indexOf(email);
-            //     // show the next mail
-            //     if (getFolder().messages.length > 1) {
-            //         // if we're about to delete the last entry of the array, show the previous (i.e. the one below in the list), 
-            //         // otherwise show the next one (i.e. the one above in the list)
-            //         $scope.select(_.last(getFolder().messages) === email ? getFolder().messages[index - 1] : getFolder().messages[index + 1]);
-            //     } else {
-            //         // if we have only one email in the array, show nothing
-            //         $scope.select();
-            //         $scope.state.mailList.selected = undefined;
-            //     }
-            //     getFolder().messages.splice(index, 1);
-            // }
-
-            // function removeRemote() {
-            //     if (getFolder() === trashFolder) {
-            //         emailDao.imapDeleteMessage({
-            //             folder: getFolder().path,
-            //             uid: email.uid
-            //         }, moved);
-            //         return;
-            //     }
-
-            //     emailDao.imapMoveMessage({
-            //         folder: getFolder().path,
-            //         uid: email.uid,
-            //         destination: trashFolder.path
-            //     }, moved);
-            // }
-
-            // function moved(err) {
-            //     if (err) {
-            //         getFolder().messages.splice(index, 0, email);
-            //         $scope.onError(err);
-            //         return;
-            //     }
-            // }
+            function removeAndShowNext() {
+                index = getFolder().messages.indexOf(email);
+                // show the next mail
+                if (getFolder().messages.length > 1) {
+                    // if we're about to delete the last entry of the array, show the previous (i.e. the one below in the list), 
+                    // otherwise show the next one (i.e. the one above in the list)
+                    $scope.select(_.last(getFolder().messages) === email ? getFolder().messages[index - 1] : getFolder().messages[index + 1]);
+                } else {
+                    // if we have only one email in the array, show nothing
+                    $scope.select();
+                    $scope.state.mailList.selected = undefined;
+                }
+                getFolder().messages.splice(index, 1);
+            }
         };
 
         $scope._stopWatchTask = $scope.$watch('state.nav.currentFolder', function() {
@@ -186,7 +145,6 @@ define(function(require) {
 
             // development... display dummy mail objects
             if (!window.chrome || !chrome.identity) {
-                firstSelect = true;
                 updateStatus('Last update: ', new Date());
                 getFolder().messages = createDummyMails();
                 displayEmails(getFolder().messages);
@@ -217,14 +175,14 @@ define(function(require) {
         // helper functions
         //
 
-        // function notificationForEmail(email) {
-        //     chrome.notifications.create('' + email.uid, {
-        //         type: 'basic',
-        //         title: email.from[0].address,
-        //         message: email.subject.split(str.subjectPrefix)[1],
-        //         iconUrl: chrome.runtime.getURL(cfg.iconPath)
-        //     }, function() {});
-        // }
+        function notificationForEmail(email) {
+            chrome.notifications.create('' + email.uid, {
+                type: 'basic',
+                title: email.from[0].address,
+                message: email.subject.split(str.subjectPrefix)[1],
+                iconUrl: chrome.runtime.getURL(cfg.iconPath)
+            }, function() {});
+        }
 
         function updateStatus(lbl, time) {
             $scope.lastUpdateLbl = lbl;
@@ -248,12 +206,6 @@ define(function(require) {
         // function markAsRead(email) {
         //     // marking mails as read is meaningless in the outbox
         //     if (getFolder().type === 'Outbox') {
-        //         return;
-        //     }
-
-        //     // don't mark top selected email automatically
-        //     if (firstSelect) {
-        //         firstSelect = false;
         //         return;
         //     }
 
