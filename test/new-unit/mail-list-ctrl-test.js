@@ -178,7 +178,7 @@ define(function(require) {
         });
 
         describe('synchronize', function() {
-            it('should do imap sync and display mails', function() {
+            it('should do imap sync and display mails', function(done) {
                 scope._stopWatchTask();
 
                 emailDaoMock.sync.yieldsAsync();
@@ -195,6 +195,7 @@ define(function(require) {
                 scope.synchronize(function() {
                     expect(scope.state.nav.currentFolder.messages).to.deep.equal(emails);
                     expect(scope.state.mailList.selected).to.exist;
+                    done();
                 });
 
             });
