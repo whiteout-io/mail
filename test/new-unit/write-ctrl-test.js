@@ -165,21 +165,37 @@ define(function(require) {
 
         describe('send to outbox', function() {
             it('should work', function(done) {
-                scope.state.writer.open = true;
-                scope.to = 'a, b, c';
-                scope.body = 'asd';
-                scope.subject = 'yaddablabla';
-                scope.toKey = 'Public Key';
+                var verifyToSpy = sinon.spy(scope, 'verifyTo'),
+                    re = {
+                        from: [{
+                            address: 'pity@dafool'
+                        }],
+                        subject: 'Ermahgerd!',
+                        sentDate: new Date(),
+                        body: 'so much body!'
+                    };
 
-                emailDaoMock.store.withArgs(sinon.match(function(mail) {
-                    return mail.from[0].address === emailAddress && mail.to.length === 3;
-                })).yieldsAsync();
-                scope.emptyOutbox = function() {
+                scope.state.nav = {
+                    currentFolder: 'currentFolder'
+                };
+
+                scope.emptyOutbox = function() {};
+
+                emailDaoMock.store.yields();
+                emailDaoMock.markAnswered.yields();
+
+                scope.onError = function(err) {
+                    expect(err).to.not.exist;
                     expect(scope.state.writer.open).to.be.false;
                     expect(emailDaoMock.store.calledOnce).to.be.true;
+                    expect(emailDaoMock.store.calledOnce).to.be.true;
+                    expect(verifyToSpy.calledOnce).to.be.true;
+
+                    scope.verifyTo.restore();
                     done();
                 };
 
+                scope.state.writer.write(re);
                 scope.sendToOutbox();
             });
 

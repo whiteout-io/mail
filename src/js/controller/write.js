@@ -189,7 +189,7 @@ define(function(require) {
             $scope.replyTo.answered = true;
 
             // mark remote imap object
-            emailDao.imapMarkAnswered({
+            emailDao.markAnswered({
                 uid: $scope.replyTo.uid,
                 folder: $scope.state.nav.currentFolder.path
             }, $scope.onError);
