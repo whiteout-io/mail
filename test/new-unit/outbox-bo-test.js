@@ -16,12 +16,16 @@ define(function(require) {
         beforeEach(function() {
             emailDaoStub = sinon.createStubInstance(EmailDAO);
             emailDaoStub._account = {
-                emailAddress: dummyUser
+                emailAddress: dummyUser,
+                folders: [{
+                    type: 'Outbox'
+                }]
             };
             devicestorageStub = sinon.createStubInstance(DeviceStorageDAO);
             keychainStub = sinon.createStubInstance(KeychainDAO);
             invitationDaoStub = sinon.createStubInstance(InvitationDAO);
             outbox = new OutboxBO(emailDaoStub, keychainStub, devicestorageStub, invitationDaoStub);
+            outbox.init();
         });
 
         afterEach(function() {});
@@ -35,6 +39,7 @@ define(function(require) {
                 expect(outbox._invitationDao).to.equal(invitationDaoStub);
                 expect(outbox._outboxBusy).to.be.false;
                 expect(outbox.pendingEmails).to.be.empty;
+                expect(emailDaoStub._account.folders[0].messages).to.equal(outbox.pendingEmails);
             });
         });
 

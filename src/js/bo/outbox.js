@@ -37,6 +37,13 @@ define(function(require) {
         this.pendingEmails = [];
     };
 
+    OutboxBO.prototype.init = function() {
+        var outboxFolder = _.findWhere(this._emailDao._account.folders, {
+            type: 'Outbox'
+        });
+        outboxFolder.messages = this.pendingEmails;
+    };
+
     /** 
      * This function activates the periodic checking of the local device storage for pending mails.
      * @param {Function} callback(error, pendingMailsCount) Callback that informs you about the count of pending mails.
@@ -89,8 +96,11 @@ define(function(require) {
                 // update outbox folder count
                 emails = pending;
 
-                // keep an independent shallow copy of the pending mails array in the member
-                self.pendingEmails = pending.slice();
+                // fill all the pending mails into the pending mails array
+                self.pendingEmails.length = 0; //fastest way to empty an array
+                pending.forEach(function(i) {
+                    self.pendingEmails.push(i);
+                });
 
                 // sending pending mails
                 processMails();

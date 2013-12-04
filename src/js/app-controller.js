@@ -224,7 +224,11 @@ define(function(require) {
 
             self._emailDao.init({
                 account: account
-            }, callback);
+            }, function(err, keypair) {
+                self._outboxBo.init();
+                callback(err, keypair);
+            });
+
         }
     };
 
