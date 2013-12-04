@@ -13,6 +13,9 @@ define(function(require) {
         crypto = appController._crypto;
         keychain = appController._keychain;
 
+        // set default value so that the popover height is correct on init
+        $scope.fingerprint = 'XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX';
+
         $scope.state.read = {
             open: false,
             toggle: function(to) {
