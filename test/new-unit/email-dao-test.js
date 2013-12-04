@@ -10,7 +10,7 @@ define(function(require) {
         expect = chai.expect;
 
 
-    describe('Email DAO 2 unit tests', function() {
+    describe('Email DAO unit tests', function() {
         var dao, keychainStub, imapClientStub, smtpClientStub, pgpStub, devicestorageStub;
 
         var emailAddress, passphrase, asymKeySize, mockkeyId, dummyEncryptedMail,
@@ -104,6 +104,19 @@ define(function(require) {
         });
 
         afterEach(function() {});
+
+        describe('push', function() {
+            it('should work', function(done) {
+                var o = {};
+
+                dao.onIncomingMessage = function(obj) {
+                    expect(obj).to.equal(o);
+                    done();
+                };
+                
+                dao._imapClient.onIncomingMessage(o);
+            });
+        });
 
         describe('init', function() {
             beforeEach(function() {
