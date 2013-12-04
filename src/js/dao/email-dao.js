@@ -490,6 +490,8 @@ define(function(require) {
         }
 
         function handleMessage(message, localCallback) {
+            message.subject = message.subject.split(str.subjectPrefix)[1];
+
             if (containsArmoredCiphertext(message)) {
                 decrypt(message, localCallback);
                 return;
@@ -679,7 +681,7 @@ define(function(require) {
 
             // build encrypted text body
             email.body = greeting + message + ct + signature;
-            email.subject = email.subject;
+            email.subject = str.subjectPrefix + email.subject;
         }
     };
 
@@ -860,6 +862,7 @@ define(function(require) {
 
                 mails.forEach(function(mail) {
                     mail.body = str.cryptPrefix + mail.body.split(str.cryptPrefix)[1].split(str.cryptSuffix)[0] + str.cryptSuffix;
+                    mail.subject = mail.subject.split(str.subjectPrefix)[1];
                     self._crypto.decrypt(mail.body, ownKeys.publicKeyArmored, function(err, decrypted) {
                         mail.body = err ? err.errMsg : decrypted;
                         after();

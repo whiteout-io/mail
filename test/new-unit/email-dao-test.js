@@ -54,7 +54,7 @@ define(function(require) {
                 to: [{
                     address: 'qwe@qwe.de'
                 }],
-                subject: '[whiteout] qweasd',
+                subject: 'qweasd',
                 body: 'asd'
             };
             nonWhitelistedMail = {
@@ -592,7 +592,10 @@ define(function(require) {
                 pgpStub.decrypt.withArgs(dummyEncryptedMail.body, mockKeyPair.publicKey).yields(null, dummyDecryptedMail.body);
                 imapListStub = sinon.stub(dao, '_imapListMessages').withArgs({
                     folder: folder
-                }).yields(null, [dummyEncryptedMail]);
+                }).yields(null, [{
+                    uid: dummyEncryptedMail.uid,
+                    subject: '[whiteout] ' + dummyEncryptedMail // the object has already been manipulated as a side-effect...
+                }]);
 
                 dao.sync({
                     folder: folder
