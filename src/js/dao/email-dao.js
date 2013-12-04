@@ -530,6 +530,8 @@ define(function(require) {
                         decrypted = err.errMsg;
                     }
 
+                    // set encrypted flag
+                    email.encrypted = true;
                     setBodyAndContinue(decrypted);
                 });
             });
