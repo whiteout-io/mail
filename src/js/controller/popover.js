@@ -33,6 +33,7 @@ define(function(require) {
                     var width = elm[0].offsetWidth;
                     var height = elm[0].offsetHeight;
 
+                    popover[0].style.transition = 'opacity 0.4s linear';
                     popover[0].style.top = (top + height / 2 - popover[0].offsetHeight / 2) + 'px';
                     popover[0].style.left = (left + width) + 'px';
                     popover[0].style.opacity = '1';
@@ -40,7 +41,10 @@ define(function(require) {
             });
 
             elm.on('mouseout', function() {
+                popover[0].style.transition = 'opacity 0.4s linear, top 0.4s step-end, left 0.4s step-end';
                 popover[0].style.opacity = '0';
+                popover[0].style.top = '-9999px';
+                popover[0].style.left = '-9999px';
             });
         };
     });
