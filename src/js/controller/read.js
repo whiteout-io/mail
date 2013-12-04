@@ -28,7 +28,13 @@ define(function(require) {
         };
 
         $scope.getFingerprint = function(address) {
+            $scope.fingerprint = 'Fingerprint cannot be displayed. Public key not found for that user.';
             keychain.getReceiverPublicKey(address, function(err, pubkey) {
+                if (err) {
+                    $scope.onError(err);
+                    return;
+                }
+
                 var fpr = crypto.getFingerprint(pubkey.publicKey);
                 var formatted = fpr.slice(0, 4) + ' ' + fpr.slice(4, 8) + ' ' + fpr.slice(8, 12) + ' ' + fpr.slice(12, 16) + ' ' + fpr.slice(16, 20) + ' ' + fpr.slice(20, 24) + ' ' + fpr.slice(24, 28) + ' ' + fpr.slice(28, 32) + ' ' + fpr.slice(32, 36) + ' ' + fpr.slice(36);
 
@@ -36,6 +42,32 @@ define(function(require) {
                 $scope.$apply();
             });
         };
+
+        $scope.$watch('state.mailList.selected', function() {
+            var mail = $scope.state.mailList.selected;
+            // display sender security status
+            mail.from.forEach(checkPublicKey);
+            // display recipient security status
+            mail.to.forEach(checkPublicKey);
+        });
+
+        function checkPublicKey(user) {
+            user.secure = undefined;
+            keychain.getReceiverPublicKey(user.address, function(err, pubkey) {
+                if (err) {
+                    $scope.onError(err);
+                    return;
+                }
+
+                if (pubkey && pubkey.publicKey) {
+                    user.secure = true;
+                } else {
+                    user.secure = false;
+                }
+
+                $scope.$apply();
+            });
+        }
     };
 
     //
