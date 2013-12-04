@@ -12,6 +12,7 @@
         <div>
           <input type="password" ng-model="state.passphrase" placeholder="Enter passphrase" tabindex="1" focus-me="true">
           <input type="password" ng-model="state.confirmation" ng-class="{error: state.confirmation !== state.passphrase}" placeholder="Confirm passphrase" tabindex="2">
+          <span class="popover-info" data-icon-append="&#xe010;" popover="#passphrase-info"></span>
         </div>
         <div>
           <button type="submit" ng-click="confirmPassphrase()" class="btn" ng-disabled="!state.passphrase || state.passphrase !== state.confirmation" tabindex="3">Generate keypair</button>
@@ -38,3 +39,15 @@
 <div class="lightbox-overlay" ng-class="{'show': state.dialog.open}">
   <div class="lightbox lightbox-effect view-dialog" ng-include="'tpl/dialog.html'"></div>
 </div>
+
+<!-- popovers -->
+<div id="passphrase-info" class="popover right" ng-controller="PopoverCtrl">
+  <div class="arrow"></div>
+  <div class="popover-title"><b>What is this?</b></div>
+  <div class="popover-content">
+    <p>A passphrase is like a password but longer.</p>
+    <p>If your device is lost or stolen the passphrase protects the contents of your mailbox.</p>
+    <p>The passphrase should consist of multiple words that are easy to remember.</p>
+    <p>You cannot change your passphrase at a later time.</p>
+  </div>
+</div><!--/.popover-->

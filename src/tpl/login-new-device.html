@@ -9,8 +9,14 @@
     <p>You are already registered on another device. To access your emails on this device, please import your key file.</p>
     
     <form>
-      <div><input type="file" file-reader tabindex="1"></div>
-      <div><input type="password" ng-model="passphrase" ng-class="{error:incorrect}" placeholder="Passphrase" tabindex="2" focus-me="true"></div>
+      <div>
+        <input type="file" file-reader tabindex="1">
+        <span class="popover-info" data-icon-append="&#xe010;" popover="#keyfile-info"></span>
+      </div>
+      <div>
+        <input type="password" ng-model="passphrase" ng-class="{error:incorrect}" placeholder="Passphrase" tabindex="2" focus-me="true">        
+        <span class="popover-info" data-icon-append="&#xe010;" popover="#passphrase-info"></span>
+      </div>
       <div><button type="submit" ng-click="confirmPassphrase()" class="btn" ng-disabled="!key" tabindex="3">Import</button>
     </form>
   </div>
@@ -20,3 +26,24 @@
 <div class="lightbox-overlay" ng-class="{'show': state.dialog.open}">
   <div class="lightbox lightbox-effect view-dialog" ng-include="'tpl/dialog.html'"></div>
 </div>
+
+<!-- popovers -->
+<div id="keyfile-info" class="popover right" ng-controller="PopoverCtrl">
+  <div class="arrow"></div>
+  <div class="popover-title"><b>What is this?</b></div>
+  <div class="popover-content">
+    <p>The keyfile contains your PGP keys.</p>
+    <p>It can be exported on your first computer under "Account".</p>
+    <p>You can import it from a USB flash drive. Never send the keyfile to yourself via email.</p>
+  </div>
+</div><!--/.popover-->
+
+<div id="passphrase-info" class="popover right" ng-controller="PopoverCtrl">
+  <div class="arrow"></div>
+  <div class="popover-title"><b>What is this?</b></div>
+  <div class="popover-content">
+    <p>The passphrase protects your encrypted mailbox.</p>
+    <p>There is no way to access your messages without your passphrase.</p>
+    <p>If you have forgotten your passphrase, please request an account reset by sending an email to <b>support@whiteout.io</b>. You will not be able to read previous messages after a reset.</p>
+  </div>
+</div><!--/.popover-->

@@ -28,12 +28,3 @@
 <div class="lightbox-overlay" ng-class="{'show': state.dialog.open}">
   <div class="lightbox lightbox-effect view-dialog" ng-include="'tpl/dialog.html'"></div>
 </div>
-
-<!-- popover  -->
-<div class="popover right" ng-controller="PopoverCtrl">
-  <div class="arrow"></div>
-  <div ng-switch="state.popover.title !== undefined">
-    <div ng-switch-when="true" class="popover-title"><b>{{state.popover.title}}</b></div>
-  </div>
-  <div class="popover-content">{{state.popover.content}}</div>
-</div><!--/.popover-->

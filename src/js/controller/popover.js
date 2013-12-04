@@ -18,14 +18,8 @@ define(function(require) {
     var ngModule = angular.module('popover', []);
     ngModule.directive('popover', function() {
         return function(scope, elm, attrs) {
-            var popover = angular.element(document.querySelector('.popover'));
-
-            var model = attrs.popover;
-            scope.$watch(model, function(value) {
-                // set popover title and content
-                scope.state.popover.title = attrs.popoverTitle;
-                scope.state.popover.content = value;
-            });
+            var selector = attrs.popover;
+            var popover = angular.element(document.querySelector(selector));
 
             elm.on('mouseover', function() {
                 // set popover position

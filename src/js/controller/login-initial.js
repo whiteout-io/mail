@@ -21,7 +21,6 @@ define(function(require) {
         };
         $scope.state.ui = states.IDLE; // initial state
 
-
         //
         // scope functions
         //

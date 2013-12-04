@@ -11,6 +11,7 @@
     <form>
       <div>
        <input type="password" ng-model="passphrase" ng-change="change()" ng-class="{error:incorrect}" placeholder="Passphrase" tabindex="1" focus-me="true">
+       <span class="popover-info" data-icon-append="&#xe010;" popover="#passphrase-info"></span>
       </div>
       <div>
         <button type="submit" ng-click="confirmPassphrase()" class="btn" data-icon="&#xe009;" ng-disabled="!buttonEnabled" tabindex="2">Unlock</button>
@@ -23,3 +24,14 @@
 <div class="lightbox-overlay" ng-class="{'show': state.dialog.open}">
   <div class="lightbox lightbox-effect view-dialog" ng-include="'tpl/dialog.html'"></div>
 </div>
+
+<!-- popovers -->
+<div id="passphrase-info" class="popover right" ng-controller="PopoverCtrl">
+  <div class="arrow"></div>
+  <div class="popover-title"><b>What is this?</b></div>
+  <div class="popover-content">
+    <p>The passphrase protects your encrypted mailbox.</p>
+    <p>There is no way to access your messages without your passphrase.</p>
+    <p>If you have forgotten your passphrase, please request an account reset by sending an email to <b>support@whiteout.io</b>. You will not be able to read previous messages after a reset.</p>
+  </div>
+</div><!--/.popover-->
