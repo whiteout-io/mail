@@ -619,7 +619,7 @@ define(function(require) {
             // public key found... encrypt and send
             self._encrypt({
                 email: email,
-                keys: receiverPubkey.publicKey
+                keys: [receiverPubkey.publicKey]
             }, function(err, email) {
                 if (err) {
                     callback(err);
@@ -645,7 +645,7 @@ define(function(require) {
         var self = this,
             pt = options.email.body;
 
-        options.keys = [options.keys] || [];
+        options.keys = options.keys || [];
 
         // get own public key so send message can be read
         self._crypto.exportKeys(function(err, ownKeys) {
