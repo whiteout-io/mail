@@ -6,17 +6,17 @@ define(function(require) {
         mocks = require('angularMocks'),
         WriteCtrl = require('js/controller/write'),
         EmailDAO = require('js/dao/email-dao'),
-        DeviceStorageDAO = require('js/dao/devicestorage-dao'),
         KeychainDAO = require('js/dao/keychain-dao'),
         appController = require('js/app-controller');
 
     describe('Write controller unit test', function() {
-        var ctrl, scope, origEmailDao, emailDaoMock, keychainMock, deviceStorageMock, emailAddress;
+        var ctrl, scope, origEmailDao, emailDaoMock, keychainMock, emailAddress;
 
         beforeEach(function() {
             origEmailDao = appController._emailDao;
             emailDaoMock = sinon.createStubInstance(EmailDAO);
             appController._emailDao = emailDaoMock;
+
             emailAddress = 'fred@foo.com';
             emailDaoMock._account = {
                 emailAddress: emailAddress,
@@ -24,9 +24,6 @@ define(function(require) {
 
             keychainMock = sinon.createStubInstance(KeychainDAO);
             emailDaoMock._keychain = keychainMock;
-
-            deviceStorageMock = sinon.createStubInstance(DeviceStorageDAO);
-            emailDaoMock._devicestorage = deviceStorageMock;
 
             angular.module('writetest', []);
             mocks.module('writetest');
@@ -145,21 +142,37 @@ define(function(require) {
 
         describe('send to outbox', function() {
             it('should work', function(done) {
-                scope.state.writer.open = true;
-                scope.to = 'a, b, c';
-                scope.body = 'asd';
-                scope.subject = 'yaddablabla';
-                scope.toKey = 'Public Key';
+                var verifyToSpy = sinon.spy(scope, 'verifyTo'),
+                    re = {
+                        from: [{
+                            address: 'pity@dafool'
+                        }],
+                        subject: 'Ermahgerd!',
+                        sentDate: new Date(),
+                        body: 'so much body!'
+                    };
 
-                deviceStorageMock.storeList.withArgs(sinon.match(function(mail) {
-                    return mail[0].from[0].address === emailAddress && mail[0].to.length === 3;
-                })).yieldsAsync();
-                scope.emptyOutbox = function() {
+                scope.state.nav = {
+                    currentFolder: 'currentFolder'
+                };
+
+                scope.emptyOutbox = function() {};
+
+                emailDaoMock.store.yields();
+                emailDaoMock.markAnswered.yields();
+
+                scope.onError = function(err) {
+                    expect(err).to.not.exist;
                     expect(scope.state.writer.open).to.be.false;
-                    expect(deviceStorageMock.storeList.calledOnce).to.be.true;
+                    expect(emailDaoMock.store.calledOnce).to.be.true;
+                    expect(emailDaoMock.store.calledOnce).to.be.true;
+                    expect(verifyToSpy.calledOnce).to.be.true;
+
+                    scope.verifyTo.restore();
                     done();
                 };
 
+                scope.state.writer.write(re);
                 scope.sendToOutbox();
             });
 
@@ -170,8 +183,8 @@ define(function(require) {
                 scope.subject = 'yaddablabla';
                 scope.toKey = 'Public Key';
 
-                deviceStorageMock.storeList.withArgs(sinon.match(function(mail) {
-                    return mail[0].from[0].address === emailAddress && mail[0].to.length === 3;
+                emailDaoMock.store.withArgs(sinon.match(function(mail) {
+                    return mail.from[0].address === emailAddress && mail.to.length === 3;
                 })).yields({
                     errMsg: 'snafu'
                 });
@@ -179,7 +192,7 @@ define(function(require) {
                 scope.onError = function(err) {
                     expect(err).to.exist;
                     expect(scope.state.writer.open).to.be.true;
-                    expect(deviceStorageMock.storeList.calledOnce).to.be.true;
+                    expect(emailDaoMock.store.calledOnce).to.be.true;
                     done();
                 };
 

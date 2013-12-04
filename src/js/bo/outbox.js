@@ -12,10 +12,36 @@ define(function(require) {
      * The local outbox takes care of the emails before they are being sent.
      * It also checks periodically if there are any mails in the local device storage to be sent.
      */
-    var OutboxBO = function(emailDao, invitationDao) {
+    var OutboxBO = function(emailDao, keychain, devicestorage, invitationDao) {
+        /** @private */
         this._emailDao = emailDao;
+
+        /** @private */
+        this._keychain = keychain;
+
+        /** @private */
+        this._devicestorage = devicestorage;
+
+
+        /** @private */
         this._invitationDao = invitationDao;
+
+        /**
+         * Semaphore-esque flag to avoid 'concurrent' calls to _processOutbox when the timeout fires, but a call is still in process.
+         * @private */
         this._outboxBusy = false;
+
+        /**
+         * Pending, unsent emails stored in the outbox. Updated on each call to _processOutbox
+         * @public */
+        this.pendingEmails = [];
+    };
+
+    OutboxBO.prototype.init = function() {
+        var outboxFolder = _.findWhere(this._emailDao._account.folders, {
+            type: 'Outbox'
+        });
+        outboxFolder.messages = this.pendingEmails;
     };
 
     /** 
@@ -60,7 +86,7 @@ define(function(require) {
             self._outboxBusy = true;
 
             // get last item from outbox
-            self._emailDao._devicestorage.listItems(dbType, 0, null, function(err, pending) {
+            self._emailDao.list(function(err, pending) {
                 if (err) {
                     self._outboxBusy = false;
                     callback(err);
@@ -69,6 +95,12 @@ define(function(require) {
 
                 // update outbox folder count
                 emails = pending;
+
+                // fill all the pending mails into the pending mails array
+                self.pendingEmails.length = 0; //fastest way to empty an array
+                pending.forEach(function(i) {
+                    self.pendingEmails.push(i);
+                });
 
                 // sending pending mails
                 processMails();
@@ -80,12 +112,12 @@ define(function(require) {
             if (emails.length === 0) {
                 // in the navigation controller, this updates the folder count
                 self._outboxBusy = false;
-                callback(null, 0);
+                callback(null, self.pendingEmails.length);
                 return;
             }
 
             // in the navigation controller, this updates the folder count
-            callback(null, emails.length);
+            callback(null, self.pendingEmails.length);
             var email = emails.shift();
             checkReceivers(email);
         }
@@ -107,7 +139,7 @@ define(function(require) {
 
             // find out if there are unregistered users
             email.to.forEach(function(recipient) {
-                self._emailDao._keychain.getReceiverPublicKey(recipient.address, function(err, key) {
+                self._keychain.getReceiverPublicKey(recipient.address, function(err, key) {
                     if (err) {
                         self._outboxBusy = false;
                         callback(err);
@@ -187,7 +219,7 @@ define(function(require) {
                     };
 
                 // send invitation mail
-                self._emailDao.send(invitationMail, function(err) {
+                self._emailDao.sendPlaintext(invitationMail, function(err) {
                     if (err) {
                         self._outboxBusy = false;
                         callback(err);
@@ -199,7 +231,10 @@ define(function(require) {
         }
 
         function sendEncrypted(email) {
-            self._emailDao.encryptedSend(email, function(err) {
+            removeFromPendingMails(email);
+            self._emailDao.sendEncrypted({
+                email: email
+            }, function(err) {
                 if (err) {
                     self._outboxBusy = false;
                     callback(err);
@@ -208,6 +243,12 @@ define(function(require) {
 
                 removeFromStorage(email.id);
             });
+        }
+
+        // update the member so that the outbox can visualize
+        function removeFromPendingMails(email) {
+            var i = self.pendingEmails.indexOf(email);
+            self.pendingEmails.splice(i, 1);
         }
 
         function removeFromStorage(id) {
@@ -221,7 +262,7 @@ define(function(require) {
 
             // delete email from local storage
             var key = dbType + '_' + id;
-            self._emailDao._devicestorage.removeList(key, function(err) {
+            self._devicestorage.removeList(key, function(err) {
                 if (err) {
                     self._outboxBusy = false;
                     callback(err);

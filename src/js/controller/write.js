@@ -159,9 +159,7 @@ define(function(require) {
                 });
             });
 
-            // set an id for the email and store in outbox
-            email.id = util.UUID();
-            emailDao._devicestorage.storeList([email], 'email_OUTBOX', function(err) {
+            emailDao.store(email, function(err) {
                 if (err) {
                     $scope.onError(err);
                     return;
@@ -185,7 +183,7 @@ define(function(require) {
             $scope.replyTo.answered = true;
 
             // mark remote imap object
-            emailDao.imapMarkAnswered({
+            emailDao.markAnswered({
                 uid: $scope.replyTo.uid,
                 folder: $scope.state.nav.currentFolder.path
             }, $scope.onError);

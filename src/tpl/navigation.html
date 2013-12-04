@@ -4,7 +4,7 @@
   </header>
 
   <ul class="nav-primary">
-    <li ng-repeat="folder in folders" ng-switch="folder.count !== undefined">
+    <li ng-repeat="folder in account.folders" ng-switch="folder.count !== undefined">
       <a href="#" ng-click="openFolder(folder); $event.preventDefault()">
         {{folder.type}}
         <span class="label-wrapper" ng-switch-when="true"><span class="label label-light">{{folder.count}}</span></span>

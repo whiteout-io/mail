@@ -39,7 +39,10 @@ define(function(require) {
                     encryptedKey: $scope.key.privateKeyArmored
                 };
 
-                emailDao.unlock(keypair, $scope.passphrase, function(err) {
+                emailDao.unlock({
+                    keypair: keypair,
+                    passphrase: $scope.passphrase
+                }, function(err) {
                     if (err) {
                         $scope.incorrect = true;
                         $scope.onError(err);

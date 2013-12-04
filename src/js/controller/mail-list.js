@@ -1,24 +1,23 @@
 define(function(require) {
     'use strict';
 
-    var _ = require('underscore'),
-        angular = require('angular'),
+    var angular = require('angular'),
+        _ = require('underscore'),
         appController = require('js/app-controller'),
         IScroll = require('iscroll'),
         str = require('js/app-config').string,
         cfg = require('js/app-config').config,
-        emailDao;
+        emailDao, outboxBo;
 
     var MailListCtrl = function($scope) {
-        var offset = 0,
-            num = 100,
-            firstSelect = true;
-
         //
         // Init
         //
 
         emailDao = appController._emailDao;
+        outboxBo = appController._outboxBo;
+
+        // push handler
         if (emailDao) {
             emailDao.onIncomingMessage = function(email) {
                 if (email.subject.indexOf(str.subjectPrefix) === -1) {
@@ -41,7 +40,7 @@ define(function(require) {
                 return;
             }
 
-            email = _.findWhere($scope.emails, {
+            email = _.findWhere(getFolder().messages, {
                 uid: uid
             });
 
@@ -62,29 +61,39 @@ define(function(require) {
 
             $scope.state.mailList.selected = email;
 
-            // mark selected message as 'read'
-            markAsRead(email);
+            // // mark selected message as 'read'
+            // markAsRead(email);
         };
 
         $scope.synchronize = function(callback) {
+            // if we're in the outbox, don't do an imap sync
+            if (getFolder().type === 'Outbox') {
+                updateStatus('Last update: ', new Date());
+                displayEmails(outboxBo.pendingEmails);
+                return;
+            }
+
             updateStatus('Syncing ...');
-            // sync from imap to local db
-            syncImapFolder({
-                folder: getFolder().path,
-                offset: -num,
-                num: offset
-            }, function() {
-                // list again from local db after syncing
-                listLocalMessages({
-                    folder: getFolder().path,
-                    offset: offset,
-                    num: num
-                }, function() {
-                    updateStatus('Last update: ', new Date());
-                    if (callback) {
-                        callback();
-                    }
-                });
+
+            // let email dao handle sync transparently
+            emailDao.sync({
+                folder: getFolder().path
+            }, function(err) {
+                if (err) {
+                    updateStatus('Error on sync!');
+                    $scope.onError(err);
+                    return;
+                }
+
+                // sort emails
+                displayEmails(getFolder().messages);
+                // display last update
+                updateStatus('Last update: ', new Date());
+                $scope.$apply();
+
+                if (callback) {
+                    callback();
+                }
             });
         };
 
@@ -93,88 +102,67 @@ define(function(require) {
                 return;
             }
 
-            var index, trashFolder;
+            var index, currentFolder, outboxFolder;
 
-            trashFolder = _.findWhere($scope.folders, {
-                type: 'Trash'
+            currentFolder = getFolder();
+            // trashFolder = _.findWhere($scope.folders, {
+            //     type: 'Trash'
+            // });
+            outboxFolder = _.findWhere($scope.account.folders, {
+                type: 'Outbox'
             });
 
-            if (getFolder() === trashFolder) {
-                $scope.state.dialog = {
-                    open: true,
-                    title: 'Delete',
-                    message: 'Delete this message permanently?',
-                    callback: function(ok) {
-                        if (!ok) {
-                            return;
-                        }
-
-                        removeLocalAndShowNext();
-                        removeRemote();
-                    }
-                };
+            if (currentFolder === outboxFolder) {
+                $scope.onError({
+                    errMsg: 'Deleting messages from the outbox is not yet supported.'
+                });
                 return;
             }
 
-            removeLocalAndShowNext();
-            removeRemote();
+            removeAndShowNext();
+            $scope.synchronize();
 
-            function removeLocalAndShowNext() {
-                index = $scope.emails.indexOf(email);
+            function removeAndShowNext() {
+                index = getFolder().messages.indexOf(email);
                 // show the next mail
-                if ($scope.emails.length > 1) {
+                if (getFolder().messages.length > 1) {
                     // if we're about to delete the last entry of the array, show the previous (i.e. the one below in the list), 
                     // otherwise show the next one (i.e. the one above in the list)
-                    $scope.select(_.last($scope.emails) === email ? $scope.emails[index - 1] : $scope.emails[index + 1]);
+                    $scope.select(_.last(getFolder().messages) === email ? getFolder().messages[index - 1] : getFolder().messages[index + 1]);
                 } else {
                     // if we have only one email in the array, show nothing
                     $scope.select();
                     $scope.state.mailList.selected = undefined;
                 }
-                $scope.emails.splice(index, 1);
-            }
-
-            function removeRemote() {
-                if (getFolder() === trashFolder) {
-                    emailDao.imapDeleteMessage({
-                        folder: getFolder().path,
-                        uid: email.uid
-                    }, moved);
-                    return;
-                }
-
-                emailDao.imapMoveMessage({
-                    folder: getFolder().path,
-                    uid: email.uid,
-                    destination: trashFolder.path
-                }, moved);
-            }
-
-            function moved(err) {
-                if (err) {
-                    $scope.emails.splice(index, 0, email);
-                    $scope.onError(err);
-                    return;
-                }
+                getFolder().messages.splice(index, 1);
             }
         };
 
-        $scope.$watch('state.nav.currentFolder', function() {
+        $scope._stopWatchTask = $scope.$watch('state.nav.currentFolder', function() {
             if (!getFolder()) {
                 return;
             }
 
-            // production... in chrome packaged app
-            if (window.chrome && chrome.identity) {
-                initList();
+            // development... display dummy mail objects
+            if (!window.chrome || !chrome.identity) {
+                updateStatus('Last update: ', new Date());
+                getFolder().messages = createDummyMails();
+                displayEmails(getFolder().messages);
                 return;
             }
 
-            // development... display dummy mail objects
-            firstSelect = true;
-            updateStatus('Last update: ', new Date());
-            $scope.emails = createDummyMails();
-            $scope.select($scope.emails[0]);
+            // production... in chrome packaged app
+
+            // if we're in the outbox, read directly from there.
+            if (getFolder().type === 'Outbox') {
+                updateStatus('Last update: ', new Date());
+                displayEmails(outboxBo.pendingEmails);
+                return;
+            }
+
+            displayEmails(getFolder().messages);
+
+            $scope.synchronize();
         });
 
         // share local scope functions with root state
@@ -196,60 +184,6 @@ define(function(require) {
             }, function() {});
         }
 
-        function initList() {
-            updateStatus('Read cache ...');
-
-            // list messaged from local db
-            listLocalMessages({
-                folder: getFolder().path,
-                offset: offset,
-                num: num
-            }, function sync() {
-                updateStatus('Syncing ...');
-                $scope.$apply();
-
-                // sync imap folder to local db
-                $scope.synchronize();
-            });
-        }
-
-        function syncImapFolder(options, callback) {
-            emailDao.unreadMessages(getFolder().path, function(err, unreadCount) {
-                if (err) {
-                    updateStatus('Error on sync!');
-                    $scope.onError(err);
-                    return;
-                }
-                // set unread count in folder model
-                getFolder().count = unreadCount;
-                $scope.$apply();
-
-                emailDao.imapSync(options, function(err) {
-                    if (err) {
-                        updateStatus('Error on sync!');
-                        $scope.onError(err);
-                        return;
-                    }
-
-                    callback();
-                });
-            });
-        }
-
-        function listLocalMessages(options, callback) {
-            firstSelect = true;
-            emailDao.listMessages(options, function(err, emails) {
-                if (err) {
-                    updateStatus('Error listing cache!');
-                    $scope.onError(err);
-                    return;
-                }
-
-                callback(emails);
-                displayEmails(emails);
-            });
-        }
-
         function updateStatus(lbl, time) {
             $scope.lastUpdateLbl = lbl;
             $scope.lastUpdate = (time) ? time : '';
@@ -257,59 +191,54 @@ define(function(require) {
 
         function displayEmails(emails) {
             if (!emails || emails.length < 1) {
-                $scope.emails = [];
                 $scope.select();
-                $scope.$apply();
                 return;
             }
 
-            // sort by uid
-            emails = _.sortBy(emails, function(e) {
-                return -e.uid;
-            });
-
-            $scope.emails = emails;
-            $scope.select($scope.emails[0]);
-            $scope.$apply();
+            if (!$scope.state.mailList.selected) {
+                // select first message
+                $scope.select(emails[emails.length - 1]);
+            }
         }
 
         function getFolder() {
             return $scope.state.nav.currentFolder;
         }
 
-        function markAsRead(email) {
-            // don't mark top selected email automatically
-            if (firstSelect) {
-                firstSelect = false;
-                return;
-            }
+        // function markAsRead(email) {
+        //     // marking mails as read is meaningless in the outbox
+        //     if (getFolder().type === 'Outbox') {
+        //         return;
+        //     }
 
-            $scope.state.read.toggle(true);
-            if (!window.chrome || !chrome.socket) {
-                return;
-            }
+        //     $scope.state.read.toggle(true);
+        //     if (!window.chrome || !chrome.socket) {
+        //         return;
+        //     }
 
-            if (!email.unread) {
-                return;
-            }
+        //     if (!email.unread) {
+        //         return;
+        //     }
 
-            email.unread = false;
-            emailDao.imapMarkMessageRead({
-                folder: getFolder().path,
-                uid: email.uid
-            }, function(err) {
-                if (err) {
-                    updateStatus('Error marking read!');
-                    $scope.onError(err);
-                    return;
-                }
-            });
-        }
+        //     email.unread = false;
+        //     emailDao.imapMarkMessageRead({
+        //         folder: getFolder().path,
+        //         uid: email.uid
+        //     }, function(err) {
+        //         if (err) {
+        //             updateStatus('Error marking read!');
+        //             $scope.onError(err);
+        //             return;
+        //         }
+        //     });
+        // }
     };
 
     function createDummyMails() {
+        var uid = 0;
+
         var Email = function(unread, attachments, answered, html) {
-            this.uid = '1';
+            this.uid = uid++;
             this.from = [{
                 name: 'Whiteout Support',
                 address: 'support@whiteout.io'
@@ -336,17 +265,17 @@ define(function(require) {
     //
 
     var ngModule = angular.module('mail-list', []);
-    ngModule.directive('ngIscroll', function($parse) {
+    ngModule.directive('ngIscroll', function() {
         return {
             link: function(scope, elm, attrs) {
-                var model = $parse(attrs.ngIscroll);
+                var model = attrs.ngIscroll;
                 scope.$watch(model, function() {
                     var myScroll;
                     // activate iscroll
                     myScroll = new IScroll(elm[0], {
                         mouseWheel: true
                     });
-                });
+                }, true);
             }
         };
     });

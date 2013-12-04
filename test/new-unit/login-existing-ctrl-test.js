@@ -71,7 +71,10 @@ define(function(require) {
                         pathSpy = sinon.spy(location, 'path');
                     scope.passphrase = passphrase;
                     keychainMock.getUserKeyPair.withArgs(emailAddress).yields(null, keypair);
-                    emailDaoMock.unlock.withArgs(keypair, passphrase).yields(null);
+                    emailDaoMock.unlock.withArgs({
+                        keypair: keypair,
+                        passphrase: passphrase
+                    }).yields();
 
 
                     scope.confirmPassphrase();

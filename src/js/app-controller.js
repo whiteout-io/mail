@@ -155,7 +155,7 @@ define(function(require) {
      */
     self.init = function(userId, token, callback) {
         var auth, imapOptions, smtpOptions, certificate,
-            lawnchairDao, restDao, pubkeyDao, invitationDao,
+            lawnchairDao, restDao, pubkeyDao, invitationDao, emailDao,
             keychain, imapClient, smtpClient, pgp, userStorage, xhr;
 
         // fetch pinned local ssl certificate
@@ -213,10 +213,10 @@ define(function(require) {
             pgp = new PGP();
             self._crypto = pgp;
             userStorage = new DeviceStorageDAO(lawnchairDao);
-            self._emailDao = new EmailDAO(keychain, imapClient, smtpClient, pgp, userStorage);
+            self._emailDao = emailDao = new EmailDAO(keychain, imapClient, smtpClient, pgp, userStorage);
 
             invitationDao = new InvitationDAO(restDao);
-            self._outboxBo = new OutboxBO(self._emailDao, invitationDao);
+            self._outboxBo = new OutboxBO(emailDao, keychain, userStorage, invitationDao);
 
             // init email dao
             var account = {
@@ -224,7 +224,13 @@ define(function(require) {
                 asymKeySize: config.asymKeySize
             };
 
-            self._emailDao.init(account, callback);
+            self._emailDao.init({
+                account: account
+            }, function(err, keypair) {
+                self._outboxBo.init();
+                callback(err, keypair);
+            });
+
         }
     };
 

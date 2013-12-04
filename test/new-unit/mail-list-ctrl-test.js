@@ -12,7 +12,7 @@ define(function(require) {
 
     describe('Mail List controller unit test', function() {
         var scope, ctrl, origEmailDao, emailDaoMock, keychainMock, deviceStorageMock,
-            emailAddress, notificationClickedHandler,
+            emailAddress, notificationClickedHandler, emails,
             hasChrome, hasNotifications, hasSocket, hasRuntime, hasIdentity;
 
         beforeEach(function() {
@@ -44,6 +44,18 @@ define(function(require) {
             if (!hasIdentity) {
                 window.chrome.identity = {};
             }
+
+            emails = [{
+                unread: true
+            }, {
+                unread: true
+            }, {
+                unread: true
+            }];
+            appController._outboxBo = {
+                pendingEmails: emails
+            };
+
             origEmailDao = appController._emailDao;
             emailDaoMock = sinon.createStubInstance(EmailDAO);
             appController._emailDao = emailDaoMock;
@@ -86,7 +98,7 @@ define(function(require) {
             if (!hasIdentity) {
                 delete window.chrome.identity;
             }
-            
+
             // restore the module
             appController._emailDao = origEmailDao;
         });
@@ -97,13 +109,15 @@ define(function(require) {
                 expect(scope.synchronize).to.exist;
                 expect(scope.remove).to.exist;
                 expect(scope.state.mailList).to.exist;
-                expect(emailDaoMock.onIncomingMessage).to.exist;
+                // expect(emailDaoMock.onIncomingMessage).to.exist;
             });
         });
 
         describe('push notification', function() {
             it('should focus mail and not mark it read', function(done) {
                 var uid, mail, currentFolder;
+
+                scope._stopWatchTask();
 
                 uid = 123;
                 mail = {
@@ -122,20 +136,12 @@ define(function(require) {
                     toggle: function() {}
                 };
                 scope.emails = [mail];
-                emailDaoMock.imapMarkMessageRead.withArgs({
-                    folder: currentFolder,
-                    uid: uid
-                }).yields();
-                emailDaoMock.unreadMessages.yieldsAsync(null, 10);
-                emailDaoMock.imapSync.yieldsAsync();
-                emailDaoMock.listMessages.yieldsAsync(null, [mail]);
+                emailDaoMock.sync.yieldsAsync();
                 window.chrome.notifications.create = function(id, opts) {
                     expect(id).to.equal('123');
                     expect(opts.type).to.equal('basic');
                     expect(opts.message).to.equal('asdasd');
                     expect(opts.title).to.equal('asd');
-                    expect(scope.state.mailList.selected).to.deep.equal(mail);
-                    expect(emailDaoMock.imapMarkMessageRead.callCount).to.equal(0);
                     done();
                 };
 
@@ -144,77 +150,123 @@ define(function(require) {
         });
 
         describe('clicking push notification', function() {
-            it('should focus mail and mark it read', function() {
-                var uid, mail, currentFolder;
+            it('should focus mail', function() {
+                var mail, currentFolder;
 
-                uid = 123;
+                scope._stopWatchTask();
+
                 mail = {
-                    uid: uid,
+                    uid: 123,
                     from: [{
                         address: 'asd'
                     }],
                     subject: '[whiteout] asdasd',
                     unread: true
                 };
-                currentFolder = 'asd';
+                currentFolder = {
+                    type: 'asd',
+                    messages: [mail]
+                };
                 scope.state.nav = {
                     currentFolder: currentFolder
                 };
-                scope.state.read = {
-                    toggle: function() {}
-                };
-                scope.emails = [mail];
-                emailDaoMock.imapMarkMessageRead.withArgs({
-                    folder: currentFolder,
-                    uid: uid
-                }).yields();
 
-                notificationClickedHandler('123'); // first select, irrelevant
                 notificationClickedHandler('123');
 
-                expect(scope.state.mailList.selected).to.deep.equal(mail);
-                expect(emailDaoMock.imapMarkMessageRead.callCount).to.be.at.least(1);
+                expect(scope.state.mailList.selected).to.equal(mail);
             });
         });
-        describe('remove', function() {
-            it('should not delete without a selected mail', function() {
-                scope.remove();
 
-                expect(emailDaoMock.imapDeleteMessage.called).to.be.false;
-            });
+        describe('synchronize', function() {
+            it('should do imap sync and display mails', function(done) {
+                scope._stopWatchTask();
 
-            it('should delete the selected mail from trash folder after clicking ok', function() {
-                var uid, mail, currentFolder;
+                emailDaoMock.sync.yieldsAsync();
 
-                uid = 123;
-                mail = {
-                    uid: uid,
-                    from: [{
-                        address: 'asd'
-                    }],
-                    subject: '[whiteout] asdasd',
-                    unread: true
-                };
-                scope.emails = [mail];
-                currentFolder = {
-                    type: 'Trash'
+                var currentFolder = {
+                    type: 'Inbox',
+                    messages: emails
                 };
                 scope.folders = [currentFolder];
                 scope.state.nav = {
                     currentFolder: currentFolder
                 };
-                emailDaoMock.imapDeleteMessage.yields();
 
-                scope.remove(mail);
-                scope.state.dialog.callback(true);
+                scope.synchronize(function() {
+                    expect(scope.state.nav.currentFolder.messages).to.deep.equal(emails);
+                    expect(scope.state.mailList.selected).to.exist;
+                    done();
+                });
 
-                expect(emailDaoMock.imapDeleteMessage.calledOnce).to.be.true;
-                expect(scope.state.mailList.selected).to.not.exist;
             });
 
-            it('should move the selected mail to the trash folder', function() {
-                var uid, mail, currentFolder, trashFolder;
+            it('should read directly from outbox instead of doing a full imap sync', function() {
+                scope._stopWatchTask();
 
+                var currentFolder = {
+                    type: 'Outbox'
+                };
+                scope.folders = [currentFolder];
+                scope.state.nav = {
+                    currentFolder: currentFolder
+                };
+
+                scope.synchronize();
+
+                // emails array is also used as the outbox's pending mail
+                expect(scope.state.mailList.selected).to.deep.equal(emails[0]);
+            });
+        });
+
+        describe('remove', function() {
+            it('should not delete without a selected mail', function() {
+                scope.remove();
+
+                expect(emailDaoMock.sync.called).to.be.false;
+            });
+
+            it('should not delete from the outbox', function(done) {
+                var currentFolder, mail;
+
+                scope._stopWatchTask();
+
+                scope.account = {};
+                mail = {
+                    uid: 123,
+                    from: [{
+                        address: 'asd'
+                    }],
+                    subject: '[whiteout] asdasd',
+                    unread: true
+                };
+                currentFolder = {
+                    type: 'Outbox',
+                    path: 'OUTBOX',
+                    messages: [mail]
+                };
+
+                scope.emails = [mail];
+                scope.account.folders = [currentFolder];
+                scope.state.nav = {
+                    currentFolder: currentFolder
+                };
+
+                scope.onError = function(err) {
+                    expect(err).to.exist; // would normally display the notification
+                    expect(emailDaoMock.sync.called).to.be.false;
+                    done();
+                };
+
+                scope.remove(mail);
+
+            });
+
+            it('should delete the selected mail', function() {
+                var uid, mail, currentFolder;
+
+                scope._stopWatchTask();
+
+                scope.account = {};
                 uid = 123;
                 mail = {
                     uid: uid,
@@ -224,28 +276,20 @@ define(function(require) {
                     subject: '[whiteout] asdasd',
                     unread: true
                 };
-                scope.emails = [mail];
                 currentFolder = {
                     type: 'Inbox',
-                    path: 'INBOX'
+                    path: 'INBOX',
+                    messages: [mail]
                 };
-                trashFolder = {
-                    type: 'Trash',
-                    path: 'TRASH'
-                };
-                scope.folders = [currentFolder, trashFolder];
+                scope.account.folders = [currentFolder];
                 scope.state.nav = {
                     currentFolder: currentFolder
                 };
-                emailDaoMock.imapMoveMessage.withArgs({
-                    folder: currentFolder,
-                    uid: uid,
-                    destination: trashFolder.path
-                }).yields();
+                emailDaoMock.sync.yields();
 
                 scope.remove(mail);
 
-                expect(emailDaoMock.imapMoveMessage.calledOnce).to.be.true;
+                expect(emailDaoMock.sync.calledOnce).to.be.true;
                 expect(scope.state.mailList.selected).to.not.exist;
             });
         });
