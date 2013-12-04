@@ -93,7 +93,7 @@ define(function(require) {
                     _id: keyId,
                     publicKey: 'a'
                 });
-                emailDaoMock.unlock.withArgs(sinon.match.any, passphrase).yields();
+                emailDaoMock.unlock.yields();
                 keychainMock.putUserKeyPair.yields({
                     errMsg: 'yo mamma.'
                 });
@@ -115,7 +115,7 @@ define(function(require) {
                     _id: keyId,
                     publicKey: 'a'
                 });
-                emailDaoMock.unlock.withArgs(sinon.match.any, passphrase).yields({
+                emailDaoMock.unlock.yields({
                     errMsg: 'yo mamma.'
                 });
 
