@@ -195,8 +195,10 @@ define(function(require) {
                 return;
             }
 
-            // select first message
-            $scope.select(emails[emails.length - 1]);
+            if (!$scope.state.mailList.selected) {
+                // select first message
+                $scope.select(emails[emails.length - 1]);
+            }
         }
 
         function getFolder() {
