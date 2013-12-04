@@ -222,7 +222,9 @@ define(function(require) {
 
         function sendEncrypted(email) {
             removeFromPendingMails(email);
-            self._emailDao.sendEncrypted(email, function(err) {
+            self._emailDao.sendEncrypted({
+                email: email
+            }, function(err) {
                 if (err) {
                     self._outboxBusy = false;
                     callback(err);

@@ -80,7 +80,9 @@ define(function(require) {
                 dummyMails = [member, invited, notinvited];
 
                 emailDaoStub.list.yieldsAsync(null, dummyMails);
-                emailDaoStub.sendEncrypted.yieldsAsync();
+                emailDaoStub.sendEncrypted.withArgs(sinon.match(function(opts) {
+                    return typeof opts.email !== 'undefined' && opts.email.to.address === member.to.address;
+                })).yieldsAsync();
                 emailDaoStub.sendPlaintext.yieldsAsync();
                 devicestorageStub.removeList.yieldsAsync();
                 invitationDaoStub.check.withArgs(sinon.match(function(o) {
