@@ -124,7 +124,10 @@
 }
 
 .popover-info {
-    cursor: pointer;
     color: $color-blue;
     margin-left: 5px;
+
+    &:hover {
+        cursor: pointer;
+    }
 }

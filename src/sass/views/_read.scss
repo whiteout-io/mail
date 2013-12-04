@@ -28,6 +28,10 @@
 
             .label {
                 margin-left: 0.3em;
+
+                &:hover {
+                    cursor: pointer;
+                }
             }
         }
     }
