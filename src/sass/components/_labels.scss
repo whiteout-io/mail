@@ -13,10 +13,10 @@
     transition: background-color 0.3s;
 
     &[data-icon]:before {
-        padding-right: 0.5em
+        padding-right: 0.5em;
     }
     &[data-icon-append]:after {
-        padding-left: 0.5em
+        padding-left: 0.5em;
     }
 }
 
