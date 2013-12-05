@@ -181,12 +181,6 @@ define(function(require) {
 
             // mark list object
             $scope.replyTo.answered = true;
-
-            // mark remote imap object
-            emailDao.markAnswered({
-                uid: $scope.replyTo.uid,
-                folder: $scope.state.nav.currentFolder.path
-            }, $scope.onError);
         }
     };
 

@@ -141,7 +141,7 @@ define(function(require) {
         });
 
         describe('send to outbox', function() {
-            it('should work', function(done) {
+            it('should work', function() {
                 var verifyToSpy = sinon.spy(scope, 'verifyTo'),
                     re = {
                         from: [{
@@ -159,21 +159,15 @@ define(function(require) {
                 scope.emptyOutbox = function() {};
 
                 emailDaoMock.store.yields();
-                emailDaoMock.markAnswered.yields();
-
-                scope.onError = function(err) {
-                    expect(err).to.not.exist;
-                    expect(scope.state.writer.open).to.be.false;
-                    expect(emailDaoMock.store.calledOnce).to.be.true;
-                    expect(emailDaoMock.store.calledOnce).to.be.true;
-                    expect(verifyToSpy.calledOnce).to.be.true;
-
-                    scope.verifyTo.restore();
-                    done();
-                };
 
                 scope.state.writer.write(re);
                 scope.sendToOutbox();
+
+                expect(scope.state.writer.open).to.be.false;
+                expect(emailDaoMock.store.calledOnce).to.be.true;
+                expect(verifyToSpy.calledOnce).to.be.true;
+
+                scope.verifyTo.restore();
             });
 
             it('should not work and not close the write view', function(done) {
