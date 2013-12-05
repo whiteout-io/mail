@@ -118,7 +118,11 @@ define(function(require) {
         });
 
         describe('Encryption', function() {
-            var message = 'Hello, World!';
+            var message = 'asdfs\n\nThursday, Nov 21, 2013 7:38 PM asdf@example.com wrote:\n' +
+                '> asdf\n' +
+                '> \n' +
+                '> Thursday, Nov 21, 2013 7:32 PM asdf@example.com wrote:\n' +
+                '> > secret 3';
 
             beforeEach(function(done) {
                 pgp.importKeys({
@@ -195,7 +199,7 @@ define(function(require) {
                 it('should work', function(done) {
                     pgp.decrypt(ciphertext, pubkey, function(err, pt) {
                         expect(err).to.not.exist;
-                        expect(pt).to.equal(message);
+                        expect(pt).to.equal(message.replace(/\r\n/g, '\n').replace(/[\t ]+\n/g, "\n").replace(/\n/g, '\r\n'));
                         done();
                     });
                 });
