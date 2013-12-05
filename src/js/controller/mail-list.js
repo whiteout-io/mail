@@ -79,6 +79,11 @@ define(function(require) {
             emailDao.sync({
                 folder: getFolder().path
             }, function(err) {
+                if (err && err.code === 409) {
+                    // sync still busy
+                    return;
+                }
+
                 if (err) {
                     updateStatus('Error on sync!');
                     $scope.onError(err);
@@ -176,10 +181,10 @@ define(function(require) {
         //
 
         function notificationForEmail(email) {
-            chrome.notifications.create('' + email.uid, {
+            chrome.notifications.create('i' + email.uid, {
                 type: 'basic',
-                title: email.from[0].address,
-                message: email.subject.split(str.subjectPrefix)[1],
+                title: email.from[0].name || email.from[0].address,
+                message: email.subject.replace(str.subjectPrefix, ''),
                 iconUrl: chrome.runtime.getURL(cfg.iconPath)
             }, function() {});
         }

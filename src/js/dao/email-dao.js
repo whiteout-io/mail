@@ -165,7 +165,8 @@ define(function(require) {
 
         if (self._account.busy) {
             callback({
-                errMsg: 'Sync aborted: Previous sync still in progress'
+                errMsg: 'Sync aborted: Previous sync still in progress',
+                code: 409
             });
             return;
         }

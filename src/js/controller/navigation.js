@@ -2,6 +2,8 @@ define(function(require) {
     'use strict';
 
     var angular = require('angular'),
+        str = require('js/app-config').string,
+        cfg = require('js/app-config').config,
         appController = require('js/app-controller'),
         errorUtil = require('js/util/error'),
         _ = require('underscore'),
@@ -67,6 +69,8 @@ define(function(require) {
                 // get pointer to account/folder/message tree on root scope
                 $scope.$root.account = emailDao._account;
 
+                // set notificatio handler for sent messages
+                outboxBo.onSent = sentNotification;
                 // start checking outbox periodically
                 outboxBo.startChecking($scope.onOutboxUpdate);
                 // make function available globally for write controller
@@ -97,6 +101,15 @@ define(function(require) {
                 count: 0,
                 path: 'TRASH'
             }];
+        }
+
+        function sentNotification(email) {
+            chrome.notifications.create('o' + email.id, {
+                type: 'basic',
+                title: 'Sent successfully!',
+                message: email.subject.replace(str.subjectPrefix, ''),
+                iconUrl: chrome.runtime.getURL(cfg.iconPath)
+            }, function() {});
         }
     };
 

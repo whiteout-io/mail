@@ -66,6 +66,16 @@ define(function(require) {
     };
 
     /**
+     * Private Api which is called whenever a message has been sent
+     * The public callback "onSent" can be set by the caller to get notified.
+     */
+    OutboxBO.prototype._onSent = function(message) {
+        if (typeof this.onSent === 'function') {
+            this.onSent(message);
+        }
+    };
+
+    /**
      * Checks the local device storage for pending mails.
      * @param {Function} callback(error, pendingMailsCount) Callback that informs you about the count of pending mails.
      */
@@ -225,6 +235,10 @@ define(function(require) {
                         callback(err);
                         return;
                     }
+
+                    // fire sent notification
+                    self._onSent(invitationMail);
+
                     invitationFinished();
                 });
             }
@@ -240,6 +254,9 @@ define(function(require) {
                     callback(err);
                     return;
                 }
+
+                // fire sent notification
+                self._onSent(email);
 
                 removeFromStorage(email.id);
             });
