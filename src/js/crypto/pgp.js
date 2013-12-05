@@ -159,11 +159,10 @@ define(function(require) {
             receiverKeys[i] = openpgp.read_publicKey(receiverKeys[i])[0];
         }
 
-        // format: \n -> \r\n
-        plaintext = plaintext.replace(/\r\n/g, '\n').replace(/[\t ]+\n/g, "\n").replace(/\n/g, '\r\n');
-
-        // encrypt and sign the plaintext
         try {
+            // format: \n -> \r\n
+            plaintext = plaintext.replace(/\r\n/g, '\n').replace(/[\t ]+\n/g, "\n").replace(/\n/g, '\r\n');
+            // encrypt and sign the plaintext
             ct = openpgp.write_signed_and_encrypted_message(privateKey, receiverKeys, plaintext);
         } catch (err) {
             callback({
