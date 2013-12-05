@@ -75,7 +75,11 @@ define(function(require) {
             mocks.module('maillisttest');
             mocks.inject(function($rootScope, $controller) {
                 scope = $rootScope.$new();
-                scope.state = {};
+                scope.state = {
+                    read: {
+                        toggle: function() {}
+                    }
+                };
                 ctrl = $controller(MailListCtrl, {
                     $scope: scope
                 });
@@ -210,11 +214,12 @@ define(function(require) {
                 scope.state.nav = {
                     currentFolder: currentFolder
                 };
+                scope.state.mailList.selected = undefined;
 
                 scope.synchronize();
 
                 // emails array is also used as the outbox's pending mail
-                expect(scope.state.mailList.selected).to.deep.equal(emails[0]);
+                expect(scope.state.mailList.selected).to.deep.equal(emails[emails.length - 1]);
             });
         });
 

@@ -60,9 +60,16 @@ define(function(require) {
             }
 
             $scope.state.mailList.selected = email;
+            $scope.state.read.toggle(true);
 
-            // // mark selected message as 'read'
-            // markAsRead(email);
+            // if the email is unread, please sync the new state.
+            // otherweise forget about it.
+            if (!email.unread) {
+                return;
+            }
+
+            email.unread = false;
+            $scope.synchronize();
         };
 
         $scope.synchronize = function(callback) {
@@ -209,34 +216,6 @@ define(function(require) {
         function getFolder() {
             return $scope.state.nav.currentFolder;
         }
-
-        // function markAsRead(email) {
-        //     // marking mails as read is meaningless in the outbox
-        //     if (getFolder().type === 'Outbox') {
-        //         return;
-        //     }
-
-        //     $scope.state.read.toggle(true);
-        //     if (!window.chrome || !chrome.socket) {
-        //         return;
-        //     }
-
-        //     if (!email.unread) {
-        //         return;
-        //     }
-
-        //     email.unread = false;
-        //     emailDao.imapMarkMessageRead({
-        //         folder: getFolder().path,
-        //         uid: email.uid
-        //     }, function(err) {
-        //         if (err) {
-        //             updateStatus('Error marking read!');
-        //             $scope.onError(err);
-        //             return;
-        //         }
-        //     });
-        // }
     };
 
     function createDummyMails() {

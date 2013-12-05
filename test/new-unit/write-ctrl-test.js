@@ -157,23 +157,23 @@ define(function(require) {
                 };
 
                 scope.emptyOutbox = function() {};
-
-                emailDaoMock.store.yields();
-                emailDaoMock.markAnswered.yields();
-
                 scope.onError = function(err) {
                     expect(err).to.not.exist;
                     expect(scope.state.writer.open).to.be.false;
-                    expect(emailDaoMock.store.calledOnce).to.be.true;
-                    expect(emailDaoMock.store.calledOnce).to.be.true;
                     expect(verifyToSpy.calledOnce).to.be.true;
+                    expect(emailDaoMock.store.calledOnce).to.be.true;
+                    expect(emailDaoMock.sync.calledOnce).to.be.true;
 
                     scope.verifyTo.restore();
                     done();
                 };
 
+                emailDaoMock.store.yields();
+                emailDaoMock.sync.yields();
+
                 scope.state.writer.write(re);
                 scope.sendToOutbox();
+
             });
 
             it('should not work and not close the write view', function(done) {

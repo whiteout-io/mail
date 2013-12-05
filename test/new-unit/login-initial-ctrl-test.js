@@ -67,7 +67,9 @@ define(function(require) {
             it('should unlock crypto', function(done) {
                 scope.state.passphrase = passphrase;
                 scope.state.confirmation = passphrase;
-                emailDaoMock.unlock.withArgs({}, passphrase).yields();
+                emailDaoMock.unlock.withArgs({
+                    passphrase: passphrase
+                }).yields();
                 setStateStub = sinon.stub(scope, 'setState', function(state) {
                     if (setStateStub.calledOnce) {
                         expect(state).to.equal(2);
@@ -92,7 +94,9 @@ define(function(require) {
             it('should not work when keypair generation fails', function(done) {
                 scope.state.passphrase = passphrase;
                 scope.state.confirmation = passphrase;
-                emailDaoMock.unlock.withArgs({}, passphrase).yields(new Error('asd'));
+                emailDaoMock.unlock.withArgs({
+                    passphrase: passphrase
+                }).yields(new Error('asd'));
                 setStateStub = sinon.stub(scope, 'setState', function(state) {
                     if (setStateStub.calledOnce) {
                         expect(state).to.equal(2);

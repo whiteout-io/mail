@@ -167,11 +167,11 @@ define(function(require) {
                 $scope.$apply();
                 $scope.emptyOutbox($scope.onOutboxUpdate);
 
-                markAnwsered();
+                markAnswered();
             });
         };
 
-        function markAnwsered() {
+        function markAnswered() {
             // mark replyTo as answered
             if (!$scope.replyTo) {
                 return;
@@ -179,10 +179,7 @@ define(function(require) {
 
             // mark list object
             $scope.replyTo.answered = true;
-
-            // mark remote imap object
-            emailDao.markAnswered({
-                uid: $scope.replyTo.uid,
+            emailDao.sync({
                 folder: $scope.state.nav.currentFolder.path
             }, $scope.onError);
         }

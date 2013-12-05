@@ -143,15 +143,26 @@ define(function(require) {
     EmailDAO.prototype.sync = function(options, callback) {
         /*
          * Here's how delta sync works:
-         * delta1: storage > memory  => we deleted messages, remove from remote
+         *
+         * First, we sync the messages between memory and local storage, based on their uid
+         * delta1: storage > memory  => we deleted messages, remove from remote and memory
          * delta2:  memory > storage => we added messages, push to remote <<< not supported yet
-         * delta3:  memory > imap    => we deleted messages directly from the remote, remove from memory and storage
-         * delta4:    imap > memory  => we have new messages available, fetch to memory and storage
+         *
+         * Second, we check the delta for the flags
+         * deltaF1: memory > storage => we changed flags, sync them to the remote and memory
+         *
+         * Third, we go on to sync between imap and memory, again based on uid
+         * delta3: memory > imap    => we deleted messages directly from the remote, remove from memory and storage
+         * delta4:   imap > memory  => we have new messages available, fetch to memory and storage
+         *
+         * Fourth, we pull changes in the flags downstream
+         * deltaF2: imap > memory  => we changed flags directly on the remote, sync them to the storage and memory
          */
 
         var self = this,
             folder,
-            delta1 /*, delta2 */ , delta3, delta4,
+            delta1 /*, delta2 */ , delta3, delta4, //message 
+            deltaF1, deltaF2,
             isFolderInitialized;
 
 
@@ -238,24 +249,22 @@ define(function(require) {
                 /*
                  * delta1: storage > memory  => we deleted messages, remove from remote
                  * delta2:  memory > storage => we added messages, push to remote
+                 * deltaF1: memory > storage => we changed flags, sync them to the remote and memory
                  */
                 delta1 = checkDelta(messages, folder.messages);
                 // delta2 = checkDelta(folder.messages, messages); // not supported yet
-
-                if (_.isEmpty(delta1) /* && _.isEmpty(delta2)*/ ) {
-                    // if there is no delta, head directly to imap sync
-                    callback();
-                    doImapDelta();
-                    return;
-                }
+                deltaF1 = checkFlags(folder.messages, messages);
 
                 doDelta1();
 
                 function doDelta1() {
+                    if (_.isEmpty(delta1)) {
+                        doDeltaF1();
+                        return;
+                    }
+
                     var after = _.after(delta1.length, function() {
-                        // doDelta2(); when it is implemented
-                        callback();
-                        doImapDelta();
+                        doDeltaF1();
                     });
 
                     delta1.forEach(function(message) {
@@ -272,6 +281,47 @@ define(function(require) {
                             }
 
                             self._localDeleteMessage(deleteMe, function(err) {
+                                if (err) {
+                                    self._account.busy = false;
+                                    callback(err);
+                                    return;
+                                }
+
+                                after();
+                            });
+                        });
+                    });
+                }
+
+                function doDeltaF1() {
+                    if (_.isEmpty(deltaF1)) {
+                        callback();
+                        doImapDelta();
+                        return;
+                    }
+
+                    var after = _.after(deltaF1.length, function() {
+                        callback();
+                        doImapDelta();
+                    });
+
+                    deltaF1.forEach(function(message) {
+                        self._imapMark({
+                            folder: folder.path,
+                            uid: message.uid,
+                            unread: message.unread,
+                            answered: message.answered
+                        }, function(err) {
+                            if (err) {
+                                self._account.busy = false;
+                                callback(err);
+                                return;
+                            }
+
+                            self._localStoreMessages({
+                                folder: folder.path,
+                                emails: [message]
+                            }, function(err) {
                                 if (err) {
                                     self._account.busy = false;
                                     callback(err);
@@ -305,18 +355,13 @@ define(function(require) {
                 });
 
                 /*
-                 * delta3:  memory > imap    => we deleted messages directly from the remote, remove from memory and storage
-                 * delta4:    imap > memory  => we have new messages available, fetch to memory and storage
+                 * delta3: memory > imap   => we deleted messages directly from the remote, remove from memory and storage
+                 * delta4:   imap > memory => we have new messages available, fetch to memory and storage
+                 * deltaF2:  imap > memory => we changed flags directly on the remote, sync them to the storage and memory
                  */
                 delta3 = checkDelta(folder.messages, headers);
                 delta4 = checkDelta(headers, folder.messages);
-
-                if (_.isEmpty(delta3) && _.isEmpty(delta4)) {
-                    // if there is no delta, we're done
-                    self._account.busy = false;
-                    callback();
-                    return;
-                }
+                deltaF2 = checkFlags(headers, folder.messages);
 
                 doDelta3();
 
@@ -358,13 +403,11 @@ define(function(require) {
                 function doDelta4() {
                     // no delta, we're done here
                     if (_.isEmpty(delta4)) {
-                        self._account.busy = false;
-                        callback();
+                        doDeltaF2();
                     }
 
                     var after = _.after(delta4.length, function() {
-                        self._account.busy = false;
-                        callback();
+                        doDeltaF2();
                     });
 
                     delta4.forEach(function(header) {
@@ -392,10 +435,17 @@ define(function(require) {
                                 return;
                             }
 
+                            // create a bastard child of smtp and imap.
+                            // before thinking this is stupid, talk to the guys who wrote this.
+                            header.id = message.id;
+                            header.body = message.body;
+                            header.html = message.html;
+                            header.attachments = message.attachments;
+
                             // add the encrypted message to the local storage
                             self._localStoreMessages({
                                 folder: folder.path,
-                                emails: [message]
+                                emails: [header]
                             }, function(err) {
                                 if (err) {
                                     self._account.busy = false;
@@ -404,7 +454,7 @@ define(function(require) {
                                 }
 
                                 // decrypt and add to folder in memory
-                                handleMessage(message, function(err, cleartextMessage) {
+                                handleMessage(header, function(err, cleartextMessage) {
                                     if (err) {
                                         self._account.busy = false;
                                         callback(err);
@@ -418,6 +468,44 @@ define(function(require) {
                         });
                     });
                 }
+
+                // we have a mismatch concerning flags between imap and memory.
+                // pull changes from imap.
+                function doDeltaF2() {
+                    if (_.isEmpty(deltaF2)) {
+                        self._account.busy = false;
+                        callback();
+                        return;
+                    }
+
+                    var after = _.after(deltaF2.length, function() {
+                        self._account.busy = false;
+                        callback();
+                    });
+
+                    deltaF2.forEach(function(header) {
+                        // we don't work on the header, we work on the live object
+                        var msg = _.findWhere(folder.messages, {
+                            uid: header.uid
+                        });
+
+                        msg.unread = header.unread;
+                        msg.answered = header.answered;
+                        self._localStoreMessages({
+                            folder: folder.path,
+                            emails: [msg]
+                        }, function(err) {
+                            if (err) {
+                                self._account.busy = false;
+                                callback(err);
+                                return;
+                            }
+
+                            after();
+                        });
+                    });
+                }
+
             });
         }
 
@@ -436,6 +524,27 @@ define(function(require) {
                 });
                 if (!exists) {
                     delta.push(msg);
+                }
+            }
+
+            return delta;
+        }
+
+        /*
+         * checks if there are some flags that have changed in a and b
+         */
+        function checkFlags(a, b) {
+            var i, aI, bI,
+                delta = [];
+
+            // find the delta
+            for (i = a.length - 1; i >= 0; i--) {
+                aI = a[i];
+                bI = _.findWhere(b, {
+                    uid: aI.uid
+                });
+                if (bI && (aI.unread !== bI.unread || aI.answered !== bI.answered)) {
+                    delta.push(aI);
                 }
             }
 
@@ -473,9 +582,10 @@ define(function(require) {
                 }
 
                 // public key has been verified, mark the message as read, delete it, and ignore it in the future
-                self.markRead({
+                self._imapMark({
                     folder: options.folder,
-                    uid: email.uid
+                    uid: email.uid,
+                    unread: false
                 }, function(err) {
                     if (err) {
                         localCallback(err);
@@ -552,19 +662,12 @@ define(function(require) {
         }
     };
 
-    EmailDAO.prototype.markRead = function(options, callback) {
+    EmailDAO.prototype._imapMark = function(options, callback) {
         this._imapClient.updateFlags({
             path: options.folder,
             uid: options.uid,
-            unread: false
-        }, callback);
-    };
-
-    EmailDAO.prototype.markAnswered = function(options, callback) {
-        this._imapClient.updateFlags({
-            path: options.folder,
-            uid: options.uid,
-            answered: true
+            unread: options.unread,
+            answered: options.answered
         }, callback);
     };
 
