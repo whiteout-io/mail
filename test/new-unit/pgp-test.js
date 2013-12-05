@@ -199,7 +199,7 @@ define(function(require) {
                 it('should work', function(done) {
                     pgp.decrypt(ciphertext, pubkey, function(err, pt) {
                         expect(err).to.not.exist;
-                        expect(pt).to.equal(message.replace(/\r\n/g, '\n').replace(/[\t ]+\n/g, "\n").replace(/\n/g, '\r\n'));
+                        expect(pt).to.equal(message.replace(/\r\n/g, '\n').replace(/\n/g, '\r\n'));
                         done();
                     });
                 });

@@ -7598,7 +7598,7 @@ function openpgp_encoding_deArmor(text) {
 		// splittedtext[indexBase] - the message
 		// splittedtext[indexBase + 1] - the signature and checksum
 
-		var msg = openpgp_encoding_split_headers(splittedtext[indexBase].replace(/^- /mg, ''));
+		var msg = openpgp_encoding_split_headers(splittedtext[indexBase].replace(/^- /mg, '').replace(/[\t ]+\n/g, "\n"));
 		var sig = openpgp_encoding_split_headers(splittedtext[indexBase + 1].replace(/^- /mg, ''));
 		var sig_sum = openpgp_encoding_split_checksum(sig.body);
 
@@ -8310,7 +8310,7 @@ function _openpgp () {
 	 */
 	function write_signed_and_encrypted_message(privatekey, publickeys, messagetext) {
 		var result = "";
-		var literal = new openpgp_packet_literaldata().write_packet(messagetext.replace(/\r\n/g,"\n").replace(/\n/g,"\r\n"));
+		var literal = new openpgp_packet_literaldata().write_packet(messagetext.replace(/\r/g,'').replace(/\n/g,"\r\n"));
 		util.print_debug_hexstr_dump("literal_packet: |"+literal+"|\n",literal);
 		for (var i = 0; i < publickeys.length; i++) {
 			var onepasssignature = new openpgp_packet_onepasssignature();
@@ -8367,7 +8367,7 @@ function _openpgp () {
 	 */
 	function write_encrypted_message(publickeys, messagetext) {
 		var result = "";
-		var literal = new openpgp_packet_literaldata().write_packet(messagetext.replace(/\r\n/g,"\n").replace(/\n/g,"\r\n"));
+		var literal = new openpgp_packet_literaldata().write_packet(messagetext.replace(/\r/g,'').replace(/\n/g,"\r\n"));
 		util.print_debug_hexstr_dump("literal_packet: |"+literal+"|\n",literal);
 		result = literal;
 		
@@ -8410,9 +8410,10 @@ function _openpgp () {
 	 * This can be directly used to OpenPGP armor the message
 	 */
 	function write_signed_message(privatekey, messagetext) {
-		var sig = new openpgp_packet_signature().write_message_signature(1, messagetext.replace(/\r\n/g,"\n").replace(/\n/g,"\r\n"), privatekey);
-		var result = {text: messagetext.replace(/\r\n/g,"\n").replace(/\n/g,"\r\n"), openpgp: sig.openpgp, hash: sig.hash};
-		return openpgp_encoding_armor(2,result, null, null)
+		var canonicalMsgText = messagetext.replace(/\r/g,'').replace(/[\t ]+\n/g, "\n").replace(/\n/g,"\r\n");
+		var sig = new openpgp_packet_signature().write_message_signature(1, canonicalMsgText, privatekey);
+		var result = {text: canonicalMsgText, openpgp: sig.openpgp, hash: sig.hash};
+		return openpgp_encoding_armor(2, result, null, null)
 	}
 	
 	/**
@@ -12130,21 +12131,18 @@ function openpgp_packet_signature() {
 			break;
 
 		case 1: // 0x01: Signature of a canonical text document.
-			var tohash = data
-				.replace(/\r\n/g,"\n")
-				.replace(/[\t ]+\n/g, "\n")
-				.replace(/\n/g,"\r\n");
+			var canonicalMsgText = data.replace(/\r/g,'').replace(/\n/g,"\r\n");
 			if (openpgp.config.debug) {
-				util.print_debug('tohash: '+util.hexdump(tohash));
+				util.print_debug('canonicalMsgText: '+util.hexdump(canonicalMsgText));
 				util.print_debug('signatureData: '+util.hexdump(this.signatureData));
 				util.print_debug('trailer: '+util.hexdump(trailer));
 			}
 			if (this.version == 4) {
 				this.verified = openpgp_crypto_verifySignature(this.publicKeyAlgorithm, this.hashAlgorithm, 
-					this.MPIs, key.obj.publicKeyPacket.MPIs, tohash+this.signatureData+trailer);
+					this.MPIs, key.obj.publicKeyPacket.MPIs, canonicalMsgText+this.signatureData+trailer);
 			} else if (this.version == 3) {
 				this.verified = openpgp_crypto_verifySignature(this.publicKeyAlgorithm, this.hashAlgorithm, 
-					this.MPIs, key.obj.publicKeyPacket.MPIs, tohash+this.signatureData);
+					this.MPIs, key.obj.publicKeyPacket.MPIs, canonicalMsgText+this.signatureData);
 			} else {
 				this.verified = false;
 			}
