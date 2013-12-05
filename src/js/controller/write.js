@@ -5,7 +5,6 @@ define(function(require) {
         appController = require('js/app-controller'),
         aes = require('cryptoLib/aes-cbc'),
         util = require('cryptoLib/util'),
-        str = require('js/app-config').string,
         emailDao;
 
     //
@@ -13,7 +12,6 @@ define(function(require) {
     //
 
     var WriteCtrl = function($scope, $filter) {
-        $scope.signature = str.signature;
         emailDao = appController._emailDao;
 
         //
