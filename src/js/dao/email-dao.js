@@ -434,13 +434,17 @@ define(function(require) {
                                 return;
                             }
 
-                            message.answered = header.answered;
-                            message.unread = header.unread;
+                            // create a bastard child of smtp and imap.
+                            // before thinking this is stupid, talk to the guys who wrote this.
+                            header.id = message.id;
+                            header.body = message.body;
+                            header.html = message.html;
+                            header.attachments = message.attachments;
 
                             // add the encrypted message to the local storage
                             self._localStoreMessages({
                                 folder: folder.path,
-                                emails: [message]
+                                emails: [header]
                             }, function(err) {
                                 if (err) {
                                     self._account.busy = false;
@@ -449,7 +453,7 @@ define(function(require) {
                                 }
 
                                 // decrypt and add to folder in memory
-                                handleMessage(message, function(err, cleartextMessage) {
+                                handleMessage(header, function(err, cleartextMessage) {
                                     if (err) {
                                         self._account.busy = false;
                                         callback(err);
