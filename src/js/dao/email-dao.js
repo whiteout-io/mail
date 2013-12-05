@@ -404,6 +404,7 @@ define(function(require) {
                     // no delta, we're done here
                     if (_.isEmpty(delta4)) {
                         doDeltaF2();
+                        return;
                     }
 
                     var after = _.after(delta4.length, function() {
