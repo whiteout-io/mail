@@ -177,10 +177,15 @@ define(function(require) {
      * Decrypt and verify a pgp message for a single sender
      */
     PGP.prototype.decrypt = function(ciphertext, senderKey, callback) {
-        var privateKey, msg, keymat, sesskey, decrypted;
+        var privateKey, publicKey, pubKeys, msg, keymat, sesskey, decrypted;
 
         privateKey = openpgp.keyring.exportPrivateKey(0).obj;
-        senderKey = openpgp.read_publicKey(senderKey)[0];
+        publicKey = openpgp.read_publicKey(senderKey)[0];
+        pubKeys = [{
+            armored: senderKey,
+            obj: publicKey,
+            keyId: publicKey.getKeyId()
+        }];
 
         try {
             msg = openpgp.read_message(ciphertext)[0];
@@ -223,15 +228,26 @@ define(function(require) {
 
         // decrypt and verify ciphertext
         try {
-            decrypted = msg.decryptAndVerifySignature(keymat, sesskey, senderKey);
+            decrypted = msg.decryptAndVerifySignature(keymat, sesskey, pubKeys);
         } catch (err) {
             callback({
-                errMsg: 'Error reading PGP message!',
+                errMsg: 'Error decrypting PGP message!',
                 err: err
             });
             return;
         }
 
+        // check if signatures are ok
+        for (var k = 0; k < decrypted.validSignatures.length; k++) {
+            if (!decrypted.validSignatures[k]) {
+                callback({
+                    errMsg: 'Error verifying PGP signature!'
+                });
+                return;
+            }
+        }
+
+        // return decrypted plaintext
         callback(null, decrypted.text);
     };
 
