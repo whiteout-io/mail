@@ -35,7 +35,9 @@ define(function(require) {
 
             $scope.setState(states.PROCESSING);
             setTimeout(function() {
-                emailDao.unlock({}, passphrase, function(err) {
+                emailDao.unlock({
+                    passphrase: passphrase
+                }, function(err) {
                     if (err) {
                         $scope.setState(states.IDLE);
                         $scope.onError(err);
