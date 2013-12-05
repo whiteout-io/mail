@@ -305,7 +305,7 @@ define(function(require) {
                     });
 
                     deltaF1.forEach(function(message) {
-                        self._mark({
+                        self._imapMark({
                             folder: folder.path,
                             uid: message.uid,
                             unread: message.unread,
@@ -581,7 +581,7 @@ define(function(require) {
                 }
 
                 // public key has been verified, mark the message as read, delete it, and ignore it in the future
-                self._mark({
+                self._imapMark({
                     folder: options.folder,
                     uid: email.uid,
                     unread: false
@@ -661,7 +661,7 @@ define(function(require) {
         }
     };
 
-    EmailDAO.prototype._mark = function(options, callback) {
+    EmailDAO.prototype._imapMark = function(options, callback) {
         this._imapClient.updateFlags({
             path: options.folder,
             uid: options.uid,

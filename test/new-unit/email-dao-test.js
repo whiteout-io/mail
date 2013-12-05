@@ -1241,7 +1241,7 @@ define(function(require) {
                 imapListStub = sinon.stub(dao, '_imapListMessages').yields(null, [verificationMail]);
                 imapGetStub = sinon.stub(dao, '_imapGetMessage').yields(null, verificationMail);
                 keychainStub.verifyPublicKey.withArgs(verificationUuid).yields();
-                markReadStub = sinon.stub(dao, '_mark').withArgs({
+                markReadStub = sinon.stub(dao, '_imapMark').withArgs({
                     folder: folder,
                     uid: verificationMail.uid,
                     unread: false
@@ -1291,7 +1291,7 @@ define(function(require) {
                 imapListStub = sinon.stub(dao, '_imapListMessages').yields(null, [verificationMail]);
                 imapGetStub = sinon.stub(dao, '_imapGetMessage').yields(null, verificationMail);
                 keychainStub.verifyPublicKey.yields();
-                markReadStub = sinon.stub(dao, '_mark').yields();
+                markReadStub = sinon.stub(dao, '_imapMark').yields();
                 imapDeleteStub = sinon.stub(dao, '_imapDeleteMessage').yields({});
 
                 dao.sync({
@@ -1334,7 +1334,7 @@ define(function(require) {
                 imapListStub = sinon.stub(dao, '_imapListMessages').yields(null, [verificationMail]);
                 imapGetStub = sinon.stub(dao, '_imapGetMessage').yields(null, verificationMail);
                 keychainStub.verifyPublicKey.yields();
-                markReadStub = sinon.stub(dao, '_mark').yields({});
+                markReadStub = sinon.stub(dao, '_imapMark').yields({});
                 imapDeleteStub = sinon.stub(dao, '_imapDeleteMessage');
 
                 dao.sync({
@@ -1377,7 +1377,7 @@ define(function(require) {
                 imapListStub = sinon.stub(dao, '_imapListMessages').yields(null, [verificationMail]);
                 imapGetStub = sinon.stub(dao, '_imapGetMessage').yields(null, verificationMail);
                 keychainStub.verifyPublicKey.yields({});
-                markReadStub = sinon.stub(dao, '_mark');
+                markReadStub = sinon.stub(dao, '_imapMark');
                 imapDeleteStub = sinon.stub(dao, '_imapDeleteMessage');
 
                 dao.sync({
@@ -1421,7 +1421,7 @@ define(function(require) {
                 localListStub = sinon.stub(dao, '_localListMessages').yields(null, []);
                 imapListStub = sinon.stub(dao, '_imapListMessages').yields(null, [verificationMail]);
                 imapGetStub = sinon.stub(dao, '_imapGetMessage').yields(null, verificationMail);
-                markReadStub = sinon.stub(dao, '_mark');
+                markReadStub = sinon.stub(dao, '_imapMark');
                 imapDeleteStub = sinon.stub(dao, '_imapDeleteMessage');
 
                 dao.sync({
@@ -1464,7 +1464,7 @@ define(function(require) {
                 localListStub = sinon.stub(dao, '_localListMessages').yields(null, []);
                 imapListStub = sinon.stub(dao, '_imapListMessages').yields(null, [verificationMail]);
                 imapGetStub = sinon.stub(dao, '_imapGetMessage').yields(null, verificationMail);
-                markReadStub = sinon.stub(dao, '_mark');
+                markReadStub = sinon.stub(dao, '_imapMark');
                 imapDeleteStub = sinon.stub(dao, '_imapDeleteMessage');
 
                 dao.sync({
@@ -1509,7 +1509,7 @@ define(function(require) {
 
                 localListStub = sinon.stub(dao, '_localListMessages').yields(null, [inStorage]);
                 imapListStub = sinon.stub(dao, '_imapListMessages').yields(null, [inImap]);
-                markStub = sinon.stub(dao, '_mark').withArgs({
+                markStub = sinon.stub(dao, '_imapMark').withArgs({
                     folder: folder,
                     uid: dummyDecryptedMail.uid,
                     unread: dummyDecryptedMail.unread,
@@ -1560,7 +1560,7 @@ define(function(require) {
 
                 localListStub = sinon.stub(dao, '_localListMessages').yields(null, [inStorage]);
                 imapListStub = sinon.stub(dao, '_imapListMessages').yields(null, [inImap]);
-                markStub = sinon.stub(dao, '_mark').yields();
+                markStub = sinon.stub(dao, '_imapMark').yields();
                 localStoreStub = sinon.stub(dao, '_localStoreMessages').yields({});
 
                 dao.sync({
@@ -1596,7 +1596,7 @@ define(function(require) {
 
                 localListStub = sinon.stub(dao, '_localListMessages').yields(null, [inStorage]);
                 imapListStub = sinon.stub(dao, '_imapListMessages').yields(null, [inImap]);
-                markStub = sinon.stub(dao, '_mark').yields({});
+                markStub = sinon.stub(dao, '_imapMark').yields({});
                 localStoreStub = sinon.stub(dao, '_localStoreMessages');
 
                 dao.sync({
@@ -1632,7 +1632,7 @@ define(function(require) {
 
                 localListStub = sinon.stub(dao, '_localListMessages').yields(null, [inStorage]);
                 imapListStub = sinon.stub(dao, '_imapListMessages').yields(null, [inImap]);
-                markStub = sinon.stub(dao, '_mark');
+                markStub = sinon.stub(dao, '_imapMark');
                 localStoreStub = sinon.stub(dao, '_localStoreMessages').withArgs({
                     folder: folder,
                     emails: [dummyDecryptedMail]
@@ -1680,7 +1680,7 @@ define(function(require) {
 
                 localListStub = sinon.stub(dao, '_localListMessages').yields(null, [inStorage]);
                 imapListStub = sinon.stub(dao, '_imapListMessages').yields(null, [inImap]);
-                markStub = sinon.stub(dao, '_mark');
+                markStub = sinon.stub(dao, '_imapMark');
                 localStoreStub = sinon.stub(dao, '_localStoreMessages').yields({});
 
                 dao.sync({
@@ -1718,7 +1718,7 @@ define(function(require) {
                     answered: false
                 }).yields();
 
-                dao._mark({
+                dao._imapMark({
                     folder: 'asdf',
                     uid: 1,
                     unread: false,
