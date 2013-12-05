@@ -118,8 +118,7 @@ define(function(require) {
         });
 
         describe('Encryption', function() {
-            var message = 'Hello, World!',
-                ciphertext;
+            var message = 'Hello, World!';
 
             beforeEach(function(done) {
                 pgp.importKeys({
@@ -151,7 +150,7 @@ define(function(require) {
                 });
             });
 
-            describe('Encrypt', function() {
+            describe('Encrypt and sign', function() {
                 it('should fail', function(done) {
                     var input = null;
 
@@ -166,13 +165,23 @@ define(function(require) {
                     pgp.encrypt(message, [pubkey], function(err, ct) {
                         expect(err).to.not.exist;
                         expect(ct).to.exist;
-                        ciphertext = ct;
                         done();
                     });
                 });
             });
 
-            describe('Decrypt', function() {
+            describe('Decrypt and verify', function() {
+                var ciphertext;
+
+                beforeEach(function(done) {
+                    pgp.encrypt(message, [pubkey], function(err, ct) {
+                        expect(err).to.not.exist;
+                        expect(ct).to.exist;
+                        ciphertext = ct;
+                        done();
+                    });
+                });
+
                 it('should fail', function(done) {
                     var input = 'asdfa\rsdf';
 
