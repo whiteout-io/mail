@@ -52,7 +52,7 @@ define(function(require) {
         message: 'this is a private conversation. To read my encrypted message below, simply install Whiteout Mail for Chrome. The app is really easy to use and automatically encrypts sent emails, so that only the two of us can read them.\n\nOpen Whiteout Mail: https://chrome.google.com/webstore/detail/jjgghafhamholjigjoghcfcekhkonijg',
         cryptPrefix: '-----BEGIN PGP MESSAGE-----',
         cryptSuffix: '-----END PGP MESSAGE-----',
-        signature: 'Sent securely from whiteout mail',
+        signature: 'Sent securely from Whiteout Mail',
         webSite: 'http://whiteout.io',
         verificationSubject: 'New public key uploaded'
     };
