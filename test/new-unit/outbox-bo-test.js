@@ -130,6 +130,15 @@ define(function(require) {
 
                 outbox._processOutbox(onOutboxUpdate);
             });
+
+            it('should fire notification', function(done) {
+                outbox.onSent = function(email) {
+                    expect(email).to.exist;
+                    done();
+                };
+
+                outbox._onSent({});
+            });
         });
     });
 });

@@ -181,7 +181,7 @@ define(function(require) {
         //
 
         function notificationForEmail(email) {
-            chrome.notifications.create('i' + email.uid, {
+            chrome.notifications.create('' + email.uid, {
                 type: 'basic',
                 title: email.from[0].name || email.from[0].address,
                 message: email.subject.replace(str.subjectPrefix, ''),
