@@ -4,9 +4,13 @@
     <h2>{{state.nav.currentFolder.type}}</h2>
   </header>
 
+  <div class="search">
+    <input ng-model="searchText" placeholder="Search">
+  </div>
+
   <div class="list-wrapper" ng-iscroll="state.nav.currentFolder.messages.length">
     <ul class="mail-list">
-      <li ng-class="{'mail-list-active': email === state.mailList.selected, 'mail-list-attachment': email.attachments !== undefined && email.attachments.length > 0, 'mail-list-unread': email.unread && !email.answered, 'mail-list-replied': email.answered}" ng-click="select(email)" ng-repeat="email in state.nav.currentFolder.messages | orderBy:'uid':true">
+      <li ng-class="{'mail-list-active': email === state.mailList.selected, 'mail-list-attachment': email.attachments !== undefined && email.attachments.length > 0, 'mail-list-unread': email.unread && !email.answered, 'mail-list-replied': email.answered}" ng-click="select(email)" ng-repeat="email in state.nav.currentFolder.messages | orderBy:'uid':true | filter:searchText">
         <h3>{{email.from[0].name || email.from[0].address}}</h3>
         <div class="head">
           <p class="subject">{{email.subject || 'No subject'}}</p>

@@ -28,6 +28,14 @@
 
     }
 
+    .search {
+        width: 100%;
+        padding: 0 $padding-horizontal $padding-vertical $padding-horizontal;
+        input {
+            width: 100%;
+        }
+    }
+
     .list-wrapper {
         height: 100%;
         padding: 0 $padding-horizontal;
