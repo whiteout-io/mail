@@ -118,7 +118,7 @@ define(function(require) {
     //
 
     var ngModule = angular.module('navigation', []);
-    ngModule.directive('keyShortcuts', function() {
+    ngModule.directive('keyShortcuts', function($timeout) {
         return function(scope, elm) {
             elm.bind('keydown', function(e) {
                 // global state is not yet set, ignore keybaord shortcuts
@@ -132,6 +132,14 @@ define(function(require) {
                     // n -> new mail
                     e.preventDefault();
                     scope.state.writer.write();
+
+                } else if (modifier && e.keyCode === 70 && !scope.state.writer.open) {
+                    // f -> find
+                    e.preventDefault();
+                    scope.state.mailList.searching = true;
+                    $timeout(function() {
+                        scope.state.mailList.searching = false;
+                    }, 200);
 
                 } else if (modifier && e.keyCode === 82 && scope.state.writer && !scope.state.writer.open && scope.state.mailList.selected) {
                     // r -> reply
