@@ -532,12 +532,23 @@ define(function(require) {
         });
 
         describe('_localListMessages', function() {
-            it('should work', function(done) {
+            it('should work without uid', function(done) {
                 var folder = 'FOLDAAAA';
                 devicestorageStub.listItems.withArgs('email_' + folder, 0, null).yields();
 
                 dao._localListMessages({
                     folder: folder
+                }, done);
+            });
+
+            it('should work with uid', function(done) {
+                var folder = 'FOLDAAAA',
+                    uid = 123;
+                devicestorageStub.listItems.withArgs('email_' + folder + '_' + uid, 0, null).yields();
+
+                dao._localListMessages({
+                    folder: folder,
+                    uid: uid
                 }, done);
             });
         });
@@ -1007,7 +1018,7 @@ define(function(require) {
 
                     expect(err).to.exist;
                     expect(dao._account.busy).to.be.false;
-                    expect(dao._account.folders[0].messages).to.be.empty;
+                    expect(dao._account.folders[0].messages).to.not.be.empty;
                     expect(localListStub.calledOnce).to.be.true;
                     expect(imapListStub.calledOnce).to.be.true;
                     expect(localDeleteStub.calledOnce).to.be.true;
@@ -1517,7 +1528,7 @@ define(function(require) {
                 }).yields();
                 localStoreStub = sinon.stub(dao, '_localStoreMessages').withArgs({
                     folder: folder,
-                    emails: [dummyDecryptedMail]
+                    emails: [inStorage]
                 }).yields();
 
                 dao.sync({
@@ -1537,6 +1548,9 @@ define(function(require) {
                     expect(imapListStub.calledOnce).to.be.true;
                     expect(markStub.calledOnce).to.be.true;
                     expect(localStoreStub.calledOnce).to.be.true;
+
+                    expect(inStorage.unread).to.equal(dummyDecryptedMail.unread);
+                    expect(inStorage.answered).to.equal(dummyDecryptedMail.answered);
 
                     done();
                 });
@@ -1633,10 +1647,7 @@ define(function(require) {
                 localListStub = sinon.stub(dao, '_localListMessages').yields(null, [inStorage]);
                 imapListStub = sinon.stub(dao, '_imapListMessages').yields(null, [inImap]);
                 markStub = sinon.stub(dao, '_imapMark');
-                localStoreStub = sinon.stub(dao, '_localStoreMessages').withArgs({
-                    folder: folder,
-                    emails: [dummyDecryptedMail]
-                }).yields();
+                localStoreStub = sinon.stub(dao, '_localStoreMessages').yields();
 
                 dao.sync({
                     folder: folder
@@ -1651,12 +1662,13 @@ define(function(require) {
 
                     expect(dao._account.busy).to.be.false;
                     expect(dao._account.folders[0]).to.not.be.empty;
-                    expect(localListStub.calledOnce).to.be.true;
+                    expect(localListStub.calledTwice).to.be.true;
                     expect(imapListStub.calledOnce).to.be.true;
                     expect(markStub.called).to.be.false;
                     expect(localStoreStub.calledOnce).to.be.true;
 
                     expect(dummyDecryptedMail.unread).to.equal(inImap.unread);
+                    expect(inStorage.unread).to.equal(inImap.unread);
 
                     done();
                 });
@@ -1697,12 +1709,13 @@ define(function(require) {
                     expect(err).to.exist;
                     expect(dao._account.busy).to.be.false;
                     expect(dao._account.folders[0]).to.not.be.empty;
-                    expect(localListStub.calledOnce).to.be.true;
+                    expect(localListStub.calledTwice).to.be.true;
                     expect(imapListStub.calledOnce).to.be.true;
                     expect(markStub.called).to.be.false;
                     expect(localStoreStub.calledOnce).to.be.true;
 
-                    expect(dummyDecryptedMail.unread).to.equal(inImap.unread);
+                    expect(inStorage.unread).to.equal(inImap.unread);
+                    expect(dummyDecryptedMail.unread).to.equal(true); // the live object has not been touched!
 
                     done();
                 });
