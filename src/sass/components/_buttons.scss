@@ -17,11 +17,9 @@
     background-image: none; // Reset unusual Firefox-on-Android default style; see https://github.com/necolas/normalize.css/issues/214
     background-color: $btn-back-color;
     color: $btn-color;
-    box-shadow: 1px 1px 0px $btn-shadow-color;
     transition: background-color 0.3s;
     text-decoration: none;
     font-weight: normal;
-    -webkit-font-smoothing: auto;
 
     &:hover,
     &:focus {
@@ -56,6 +54,15 @@
     }
     &[data-icon-append]:after {
         padding-left: 0.5em
+    }
+}
+
+.btn-alt {
+    background-color: $color-grey-input;
+
+    &:hover,
+    &:focus {
+        background-color: lighten($color-grey-input, 10%);
     }
 }
 

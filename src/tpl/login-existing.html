@@ -4,13 +4,11 @@
   </div><!--/logo-->
 
   <div class="content">
-    <h1>Unlock mailbox</h1>
-
-    <p>Please enter your passphrase to unlock the mailbox.</p>
+    <p><b>Unlock mailbox.</b> Please enter your passphrase to unlock the mailbox.</p>
 
     <form>
       <div>
-       <input type="password" ng-model="passphrase" ng-change="change()" ng-class="{error:incorrect}" placeholder="Passphrase" tabindex="1" focus-me="true">
+       <input class="input-text" type="password" ng-model="passphrase" ng-change="change()" ng-class="{error:incorrect}" placeholder="Passphrase" tabindex="1" focus-me="true">
        <span class="popover-info" data-icon-append="&#xe010;" popover="#passphrase-info"></span>
       </div>
       <div>

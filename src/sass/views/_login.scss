@@ -6,40 +6,64 @@
     color: $color-grey-dark;
 
     .logo-wrapper {
-        width: 320px;
+        max-width: 700px;
         height: 58px;
-        margin: 125px auto 80px;
-    }
+        margin: 145px auto 75px auto;
 
-    .logo {
-        background-image:url('../img/whiteout_logo.svg');
-        background-repeat: no-repeat;
-        background-size: 320px 58px;
-        width: 320px;
-        height: 58px;
+        .logo {
+            background-image:url('../img/whiteout_logo.svg');
+            background-repeat: no-repeat;
+            background-size: 320px 58px;
+            width: 320px;
+            height: 58px;
+        }
     }
 
     .content {
-        max-width: 500px;
+        max-width: 400px;
         margin-left: auto;
         margin-right: auto;
 
         p {
-            line-height: 150%
+            line-height: 150%;
+
+            b {
+                color: $color-blue;
+            }
         }
 
         div {
-            margin: 25px 0;
+            margin: 20px 0;
         }
 
         input {
-            margin-right: 5px;
-            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        input[type=file] {
+            background-color: white;
             border-width: 1px;
             border-style: solid;
-            border-color: $color-grey-light;
-            padding: 5px;
+            border-color: $color-grey-lighter;
+            color: $color-grey-input;
+            font-size: 1em;
+            padding: 4px 4px;
             outline: none;
+
+            &::-webkit-file-upload-button {
+                background-color: $color-grey-input;
+                border-width: 0px;
+                border-style: solid;
+                color: white;
+                padding: 4px 10px;
+                font-family: inherit;
+                font-size: inherit;
+                line-height: inherit;
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+                outline: none;
+                cursor: pointer;
+            }
         }
 
         .error {
@@ -49,7 +73,10 @@
 }
 
 .view-login-existing {
-    .content {
-        max-width: 400px;
+}
+
+.view-login-initial {
+    button {
+        margin-right: 10px;
     }
 }
