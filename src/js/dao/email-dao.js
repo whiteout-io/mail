@@ -318,9 +318,16 @@ define(function(require) {
                                 return;
                             }
 
+                            var encryptedMsg = _.findWhere(messages, {
+                                uid: message.uid
+                            });
+
+                            encryptedMsg.unread = message.unread;
+                            encryptedMsg.answered = message.answered;
+
                             self._localStoreMessages({
                                 folder: folder.path,
-                                emails: [message]
+                                emails: [encryptedMsg]
                             }, function(err) {
                                 if (err) {
                                     self._account.busy = false;
@@ -485,24 +492,41 @@ define(function(require) {
                     });
 
                     deltaF2.forEach(function(header) {
-                        // we don't work on the header, we work on the live object
-                        var msg = _.findWhere(folder.messages, {
-                            uid: header.uid
-                        });
-
-                        msg.unread = header.unread;
-                        msg.answered = header.answered;
-                        self._localStoreMessages({
+                        // do a short round trip to the database to avoid re-encrypting,
+                        // instead use the encrypted object in the storage
+                        self._localListMessages({
                             folder: folder.path,
-                            emails: [msg]
-                        }, function(err) {
+                            uid: header.uid
+                        }, function(err, storedMsgs) {
                             if (err) {
                                 self._account.busy = false;
                                 callback(err);
                                 return;
                             }
 
-                            after();
+                            var storedMsg = storedMsgs[0];
+                            storedMsg.unread = header.unread;
+                            storedMsg.answered = header.answered;
+
+                            self._localStoreMessages({
+                                folder: folder.path,
+                                emails: [storedMsg]
+                            }, function(err) {
+                                if (err) {
+                                    self._account.busy = false;
+                                    callback(err);
+                                    return;
+                                }
+
+                                // after the metadata of the encrypted object has changed, proceed with the live object
+                                var liveMsg = _.findWhere(folder.messages, {
+                                    uid: header.uid
+                                });
+                                liveMsg.unread = header.unread;
+                                liveMsg.answered = header.answered;
+
+                                after();
+                            });
                         });
                     });
                 }
@@ -796,6 +820,9 @@ define(function(require) {
 
     EmailDAO.prototype._localListMessages = function(options, callback) {
         var dbType = 'email_' + options.folder;
+        if (typeof options.uid !== 'undefined') {
+            dbType = dbType + '_' + options.uid;
+        }
         this._devicestorage.listItems(dbType, 0, null, callback);
     };
 
