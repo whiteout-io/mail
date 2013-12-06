@@ -106,7 +106,7 @@ define(function(require) {
         function sentNotification(email) {
             chrome.notifications.create('o' + email.id, {
                 type: 'basic',
-                title: 'Sent successfully!',
+                title: 'Message sent',
                 message: email.subject.replace(str.subjectPrefix, ''),
                 iconUrl: chrome.runtime.getURL(cfg.iconPath)
             }, function() {});
