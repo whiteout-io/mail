@@ -126,15 +126,22 @@ define(function(require) {
                     return;
                 }
 
-                if (e.keyCode === 78 && scope.state.writer && !scope.state.writer.open) {
+                var modifier = e.ctrlKey || e.metaKey;
+
+                if (modifier && e.keyCode === 78 && scope.state.writer && !scope.state.writer.open) {
                     // n -> new mail
                     e.preventDefault();
                     scope.state.writer.write();
 
-                } else if (e.keyCode === 82 && scope.state.writer && !scope.state.writer.open && scope.state.mailList.selected) {
+                } else if (modifier && e.keyCode === 82 && scope.state.writer && !scope.state.writer.open && scope.state.mailList.selected) {
                     // r -> reply
                     e.preventDefault();
                     scope.state.writer.write(scope.state.mailList.selected);
+
+                } else if (modifier && e.keyCode === 83 && scope.state.writer && !scope.state.writer.open && scope.state.mailList.synchronize) {
+                    // s -> sync folder
+                    e.preventDefault();
+                    scope.state.mailList.synchronize();
 
                 } else if (e.keyCode === 27 && scope.state.writer.open) {
                     // escape -> close writer
@@ -150,11 +157,6 @@ define(function(require) {
                     // escape -> close nav view
                     e.preventDefault();
                     scope.state.nav.toggle(false);
-
-                } else if (e.keyCode === 83 && scope.state.writer && !scope.state.writer.open && scope.state.mailList.synchronize) {
-                    // s -> sync folder
-                    e.preventDefault();
-                    scope.state.mailList.synchronize();
                 }
 
                 scope.$apply();
