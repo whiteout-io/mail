@@ -75,6 +75,12 @@ define(function(require) {
                         return;
                     }
 
+                    // every folder is initially created with an unread count of 0.
+                    // the unread count will be updated after every sync
+                    folders.forEach(function(folder){
+                        folder.count = 0;
+                    });
+
                     self._account.folders = folders;
                     callback(null, keypair);
                 });
@@ -484,15 +490,21 @@ define(function(require) {
                 // we have a mismatch concerning flags between imap and memory.
                 // pull changes from imap.
                 function doDeltaF4() {
-                    if (_.isEmpty(deltaF4)) {
+                    function finishSync() {
                         self._account.busy = false;
+                        folder.count = _.filter(folder.messages, function(msg) {
+                            return msg.unread === true;
+                        }).length;
                         callback();
+                    }
+
+                    if (_.isEmpty(deltaF4)) {
+                        finishSync();
                         return;
                     }
 
                     var after = _.after(deltaF4.length, function() {
-                        self._account.busy = false;
-                        callback();
+                        finishSync();
                     });
 
                     // deltaF4 contains the imap headers that have changed flags
