@@ -149,20 +149,20 @@ define(function(require) {
          * delta2:  memory > storage => we added messages, push to remote <<< not supported yet
          *
          * Second, we check the delta for the flags
-         * deltaF1: memory > storage => we changed flags, sync them to the remote and memory
+         * deltaF2: memory > storage => we changed flags, sync them to the remote and memory
          *
          * Third, we go on to sync between imap and memory, again based on uid
          * delta3: memory > imap    => we deleted messages directly from the remote, remove from memory and storage
          * delta4:   imap > memory  => we have new messages available, fetch to memory and storage
          *
          * Fourth, we pull changes in the flags downstream
-         * deltaF2: imap > memory  => we changed flags directly on the remote, sync them to the storage and memory
+         * deltaF4: imap > memory  => we changed flags directly on the remote, sync them to the storage and memory
          */
 
         var self = this,
             folder,
             delta1 /*, delta2 */ , delta3, delta4, //message 
-            deltaF1, deltaF2,
+            deltaF2, deltaF4,
             isFolderInitialized;
 
 
@@ -202,27 +202,27 @@ define(function(require) {
             folder.messages = [];
             self._localListMessages({
                 folder: folder.path
-            }, function(err, messages) {
+            }, function(err, storedMessages) {
                 if (err) {
                     self._account.busy = false;
                     callback(err);
                     return;
                 }
 
-                if (_.isEmpty(messages)) {
+                if (_.isEmpty(storedMessages)) {
                     // if there's nothing here, we're good
                     callback();
                     doImapDelta();
                     return;
                 }
 
-                var after = _.after(messages.length, function() {
+                var after = _.after(storedMessages.length, function() {
                     callback();
                     doImapDelta();
                 });
 
-                messages.forEach(function(message) {
-                    handleMessage(message, function(err, cleartextMessage) {
+                storedMessages.forEach(function(storedMessage) {
+                    handleMessage(storedMessage, function(err, cleartextMessage) {
                         if (err) {
                             self._account.busy = false;
                             callback(err);
@@ -239,7 +239,7 @@ define(function(require) {
         function doLocalDelta() {
             self._localListMessages({
                 folder: folder.path
-            }, function(err, messages) {
+            }, function(err, storedMessages) {
                 if (err) {
                     self._account.busy = false;
                     callback(err);
@@ -249,28 +249,29 @@ define(function(require) {
                 /*
                  * delta1: storage > memory  => we deleted messages, remove from remote
                  * delta2:  memory > storage => we added messages, push to remote
-                 * deltaF1: memory > storage => we changed flags, sync them to the remote and memory
+                 * deltaF2: memory > storage => we changed flags, sync them to the remote and memory
                  */
-                delta1 = checkDelta(messages, folder.messages);
-                // delta2 = checkDelta(folder.messages, messages); // not supported yet
-                deltaF1 = checkFlags(folder.messages, messages);
+                delta1 = checkDelta(storedMessages, folder.messages);
+                // delta2 = checkDelta(folder.messages, storedMessages); // not supported yet
+                deltaF2 = checkFlags(folder.messages, storedMessages);
 
                 doDelta1();
 
                 function doDelta1() {
                     if (_.isEmpty(delta1)) {
-                        doDeltaF1();
+                        doDeltaF2();
                         return;
                     }
 
                     var after = _.after(delta1.length, function() {
-                        doDeltaF1();
+                        doDeltaF2();
                     });
 
-                    delta1.forEach(function(message) {
+                    // deltaF2 contains references to the in-memory messages
+                    delta1.forEach(function(inMemoryMessage) {
                         var deleteMe = {
                             folder: folder.path,
-                            uid: message.uid
+                            uid: inMemoryMessage.uid
                         };
 
                         self._imapDeleteMessage(deleteMe, function(err) {
@@ -293,24 +294,25 @@ define(function(require) {
                     });
                 }
 
-                function doDeltaF1() {
-                    if (_.isEmpty(deltaF1)) {
+                function doDeltaF2() {
+                    if (_.isEmpty(deltaF2)) {
                         callback();
                         doImapDelta();
                         return;
                     }
 
-                    var after = _.after(deltaF1.length, function() {
+                    var after = _.after(deltaF2.length, function() {
                         callback();
                         doImapDelta();
                     });
 
-                    deltaF1.forEach(function(message) {
+                    // deltaF2 contains references to the in-memory messages
+                    deltaF2.forEach(function(inMemoryMessage) {
                         self._imapMark({
                             folder: folder.path,
-                            uid: message.uid,
-                            unread: message.unread,
-                            answered: message.answered
+                            uid: inMemoryMessage.uid,
+                            unread: inMemoryMessage.unread,
+                            answered: inMemoryMessage.answered
                         }, function(err) {
                             if (err) {
                                 self._account.busy = false;
@@ -318,16 +320,16 @@ define(function(require) {
                                 return;
                             }
 
-                            var encryptedMsg = _.findWhere(messages, {
-                                uid: message.uid
+                            var storedMessage = _.findWhere(storedMessages, {
+                                uid: inMemoryMessage.uid
                             });
 
-                            encryptedMsg.unread = message.unread;
-                            encryptedMsg.answered = message.answered;
+                            storedMessage.unread = inMemoryMessage.unread;
+                            storedMessage.answered = inMemoryMessage.answered;
 
                             self._localStoreMessages({
                                 folder: folder.path,
-                                emails: [encryptedMsg]
+                                emails: [storedMessage]
                             }, function(err) {
                                 if (err) {
                                     self._account.busy = false;
@@ -364,11 +366,11 @@ define(function(require) {
                 /*
                  * delta3: memory > imap   => we deleted messages directly from the remote, remove from memory and storage
                  * delta4:   imap > memory => we have new messages available, fetch to memory and storage
-                 * deltaF2:  imap > memory => we changed flags directly on the remote, sync them to the storage and memory
+                 * deltaF4:  imap > memory => we changed flags directly on the remote, sync them to the storage and memory
                  */
                 delta3 = checkDelta(folder.messages, headers);
                 delta4 = checkDelta(headers, folder.messages);
-                deltaF2 = checkFlags(headers, folder.messages);
+                deltaF4 = checkFlags(headers, folder.messages);
 
                 doDelta3();
 
@@ -384,21 +386,22 @@ define(function(require) {
                         doDelta4();
                     });
 
-                    delta3.forEach(function(header) {
-                        // remove delta3 from memory
-                        var idx = folder.messages.indexOf(header);
-                        folder.messages.splice(idx, 1);
-
+                    // delta3 contains references to the in-memory messages that have been deleted from the remote
+                    delta3.forEach(function(inMemoryMessage) {
                         // remove delta3 from local storage
                         self._localDeleteMessage({
                             folder: folder.path,
-                            uid: header.uid
+                            uid: inMemoryMessage.uid
                         }, function(err) {
                             if (err) {
                                 self._account.busy = false;
                                 callback(err);
                                 return;
                             }
+
+                            // remove delta3 from memory
+                            var idx = folder.messages.indexOf(inMemoryMessage);
+                            folder.messages.splice(idx, 1);
 
                             after();
                         });
@@ -410,19 +413,20 @@ define(function(require) {
                 function doDelta4() {
                     // no delta, we're done here
                     if (_.isEmpty(delta4)) {
-                        doDeltaF2();
+                        doDeltaF4();
                         return;
                     }
 
                     var after = _.after(delta4.length, function() {
-                        doDeltaF2();
+                        doDeltaF4();
                     });
 
-                    delta4.forEach(function(header) {
+                    // delta4 contains the headers that are newly available on the remote
+                    delta4.forEach(function(imapHeader) {
                         // get the whole message
                         self._imapGetMessage({
                             folder: folder.path,
-                            uid: header.uid
+                            uid: imapHeader.uid
                         }, function(err, message) {
                             if (err) {
                                 self._account.busy = false;
@@ -445,15 +449,15 @@ define(function(require) {
 
                             // create a bastard child of smtp and imap.
                             // before thinking this is stupid, talk to the guys who wrote this.
-                            header.id = message.id;
-                            header.body = message.body;
-                            header.html = message.html;
-                            header.attachments = message.attachments;
+                            imapHeader.id = message.id;
+                            imapHeader.body = message.body;
+                            imapHeader.html = message.html;
+                            imapHeader.attachments = message.attachments;
 
                             // add the encrypted message to the local storage
                             self._localStoreMessages({
                                 folder: folder.path,
-                                emails: [header]
+                                emails: [imapHeader]
                             }, function(err) {
                                 if (err) {
                                     self._account.busy = false;
@@ -462,7 +466,7 @@ define(function(require) {
                                 }
 
                                 // decrypt and add to folder in memory
-                                handleMessage(header, function(err, cleartextMessage) {
+                                handleMessage(imapHeader, function(err, cleartextMessage) {
                                     if (err) {
                                         self._account.busy = false;
                                         callback(err);
@@ -479,38 +483,39 @@ define(function(require) {
 
                 // we have a mismatch concerning flags between imap and memory.
                 // pull changes from imap.
-                function doDeltaF2() {
-                    if (_.isEmpty(deltaF2)) {
+                function doDeltaF4() {
+                    if (_.isEmpty(deltaF4)) {
                         self._account.busy = false;
                         callback();
                         return;
                     }
 
-                    var after = _.after(deltaF2.length, function() {
+                    var after = _.after(deltaF4.length, function() {
                         self._account.busy = false;
                         callback();
                     });
 
-                    deltaF2.forEach(function(header) {
+                    // deltaF4 contains the imap headers that have changed flags
+                    deltaF4.forEach(function(imapHeader) {
                         // do a short round trip to the database to avoid re-encrypting,
                         // instead use the encrypted object in the storage
                         self._localListMessages({
                             folder: folder.path,
-                            uid: header.uid
-                        }, function(err, storedMsgs) {
+                            uid: imapHeader.uid
+                        }, function(err, storedMessages) {
                             if (err) {
                                 self._account.busy = false;
                                 callback(err);
                                 return;
                             }
 
-                            var storedMsg = storedMsgs[0];
-                            storedMsg.unread = header.unread;
-                            storedMsg.answered = header.answered;
+                            var storedMessage = storedMessages[0];
+                            storedMessage.unread = imapHeader.unread;
+                            storedMessage.answered = imapHeader.answered;
 
                             self._localStoreMessages({
                                 folder: folder.path,
-                                emails: [storedMsg]
+                                emails: [storedMessage]
                             }, function(err) {
                                 if (err) {
                                     self._account.busy = false;
@@ -519,11 +524,11 @@ define(function(require) {
                                 }
 
                                 // after the metadata of the encrypted object has changed, proceed with the live object
-                                var liveMsg = _.findWhere(folder.messages, {
-                                    uid: header.uid
+                                var inMemoryMessage = _.findWhere(folder.messages, {
+                                    uid: imapHeader.uid
                                 });
-                                liveMsg.unread = header.unread;
-                                liveMsg.answered = header.answered;
+                                inMemoryMessage.unread = imapHeader.unread;
+                                inMemoryMessage.answered = imapHeader.answered;
 
                                 after();
                             });

@@ -1018,7 +1018,7 @@ define(function(require) {
 
                     expect(err).to.exist;
                     expect(dao._account.busy).to.be.false;
-                    expect(dao._account.folders[0].messages).to.be.empty;
+                    expect(dao._account.folders[0].messages).to.not.be.empty;
                     expect(localListStub.calledOnce).to.be.true;
                     expect(imapListStub.calledOnce).to.be.true;
                     expect(localDeleteStub.calledOnce).to.be.true;
