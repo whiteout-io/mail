@@ -131,7 +131,7 @@ define(function(require) {
             it('should init', function(done) {
                 var loginStub, listFolderStub, folders;
 
-                folders = [];
+                folders = [{}, {}];
 
                 // initKeychain
                 devicestorageStub.init.withArgs(emailAddress).yields();
@@ -151,6 +151,7 @@ define(function(require) {
 
                     expect(dao._account).to.equal(account);
                     expect(dao._account.folders).to.equal(folders);
+                    expect(dao._account.folders[0].count).to.equal(0);
                     expect(devicestorageStub.init.calledOnce).to.be.true;
                     expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
 
@@ -600,6 +601,8 @@ define(function(require) {
                     type: 'Folder',
                     path: folder
                 }];
+                dummyDecryptedMail.unread = true;
+                dummyEncryptedMail.unread = true;
 
                 localListStub = sinon.stub(dao, '_localListMessages').withArgs({
                     folder: folder
@@ -631,6 +634,7 @@ define(function(require) {
                     expect(localListStub.calledOnce).to.be.true;
                     expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
                     expect(pgpStub.decrypt.calledOnce).to.be.true;
+                    expect(dao._account.folders[0].count).to.equal(1);
 
                     done();
                 });
@@ -673,6 +677,8 @@ define(function(require) {
                     path: folder
                 }];
 
+                dummyEncryptedMail.unread = true;
+
                 localListStub = sinon.stub(dao, '_localListMessages').withArgs({
                     folder: folder
                 }).yields(null, []);
@@ -706,6 +712,7 @@ define(function(require) {
                     expect(localStoreStub.calledOnce).to.be.true;
                     expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
                     expect(pgpStub.decrypt.calledOnce).to.be.true;
+                    expect(dao._account.folders[0].count).to.equal(1);
 
                     done();
                 });
