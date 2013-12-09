@@ -244,7 +244,7 @@ module.exports = function(grunt) {
 
     // Test/Dev tasks
     grunt.registerTask('dev', ['connect:dev']);
-    grunt.registerTask('test', ['jshint', 'connect:test', 'mocha', 'qunit']);
+    grunt.registerTask('test', ['jshint', 'connect:test', 'mocha']);
     grunt.registerTask('prod', ['connect:prod']);
 
     //

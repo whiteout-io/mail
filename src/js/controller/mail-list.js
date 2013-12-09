@@ -91,6 +91,13 @@ define(function(require) {
                     return;
                 }
 
+                if (err && err.code === 42) {
+                    // offline
+                    updateStatus('Offline mode');
+                    $scope.$apply();
+                    return;
+                }
+
                 if (err) {
                     updateStatus('Error on sync!');
                     $scope.onError(err);
@@ -150,6 +157,19 @@ define(function(require) {
             }
         };
 
+        // share local scope functions with root state
+        $scope.state.mailList = {
+            remove: $scope.remove,
+            synchronize: $scope.synchronize
+        };
+
+        //
+        // watch tasks
+        //
+
+        /**
+         * List emails from folder when user changes folder
+         */
         $scope._stopWatchTask = $scope.$watch('state.nav.currentFolder', function() {
             if (!getFolder()) {
                 return;
@@ -177,11 +197,16 @@ define(function(require) {
             $scope.synchronize();
         });
 
-        // share local scope functions with root state
-        $scope.state.mailList = {
-            remove: $scope.remove,
-            synchronize: $scope.synchronize
-        };
+        /**
+         * Sync current folder when client comes back online
+         */
+        $scope.$watch('account.online', function(isOnline) {
+            if (isOnline) {
+                $scope.synchronize();
+            } else {
+                updateStatus('Offline mode');
+            }
+        }, true);
 
         //
         // helper functions

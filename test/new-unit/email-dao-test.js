@@ -17,7 +17,7 @@ define(function(require) {
             dummyDecryptedMail, mockKeyPair, account, publicKey, verificationMail, verificationUuid,
             nonWhitelistedMail;
 
-        beforeEach(function() {
+        beforeEach(function(done) {
             emailAddress = 'asdf@asdf.com';
             passphrase = 'asdf';
             asymKeySize = 2048;
@@ -98,17 +98,41 @@ define(function(require) {
             pgpStub = sinon.createStubInstance(PGP);
             devicestorageStub = sinon.createStubInstance(DeviceStorageDAO);
 
-            dao = new EmailDAO(keychainStub, imapClientStub, smtpClientStub, pgpStub, devicestorageStub);
+            dao = new EmailDAO(keychainStub, pgpStub, devicestorageStub);
             dao._account = account;
 
             expect(dao._keychain).to.equal(keychainStub);
-            expect(dao._imapClient).to.equal(imapClientStub);
-            expect(dao._smtpClient).to.equal(smtpClientStub);
             expect(dao._crypto).to.equal(pgpStub);
             expect(dao._devicestorage).to.equal(devicestorageStub);
+
+            // connect
+            expect(dao._imapClient).to.not.exist;
+            expect(dao._smtpClient).to.not.exist;
+            expect(dao._account.online).to.be.undefined;
+            dao._account.folders = [];
+            imapClientStub.login.yields();
+
+            dao.onConnect({
+                imapClient: imapClientStub,
+                smtpClient: smtpClientStub
+            }, function(err) {
+                expect(err).to.not.exist;
+                expect(dao._account.online).to.be.true;
+                expect(dao._imapClient).to.equal(dao._imapClient);
+                expect(dao._smtpClient).to.equal(dao._smtpClient);
+                done();
+            });
         });
 
-        afterEach(function() {});
+        afterEach(function(done) {
+            dao.onDisconnect(null, function(err) {
+                expect(err).to.not.exist;
+                expect(dao._account.online).to.be.false;
+                expect(dao._imapClient).to.not.exist;
+                expect(dao._smtpClient).to.not.exist;
+                done();
+            });
+        });
 
         describe('push', function() {
             it('should work', function(done) {
@@ -129,7 +153,7 @@ define(function(require) {
             });
 
             it('should init', function(done) {
-                var loginStub, listFolderStub, folders;
+                var listFolderStub, folders;
 
                 folders = [{}, {}];
 
@@ -138,24 +162,22 @@ define(function(require) {
                 keychainStub.getUserKeyPair.yields(null, mockKeyPair);
 
                 // initFolders
-                loginStub = sinon.stub(dao, '_imapLogin');
                 listFolderStub = sinon.stub(dao, '_imapListFolders');
-                loginStub.yields();
                 listFolderStub.yields(null, folders);
 
                 dao.init({
                     account: account
                 }, function(err, keyPair) {
                     expect(err).to.not.exist;
+                    expect(dao._account.busy).to.be.false;
+                    expect(dao._account.online).to.be.false;
                     expect(keyPair).to.equal(mockKeyPair);
 
                     expect(dao._account).to.equal(account);
                     expect(dao._account.folders).to.equal(folders);
-                    expect(dao._account.folders[0].count).to.equal(0);
                     expect(devicestorageStub.init.calledOnce).to.be.true;
                     expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
 
-                    expect(loginStub.calledOnce).to.be.true;
                     expect(listFolderStub.calledOnce).to.be.true;
 
                     done();
@@ -163,16 +185,14 @@ define(function(require) {
             });
 
             it('should fail due to error while listing folders', function(done) {
-                var loginStub, listFolderStub;
+                var listFolderStub;
 
                 // initKeychain
                 devicestorageStub.init.withArgs(emailAddress).yields();
                 keychainStub.getUserKeyPair.yields(null, mockKeyPair);
 
                 // initFolders
-                loginStub = sinon.stub(dao, '_imapLogin');
                 listFolderStub = sinon.stub(dao, '_imapListFolders');
-                loginStub.yields();
                 listFolderStub.yields({});
 
                 dao.init({
@@ -184,35 +204,7 @@ define(function(require) {
                     expect(dao._account).to.equal(account);
                     expect(devicestorageStub.init.calledOnce).to.be.true;
                     expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
-
-                    expect(loginStub.calledOnce).to.be.true;
                     expect(listFolderStub.calledOnce).to.be.true;
-
-                    done();
-                });
-            });
-
-            it('should fail due to error during imap login', function(done) {
-                var loginStub = sinon.stub(dao, '_imapLogin');
-
-                // initKeychain
-                devicestorageStub.init.withArgs(emailAddress).yields();
-                keychainStub.getUserKeyPair.yields(null, mockKeyPair);
-
-                // initFolders
-                loginStub.yields({});
-
-                dao.init({
-                    account: account
-                }, function(err, keyPair) {
-                    expect(err).to.exist;
-                    expect(keyPair).to.not.exist;
-
-                    expect(dao._account).to.equal(account);
-                    expect(devicestorageStub.init.calledOnce).to.be.true;
-                    expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
-
-                    expect(loginStub.calledOnce).to.be.true;
 
                     done();
                 });
@@ -230,6 +222,77 @@ define(function(require) {
 
                     expect(devicestorageStub.init.calledOnce).to.be.true;
 
+                    done();
+                });
+            });
+        });
+
+        describe('onConnect', function() {
+            var imapLoginStub, imapListFoldersStub;
+
+            beforeEach(function(done) {
+                // imap login
+                imapLoginStub = sinon.stub(dao, '_imapLogin');
+                imapListFoldersStub = sinon.stub(dao, '_imapListFolders');
+
+                dao.onDisconnect(null, function(err) {
+                    expect(err).to.not.exist;
+                    expect(dao._imapClient).to.not.exist;
+                    expect(dao._smtpClient).to.not.exist;
+                    expect(dao._account.online).to.be.false;
+                    done();
+                });
+            });
+
+            afterEach(function() {
+                imapLoginStub.restore();
+                imapListFoldersStub.restore();
+            });
+
+            it('should fail due to error in imap login', function(done) {
+                imapLoginStub.yields({});
+
+                dao.onConnect({
+                    imapClient: imapClientStub,
+                    smtpClient: smtpClientStub
+                }, function(err) {
+                    expect(err).to.exist;
+                    expect(imapLoginStub.calledOnce).to.be.true;
+                    expect(dao._account.online).to.be.false;
+                    done();
+                });
+            });
+
+            it('should work when folder already initiated', function(done) {
+                dao._account.folders = [];
+                imapLoginStub.yields();
+
+                dao.onConnect({
+                    imapClient: imapClientStub,
+                    smtpClient: smtpClientStub
+                }, function(err) {
+                    expect(err).to.not.exist;
+                    expect(dao._account.online).to.be.true;
+                    expect(dao._imapClient).to.equal(dao._imapClient);
+                    expect(dao._smtpClient).to.equal(dao._smtpClient);
+                    done();
+                });
+            });
+
+            it('should work when folder not yet initiated', function(done) {
+                var folders = [];
+                imapLoginStub.yields();
+                imapListFoldersStub.yields(null, folders);
+
+                dao.onConnect({
+                    imapClient: imapClientStub,
+                    smtpClient: smtpClientStub
+                }, function(err) {
+                    expect(err).to.not.exist;
+                    expect(dao._account.online).to.be.true;
+                    expect(dao._imapClient).to.equal(dao._imapClient);
+                    expect(dao._smtpClient).to.equal(dao._smtpClient);
+                    expect(dao._account.folders).to.deep.equal(folders);
                     done();
                 });
             });
@@ -362,6 +425,17 @@ define(function(require) {
         });
 
         describe('_imapLogin', function() {
+            it('should fail when disconnected', function(done) {
+                dao.onDisconnect(null, function(err) {
+                    expect(err).to.not.exist;
+
+                    dao._imapLogin(function(err) {
+                        expect(err.code).to.equal(42);
+                        done();
+                    });
+                });
+            });
+
             it('should work', function(done) {
                 imapClientStub.login.yields();
 
@@ -382,6 +456,17 @@ define(function(require) {
         });
 
         describe('_imapLogout', function() {
+            it('should fail when disconnected', function(done) {
+                dao.onDisconnect(null, function(err) {
+                    expect(err).to.not.exist;
+
+                    dao._imapLogout(function(err) {
+                        expect(err.code).to.equal(42);
+                        done();
+                    });
+                });
+            });
+
             it('should work', function(done) {
                 imapClientStub.logout.yields();
 
@@ -430,6 +515,19 @@ define(function(require) {
                     expect(devicestorageStub.listItems.calledOnce).to.be.true;
                     expect(imapClientStub.listWellKnownFolders.called).to.be.false;
                     done();
+                });
+            });
+
+            it('should fail when disconnected', function(done) {
+                devicestorageStub.listItems.yields(null, []);
+
+                dao.onDisconnect(null, function(err) {
+                    expect(err).to.not.exist;
+
+                    dao._imapListFolders(function(err) {
+                        expect(err.code).to.equal(42);
+                        done();
+                    });
                 });
             });
 
@@ -483,6 +581,17 @@ define(function(require) {
         });
 
         describe('_imapListMessages', function() {
+            it('should fail when disconnected', function(done) {
+                dao.onDisconnect(null, function(err) {
+                    expect(err).to.not.exist;
+
+                    dao._imapListMessages({}, function(err) {
+                        expect(err.code).to.equal(42);
+                        done();
+                    });
+                });
+            });
+
             it('should work', function(done) {
                 var path = 'FOLDAAAA';
 
@@ -499,6 +608,17 @@ define(function(require) {
         });
 
         describe('_imapDeleteMessage', function() {
+            it('should fail when disconnected', function(done) {
+                dao.onDisconnect(null, function(err) {
+                    expect(err).to.not.exist;
+
+                    dao._imapDeleteMessage({}, function(err) {
+                        expect(err.code).to.equal(42);
+                        done();
+                    });
+                });
+            });
+
             it('should work', function(done) {
                 var path = 'FOLDAAAA',
                     uid = 1337;
@@ -516,6 +636,17 @@ define(function(require) {
         });
 
         describe('_imapGetMessage', function() {
+            it('should fail when disconnected', function(done) {
+                dao.onDisconnect(null, function(err) {
+                    expect(err).to.not.exist;
+
+                    dao._imapGetMessage({}, function(err) {
+                        expect(err.code).to.equal(42);
+                        done();
+                    });
+                });
+            });
+
             it('should work', function(done) {
                 var path = 'FOLDAAAA',
                     uid = 1337;

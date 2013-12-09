@@ -14,32 +14,29 @@ define(function(require) {
         appController.checkForUpdate();
 
         // start main application controller
-        appController.start(function(err) {
+        appController.start({
+            onError: $scope.onError
+        }, function(err) {
             if (err) {
                 $scope.onError(err);
                 return;
             }
 
-            if (!window.chrome || !chrome.identity) {
-                $location.path('/desktop');
-                $scope.$apply();
-                return;
-            }
-
-            // login to imap
             initializeUser();
         });
 
         function initializeUser() {
             // get OAuth token from chrome
-            appController.fetchOAuthToken(function(err, auth) {
+            appController.getEmailAddress(function(err, emailAddress) {
                 if (err) {
                     $scope.onError(err);
                     return;
                 }
 
                 // initiate controller by creating email dao
-                appController.init(auth.emailAddress, auth.token, function(err, availableKeys) {
+                appController.init({
+                    emailAddress: emailAddress
+                }, function(err, availableKeys) {
                     if (err) {
                         $scope.onError(err);
                         return;

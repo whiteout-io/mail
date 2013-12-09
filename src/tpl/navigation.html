@@ -4,18 +4,19 @@
   </header>
 
   <ul class="nav-primary">
-    <li ng-repeat="folder in account.folders" ng-switch="folder.count !== undefined">
+    <li ng-repeat="folder in account.folders" ng-switch="folder.count !== undefined && folder.count > 0">
       <a href="#" ng-click="openFolder(folder); $event.preventDefault()">
         {{folder.type}}
-        <span class="label-wrapper" ng-switch-when="true"><span class="label label-light">{{folder.count}}</span></span>
+        <span class="label-wrapper" ng-switch-when="true">
+          <span class="label label-light">{{folder.count}}</span>
+        </span>
       </a>
     </li>
   </ul>
 
   <ul class="nav-secondary">
     <li><a href="#" ng-click="state.account.toggle(true); $event.preventDefault()">Account</a></li>
-    <li><a href="#" ng-click="$event.preventDefault()">About whiteout.io</a></li>
-    <li><a href="#" ng-click="$event.preventDefault()">Help</a></li>
+    <li><a href="http://whiteout.io" target="_blank">About whiteout.io</a></li>
   </ul>
 
   <footer>

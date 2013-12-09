@@ -6,21 +6,12 @@ define(function(require) {
         str = require('js/app-config').string,
         config = require('js/app-config').config;
 
-    var EmailDAO = function(keychain, imapClient, smtpClient, crypto, devicestorage) {
+    var EmailDAO = function(keychain, crypto, devicestorage) {
         var self = this;
 
         self._keychain = keychain;
-        self._imapClient = imapClient;
-        self._smtpClient = smtpClient;
         self._crypto = crypto;
         self._devicestorage = devicestorage;
-
-        // delegation-esque pattern to mitigate between node-style events and plain js
-        self._imapClient.onIncomingMessage = function(message) {
-            if (typeof self.onIncomingMessage === 'function') {
-                self.onIncomingMessage(message);
-            }
-        };
     };
 
     //
@@ -33,6 +24,7 @@ define(function(require) {
 
         self._account = options.account;
         self._account.busy = false;
+        self._account.online = false;
 
         // validate email address
         var emailAddress = self._account.emailAddress;
@@ -63,31 +55,70 @@ define(function(require) {
         }
 
         function initFolders() {
-            self._imapLogin(function(err) {
+            // try init folders from memory, since imap client not initiated yet
+            self._imapListFolders(function(err, folders) {
                 if (err) {
                     callback(err);
                     return;
                 }
 
-                self._imapListFolders(function(err, folders) {
-                    if (err) {
-                        callback(err);
-                        return;
-                    }
-
-                    // every folder is initially created with an unread count of 0.
-                    // the unread count will be updated after every sync
-                    folders.forEach(function(folder){
-                        folder.count = 0;
-                    });
-
-                    self._account.folders = folders;
-                    callback(null, keypair);
-                });
+                self._account.folders = folders;
+                callback(null, keypair);
             });
         }
     };
 
+    EmailDAO.prototype.onConnect = function(options, callback) {
+        var self = this;
+
+        self._imapClient = options.imapClient;
+        self._smtpClient = options.smtpClient;
+
+        // delegation-esque pattern to mitigate between node-style events and plain js
+        self._imapClient.onIncomingMessage = function(message) {
+            if (typeof self.onIncomingMessage === 'function') {
+                self.onIncomingMessage(message);
+            }
+        };
+
+        // connect to newly created imap client
+        self._imapLogin(function(err) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            // set status to online
+            self._account.online = true;
+
+            // check memory
+            if (self._account.folders) {
+                // no need to init folder again on connect... already in memory
+                callback();
+                return;
+            }
+
+            // init folders
+            self._imapListFolders(function(err, folders) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                self._account.folders = folders;
+                callback();
+            });
+        });
+    };
+
+    EmailDAO.prototype.onDisconnect = function(options, callback) {
+        // set status to online
+        this._account.online = false;
+        this._imapClient = undefined;
+        this._smtpClient = undefined;
+
+        callback();
+    };
 
     EmailDAO.prototype.unlock = function(options, callback) {
         var self = this;
@@ -180,6 +211,7 @@ define(function(require) {
             return;
         }
 
+        // check busy status
         if (self._account.busy) {
             callback({
                 errMsg: 'Sync aborted: Previous sync still in progress',
@@ -188,6 +220,7 @@ define(function(require) {
             return;
         }
 
+        // not busy -> set busy
         self._account.busy = true;
 
         folder = _.findWhere(self._account.folders, {
@@ -547,7 +580,6 @@ define(function(require) {
                         });
                     });
                 }
-
             });
         }
 
@@ -705,6 +737,14 @@ define(function(require) {
     };
 
     EmailDAO.prototype._imapMark = function(options, callback) {
+        if (!this._imapClient) {
+            callback({
+                errMsg: 'Client is currently offline!',
+                code: 42
+            });
+            return;
+        }
+
         this._imapClient.updateFlags({
             path: options.folder,
             uid: options.uid,
@@ -714,6 +754,14 @@ define(function(require) {
     };
 
     EmailDAO.prototype.move = function(options, callback) {
+        if (!this._imapClient) {
+            callback({
+                errMsg: 'Client is currently offline!',
+                code: 42
+            });
+            return;
+        }
+
         this._imapClient.moveMessage({
             path: options.folder,
             uid: options.uid,
@@ -724,6 +772,14 @@ define(function(require) {
     EmailDAO.prototype.sendEncrypted = function(options, callback) {
         var self = this,
             email = options.email;
+
+        if (!self._smtpClient) {
+            callback({
+                errMsg: 'Client is currently offline!',
+                code: 42
+            });
+            return;
+        }
 
         // validate the email input
         if (!email.to || !email.from || !email.to[0].address || !email.from[0].address) {
@@ -782,6 +838,14 @@ define(function(require) {
     };
 
     EmailDAO.prototype.sendPlaintext = function(options, callback) {
+        if (!this._smtpClient) {
+            callback({
+                errMsg: 'Client is currently offline!',
+                code: 42
+            });
+            return;
+        }
+
         this._smtpClient.send(options.email, callback);
     };
 
@@ -866,6 +930,14 @@ define(function(require) {
      * Login the imap client
      */
     EmailDAO.prototype._imapLogin = function(callback) {
+        if (!this._imapClient) {
+            callback({
+                errMsg: 'Client is currently offline!',
+                code: 42
+            });
+            return;
+        }
+
         // login IMAP client if existent
         this._imapClient.login(callback);
     };
@@ -874,6 +946,14 @@ define(function(require) {
      * Cleanup by logging the user off.
      */
     EmailDAO.prototype._imapLogout = function(callback) {
+        if (!this._imapClient) {
+            callback({
+                errMsg: 'Client is currently offline!',
+                code: 42
+            });
+            return;
+        }
+
         this._imapClient.logout(callback);
     };
 
@@ -882,6 +962,14 @@ define(function(require) {
      * @param {String} options.folderName The name of the imap folder.
      */
     EmailDAO.prototype._imapListMessages = function(options, callback) {
+        if (!this._imapClient) {
+            callback({
+                errMsg: 'Client is currently offline!',
+                code: 42
+            });
+            return;
+        }
+
         this._imapClient.listMessages({
             path: options.folder,
             offset: 0,
@@ -890,6 +978,14 @@ define(function(require) {
     };
 
     EmailDAO.prototype._imapDeleteMessage = function(options, callback) {
+        if (!this._imapClient) {
+            callback({
+                errMsg: 'Client is currently offline!',
+                code: 42
+            });
+            return;
+        }
+
         this._imapClient.deleteMessage({
             path: options.folder,
             uid: options.uid
@@ -901,6 +997,14 @@ define(function(require) {
      * @param {String} options.messageId The
      */
     EmailDAO.prototype._imapGetMessage = function(options, callback) {
+        if (!this._imapClient) {
+            callback({
+                errMsg: 'Client is currently offline!',
+                code: 42
+            });
+            return;
+        }
+
         this._imapClient.getMessagePreview({
             path: options.folder,
             uid: options.uid
@@ -932,6 +1036,14 @@ define(function(require) {
 
         function fetchFromServer() {
             var folders;
+
+            if (!self._imapClient) {
+                callback({
+                    errMsg: 'Client is currently offline!',
+                    code: 42
+                });
+                return;
+            }
 
             // fetch list from imap server
             self._imapClient.listWellKnownFolders(function(err, wellKnownFolders) {

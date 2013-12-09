@@ -232,7 +232,12 @@ define(function(require) {
                 self._emailDao.sendPlaintext(invitationMail, function(err) {
                     if (err) {
                         self._outboxBusy = false;
-                        callback(err);
+                        if (err.code === 42) {
+                            // offline try again later
+                            callback();
+                        } else {
+                            callback(err);
+                        }
                         return;
                     }
 
@@ -251,7 +256,12 @@ define(function(require) {
             }, function(err) {
                 if (err) {
                     self._outboxBusy = false;
-                    callback(err);
+                    if (err.code === 42) {
+                        // offline try again later
+                        callback();
+                    } else {
+                        callback(err);
+                    }
                     return;
                 }
 

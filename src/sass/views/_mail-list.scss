@@ -63,6 +63,12 @@
             color: $color-grey-dark;
             line-height: em(28,12);
 
+            .offline {
+                &[data-icon]:before {
+                    padding-right: 0.5em;
+                }
+            }
+
             &.syncing {
                 .spinner {
                     top: 6.5px;

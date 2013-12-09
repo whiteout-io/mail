@@ -181,7 +181,15 @@ define(function(require) {
             $scope.replyTo.answered = true;
             emailDao.sync({
                 folder: $scope.state.nav.currentFolder.path
-            }, $scope.onError);
+            }, function(err) {
+                if (err && err.code === 42) {
+                    // offline
+                    $scope.onError();
+                    return;
+                }
+
+                $scope.onError(err);
+            });
         }
     };
 

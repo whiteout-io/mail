@@ -23,6 +23,11 @@
 
   <footer ng-class="{syncing: account.busy}" ng-click="synchronize()">
     <span class="spinner"></span>
-    <span class="text">{{lastUpdateLbl}} {{lastUpdate | date:'shortTime'}}</span>
+    <span class="text" ng-switch="account.online">
+      <span ng-switch-when="false">
+        <span class="offline" data-icon="&#xe011;"></span>
+      </span>
+      {{lastUpdateLbl}} {{lastUpdate | date:'shortTime'}}
+    </span>
   </footer>
 </div><!--/.view-mail-list-->

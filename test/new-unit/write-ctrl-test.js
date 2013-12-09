@@ -141,6 +141,42 @@ define(function(require) {
         });
 
         describe('send to outbox', function() {
+            it('should work when offline', function(done) {
+                var verifyToSpy = sinon.spy(scope, 'verifyTo'),
+                    re = {
+                        from: [{
+                            address: 'pity@dafool'
+                        }],
+                        subject: 'Ermahgerd!',
+                        sentDate: new Date(),
+                        body: 'so much body!'
+                    };
+
+                scope.state.nav = {
+                    currentFolder: 'currentFolder'
+                };
+
+                scope.emptyOutbox = function() {};
+                scope.onError = function(err) {
+                    expect(err).to.not.exist;
+                    expect(scope.state.writer.open).to.be.false;
+                    expect(verifyToSpy.calledOnce).to.be.true;
+                    expect(emailDaoMock.store.calledOnce).to.be.true;
+                    expect(emailDaoMock.sync.calledOnce).to.be.true;
+
+                    scope.verifyTo.restore();
+                    done();
+                };
+
+                emailDaoMock.store.yields();
+                emailDaoMock.sync.yields({
+                    code: 42
+                });
+
+                scope.state.writer.write(re);
+                scope.sendToOutbox();
+            });
+
             it('should work', function(done) {
                 var verifyToSpy = sinon.spy(scope, 'verifyTo'),
                     re = {
@@ -173,7 +209,40 @@ define(function(require) {
 
                 scope.state.writer.write(re);
                 scope.sendToOutbox();
+            });
 
+            it('should fail', function(done) {
+                var verifyToSpy = sinon.spy(scope, 'verifyTo'),
+                    re = {
+                        from: [{
+                            address: 'pity@dafool'
+                        }],
+                        subject: 'Ermahgerd!',
+                        sentDate: new Date(),
+                        body: 'so much body!'
+                    };
+
+                scope.state.nav = {
+                    currentFolder: 'currentFolder'
+                };
+
+                scope.emptyOutbox = function() {};
+                scope.onError = function(err) {
+                    expect(err).to.exist;
+                    expect(scope.state.writer.open).to.be.false;
+                    expect(verifyToSpy.calledOnce).to.be.true;
+                    expect(emailDaoMock.store.calledOnce).to.be.true;
+                    expect(emailDaoMock.sync.calledOnce).to.be.true;
+
+                    scope.verifyTo.restore();
+                    done();
+                };
+
+                emailDaoMock.store.yields();
+                emailDaoMock.sync.yields({});
+
+                scope.state.writer.write(re);
+                scope.sendToOutbox();
             });
 
             it('should not work and not close the write view', function(done) {
