@@ -440,8 +440,15 @@ define(function(require) {
                                 return;
                             }
 
-                            if (isVerificationMail(message)) {
-                                verify(message, function(err) {
+                            // create a bastard child of smtp and imap.
+                            // before thinking this is stupid, talk to the guys who wrote this.
+                            imapHeader.id = message.id;
+                            imapHeader.body = message.body;
+                            imapHeader.html = message.html;
+                            imapHeader.attachments = message.attachments;
+
+                            if (isVerificationMail(imapHeader)) {
+                                verify(imapHeader, function(err) {
                                     if (err) {
                                         self._account.busy = false;
                                         callback(err);
@@ -452,13 +459,6 @@ define(function(require) {
                                 });
                                 return;
                             }
-
-                            // create a bastard child of smtp and imap.
-                            // before thinking this is stupid, talk to the guys who wrote this.
-                            imapHeader.id = message.id;
-                            imapHeader.body = message.body;
-                            imapHeader.html = message.html;
-                            imapHeader.attachments = message.attachments;
 
                             // add the encrypted message to the local storage
                             self._localStoreMessages({
