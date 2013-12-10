@@ -369,8 +369,7 @@ define(function(require) {
         self._emailDao.init({
             account: account
         }, function(err, keypair) {
-            // dont handle offline case this time
-            if (err && err.code !== 42) {
+            if (err) {
                 callback(err);
                 return;
             }

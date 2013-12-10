@@ -184,6 +184,35 @@ define(function(require) {
                 });
             });
 
+            it('should not fail when offline', function(done) {
+                var listFolderStub;
+
+                // initKeychain
+                devicestorageStub.init.withArgs(emailAddress).yields();
+                keychainStub.getUserKeyPair.yields(null, mockKeyPair);
+
+                // initFolders
+                listFolderStub = sinon.stub(dao, '_imapListFolders');
+                listFolderStub.yields({code:42});
+
+                dao.init({
+                    account: account
+                }, function(err, keyPair) {
+                    expect(err).to.not.exist;
+                    expect(dao._account.busy).to.be.false;
+                    expect(dao._account.online).to.be.false;
+                    expect(keyPair).to.equal(mockKeyPair);
+
+                    expect(dao._account).to.equal(account);
+                    expect(dao._account.folders).to.equal(undefined);
+                    expect(devicestorageStub.init.calledOnce).to.be.true;
+                    expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
+                    expect(listFolderStub.calledOnce).to.be.true;
+
+                    done();
+                });
+            });
+
             it('should fail due to error while listing folders', function(done) {
                 var listFolderStub;
 

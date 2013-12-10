@@ -57,7 +57,8 @@ define(function(require) {
         function initFolders() {
             // try init folders from memory, since imap client not initiated yet
             self._imapListFolders(function(err, folders) {
-                if (err) {
+                // dont handle offline case this time
+                if (err && err.code !== 42) {
                     callback(err);
                     return;
                 }

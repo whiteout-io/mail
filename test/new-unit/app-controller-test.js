@@ -266,8 +266,9 @@ define(function(require) {
             it('should fail due to error in emailDao.init', function(done) {
                 emailDaoStub.init.yields({});
 
-                controller.init({}, function(err) {
+                controller.init({}, function(err, keypair) {
                     expect(err).to.exist;
+                    expect(keypair).to.not.exist;
                     done();
                 });
             });
@@ -280,22 +281,6 @@ define(function(require) {
                 controller.init({}, function(err) {
                     expect(err).to.exist;
                     expect(onConnectStub.calledOnce).to.be.true;
-                    done();
-                });
-            });
-
-            it('should pass email dao init when offline', function(done) {
-                emailDaoStub.init.yields({
-                    code: 42
-                });
-
-                onConnectStub.yields();
-                outboxStub.init.returns();
-
-                controller.init({}, function(err) {
-                    expect(err).to.not.exist;
-                    expect(onConnectStub.calledOnce).to.be.true;
-                    expect(outboxStub.init.calledOnce).to.be.true;
                     done();
                 });
             });
