@@ -229,7 +229,9 @@ define(function(require) {
                     };
 
                 // send invitation mail
-                self._emailDao.sendPlaintext(invitationMail, function(err) {
+                self._emailDao.sendPlaintext({
+                    email: invitationMail
+                }, function(err) {
                     if (err) {
                         self._outboxBusy = false;
                         if (err.code === 42) {
