@@ -825,7 +825,7 @@ define(function(require) {
     };
 
     EmailDAO.prototype._imapMark = function(options, callback) {
-        if (!this._imapClient) {
+        if (!this._account.online) {
             callback({
                 errMsg: 'Client is currently offline!',
                 code: 42
@@ -842,7 +842,7 @@ define(function(require) {
     };
 
     EmailDAO.prototype.move = function(options, callback) {
-        if (!this._imapClient) {
+        if (!this._account.online) {
             callback({
                 errMsg: 'Client is currently offline!',
                 code: 42
@@ -861,7 +861,7 @@ define(function(require) {
         var self = this,
             email = options.email;
 
-        if (!self._smtpClient) {
+        if (!this._account.online) {
             callback({
                 errMsg: 'Client is currently offline!',
                 code: 42
@@ -926,7 +926,7 @@ define(function(require) {
     };
 
     EmailDAO.prototype.sendPlaintext = function(options, callback) {
-        if (!this._smtpClient) {
+        if (!this._account.online) {
             callback({
                 errMsg: 'Client is currently offline!',
                 code: 42
@@ -1034,7 +1034,7 @@ define(function(require) {
      * Cleanup by logging the user off.
      */
     EmailDAO.prototype._imapLogout = function(callback) {
-        if (!this._imapClient) {
+        if (!this._account.online) {
             callback({
                 errMsg: 'Client is currently offline!',
                 code: 42
@@ -1053,7 +1053,7 @@ define(function(require) {
      * @param {Function} callback(error, uids) invoked with the uids of messages matching the search terms, or an error object if an error occurred
      */
     EmailDAO.prototype._imapSearch = function(options, callback) {
-        if (!this._imapClient) {
+        if (!this._account.online) {
             callback({
                 errMsg: 'Client is currently offline!',
                 code: 42
@@ -1077,7 +1077,7 @@ define(function(require) {
     };
 
     EmailDAO.prototype._imapDeleteMessage = function(options, callback) {
-        if (!this._imapClient) {
+        if (!this._account.online) {
             callback({
                 errMsg: 'Client is currently offline!',
                 code: 42
@@ -1098,7 +1098,7 @@ define(function(require) {
     EmailDAO.prototype._imapGetMessage = function(options, callback) {
         var self = this;
 
-        if (!this._imapClient) {
+        if (!this._account.online) {
             callback({
                 errMsg: 'Client is currently offline!',
                 code: 42
@@ -1165,7 +1165,7 @@ define(function(require) {
         function fetchFromServer() {
             var folders;
 
-            if (!self._imapClient) {
+            if (!self._account.online) {
                 callback({
                     errMsg: 'Client is currently offline!',
                     code: 42
