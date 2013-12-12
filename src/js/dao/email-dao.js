@@ -386,31 +386,29 @@ define(function(require) {
         }
 
         function doImapDelta() {
-            self._imapListMessages({
+            self._imapSearch({
                 folder: folder.path
-            }, function(err, headers) {
+            }, function(err, uids) {
                 if (err) {
                     self._account.busy = false;
                     callback(err);
                     return;
                 }
 
-                // ignore non-whitelisted mails
-                var nonWhitelisted = _.filter(headers, function(header) {
-                    return header.subject.indexOf(str.subjectPrefix) === -1;
-                });
-                nonWhitelisted.forEach(function(i) {
-                    headers.splice(headers.indexOf(i), 1);
+                // uidWrappers is just to wrap the bare uids in an object { uid: 123 } so 
+                // the checkDelta function can treat it like something that resembles a stripped down email object...
+                var uidWrappers = _.map(uids, function(uid) {
+                    return {
+                        uid: uid
+                    };
                 });
 
                 /*
                  * delta3: memory > imap   => we deleted messages directly from the remote, remove from memory and storage
                  * delta4:   imap > memory => we have new messages available, fetch to memory and storage
-                 * deltaF4:  imap > memory => we changed flags directly on the remote, sync them to the storage and memory
                  */
-                delta3 = checkDelta(folder.messages, headers);
-                delta4 = checkDelta(headers, folder.messages);
-                deltaF4 = checkFlags(headers, folder.messages);
+                delta3 = checkDelta(folder.messages, uidWrappers);
+                delta4 = checkDelta(uidWrappers, folder.messages);
 
                 doDelta3();
 
@@ -451,22 +449,36 @@ define(function(require) {
                 // we have new messages available, fetch to memory and storage
                 // (downstream sync)
                 function doDelta4() {
-                    // no delta, we're done here
-                    if (_.isEmpty(delta4)) {
-                        doDeltaF4();
-                        return;
+                    // eliminate uids smaller than the biggest local uid, i.e. just fetch everything
+                    // that came in AFTER the most recent email we have in memory. Keep in mind that
+                    // uids are strictly ascending, so there can't be a NEW mail in the mailbox with a 
+                    // uid smaller than anything we've encountered before.
+                    if (!_.isEmpty(folder.messages)) {
+                        var localUids = _.pluck(folder.messages, 'uid'),
+                            maxLocalUid = Math.max.apply(null, localUids);
+
+                        // eliminate everything prior to maxLocalUid
+                        delta4 = _.filter(delta4, function(uidWrapper) {
+                            return uidWrapper.uid > maxLocalUid;
+                        });
                     }
 
-                    var after = _.after(delta4.length, function() {
-                        doDeltaF4();
-                    });
+                    syncNextItem();
 
-                    // delta4 contains the headers that are newly available on the remote
-                    delta4.forEach(function(imapHeader) {
+                    function syncNextItem() {
+                        // no delta, we're done here
+                        if (_.isEmpty(delta4)) {
+                            doDeltaF4();
+                            return;
+                        }
+
+                        // delta4 contains the headers that are newly available on the remote
+                        var nextUidWrapper = delta4.shift();
+
                         // get the whole message
                         self._imapGetMessage({
                             folder: folder.path,
-                            uid: imapHeader.uid
+                            uid: nextUidWrapper.uid
                         }, function(err, message) {
                             if (err) {
                                 self._account.busy = false;
@@ -474,22 +486,22 @@ define(function(require) {
                                 return;
                             }
 
-                            // create a bastard child of smtp and imap.
-                            // before thinking this is stupid, talk to the guys who wrote this.
-                            imapHeader.id = message.id;
-                            imapHeader.body = message.body;
-                            imapHeader.html = message.html;
-                            imapHeader.attachments = message.attachments;
+                            // imap filtering may not be sufficient, since google filters out
+                            // non-alphabetical characters
+                            if (message.subject.indexOf(str.subjectPrefix) === -1) {
+                                syncNextItem();
+                                return;
+                            }
 
-                            if (isVerificationMail(imapHeader)) {
-                                verify(imapHeader, function(err) {
+                            if (isVerificationMail(message)) {
+                                verify(message, function(err) {
                                     if (err) {
                                         self._account.busy = false;
                                         callback(err);
                                         return;
                                     }
 
-                                    after();
+                                    syncNextItem();
                                 });
                                 return;
                             }
@@ -497,7 +509,7 @@ define(function(require) {
                             // add the encrypted message to the local storage
                             self._localStoreMessages({
                                 folder: folder.path,
-                                emails: [imapHeader]
+                                emails: [message]
                             }, function(err) {
                                 if (err) {
                                     self._account.busy = false;
@@ -506,7 +518,7 @@ define(function(require) {
                                 }
 
                                 // decrypt and add to folder in memory
-                                handleMessage(imapHeader, function(err, cleartextMessage) {
+                                handleMessage(message, function(err, cleartextMessage) {
                                     if (err) {
                                         self._account.busy = false;
                                         callback(err);
@@ -514,40 +526,109 @@ define(function(require) {
                                     }
 
                                     folder.messages.push(cleartextMessage);
-                                    after();
+                                    syncNextItem();
                                 });
                             });
                         });
+                    }
+                }
+            });
+
+            function doDeltaF4() {
+                var answeredUids, unreadUids;
+
+                getUnreadUids();
+
+                // find all the relevant unread mails
+                function getUnreadUids() {
+                    self._imapSearch({
+                        folder: folder.path,
+                        unread: true
+                    }, function(err, uids) {
+                        if (err) {
+                            self._account.busy = false;
+                            callback(err);
+                            return;
+                        }
+
+                        // we're done here, let's get all the answered mails
+                        unreadUids = uids;
+                        getAnsweredUids();
                     });
                 }
 
-                // we have a mismatch concerning flags between imap and memory.
-                // pull changes from imap.
-                function doDeltaF4() {
-                    function finishSync() {
-                        self._account.busy = false;
-                        folder.count = _.filter(folder.messages, function(msg) {
-                            return msg.unread === true;
-                        }).length;
-                        callback();
-                    }
+                // find all the relevant answered mails
+                function getAnsweredUids() {
+                    // find all the relevant answered mails
+                    self._imapSearch({
+                        folder: folder.path,
+                        answered: true
+                    }, function(err, uids) {
+                        if (err) {
+                            self._account.busy = false;
+                            callback(err);
+                            return;
+                        }
 
+                        // we're done here, let's update what we have in memory and persist that!
+                        answeredUids = uids;
+                        updateFlags();
+                    });
+
+                }
+
+                function updateFlags() {
+                    // deltaF4:  imap > memory => we changed flags directly on the remote, sync them to the storage and memory
+                    deltaF4 = [];
+
+                    folder.messages.forEach(function(msg) {
+                        // if the message's uid is among the uids that should be unread,
+                        // AND the message is not unread, we clearly have to change that
+                        var shouldBeUnread = _.contains(unreadUids, msg.uid);
+                        if (msg.unread === shouldBeUnread) {
+                            // everything is in order, we're good here
+                            return;
+                        }
+
+                        msg.unread = shouldBeUnread;
+                        deltaF4.push(msg);
+                    });
+
+                    folder.messages.forEach(function(msg) {
+                        // if the message's uid is among the uids that should be answered,
+                        // AND the message is not answered, we clearly have to change that
+                        var shouldBeAnswered = _.contains(answeredUids, msg.uid);
+                        if (msg.answered === shouldBeAnswered) {
+                            // everything is in order, we're good here
+                            return;
+                        }
+
+                        msg.answered = shouldBeAnswered;
+                        deltaF4.push(msg);
+                    });
+
+                    // maybe a mail had BOTH flags wrong, so let's create
+                    // a duplicate-free version of deltaF4
+                    deltaF4 = _.uniq(deltaF4);
+
+                    // everything up to date? fine, we're done!
                     if (_.isEmpty(deltaF4)) {
                         finishSync();
                         return;
                     }
 
                     var after = _.after(deltaF4.length, function() {
+                        // we're doing updating everything
                         finishSync();
                     });
 
-                    // deltaF4 contains the imap headers that have changed flags
-                    deltaF4.forEach(function(imapHeader) {
+                    // alright, so let's sync the corrected messages
+                    deltaF4.forEach(function(inMemoryMessage) {
                         // do a short round trip to the database to avoid re-encrypting,
                         // instead use the encrypted object in the storage
                         self._localListMessages({
                             folder: folder.path,
-                            uid: imapHeader.uid
+                            uid: inMemoryMessage.uid
                         }, function(err, storedMessages) {
                             if (err) {
                                 self._account.busy = false;
@@ -556,9 +637,10 @@ define(function(require) {
                             }
 
                             var storedMessage = storedMessages[0];
-                            storedMessage.unread = imapHeader.unread;
-                            storedMessage.answered = imapHeader.answered;
+                            storedMessage.unread = inMemoryMessage.unread;
+                            storedMessage.answered = inMemoryMessage.answered;
 
+                            // persist the modified object
                             self._localStoreMessages({
                                 folder: folder.path,
                                 emails: [storedMessage]
@@ -569,19 +651,24 @@ define(function(require) {
                                     return;
                                 }
 
-                                // after the metadata of the encrypted object has changed, proceed with the live object
-                                var inMemoryMessage = _.findWhere(folder.messages, {
-                                    uid: imapHeader.uid
-                                });
-                                inMemoryMessage.unread = imapHeader.unread;
-                                inMemoryMessage.answered = imapHeader.answered;
-
+                                // and we're done.
                                 after();
                             });
                         });
+
                     });
                 }
-            });
+
+                function finishSync() {
+                    // after all the tags are up to date, let's adjust the unread mail count
+                    folder.count = _.filter(folder.messages, function(msg) {
+                        return msg.unread === true;
+                    }).length;
+                    // allow the next sync to take place
+                    self._account.busy = false;
+                    callback();
+                }
+            }
         }
 
         /*
@@ -959,10 +1046,13 @@ define(function(require) {
     };
 
     /**
-     * List messages from an imap folder. This will not yet fetch the email body.
-     * @param {String} options.folderName The name of the imap folder.
+     * Returns the relevant messages corresponding to the search terms in the options
+     * @param {String} options.folder The folder's path
+     * @param {Boolean} options.answered (optional) Mails with or without the \Answered flag set.
+     * @param {Boolean} options.unread (optional) Mails with or without the \Seen flag set.
+     * @param {Function} callback(error, uids) invoked with the uids of messages matching the search terms, or an error object if an error occurred
      */
-    EmailDAO.prototype._imapListMessages = function(options, callback) {
+    EmailDAO.prototype._imapSearch = function(options, callback) {
         if (!this._imapClient) {
             callback({
                 errMsg: 'Client is currently offline!',
@@ -971,11 +1061,19 @@ define(function(require) {
             return;
         }
 
-        this._imapClient.listMessages({
+        var o = {
             path: options.folder,
-            offset: 0,
-            length: 100
-        }, callback);
+            subject: str.subjectPrefix
+        };
+
+        if (typeof options.answered !== 'undefined') {
+            o.answered = options.answered;
+        }
+        if (typeof options.unread !== 'undefined') {
+            o.unread = options.unread;
+        }
+
+        this._imapClient.search(o, callback);
     };
 
     EmailDAO.prototype._imapDeleteMessage = function(options, callback) {
@@ -998,6 +1096,8 @@ define(function(require) {
      * @param {String} options.messageId The
      */
     EmailDAO.prototype._imapGetMessage = function(options, callback) {
+        var self = this;
+
         if (!this._imapClient) {
             callback({
                 errMsg: 'Client is currently offline!',
@@ -1006,10 +1106,37 @@ define(function(require) {
             return;
         }
 
-        this._imapClient.getMessagePreview({
+        self._imapClient.listMessagesByUid({
             path: options.folder,
-            uid: options.uid
-        }, callback);
+            firstUid: options.uid,
+            lastUid: options.uid
+        }, function(err, imapHeaders) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            var imapHeader = imapHeaders[0];
+            self._imapClient.getMessagePreview({
+                path: options.folder,
+                uid: options.uid
+            }, function(err, message) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                // create a bastard child of smtp and imap. before thinking this is stupid, talk to the guys who wrote this.
+                // p.s. it's a parsing issue.
+
+                imapHeader.id = message.id;
+                imapHeader.body = message.body;
+                imapHeader.html = message.html;
+                imapHeader.attachments = message.attachments;
+
+                callback(null, imapHeader);
+            });
+        });
     };
 
     /**
