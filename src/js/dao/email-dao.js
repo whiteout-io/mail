@@ -588,7 +588,7 @@ define(function(require) {
                         finishSync();
                     });
 
-                    // alright, so let's sync the corr
+                    // alright, so let's sync the corrected messages
                     deltaF4.forEach(function(inMemoryMessage) {
                         // do a short round trip to the database to avoid re-encrypting,
                         // instead use the encrypted object in the storage
