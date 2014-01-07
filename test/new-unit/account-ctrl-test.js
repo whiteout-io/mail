@@ -71,7 +71,7 @@ define(function(require) {
                     keyId: dummyKeyId
                 });
                 createDownloadMock.withArgs(sinon.match(function(arg) {
-                    return arg.content === 'ab' && arg.filename === expectedKeyId + '.asc' && arg.contentType === 'text/plain';
+                    return arg.content === 'ab' && arg.filename === 'whiteout_mail_' + emailAddress + '_' + expectedKeyId + '.asc' && arg.contentType === 'text/plain';
                 })).yields();
                 scope.onError = function() {
                     expect(cryptoMock.exportKeys.calledOnce).to.be.true;
@@ -100,9 +100,7 @@ define(function(require) {
                     privateKeyArmored: 'b',
                     keyId: dummyKeyId
                 });
-                createDownloadMock.withArgs(sinon.match(function(arg) {
-                    return arg.content === 'ab' && arg.filename === expectedKeyId + '.asc' && arg.contentType === 'text/plain';
-                })).yields(new Error('asdasd'));
+                createDownloadMock.withArgs().yields(new Error('asdasd'));
                 scope.onError = function() {
                     expect(cryptoMock.exportKeys.calledOnce).to.be.true;
                     expect(dl.createDownload.calledOnce).to.be.true;

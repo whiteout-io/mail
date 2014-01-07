@@ -41,7 +41,7 @@ define(function(require) {
                     return;
                 }
 
-                var id = keys.keyId.substring(8, keys.keyId.length);
+                var id = 'whiteout_mail_' + emailDao._account.emailAddress + '_' + keys.keyId.substring(8, keys.keyId.length);
                 dl.createDownload({
                     content: keys.publicKeyArmored + keys.privateKeyArmored,
                     filename: id + '.asc',

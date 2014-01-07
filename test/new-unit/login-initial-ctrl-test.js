@@ -133,7 +133,7 @@ define(function(require) {
                     keyId: keyId
                 });
                 createDownloadMock.withArgs(sinon.match(function(arg) {
-                    return arg.content === 'ab' && arg.filename === expectedKeyId + '.asc' && arg.contentType === 'text/plain';
+                    return arg.content === 'ab' && arg.filename === 'whiteout_mail_' + emailAddress + '_' + expectedKeyId + '.asc' && arg.contentType === 'text/plain';
                 })).yields();
 
                 locationSpy = sinon.spy(location, 'path');
