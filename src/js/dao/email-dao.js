@@ -486,9 +486,8 @@ define(function(require) {
                                 return;
                             }
 
-                            // imap filtering may not be sufficient, since google filters out
-                            // non-alphabetical characters
-                            if (message.subject.indexOf(str.subjectPrefix) === -1) {
+                            // imap filtering is insufficient, since google ignores non-alphabetical characters
+                            if (message.subject.indexOf(str.subjectPrefix.trim()) === -1) {
                                 syncNextItem();
                                 return;
                             }
@@ -718,7 +717,7 @@ define(function(require) {
         }
 
         function verify(email, localCallback) {
-            var uuid, index, verifyUrlPrefix = config.cloudUrl + config.verificationUrl;
+            var uuid, isValidUuid, index, verifyUrlPrefix = config.cloudUrl + config.verificationUrl;
 
             if (!email.unread) {
                 // don't bother if the email was already marked as read
@@ -733,8 +732,14 @@ define(function(require) {
                 return;
             }
 
-
             uuid = email.body.substr(index + verifyUrlPrefix.length, config.verificationUuidLength);
+            isValidUuid = new RegExp('[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}').test(uuid);
+            if (!isValidUuid) {
+                // there's no valid uuid in the email, so forget about that, too.
+                localCallback();
+                return;
+            }
+
             self._keychain.verifyPublicKey(uuid, function(err) {
                 if (err) {
                     localCallback({
