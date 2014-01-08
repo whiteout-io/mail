@@ -12,7 +12,7 @@
         <span class="popover-info" data-icon-append="&#xe010;" popover="#keyfile-info"></span>
       </div>
       <div>
-        <input class="input-text" type="password" ng-model="passphrase" ng-class="{error:incorrect}" placeholder="Passphrase" tabindex="2" focus-me="true">        
+        <input class="input-text" type="password" ng-model="passphrase" ng-class="{'input-text-error':incorrect}" placeholder="Passphrase" tabindex="2" focus-me="true">
         <span class="popover-info" data-icon-append="&#xe010;" popover="#passphrase-info"></span>
       </div>
       <div><button type="submit" ng-click="confirmPassphrase()" class="btn" ng-disabled="!key" tabindex="3">Import</button>

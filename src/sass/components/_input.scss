@@ -9,6 +9,17 @@
     outline: none;
 }
 
+.input-text-error {
+    border-color: red;
+}
+
+.input-error-message {
+    margin: 5px 0;
+    padding: 0;
+    color: red;
+    font-size: em(13);
+}
+
 .input-search {
     width: 93%;
     -webkit-appearance: searchfield;

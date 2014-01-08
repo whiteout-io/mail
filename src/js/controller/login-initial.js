@@ -25,6 +25,49 @@ define(function(require) {
         // scope functions
         //
 
+        $scope.checkPassphraseQuality = function() {
+            var passphrase = $scope.state.passphrase;
+            $scope.passphraseRating = 0;
+
+            var LOWER = /[a-z]/,
+                UPPER = /[A-Z]/,
+                DIGIT = /[0-9]/,
+                DIGITS = /[0-9].*[0-9]/,
+                SPECIAL = /[^a-zA-Z0-9]/,
+                SAME = /^(.)\1+$/;
+
+            function uncapitalize(str) {
+                return str.substring(0, 1).toLowerCase() + str.substring(1);
+            }
+
+            if (!passphrase || passphrase.length < 10) {
+                $scope.passphraseMsg = 'Too short';
+                return;
+            }
+
+            if (SAME.test(passphrase)) {
+                $scope.passphraseMsg = 'Very weak';
+                return;
+            }
+
+            var lower = LOWER.test(passphrase),
+                upper = UPPER.test(uncapitalize(passphrase)),
+                digit = DIGIT.test(passphrase),
+                digits = DIGITS.test(passphrase),
+                special = SPECIAL.test(passphrase);
+
+            if (lower && upper && digit || lower && digits || upper && digits || special) {
+                $scope.passphraseMsg = 'Strong';
+                $scope.passphraseRating = 3;
+            } else if (lower && upper || lower && digit || upper && digit) {
+                $scope.passphraseMsg = 'Good';
+                $scope.passphraseRating = 2;
+            } else {
+                $scope.passphraseMsg = 'Weak';
+                $scope.passphraseRating = 1;
+            }
+        };
+
         $scope.confirmPassphrase = function() {
             var passphrase = $scope.state.passphrase,
                 confirmation = $scope.state.confirmation;

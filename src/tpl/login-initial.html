@@ -9,12 +9,13 @@
       <p><b>Set passphrase.</b> The passphrase protects your keypair. If you forget your passphrase you will not be able to recover your messages.</p>
       <form>
         <div>
-          <input class="input-text" type="password" ng-model="state.passphrase" placeholder="Enter passphrase" tabindex="1" focus-me="true">
-          <input class="input-text" type="password" ng-model="state.confirmation" ng-class="{error: state.confirmation !== state.passphrase}" placeholder="Confirm passphrase" tabindex="2">
+          <label class="input-error-message" ng-class="{'passphrase-label-ok': passphraseRating >= 2}">{{passphraseMsg}}</label><br>
+          <input class="input-text" ng-class="{'input-text-error': passphraseRating < 2}" type="password" ng-model="state.passphrase" ng-change="checkPassphraseQuality()" placeholder="Enter passphrase" tabindex="1" focus-me="true">
+          <input class="input-text" type="password" ng-model="state.confirmation" ng-class="{'input-text-error': state.confirmation && state.confirmation !== state.passphrase}" placeholder="Confirm passphrase" tabindex="2">
           <span class="popover-info" data-icon-append="&#xe010;" popover="#passphrase-info"></span>
         </div>
         <div>
-          <button type="submit" ng-click="confirmPassphrase()" class="btn" ng-disabled="!state.passphrase || state.passphrase !== state.confirmation" tabindex="3">Generate keypair</button>
+          <button type="submit" ng-click="confirmPassphrase()" class="btn" ng-disabled="passphraseRating < 2 || state.passphrase !== state.confirmation" tabindex="3">Generate keypair</button>
         </div>
       </form>
     </div>
