@@ -15,6 +15,7 @@ define(function(require) {
 
         var emailAddress, passphrase, asymKeySize, mockkeyId, dummyEncryptedMail,
             dummyDecryptedMail, mockKeyPair, account, publicKey, verificationMail, verificationUuid,
+            corruptedVerificationMail, corruptedVerificationUuid,
             nonWhitelistedMail;
 
         beforeEach(function(done) {
@@ -35,7 +36,7 @@ define(function(require) {
                 unread: false,
                 answered: false
             };
-            verificationUuid = 'OMFG_FUCKING_BASTARD_UUID_FROM_HELL!';
+            verificationUuid = '9A858952-17EE-4273-9E74-D309EAFDFAFB';
             verificationMail = {
                 from: [{
                     name: 'Whiteout Test',
@@ -46,6 +47,20 @@ define(function(require) {
                 }], // list of receivers
                 subject: "[whiteout] New public key uploaded", // Subject line
                 body: 'yadda yadda bla blabla foo bar https://keys.whiteout.io/verify/' + verificationUuid, // plaintext body
+                unread: true,
+                answered: false
+            };
+            corruptedVerificationUuid = 'OMFG_FUCKING_BASTARD_UUID_FROM_HELL!';
+            corruptedVerificationMail = {
+                from: [{
+                    name: 'Whiteout Test',
+                    address: 'whiteout.test@t-online.de'
+                }], // sender address
+                to: [{
+                    address: 'safewithme.testuser@gmail.com'
+                }], // list of receivers
+                subject: "[whiteout] New public key uploaded", // Subject line
+                body: 'yadda yadda bla blabla foo bar https://keys.whiteout.io/verify/' + corruptedVerificationUuid, // plaintext body
                 unread: true,
                 answered: false
             };
@@ -193,7 +208,9 @@ define(function(require) {
 
                 // initFolders
                 listFolderStub = sinon.stub(dao, '_imapListFolders');
-                listFolderStub.yields({code:42});
+                listFolderStub.yields({
+                    code: 42
+                });
 
                 dao.init({
                     account: account
@@ -1666,7 +1683,6 @@ define(function(require) {
                 dao.sync({
                     folder: folder
                 }, function(err) {
-
                     if (invocations === 0) {
                         expect(err).to.not.exist;
                         expect(dao._account.busy).to.be.true;
@@ -1714,7 +1730,6 @@ define(function(require) {
                 dao.sync({
                     folder: folder
                 }, function(err) {
-
                     if (invocations === 0) {
                         expect(err).to.not.exist;
                         expect(dao._account.busy).to.be.true;
@@ -1761,7 +1776,6 @@ define(function(require) {
                 dao.sync({
                     folder: folder
                 }, function(err) {
-
                     if (invocations === 0) {
                         expect(err).to.not.exist;
                         expect(dao._account.busy).to.be.true;
@@ -1817,6 +1831,59 @@ define(function(require) {
                 dao.sync({
                     folder: folder
                 }, function(err) {
+                    if (invocations === 0) {
+                        expect(err).to.not.exist;
+                        expect(dao._account.busy).to.be.true;
+                        invocations++;
+                        return;
+                    }
+
+                    expect(err).to.not.exist;
+                    expect(dao._account.busy).to.be.false;
+                    expect(dao._account.folders[0].messages).to.be.empty;
+                    expect(localListStub.calledOnce).to.be.true;
+                    expect(imapSearchStub.calledThrice).to.be.true;
+                    expect(imapGetStub.calledOnce).to.be.true;
+                    expect(keychainStub.verifyPublicKey.called).to.be.false;
+                    expect(markReadStub.called).to.be.false;
+                    expect(imapDeleteStub.called).to.be.false;
+
+                    done();
+                });
+            });
+
+            it('should not bother about corrupted authentication mails', function(done) {
+                var invocations, folder, localListStub, imapSearchStub, imapGetStub, markReadStub, imapDeleteStub;
+
+                invocations = 0;
+                folder = 'FOLDAAAA';
+                dao._account.folders = [{
+                    type: 'Folder',
+                    path: folder,
+                    messages: []
+                }];
+
+                localListStub = sinon.stub(dao, '_localListMessages').yields(null, []);
+                imapSearchStub = sinon.stub(dao, '_imapSearch');
+                imapSearchStub.withArgs({
+                    folder: folder
+                }).yields(null, [corruptedVerificationMail.uid]);
+                imapSearchStub.withArgs({
+                    folder: folder,
+                    unread: true
+                }).yields(null, []);
+                imapSearchStub.withArgs({
+                    folder: folder,
+                    answered: true
+                }).yields(null, []);
+
+                imapGetStub = sinon.stub(dao, '_imapGetMessage').yields(null, corruptedVerificationMail);
+                markReadStub = sinon.stub(dao, '_imapMark');
+                imapDeleteStub = sinon.stub(dao, '_imapDeleteMessage');
+
+                dao.sync({
+                    folder: folder
+                }, function(err) {
                     expect(err).to.not.exist;
 
                     if (invocations === 0) {
@@ -1838,7 +1905,7 @@ define(function(require) {
                 });
             });
 
-            it('should not bother about corrupted authentication mails', function(done) {
+            it('should not bother about corrupted authentication mails no verification link', function(done) {
                 var invocations, folder, localListStub, imapSearchStub,
                     imapGetStub, markReadStub, imapDeleteStub;
 

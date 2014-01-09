@@ -20,7 +20,12 @@ define(function(require) {
         // push handler
         if (emailDao) {
             emailDao.onIncomingMessage = function(email) {
-                if (email.subject.indexOf(str.subjectPrefix) === -1) {
+                if (!email.subject) {
+                    return;
+                }
+                
+                if (email.subject.indexOf(str.subjectPrefix) === -1 ||
+                    email.subject === str.subjectPrefix + str.verificationSubject) {
                     return;
                 }
 

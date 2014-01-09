@@ -49,8 +49,19 @@ define(function(require) {
             it('should fail', function(done) {
                 restDaoStub.get.yields(42);
 
-                pubkeyDao.get('id', function(err) {
+                pubkeyDao.verify('id', function(err) {
                     expect(err).to.exist;
+                    done();
+                });
+            });
+
+            it('should not error for 400', function(done) {
+                restDaoStub.get.yields({
+                    code: 400
+                });
+
+                pubkeyDao.verify('id', function(err) {
+                    expect(err).to.not.exist;
                     done();
                 });
             });

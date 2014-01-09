@@ -14,7 +14,15 @@ define(function() {
         this._restDao.get({
             uri: uri,
             type: 'text'
-        }, callback);
+        }, function(err, res, status) {
+            if (err && err.code === 400) {
+                // there was an attempt to verify a non-existing public key
+                callback();
+                return;
+            }
+
+            callback(err, res, status);
+        });
     };
 
     /**
