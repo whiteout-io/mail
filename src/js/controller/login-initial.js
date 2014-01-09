@@ -25,6 +25,15 @@ define(function(require) {
         // scope functions
         //
 
+        /*
+         * Taken from jQuery validate.password plug-in 1.0
+         * http://bassistance.de/jquery-plugins/jquery-plugin-validate.password/
+         *
+         * Copyright (c) 2009 Jörn Zaefferer
+         *
+         * Licensed under the MIT
+         *   http://www.opensource.org/licenses/mit-license.php
+         */
         $scope.checkPassphraseQuality = function() {
             var passphrase = $scope.state.passphrase;
             $scope.passphraseRating = 0;
