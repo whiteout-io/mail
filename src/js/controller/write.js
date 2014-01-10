@@ -39,7 +39,9 @@ define(function(require) {
 
         function resetFields() {
             $scope.writerTitle = 'New email';
-            $scope.to = '';
+            $scope.to = [{
+                address: ''
+            }];
             $scope.subject = '';
             $scope.body = '';
             $scope.ciphertextPreview = '';
@@ -73,43 +75,59 @@ define(function(require) {
         // Editing headers
         //
 
-        $scope.verifyTo = function() {
-            if (!$scope.to) {
-                resetDisplay();
+        $scope.onAddressUpdate = function(recipient) {
+            var to = $scope.to,
+                address = recipient.address;
+
+            // handle number of email inputs for multiple recipients
+            if (address.indexOf(' ') !== -1) {
+                recipient.address = address.replace(' ', '');
+                to.push({
+                    address: ''
+                });
+            } else if (address.length === 0 && to.length > 1) {
+                to.splice(to.indexOf(recipient), 1);
+            }
+
+            verify(recipient);
+        };
+
+        function verify(recipient) {
+            // set display to insecure while fetching keys
+            recipient.key = undefined;
+            recipient.secure = false;
+
+            // verify email address
+            if (!util.validateEmailAddress(recipient.address)) {
+                recipient.secure = undefined;
                 return;
             }
 
-            // set display to insecure while fetching keys
-            $scope.toKey = undefined;
-            displayInsecure();
             // check if to address is contained in known public keys
-            emailDao._keychain.getReceiverPublicKey($scope.to, function(err, key) {
+            emailDao._keychain.getReceiverPublicKey(recipient.address, function(err, key) {
                 if (err) {
                     $scope.onError(err);
                     return;
                 }
 
                 // compare again since model could have changed during the roundtrip
-                if (key && key.userId === $scope.to) {
-                    $scope.toKey = key;
-                    displaySecure();
+                if (key && key.userId === recipient.address) {
+                    recipient.key = key;
+                    recipient.secure = true;
                     $scope.$apply();
                 }
             });
-        };
+        }
 
         function resetDisplay() {
-            $scope.toSecure = undefined;
             $scope.sendBtnText = undefined;
         }
 
         function displaySecure() {
-            $scope.toSecure = true;
             $scope.sendBtnText = 'Send securely';
         }
 
         function displayInsecure() {
-            $scope.toSecure = false;
             $scope.sendBtnText = 'Invite & send securely';
         }
 
@@ -254,12 +272,41 @@ define(function(require) {
             link: function(scope, elm, attrs) {
                 var model = $parse(attrs.autoSize);
                 scope.$watch(model, function(value) {
-                    if (!value) {
-                        return;
+                    var width;
+
+                    if (value.length < 12) {
+                        width = (14 * 8) + 'px';
+                    } else {
+                        width = ((value.length + 2) * 8) + 'px';
                     }
 
-                    var width = ((value.length + 2) * 8) + 'px';
                     elm.css('width', width);
+                });
+            }
+        };
+    });
+
+    ngModule.directive('addressInput', function($timeout, $parse) {
+        return {
+            //scope: true,   // optionally create a child scope
+            link: function(scope, element, attrs) {
+                element.bind('keydown', function(e) {
+                    if (e.keyCode === 32) {
+                        // space -> go to next input
+                        e.preventDefault();
+                        element[0].parent[0].nextSibling[0].children[0].focus();
+                    }
+                    scope.$apply();
+                });
+
+
+                var model = $parse(attrs.focusMe);
+                scope.$watch(model, function(value) {
+                    if (value === true) {
+                        $timeout(function() {
+                            element[0].focus();
+                        }, 100);
+                    }
                 });
             }
         };
