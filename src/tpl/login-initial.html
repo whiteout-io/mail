@@ -15,7 +15,7 @@
           <span class="popover-info" data-icon-append="&#xe010;" popover="#passphrase-info"></span>
         </div>
         <div>
-          <button type="submit" ng-click="confirmPassphrase()" class="btn" ng-disabled="passphraseRating < 2 || state.passphrase !== state.confirmation" tabindex="3">Generate keypair</button>
+          <button type="submit" ng-click="confirmPassphrase()" class="btn" ng-disabled="!state.passphrase || passphraseRating < 2 || state.passphrase !== state.confirmation" tabindex="3">Generate keypair</button>
         </div>
       </form>
     </div>
