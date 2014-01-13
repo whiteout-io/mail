@@ -62,7 +62,9 @@ define(function(require) {
 
             $scope.writerTitle = 'Reply';
             // fill recipient field
-            $scope.to[0].address = re.from[0].address;
+            $scope.to.unshift({
+                address: re.from[0].address
+            });
             // fill subject
             $scope.subject = 'Re: ' + ((re.subject) ? re.subject.replace('Re: ', '') : '');
 

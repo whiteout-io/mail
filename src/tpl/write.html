@@ -19,12 +19,6 @@
             <input id="cc{{$index}}" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" ng-class="{'label': recipient.secure === true, 'label label-primary': recipient.secure === false && recipient.valid !== true}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(cc, $index)" address-input="cc" tabindex="1">
           </span>
         </p>
-        <p>
-          <span>Bcc:</span>
-          <span ng-repeat="recipient in bcc track by $index">
-            <input id="bcc{{$index}}" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" ng-class="{'label': recipient.secure === true, 'label label-primary': recipient.secure === false && recipient.valid !== true}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(bcc, $index)" address-input="bcc" tabindex="1">
-          </span>
-        </p>
       </div><!--/.address-headers-->
 
       <div class="subject-box">
