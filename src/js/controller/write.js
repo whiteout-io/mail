@@ -108,6 +108,7 @@ define(function(require) {
             // verify email address
             if (!util.validateEmailAddress(recipient.address)) {
                 recipient.secure = undefined;
+                checkSendStatus();
                 return;
             }
 
@@ -122,21 +123,48 @@ define(function(require) {
                 if (key && key.userId === recipient.address) {
                     recipient.key = key;
                     recipient.secure = true;
-                    $scope.$apply();
                 }
+
+                checkSendStatus();
+                $scope.$apply();
             });
         }
 
-        function resetDisplay() {
+        function checkSendStatus() {
+            $scope.okToSend = false;
             $scope.sendBtnText = undefined;
-        }
+            $scope.sendBtnSecure = undefined;
 
-        function displaySecure() {
-            $scope.sendBtnText = 'Send securely';
-        }
+            var allSecure = true;
+            var numReceivers = 0;
 
-        function displayInsecure() {
-            $scope.sendBtnText = 'Invite & send securely';
+            // count number of receivers and check security
+            $scope.to.forEach(check);
+            $scope.cc.forEach(check);
+            $scope.bcc.forEach(check);
+
+            function check(recipient) {
+                // validate address
+                if (!util.validateEmailAddress(recipient.address)) {
+                    return;
+                }
+                numReceivers++;
+                if (!recipient.secure) {
+                    allSecure = false;
+                }
+            }
+
+            // sender can invite only one use at a time
+            if (!allSecure && numReceivers === 1) {
+                $scope.sendBtnText = 'Invite & send securely';
+                $scope.okToSend = true;
+                $scope.sendBtnSecure = false;
+            } else if (allSecure && numReceivers > 0) {
+                // all recipients are secure
+                $scope.sendBtnText = 'Send securely';
+                $scope.okToSend = true;
+                $scope.sendBtnSecure = true;
+            }
         }
 
         //

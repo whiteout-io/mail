@@ -39,7 +39,7 @@
       </div><!--/.body-->
 
       <div class="send-control">
-        <button ng-click="sendToOutbox()" class="btn" data-icon="{{(toSecure === false) ? '&#xe001;' : (toSecure === true) ? '&#xe009;' : ''}}" ng-disabled="!to" tabindex="4">{{sendBtnText || 'Send'}}</button>
+        <button ng-click="sendToOutbox()" class="btn" data-icon="{{(sendBtnSecure === false) ? '&#xe001;' : (sendBtnSecure === true) ? '&#xe009;' : ''}}" ng-disabled="!okToSend" tabindex="4">{{sendBtnText || 'Send'}}</button>
       </div>
     </div><!--/.write-view-->
 
