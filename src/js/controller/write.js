@@ -30,7 +30,7 @@ define(function(require) {
                 fillFields(replyTo);
                 $scope.updatePreview();
 
-                $scope.verifyTo();
+                verify($scope.to[0]);
             },
             close: function() {
                 this.open = false;
@@ -40,6 +40,12 @@ define(function(require) {
         function resetFields() {
             $scope.writerTitle = 'New email';
             $scope.to = [{
+                address: ''
+            }];
+            $scope.cc = [{
+                address: ''
+            }];
+            $scope.bcc = [{
                 address: ''
             }];
             $scope.subject = '';
@@ -56,7 +62,7 @@ define(function(require) {
 
             $scope.writerTitle = 'Reply';
             // fill recipient field
-            $scope.to = re.from[0].address;
+            $scope.to[0].address = re.from[0].address;
             // fill subject
             $scope.subject = 'Re: ' + ((re.subject) ? re.subject.replace('Re: ', '') : '');
 
@@ -75,18 +81,18 @@ define(function(require) {
         // Editing headers
         //
 
-        $scope.onAddressUpdate = function(recipient) {
-            var to = $scope.to,
+        $scope.onAddressUpdate = function(field, index) {
+            var recipient = field[index],
                 address = recipient.address;
 
             // handle number of email inputs for multiple recipients
             if (address.indexOf(' ') !== -1) {
                 recipient.address = address.replace(' ', '');
-                to.push({
+                field.push({
                     address: ''
                 });
-            } else if (address.length === 0 && to.length > 1) {
-                to.splice(to.indexOf(recipient), 1);
+            } else if (address.length === 0 && field.length > 1) {
+                field.splice(field.indexOf(recipient), 1);
             }
 
             verify(recipient);
@@ -286,25 +292,20 @@ define(function(require) {
         };
     });
 
-    ngModule.directive('addressInput', function($timeout, $parse) {
+    ngModule.directive('addressInput', function($timeout) {
         return {
             //scope: true,   // optionally create a child scope
             link: function(scope, element, attrs) {
+                // get prefix for id
+                var idPrefix = attrs.addressInput;
                 element.bind('keydown', function(e) {
                     if (e.keyCode === 32) {
                         // space -> go to next input
-                        e.preventDefault();
-                        element[0].parent[0].nextSibling[0].children[0].focus();
-                    }
-                    scope.$apply();
-                });
-
-
-                var model = $parse(attrs.focusMe);
-                scope.$watch(model, function(value) {
-                    if (value === true) {
                         $timeout(function() {
-                            element[0].focus();
+                            // find next input and focus
+                            var index = attrs.id.replace(idPrefix, '');
+                            var nextId = idPrefix + (parseInt(index, 10) + 1);
+                            document.getElementById(nextId).focus();
                         }, 100);
                     }
                 });

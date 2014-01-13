@@ -9,25 +9,27 @@
       <div class="headers">
         <p>
           <span>To:</span>
-
           <span ng-repeat="recipient in to track by $index">
-            <input value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" ng-class="{'label': recipient.secure === true, 'label label-primary': recipient.secure === false && recipient.valid !== true}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(recipient)">
+            <input id="to{{$index}}" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" ng-class="{'label': recipient.secure === true, 'label label-primary': recipient.secure === false && recipient.valid !== true}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(to, $index)" address-input="to" tabindex="1" focus-me="state.writer.open && writerTitle !== 'Reply'">
           </span>
-
         </p>
         <p>
           <span>Cc:</span>
-          <input type="email" ng-model="cc" tabindex="2">
+          <span ng-repeat="recipient in cc track by $index">
+            <input id="cc{{$index}}" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" ng-class="{'label': recipient.secure === true, 'label label-primary': recipient.secure === false && recipient.valid !== true}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(cc, $index)" address-input="cc" tabindex="1">
+          </span>
         </p>
         <p>
           <span>Bcc:</span>
-          <input type="email" ng-model="bcc" tabindex="3">
+          <span ng-repeat="recipient in bcc track by $index">
+            <input id="bcc{{$index}}" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" ng-class="{'label': recipient.secure === true, 'label label-primary': recipient.secure === false && recipient.valid !== true}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(bcc, $index)" address-input="bcc" tabindex="1">
+          </span>
         </p>
       </div><!--/.address-headers-->
 
       <div class="subject-box">
         <div class="subject-line">
-          <input ng-model="subject" class="subject" spellcheck="true" tabindex="4" placeholder="Subject" ng-change="updatePreview()">
+          <input ng-model="subject" class="subject" spellcheck="true" tabindex="2" placeholder="Subject" ng-change="updatePreview()">
         </div>
         <button class="btn-attachment">
           <div data-icon="&#xe003;"></div>
@@ -35,7 +37,7 @@
       </div><!--/.subject-box-->
 
       <div class="body" focus-child>
-        <p ng-model="body" contentEditable="true" spellcheck="false" ng-change="updatePreview()" tabindex="5" focus-me="state.writer.open && writerTitle === 'Reply'"></p>
+        <p ng-model="body" contentEditable="true" spellcheck="false" ng-change="updatePreview()" tabindex="3" focus-me="state.writer.open && writerTitle === 'Reply'"></p>
 
         <div class="encrypt-preview" ng-class="{'invisible': !ciphertextPreview}">
           <p>-----BEGIN ENCRYPTED PREVIEW-----<br>{{ciphertextPreview}}<br>-----END ENCRYPTED PREVIEW-----</p>
@@ -43,7 +45,7 @@
       </div><!--/.body-->
 
       <div class="send-control">
-        <button ng-click="sendToOutbox()" class="btn" data-icon="{{(toSecure === false) ? '&#xe001;' : (toSecure === true) ? '&#xe009;' : ''}}" ng-disabled="!to" tabindex="6">{{sendBtnText || 'Send'}}</button>
+        <button ng-click="sendToOutbox()" class="btn" data-icon="{{(toSecure === false) ? '&#xe001;' : (toSecure === true) ? '&#xe009;' : ''}}" ng-disabled="!to" tabindex="4">{{sendBtnText || 'Send'}}</button>
       </div>
     </div><!--/.write-view-->
 
