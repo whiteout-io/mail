@@ -153,20 +153,13 @@ define(function(require) {
         };
 
         $scope.sendToOutbox = function() {
-            var to, email;
+            var email;
 
-            // validate recipients
-            to = $scope.to.replace(/\s/g, '').split(/[,;]/);
-            if (!to || to.length < 1) {
-                $scope.onError({
-                    errMsg: 'Seperate recipients with a comma!',
-                    sync: true
-                });
-                return;
-            }
-
+            // build email model for smtp-client
             email = {
-                to: [], // list of receivers
+                to: [],
+                cc: [],
+                bcc: [],
                 subject: $scope.subject, // Subject line
                 body: $scope.body // use parsed plaintext body
             };
@@ -174,13 +167,34 @@ define(function(require) {
                 name: '',
                 address: emailDao._account.emailAddress
             }];
-            to.forEach(function(address) {
-                email.to.push({
-                    name: '',
-                    address: address
-                });
-            });
 
+            // validate recipients and gather public keys
+            email.receiverKeys = []; // gather public keys for emailDao._encrypt
+
+            appendReceivers($scope.to, email.to);
+            appendReceivers($scope.cc, email.cc);
+            appendReceivers($scope.bcc, email.bcc);
+
+            function appendReceivers(srcField, destField) {
+                srcField.forEach(function(recipient) {
+                    // validate address
+                    if (!util.validateEmailAddress(recipient.address)) {
+                        return;
+                    }
+
+                    // append address to email model
+                    destField.push({
+                        address: recipient.address
+                    });
+
+                    // add public key to list of recipient keys
+                    if (recipient.key && recipient.key.publicKey) {
+                        email.receiverKeys.push(recipient.key.publicKey);
+                    }
+                });
+            }
+
+            // persist the email locally for later smtp transmission
             emailDao.store(email, function(err) {
                 if (err) {
                     $scope.onError(err);
