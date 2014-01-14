@@ -30,7 +30,7 @@ define(function(require) {
                 fillFields(replyTo);
                 $scope.updatePreview();
 
-                verify($scope.to[0]);
+                $scope.verify($scope.to[0]);
             },
             close: function() {
                 this.open = false;
@@ -83,6 +83,9 @@ define(function(require) {
         // Editing headers
         //
 
+        /**
+         * This event is fired when editing the email address headers. It checks is space is pressed and if so, creates a new address field.
+         */
         $scope.onAddressUpdate = function(field, index) {
             var recipient = field[index],
                 address = recipient.address;
@@ -97,10 +100,13 @@ define(function(require) {
                 field.splice(field.indexOf(recipient), 1);
             }
 
-            verify(recipient);
+            $scope.verify(recipient);
         };
 
-        function verify(recipient) {
+        /**
+         * Verify and email address and fetch its public key
+         */
+        $scope.verify = function(recipient) {
             // set display to insecure while fetching keys
             recipient.key = undefined;
             recipient.secure = false;
@@ -108,7 +114,7 @@ define(function(require) {
             // verify email address
             if (!util.validateEmailAddress(recipient.address)) {
                 recipient.secure = undefined;
-                checkSendStatus();
+                $scope.checkSendStatus();
                 return;
             }
 
@@ -125,12 +131,15 @@ define(function(require) {
                     recipient.secure = true;
                 }
 
-                checkSendStatus();
+                $scope.checkSendStatus();
                 $scope.$apply();
             });
-        }
+        };
 
-        function checkSendStatus() {
+        /**
+         * Check if it is ok to send an email depending on the invitation state of the addresses
+         */
+        $scope.checkSendStatus = function() {
             $scope.okToSend = false;
             $scope.sendBtnText = undefined;
             $scope.sendBtnSecure = undefined;
@@ -165,7 +174,7 @@ define(function(require) {
                 $scope.okToSend = true;
                 $scope.sendBtnSecure = true;
             }
-        }
+        };
 
         //
         // Editing email body
