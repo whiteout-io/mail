@@ -724,24 +724,10 @@ define(function(require) {
                 var path = 'FOLDAAAA',
                     uid = 1337;
 
-                imapClientStub.listMessagesByUid.withArgs({
-                    path: path,
-                    firstUid: uid,
-                    lastUid: uid
-                }).yields(null, [{
-                    uid: uid,
-                    subject: 'asdasd',
-                    unread: true,
-                    answered: false
-                }]);
-
-                imapClientStub.getMessagePreview.withArgs({
+                imapClientStub.getMessage.withArgs({
                     path: path,
                     uid: uid
-                }).yields(null, {
-                    id: 'idididididid',
-                    body: 'yes.'
-                });
+                }).yields(null, {});
 
                 dao._imapGetMessage({
                     folder: path,
@@ -750,17 +736,16 @@ define(function(require) {
                     expect(err).to.not.exist;
                     expect(msg).to.exist;
 
-                    expect(imapClientStub.listMessagesByUid.calledOnce).to.be.true;
-                    expect(imapClientStub.getMessagePreview.calledOnce).to.be.true;
+                    expect(imapClientStub.getMessage.calledOnce).to.be.true;
 
                     done();
                 });
             });
-            it('should not work when listMessages fails', function(done) {
+            it('should not work when getMessage fails', function(done) {
                 var path = 'FOLDAAAA',
                     uid = 1337;
 
-                imapClientStub.listMessagesByUid.yields({});
+                imapClientStub.getMessage.yields({});
 
                 dao._imapGetMessage({
                     folder: path,
@@ -769,33 +754,7 @@ define(function(require) {
                     expect(err).to.exist;
                     expect(msg).to.not.exist;
 
-                    expect(imapClientStub.listMessagesByUid.calledOnce).to.be.true;
-                    expect(imapClientStub.getMessagePreview.called).to.be.false;
-
-                    done();
-                });
-            });
-            it('should not work when getMessagePreview fails', function(done) {
-                var path = 'FOLDAAAA',
-                    uid = 1337;
-
-                imapClientStub.listMessagesByUid.yields(null, [{
-                    uid: uid,
-                    subject: 'asdasd',
-                    unread: true,
-                    answered: false
-                }]);
-                imapClientStub.getMessagePreview.yields({});
-
-                dao._imapGetMessage({
-                    folder: path,
-                    uid: uid
-                }, function(err, msg) {
-                    expect(err).to.exist;
-                    expect(msg).to.not.exist;
-
-                    expect(imapClientStub.listMessagesByUid.calledOnce).to.be.true;
-                    expect(imapClientStub.getMessagePreview.calledOnce).to.be.true;
+                    expect(imapClientStub.getMessage.calledOnce).to.be.true;
 
                     done();
                 });
