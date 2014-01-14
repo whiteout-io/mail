@@ -75,7 +75,8 @@ define(function(require) {
                 subject: 'qweasd',
                 body: 'asd',
                 unread: false,
-                answered: false
+                answered: false,
+                receiverKeys: ['-----BEGIN PGP PUBLIC KEY-----\nasd\n-----END PGP PUBLIC KEY-----']
             };
             nonWhitelistedMail = {
                 uid: 1234,
@@ -2409,11 +2410,7 @@ define(function(require) {
         describe('sendEncrypted', function() {
             it('should work', function(done) {
                 var encryptStub = sinon.stub(dao, '_encrypt').yields(null, {});
-                keychainStub.getReceiverPublicKey.withArgs(dummyDecryptedMail.to[0].address).yields(null, {
-                    _id: "fcf8b4aa-5d09-4089-8b4f-e3bc5091daf3",
-                    userId: dummyDecryptedMail.to[0].address,
-                    publicKey: publicKey
-                });
+
                 smtpClientStub.send.yields();
 
                 dao.sendEncrypted({
@@ -2421,7 +2418,6 @@ define(function(require) {
                 }, function(err) {
                     expect(err).to.not.exist;
 
-                    expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
                     expect(encryptStub.calledOnce).to.be.true;
                     expect(smtpClientStub.send.calledOnce).to.be.true;
 
@@ -2430,67 +2426,13 @@ define(function(require) {
             });
             it('should not work when encryption fails', function(done) {
                 var encryptStub = sinon.stub(dao, '_encrypt').yields({});
-                keychainStub.getReceiverPublicKey.withArgs(dummyDecryptedMail.to[0].address).yields(null, {
-                    _id: "fcf8b4aa-5d09-4089-8b4f-e3bc5091daf3",
-                    userId: dummyDecryptedMail.to[0].address,
-                    publicKey: publicKey
-                });
 
                 dao.sendEncrypted({
                     email: dummyDecryptedMail
                 }, function(err) {
                     expect(err).to.exist;
 
-                    expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
                     expect(encryptStub.calledOnce).to.be.true;
-                    expect(smtpClientStub.send.called).to.be.false;
-
-                    done();
-                });
-            });
-            it('should not work when key retrieval fails', function(done) {
-                var encryptStub = sinon.stub(dao, '_encrypt');
-                keychainStub.getReceiverPublicKey.withArgs(dummyDecryptedMail.to[0].address).yields({});
-
-                dao.sendEncrypted({
-                    email: dummyDecryptedMail
-                }, function(err) {
-                    expect(err).to.exist;
-
-                    expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
-                    expect(encryptStub.called).to.be.false;
-                    expect(smtpClientStub.send.called).to.be.false;
-
-                    done();
-                });
-            });
-            it('should not work invalid recipients', function(done) {
-                var encryptStub = sinon.stub(dao, '_encrypt');
-                dummyDecryptedMail.to[0].address = 'asd@asd';
-
-                dao.sendEncrypted({
-                    email: dummyDecryptedMail
-                }, function(err) {
-                    expect(err).to.exist;
-
-                    expect(keychainStub.getReceiverPublicKey.called).to.be.false;
-                    expect(encryptStub.called).to.be.false;
-                    expect(smtpClientStub.send.called).to.be.false;
-
-                    done();
-                });
-            });
-            it('should not work with without sender', function(done) {
-                var encryptStub = sinon.stub(dao, '_encrypt');
-                dummyDecryptedMail.from[0].address = 'asd@asd';
-
-                dao.sendEncrypted({
-                    email: dummyDecryptedMail
-                }, function(err) {
-                    expect(err).to.exist;
-
-                    expect(keychainStub.getReceiverPublicKey.called).to.be.false;
-                    expect(encryptStub.called).to.be.false;
                     expect(smtpClientStub.send.called).to.be.false;
 
                     done();
@@ -2505,7 +2447,6 @@ define(function(require) {
                 }, function(err) {
                     expect(err).to.exist;
 
-                    expect(keychainStub.getReceiverPublicKey.called).to.be.false;
                     expect(encryptStub.called).to.be.false;
                     expect(smtpClientStub.send.called).to.be.false;
 
@@ -2521,7 +2462,6 @@ define(function(require) {
                 }, function(err) {
                     expect(err).to.exist;
 
-                    expect(keychainStub.getReceiverPublicKey.called).to.be.false;
                     expect(encryptStub.called).to.be.false;
                     expect(smtpClientStub.send.called).to.be.false;
 

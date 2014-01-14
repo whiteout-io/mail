@@ -875,7 +875,7 @@ define(function(require) {
         }
 
         // validate the email input
-        if (!email.to || !email.from || !email.to[0].address || !email.from[0].address) {
+        if (!email.to || !email.from || !email.to[0].address || !email.from[0].address || !Array.isArray(email.receiverKeys)) {
             callback({
                 errMsg: 'Invalid email object!'
             });
