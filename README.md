@@ -5,9 +5,7 @@ HTML5 Mail App with integrated OpenPGP encryption. Download the official version
 
 ### Building
 
-You can download a prebuilt bundle under [releases](https://github.com/whiteout-io/mail-html5/releases) or build your own.
-
-Required packages: nodejs, npm:
+You can download a prebuilt bundle under [releases](https://github.com/whiteout-io/mail-html5/releases) or build your own:
 
     npm install && grunt
     
