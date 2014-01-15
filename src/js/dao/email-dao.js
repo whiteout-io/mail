@@ -1077,36 +1077,16 @@ define(function(require) {
             return;
         }
 
-        self._imapClient.listMessagesByUid({
+        self._imapClient.getMessage({
             path: options.folder,
-            firstUid: options.uid,
-            lastUid: options.uid
-        }, function(err, imapHeaders) {
+            uid: options.uid
+        }, function(err, message) {
             if (err) {
                 callback(err);
                 return;
             }
 
-            var imapHeader = imapHeaders[0];
-            self._imapClient.getMessagePreview({
-                path: options.folder,
-                uid: options.uid
-            }, function(err, message) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-
-                // create a bastard child of smtp and imap. before thinking this is stupid, talk to the guys who wrote this.
-                // p.s. it's a parsing issue.
-
-                imapHeader.id = message.id;
-                imapHeader.body = message.body;
-                imapHeader.html = message.html;
-                imapHeader.attachments = message.attachments;
-
-                callback(null, imapHeader);
-            });
+            callback(null, message);
         });
     };
 
