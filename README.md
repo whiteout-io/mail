@@ -1,4 +1,4 @@
-mail-html5 [![Build Status](https://magnum.travis-ci.com/whiteout-io/mail-html5.png?token=g11Y5xe1ynqF5dzGqgB8)](https://magnum.travis-ci.com/whiteout-io/mail-html5)
+mail-html5 [![Build Status](https://travis-ci.org/whiteout-io/mail-html5.png)](https://travis-ci.org/whiteout-io/mail-html5)
 ==========
 
 HTML5 Mail App with Client-side Encryption
