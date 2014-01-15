@@ -23,7 +23,7 @@ define(function(require) {
                 if (!email.subject) {
                     return;
                 }
-                
+
                 if (email.subject.indexOf(str.subjectPrefix) === -1 ||
                     email.subject === str.subjectPrefix + str.verificationSubject) {
                     return;
@@ -58,6 +58,9 @@ define(function(require) {
         // scope functions
         //
 
+        /**
+         * Called when clicking on an email list item
+         */
         $scope.select = function(email) {
             if (!email) {
                 $scope.state.mailList.selected = undefined;
@@ -77,6 +80,17 @@ define(function(require) {
             $scope.synchronize();
         };
 
+        /**
+         * Mark an email as unread
+         */
+        $scope.markUnread = function(email) {
+            email.unread = true;
+            $scope.synchronize();
+        };
+
+        /**
+         * Synchronize the selected imap folder to local storage
+         */
         $scope.synchronize = function(callback) {
             // if we're in the outbox, don't do an imap sync
             if (getFolder().type === 'Outbox') {
@@ -121,6 +135,9 @@ define(function(require) {
             });
         };
 
+        /**
+         * Delete an email by moving it to the trash folder or purging it.
+         */
         $scope.remove = function(email) {
             if (!email) {
                 return;

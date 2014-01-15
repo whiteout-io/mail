@@ -52,8 +52,7 @@
                 text-align: right;
                 line-height: 1.5em * ($font-size-small / $font-size-smaller);
             }
-            &:before {
-                content: "";
+            .flag {
                 width: 1em;
                 height: 1em;
                 border-radius: 50%;
@@ -63,7 +62,6 @@
                 left: 0;
                 margin-top: 0.2em;
                 margin-left: -1.3em;
-                transition: background-color $time-li-fade, box-shadow $time-li-fade;
             }
         }
         .body {
@@ -93,15 +91,14 @@
         }
 
         &.mail-list-unread {
-            .head:before {
+            .flag {
                 background-color: $color-blue;
                 box-shadow: inset 0.5px 1px 1px $color-grey-medium;
             }
         }
 
         &.mail-list-replied {
-            .head:before {
-                content: "\e002";
+            .flag {
                 color: $color-grey-medium;
                 font-family: $font-family-icons;
                 position: absolute;
@@ -136,7 +133,7 @@
             .body {
                 color: $color-white;
             }
-            .head:before {
+            .flag {
                 box-shadow: inset 1px 1px 1px $color-grey-light;
                 background-color: $color-white;
             }
@@ -146,13 +143,13 @@
                 }
             }
             &.mail-list-unread {
-                .head:before {
+                .flag {
                     box-shadow: inset 1px 1px 1px $color-grey-light;
                     background-color: $color-white;
                 }
             }
             &.mail-list-replied {
-                .head:before {
+                .flag {
                     color: $color-white;
                     background: transparent;
                     box-shadow: none;
