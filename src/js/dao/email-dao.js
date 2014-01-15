@@ -875,58 +875,24 @@ define(function(require) {
         }
 
         // validate the email input
-        if (!email.to || !email.from || !email.to[0].address || !email.from[0].address) {
+        if (!email.to || !email.from || !email.to[0].address || !email.from[0].address || !Array.isArray(email.receiverKeys)) {
             callback({
                 errMsg: 'Invalid email object!'
             });
             return;
         }
 
-        // validate email addresses
-        for (var i = email.to.length - 1; i >= 0; i--) {
-            if (!util.validateEmailAddress(email.to[i].address)) {
-                callback({
-                    errMsg: 'Invalid recipient: ' + email.to[i].address
-                });
-                return;
-            }
-        }
-
-        if (!util.validateEmailAddress(email.from[0].address)) {
-            callback({
-                errMsg: 'Invalid sender: ' + email.from
-            });
-            return;
-        }
-
-        // only support single recipient for e-2-e encryption
-        // check if receiver has a public key
-        self._keychain.getReceiverPublicKey(email.to[0].address, function(err, receiverPubkey) {
+        // public key found... encrypt and send
+        self._encrypt({
+            email: email,
+            keys: email.receiverKeys // this Array is set in writer controller
+        }, function(err, email) {
             if (err) {
                 callback(err);
                 return;
             }
 
-            // validate public key
-            if (!receiverPubkey) {
-                callback({
-                    errMsg: 'User has no public key yet!'
-                });
-                return;
-            }
-
-            // public key found... encrypt and send
-            self._encrypt({
-                email: email,
-                keys: [receiverPubkey.publicKey]
-            }, function(err, email) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-
-                self._smtpClient.send(email, callback);
-            });
+            self._smtpClient.send(email, callback);
         });
     };
 

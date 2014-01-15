@@ -53,6 +53,8 @@ define(function(require) {
             mail.from.forEach(checkPublicKey);
             // display recipient security status
             mail.to.forEach(checkPublicKey);
+            // display recipient security status
+            Array.isArray(mail.cc) && mail.cc.forEach(checkPublicKey);
         });
 
         function checkPublicKey(user) {

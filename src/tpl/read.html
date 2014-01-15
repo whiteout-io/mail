@@ -16,7 +16,7 @@
     </p>
     <div ng-switch="state.mailList.selected.cc !== undefined">
       <p class="address" ng-switch-when="true">
-        CC: <span ng-repeat="u in state.mailList.selected.cc" class="label" ng-class="{'label-primary': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : (u.secure === true) ? '&#xe009;' : ''}}" ng-mouseover="getFingerprint(u.address)" popover="#fingerprint-info">{{u.name || u.address}}</span>
+        Cc: <span ng-repeat="u in state.mailList.selected.cc" class="label" ng-class="{'label-primary': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : (u.secure === true) ? '&#xe009;' : ''}}" ng-mouseover="getFingerprint(u.address)" popover="#fingerprint-info">{{u.name || u.address}}</span>
       </p>
     </div>
   </div><!--/.headers-->

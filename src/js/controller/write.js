@@ -5,6 +5,7 @@ define(function(require) {
         appController = require('js/app-controller'),
         aes = require('cryptoLib/aes-cbc'),
         util = require('cryptoLib/util'),
+        str = require('js/app-config').string,
         emailDao;
 
     //
@@ -30,7 +31,7 @@ define(function(require) {
                 fillFields(replyTo);
                 $scope.updatePreview();
 
-                $scope.verifyTo();
+                $scope.verify($scope.to[0]);
             },
             close: function() {
                 this.open = false;
@@ -39,7 +40,15 @@ define(function(require) {
 
         function resetFields() {
             $scope.writerTitle = 'New email';
-            $scope.to = '';
+            $scope.to = [{
+                address: ''
+            }];
+            $scope.cc = [{
+                address: ''
+            }];
+            $scope.bcc = [{
+                address: ''
+            }];
             $scope.subject = '';
             $scope.body = '';
             $scope.ciphertextPreview = '';
@@ -54,7 +63,9 @@ define(function(require) {
 
             $scope.writerTitle = 'Reply';
             // fill recipient field
-            $scope.to = re.from[0].address;
+            $scope.to.unshift({
+                address: re.from[0].address
+            });
             // fill subject
             $scope.subject = 'Re: ' + ((re.subject) ? re.subject.replace('Re: ', '') : '');
 
@@ -73,45 +84,98 @@ define(function(require) {
         // Editing headers
         //
 
-        $scope.verifyTo = function() {
-            if (!$scope.to) {
-                resetDisplay();
+        /**
+         * This event is fired when editing the email address headers. It checks is space is pressed and if so, creates a new address field.
+         */
+        $scope.onAddressUpdate = function(field, index) {
+            var recipient = field[index],
+                address = recipient.address;
+
+            // handle number of email inputs for multiple recipients
+            if (address.indexOf(' ') !== -1) {
+                recipient.address = address.replace(' ', '');
+                field.push({
+                    address: ''
+                });
+            } else if (address.length === 0 && field.length > 1) {
+                field.splice(field.indexOf(recipient), 1);
+            }
+
+            $scope.verify(recipient);
+        };
+
+        /**
+         * Verify and email address and fetch its public key
+         */
+        $scope.verify = function(recipient) {
+            // set display to insecure while fetching keys
+            recipient.key = undefined;
+            recipient.secure = false;
+
+            // verify email address
+            if (!util.validateEmailAddress(recipient.address)) {
+                recipient.secure = undefined;
+                $scope.checkSendStatus();
                 return;
             }
 
-            // set display to insecure while fetching keys
-            $scope.toKey = undefined;
-            displayInsecure();
             // check if to address is contained in known public keys
-            emailDao._keychain.getReceiverPublicKey($scope.to, function(err, key) {
+            emailDao._keychain.getReceiverPublicKey(recipient.address, function(err, key) {
                 if (err) {
                     $scope.onError(err);
                     return;
                 }
 
                 // compare again since model could have changed during the roundtrip
-                if (key && key.userId === $scope.to) {
-                    $scope.toKey = key;
-                    displaySecure();
-                    $scope.$apply();
+                if (key && key.userId === recipient.address) {
+                    recipient.key = key;
+                    recipient.secure = true;
                 }
+
+                $scope.checkSendStatus();
+                $scope.$apply();
             });
         };
 
-        function resetDisplay() {
-            $scope.toSecure = undefined;
+        /**
+         * Check if it is ok to send an email depending on the invitation state of the addresses
+         */
+        $scope.checkSendStatus = function() {
+            $scope.okToSend = false;
             $scope.sendBtnText = undefined;
-        }
+            $scope.sendBtnSecure = undefined;
 
-        function displaySecure() {
-            $scope.toSecure = true;
-            $scope.sendBtnText = 'Send securely';
-        }
+            var allSecure = true;
+            var numReceivers = 0;
 
-        function displayInsecure() {
-            $scope.toSecure = false;
-            $scope.sendBtnText = 'Invite & send securely';
-        }
+            // count number of receivers and check security
+            $scope.to.forEach(check);
+            $scope.cc.forEach(check);
+            $scope.bcc.forEach(check);
+
+            function check(recipient) {
+                // validate address
+                if (!util.validateEmailAddress(recipient.address)) {
+                    return;
+                }
+                numReceivers++;
+                if (!recipient.secure) {
+                    allSecure = false;
+                }
+            }
+
+            // sender can invite only one use at a time
+            if (!allSecure && numReceivers === 1) {
+                $scope.sendBtnText = str.sendBtnInvite;
+                $scope.okToSend = true;
+                $scope.sendBtnSecure = false;
+            } else if (allSecure && numReceivers > 0) {
+                // all recipients are secure
+                $scope.sendBtnText = str.sendBtnSecure;
+                $scope.okToSend = true;
+                $scope.sendBtnSecure = true;
+            }
+        };
 
         //
         // Editing email body
@@ -129,20 +193,13 @@ define(function(require) {
         };
 
         $scope.sendToOutbox = function() {
-            var to, email;
+            var email;
 
-            // validate recipients
-            to = $scope.to.replace(/\s/g, '').split(/[,;]/);
-            if (!to || to.length < 1) {
-                $scope.onError({
-                    errMsg: 'Seperate recipients with a comma!',
-                    sync: true
-                });
-                return;
-            }
-
+            // build email model for smtp-client
             email = {
-                to: [], // list of receivers
+                to: [],
+                cc: [],
+                bcc: [],
                 subject: $scope.subject, // Subject line
                 body: $scope.body // use parsed plaintext body
             };
@@ -150,13 +207,34 @@ define(function(require) {
                 name: '',
                 address: emailDao._account.emailAddress
             }];
-            to.forEach(function(address) {
-                email.to.push({
-                    name: '',
-                    address: address
-                });
-            });
 
+            // validate recipients and gather public keys
+            email.receiverKeys = []; // gather public keys for emailDao._encrypt
+
+            appendReceivers($scope.to, email.to);
+            appendReceivers($scope.cc, email.cc);
+            appendReceivers($scope.bcc, email.bcc);
+
+            function appendReceivers(srcField, destField) {
+                srcField.forEach(function(recipient) {
+                    // validate address
+                    if (!util.validateEmailAddress(recipient.address)) {
+                        return;
+                    }
+
+                    // append address to email model
+                    destField.push({
+                        address: recipient.address
+                    });
+
+                    // add public key to list of recipient keys
+                    if (recipient.key && recipient.key.publicKey) {
+                        email.receiverKeys.push(recipient.key.publicKey);
+                    }
+                });
+            }
+
+            // persist the email locally for later smtp transmission
             emailDao.store(email, function(err) {
                 if (err) {
                     $scope.onError(err);
@@ -254,12 +332,36 @@ define(function(require) {
             link: function(scope, elm, attrs) {
                 var model = $parse(attrs.autoSize);
                 scope.$watch(model, function(value) {
-                    if (!value) {
-                        return;
+                    var width;
+
+                    if (value.length < 12) {
+                        width = (14 * 8) + 'px';
+                    } else {
+                        width = ((value.length + 2) * 8) + 'px';
                     }
 
-                    var width = ((value.length + 2) * 8) + 'px';
                     elm.css('width', width);
+                });
+            }
+        };
+    });
+
+    ngModule.directive('addressInput', function($timeout) {
+        return {
+            //scope: true,   // optionally create a child scope
+            link: function(scope, element, attrs) {
+                // get prefix for id
+                var idPrefix = attrs.addressInput;
+                element.bind('keydown', function(e) {
+                    if (e.keyCode === 32) {
+                        // space -> go to next input
+                        $timeout(function() {
+                            // find next input and focus
+                            var index = attrs.id.replace(idPrefix, '');
+                            var nextId = idPrefix + (parseInt(index, 10) + 1);
+                            document.getElementById(nextId).focus();
+                        }, 100);
+                    }
                 });
             }
         };
