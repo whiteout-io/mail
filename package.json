@@ -11,7 +11,7 @@
     },
     "dependencies": {
         "crypto-lib": "https://github.com/whiteout-io/crypto-lib/tarball/master",
-        "imap-client": "git+ssh://git@github.com:whiteout-io/imap-client.git#dev/imap-redesign",
+        "imap-client": "git+ssh://git@github.com:whiteout-io/imap-client.git#master",
         "smtp-client": "git+ssh://git@github.com:whiteout-io/smtp-client.git#master",
         "requirejs": "2.1.8"
     },
