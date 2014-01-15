@@ -201,7 +201,7 @@ define(function(require) {
                 cc: [],
                 bcc: [],
                 subject: $scope.subject, // Subject line
-                body: $scope.body // use parsed plaintext body
+                body: $scope.body.trim() // use parsed plaintext body
             };
             email.from = [{
                 name: '',
