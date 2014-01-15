@@ -9,7 +9,7 @@ You can download a prebuilt bundle under [releases](https://github.com/whiteout-
 
     npm install && grunt
     
-This generates a development build of the Chrome Packaged App (DEV.zip) which can be installed under [chrome://extensions](chrome://extensions) in developer mode.
+This builds the Chrome Packaged App bundle **DEV.zip** which can be installed under [chrome://extensions](chrome://extensions) in developer mode.
 
 ## License
 
