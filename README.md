@@ -6,8 +6,6 @@ HTML5 Mail App with Client-side Encryption
 ## Getting started
 Required packages: nodejs, npm
 
-    npm install && npm start
+    npm install && grunt
     
-browse to http://localhost:8580/dist/<platform>.html
-
-or install the chrome packaged app in developer mode.
+This generates a development build of the Chrome Packaged App (DEV.zip) which can be installed under [chrome://extensions](chrome://extensions) in developer mode.
