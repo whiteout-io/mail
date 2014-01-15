@@ -54,7 +54,9 @@ define(function(require) {
         cryptSuffix: '-----END PGP MESSAGE-----',
         signature: 'Sent securely from Whiteout Mail',
         webSite: 'http://whiteout.io',
-        verificationSubject: 'New public key uploaded'
+        verificationSubject: 'New public key uploaded',
+        sendBtnInvite: 'Invite & send securely',
+        sendBtnSecure: 'Send securely'
     };
 
     return app;

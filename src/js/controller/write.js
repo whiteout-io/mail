@@ -5,6 +5,7 @@ define(function(require) {
         appController = require('js/app-controller'),
         aes = require('cryptoLib/aes-cbc'),
         util = require('cryptoLib/util'),
+        str = require('js/app-config').string,
         emailDao;
 
     //
@@ -165,12 +166,12 @@ define(function(require) {
 
             // sender can invite only one use at a time
             if (!allSecure && numReceivers === 1) {
-                $scope.sendBtnText = 'Invite & send securely';
+                $scope.sendBtnText = str.sendBtnInvite;
                 $scope.okToSend = true;
                 $scope.sendBtnSecure = false;
             } else if (allSecure && numReceivers > 0) {
                 // all recipients are secure
-                $scope.sendBtnText = 'Send securely';
+                $scope.sendBtnText = str.sendBtnSecure;
                 $scope.okToSend = true;
                 $scope.sendBtnSecure = true;
             }
