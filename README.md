@@ -1,10 +1,13 @@
 mail-html5 [![Build Status](https://travis-ci.org/whiteout-io/mail-html5.png)](https://travis-ci.org/whiteout-io/mail-html5)
 ==========
 
-HTML5 Mail App with Client-side Encryption
+HTML5 Mail App with integrated OpenPGP encryption. Download the official version under [whiteout.io](http://whiteout.io)
 
-## Getting started
-Required packages: nodejs, npm
+### Building
+
+You can download a prebuilt bundle under [https://github.com/whiteout-io/mail-html5/releases](https://github.com/whiteout-io/mail-html5/releases)
+
+Required packages: nodejs, npm:
 
     npm install && grunt
     
