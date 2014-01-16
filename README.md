@@ -1,7 +1,14 @@
 mail-html5 [![Build Status](https://travis-ci.org/whiteout-io/mail-html5.png)](https://travis-ci.org/whiteout-io/mail-html5)
 ==========
 
-Whiteout Mail is a packaged HTML5 app with full IMAP, SMTP, TLS and OpenPGP support written in pure JavaScript on top of [chrome.socket](http://developer.chrome.com/apps/socket.html). Download the official version under [whiteout.io](http://whiteout.io).
+Whiteout Mail is a mail client with full IMAP, SMTP, TLS and OpenPGP support written in pure JavaScript. The Client is distributed as a [Chrome Packaged App](https://developer.chrome.com/apps/about_apps.html) since it requires [TCP sockets](http://developer.chrome.com/apps/socket.html). Download the official version under [whiteout.io](http://whiteout.io).
+
+### Security
+
+* The app is deployed as an auditable app with static versions in order to prevent the [problems with host-based security](http://tonyarcieri.com/whats-wrong-with-webcrypto).
+* [Content Securit Policy (CSP)](http://www.html5rocks.com/en/tutorials/security/content-security-policy/) is enforced to prevent against injection attacks.
+* The code is still under heavy development and is yet not recommended for production use. That being said, we have done multiple code audits and penetration tests (which will be published as soon as all reported vulnerabilities are fixed).
+* We will also launch a bug bounty program later on the compensate security researchers. If you find any security vulnerabilites, don't hesitate to contact us [security@whiteout.io](mailto:security@whiteout.io).
 
 ### Building
 
@@ -24,7 +31,7 @@ This builds the Chrome Packaged App bundle **DEV.zip** which can be installed un
     interested in contributing or getting a license, please get in touch with
     us (info@whiteout.io).
 
-Here are some of the libraries we use (for a complete list please take a look at the code):
+Many of the libraries we use are licensed under an open source license. Here are some of the libraries we use (for a complete list please take a look at the code):
 
 * [OpenPGP.js](http://openpgpjs.org): An implementation of OpenPGP in Javascript
 * [Inbox](https://github.com/andris9/inbox): Simple IMAP client for node.js
