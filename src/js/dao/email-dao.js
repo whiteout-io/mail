@@ -487,7 +487,7 @@ define(function(require) {
                             }
 
                             // imap filtering is insufficient, since google ignores non-alphabetical characters
-                            if (message.subject.indexOf(str.subjectPrefix.trim()) === -1) {
+                            if (message.subject.indexOf(str.subjectPrefix) === -1) {
                                 syncNextItem();
                                 return;
                             }
