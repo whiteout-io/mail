@@ -21,7 +21,19 @@
     </div>
   </div><!--/.headers-->
 
-  <div class="seperator-line"></div>
+  <div ng-switch="state.mailList.selected.attachments !== undefined && state.mailList.selected.attachments.length > 0">
+    <div ng-switch-when="true">
+      <div class="attachments">
+        <span ng-repeat="attachment in state.mailList.selected.attachments">
+          <button ng-click="download(attachment)">{{attachment.filename}}</button>
+        </span>
+      </div>
+    </div>
+    <div ng-switch-default>
+      <div class="seperator-line"></div>
+    </div>
+  </div>
+
 
   <div class="body">
     <!-- Render lines of a text-email in divs for easier styling -->

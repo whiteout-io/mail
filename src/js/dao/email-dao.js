@@ -862,6 +862,18 @@ define(function(require) {
         }, callback);
     };
 
+    EmailDAO.prototype.getAttachment = function(options, callback) {
+        if (!this._account.online) {
+            callback({
+                errMsg: 'Client is currently offline!',
+                code: 42
+            });
+            return;
+        }
+
+        this._imapClient.getAttachment(options, callback);
+    };
+
     EmailDAO.prototype.sendEncrypted = function(options, callback) {
         var self = this,
             email = options.email;
