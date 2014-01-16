@@ -19,7 +19,7 @@ Whiteout Mail is an easy to use email client with integrated OpenPGP encryption 
 
 ### Reporting bugs and feature requests
 
-* We will launch a bug bounty program later on the compensate security researchers. If you find any security vulnerabilities, don't hesitate to contact us [security@whiteout.io](mailto:security@whiteout.io).
+* We will launch a bug bounty program later on for independant security researchers. If you find any security vulnerabilities, don't hesitate to contact us [security@whiteout.io](mailto:security@whiteout.io).
 
 * You can also just create an [issue](https://github.com/whiteout-io/mail-html5/issues) on GitHub if you're missing a feature or just want to give us feedback. It would be much appreciated!
 
