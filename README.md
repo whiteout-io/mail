@@ -50,4 +50,4 @@ Many of the libraries we use are licensed under an open source license. Here are
 * [Inbox](https://github.com/andris9/inbox): Simple IMAP client for node.js
 * [Nodemailer](http://www.nodemailer.com): SMTP client for node.js
 * [Forge](https://github.com/digitalbazaar/forge): An implementation of TLS in Javascript
-* [node-shims](https://github.com/whiteout-io/node-shims): A basic set shims of commonly used node APIs for use in the browser
+* [node-shims](https://github.com/whiteout-io/node-shims): A basic set of shims for node APIs in the browser
