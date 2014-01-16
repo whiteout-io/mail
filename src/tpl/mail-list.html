@@ -13,7 +13,7 @@
       <li ng-class="{'mail-list-active': email === state.mailList.selected, 'mail-list-attachment': email.attachments !== undefined && email.attachments.length > 0, 'mail-list-unread': email.unread, 'mail-list-replied': !email.unread && email.answered}" ng-click="select(email)" ng-repeat="email in state.nav.currentFolder.messages | orderBy:'uid':true | filter:searchText">
         <h3>{{email.from[0].name || email.from[0].address}}</h3>
         <div class="head">
-          <div class="flag" data-icon="{{(!email.unread && email.answered) ? '&#xe002;' : ''}}" ng-click="markUnread(email); $event.stopPropagation()"></div>
+          <div class="flag" data-icon="{{(!email.unread && email.answered) ? '&#xe002;' : ''}}" ng-click="toggleUnread(email); $event.stopPropagation()"></div>
           <p class="subject">{{email.subject || 'No subject'}}</p>
           <time>{{email.sentDate | date:'mediumDate'}}</time>
         </div>

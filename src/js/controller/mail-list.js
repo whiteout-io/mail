@@ -81,10 +81,10 @@ define(function(require) {
         };
 
         /**
-         * Mark an email as unread
+         * Mark an email as unread or read, respectively
          */
-        $scope.markUnread = function(email) {
-            email.unread = true;
+        $scope.toggleUnread = function(email) {
+            email.unread = !email.unread;
             $scope.synchronize();
         };
 
