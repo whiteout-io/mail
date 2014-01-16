@@ -12,7 +12,7 @@ Whiteout Mail is a mail client with full IMAP, SMTP, TLS and OpenPGP support wri
 ### Reporting bugs and feature requests
 
 * We will launch a bug bounty program later on the compensate security researchers. If you find any security vulnerabilites, don't hesitate to contact us [security@whiteout.io](mailto:security@whiteout.io).
-* You can also just create an [issue](https://github.com/whiteout-io/mail-html5/issues)
+* You can also just create an [issue](https://github.com/whiteout-io/mail-html5/issues) if you're missing a feature or just want to give us feedback.
 
 ### Testing
 
