@@ -44,6 +44,8 @@ Run the unit tests locally:
     interested in contributing or getting a license, please get in touch with
     us (info@whiteout.io).
 
+### Third party libraries
+
 Many of the libraries we use are licensed under an open source license. Here are some of them:
 
 * [OpenPGP.js](http://openpgpjs.org): An implementation of OpenPGP in Javascript
