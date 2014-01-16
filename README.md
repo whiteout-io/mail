@@ -8,6 +8,7 @@ Whiteout Mail is a mail client with full IMAP, SMTP, TLS and OpenPGP support wri
 * The client talks directly via IMAP/SMTP to your mail server. Your data and your private PGP key are stored encrypted on your computer and are never sent to our our servers.
 * The app is deployed as an auditable packaged app with static versions in order to prevent [problems with host-based security](http://tonyarcieri.com/whats-wrong-with-webcrypto).
 * [Content Securit Policy (CSP)](http://www.html5rocks.com/en/tutorials/security/content-security-policy/) is enforced to prevent against injection attacks.
+* SSL certificates are pinned under [`src/ca/`](https://github.com/whiteout-io/mail-html5/tree/master/src/ca) in order to protect against SSL stripping and other man in the middle attacks.
 * The code is still under heavy development and is not yet recommended for production use. That being said, we have done multiple code audits and penetration tests (which will be published regularly once all reported vulnerabilities are fixed).
 
 ### Reporting bugs and feature requests
