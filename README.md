@@ -11,13 +11,20 @@ You can download a prebuilt bundle under [releases](https://github.com/whiteout-
     
 This builds the Chrome Packaged App bundle **DEV.zip** which can be installed under [chrome://extensions](chrome://extensions) in developer mode.
 
+### Testing
+
+    npm test
+
 ## License
 
     Copyright © 2013, Whiteout Networks GmbH. All rights reserved.
 
-    The code is open for inspection and peer review by the security community. The code is currently not licensed under an open source license. If you're interested in contributing or getting a license, please get in touch with us [info@whiteout.io](mailto:info@whiteout.io).
+    The code is open for inspection and peer review by the security community.
+    The code is currently not licensed under an open source license. If you're
+    interested in contributing or getting a license, please get in touch with
+    us [info@whiteout.io](mailto:info@whiteout.io).
 
-These are some of the libraries we use. For a complete list please take a look at the code.
+Here are some of the libraries we use (for a complete list please take a look at the code):
 
 * [OpenPGP.js](http://openpgpjs.org): An implementation of OpenPGP in Javascript
 * [Inbox](https://github.com/andris9/inbox): Simple IMAP client for node.js
