@@ -1,30 +1,31 @@
 mail-html5 [![Build Status](https://travis-ci.org/whiteout-io/mail-html5.png)](https://travis-ci.org/whiteout-io/mail-html5)
 ==========
 
-Whiteout Mail is a mail client with full IMAP, SMTP, TLS and OpenPGP support written in pure JavaScript. The Client is distributed as a [Chrome Packaged App](https://developer.chrome.com/apps/about_apps.html) since it requires [TCP sockets](http://developer.chrome.com/apps/socket.html). Download the official version under [whiteout.io](http://whiteout.io).
+Whiteout Mail is an easy to use email client with integrated OpenPGP encryption written in pure JavaScript. Download the official version under [whiteout.io](http://whiteout.io).
 
-### Security and Privacy
+### Privacy and Security
 
-* We take the privacy of your data very seriously. The client talks directly via IMAP/SMTP to your mail server. Your data and your private PGP key are stored encrypted on your computer and are never sent to our our servers.
-* The app is deployed as an auditable packaged app with static versions in order to prevent [problems with host-based security](http://tonyarcieri.com/whats-wrong-with-webcrypto).
-* [Content Securit Policy (CSP)](http://www.html5rocks.com/en/tutorials/security/content-security-policy/) is enforced to prevent against injection attacks.
+* We take the privacy of your data very seriously. Messages are [encrypted end-to-end ](http://en.wikipedia.org/wiki/End-to-end_encryption) using the [OpenPGP](http://en.wikipedia.org/wiki/Pretty_Good_Privacy) protocol. This means that only you and your correspondents can read your mail.
+* The client talks directly via IMAP/SMTP to your mail server. Your data and private PGP key are stored encrypted on your computer and are never sent to our our servers.
 * Mail server SSL certificates are pinned under [`src/ca/`](https://github.com/whiteout-io/mail-html5/tree/master/src/ca) in order to protect against SSL stripping and other man in the middle attacks.
+* The app is deployed as an auditable [Chrome Packaged App](https://developer.chrome.com/apps/about_apps.html) with static versions in order to prevent [problems with host-based security](http://tonyarcieri.com/whats-wrong-with-webcrypto). It uses raw [TCP sockets](http://developer.chrome.com/apps/socket.html) to communicate with the mail server.
+* [Content Securit Policy (CSP)](http://www.html5rocks.com/en/tutorials/security/content-security-policy/) is enforced to prevent against injection attacks.
 * The code is still under heavy development and is not yet recommended for production use. That being said, we have done multiple code audits and penetration tests (which will be published regularly once all reported vulnerabilities are fixed).
 
 ### Reporting bugs and feature requests
 
-* We will launch a bug bounty program later on the compensate security researchers. If you find any security vulnerabilites, don't hesitate to contact us [security@whiteout.io](mailto:security@whiteout.io).
+* We will launch a bug bounty program later on the compensate security researchers. If you find any security vulnerabilities, don't hesitate to contact us [security@whiteout.io](mailto:security@whiteout.io).
 * You can also just create an [issue](https://github.com/whiteout-io/mail-html5/issues) on GitHub if you're missing a feature or just want to give us feedback. It would be much appreciated!
 
 ### Testing
 
-You can download a prebuilt bundle under [releases](https://github.com/whiteout-io/mail-html5/releases) or build your own:
+You can download a prebuilt bundle under [releases](https://github.com/whiteout-io/mail-html5/releases) or build your own from source:
 
     npm install && grunt
     
 This builds the Chrome Packaged App bundle **DEV.zip** which can be installed under [chrome://extensions](chrome://extensions) in developer mode.
 
-To run the unit tests locally run:
+Run the unit tests locally:
 
     npm test
 
