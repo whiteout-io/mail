@@ -44,7 +44,7 @@ Run the unit tests locally:
     interested in contributing or getting a license, please get in touch with
     us (info@whiteout.io).
 
-Many of the libraries we use are licensed under an open source license. Here are some of the libraries we use (for a complete list please take a look at the code):
+Many of the libraries we use are licensed under an open source license. Here are some of them:
 
 * [OpenPGP.js](http://openpgpjs.org): An implementation of OpenPGP in Javascript
 * [Inbox](https://github.com/andris9/inbox): Simple IMAP client for node.js
