@@ -8,9 +8,13 @@ Whiteout Mail is a mail client with full IMAP, SMTP, TLS and OpenPGP support wri
 * The app is deployed as an auditable packaged app with static versions in order to prevent [problems with host-based security](http://tonyarcieri.com/whats-wrong-with-webcrypto).
 * [Content Securit Policy (CSP)](http://www.html5rocks.com/en/tutorials/security/content-security-policy/) is enforced to prevent against injection attacks.
 * The code is still under heavy development and is yet not recommended for production use. That being said, we have done multiple code audits and penetration tests (which will be published as soon as all reported vulnerabilities are fixed).
-* We will also launch a bug bounty program later on the compensate security researchers. If you find any security vulnerabilites, don't hesitate to contact us [security@whiteout.io](mailto:security@whiteout.io).
 
-### Building
+### Reporting bugs and feature requests
+
+* We will launch a bug bounty program later on the compensate security researchers. If you find any security vulnerabilites, don't hesitate to contact us [security@whiteout.io](mailto:security@whiteout.io).
+* You can also just create an [issue](https://github.com/whiteout-io/mail-html5/issues)
+
+### Testing
 
 You can download a prebuilt bundle under [releases](https://github.com/whiteout-io/mail-html5/releases) or build your own:
 
@@ -18,7 +22,7 @@ You can download a prebuilt bundle under [releases](https://github.com/whiteout-
     
 This builds the Chrome Packaged App bundle **DEV.zip** which can be installed under [chrome://extensions](chrome://extensions) in developer mode.
 
-### Testing
+To run the unit tests locally run:
 
     npm test
 
