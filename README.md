@@ -22,7 +22,7 @@ This builds the Chrome Packaged App bundle **DEV.zip** which can be installed un
     The code is open for inspection and peer review by the security community.
     The code is currently not licensed under an open source license. If you're
     interested in contributing or getting a license, please get in touch with
-    us [info@whiteout.io](mailto:info@whiteout.io).
+    us (info@whiteout.io).
 
 Here are some of the libraries we use (for a complete list please take a look at the code):
 
