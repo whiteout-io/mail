@@ -47,6 +47,7 @@ define(function(require) {
      */
     app.string = {
         subjectPrefix: '[whiteout] ',
+        fallbackSubject: '(no subject)',
         invitationSubject: 'Invitation to a private conversation',
         invitationMessage: 'I would like to invite you to a private conversation. To read my encrypted messages, simply install Whiteout Mail for Chrome. The app is really easy to use and automatically encrypts sent emails, so that only the two of us can read them.\n\nOpen Whiteout Mail: https://chrome.google.com/webstore/detail/jjgghafhamholjigjoghcfcekhkonijg',
         message: 'this is a private conversation. To read my encrypted message below, simply install Whiteout Mail for Chrome. The app is really easy to use and automatically encrypts sent emails, so that only the two of us can read them.\n\nOpen Whiteout Mail: https://chrome.google.com/webstore/detail/jjgghafhamholjigjoghcfcekhkonijg',

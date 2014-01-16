@@ -200,7 +200,7 @@ define(function(require) {
                 to: [],
                 cc: [],
                 bcc: [],
-                subject: $scope.subject, // Subject line
+                subject: $scope.subject.trim() ? $scope.subject.trim() : str.fallbackSubject, // Subject line, or the fallback subject, if nothing valid was entered
                 body: $scope.body.trim() // use parsed plaintext body
             };
             email.from = [{
