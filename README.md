@@ -19,8 +19,8 @@ This builds the Chrome Packaged App bundle **DEV.zip** which can be installed un
 
 These are some of the libraries we use. For a complete list please take a look at the code.
 
-* [OpenPGP.js](https://github.com/openpgpjs/openpgpjs): An implementation of OpenPGP in Javascript.
-* [Forge](https://github.com/digitalbazaar/forge): A native implementation of TLS in Javascript
+* [OpenPGP.js](http://openpgpjs.org): An implementation of OpenPGP in Javascript
 * [Inbox](https://github.com/andris9/inbox): Simple IMAP client for node.js
 * [Nodemailer](http://www.nodemailer.com): SMTP client for node.js
+* [Forge](https://github.com/digitalbazaar/forge): An implementation of TLS in Javascript
 * [node-shims](https://github.com/whiteout-io/node-shims): A basic set shims of commonly used node API for use in the browser
