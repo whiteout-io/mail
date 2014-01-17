@@ -11,7 +11,7 @@ Whiteout Mail is an easy to use email client with integrated OpenPGP encryption 
 
 * The app is deployed as a [Chrome Packaged App](https://developer.chrome.com/apps/about_apps.html) with auditable static versions in order to prevent [problems with host-based security](http://tonyarcieri.com/whats-wrong-with-webcrypto). It uses raw [TCP sockets](http://developer.chrome.com/apps/socket.html) to communicate with the mail server.
 
-* Mail server [SSL certificates are pinned](http://security.stackexchange.com/questions/29988/what-is-certificate-pinning) under [`src/ca/`](https://github.com/whiteout-io/mail-html5/tree/master/src/ca) in order to protect against SSL stripping and other man in the middle attacks.
+* Mail server [SSL certificates are pinned](http://security.stackexchange.com/questions/29988/what-is-certificate-pinning) under [`src/ca/`](https://github.com/whiteout-io/mail-html5/tree/master/src/ca) in order to protect against SSL certificate forgery and other man in the middle attacks.
 
 * [Content Security Policy (CSP)](http://www.html5rocks.com/en/tutorials/security/content-security-policy/) is enforced to prevent against injection attacks.
 
