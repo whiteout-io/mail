@@ -11,7 +11,7 @@ You can read about product features and our future roadmap in our [FAQ](https://
 
 We take the privacy of your data very seriously. Here are some of the technical details:
 
-* Messages are [encrypted end-to-end ](http://en.wikipedia.org/wiki/End-to-end_encryption) using the [OpenPGP](http://en.wikipedia.org/wiki/Pretty_Good_Privacy) standard. This means that only you and your correspondents can read your mail. Your messages and private PGP key are encrypted at rest on your computer and are never sent to our our servers.
+* Messages are [encrypted end-to-end ](http://en.wikipedia.org/wiki/End-to-end_encryption) using the [OpenPGP](http://en.wikipedia.org/wiki/Pretty_Good_Privacy) standard. This means that only you and your correspondents can read your mail. Your messages and private PGP key are stored encrypted on your computer and are never sent to our our servers.
 
 * Like most native email clients whiteout mail uses raw [TCP sockets](http://developer.chrome.com/apps/socket.html) to communicate directly with your mail server via IMAP/SMTP.
 
