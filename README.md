@@ -5,7 +5,7 @@ Whiteout Mail is an easy to use email client with integrated OpenPGP encryption 
 
 ### Features
 
-You can read about product features and future roadmap in our [FAQ](https://github.com/whiteout-io/mail-html5/wiki/FAQ).
+You can read about product features and our future roadmap in our [FAQ](https://github.com/whiteout-io/mail-html5/wiki/FAQ).
 
 ### Privacy and Security
 
