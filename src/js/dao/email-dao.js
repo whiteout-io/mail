@@ -798,7 +798,8 @@ define(function(require) {
 
                 if (!senderPubkey) {
                     // this should only happen if a mail from another channel is in the inbox
-                    setBodyAndContinue('Public key for sender not found!');
+                    email.body = 'Public key for sender not found!';
+                    localCallback(null, email);
                     return;
                 }
 
@@ -810,7 +811,20 @@ define(function(require) {
 
                     // set encrypted flag
                     email.encrypted = true;
-                    setBodyAndContinue(decrypted);
+
+                    // does our message block even need to be parsed?
+                    if (decrypted.indexOf('Content-Type: multipart/signed') === -1) {
+                        // decrypted message is plain text and not a well-formed email
+                        email.body = decrypted;
+                        localCallback(null, email);
+                        return;
+                    }
+
+                    // parse decrypted message
+                    self._imapParseMessageBlock({
+                        message: email,
+                        block: decrypted
+                    }, localCallback);
                 });
             });
 
@@ -820,11 +834,6 @@ define(function(require) {
 
                 // parse email body for encrypted message block
                 email.body = email.body.substring(start, end);
-            }
-
-            function setBodyAndContinue(text) {
-                email.body = text;
-                localCallback(null, email);
             }
         }
     };
@@ -1072,6 +1081,10 @@ define(function(require) {
             path: options.folder,
             uid: options.uid
         }, callback);
+    };
+
+    EmailDAO.prototype._imapParseMessageBlock = function(options, callback) {
+        this._imapClient.parseDecryptedMessageBlock(options, callback);
     };
 
     /**
