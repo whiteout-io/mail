@@ -813,7 +813,10 @@ define(function(require) {
                     email.encrypted = true;
 
                     // does our message block even need to be parsed?
-                    if (decrypted.indexOf('Content-Type: multipart/signed') === -1) {
+                    // this is a very primitive detection if we have a mime node or plain text
+                    // taking this out breaks compatibility to clients < 0.5
+                    if (decrypted.indexOf('Content-Transfer-Encoding:') === -1 &&
+                        decrypted.indexOf('Content-Type:') === -1) {
                         // decrypted message is plain text and not a well-formed email
                         email.body = decrypted;
                         localCallback(null, email);
