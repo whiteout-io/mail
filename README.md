@@ -3,9 +3,15 @@ mail-html5 [![Build Status](https://travis-ci.org/whiteout-io/mail-html5.png)](h
 
 Whiteout Mail is an easy to use email client with integrated OpenPGP encryption written in pure JavaScript. Download the official version under [whiteout.io](http://whiteout.io).
 
+### Features
+
+You can read about product features and future roadmap in our [FAQ](https://github.com/whiteout-io/mail-html5/wiki/FAQ).
+
 ### Privacy and Security
 
-* We take the privacy of your data very seriously. Messages are [encrypted end-to-end ](http://en.wikipedia.org/wiki/End-to-end_encryption) using the [OpenPGP](http://en.wikipedia.org/wiki/Pretty_Good_Privacy) protocol. This means that only you and your correspondents can read your mail.
+We take the privacy of your data very seriously. Here are some of the technical details:
+
+* Messages are [encrypted end-to-end ](http://en.wikipedia.org/wiki/End-to-end_encryption) using the [OpenPGP](http://en.wikipedia.org/wiki/Pretty_Good_Privacy) protocol. This means that only you and your correspondents can read your mail.
 
 * The client talks directly via IMAP/SMTP to your mail server. Your messages and private PGP key are stored encrypted on your computer and are never sent to our our servers.
 
