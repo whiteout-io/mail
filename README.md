@@ -46,7 +46,7 @@ Run the unit tests locally:
 
 ### Third party libraries
 
-Many of the libraries we use are licensed under an open source license. Here are some of them:
+We work together with existing open source projects wherever possible and contribute any changes we make back upstream. Many of theses libraries are licensed under an open source license. Here are some of them:
 
 * [OpenPGP.js](http://openpgpjs.org): An implementation of OpenPGP in Javascript
 * [Inbox](https://github.com/andris9/inbox): Simple IMAP client for node.js
