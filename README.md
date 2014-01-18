@@ -15,7 +15,7 @@ We take the privacy of your data very seriously. Here are some of the technical 
 
 * The client talks directly via IMAP/SMTP to your mail server. Your messages and private PGP key are stored encrypted on your computer and are never sent to our our servers.
 
-* The app is deployed as a [Chrome Packaged App](https://developer.chrome.com/apps/about_apps.html) with auditable static versions in order to prevent [problems with host-based security](http://tonyarcieri.com/whats-wrong-with-webcrypto). It uses raw [TCP sockets](http://developer.chrome.com/apps/socket.html) to communicate with the mail server.
+* The app is deployed as a [Chrome Packaged App](https://developer.chrome.com/apps/about_apps.html) with [auditable static versions](https://github.com/whiteout-io/mail-html5/releases) in order to prevent [problems with host-based security](http://tonyarcieri.com/whats-wrong-with-webcrypto). It uses raw [TCP sockets](http://developer.chrome.com/apps/socket.html) to communicate with the mail server.
 
 * Mail server [SSL certificates are pinned](http://security.stackexchange.com/questions/29988/what-is-certificate-pinning) under [`src/ca/`](https://github.com/whiteout-io/mail-html5/tree/master/src/ca) in order to protect against SSL certificate forgery and other man in the middle attacks.
 
