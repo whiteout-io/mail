@@ -11,13 +11,13 @@ You can read about product features and our future roadmap in our [FAQ](https://
 
 We take the privacy of your data very seriously. Here are some of the technical details:
 
-* Messages are [encrypted end-to-end ](http://en.wikipedia.org/wiki/End-to-end_encryption) using the [OpenPGP](http://en.wikipedia.org/wiki/Pretty_Good_Privacy) protocol. This means that only you and your correspondents can read your mail.
+* Messages are [encrypted end-to-end ](http://en.wikipedia.org/wiki/End-to-end_encryption) using the [OpenPGP](http://en.wikipedia.org/wiki/Pretty_Good_Privacy) standard. This means that only you and your correspondents can read your mail. Your messages and private PGP key are encrypted at rest on your computer and are never sent to our our servers.
 
-* The client talks directly via IMAP/SMTP to your mail server. Your messages and private PGP key are stored encrypted on your computer and are never sent to our our servers.
-
-* The app is deployed as a [Chrome Packaged App](https://developer.chrome.com/apps/about_apps.html) with [auditable static versions](https://github.com/whiteout-io/mail-html5/releases) in order to prevent [problems with host-based security](http://tonyarcieri.com/whats-wrong-with-webcrypto). It uses raw [TCP sockets](http://developer.chrome.com/apps/socket.html) to communicate with the mail server.
+* Like most native email clients whiteout mail uses raw [TCP sockets](http://developer.chrome.com/apps/socket.html) to communicate directly with your mail server via IMAP/SMTP.
 
 * Mail server [SSL certificates are pinned](http://security.stackexchange.com/questions/29988/what-is-certificate-pinning) under [`src/ca/`](https://github.com/whiteout-io/mail-html5/tree/master/src/ca) in order to protect against SSL certificate forgery and other man in the middle attacks.
+
+* The app is deployed as a [Chrome Packaged App](https://developer.chrome.com/apps/about_apps.html) with [auditable static versions](https://github.com/whiteout-io/mail-html5/releases) in order to prevent [problems with host-based security](http://tonyarcieri.com/whats-wrong-with-webcrypto).
 
 * [Content Security Policy (CSP)](http://www.html5rocks.com/en/tutorials/security/content-security-policy/) is enforced to prevent against injection attacks.
 
@@ -31,15 +31,11 @@ We take the privacy of your data very seriously. Here are some of the technical 
 
 ### Testing
 
-You can download a prebuilt bundle under [releases](https://github.com/whiteout-io/mail-html5/releases) or build your own from source:
+You can download a prebuilt bundle under [releases](https://github.com/whiteout-io/mail-html5/releases) or build your own from source (requires [node.js and npm](http://nodejs.org/download/)):
 
-    npm install && grunt
+    npm install && npm test
     
-This builds the Chrome Packaged App bundle **DEV.zip** which can be installed under [chrome://extensions](chrome://extensions) in developer mode.
-
-Run the unit tests locally:
-
-    npm test
+This will download all dependencies, run the tests and build the Chrome Packaged App bundle **DEV.zip** which can be installed under [chrome://extensions](chrome://extensions) in developer mode.
 
 ## License
 
