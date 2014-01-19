@@ -88,19 +88,7 @@ define(function(require) {
          * This event is fired when editing the email address headers. It checks is space is pressed and if so, creates a new address field.
          */
         $scope.onAddressUpdate = function(field, index) {
-            var recipient = field[index],
-                address = recipient.address;
-
-            // handle number of email inputs for multiple recipients
-            if (address.indexOf(' ') !== -1) {
-                recipient.address = address.replace(' ', '');
-                field.push({
-                    address: ''
-                });
-            } else if (address.length === 0 && field.length > 1) {
-                field.splice(field.indexOf(recipient), 1);
-            }
-
+            var recipient = field[index];
             $scope.verify(recipient);
         };
 
@@ -319,9 +307,9 @@ define(function(require) {
         return {
             //scope: true,   // optionally create a child scope
             link: function(scope, element) {
-                element[0].onclick = function() {
+                element.on('click', function() {
                     element[0].children[0].focus();
-                };
+                });
             }
         };
     });
@@ -330,6 +318,7 @@ define(function(require) {
         return {
             require: 'ngModel',
             link: function(scope, elm, attrs) {
+                // resize text input depending on value length
                 var model = $parse(attrs.autoSize);
                 scope.$watch(model, function(value) {
                     var width;
@@ -346,21 +335,88 @@ define(function(require) {
         };
     });
 
-    ngModule.directive('addressInput', function($timeout) {
+    function addInput(field, scope) {
+        field.push({
+            address: ''
+        });
+        scope.$apply();
+    }
+
+    function checkForEmptyInput(field) {
+        var emptyFieldExists = false;
+        field.forEach(function(recipient) {
+            if (!recipient.address) {
+                emptyFieldExists = true;
+            }
+        });
+
+        return emptyFieldExists;
+    }
+
+    ngModule.directive('field', function() {
+        return {
+            //scope: true,   // optionally create a child scope
+            link: function(scope, element, attrs) {
+                element.on('click', function() {
+                    var fieldName = attrs.field;
+                    var field = scope[fieldName];
+
+                    if (!checkForEmptyInput(field)) {
+                        // create new field input if no empy one exists
+                        addInput(field, scope);
+                    }
+
+                    // focus on last input when clicking on field
+                    var id = fieldName + (field.length - 1);
+                    document.getElementById(id).focus();
+                });
+            }
+        };
+    });
+
+    ngModule.directive('addressInput', function() {
         return {
             //scope: true,   // optionally create a child scope
             link: function(scope, element, attrs) {
                 // get prefix for id
-                var idPrefix = attrs.addressInput;
-                element.bind('keydown', function(e) {
-                    if (e.keyCode === 32) {
-                        // space -> go to next input
-                        $timeout(function() {
-                            // find next input and focus
-                            var index = attrs.id.replace(idPrefix, '');
-                            var nextId = idPrefix + (parseInt(index, 10) + 1);
-                            document.getElementById(nextId).focus();
-                        }, 100);
+                var fieldName = attrs.addressInput;
+                var field = scope[fieldName];
+                var index = parseInt(attrs.id.replace(fieldName, ''), 10);
+
+                element.on('click', function(e) {
+                    // focus on this one and dont bubble to field click handler
+                    e.stopPropagation();
+                });
+
+                element.on('blur', function() {
+                    if (!checkForEmptyInput(field)) {
+                        // create new field input
+                        addInput(field, scope);
+                    }
+                });
+
+                element.on('keydown', function(e) {
+                    var code = e.keyCode;
+
+                    if (code === 32 || code === 188 || code === 186) {
+                        // catch space, comma, semicolon
+                        e.preventDefault();
+
+                        // create new field input
+                        addInput(field, scope);
+                        // find next input and focus
+                        var nextId = fieldName + (index + 1);
+                        document.getElementById(nextId).focus();
+
+                    } else if ((code === 8 || code === 46) && !field[index].address && field.length > 1) {
+                        // backspace, delete on empty input
+                        // remove input
+                        e.preventDefault();
+                        field.splice(index, 1);
+                        scope.$apply();
+                        // focus on previous id
+                        var previousId = fieldName + (index - 1);
+                        document.getElementById(previousId).focus();
                     }
                 });
             }
