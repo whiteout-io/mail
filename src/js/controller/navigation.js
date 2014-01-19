@@ -39,15 +39,50 @@ define(function(require) {
         };
 
         $scope.onOutboxUpdate = function(err, count) {
+            var outbox, mail;
+
             if (err) {
                 $scope.onError(err);
                 return;
             }
 
-            var outbox = _.findWhere($scope.account.folders, {
+            outbox = _.findWhere($scope.account.folders, {
                 type: 'Outbox'
             });
+            // update the outbox mail count
             outbox.count = count;
+
+            // if we're NOT viewing the outbox or we're not looking at any mail now, we're done
+            if ($scope.state.nav.currentFolder !== outbox || !$scope.state.mailList.selected) {
+                $scope.$apply();
+                return;
+            }
+
+            // so we're currently in the outbox.
+            // if the currently selected mail is still among the pending mails, re-select it, since the object has changed.
+            // however, if the mail is NOT in the outbox anymore, select another pending mail
+            //
+            // this is a workaround due to the fact that the outbox loads pending messages from the indexedDB, 
+            // where object identity is broken when you read an object twice, which happens upon the next retry
+            // to send the pending messages...
+
+            mail = _.findWhere(outbox.messages, {
+                id: $scope.state.mailList.selected.id
+            });
+
+            if (mail) {
+                // select the 'new old' mail
+                $scope.state.mailList.selected = mail;
+            } else {
+                if (outbox.messages.length) {
+                    // there are more mails to show, select another one in the list
+                    $scope.state.mailList.selected = outbox.messages[0];
+                } else {
+                    // no mails to show, don't select anything...
+                    $scope.state.mailList.selected = undefined;
+                }
+            }
+
             $scope.$apply();
         };
 

@@ -252,7 +252,6 @@ define(function(require) {
         }
 
         function sendEncrypted(email) {
-            removeFromPendingMails(email);
             self._emailDao.sendEncrypted({
                 email: email
             }, function(err) {
@@ -266,6 +265,9 @@ define(function(require) {
                     }
                     return;
                 }
+
+                // the email has been sent, remove from pending mails
+                removeFromPendingMails(email);
 
                 // fire sent notification
                 self._onSent(email);
