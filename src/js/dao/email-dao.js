@@ -1209,6 +1209,7 @@ define(function(require) {
                         mail.body = err ? err.errMsg : decrypted;
                         after();
                     });
+                    mail.encrypted = true;
                 });
 
             });
