@@ -10,13 +10,13 @@
         <p field="to">
           <span>To:</span>
           <span ng-repeat="recipient in to track by $index">
-            <input id="to{{$index}}" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" ng-class="{'label': recipient.secure === true, 'label label-primary': recipient.secure === false && recipient.valid !== true}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(to, $index)" address-input="to" tabindex="1" focus-me="state.writer.open && writerTitle !== 'Reply'">
+            <input id="to{{$index}}" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" ng-class="{'label': recipient.secure === true, 'label label-primary': recipient.secure === false && recipient.valid !== true}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(to, $index)" address-input="to" tabindex="1" ng-mouseover="getFingerprint(recipient)" popover="#fingerprint-writer" focus-me="state.writer.open && writerTitle !== 'Reply'">
           </span>
         </p>
         <p field="cc">
           <span>Cc:</span>
           <span ng-repeat="recipient in cc track by $index">
-            <input id="cc{{$index}}" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" ng-class="{'label': recipient.secure === true, 'label label-primary': recipient.secure === false && recipient.valid !== true}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(cc, $index)" address-input="cc" tabindex="1">
+            <input id="cc{{$index}}" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" ng-class="{'label': recipient.secure === true, 'label label-primary': recipient.secure === false && recipient.valid !== true}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(cc, $index)" address-input="cc" tabindex="1" ng-mouseover="getFingerprint(recipient)" popover="#fingerprint-writer">
           </span>
         </p>
       </div><!--/.address-headers-->
@@ -44,4 +44,11 @@
     </div><!--/.write-view-->
 
   </div><!--/.content-->
+
+  <!-- popovers -->
+  <div id="fingerprint-writer" class="popover right" ng-controller="PopoverCtrl">
+    <div class="arrow"></div>
+    <div class="popover-title"><b>PGP Fingerprint</b></div>
+    <div class="popover-content">{{fingerprint}}</div>
+  </div><!--/.popover-->
 </div><!--/.lightbox-body-->

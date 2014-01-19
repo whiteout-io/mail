@@ -6,14 +6,18 @@ define(function(require) {
         aes = require('cryptoLib/aes-cbc'),
         util = require('cryptoLib/util'),
         str = require('js/app-config').string,
-        emailDao;
+        crypto, emailDao;
 
     //
     // Controller
     //
 
     var WriteCtrl = function($scope, $filter) {
+        crypto = appController._crypto;
         emailDao = appController._emailDao;
+
+        // set default value so that the popover height is correct on init
+        $scope.fingerprint = 'XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX';
 
         //
         // Init
@@ -123,6 +127,20 @@ define(function(require) {
                 $scope.checkSendStatus();
                 $scope.$apply();
             });
+        };
+
+        $scope.getFingerprint = function(recipient) {
+            $scope.fingerprint = 'Fingerprint cannot be displayed. Public key not found for that user.';
+
+            if (!recipient.key) {
+                return;
+            }
+
+            var fpr = crypto.getFingerprint(recipient.key.publicKey);
+            var formatted = fpr.slice(0, 4) + ' ' + fpr.slice(4, 8) + ' ' + fpr.slice(8, 12) + ' ' + fpr.slice(12, 16) + ' ' + fpr.slice(16, 20) + ' ' + fpr.slice(20, 24) + ' ' + fpr.slice(24, 28) + ' ' + fpr.slice(28, 32) + ' ' + fpr.slice(32, 36) + ' ' + fpr.slice(36);
+
+            $scope.fingerprint = formatted;
+            $scope.$apply();
         };
 
         /**
