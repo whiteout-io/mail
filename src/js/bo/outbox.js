@@ -183,8 +183,13 @@ define(function(require) {
                     sender: sender
                 }, function(err, status) {
                     if (err) {
-                        self._outboxBusy = false;
-                        callback(err);
+                        if (err.code === 404) {
+                            // 404 means we're offline, no need to error then, just go on with the next one
+                            invitationFinished();
+                        } else {
+                            self._outboxBusy = false;
+                            callback(err);
+                        }
                         return;
                     }
 
