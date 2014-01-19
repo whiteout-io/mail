@@ -126,42 +126,6 @@ define(function(require) {
                 scope.verify.restore();
             });
 
-            it('should add new field item if space is pressed', function() {
-                var to = [{
-                    address: 'asdf@asdf.de '
-                }];
-                scope.onAddressUpdate(to, 0);
-
-                expect(to.length).to.equal(2);
-                expect(to[0].address).to.equal('asdf@asdf.de');
-                expect(to[1].address).to.equal('');
-                expect(verifyMock.calledOnce).to.be.true;
-            });
-
-            it('should remove field item if address is empty', function() {
-                var to = [{
-                    address: 'asdf@asdf.de'
-                }, {
-                    address: ''
-                }];
-                scope.onAddressUpdate(to, 1);
-
-                expect(to.length).to.equal(1);
-                expect(to[0].address).to.equal('asdf@asdf.de');
-                expect(verifyMock.calledOnce).to.be.true;
-            });
-
-            it('should not remove last field item if address is empty', function() {
-                var to = [{
-                    address: ''
-                }];
-                scope.onAddressUpdate(to, 0);
-
-                expect(to.length).to.equal(1);
-                expect(to[0].address).to.equal('');
-                expect(verifyMock.calledOnce).to.be.true;
-            });
-
             it('should do nothing for normal address', function() {
                 var to = [{
                     address: 'asdf@asdf.de'
