@@ -49,7 +49,7 @@ define(function(require) {
         subjectPrefix: '[whiteout] ',
         fallbackSubject: '(no subject)',
         invitationSubject: 'Invitation to a private conversation',
-        invitationMessage: 'I would like to invite you to a private conversation. To read my encrypted messages, simply install Whiteout Mail for Chrome. The app is really easy to use and automatically encrypts sent emails, so that only the two of us can read them.\n\nOpen Whiteout Mail: https://chrome.google.com/webstore/detail/jjgghafhamholjigjoghcfcekhkonijg',
+        invitationMessage: 'I would like to invite you to a private conversation!\n\nIn order to read my encrypted message please install the Whiteout Mail application. This application is used to read and write messages securely with strong encryption applied.\n\nGo to the Whiteout Networks homepage to learn more and to download the application: https://whiteout.io',
         message: 'this is a private conversation. To read my encrypted message below, simply install Whiteout Mail for Chrome. The app is really easy to use and automatically encrypts sent emails, so that only the two of us can read them.\n\nOpen Whiteout Mail: https://chrome.google.com/webstore/detail/jjgghafhamholjigjoghcfcekhkonijg',
         cryptPrefix: '-----BEGIN PGP MESSAGE-----',
         cryptSuffix: '-----END PGP MESSAGE-----',

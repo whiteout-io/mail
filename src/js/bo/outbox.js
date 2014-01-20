@@ -232,7 +232,7 @@ define(function(require) {
                         from: [sender],
                         to: [recipient],
                         subject: str.invitationSubject,
-                        body: 'Hi ' + to + ',\n\n' + str.invitationMessage + '\n\n\n' + str.signature
+                        body: 'Hi ' + to + ',\n\n' + str.invitationMessage + '\n\n'
                     };
 
                 // send invitation mail
