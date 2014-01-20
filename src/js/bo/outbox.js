@@ -112,6 +112,13 @@ define(function(require) {
                     self.pendingEmails.push(i);
                 });
 
+                // we're not online, don't even bother sending mails
+                if (!self._emailDao._account.online) {
+                    self._outboxBusy = false;
+                    callback(null, self.pendingEmails.length);
+                    return;
+                }
+
                 // sending pending mails
                 processMails();
             });
