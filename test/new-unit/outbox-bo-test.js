@@ -19,7 +19,8 @@ define(function(require) {
                 emailAddress: dummyUser,
                 folders: [{
                     type: 'Outbox'
-                }]
+                }],
+                online: true
             };
             devicestorageStub = sinon.createStubInstance(DeviceStorageDAO);
             keychainStub = sinon.createStubInstance(KeychainDAO);
@@ -107,6 +108,8 @@ define(function(require) {
                 })).yieldsAsync();
 
                 var check = _.after(dummyMails.length + 1, function() {
+                    expect(outbox._outboxBusy).to.be.false;
+
                     expect(unsentCount).to.equal(2);
                     expect(emailDaoStub.list.callCount).to.equal(1);
                     expect(emailDaoStub.sendEncrypted.callCount).to.equal(1);
@@ -129,6 +132,25 @@ define(function(require) {
                 }
 
                 outbox._processOutbox(onOutboxUpdate);
+            });
+
+            it('should not process outbox in offline mode', function(done) {
+                emailDaoStub._account.online = false;
+                emailDaoStub.list.yieldsAsync(null, [{
+                    id: '123',
+                    to: [{
+                        name: 'member',
+                        address: 'member@whiteout.io'
+                    }]
+                }]);
+
+                outbox._processOutbox(function(err, count) {
+                    expect(err).to.not.exist;
+                    expect(count).to.equal(1);
+                    expect(emailDaoStub.list.callCount).to.equal(1);
+                    expect(outbox._outboxBusy).to.be.false;
+                    done();
+                });
             });
 
             it('should fire notification', function(done) {
