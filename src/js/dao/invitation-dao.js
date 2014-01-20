@@ -77,13 +77,12 @@ define(function() {
         }, completed);
 
         function completed(error, res, status) {
-            // 404 is a meaningful return value from the web service
-            if (error && error.code !== 404) {
+            if (error) {
                 callback(error);
                 return;
             }
 
-            if (error && error.code === 404) {
+            if (status === 204) {
                 callback(null, InvitationDAO.INVITE_MISSING);
                 return;
             } else if (status === 200) {

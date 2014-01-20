@@ -131,6 +131,44 @@ define(function(require) {
                 outbox._processOutbox(onOutboxUpdate);
             });
 
+            it('should not error for unknown users in offline mode', function(done) {
+                var notinvited, dummyMails, unsentCount;
+
+                notinvited = {
+                    id: '789',
+                    to: [{
+                        name: 'notinvited',
+                        address: 'notinvited@whiteout.io'
+                    }]
+                };
+                dummyMails = [notinvited];
+
+                emailDaoStub.list.yieldsAsync(null, dummyMails);
+                keychainStub.getReceiverPublicKey.yieldsAsync();
+                invitationDaoStub.check.yieldsAsync({
+                    code: 404
+                });
+
+                var check = _.after(dummyMails.length + 1, function() {
+                    expect(unsentCount).to.equal(1);
+                    expect(emailDaoStub.list.calledOnce).to.be.true;
+                    expect(invitationDaoStub.check.calledOnce).to.be.true;
+
+                    expect(outbox.pendingEmails.length).to.equal(1);
+                    expect(outbox.pendingEmails).to.contain(notinvited);
+                    done();
+                });
+
+                function onOutboxUpdate(err, count) {
+                    expect(err).to.not.exist;
+                    expect(count).to.exist;
+                    unsentCount = count;
+                    check();
+                }
+
+                outbox._processOutbox(onOutboxUpdate);
+            });
+
             it('should fire notification', function(done) {
                 outbox.onSent = function(email) {
                     expect(email).to.exist;

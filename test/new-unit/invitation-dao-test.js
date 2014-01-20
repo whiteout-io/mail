@@ -124,9 +124,7 @@ define(function(require) {
             });
 
             it('should return missing invite', function(done) {
-                restDaoStub.get.yieldsAsync({
-                    code: 404
-                });
+                restDaoStub.get.yieldsAsync(null, undefined, 204);
 
                 invitationDao.check({
                     recipient: alice,
@@ -140,7 +138,7 @@ define(function(require) {
 
             it('should not work for http error', function(done) {
                 restDaoStub.get.yieldsAsync({
-                    code: 1337,
+                    code: 404,
                     errMsg: 'jawollja.'
                 });
 
