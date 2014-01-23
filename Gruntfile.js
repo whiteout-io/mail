@@ -278,7 +278,7 @@ module.exports = function(grunt) {
             suffix: ' (Alpha)',
             version: version,
             deleteKey: true,
-            keyServer: 'https://keys.whiteout.io'
+            keyServer: 'https://keys.whiteout.io/'
         });
     });
 
@@ -297,7 +297,7 @@ module.exports = function(grunt) {
             manifest.oauth2.client_id = options.client_id;
         }
         if (options.keyServer) {
-            var ksIndex = manifest.permissions.indexOf('https://keys-test.whiteout.io');
+            var ksIndex = manifest.permissions.indexOf('https://keys-test.whiteout.io/');
             manifest.permissions[ksIndex] = options.keyServer;
         }
         if (options.deleteKey) {
