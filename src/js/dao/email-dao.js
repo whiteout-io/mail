@@ -463,6 +463,13 @@ define(function(require) {
                         });
                     }
 
+                    // sync in the uids in ascending order, to not leave the local database in a corrupted state:
+                    // when the 5, 3, 1 should be synced and the client would fail at 3, but 5 was successfully synced,
+                    // any subsequent syncs would never fetch 1 and 3. simple solution: sync in ascending order
+                    delta4 = _.sortBy(delta4, function(uidWrapper) {
+                        return uidWrapper.uid;
+                    });
+
                     syncNextItem();
 
                     function syncNextItem() {
