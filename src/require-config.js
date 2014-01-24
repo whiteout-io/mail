@@ -20,7 +20,7 @@
 			angularTouch: 'angular/angular-touch.min',
 			moment: 'moment/moment.min',
 			uuid: 'uuid/uuid',
-			openpgp: 'openpgp/openpgp',
+			openpgp: 'openpgp/openpgp.min',
 			iscroll: 'iscroll/iscroll-min'
 		},
 		shim: {
@@ -34,9 +34,6 @@
 			angularTouch: {
 				exports: 'angular',
 				deps: ['angular']
-			},
-			openpgp: {
-				exports: 'window'
 			},
 			iscroll: {
 				exports: 'IScroll'
