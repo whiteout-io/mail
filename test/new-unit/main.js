@@ -39,6 +39,7 @@ function startTests() {
 			'test/new-unit/keychain-dao-test',
 			'test/new-unit/devicestorage-dao-test',
 			'test/new-unit/dialog-ctrl-test',
+			'test/new-unit/add-account-ctrl-test',
 			'test/new-unit/account-ctrl-test',
 			'test/new-unit/login-existing-ctrl-test',
 			'test/new-unit/login-initial-ctrl-test',

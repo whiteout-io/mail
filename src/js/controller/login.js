@@ -33,6 +33,12 @@ define(function(require) {
                     return;
                 }
 
+                // check if account needs to be selected
+                if (!emailAddress) {
+                    firstLogin();
+                    return;
+                }
+
                 // initiate controller by creating email dao
                 appController.init({
                     emailAddress: emailAddress
@@ -45,6 +51,11 @@ define(function(require) {
                     redirect(availableKeys);
                 });
             });
+        }
+
+        function firstLogin() {
+            $location.path('/add-account');
+            $scope.$apply();
         }
 
         function redirect(availableKeys) {
