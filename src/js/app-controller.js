@@ -116,9 +116,17 @@ define(function(require) {
             smtpClient = new SmtpClient(smtpOptions);
 
             imapClient.onError = function(err) {
-                console.log('IMAP error... reconnecting.', err);
+                console.log('IMAP error.', err);
+                console.log('IMAP reconnecting...');
                 // re-init client modules on error
-                self.onConnect(callback);
+                self.onConnect(function(err) {
+                    if (err) {
+                        console.error('IMAP reconnect failed!', err);
+                        return;
+                    }
+
+                    console.log('IMAP reconnect successful.');
+                });
             };
 
             // connect to clients
