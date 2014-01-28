@@ -1,0 +1,92 @@
+<div class="view-add-account">
+
+  <h1>Select email account</h1>
+
+  <ul>
+    <li class="google enabled" popover="#google-info" ng-click="connectToGoogle()">
+      <div><img src="img/google_logo.png" alt="Google Mail"></div>
+    </li>
+    <li class="whiteout disabled" popover="#whiteout-info">
+      <div><img src="img/whiteout_logo.svg" alt="Whiteout Mailbox"></div>
+    </li>
+    <li class="outlook disabled" popover="#outlook-info">
+      <div><img src="img/outlook_logo.jpg" alt="Outlook.com"></div>
+    </li>
+    <li class="yahoo disabled" popover="#yahoo-info">
+      <div><img src="img/yahoo_logo.png" alt="Yahoo! Mail"></div>
+    </li>
+    <li class="tonline disabled" popover="#tonline-info">
+      <div><img src="img/tonline_logo.jpg" alt="T-Online"></div>
+    </li>
+    <li class="other disabled" popover="#custom-info">
+      <h3>Custom server...</h3>
+    </li>
+  </ul>
+
+</div>
+
+<!-- lightbox -->
+<div class="lightbox-overlay" ng-class="{'show': state.dialog.open}">
+  <div class="lightbox lightbox-effect view-dialog" ng-include="'tpl/dialog.html'"></div>
+</div>
+
+<!-- popovers -->
+<div id="google-info" class="popover right" ng-controller="PopoverCtrl">
+  <div class="arrow"></div>
+  <div class="popover-title"><b>Google Account</b></div>
+  <div class="popover-content">
+    <p>Connect Whiteout Mail to your Gmail or Google Apps account.</p>
+    <p>Encrypted and cleartext messages are stored on Google's servers.</p>
+    <p>No data is sent to our servers.</p>
+  </div>
+</div><!--/.popover-->
+
+<div id="whiteout-info" class="popover right" ng-controller="PopoverCtrl">
+  <div class="arrow"></div>
+  <div class="popover-title"><b>Whiteout Mailbox (coming soon)</b></div>
+  <div class="popover-content">
+    <p>Connect Whiteout Mail to your secure Whiteout Mailbox.</p>
+    <p>All incoming messages are encrypted at rest and can only be read on your device.</p>
+    <p>Whiteout Mailbox is an email service hosted in Germany.</p>
+  </div>
+</div><!--/.popover-->
+
+<div id="outlook-info" class="popover right" ng-controller="PopoverCtrl">
+  <div class="arrow"></div>
+  <div class="popover-title"><b>Outlook.com Account (coming soon)</b></div>
+  <div class="popover-content">
+    <p>Connect Whiteout Mail to your Outlook.com account.</p>
+    <p>Encrypted and cleartext messages are stored on Microsoft's servers.</p>
+    <p>No data is sent to our servers.</p>
+  </div>
+</div><!--/.popover-->
+
+<div id="yahoo-info" class="popover right" ng-controller="PopoverCtrl">
+  <div class="arrow"></div>
+  <div class="popover-title"><b>Yahoo Mail (coming soon)</b></div>
+  <div class="popover-content">
+    <p>Connect Whiteout Mail to your Yahoo Mail account.</p>
+    <p>Encrypted and cleartext messages are stored on Yahoo's servers.</p>
+    <p>No data is sent to our servers.</p>
+  </div>
+</div><!--/.popover-->
+
+<div id="tonline-info" class="popover right" ng-controller="PopoverCtrl">
+  <div class="arrow"></div>
+  <div class="popover-title"><b>T-Online Account (coming soon)</b></div>
+  <div class="popover-content">
+    <p>Connect Whiteout Mail to your T-Online account.</p>
+    <p>Encrypted and cleartext messages are stored on T-Online's servers.</p>
+    <p>No data is sent to our servers.</p>
+  </div>
+</div><!--/.popover-->
+
+<div id="custom-info" class="popover right" ng-controller="PopoverCtrl">
+  <div class="arrow"></div>
+  <div class="popover-title"><b>Custom server (coming soon)</b></div>
+  <div class="popover-content">
+    <p>Connect Whiteout Mail to your own email server.</p>
+    <p>Encrypted and cleartext messages are stored on your server.</p>
+    <p>No data is sent to our servers.</p>
+  </div>
+</div><!--/.popover-->

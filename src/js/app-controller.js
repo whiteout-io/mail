@@ -203,12 +203,6 @@ define(function(require) {
                 return;
             }
 
-            if (cachedEmailAddress) {
-                // not first time login... address cached
-                callback(null, cachedEmailAddress);
-                return;
-            }
-
             if (!cachedEmailAddress && !self.isOnline()) {
                 // first time login... must be online
                 callback({
@@ -217,14 +211,7 @@ define(function(require) {
                 return;
             }
 
-            self.fetchOAuthToken(function(err, oauth) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-
-                callback(null, oauth.emailAddress);
-            });
+            callback(null, cachedEmailAddress);
         });
     };
 

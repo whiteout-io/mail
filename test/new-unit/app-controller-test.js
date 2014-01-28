@@ -177,34 +177,6 @@ define(function(require) {
                     done();
                 });
             });
-
-            it('should fail due to error in fetchOAuthToken', function(done) {
-                appConfigStoreStub.listItems.yields(null, []);
-                isOnlineStub.returns(true);
-                fetchOAuthTokenStub.yields({});
-
-                controller.getEmailAddress(function(err, emailAddress) {
-                    expect(err).to.exist;
-                    expect(emailAddress).to.not.exist;
-                    expect(fetchOAuthTokenStub.calledOnce).to.be.true;
-                    done();
-                });
-            });
-
-            it('should fail work when fetching oauth token', function(done) {
-                appConfigStoreStub.listItems.yields(null, []);
-                isOnlineStub.returns(true);
-                fetchOAuthTokenStub.yields(null, {
-                    emailAddress: 'asfd@example.com'
-                });
-
-                controller.getEmailAddress(function(err, emailAddress) {
-                    expect(err).to.not.exist;
-                    expect(emailAddress).to.equal('asfd@example.com');
-                    expect(fetchOAuthTokenStub.calledOnce).to.be.true;
-                    done();
-                });
-            });
         });
 
         describe('fetchOAuthToken', function() {

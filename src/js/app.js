@@ -5,6 +5,7 @@ require([
     'angular',
     'js/controller/dialog',
     'js/controller/popover',
+    'js/controller/add-account',
     'js/controller/account',
     'js/controller/login',
     'js/controller/login-initial',
@@ -17,7 +18,7 @@ require([
     'cryptoLib/util',
     'angularRoute',
     'angularTouch'
-], function(angular, DialogCtrl, PopoverCtrl, AccountCtrl, LoginCtrl, LoginInitialCtrl, LoginNewDeviceCtrl, LoginExistingCtrl, MailListCtrl, ReadCtrl, WriteCtrl, NavigationCtrl, util) {
+], function(angular, DialogCtrl, PopoverCtrl, AddAccountCtrl, AccountCtrl, LoginCtrl, LoginInitialCtrl, LoginNewDeviceCtrl, LoginExistingCtrl, MailListCtrl, ReadCtrl, WriteCtrl, NavigationCtrl, util) {
     'use strict';
 
     // reset window.name
@@ -28,6 +29,10 @@ require([
 
     // set router paths
     app.config(function($routeProvider) {
+        $routeProvider.when('/add-account', {
+            templateUrl: 'tpl/add-account.html',
+            controller: AddAccountCtrl
+        });
         $routeProvider.when('/login', {
             templateUrl: 'tpl/login.html',
             controller: LoginCtrl
