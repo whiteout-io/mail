@@ -954,8 +954,7 @@ define(function(require) {
                 message = str.message + '\n\n\n',
                 signature = '\n\n' + str.signature + '\n\n';
 
-            // get first name of recipient
-            greeting = 'Hi ' + (email.to[0].name || email.to[0].address).split('@')[0].split('.')[0].split(' ')[0] + ',\n\n';
+            greeting = 'Hi,\n\n';
 
             // build encrypted text body
             email.body = greeting + message + ct + signature;

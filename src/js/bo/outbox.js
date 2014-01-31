@@ -227,13 +227,12 @@ define(function(require) {
 
             // send an invitation to the unregistered user, aka the recipient
             function sendInvitationMail(recipient, sender) {
-                var to = (recipient.name || recipient.address).split('@')[0].split('.')[0].split(' ')[0],
-                    invitationMail = {
-                        from: [sender],
-                        to: [recipient],
-                        subject: str.invitationSubject,
-                        body: 'Hi ' + to + ',\n\n' + str.invitationMessage + '\n\n'
-                    };
+                var invitationMail = {
+                    from: [sender],
+                    to: [recipient],
+                    subject: str.invitationSubject,
+                    body: 'Hi,\n\n' + str.invitationMessage + '\n\n'
+                };
 
                 // send invitation mail
                 self._emailDao.sendPlaintext({
