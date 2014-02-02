@@ -120,14 +120,7 @@ define(function(require) {
                 console.log('IMAP error.', err);
                 console.log('IMAP reconnecting...');
                 // re-init client modules on error
-                self.onConnect(function(err) {
-                    if (err) {
-                        console.error('IMAP reconnect failed!', err);
-                        return;
-                    }
-
-                    console.log('IMAP reconnect successful.');
-                });
+                self.onConnect(callback);
             };
 
             // connect to clients
