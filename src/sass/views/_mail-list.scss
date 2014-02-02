@@ -1,13 +1,14 @@
 .view-mail-list {
     $padding-horizontal: 15px;
     $padding-vertical: 10px;
+    position: relative;
     height: 100%;
+    width: 100%;
 
     background: $color-grey-lightest;
     background-image: linear-gradient(to right ,$color-grey-lightest 98%, darken($color-grey-lightest, 1%) 100%);
 
     header {
-
         cursor: pointer;
         padding: $padding-vertical $padding-horizontal;
         text-shadow: 0px 1px 1px $color-grey-lighter;
@@ -41,51 +42,44 @@
     }
 
     ul {
-        padding-bottom: 98px;
-        @include respond-to(desktop) {
-            padding-bottom: 126px;
-        }
+        padding-bottom: 126px;
     }
 
     footer {
-        height: 0px;
-        @include respond-to(desktop) {
-            height: 28px;
-            cursor: pointer;
-            position: absolute;
-            bottom: 0px;
-            left: 0px;
-            padding: 0 $nav-padding;
-            background: darken($color-grey-lightest, 1%);
-            width: $content-nav-width;
-            border-right: 1px solid $color-grey-light;
-            font-size: $font-size-smaller;
-            color: $color-grey-dark;
-            line-height: em(28,12);
+        height: 28px;
+        cursor: pointer;
+        position: absolute;
+        bottom: 0px;
+        left: 0px;
+        padding: 0 $nav-padding;
+        background: darken($color-grey-lightest, 1%);
+        width: 100%;
+        font-size: $font-size-smaller;
+        color: $color-grey-dark;
+        line-height: em(28,12);
 
-            .offline {
-                &[data-icon]:before {
-                    padding-right: 0.5em;
-                }
+        .offline {
+            &[data-icon]:before {
+                padding-right: 0.5em;
             }
+        }
 
-            &.syncing {
-                .spinner {
-                    top: 6.5px;
-                    left: $padding-horizontal;
-                    height: 13px;
-                    width: 13px;
-                    position: absolute;
-                    animation: rotation .6s linear infinite;
-                    border-left: 2px solid $color-grey-light;
-                    border-right: 2px solid $color-grey-light;
-                    border-bottom: 2px solid $color-grey-light;
-                    border-top: 2px solid $color-grey;
-                    border-radius: 100%;
-                }
-                .text {
-                    padding-left: 1.5em;
-                }
+        &.syncing {
+            .spinner {
+                top: 6.5px;
+                left: $padding-horizontal;
+                height: 13px;
+                width: 13px;
+                position: absolute;
+                animation: rotation .6s linear infinite;
+                border-left: 2px solid $color-grey-light;
+                border-right: 2px solid $color-grey-light;
+                border-bottom: 2px solid $color-grey-light;
+                border-top: 2px solid $color-grey;
+                border-radius: 100%;
+            }
+            .text {
+                padding-left: 1.5em;
             }
         }
     }
