@@ -2,14 +2,17 @@ define(function(require) {
     'use strict';
 
     var appController = require('js/app-controller'),
+        download = require('js/util/download'),
         angular = require('angular'),
-        crypto, keychain;
+        emailDao, crypto, keychain;
 
     //
     // Controller
     //
 
     var ReadCtrl = function($scope) {
+
+        emailDao = appController._emailDao;
         crypto = appController._crypto;
         keychain = appController._keychain;
 
@@ -74,6 +77,38 @@ define(function(require) {
                 $scope.$apply();
             });
         }
+
+        $scope.download = function(attachment) {
+            // download file to disk if content is available
+            if (attachment.content) {
+                saveToDisk(attachment);
+                return;
+            }
+
+            var folder = $scope.state.nav.currentFolder;
+            var email = $scope.state.mailList.selected;
+
+            emailDao.getAttachment({
+                path: folder.path,
+                uid: email.uid,
+                attachment: attachment
+            }, function(err) {
+                if (err) {
+                    $scope.onError(err);
+                    return;
+                }
+
+                saveToDisk(attachment);
+            });
+
+            function saveToDisk(attachment) {
+                download.createDownload({
+                    content: attachment.content,
+                    filename: attachment.filename,
+                    contentType: attachment.mimeType
+                }, $scope.onError);
+            }
+        };
     };
 
     //

@@ -137,13 +137,12 @@ module.exports = function(grunt) {
                     'imap-client/node_modules/mimelib/node_modules/addressparser/src/addressparser.js',
                     'imap-client/node_modules/mimelib/node_modules/encoding/src/encoding.js',
                     'imap-client/node_modules/mimelib/node_modules/encoding/node_modules/iconv-lite/src/*.js',
-                    'imap-client/node_modules/mimelib/node_modules/encoding/node_modules/mime/src/*.js',
                     'imap-client/node_modules/mailparser/src/*.js',
-                    'imap-client/node_modules/mailparser/node_modules/mime/src/mime.js',
+                    'imap-client/node_modules/mime/src/mime.js',
                     'smtp-client/src/*.js',
                     'smtp-client/node_modules/mailcomposer/src/*',
                     'smtp-client/node_modules/nodemailer/src/*',
-                    'smtp-client/node_modules/nodemailer/node_modules/simplesmtp/src/*',
+                    'smtp-client/node_modules/nodemailer/node_modules/simplesmtp/src/*'
                 ],
                 dest: 'src/lib/'
             },

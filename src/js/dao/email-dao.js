@@ -805,7 +805,8 @@ define(function(require) {
 
                 if (!senderPubkey) {
                     // this should only happen if a mail from another channel is in the inbox
-                    setBodyAndContinue('Public key for sender not found!');
+                    email.body = 'Public key for sender not found!';
+                    localCallback(null, email);
                     return;
                 }
 
@@ -817,7 +818,23 @@ define(function(require) {
 
                     // set encrypted flag
                     email.encrypted = true;
-                    setBodyAndContinue(decrypted);
+
+                    // does our message block even need to be parsed?
+                    // this is a very primitive detection if we have a mime node or plain text
+                    // taking this out breaks compatibility to clients < 0.5
+                    if (decrypted.indexOf('Content-Transfer-Encoding:') === -1 &&
+                        decrypted.indexOf('Content-Type:') === -1) {
+                        // decrypted message is plain text and not a well-formed email
+                        email.body = decrypted;
+                        localCallback(null, email);
+                        return;
+                    }
+
+                    // parse decrypted message
+                    self._imapParseMessageBlock({
+                        message: email,
+                        block: decrypted
+                    }, localCallback);
                 });
             });
 
@@ -827,11 +844,6 @@ define(function(require) {
 
                 // parse email body for encrypted message block
                 email.body = email.body.substring(start, end);
-            }
-
-            function setBodyAndContinue(text) {
-                email.body = text;
-                localCallback(null, email);
             }
         }
     };
@@ -867,6 +879,18 @@ define(function(require) {
             uid: options.uid,
             destination: options.destination
         }, callback);
+    };
+
+    EmailDAO.prototype.getAttachment = function(options, callback) {
+        if (!this._account.online) {
+            callback({
+                errMsg: 'Client is currently offline!',
+                code: 42
+            });
+            return;
+        }
+
+        this._imapClient.getAttachment(options, callback);
     };
 
     EmailDAO.prototype.sendEncrypted = function(options, callback) {
@@ -1066,6 +1090,10 @@ define(function(require) {
             path: options.folder,
             uid: options.uid
         }, callback);
+    };
+
+    EmailDAO.prototype._imapParseMessageBlock = function(options, callback) {
+        this._imapClient.parseDecryptedMessageBlock(options, callback);
     };
 
     /**

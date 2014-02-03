@@ -14,7 +14,7 @@ define(function(require) {
         var dao, keychainStub, imapClientStub, smtpClientStub, pgpStub, devicestorageStub;
 
         var emailAddress, passphrase, asymKeySize, mockkeyId, dummyEncryptedMail,
-            dummyDecryptedMail, mockKeyPair, account, publicKey, verificationMail, verificationUuid,
+            dummyDecryptedMail, dummyLegacyDecryptedMail, mockKeyPair, account, publicKey, verificationMail, verificationUuid,
             corruptedVerificationMail, corruptedVerificationUuid,
             nonWhitelistedMail;
 
@@ -65,6 +65,20 @@ define(function(require) {
                 answered: false
             };
             dummyDecryptedMail = {
+                uid: 1234,
+                from: [{
+                    address: 'asd@asd.de'
+                }],
+                to: [{
+                    address: 'qwe@qwe.de'
+                }],
+                subject: 'qweasd',
+                body: 'Content-Type: multipart/signed;\r\n  boundary="Apple-Mail=_1D8756C0-F347-4D7A-A8DB-7869CBF14FD2";\r\n    protocol="application/pgp-signature";\r\n   micalg=pgp-sha512\r\n\r\n\r\n--Apple-Mail=_1D8756C0-F347-4D7A-A8DB-7869CBF14FD2\r\nContent-Type: multipart/mixed;\r\n   boundary="Apple-Mail=_8ED7DC84-6AD9-4A08-8327-80B62D6BCBFA"\r\n\r\n\r\n--Apple-Mail=_8ED7DC84-6AD9-4A08-8327-80B62D6BCBFA\r\nContent-Transfer-Encoding: 7bit\r\nContent-Type: text/plain;\r\n   charset=us-ascii\r\n\r\nasdasd \r\n--Apple-Mail=_8ED7DC84-6AD9-4A08-8327-80B62D6BCBFA\r\nContent-Disposition: attachment;\r\n   filename=dummy.txt\r\nContent-Type: text/plain;\r\n name="dummy.txt"\r\nContent-Transfer-Encoding: 7bit\r\n\r\noaudbcoaurbvosuabvlasdjbfalwubjvawvb\r\n--Apple-Mail=_8ED7DC84-6AD9-4A08-8327-80B62D6BCBFA--\r\n\r\n--Apple-Mail=_1D8756C0-F347-4D7A-A8DB-7869CBF14FD2\r\nContent-Transfer-Encoding: 7bit\r\nContent-Disposition: attachment;\r\n    filename=signature.asc\r\nContent-Type: application/pgp-signature;\r\n  name=signature.asc\r\nContent-Description: Message signed with OpenPGP using GPGMail\r\n\r\n-----BEGIN PGP SIGNATURE-----\r\nComment: GPGTools - https://gpgtools.org\r\n\r\niQEcBAEBCgAGBQJS2kO1AAoJEDzmUwH7XO/cP+YH/2PSBxX1ZZd83Uf9qBGDY807\r\niHOdgPFXm64YjSnohO7XsPcnmihqP1ipS2aaCXFC3/Vgb9nc4isQFS+i1VdPwfuR\r\n1Pd2l3dC4/nD4xO9h/W6JW7Yd24NS5TJD5cA7LYwQ8LF+rOzByMatiTMmecAUCe8\r\nEEalEjuogojk4IacA8dg/bfLqQu9E+0GYUJBcI97dx/0jZ0qMOxbWOQLsJ3DnUnV\r\nOad7pAIbHEO6T0EBsH7TyTj4RRHkP6SKE0mm6ZYUC7KCk2Z3MtkASTxUrnqW5qZ5\r\noaXUO9GEc8KZcmbCdhZY2Y5h+dmucaO0jpbeSKkvtYyD4KZrSvt7NTb/0dSLh4Y=\r\n=G8km\r\n-----END PGP SIGNATURE-----\r\n\r\n--Apple-Mail=_1D8756C0-F347-4D7A-A8DB-7869CBF14FD2--\r\n',
+                unread: false,
+                answered: false,
+                receiverKeys: ['-----BEGIN PGP PUBLIC KEY-----\nasd\n-----END PGP PUBLIC KEY-----']
+            };
+            dummyLegacyDecryptedMail = {
                 uid: 1234,
                 from: [{
                     address: 'asd@asd.de'
@@ -471,6 +485,19 @@ define(function(require) {
             });
         });
 
+        describe('_imapParseMessageBlock', function() {
+            it('should parse a message', function(done) {
+                imapClientStub.parseDecryptedMessageBlock.yields(null, {});
+
+                dao._imapParseMessageBlock(function(err, msg) {
+                    expect(err).to.not.exist;
+                    expect(msg).to.exist;
+                    done();
+                });
+
+            });
+        });
+
         describe('_imapLogin', function() {
             it('should fail when disconnected', function(done) {
                 dao.onDisconnect(null, function(err) {
@@ -823,7 +850,7 @@ define(function(require) {
 
         describe('sync', function() {
             it('should work initially', function(done) {
-                var folder, localListStub, invocations, imapSearchStub;
+                var folder, localListStub, invocations, imapSearchStub, imapParseStub;
 
                 invocations = 0;
                 folder = 'FOLDAAAA';
@@ -852,6 +879,13 @@ define(function(require) {
                     answered: true
                 }).yields(null, []);
 
+                imapParseStub = sinon.stub(dao, '_imapParseMessageBlock');
+                imapParseStub.withArgs({
+                    message: dummyEncryptedMail,
+                    block: dummyDecryptedMail.body
+                }).yields(null, dummyDecryptedMail);
+
+
                 dao.sync({
                     folder: folder
                 }, function(err) {
@@ -870,6 +904,7 @@ define(function(require) {
                     expect(pgpStub.decrypt.calledOnce).to.be.true;
                     expect(imapSearchStub.calledThrice).to.be.true;
                     expect(dao._account.folders[0].count).to.equal(1);
+                    expect(imapParseStub.calledOnce).to.be.true;
 
                     done();
                 });
@@ -903,7 +938,7 @@ define(function(require) {
             });
 
             it('should initially sync downstream when storage is empty', function(done) {
-                var folder, localListStub, localStoreStub, invocations, imapSearchStub, imapGetStub;
+                var folder, localListStub, localStoreStub, invocations, imapSearchStub, imapGetStub, imapParseStub;
 
                 invocations = 0;
                 folder = 'FOLDAAAA';
@@ -912,8 +947,8 @@ define(function(require) {
                     path: folder
                 }];
 
-                dummyEncryptedMail.unread = true;
-                dummyEncryptedMail.answered = true;
+                dummyDecryptedMail.unread = true;
+                dummyDecryptedMail.answered = true;
 
                 localListStub = sinon.stub(dao, '_localListMessages').withArgs({
                     folder: folder
@@ -938,6 +973,9 @@ define(function(require) {
                     answered: true
                 }).yields(null, [dummyEncryptedMail.uid]);
 
+                imapParseStub = sinon.stub(dao, '_imapParseMessageBlock');
+                imapParseStub.yields(null, dummyDecryptedMail);
+
                 localStoreStub = sinon.stub(dao, '_localStoreMessages').yields();
 
                 dao.sync({
@@ -960,6 +998,7 @@ define(function(require) {
                     expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
                     expect(pgpStub.decrypt.calledOnce).to.be.true;
                     expect(dao._account.folders[0].count).to.equal(1);
+                    expect(imapParseStub.calledOnce).to.be.true;
 
                     done();
                 });
@@ -1162,7 +1201,7 @@ define(function(require) {
                 });
             });
 
-            it('should error whilte removing messages from local', function(done) {
+            it('should error while removing messages from local', function(done) {
                 var invocations, folder, localListStub, imapSearchStub, localDeleteStub, imapDeleteStub;
 
                 invocations = 0;
@@ -1316,8 +1355,68 @@ define(function(require) {
                 });
             });
 
-            it('should fetch messages downstream from the remote', function(done) {
+            it('should fetch legacy messages downstream from the remote', function(done) {
                 var invocations, folder, localListStub, imapSearchStub, imapGetStub, localStoreStub;
+
+                invocations = 0;
+                folder = 'FOLDAAAA';
+                dao._account.folders = [{
+                    type: 'Folder',
+                    path: folder,
+                    messages: []
+                }];
+
+                localListStub = sinon.stub(dao, '_localListMessages').withArgs({
+                    folder: folder
+                }).yields(null, []);
+                imapSearchStub = sinon.stub(dao, '_imapSearch');
+                imapSearchStub.withArgs({
+                    folder: folder
+                }).yields(null, [dummyEncryptedMail.uid]);
+                imapSearchStub.withArgs({
+                    folder: folder,
+                    unread: true
+                }).yields(null, []);
+                imapSearchStub.withArgs({
+                    folder: folder,
+                    answered: true
+                }).yields(null, []);
+
+                imapGetStub = sinon.stub(dao, '_imapGetMessage').withArgs({
+                    folder: folder,
+                    uid: dummyEncryptedMail.uid
+                }).yields(null, dummyEncryptedMail);
+
+                localStoreStub = sinon.stub(dao, '_localStoreMessages').yields();
+                keychainStub.getReceiverPublicKey.withArgs(dummyEncryptedMail.from[0].address).yields(null, mockKeyPair);
+                pgpStub.decrypt.withArgs(dummyEncryptedMail.body, mockKeyPair.publicKey).yields(null, dummyLegacyDecryptedMail.body);
+
+
+                dao.sync({
+                    folder: folder
+                }, function(err) {
+                    expect(err).to.not.exist;
+
+                    if (invocations === 0) {
+                        expect(dao._account.busy).to.be.true;
+                        invocations++;
+                        return;
+                    }
+
+                    expect(dao._account.busy).to.be.false;
+                    expect(dao._account.folders[0].messages).to.not.be.empty;
+                    expect(localListStub.calledOnce).to.be.true;
+                    expect(imapSearchStub.calledThrice).to.be.true;
+                    expect(imapGetStub.calledOnce).to.be.true;
+                    expect(localStoreStub.calledOnce).to.be.true;
+                    expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
+                    expect(pgpStub.decrypt.calledOnce).to.be.true;
+                    done();
+                });
+            });
+
+            it('should fetch valid pgp messages downstream from the remote', function(done) {
+                var invocations, folder, localListStub, imapSearchStub, imapGetStub, localStoreStub, imapParseStub;
 
                 invocations = 0;
                 folder = 'FOLDAAAA';
@@ -1352,6 +1451,11 @@ define(function(require) {
                 keychainStub.getReceiverPublicKey.withArgs(dummyEncryptedMail.from[0].address).yields(null, mockKeyPair);
                 pgpStub.decrypt.withArgs(dummyEncryptedMail.body, mockKeyPair.publicKey).yields(null, dummyDecryptedMail.body);
 
+                imapParseStub = sinon.stub(dao, '_imapParseMessageBlock');
+                imapParseStub.withArgs({
+                    message: dummyEncryptedMail,
+                    block: dummyDecryptedMail.body
+                }).yields(null, dummyDecryptedMail);
 
                 dao.sync({
                     folder: folder
@@ -1372,6 +1476,7 @@ define(function(require) {
                     expect(localStoreStub.calledOnce).to.be.true;
                     expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
                     expect(pgpStub.decrypt.calledOnce).to.be.true;
+                    expect(imapParseStub.calledOnce).to.be.true;
                     done();
                 });
             });
