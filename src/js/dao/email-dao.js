@@ -73,7 +73,11 @@ define(function(require) {
         var self = this;
 
         self._imapClient = options.imapClient;
-        self._smtpClient = options.smtpClient;
+        self._pgpMailer = options.pgpMailer;
+        // set private key
+        if (self._crypto && self._crypto._privateKey) {
+            self._pgpMailer._privateKey = self._crypto._privateKey;
+        }
 
         // delegation-esque pattern to mitigate between node-style events and plain js
         self._imapClient.onIncomingMessage = function(message) {
@@ -116,7 +120,7 @@ define(function(require) {
         // set status to online
         this._account.online = false;
         this._imapClient = undefined;
-        this._smtpClient = undefined;
+        self._pgpMailer = undefined;
 
         callback();
     };
@@ -131,6 +135,8 @@ define(function(require) {
                 privateKeyArmored: options.keypair.privateKey.encryptedKey,
                 publicKeyArmored: options.keypair.publicKey.publicKey
             }, callback);
+            // set decrypted privateKey to pgpMailer
+            self._pgpMailer._privateKey = self._crypto._privateKey;
             return;
         }
 
@@ -913,17 +919,26 @@ define(function(require) {
             return;
         }
 
-        // public key found... encrypt and send
-        self._encrypt({
-            email: email,
-            keys: email.receiverKeys // this Array is set in writer controller
-        }, function(err, email) {
+        // get own public key so send message can be read
+        self._crypto.exportKeys(function(err, ownKeys) {
             if (err) {
                 callback(err);
                 return;
             }
 
-            self._smtpClient.send(email, callback);
+            // add own public key to receiver list
+            email.receiverKeys.push(ownKeys.publicKeyArmored);
+
+            // add whiteout tag to subject
+            email.subject = str.subjectPrefix + email.subject;
+
+            // mime encode, sign, encrypt and send email via smtp
+            self._pgpMailer.send({
+                encrypt: true,
+                cleartextMessage: str.message + '\n\n' + str.signature + '\n\n',
+                mail: email,
+                publicKeysArmored: email.receiverKeys
+            }, callback);
         });
     };
 
@@ -936,7 +951,13 @@ define(function(require) {
             return;
         }
 
-        this._smtpClient.send(options.email, callback);
+        // add whiteout tag to subject
+        options.email.subject = str.subjectPrefix + options.email.subject;
+
+        // mime encode, sign and send email via smtp
+        this._pgpMailer.send({
+            mail: options.email
+        }, callback);
     };
 
     //
@@ -967,23 +988,12 @@ define(function(require) {
                     return;
                 }
 
-                // bundle encrypted email together for sending
-                frameEncryptedMessage(options.email, ct);
+                // replace plaintext body with pgp message
+                options.email.body = ct;
+
                 callback(null, options.email);
             });
         });
-
-        function frameEncryptedMessage(email, ct) {
-            var greeting,
-                message = str.message + '\n\n\n',
-                signature = '\n\n' + str.signature + '\n\n';
-
-            greeting = 'Hi,\n\n';
-
-            // build encrypted text body
-            email.body = greeting + message + ct + signature;
-            email.subject = str.subjectPrefix + email.subject;
-        }
     };
 
     // Local Storage API
@@ -1237,8 +1247,6 @@ define(function(require) {
                 });
 
                 mails.forEach(function(mail) {
-                    mail.body = str.cryptPrefix + mail.body.split(str.cryptPrefix)[1].split(str.cryptSuffix)[0] + str.cryptSuffix;
-                    mail.subject = mail.subject.split(str.subjectPrefix)[1];
                     self._crypto.decrypt(mail.body, ownKeys.publicKeyArmored, function(err, decrypted) {
                         mail.body = err ? err.errMsg : decrypted;
                         after();

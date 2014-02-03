@@ -6,7 +6,7 @@ define(function(require) {
 
     var $ = require('jquery'),
         ImapClient = require('imap-client'),
-        SmtpClient = require('smtp-client'),
+        PgpMailer = require('pgpmailer'),
         EmailDAO = require('js/dao/email-dao'),
         RestDAO = require('js/dao/rest-dao'),
         PublicKeyDAO = require('js/dao/publickey-dao'),
@@ -89,7 +89,7 @@ define(function(require) {
         });
 
         function initClients(oauth, certificate) {
-            var auth, imapOptions, imapClient, smtpOptions, smtpClient;
+            var auth, imapOptions, imapClient, smtpOptions, pgpMailer;
 
             auth = {
                 XOAuth2: {
@@ -106,15 +106,18 @@ define(function(require) {
                 ca: [certificate]
             };
             smtpOptions = {
-                secure: config.gmail.smtp.secure,
+                secureConnection: config.gmail.smtp.secure,
                 port: config.gmail.smtp.port,
                 host: config.gmail.smtp.host,
                 auth: auth,
-                ca: [certificate]
+                tls: {
+                    ca: [certificate]
+                },
+                onError: console.error
             };
 
             imapClient = new ImapClient(imapOptions);
-            smtpClient = new SmtpClient(smtpOptions);
+            pgpMailer = new PgpMailer(smtpOptions);
 
             imapClient.onError = function(err) {
                 console.log('IMAP error.', err);
@@ -126,7 +129,7 @@ define(function(require) {
             // connect to clients
             self._emailDao.onConnect({
                 imapClient: imapClient,
-                smtpClient: smtpClient
+                pgpMailer: pgpMailer
             }, callback);
         }
     };

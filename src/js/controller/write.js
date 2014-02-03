@@ -79,7 +79,7 @@ define(function(require) {
 
             // only display non html mails in reply part
             if (!re.html) {
-                body += re.body.split('\n').join('\n> ');
+                body += re.body.trim().split('\n').join('\n> ');
                 $scope.body = body;
             }
         }

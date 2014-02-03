@@ -139,10 +139,9 @@ module.exports = function(grunt) {
                     'imap-client/node_modules/mimelib/node_modules/encoding/node_modules/iconv-lite/src/*.js',
                     'imap-client/node_modules/mailparser/src/*.js',
                     'imap-client/node_modules/mime/src/mime.js',
-                    'smtp-client/src/*.js',
-                    'smtp-client/node_modules/mailcomposer/src/*',
-                    'smtp-client/node_modules/nodemailer/src/*',
-                    'smtp-client/node_modules/nodemailer/node_modules/simplesmtp/src/*'
+                    'pgpmailer/src/*.js',
+                    'pgpmailer/node_modules/simplesmtp/src/*',
+                    'pgpmailer/node_modules/mailbuilder/src/*.js'
                 ],
                 dest: 'src/lib/'
             },
