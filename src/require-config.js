@@ -10,7 +10,6 @@
 			cryptoLib: '../js/crypto',
 			'setimmediate': 'setImmediate',
 			underscore: 'underscore/underscore-min',
-			cordova: 'cordova/cordova-2.5.0',
 			lawnchair: 'lawnchair/lawnchair-git',
 			lawnchairSQL: 'lawnchair/lawnchair-adapter-webkit-sqlite-git',
 			lawnchairIDB: 'lawnchair/lawnchair-adapter-indexed-db-git',
@@ -18,7 +17,6 @@
 			angular: 'angular/angular.min',
 			angularRoute: 'angular/angular-route.min',
 			angularTouch: 'angular/angular-touch.min',
-			moment: 'moment/moment.min',
 			uuid: 'uuid/uuid',
 			openpgp: 'openpgp/openpgp.min',
 			iscroll: 'iscroll/iscroll-min'

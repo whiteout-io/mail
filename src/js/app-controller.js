@@ -17,7 +17,6 @@ define(function(require) {
         OutboxBO = require('js/bo/outbox'),
         PGP = require('js/crypto/pgp'),
         config = require('js/app-config').config;
-    require('cordova');
 
     var self = {};
 
@@ -25,13 +24,15 @@ define(function(require) {
      * Start the application
      */
     self.start = function(options, callback) {
-        // are we running in native app or in browser?
-        if (document.URL.indexOf("http") === 0 || document.URL.indexOf("app") === 0 || document.URL.indexOf("chrome") === 0) {
-            console.log('Assuming Browser environment...');
-            onDeviceReady();
-        } else {
+        // are we running in a cordova app or in a browser environment?
+        if (window.cordova) {
+            // wait for 'deviceready' event to make sure plugins are loaded
             console.log('Assuming Cordova environment...');
             document.addEventListener("deviceready", onDeviceReady, false);
+        } else {
+            // No need to wait on events... just start the app
+            console.log('Assuming Browser environment...');
+            onDeviceReady();
         }
 
         function onDeviceReady() {
@@ -119,14 +120,7 @@ define(function(require) {
                 console.log('IMAP error.', err);
                 console.log('IMAP reconnecting...');
                 // re-init client modules on error
-                self.onConnect(function(err) {
-                    if (err) {
-                        console.error('IMAP reconnect failed!', err);
-                        return;
-                    }
-
-                    console.log('IMAP reconnect successful.');
-                });
+                self.onConnect(callback);
             };
 
             // connect to clients
