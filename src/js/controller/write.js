@@ -56,6 +56,7 @@ define(function(require) {
             $scope.subject = '';
             $scope.body = '';
             $scope.ciphertextPreview = '';
+            $scope.attachments = [];
         }
 
         function fillFields(re) {
@@ -237,6 +238,11 @@ define(function(require) {
                         email.receiverKeys.push(recipient.key.publicKey);
                     }
                 });
+            }
+
+            // add attachment to email object
+            if ($scope.attachments.length > 0) {
+                email.attachments = $scope.attachments;
             }
 
             // persist the email locally for later smtp transmission
@@ -436,6 +442,29 @@ define(function(require) {
                         document.getElementById(previousId).focus();
                     }
                 });
+            }
+        };
+    });
+
+    ngModule.directive('attachment', function() {
+        return function(scope, elm) {
+            elm.bind('change', function(e) {
+                for (var i = 0; i < e.target.files.length; i++) {
+                    addAttachment(e.target.files.item(i));
+                }
+            });
+
+            function addAttachment(file) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    scope.attachments.push({
+                        fileName: file.name,
+                        contentType: file.type,
+                        uint8Array: new Uint8Array(e.target.result)
+                    });
+                    scope.$apply();
+                };
+                reader.readAsArrayBuffer(file);
             }
         };
     });
