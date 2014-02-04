@@ -935,7 +935,7 @@ define(function(require) {
             // mime encode, sign, encrypt and send email via smtp
             self._pgpMailer.send({
                 encrypt: true,
-                cleartextMessage: str.message + '\n\n' + str.signature + '\n\n',
+                cleartextMessage: str.message + '\n\n',
                 mail: email,
                 publicKeysArmored: email.receiverKeys
             }, callback);
