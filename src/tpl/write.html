@@ -25,13 +25,18 @@
         <div class="subject-line">
           <input ng-model="subject" class="subject" spellcheck="true" tabindex="2" placeholder="Subject" ng-change="updatePreview()">
         </div>
-        <button class="btn-attachment">
-          <div data-icon="&#xe003;"></div>
-        </button>
       </div><!--/.subject-box-->
 
       <div class="attachments-box">
-        <input type="file" attachment multiple>
+        <span ng-repeat="attachment in attachments" class="attachment">
+          <span data-icon="&#xe003;"></span>
+          {{attachment.fileName}}
+          <span class="close" data-icon="&#xe000;" ng-click="remove(attachment)"></span>
+        </span><!--/.attachment-->
+        <input id="attachment-input" type="file" multiple attachment-input>
+        <button class="btn-attachment" attachment-btn>
+          <div data-icon="&#xe003;"></div>
+        </button>
       </div><!--/.attachments-box-->
 
       <div class="body" focus-child>

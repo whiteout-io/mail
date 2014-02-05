@@ -184,6 +184,14 @@ define(function(require) {
         };
 
         //
+        // Editing attachments
+        //
+
+        $scope.remove = function(attachment) {
+            $scope.attachments.splice($scope.attachments.indexOf(attachment), 1);
+        };
+
+        //
         // Editing email body
         //
 
@@ -446,9 +454,9 @@ define(function(require) {
         };
     });
 
-    ngModule.directive('attachment', function() {
+    ngModule.directive('attachmentInput', function() {
         return function(scope, elm) {
-            elm.bind('change', function(e) {
+            elm.on('change', function(e) {
                 for (var i = 0; i < e.target.files.length; i++) {
                     addAttachment(e.target.files.item(i));
                 }
@@ -466,6 +474,14 @@ define(function(require) {
                 };
                 reader.readAsArrayBuffer(file);
             }
+        };
+    });
+
+    ngModule.directive('attachmentBtn', function() {
+        return function(scope, elm) {
+            elm.on('click', function() {
+                document.querySelector('#attachment-input').click();
+            });
         };
     });
 
