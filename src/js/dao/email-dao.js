@@ -995,14 +995,14 @@ define(function(require) {
 
 
     // PGP Mailer API
-    
+
     /**
      * Login the smtp client
      */
     EmailDAO.prototype._pgpmailerLogin = function() {
         this._pgpMailer.login();
     };
-    
+
 
     // IMAP API
 
@@ -1212,7 +1212,6 @@ define(function(require) {
 
                 // store to local storage
                 self._devicestorage.storeList([email], dbType, callback);
-
             });
         });
     };
@@ -1253,7 +1252,6 @@ define(function(require) {
                     });
                     mail.encrypted = true;
                 });
-
             });
         });
     };

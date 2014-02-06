@@ -466,9 +466,9 @@ define(function(require) {
                 var reader = new FileReader();
                 reader.onload = function(e) {
                     scope.attachments.push({
-                        fileName: file.name,
-                        contentType: file.type,
-                        uint8Array: new Uint8Array(e.target.result)
+                        filename: file.name,
+                        mimeType: file.type,
+                        content: new Uint8Array(e.target.result)
                     });
                     scope.$apply();
                 };
