@@ -38,6 +38,7 @@
     }
 
     .subject-box {
+        position: relative;
         margin: 20px 0 7px 0;
         width: inherit;
         border: 1px;
@@ -55,49 +56,6 @@
         .subject {
             font-weight: bold;
             width: 100%;
-        }
-    }
-
-    .attachments-box {
-        position: relative;
-        margin: 0 0 5px 0;
-        width: inherit;
-        border: 1px;
-        border-style: solid;
-        border-color: $color-grey-lighter;
-        min-height: em(44);
-
-        .attachment {
-            line-height: 41px;
-            border-radius: 15px;
-            vertical-align: middle;
-            margin: 5px 0 5px 5px;
-            padding: 5px 5px 5px 10px;
-            border: 1px;
-            border-style: solid;
-            border-color: $color-grey-lighter;
-            cursor: default;
-
-            span {
-                font-size: 14px;
-                color: $color-grey-input;
-                vertical-align: middle;
-            }
-
-            .close {
-                margin-left: 5px;
-
-                &:hover,
-                &:focus {
-                    color: darken($color-grey, 10%);
-                    cursor: pointer;
-                }
-            }
-
-            &:hover,
-            &:focus {
-                background-color: darken($color-white, 2%);
-            }
         }
 
         input[type=file] {
@@ -125,6 +83,50 @@
             &.active {
                 top: 1px;
                 right: -1px;
+            }
+        }
+    }
+
+    .attachments-box {
+        position: relative;
+        margin: 0 0 5px 0;
+        width: inherit;
+        border: 1px;
+        border-style: solid;
+        border-color: $color-grey-lighter;
+        min-height: em(44);
+
+        .attachment {
+            height: 32px;
+            border-radius: 16px;
+            vertical-align: middle;
+            margin: 5px 0 5px 5px;
+            padding: 5px 5px 5px 10px;
+            border: 1px;
+            border-style: solid;
+            border-color: $color-grey-lighter;
+            cursor: default;
+            display: inline-block;
+
+            span {
+                font-size: 14px;
+                color: $color-grey-input;
+                vertical-align: middle;
+            }
+
+            .close {
+                margin-left: 5px;
+
+                &:hover,
+                &:focus {
+                    color: darken($color-grey, 10%);
+                    cursor: pointer;
+                }
+            }
+
+            &:hover,
+            &:focus {
+                background-color: darken($color-white, 2%);
             }
         }
     }

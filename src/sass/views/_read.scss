@@ -39,6 +39,7 @@
     }
 
     .attachments {
+        position: relative;
         width: inherit;
         border: 1px;
         border-style: solid;
@@ -46,14 +47,15 @@
         min-height: em(44);
 
         .attachment {
-            line-height: 42px;
-            border-radius: 15px;
+            height: 32px;
+            border-radius: 16px;
             vertical-align: middle;
             margin: 5px 0 5px 5px;
             padding: 5px 10px 5px 10px;
             border: 1px;
             border-style: solid;
             border-color: $color-grey-lighter;
+            display: inline-block;
 
             span {
                 font-size: 14px;
