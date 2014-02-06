@@ -277,7 +277,14 @@ define(function(require) {
             this.to = [{
                 address: 'max.musterman@gmail.com'
             }]; // list of receivers
-            this.attachments = (attachments) ? [true] : undefined;
+            if (attachments) {
+                // body structure with three attachments
+                this.bodystructure = {"1": {"part": "1","type": "text/plain","parameters": {"charset": "us-ascii"},"encoding": "7bit","size": 9,"lines": 2},"2": {"part": "2","type": "application/octet-stream","parameters": {"name": "a.md"},"encoding": "7bit","size": 123,"disposition": [{"type": "attachment","filename": "a.md"}]},"3": {"part": "3","type": "application/octet-stream","parameters": {"name": "b.md"},"encoding": "7bit","size": 456,"disposition": [{"type": "attachment","filename": "b.md"}]},"4": {"part": "4","type": "application/octet-stream","parameters": {"name": "c.md"},"encoding": "7bit","size": 789,"disposition": [{"type": "attachment","filename": "c.md"}]},"type": "multipart/mixed"};
+                this.attachments = [{"filename": "a.md","filesize": 123,"mimeType": "text/x-markdown","part": "2","content": null}, {"filename": "b.md","filesize": 456,"mimeType": "text/x-markdown","part": "3","content": null}, {"filename": "c.md","filesize": 789,"mimeType": "text/x-markdown","part": "4","content": null}];
+            } else {
+                this.bodystructure = {"part": "1","type": "text/plain","parameters": {"charset": "us-ascii"},"encoding": "7bit","size": 9,"lines": 2};
+                this.attachments = [];
+            }
             this.unread = unread;
             this.answered = answered;
             this.html = html;
@@ -286,7 +293,7 @@ define(function(require) {
             this.body = 'Here are a few pointers to help you get started with Whiteout Mail.\n\n# Write encrypted message\n- You can compose a message by clicking on the compose button on the upper right (keyboard shortcut is "n" for a new message or "r" to reply).\n- When typing the recipient\'s email address, secure recipients are marked with a blue label and insecure recipients are red.\n- When sending an email to insecure recipients, the default behavior for Whiteout Mail is to invite them to the service and only send the message content in an encrypted form, once they have joined.\n\n# Advanced features\n- To verify a recipient\'s PGP key, you can hover over the blue label containing their email address and their key fingerprint will be displayed.\n- To view your own key fingerprint, open the account view in the navigation bar on the left. You can compare these with your correspondants over a second channel such as a phonecall.\n\nWe hope this helped you to get started with Whiteout Mail.\n\nYour Whiteout Networks team'; // plaintext body
         };
 
-        var dummys = [new Email(true, true), new Email(true, false, true, true), new Email(false, true, true), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false)];
+        var dummys = [new Email(true, true), new Email(true, false, true, true), new Email(false, true, true), new Email(false, true), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false)];
 
         return dummys;
     }

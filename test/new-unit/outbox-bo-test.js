@@ -85,7 +85,7 @@ define(function(require) {
                 };
                 dummyMails = [member, invited, notinvited];
 
-                emailDaoStub.list.yieldsAsync(null, dummyMails);
+                emailDaoStub.listForOutbox.yieldsAsync(null, dummyMails);
                 emailDaoStub.sendEncrypted.withArgs(sinon.match(function(opts) {
                     return typeof opts.email !== 'undefined' && opts.email.to.address === member.to.address;
                 })).yieldsAsync();
@@ -111,7 +111,7 @@ define(function(require) {
                     expect(outbox._outboxBusy).to.be.false;
 
                     expect(unsentCount).to.equal(2);
-                    expect(emailDaoStub.list.callCount).to.equal(1);
+                    expect(emailDaoStub.listForOutbox.callCount).to.equal(1);
                     expect(emailDaoStub.sendEncrypted.callCount).to.equal(1);
                     expect(emailDaoStub.sendPlaintext.callCount).to.equal(1);
                     expect(devicestorageStub.removeList.callCount).to.equal(1);
@@ -136,7 +136,7 @@ define(function(require) {
 
             it('should not process outbox in offline mode', function(done) {
                 emailDaoStub._account.online = false;
-                emailDaoStub.list.yieldsAsync(null, [{
+                emailDaoStub.listForOutbox.yieldsAsync(null, [{
                     id: '123',
                     to: [{
                         name: 'member',
@@ -147,7 +147,7 @@ define(function(require) {
                 outbox._processOutbox(function(err, count) {
                     expect(err).to.not.exist;
                     expect(count).to.equal(1);
-                    expect(emailDaoStub.list.callCount).to.equal(1);
+                    expect(emailDaoStub.listForOutbox.callCount).to.equal(1);
                     expect(outbox._outboxBusy).to.be.false;
                     done();
                 });

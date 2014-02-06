@@ -277,13 +277,13 @@ define(function(require) {
                 scope.onError = function(err) {
                     expect(err).to.not.exist;
                     expect(scope.state.writer.open).to.be.false;
-                    expect(emailDaoMock.store.calledOnce).to.be.true;
+                    expect(emailDaoMock.storeForOutbox.calledOnce).to.be.true;
                     expect(emailDaoMock.sync.calledOnce).to.be.true;
 
                     done();
                 };
 
-                emailDaoMock.store.yields();
+                emailDaoMock.storeForOutbox.yields();
                 emailDaoMock.sync.yields({
                     code: 42
                 });
@@ -310,13 +310,13 @@ define(function(require) {
                 scope.onError = function(err) {
                     expect(err).to.not.exist;
                     expect(scope.state.writer.open).to.be.false;
-                    expect(emailDaoMock.store.calledOnce).to.be.true;
+                    expect(emailDaoMock.storeForOutbox.calledOnce).to.be.true;
                     expect(emailDaoMock.sync.calledOnce).to.be.true;
 
                     done();
                 };
 
-                emailDaoMock.store.yields();
+                emailDaoMock.storeForOutbox.yields();
                 emailDaoMock.sync.yields();
 
                 scope.state.writer.write(re);
@@ -341,13 +341,13 @@ define(function(require) {
                 scope.onError = function(err) {
                     expect(err).to.exist;
                     expect(scope.state.writer.open).to.be.false;
-                    expect(emailDaoMock.store.calledOnce).to.be.true;
+                    expect(emailDaoMock.storeForOutbox.calledOnce).to.be.true;
                     expect(emailDaoMock.sync.calledOnce).to.be.true;
 
                     done();
                 };
 
-                emailDaoMock.store.yields();
+                emailDaoMock.storeForOutbox.yields();
                 emailDaoMock.sync.yields({});
 
                 scope.state.writer.write(re);
@@ -367,7 +367,7 @@ define(function(require) {
                 scope.subject = 'yaddablabla';
                 scope.toKey = 'Public Key';
 
-                emailDaoMock.store.withArgs(sinon.match(function(mail) {
+                emailDaoMock.storeForOutbox.withArgs(sinon.match(function(mail) {
                     return mail.from[0].address === emailAddress && mail.to.length === 1 && mail.receiverKeys.length === 1;
                 })).yields({
                     errMsg: 'snafu'
@@ -376,7 +376,7 @@ define(function(require) {
                 scope.onError = function(err) {
                     expect(err).to.exist;
                     expect(scope.state.writer.open).to.be.true;
-                    expect(emailDaoMock.store.calledOnce).to.be.true;
+                    expect(emailDaoMock.storeForOutbox.calledOnce).to.be.true;
                     done();
                 };
                 scope.sendToOutbox();

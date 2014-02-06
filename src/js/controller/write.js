@@ -56,6 +56,7 @@ define(function(require) {
             $scope.subject = '';
             $scope.body = '';
             $scope.ciphertextPreview = '';
+            $scope.attachments = [];
         }
 
         function fillFields(re) {
@@ -79,7 +80,7 @@ define(function(require) {
 
             // only display non html mails in reply part
             if (!re.html) {
-                body += re.body.split('\n').join('\n> ');
+                body += re.body.trim().split('\n').join('\n> ');
                 $scope.body = body;
             }
         }
@@ -183,6 +184,14 @@ define(function(require) {
         };
 
         //
+        // Editing attachments
+        //
+
+        $scope.remove = function(attachment) {
+            $scope.attachments.splice($scope.attachments.indexOf(attachment), 1);
+        };
+
+        //
         // Editing email body
         //
 
@@ -239,8 +248,13 @@ define(function(require) {
                 });
             }
 
+            // add attachment to email object
+            if ($scope.attachments.length > 0) {
+                email.attachments = $scope.attachments;
+            }
+
             // persist the email locally for later smtp transmission
-            emailDao.store(email, function(err) {
+            emailDao.storeForOutbox(email, function(err) {
                 if (err) {
                     $scope.onError(err);
                     return;
@@ -437,6 +451,37 @@ define(function(require) {
                     }
                 });
             }
+        };
+    });
+
+    ngModule.directive('attachmentInput', function() {
+        return function(scope, elm) {
+            elm.on('change', function(e) {
+                for (var i = 0; i < e.target.files.length; i++) {
+                    addAttachment(e.target.files.item(i));
+                }
+            });
+
+            function addAttachment(file) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    scope.attachments.push({
+                        filename: file.name,
+                        mimeType: file.type,
+                        content: new Uint8Array(e.target.result)
+                    });
+                    scope.$apply();
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        };
+    });
+
+    ngModule.directive('attachmentBtn', function() {
+        return function(scope, elm) {
+            elm.on('click', function() {
+                document.querySelector('#attachment-input').click();
+            });
         };
     });
 
