@@ -24,15 +24,16 @@
   <div ng-switch="state.mailList.selected.attachments !== undefined && state.mailList.selected.attachments.length > 0">
     <div ng-switch-when="true">
       <div class="attachments">
-        <span ng-repeat="attachment in state.mailList.selected.attachments">
-          <button ng-click="download(attachment)">{{attachment.filename}}</button>
-        </span>
-      </div>
+        <span class="attachment" ng-repeat="attachment in state.mailList.selected.attachments" ng-click="download(attachment)">
+          <span data-icon="&#xe003;"></span>
+          {{attachment.filename}}
+        </span><!--/.attachment-->
+      </div><!--/.attachments-->
     </div>
     <div ng-switch-default>
       <div class="seperator-line"></div>
     </div>
-  </div>
+  </div><!--/.ng-switch-->
 
 
   <div class="body">

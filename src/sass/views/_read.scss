@@ -5,6 +5,8 @@
     color: $color-grey-dark;
 
     .headers {
+        margin-bottom: 1em;
+
         p {
             margin: 0px;
             padding: 0px;
@@ -36,15 +38,45 @@
         }
     }
 
+    .attachments {
+        width: inherit;
+        border: 1px;
+        border-style: solid;
+        border-color: $color-grey-lighter;
+        min-height: em(44);
+
+        .attachment {
+            line-height: 42px;
+            border-radius: 15px;
+            vertical-align: middle;
+            margin: 5px 0 5px 5px;
+            padding: 5px 10px 5px 10px;
+            border: 1px;
+            border-style: solid;
+            border-color: $color-grey-lighter;
+
+            span {
+                font-size: 14px;
+                color: $color-grey-input;
+                vertical-align: middle;
+            }
+
+            &:hover,
+            &:focus {
+                background-color: darken($color-white, 3%);
+                cursor: pointer;
+            }
+        }
+    }
+
     .seperator-line {
         height: 1px;
         color: $color-grey-lighter;
         background-color: $color-grey-lighter;
-        margin-top: 1em;
-        margin-bottom: 1.75em;
     }
 
     .body {
+        margin-top: 1.75em;
         cursor: text;
         padding-bottom: 200px;
         line-height: 1.5em;
