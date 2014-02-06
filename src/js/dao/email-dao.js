@@ -86,6 +86,9 @@ define(function(require) {
             }
         };
 
+        // connect the pgpmailer
+        self._pgpmailerLogin();
+
         // connect to newly created imap client
         self._imapLogin(function(err) {
             if (err) {
@@ -964,38 +967,6 @@ define(function(require) {
     // Internal API
     //
 
-    // Encryption API
-
-    EmailDAO.prototype._encrypt = function(options, callback) {
-        var self = this,
-            pt = options.email.body;
-
-        options.keys = options.keys || [];
-
-        // get own public key so send message can be read
-        self._crypto.exportKeys(function(err, ownKeys) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            // add own public key to receiver list
-            options.keys.push(ownKeys.publicKeyArmored);
-            // encrypt the email
-            self._crypto.encrypt(pt, options.keys, function(err, ct) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-
-                // replace plaintext body with pgp message
-                options.email.body = ct;
-
-                callback(null, options.email);
-            });
-        });
-    };
-
     // Local Storage API
 
     EmailDAO.prototype._localListMessages = function(options, callback) {
@@ -1022,6 +993,16 @@ define(function(require) {
         this._devicestorage.removeList(dbType, callback);
     };
 
+
+    // PGP Mailer API
+    
+    /**
+     * Login the smtp client
+     */
+    EmailDAO.prototype._pgpmailerLogin = function() {
+        this._pgpMailer.login();
+    };
+    
 
     // IMAP API
 
@@ -1199,29 +1180,48 @@ define(function(require) {
         }
     };
 
-    // to be removed and solved with IMAP!
-    EmailDAO.prototype.store = function(email, callback) {
+    /**
+     * Persists an email object for the outbox, encrypted with the user's public key
+     * @param {Object} email The email object
+     * @param {Function} callback(error) Invoked when the email was encrypted and persisted, contains information in case of an error
+     */
+    EmailDAO.prototype.storeForOutbox = function(email, callback) {
         var self = this,
-            dbType = 'email_OUTBOX';
+            dbType = 'email_OUTBOX',
+            plaintext = email.body;
 
+        // give the email a random identifier (used for storage)
         email.id = util.UUID();
 
-        // encrypt
-        self._encrypt({
-            email: email
-        }, function(err, email) {
+        // get own public key so send message can be read
+        self._crypto.exportKeys(function(err, ownKeys) {
             if (err) {
                 callback(err);
                 return;
             }
 
-            // store to local storage
-            self._devicestorage.storeList([email], dbType, callback);
+            // encrypt the email with the user's public key
+            self._crypto.encrypt(plaintext, [ownKeys.publicKeyArmored], function(err, ciphertext) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                // replace plaintext body with pgp message
+                email.body = ciphertext;
+
+                // store to local storage
+                self._devicestorage.storeList([email], dbType, callback);
+
+            });
         });
     };
 
-    // to be removed and solved with IMAP!
-    EmailDAO.prototype.list = function(callback) {
+    /**
+     * Reads and decrypts persisted email objects for the outbox
+     * @param {Function} callback(error, emails) Invoked when the email was encrypted and persisted, contains information in case of an error
+     */
+    EmailDAO.prototype.listForOutbox = function(callback) {
         var self = this,
             dbType = 'email_OUTBOX';
 

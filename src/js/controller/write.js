@@ -254,7 +254,7 @@ define(function(require) {
             }
 
             // persist the email locally for later smtp transmission
-            emailDao.store(email, function(err) {
+            emailDao.storeForOutbox(email, function(err) {
                 if (err) {
                     $scope.onError(err);
                     return;

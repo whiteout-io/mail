@@ -96,7 +96,7 @@ define(function(require) {
             self._outboxBusy = true;
 
             // get last item from outbox
-            self._emailDao.list(function(err, pending) {
+            self._emailDao.listForOutbox(function(err, pending) {
                 if (err) {
                     self._outboxBusy = false;
                     callback(err);

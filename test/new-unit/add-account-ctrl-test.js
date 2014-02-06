@@ -50,13 +50,20 @@ define(function(require) {
                 mocks.module('addaccounttest');
                 mocks.inject(function($controller, $rootScope, $location) {
                     location = $location;
+                    scope = $rootScope.$new();
+                    scope.state = {};
+
                     sinon.stub(location, 'path', function(path) {
                         expect(path).to.equal('/login');
                         expect(fetchOAuthTokenStub.calledOnce).to.be.true;
+
+                        location.path.restore();
+                        scope.$apply.restore();
                         done();
                     });
-                    scope = $rootScope.$new();
-                    scope.state = {};
+
+                    sinon.stub(scope, '$apply', function() {});
+
                     ctrl = $controller(AddAccountCtrl, {
                         $location: location,
                         $scope: scope
