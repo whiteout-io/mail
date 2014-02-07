@@ -509,7 +509,7 @@ define(function(require) {
             it('should work', function() {
                 // called once in onConnect
                 expect(pgpMailerStub.login.calledOnce).to.be.true;
-                
+
                 pgpMailerStub.login.returns();
 
                 dao._pgpmailerLogin();
@@ -881,6 +881,17 @@ define(function(require) {
                 }];
                 dummyDecryptedMail.unread = true;
                 dummyEncryptedMail.unread = true;
+                dummyDecryptedMail.attachments = [{
+                    filename: 'filename',
+                    filesize: 123,
+                    mimeType: 'text/plain',
+                    content: null
+                }, {
+                    filename: 'filename',
+                    filesize: 123,
+                    mimeType: "application/pgp-signature",
+                    content: null
+                }];
 
                 localListStub = sinon.stub(dao, '_localListMessages').withArgs({
                     folder: folder
@@ -919,7 +930,9 @@ define(function(require) {
                     }
 
                     expect(dao._account.busy).to.be.false;
-                    expect(dao._account.folders[0].messages).to.not.be.empty;
+                    expect(dao._account.folders[0].messages.length).to.equal(1);
+                    expect(dao._account.folders[0].messages[0]).to.equal(dummyDecryptedMail);
+                    expect(dao._account.folders[0].messages[0].attachments.length).to.equal(1);
                     expect(localListStub.calledOnce).to.be.true;
                     expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
                     expect(pgpStub.decrypt.calledOnce).to.be.true;
@@ -1446,6 +1459,18 @@ define(function(require) {
                     path: folder,
                     messages: []
                 }];
+                dummyDecryptedMail.attachments = [{
+                    filename: 'filename',
+                    filesize: 123,
+                    mimeType: 'text/plain',
+                    content: null
+                }, {
+                    filename: 'filename',
+                    filesize: 123,
+                    mimeType: "application/pgp-signature",
+                    content: null
+                }];
+
 
                 localListStub = sinon.stub(dao, '_localListMessages').withArgs({
                     folder: folder
@@ -1490,7 +1515,9 @@ define(function(require) {
                     }
 
                     expect(dao._account.busy).to.be.false;
-                    expect(dao._account.folders[0].messages).to.not.be.empty;
+                    expect(dao._account.folders[0].messages.length).to.equal(1);
+                    expect(dao._account.folders[0].messages[0]).to.equal(dummyDecryptedMail);
+                    expect(dao._account.folders[0].messages[0].attachments.length).to.equal(1);
                     expect(localListStub.calledOnce).to.be.true;
                     expect(imapSearchStub.calledThrice).to.be.true;
                     expect(imapGetStub.calledOnce).to.be.true;
@@ -2577,7 +2604,7 @@ define(function(require) {
 
                 dao.storeForOutbox(dummyDecryptedMail, function(err) {
                     expect(err).to.not.exist;
-                    
+
                     expect(pgpStub.exportKeys.calledOnce).to.be.true;
                     expect(pgpStub.encrypt.calledOnce).to.be.true;
                     expect(devicestorageStub.storeList.calledOnce).to.be.true;
@@ -2597,7 +2624,7 @@ define(function(require) {
 
                 dao.storeForOutbox(dummyDecryptedMail, function(err) {
                     expect(err).to.exist;
-                    
+
                     expect(pgpStub.exportKeys.calledOnce).to.be.true;
                     expect(pgpStub.encrypt.calledOnce).to.be.true;
                     expect(devicestorageStub.storeList.calledOnce).to.be.true;
@@ -2616,7 +2643,7 @@ define(function(require) {
 
                 dao.storeForOutbox(dummyDecryptedMail, function(err) {
                     expect(err).to.exist;
-                    
+
                     expect(pgpStub.exportKeys.calledOnce).to.be.true;
                     expect(pgpStub.encrypt.calledOnce).to.be.true;
                     expect(devicestorageStub.storeList.called).to.be.false;
@@ -2630,7 +2657,7 @@ define(function(require) {
 
                 dao.storeForOutbox(dummyDecryptedMail, function(err) {
                     expect(err).to.exist;
-                    
+
                     expect(pgpStub.exportKeys.calledOnce).to.be.true;
                     expect(pgpStub.encrypt.called).to.be.false;
                     expect(devicestorageStub.storeList.called).to.be.false;
@@ -2671,7 +2698,9 @@ define(function(require) {
                 pgpStub.exportKeys.yields(null, {
                     publicKeyArmored: key
                 });
-                pgpStub.decrypt.yields({errMsg: errMsg});
+                pgpStub.decrypt.yields({
+                    errMsg: errMsg
+                });
 
                 dao.listForOutbox(function(err, mails) {
                     expect(err).to.not.exist;

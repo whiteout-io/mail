@@ -843,7 +843,18 @@ define(function(require) {
                     self._imapParseMessageBlock({
                         message: email,
                         block: decrypted
-                    }, localCallback);
+                    }, function(error, parsedMessage) {
+                        if (!parsedMessage) {
+                            localCallback(error);
+                            return;
+                        }
+
+                        // remove the pgp-signature from the attachments
+                        parsedMessage.attachments = _.reject(parsedMessage.attachments, function(attmt) {
+                            return attmt.mimeType === "application/pgp-signature";
+                        });
+                        localCallback(error, parsedMessage);
+                    });
                 });
             });
 
