@@ -17,7 +17,7 @@ require(['../../src/require-config'], function() {
 
 	// Start the main app logic.
 	require(['js/app-config'], function(app) {
-		window.Worker = undefined; // disable web workers since mocha doesn't support them
+		//window.Worker = undefined; // disable web workers since mocha doesn't support them
 
 		app.config.workerPath = '../../src/js';
 
