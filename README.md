@@ -34,6 +34,8 @@ We take the privacy of your data very seriously. Here are some of the technical 
 You can download a prebuilt bundle under [releases](https://github.com/whiteout-io/mail-html5/releases) or build your own from source (requires [node.js and npm](http://nodejs.org/download/)):
 
     npm install && npm test
+
+(Requires grunt and sass to be installed)
     
 This will download all dependencies, run the tests and build the Chrome Packaged App bundle **DEV.zip** which can be installed under [chrome://extensions](chrome://extensions) in developer mode.
 
