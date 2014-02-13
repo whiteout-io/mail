@@ -136,8 +136,14 @@
         cursor: text;
 
         @include respond-to(desktop) {
-            height: 445px;
+            height: 404px;
             overflow-y: scroll;
+            border: 1px solid #ddd;
+            padding: 5px;
+
+            p {
+              margin: 0;
+            }
         }
 
         *[contentEditable] {
