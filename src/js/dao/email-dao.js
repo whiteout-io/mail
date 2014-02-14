@@ -207,10 +207,7 @@ define(function(require) {
          */
 
         var self = this,
-            folder,
-            delta1 /*, delta2 */ , delta3, delta4, //message 
-            deltaF2, deltaF4,
-            isFolderInitialized;
+            folder, isFolderInitialized;
 
 
         // validate options
@@ -258,30 +255,13 @@ define(function(require) {
                     return;
                 }
 
-                if (_.isEmpty(storedMessages)) {
-                    // if there's nothing here, we're good
-                    callback();
-                    doImapDelta();
-                    return;
-                }
-
-                var after = _.after(storedMessages.length, function() {
-                    callback();
-                    doImapDelta();
-                });
-
                 storedMessages.forEach(function(storedMessage) {
-                    handleMessage(storedMessage, function(err, cleartextMessage) {
-                        if (err) {
-                            self._account.busy = false;
-                            callback(err);
-                            return;
-                        }
-
-                        folder.messages.push(cleartextMessage);
-                        after();
-                    });
+                    delete storedMessage.body; // do not flood the memory
+                    folder.messages.push(storedMessage);
                 });
+
+                callback();
+                doImapDelta();
             });
         }
 
@@ -295,18 +275,16 @@ define(function(require) {
                     return;
                 }
 
-                /*
-                 * delta1: storage > memory  => we deleted messages, remove from remote
-                 * delta2:  memory > storage => we added messages, push to remote
-                 * deltaF2: memory > storage => we changed flags, sync them to the remote and memory
-                 */
-                delta1 = checkDelta(storedMessages, folder.messages);
-                // delta2 = checkDelta(folder.messages, storedMessages); // not supported yet
-                deltaF2 = checkFlags(folder.messages, storedMessages);
-
                 doDelta1();
 
+                /*
+                 * delta1: storage > memory  => we deleted messages, remove from remote
+                 */
                 function doDelta1() {
+                    var inMemoryUids = _.pluck(folder.messages, 'uid'),
+                        storedMessageUids = _.pluck(storedMessages, 'uid'),
+                        delta1 = _.difference(storedMessageUids, inMemoryUids); // delta1 contains only uids
+
                     if (_.isEmpty(delta1)) {
                         doDeltaF2();
                         return;
@@ -317,10 +295,10 @@ define(function(require) {
                     });
 
                     // deltaF2 contains references to the in-memory messages
-                    delta1.forEach(function(inMemoryMessage) {
+                    delta1.forEach(function(inMemoryUid) {
                         var deleteMe = {
                             folder: folder.path,
-                            uid: inMemoryMessage.uid
+                            uid: inMemoryUid
                         };
 
                         self._imapDeleteMessage(deleteMe, function(err) {
@@ -343,7 +321,12 @@ define(function(require) {
                     });
                 }
 
+                /*
+                 * deltaF2: memory > storage => we changed flags, sync them to the remote and memory
+                 */
                 function doDeltaF2() {
+                    var deltaF2 = checkFlags(folder.messages, storedMessages); // deltaf2 contains the message objects, we need those to sync the flags
+
                     if (_.isEmpty(deltaF2)) {
                         callback();
                         doImapDelta();
@@ -397,48 +380,37 @@ define(function(require) {
         function doImapDelta() {
             self._imapSearch({
                 folder: folder.path
-            }, function(err, uids) {
+            }, function(err, inImapUids) {
                 if (err) {
                     self._account.busy = false;
                     callback(err);
                     return;
                 }
 
-                // uidWrappers is just to wrap the bare uids in an object { uid: 123 } so 
-                // the checkDelta function can treat it like something that resembles a stripped down email object...
-                var uidWrappers = _.map(uids, function(uid) {
-                    return {
-                        uid: uid
-                    };
-                });
+                doDelta3();
 
                 /*
                  * delta3: memory > imap   => we deleted messages directly from the remote, remove from memory and storage
-                 * delta4:   imap > memory => we have new messages available, fetch to memory and storage
                  */
-                delta3 = checkDelta(folder.messages, uidWrappers);
-                delta4 = checkDelta(uidWrappers, folder.messages);
-
-                doDelta3();
-
-                // we deleted messages directly from the remote, remove from memory and storage
                 function doDelta3() {
+                    var inMemoryUids = _.pluck(folder.messages, 'uid'),
+                        delta3 = _.difference(inMemoryUids, inImapUids);
+
                     if (_.isEmpty(delta3)) {
                         doDelta4();
                         return;
                     }
 
                     var after = _.after(delta3.length, function() {
-                        // we're done with delta 3, so let's continue
                         doDelta4();
                     });
 
                     // delta3 contains references to the in-memory messages that have been deleted from the remote
-                    delta3.forEach(function(inMemoryMessage) {
+                    delta3.forEach(function(inMemoryUid) {
                         // remove delta3 from local storage
                         self._localDeleteMessage({
                             folder: folder.path,
-                            uid: inMemoryMessage.uid
+                            uid: inMemoryUid
                         }, function(err) {
                             if (err) {
                                 self._account.busy = false;
@@ -446,85 +418,98 @@ define(function(require) {
                                 return;
                             }
 
-                            // remove delta3 from memory
-                            var idx = folder.messages.indexOf(inMemoryMessage);
-                            folder.messages.splice(idx, 1);
+                            // remove the uid from memory
+                            var inMemoryMessage = _.findWhere(folder.messages, function(msg) {
+                                return msg.uid.a === inMemoryUid;
+                            });
+                            folder.messages.splice(folder.messages.indexOf(inMemoryMessage), 1);
 
                             after();
                         });
                     });
                 }
 
-                // we have new messages available, fetch to memory and storage
-                // (downstream sync)
+
+                /*
+                 * delta4: imap > memory => we have new messages available, fetch downstream to memory and storage
+                 */
                 function doDelta4() {
+                    var inMemoryUids = _.pluck(folder.messages, 'uid'),
+                        delta4 = _.difference(inImapUids, inMemoryUids);
+
+                    // no delta, we're done here
+                    if (_.isEmpty(delta4)) {
+                        doDeltaF4();
+                        return;
+                    }
+
                     // eliminate uids smaller than the biggest local uid, i.e. just fetch everything
                     // that came in AFTER the most recent email we have in memory. Keep in mind that
                     // uids are strictly ascending, so there can't be a NEW mail in the mailbox with a 
                     // uid smaller than anything we've encountered before.
-                    if (!_.isEmpty(folder.messages)) {
-                        var localUids = _.pluck(folder.messages, 'uid'),
-                            maxLocalUid = Math.max.apply(null, localUids);
+                    if (!_.isEmpty(inMemoryUids)) {
+                        var maxInMemoryUid = Math.max.apply(null, inMemoryUids); // apply works with separate arguments rather than an array
 
-                        // eliminate everything prior to maxLocalUid
-                        delta4 = _.filter(delta4, function(uidWrapper) {
-                            return uidWrapper.uid > maxLocalUid;
+                        // eliminate everything prior to maxInMemoryUid, that was already synced
+                        delta4 = _.filter(delta4, function(uid) {
+                            return uid > maxInMemoryUid;
                         });
                     }
 
-                    // sync in the uids in ascending order, to not leave the local database in a corrupted state:
-                    // when the 5, 3, 1 should be synced and the client would fail at 3, but 5 was successfully synced,
-                    // any subsequent syncs would never fetch 1 and 3. simple solution: sync in ascending order
-                    delta4 = _.sortBy(delta4, function(uidWrapper) {
-                        return uidWrapper.uid;
-                    });
-
-                    syncNextItem();
-
-                    function syncNextItem() {
-                        // no delta, we're done here
-                        if (_.isEmpty(delta4)) {
-                            doDeltaF4();
+                    self._imapListMessages({
+                        folder: folder.path,
+                        firstUid: Math.min.apply(null, delta4),
+                        lastUid: Math.max.apply(null, delta4)
+                    }, function(err, messages) {
+                        if (err) {
+                            self._account.busy = false;
+                            callback(err);
                             return;
                         }
 
-                        // delta4 contains the headers that are newly available on the remote
-                        var nextUidWrapper = delta4.shift();
+                        // if there is a verification message in the synced messages, handle it
+                        var verificationMessage = _.findWhere(messages, {
+                            subject: str.subjectPrefix + str.verificationSubject
+                        });
 
-                        // get the whole message
-                        self._imapGetMessage({
-                            folder: folder.path,
-                            uid: nextUidWrapper.uid
-                        }, function(err, message) {
-                            if (err) {
-                                self._account.busy = false;
-                                callback(err);
+                        if (verificationMessage) {
+                            handleVerification(verificationMessage, function(err) {
+                                // TODO: show usable error when the verification failed
+                                if (err) {
+                                    self._account.busy = false;
+                                    callback(err);
+                                    return;
+                                }
+
+                                storeHeaders();
+                            });
+                            return;
+                        }
+
+                        storeHeaders();
+
+                        function storeHeaders() {
+                            // eliminate non-whiteout mails
+                            messages = _.filter(messages, function(message) {
+                                // we don't want to display "[whiteout] "-prefixed mails for now
+                                return message.subject.indexOf(str.subjectPrefix) === 0 && message.subject !== (str.subjectPrefix + str.verificationSubject);
+                            });
+
+                            // no delta, we're done here
+                            if (_.isEmpty(messages)) {
+                                doDeltaF4();
                                 return;
                             }
 
-                            // imap filtering is insufficient, since google ignores non-alphabetical characters
-                            if (message.subject.indexOf(str.subjectPrefix) === -1) {
-                                syncNextItem();
-                                return;
-                            }
+                            // filter out the "[whiteout] " prefix
+                            messages.forEach(function(messages) {
+                                messages.subject = messages.subject.replace(/^\[whiteout\] /, '');
+                            });
 
-                            if (isVerificationMail(message)) {
-                                verify(message, function(err) {
-                                    if (err) {
-                                        self._account.busy = false;
-                                        callback(err);
-                                        return;
-                                    }
-
-                                    syncNextItem();
-                                });
-                                return;
-                            }
-
-                            // add the encrypted message to the local storage
+                            // persist the encrypted message to the local storage
                             self._localStoreMessages({
                                 folder: folder.path,
-                                emails: [message]
+                                emails: messages
                             }, function(err) {
                                 if (err) {
                                     self._account.busy = false;
@@ -532,25 +517,21 @@ define(function(require) {
                                     return;
                                 }
 
-                                // decrypt and add to folder in memory
-                                handleMessage(message, function(err, cleartextMessage) {
-                                    if (err) {
-                                        self._account.busy = false;
-                                        callback(err);
-                                        return;
-                                    }
-
-                                    folder.messages.push(cleartextMessage);
-                                    syncNextItem();
-                                });
+                                // if persisting worked, add them to the messages array
+                                folder.messages = folder.messages.concat(messages);
+                                doDeltaF4();
                             });
-                        });
-                    }
+                        }
+                    });
                 }
             });
 
+            /**
+             * deltaF4: imap > memory => we changed flags directly on the remote, sync them to the storage and memory
+             */
             function doDeltaF4() {
-                var answeredUids, unreadUids;
+                var answeredUids, unreadUids,
+                    deltaF4 = [];
 
                 getUnreadUids();
 
@@ -593,9 +574,6 @@ define(function(require) {
                 }
 
                 function updateFlags() {
-                    // deltaF4:  imap > memory => we changed flags directly on the remote, sync them to the storage and memory
-                    deltaF4 = [];
-
                     folder.messages.forEach(function(msg) {
                         // if the message's uid is among the uids that should be unread,
                         // AND the message is not unread, we clearly have to change that
@@ -687,27 +665,6 @@ define(function(require) {
         }
 
         /*
-         * Checks which messages are included in a, but not in b
-         */
-        function checkDelta(a, b) {
-            var i, msg, exists,
-                delta = [];
-
-            // find the delta
-            for (i = a.length - 1; i >= 0; i--) {
-                msg = a[i];
-                exists = _.findWhere(b, {
-                    uid: msg.uid
-                });
-                if (!exists) {
-                    delta.push(msg);
-                }
-            }
-
-            return delta;
-        }
-
-        /*
          * checks if there are some flags that have changed in a and b
          */
         function checkFlags(a, b) {
@@ -728,144 +685,210 @@ define(function(require) {
             return delta;
         }
 
-        function isVerificationMail(email) {
-            return email.subject === str.subjectPrefix + str.verificationSubject;
-        }
+        function handleVerification(message, localCallback) {
+            self._imapStreamText({
+                folder: options.folder,
+                message: message
+            }, function(error) {
+                var verificationUrlPrefix = config.cloudUrl + config.verificationUrl,
+                    uuid, isValidUuid, index;
 
-        function verify(email, localCallback) {
-            var uuid, isValidUuid, index, verifyUrlPrefix = config.cloudUrl + config.verificationUrl;
-
-            if (!email.unread) {
-                // don't bother if the email was already marked as read
-                localCallback();
-                return;
-            }
-
-            index = email.body.indexOf(verifyUrlPrefix);
-            if (index === -1) {
-                // there's no url in the email, so forget about that.
-                localCallback();
-                return;
-            }
-
-            uuid = email.body.substr(index + verifyUrlPrefix.length, config.verificationUuidLength);
-            isValidUuid = new RegExp('[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}').test(uuid);
-            if (!isValidUuid) {
-                // there's no valid uuid in the email, so forget about that, too.
-                localCallback();
-                return;
-            }
-
-            self._keychain.verifyPublicKey(uuid, function(err) {
-                if (err) {
-                    localCallback({
-                        errMsg: 'Verifying your public key failed: ' + err.errMsg
-                    });
+                if (error) {
+                    localCallback(error);
                     return;
                 }
 
-                // public key has been verified, mark the message as read, delete it, and ignore it in the future
-                self._imapMark({
-                    folder: options.folder,
-                    uid: email.uid,
-                    unread: false
-                }, function(err) {
+                index = message.body.indexOf(verificationUrlPrefix);
+                if (index === -1) {
+                    // there's no url in the message, so forget about that.
+                    localCallback();
+                    return;
+                }
+
+                uuid = message.body.substr(index + verificationUrlPrefix.length, config.verificationUuidLength);
+                isValidUuid = new RegExp('[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}').test(uuid);
+                if (!isValidUuid) {
+                    // there's no valid uuid in the message, so forget about that, too.
+                    localCallback();
+                    return;
+                }
+
+                self._keychain.verifyPublicKey(uuid, function(err) {
                     if (err) {
-                        localCallback(err);
+                        localCallback({
+                            errMsg: 'Verifying your public key failed: ' + err.errMsg
+                        });
                         return;
                     }
 
+                    // public key has been verified, delete the message
                     self._imapDeleteMessage({
                         folder: options.folder,
-                        uid: email.uid
+                        uid: message.uid
                     }, localCallback);
                 });
             });
         }
+    };
 
-        function handleMessage(message, localCallback) {
-            message.subject = message.subject.split(str.subjectPrefix)[1];
+    /**
+     * Streams message content
+     * @param {Object} options.message The message for which to retrieve the body
+     * @param {Object} options.folder The IMAP folder
+     * @param {Function} callback(error, message) Invoked when the message is streamed, or provides information if an error occurred
+     */
+    EmailDAO.prototype.getMessageContent = function(options, callback) {
+        var self = this,
+            message = options.message,
+            folder = options.folder;
 
-            if (containsArmoredCiphertext(message)) {
-                decrypt(message, localCallback);
-                return;
-            }
-
-            // cleartext mail
-            localCallback(null, message);
+        // the message already has a body, so no need to become active here
+        if (message.body) {
+            callback(null, message);
+            return;
         }
 
-        function containsArmoredCiphertext(email) {
-            return typeof email.body === 'string' && email.body.indexOf(str.cryptPrefix) !== -1 && email.body.indexOf(str.cryptSuffix) !== -1;
-        }
+        // the mail does not have its content in memory
+        readFromDevice();
 
-        function decrypt(email, localCallback) {
-            var sender;
+        // if possible, read the message body from the device
+        function readFromDevice() {
+            self._localListMessages({
+                folder: folder,
+                uid: message.uid
+            }, function(err, localMessages) {
+                var localMessage;
 
-            extractArmoredContent(email);
-
-            // fetch public key required to verify signatures
-            sender = email.from[0].address;
-            self._keychain.getReceiverPublicKey(sender, function(err, senderPubkey) {
                 if (err) {
-                    localCallback(err);
+                    callback(err);
                     return;
                 }
 
-                if (!senderPubkey) {
-                    // this should only happen if a mail from another channel is in the inbox
-                    email.body = 'Public key for sender not found!';
-                    localCallback(null, email);
+                localMessage = localMessages[0];
+
+                if (!localMessage.body) {
+                    streamFromImap();
                     return;
                 }
 
-                // decrypt and verfiy signatures
-                self._crypto.decrypt(email.body, senderPubkey.publicKey, function(err, decrypted) {
-                    if (err) {
-                        decrypted = err.errMsg;
-                    }
+                // attach the body to the mail object 
+                message.body = localMessage.body;
+                handleEncryptedContent();
+            });
+        }
 
-                    // set encrypted flag
-                    email.encrypted = true;
+        // if reading the message body from the device was unsuccessful,
+        // stream the message from the imap server
+        function streamFromImap() {
+            self._imapStreamText({
+                folder: folder,
+                message: message
+            }, function(error) {
+                if (error) {
+                    callback(error);
+                    return;
+                }
 
-                    // does our message block even need to be parsed?
-                    // this is a very primitive detection if we have a mime node or plain text
-                    // taking this out breaks compatibility to clients < 0.5
-                    if (decrypted.indexOf('Content-Transfer-Encoding:') === -1 &&
-                        decrypted.indexOf('Content-Type:') === -1) {
-                        // decrypted message is plain text and not a well-formed email
-                        email.body = decrypted;
-                        localCallback(null, email);
+                self._localStoreMessages({
+                    folder: folder,
+                    emails: [message]
+                }, function(error) {
+                    if (error) {
+                        callback(error);
                         return;
                     }
 
-                    // parse decrypted message
-                    self._imapParseMessageBlock({
-                        message: email,
-                        block: decrypted
-                    }, function(error, parsedMessage) {
-                        if (!parsedMessage) {
-                            localCallback(error);
-                            return;
-                        }
-
-                        // remove the pgp-signature from the attachments
-                        parsedMessage.attachments = _.reject(parsedMessage.attachments, function(attmt) {
-                            return attmt.mimeType === "application/pgp-signature";
-                        });
-                        localCallback(error, parsedMessage);
-                    });
+                    handleEncryptedContent();
                 });
             });
-
-            function extractArmoredContent(email) {
-                var start = email.body.indexOf(str.cryptPrefix),
-                    end = email.body.indexOf(str.cryptSuffix) + str.cryptSuffix.length;
-
-                // parse email body for encrypted message block
-                email.body = email.body.substring(start, end);
-            }
         }
+
+        function handleEncryptedContent() {
+            // normally, the imap-client should already have set the message.encrypted flag. problem: if we have pgp/inline,
+            // we can't reliably determine if the message is encrypted before we have inspected the payload...
+            message.encrypted = containsArmoredCiphertext(message);
+
+            // cleans the message body from everything but the ciphertext
+            if (message.encrypted) {
+                message.decrypted = false;
+                extractCiphertext();
+            }
+            callback(null, message);
+        }
+
+        function containsArmoredCiphertext() {
+            return message.body.indexOf(str.cryptPrefix) !== -1 && message.body.indexOf(str.cryptSuffix) !== -1;
+        }
+
+        function extractCiphertext() {
+            var start = message.body.indexOf(str.cryptPrefix),
+                end = message.body.indexOf(str.cryptSuffix) + str.cryptSuffix.length;
+
+            // parse message body for encrypted message block
+            message.body = message.body.substring(start, end);
+        }
+
+    };
+
+    EmailDAO.prototype.decryptMessageContent = function(options, callback) {
+        var self = this,
+            message = options.message;
+
+        // the message is not encrypted or has already been decrypted
+        if (!message.encrypted || message.decrypted) {
+            callback(null, message);
+            return;
+        }
+
+        // get the sender's public key for signature checking
+        self._keychain.getReceiverPublicKey(message.from[0].address, function(err, senderPublicKey) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            if (!senderPublicKey) {
+                // this should only happen if a mail from another channel is in the inbox
+                message.body = 'Public key for sender not found!';
+                callback(null, message);
+                return;
+            }
+
+            // get the receiver's public key to check the message signature
+            self._crypto.decrypt(message.body, senderPublicKey.publicKey, function(err, decrypted) {
+                // if an error occurs during decryption, display the error message as the message content
+                decrypted = decrypted || err.errMsg || 'Error occurred during decryption';
+
+                // this is a very primitive detection if we have PGP/MIME or PGP/INLINE
+                if (decrypted.indexOf('Content-Transfer-Encoding:') === -1 && decrypted.indexOf('Content-Type:') === -1) {
+                    message.body = decrypted;
+                    message.decrypted = true;
+                    callback(null, message);
+                    return;
+                }
+
+                // parse the decrypted MIME message
+                self._imapParseMessageBlock({
+                    message: message,
+                    block: decrypted
+                }, function(error) {
+                    if (error) {
+                        callback(error);
+                        return;
+                    }
+
+                    message.decrypted = true;
+
+                    // remove the pgp-signature from the attachments
+                    message.attachments = _.reject(message.attachments, function(attmt) {
+                        return attmt.mimeType === "application/pgp-signature";
+                    });
+
+                    // we're done here!
+                    callback(error, message);
+                });
+            });
+        });
     };
 
     EmailDAO.prototype._imapMark = function(options, callback) {
@@ -1099,10 +1122,13 @@ define(function(require) {
     };
 
     /**
-     * Get an email messsage including the email body from imap
-     * @param {String} options.messageId The
+     * Get an email messsage without the body
+     * @param {String} options.folder The folder
+     * @param {Number} options.firstUid The lower bound of the uid (inclusive)
+     * @param {Number} options.lastUid The upper bound of the uid range (inclusive)
+     * @param {Function} callback (error, messages) The callback when the imap client is done fetching message metadata
      */
-    EmailDAO.prototype._imapGetMessage = function(options, callback) {
+    EmailDAO.prototype._imapListMessages = function(options, callback) {
         var self = this;
 
         if (!this._account.online) {
@@ -1113,17 +1139,34 @@ define(function(require) {
             return;
         }
 
-        self._imapClient.getMessage({
+        self._imapClient.listMessagesByUid({
             path: options.folder,
-            uid: options.uid
-        }, function(err, message) {
-            if (err) {
-                callback(err);
-                return;
-            }
+            firstUid: options.firstUid,
+            lastUid: options.lastUid
+        }, callback);
+    };
 
-            callback(null, message);
-        });
+    /**
+     * Stream an email messsage's body
+     * @param {String} options.folder The folder
+     * @param {Object} options.message The message, as retrieved by _imapListMessages
+     * @param {Function} callback (error, message) The callback when the imap client is done streaming message text content
+     */
+    EmailDAO.prototype._imapStreamText = function(options, callback) {
+        var self = this;
+
+        if (!this._account.online) {
+            callback({
+                errMsg: 'Client is currently offline!',
+                code: 42
+            });
+            return;
+        }
+
+        self._imapClient.streamPlaintext({
+            path: options.folder,
+            message: options.message
+        }, callback);
     };
 
     /**
