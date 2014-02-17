@@ -58,6 +58,16 @@ define(function(require) {
         // scope functions
         //
 
+        $scope.getContent = function(email) {
+            emailDao.getMessageContent({
+                folder: getFolder().path,
+                message: email
+            }, function(error) {
+                $scope.$apply();
+                $scope.onError(error);
+            });
+        };
+
         /**
          * Called when clicking on an email list item
          */
@@ -66,6 +76,13 @@ define(function(require) {
                 $scope.state.mailList.selected = undefined;
                 return;
             }
+
+            emailDao.decryptMessageContent({
+                message: email
+            }, function(error) {
+                $scope.$apply();
+                $scope.onError(error);
+            });
 
             $scope.state.mailList.selected = email;
             $scope.state.read.toggle(true);
@@ -279,10 +296,88 @@ define(function(require) {
             }]; // list of receivers
             if (attachments) {
                 // body structure with three attachments
-                this.bodystructure = {"1": {"part": "1","type": "text/plain","parameters": {"charset": "us-ascii"},"encoding": "7bit","size": 9,"lines": 2},"2": {"part": "2","type": "application/octet-stream","parameters": {"name": "a.md"},"encoding": "7bit","size": 123,"disposition": [{"type": "attachment","filename": "a.md"}]},"3": {"part": "3","type": "application/octet-stream","parameters": {"name": "b.md"},"encoding": "7bit","size": 456,"disposition": [{"type": "attachment","filename": "b.md"}]},"4": {"part": "4","type": "application/octet-stream","parameters": {"name": "c.md"},"encoding": "7bit","size": 789,"disposition": [{"type": "attachment","filename": "c.md"}]},"type": "multipart/mixed"};
-                this.attachments = [{"filename": "a.md","filesize": 123,"mimeType": "text/x-markdown","part": "2","content": null}, {"filename": "b.md","filesize": 456,"mimeType": "text/x-markdown","part": "3","content": null}, {"filename": "c.md","filesize": 789,"mimeType": "text/x-markdown","part": "4","content": null}];
+                this.bodystructure = {
+                    "1": {
+                        "part": "1",
+                        "type": "text/plain",
+                        "parameters": {
+                            "charset": "us-ascii"
+                        },
+                        "encoding": "7bit",
+                        "size": 9,
+                        "lines": 2
+                    },
+                    "2": {
+                        "part": "2",
+                        "type": "application/octet-stream",
+                        "parameters": {
+                            "name": "a.md"
+                        },
+                        "encoding": "7bit",
+                        "size": 123,
+                        "disposition": [{
+                            "type": "attachment",
+                            "filename": "a.md"
+                        }]
+                    },
+                    "3": {
+                        "part": "3",
+                        "type": "application/octet-stream",
+                        "parameters": {
+                            "name": "b.md"
+                        },
+                        "encoding": "7bit",
+                        "size": 456,
+                        "disposition": [{
+                            "type": "attachment",
+                            "filename": "b.md"
+                        }]
+                    },
+                    "4": {
+                        "part": "4",
+                        "type": "application/octet-stream",
+                        "parameters": {
+                            "name": "c.md"
+                        },
+                        "encoding": "7bit",
+                        "size": 789,
+                        "disposition": [{
+                            "type": "attachment",
+                            "filename": "c.md"
+                        }]
+                    },
+                    "type": "multipart/mixed"
+                };
+                this.attachments = [{
+                    "filename": "a.md",
+                    "filesize": 123,
+                    "mimeType": "text/x-markdown",
+                    "part": "2",
+                    "content": null
+                }, {
+                    "filename": "b.md",
+                    "filesize": 456,
+                    "mimeType": "text/x-markdown",
+                    "part": "3",
+                    "content": null
+                }, {
+                    "filename": "c.md",
+                    "filesize": 789,
+                    "mimeType": "text/x-markdown",
+                    "part": "4",
+                    "content": null
+                }];
             } else {
-                this.bodystructure = {"part": "1","type": "text/plain","parameters": {"charset": "us-ascii"},"encoding": "7bit","size": 9,"lines": 2};
+                this.bodystructure = {
+                    "part": "1",
+                    "type": "text/plain",
+                    "parameters": {
+                        "charset": "us-ascii"
+                    },
+                    "encoding": "7bit",
+                    "size": 9,
+                    "lines": 2
+                };
                 this.attachments = [];
             }
             this.unread = unread;
@@ -311,8 +406,37 @@ define(function(require) {
                     var myScroll;
                     // activate iscroll
                     myScroll = new IScroll(elm[0], {
-                        mouseWheel: true
+                        mouseWheel: true,
                     });
+
+                    // load the visible message bodies, when the list is re-initialized and when scrolling stopped
+                    loadVisible();
+                    myScroll.on('scrollEnd', loadVisible);
+
+                    function loadVisible() {
+                        var list = elm[0].getBoundingClientRect(),
+                            footerHeight = elm[0].nextElementSibling.getBoundingClientRect().height,
+                            top = list.top,
+                            bottom = list.bottom - footerHeight,
+                            listItems = elm[0].children[0].children,
+                            i = listItems.length,
+                            listItem, message,
+                            isPartiallyVisibleTop, isPartiallyVisibleBottom, isVisible;
+
+                        while (i--) {
+                            listItem = listItems.item(i).getBoundingClientRect();
+                            message = scope.filteredMessages[i];
+
+                            isPartiallyVisibleTop = listItem.top < top && listItem.bottom > top; // a portion of the list item is visible on the top
+                            isPartiallyVisibleBottom = listItem.top < bottom && listItem.bottom > bottom; // a portion of the list item is visible on the bottom
+                            isVisible = listItem.top >= top && listItem.bottom <= bottom; // the list item is visible as a whole
+
+
+                            if (isPartiallyVisibleTop || isVisible || isPartiallyVisibleBottom) {
+                                scope.getContent(message);
+                            }
+                        }
+                    }
                 }, true);
             }
         };

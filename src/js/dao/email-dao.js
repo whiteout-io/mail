@@ -742,11 +742,16 @@ define(function(require) {
             message = options.message,
             folder = options.folder;
 
-        // the message already has a body, so no need to become active here
-        if (message.body) {
-            callback(null, message);
+        if (message.loadingBody) {
             return;
         }
+
+        // the message already has a body, so no need to become active here
+        if (message.body) {
+            return;
+        }
+
+        message.loadingBody = true;
 
         // the mail does not have its content in memory
         readFromDevice();
@@ -760,6 +765,7 @@ define(function(require) {
                 var localMessage;
 
                 if (err) {
+                    message.loadingBody = false;
                     callback(err);
                     return;
                 }
@@ -785,9 +791,12 @@ define(function(require) {
                 message: message
             }, function(error) {
                 if (error) {
+                    message.loadingBody = false;
                     callback(error);
                     return;
                 }
+
+                message.loadingBody = false;
 
                 self._localStoreMessages({
                     folder: folder,
@@ -813,6 +822,7 @@ define(function(require) {
                 message.decrypted = false;
                 extractCiphertext();
             }
+            message.loadingBody = false;
             callback(null, message);
         }
 
@@ -834,15 +844,17 @@ define(function(require) {
         var self = this,
             message = options.message;
 
-        // the message is not encrypted or has already been decrypted
-        if (!message.encrypted || message.decrypted) {
-            callback(null, message);
+        // the message has no body, is not encrypted or has already been decrypted
+        if (message.decryptingBody || !message.body || !message.encrypted || message.decrypted) {
             return;
         }
+
+        message.decryptingBody = true;
 
         // get the sender's public key for signature checking
         self._keychain.getReceiverPublicKey(message.from[0].address, function(err, senderPublicKey) {
             if (err) {
+                message.decryptingBody = false;
                 callback(err);
                 return;
             }
@@ -850,6 +862,7 @@ define(function(require) {
             if (!senderPublicKey) {
                 // this should only happen if a mail from another channel is in the inbox
                 message.body = 'Public key for sender not found!';
+                message.decryptingBody = false;
                 callback(null, message);
                 return;
             }
@@ -863,6 +876,7 @@ define(function(require) {
                 if (decrypted.indexOf('Content-Transfer-Encoding:') === -1 && decrypted.indexOf('Content-Type:') === -1) {
                     message.body = decrypted;
                     message.decrypted = true;
+                    message.decryptingBody = false;
                     callback(null, message);
                     return;
                 }
@@ -873,6 +887,7 @@ define(function(require) {
                     block: decrypted
                 }, function(error) {
                     if (error) {
+                        message.decryptingBody = false;
                         callback(error);
                         return;
                     }
@@ -885,7 +900,8 @@ define(function(require) {
                     });
 
                     // we're done here!
-                    callback(error, message);
+                    message.decryptingBody = false;
+                    callback(null, message);
                 });
             });
         });

@@ -929,19 +929,16 @@ define(function(require) {
         });
 
         describe('getMessageContent', function() {
-            it('should not do anything if the message already has content', function(done) {
+            it('should not do anything if the message already has content', function() {
                 var message = {
                     body: 'bender is great!'
                 };
 
                 dao.getMessageContent({
                     message: message
-                }, function(err, msg) {
-                    expect(err).to.not.exist;
-                    expect(msg).to.equal(message);
-
-                    done();
                 });
+
+                // should do nothing
             });
 
             it('should read an unencrypted body from the device', function(done) {
@@ -957,7 +954,7 @@ define(function(require) {
                 localListStub = sinon.stub(dao, '_localListMessages').withArgs({
                     folder: folder,
                     uid: uid
-                }).yields(null, [{
+                }).yieldsAsync(null, [{
                     body: body
                 }]);
 
@@ -967,13 +964,17 @@ define(function(require) {
                     folder: folder
                 }, function(err, msg) {
                     expect(err).to.not.exist;
+                    
                     expect(msg).to.equal(message);
                     expect(msg.body).to.not.be.empty;
                     expect(msg.encrypted).to.be.false;
+                    expect(msg.loadingBody).to.be.false;
+
                     expect(localListStub.calledOnce).to.be.true;
 
                     done();
                 });
+                expect(message.loadingBody).to.be.true;
             });
 
             it('should read an encrypted body from the device', function(done) {
@@ -989,7 +990,7 @@ define(function(require) {
                 localListStub = sinon.stub(dao, '_localListMessages').withArgs({
                     folder: folder,
                     uid: uid
-                }).yields(null, [{
+                }).yieldsAsync(null, [{
                     body: body
                 }]);
 
@@ -999,14 +1000,18 @@ define(function(require) {
                     folder: folder
                 }, function(err, msg) {
                     expect(err).to.not.exist;
+                    
                     expect(msg).to.equal(message);
                     expect(msg.body).to.not.be.empty;
                     expect(msg.encrypted).to.be.true;
                     expect(msg.decrypted).to.be.false;
+                    expect(message.loadingBody).to.be.false;
+                    
                     expect(localListStub.calledOnce).to.be.true;
 
                     done();
                 });
+                expect(message.loadingBody).to.be.true;
             });
 
             it('should stream an unencrypted body from imap', function(done) {
@@ -1022,12 +1027,12 @@ define(function(require) {
                 localListStub = sinon.stub(dao, '_localListMessages').withArgs({
                     folder: folder,
                     uid: uid
-                }).yields(null, [{}]);
+                }).yieldsAsync(null, [{}]);
 
                 localStoreStub = sinon.stub(dao, '_localStoreMessages').withArgs({
                     folder: folder,
                     emails: [message]
-                }).yields();
+                }).yieldsAsync();
 
                 imapStreamStub = sinon.stub(dao, '_imapStreamText', function(opts, cb) {
                     expect(opts).to.deep.equal({
@@ -1045,15 +1050,19 @@ define(function(require) {
                     folder: folder
                 }, function(err, msg) {
                     expect(err).to.not.exist;
+
                     expect(msg).to.equal(message);
                     expect(msg.body).to.not.be.empty;
                     expect(msg.encrypted).to.be.false;
+                    expect(msg.loadingBody).to.be.false;
+
                     expect(localListStub.calledOnce).to.be.true;
                     expect(imapStreamStub.calledOnce).to.be.true;
                     expect(localStoreStub.calledOnce).to.be.true;
 
                     done();
                 });
+                expect(message.loadingBody).to.be.true;
             });
 
             it('should stream an encrypted body from imap', function(done) {
@@ -1069,12 +1078,12 @@ define(function(require) {
                 localListStub = sinon.stub(dao, '_localListMessages').withArgs({
                     folder: folder,
                     uid: uid
-                }).yields(null, [{}]);
+                }).yieldsAsync(null, [{}]);
 
                 localStoreStub = sinon.stub(dao, '_localStoreMessages').withArgs({
                     folder: folder,
                     emails: [message]
-                }).yields();
+                }).yieldsAsync();
 
                 imapStreamStub = sinon.stub(dao, '_imapStreamText', function(opts, cb) {
                     expect(opts).to.deep.equal({
@@ -1092,17 +1101,20 @@ define(function(require) {
                     folder: folder
                 }, function(err, msg) {
                     expect(err).to.not.exist;
+                    
                     expect(msg).to.equal(message);
                     expect(msg.body).to.not.be.empty;
                     expect(msg.encrypted).to.be.true;
                     expect(msg.decrypted).to.be.false;
+                    expect(msg.loadingBody).to.be.false;
+                    
                     expect(localListStub.calledOnce).to.be.true;
                     expect(imapStreamStub.calledOnce).to.be.true;
                     expect(localStoreStub.calledOnce).to.be.true;
 
-
                     done();
                 });
+                expect(message.loadingBody).to.be.true;
             });
 
             it('fail to stream from imap due to error when persisting', function(done) {
@@ -1139,6 +1151,8 @@ define(function(require) {
                     expect(imapStreamStub.calledOnce).to.be.true;
                     expect(localStoreStub.calledOnce).to.be.true;
 
+                    expect(message.loadingBody).to.be.false;
+
                     done();
                 });
             });
@@ -1174,28 +1188,27 @@ define(function(require) {
                     expect(imapStreamStub.calledOnce).to.be.true;
                     expect(localStoreStub.called).to.be.false;
 
+                    expect(message.loadingBody).to.be.false;
+
                     done();
                 });
             });
         });
 
         describe('decryptMessageContent', function() {
-            it('should not do anything when the message is not encrypted', function(done) {
+            it('should not do anything when the message is not encrypted', function() {
                 var message = {
                     encrypted: false
                 };
 
                 dao.decryptMessageContent({
                     message: message
-                }, function(error, msg) {
-                    expect(error).to.not.exist;
-                    expect(msg).to.equal(message);
-
-                    done();
                 });
+
+                // should do nothing
             });
 
-            it('should not do anything when the message is already decrypted', function(done) {
+            it('should not do anything when the message is already decrypted', function() {
                 var message = {
                     encrypted: true,
                     decrypted: true
@@ -1203,12 +1216,9 @@ define(function(require) {
 
                 dao.decryptMessageContent({
                     message: message
-                }, function(error, msg) {
-                    expect(error).to.not.exist;
-                    expect(msg).to.equal(message);
-
-                    done();
                 });
+
+                // should do nothing
             });
 
             it('decrypt a pgp/mime message', function(done) {
@@ -1224,8 +1234,8 @@ define(function(require) {
                 mimeBody = 'Content-Transfer-Encoding: Content-Type:';
                 parsedBody = 'body? yes.';
 
-                keychainStub.getReceiverPublicKey.withArgs(message.from[0].address).yields(null, mockKeyPair.publicKey);
-                pgpStub.decrypt.withArgs(message.body, mockKeyPair.publicKey.publicKey).yields(null, mimeBody);
+                keychainStub.getReceiverPublicKey.withArgs(message.from[0].address).yieldsAsync(null, mockKeyPair.publicKey);
+                pgpStub.decrypt.withArgs(message.body, mockKeyPair.publicKey.publicKey).yieldsAsync(null, mimeBody);
                 parseStub = sinon.stub(dao, '_imapParseMessageBlock', function(o, cb){
                     expect(o.message).to.equal(message);
                     expect(o.block).to.equal(mimeBody);
@@ -1238,15 +1248,20 @@ define(function(require) {
                     message: message
                 }, function(error, msg) {
                     expect(error).to.not.exist;
+                    
                     expect(msg).to.equal(message);
                     expect(msg.decrypted).to.be.true;
                     expect(msg.body).to.equal(parsedBody);
+                    expect(msg.decryptingBody).to.be.false;
+                    
                     expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
                     expect(pgpStub.decrypt.calledOnce).to.be.true;
                     expect(parseStub.calledOnce).to.be.true;
 
                     done();
                 });
+
+                expect(message.decryptingBody).to.be.true;
             });
 
             it('decrypt a pgp/inline message', function(done) {
@@ -1261,23 +1276,27 @@ define(function(require) {
 
                 plaintextBody = 'body? yes.';
 
-                keychainStub.getReceiverPublicKey.withArgs(message.from[0].address).yields(null, mockKeyPair.publicKey);
-                pgpStub.decrypt.withArgs(message.body, mockKeyPair.publicKey.publicKey).yields(null, plaintextBody);
+                keychainStub.getReceiverPublicKey.withArgs(message.from[0].address).yieldsAsync(null, mockKeyPair.publicKey);
+                pgpStub.decrypt.withArgs(message.body, mockKeyPair.publicKey.publicKey).yieldsAsync(null, plaintextBody);
                 parseStub = sinon.stub(dao, '_imapParseMessageBlock');
 
                 dao.decryptMessageContent({
                     message: message
                 }, function(error, msg) {
                     expect(error).to.not.exist;
+                    
                     expect(msg).to.equal(message);
                     expect(msg.decrypted).to.be.true;
                     expect(msg.body).to.equal(plaintextBody);
+                    expect(msg.decryptingBody).to.be.false;
+                    
                     expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
                     expect(pgpStub.decrypt.calledOnce).to.be.true;
                     expect(parseStub.called).to.be.false;
 
                     done();
                 });
+                expect(message.decryptingBody).to.be.true;
             });
 
             it('should fail during decryption message', function(done) {
@@ -1303,9 +1322,12 @@ define(function(require) {
                     message: message
                 }, function(error, msg) {
                     expect(error).to.not.exist;
+                    
                     expect(msg).to.equal(message);
                     expect(msg.decrypted).to.be.true;
                     expect(msg.body).to.equal(errMsg);
+                    expect(msg.decryptingBody).to.be.false;
+
                     expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
                     expect(pgpStub.decrypt.calledOnce).to.be.true;
                     expect(parseStub.called).to.be.false;
@@ -1331,8 +1353,12 @@ define(function(require) {
                     message: message
                 }, function(error, msg) {
                     expect(error).to.exist;
+                    
                     expect(msg).to.not.exist;
+                    
                     expect(message.decrypted).to.be.false;
+                    expect(message.decryptingBody).to.be.false;
+                    
                     expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
                     expect(pgpStub.decrypt.called).to.be.false;
                     expect(parseStub.called).to.be.false;
