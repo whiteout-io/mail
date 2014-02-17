@@ -9,6 +9,7 @@ define(function(require) {
         config = require('js/app-config').config;
 
     var PGP = function() {
+        openpgp.config.prefer_hash_algorithm = openpgp.enums.hash.sha256;
         openpgp.initWorker(config.workerPath + '/../lib/openpgp/openpgp.worker.js');
     };
 
