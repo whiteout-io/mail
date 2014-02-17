@@ -5,15 +5,18 @@ define(function(require) {
     'use strict';
 
     var openpgp = require('openpgp'),
-        util = require('openpgp').util;
+        util = require('openpgp').util,
+        config = require('js/app-config').config;
 
-    var PGP = function() {};
+    var PGP = function() {
+        openpgp.initWorker(config.workerPath + '/../lib/openpgp/openpgp.worker.js');
+    };
 
     /**
      * Generate a key pair for the user
      */
     PGP.prototype.generateKeys = function(options, callback) {
-        var keys, userId;
+        var userId;
 
         if (!util.emailRegEx.test(options.emailAddress) || !options.keySize || typeof options.passphrase !== 'string') {
             callback({
@@ -23,22 +26,24 @@ define(function(require) {
         }
 
         // generate keypair (keytype 1=RSA)
-        try {
-            userId = 'Whiteout User <' + options.emailAddress + '>';
-            keys = openpgp.generateKeyPair(1, options.keySize, userId, options.passphrase);
-        } catch (e) {
-            callback({
-                errMsg: 'Keygeneration failed!',
-                err: e
-            });
-            return;
-        }
+        userId = 'Whiteout User <' + options.emailAddress + '>';
+        openpgp.generateKeyPair(1, options.keySize, userId, options.passphrase, onGenerated);
 
-        callback(null, {
-            keyId: keys.key.getKeyPacket().getKeyId().toHex().toUpperCase(),
-            privateKeyArmored: keys.privateKeyArmored,
-            publicKeyArmored: keys.publicKeyArmored
-        });
+        function onGenerated(err, keys) {
+            if (err) {
+                callback({
+                    errMsg: 'Keygeneration failed!',
+                    err: err
+                });
+                return;
+            }
+
+            callback(null, {
+                keyId: keys.key.getKeyPacket().getKeyId().toHex().toUpperCase(),
+                privateKeyArmored: keys.privateKeyArmored,
+                publicKeyArmored: keys.publicKeyArmored
+            });
+        }
     };
 
     /**
@@ -160,7 +165,7 @@ define(function(require) {
      * Encrypt and sign a pgp message for a list of receivers
      */
     PGP.prototype.encrypt = function(plaintext, publicKeysArmored, callback) {
-        var ciphertext, publicKeys = [];
+        var publicKeys = [];
 
         // check keys
         if (!this._privateKey || publicKeysArmored.length < 1) {
@@ -170,13 +175,11 @@ define(function(require) {
             return;
         }
 
+        // parse armored public keys
         try {
-            // parse armored public keys
             publicKeysArmored.forEach(function(pubkeyArmored) {
                 publicKeys.push(openpgp.key.readArmored(pubkeyArmored).keys[0]);
             });
-            // encrypt and sign the plaintext
-            ciphertext = openpgp.signAndEncryptMessage(publicKeys, this._privateKey, plaintext);
         } catch (err) {
             callback({
                 errMsg: 'Error encrypting plaintext!',
@@ -185,14 +188,15 @@ define(function(require) {
             return;
         }
 
-        callback(null, ciphertext);
+        // encrypt and sign the plaintext
+        openpgp.signAndEncryptMessage(publicKeys, this._privateKey, plaintext, callback);
     };
 
     /**
      * Decrypt and verify a pgp message for a single sender
      */
     PGP.prototype.decrypt = function(ciphertext, publicKeyArmored, callback) {
-        var publicKey, message, decrypted, signaturesValid;
+        var publicKey, message, signaturesValid;
 
         // check keys
         if (!this._privateKey || !publicKeyArmored) {
@@ -202,11 +206,10 @@ define(function(require) {
             return;
         }
 
-        // decrypt and verify pgp message
+        // read keys and ciphertext message
         try {
             publicKey = openpgp.key.readArmored(publicKeyArmored).keys[0];
             message = openpgp.message.readArmored(ciphertext);
-            decrypted = openpgp.decryptAndVerifyMessage(this._privateKey, [publicKey], message);
         } catch (err) {
             callback({
                 errMsg: 'Error decrypting PGP message!',
@@ -215,22 +218,27 @@ define(function(require) {
             return;
         }
 
-        // check if signatures are valid
-        signaturesValid = true;
-        decrypted.signatures.forEach(function(sig) {
-            if (!sig.valid) {
-                signaturesValid = false;
-            }
-        });
-        if (!signaturesValid) {
-            callback({
-                errMsg: 'Verifying PGP signature failed!'
-            });
-            return;
-        }
+        // decrypt and verify pgp message
+        openpgp.decryptAndVerifyMessage(this._privateKey, [publicKey], message, onDecrypted);
 
-        // return decrypted plaintext
-        callback(null, decrypted.text);
+        function onDecrypted(err, decrypted) {
+            // check if signatures are valid
+            signaturesValid = true;
+            decrypted.signatures.forEach(function(sig) {
+                if (!sig.valid) {
+                    signaturesValid = false;
+                }
+            });
+            if (!signaturesValid) {
+                callback({
+                    errMsg: 'Verifying PGP signature failed!'
+                });
+                return;
+            }
+
+            // return decrypted plaintext
+            callback(null, decrypted.text);
+        }
     };
 
     return PGP;

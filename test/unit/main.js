@@ -10,7 +10,6 @@ require(['../../src/require-config'], function() {
 	require(['js/app-config', 'cordova'], function(app) {
 		// clear session storage of failed tests, so async order is correct after fail & refresh
 		window.sessionStorage.clear();
-		window.Worker = undefined;
 
 		app.config.workerPath = '../../src/js';
 
