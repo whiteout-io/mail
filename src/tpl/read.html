@@ -36,10 +36,17 @@
   </div><!--/.ng-switch-->
 
 
-  <div class="body">
-    <!-- Render lines of a text-email in divs for easier styling -->
-    <div ng-repeat="line in state.mailList.selected.body.split('\n') track by $index" ng-class="{'empty-line': lineEmpty(line)}">
-      {{line}}<br>
+  <div class="body" ng-switch="state.mailList.selected.encrypted === false || state.mailList.selected.decrypted === true">
+    <div class="line">
+      <div ng-switch-when="true">
+        <!-- Render lines of a text-email in divs for easier styling -->
+        <div ng-repeat="line in state.mailList.selected.body.split('\n') track by $index" ng-class="{'empty-line': lineEmpty(line)}">
+          {{line}}<br>
+        </div>
+      </div>
+      <div ng-switch-when="false">
+        This message contains encrypted content.
+      </div>
     </div>
   </div><!--/.body-->
 
