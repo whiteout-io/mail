@@ -37,6 +37,15 @@ You can download a prebuilt bundle under [releases](https://github.com/whiteout-
     
 This will download all dependencies, run the tests and build the Chrome Packaged App bundle **DEV.zip** which can be installed under [chrome://extensions](chrome://extensions) in developer mode.
 
+### Development
+For development you can start a connect dev server:
+
+    grunt dev
+
+Then visit [http://localhost:8580/dist/chrome.html#/desktop](http://localhost:8580/dist/chrome.html#/desktop) for front-end code or [http://localhost:8580/test/new-unit/](http://localhost:8580/test/new-unit/) to test JavaScript changes. You can also start a watch task so you don't have rebuild everytime you change make a change:
+
+    grunt watch
+
 ## License
 
     Copyright © 2013, Whiteout Networks GmbH. All rights reserved.
