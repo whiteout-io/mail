@@ -59,6 +59,11 @@ define(function(require) {
         //
 
         $scope.getContent = function(email) {
+            // don't stream message content of outbox messages...
+            if (getFolder().type === 'Outbox') {
+                return;
+            }
+
             emailDao.getMessageContent({
                 folder: getFolder().path,
                 message: email
@@ -72,17 +77,21 @@ define(function(require) {
          * Called when clicking on an email list item
          */
         $scope.select = function(email) {
+            // unselect an item
             if (!email) {
                 $scope.state.mailList.selected = undefined;
                 return;
             }
 
-            emailDao.decryptMessageContent({
-                message: email
-            }, function(error) {
-                $scope.$apply();
-                $scope.onError(error);
-            });
+            // if we're in the outbox, don't decrypt as usual
+            if (getFolder().type !== 'Outbox') {
+                emailDao.decryptMessageContent({
+                    message: email
+                }, function(error) {
+                    $scope.$apply();
+                    $scope.onError(error);
+                });
+            }
 
             $scope.state.mailList.selected = email;
             $scope.state.read.toggle(true);

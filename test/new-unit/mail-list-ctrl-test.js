@@ -249,7 +249,7 @@ define(function(require) {
                 scope.state = {
                     nav: {
                         currentFolder: {
-                            type: 'asd',
+                            type: 'asd'
                         }
                     },
                     mailList: {},
@@ -278,6 +278,11 @@ define(function(require) {
                     mailList: {},
                     read: {
                         toggle: function() {}
+                    },
+                    nav: {
+                        currentFolder: {
+                            type: 'asd'
+                        }
                     }
                 };
 
