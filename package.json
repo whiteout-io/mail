@@ -11,7 +11,7 @@
     },
     "dependencies": {
         "crypto-lib": "https://github.com/whiteout-io/crypto-lib/tarball/master",
-        "imap-client": "https://github.com/whiteout-io/imap-client/tarball/dev/stream-plaintext",
+        "imap-client": "https://github.com/whiteout-io/imap-client/tarball/master",
         "pgpmailer": "https://github.com/whiteout-io/pgpmailer/tarball/master",
         "requirejs": "2.1.10"
     },
