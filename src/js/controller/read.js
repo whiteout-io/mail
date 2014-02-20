@@ -31,7 +31,7 @@ define(function(require) {
         };
 
         $scope.getKeyId = function(address) {
-            $scope.keyId = 'Key not found for that user.';
+            $scope.keyId = 'unknown user';
             keychain.getReceiverPublicKey(address, function(err, pubkey) {
                 if (err) {
                     $scope.onError(err);
