@@ -737,7 +737,7 @@ define(function(require) {
      * @param {Object} options.folder The IMAP folder
      * @param {Function} callback(error, message) Invoked when the message is streamed, or provides information if an error occurred
      */
-    EmailDAO.prototype.getMessageContent = function(options, callback) {
+    EmailDAO.prototype.getBody = function(options, callback) {
         var self = this,
             message = options.message,
             folder = options.folder;
@@ -1179,7 +1179,7 @@ define(function(require) {
             return;
         }
 
-        self._imapClient.streamPlaintext({
+        self._imapClient.getBody({
             path: options.folder,
             message: options.message
         }, callback);

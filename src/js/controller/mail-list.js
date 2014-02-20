@@ -58,13 +58,13 @@ define(function(require) {
         // scope functions
         //
 
-        $scope.getContent = function(email) {
+        $scope.getBody = function(email) {
             // don't stream message content of outbox messages...
             if (getFolder().type === 'Outbox') {
                 return;
             }
 
-            emailDao.getMessageContent({
+            emailDao.getBody({
                 folder: getFolder().path,
                 message: email
             }, function(error) {
@@ -410,43 +410,48 @@ define(function(require) {
     ngModule.directive('ngIscroll', function() {
         return {
             link: function(scope, elm, attrs) {
-                var model = attrs.ngIscroll;
+                var model = attrs.ngIscroll,
+                    listEl = elm[0];
+
                 scope.$watch(model, function() {
                     var myScroll;
                     // activate iscroll
-                    myScroll = new IScroll(elm[0], {
-                        mouseWheel: true,
+                    myScroll = new IScroll(listEl, {
+                        mouseWheel: true
                     });
 
                     // load the visible message bodies, when the list is re-initialized and when scrolling stopped
                     loadVisible();
                     myScroll.on('scrollEnd', loadVisible);
+                }, true);
 
-                    function loadVisible() {
-                        var list = elm[0].getBoundingClientRect(),
-                            footerHeight = elm[0].nextElementSibling.getBoundingClientRect().height,
-                            top = list.top,
-                            bottom = list.bottom - footerHeight,
-                            listItems = elm[0].children[0].children,
-                            i = listItems.length,
-                            listItem, message,
-                            isPartiallyVisibleTop, isPartiallyVisibleBottom, isVisible;
+                /*
+                 * iterates over the mails in the mail list and loads their bodies if they are visible in the viewport
+                 */
+                function loadVisible() {
+                    var listBorder = listEl.getBoundingClientRect(),
+                        top = listBorder.top,
+                        bottom = listBorder.bottom,
+                        listItems = listEl.children[0].children,
+                        i = listItems.length,
+                        listItem, message,
+                        isPartiallyVisibleTop, isPartiallyVisibleBottom, isVisible;
 
-                        while (i--) {
-                            listItem = listItems.item(i).getBoundingClientRect();
-                            message = scope.filteredMessages[i];
+                    while (i--) {
+                        // the n-th list item (the dom representation of an email) corresponds to 
+                        // the n-th message model in the filteredMessages array
+                        listItem = listItems.item(i).getBoundingClientRect();
+                        message = scope.filteredMessages[i];
 
-                            isPartiallyVisibleTop = listItem.top < top && listItem.bottom > top; // a portion of the list item is visible on the top
-                            isPartiallyVisibleBottom = listItem.top < bottom && listItem.bottom > bottom; // a portion of the list item is visible on the bottom
-                            isVisible = listItem.top >= top && listItem.bottom <= bottom; // the list item is visible as a whole
+                        isPartiallyVisibleTop = listItem.top < top && listItem.bottom > top; // a portion of the list item is visible on the top
+                        isPartiallyVisibleBottom = listItem.top < bottom && listItem.bottom > bottom; // a portion of the list item is visible on the bottom
+                        isVisible = listItem.top >= top && listItem.bottom <= bottom; // the list item is visible as a whole
 
-
-                            if (isPartiallyVisibleTop || isVisible || isPartiallyVisibleBottom) {
-                                scope.getContent(message);
-                            }
+                        if (isPartiallyVisibleTop || isVisible || isPartiallyVisibleBottom) {
+                            scope.getBody(message);
                         }
                     }
-                }, true);
+                }
             }
         };
     });

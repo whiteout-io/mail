@@ -225,7 +225,7 @@ define(function(require) {
             });
         });
 
-        describe('getContent', function() {
+        describe('getBody', function() {
             it('should get the mail content', function() {
                 scope.state.nav = {
                     currentFolder: {
@@ -233,8 +233,8 @@ define(function(require) {
                     }
                 };
 
-                scope.getContent();
-                expect(emailDaoMock.getMessageContent.calledOnce).to.be.true;
+                scope.getBody();
+                expect(emailDaoMock.getBody.calledOnce).to.be.true;
             });
         });
 

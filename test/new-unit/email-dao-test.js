@@ -821,7 +821,7 @@ define(function(require) {
             it('should work', function(done) {
                 var path = 'FOLDAAAA';
 
-                imapClientStub.streamPlaintext.withArgs({
+                imapClientStub.getBody.withArgs({
                     path: path,
                     message: {}
                 }).yields(null, {});
@@ -833,16 +833,16 @@ define(function(require) {
                     expect(err).to.not.exist;
                     expect(msg).to.exist;
 
-                    expect(imapClientStub.streamPlaintext.calledOnce).to.be.true;
+                    expect(imapClientStub.getBody.calledOnce).to.be.true;
 
                     done();
                 });
             });
 
-            it('should not work when streamPlaintext fails', function(done) {
+            it('should not work when getBody fails', function(done) {
                 var path = 'FOLDAAAA';
 
-                imapClientStub.streamPlaintext.yields({});
+                imapClientStub.getBody.yields({});
 
                 dao._imapStreamText({
                     folder: path,
@@ -851,7 +851,7 @@ define(function(require) {
                     expect(err).to.exist;
                     expect(msg).to.not.exist;
 
-                    expect(imapClientStub.streamPlaintext.calledOnce).to.be.true;
+                    expect(imapClientStub.getBody.calledOnce).to.be.true;
 
                     done();
                 });
@@ -928,13 +928,13 @@ define(function(require) {
             });
         });
 
-        describe('getMessageContent', function() {
+        describe('getBody', function() {
             it('should not do anything if the message already has content', function() {
                 var message = {
                     body: 'bender is great!'
                 };
 
-                dao.getMessageContent({
+                dao.getBody({
                     message: message
                 });
 
@@ -959,12 +959,12 @@ define(function(require) {
                 }]);
 
 
-                dao.getMessageContent({
+                dao.getBody({
                     message: message,
                     folder: folder
                 }, function(err, msg) {
                     expect(err).to.not.exist;
-                    
+
                     expect(msg).to.equal(message);
                     expect(msg.body).to.not.be.empty;
                     expect(msg.encrypted).to.be.false;
@@ -995,18 +995,18 @@ define(function(require) {
                 }]);
 
 
-                dao.getMessageContent({
+                dao.getBody({
                     message: message,
                     folder: folder
                 }, function(err, msg) {
                     expect(err).to.not.exist;
-                    
+
                     expect(msg).to.equal(message);
                     expect(msg.body).to.not.be.empty;
                     expect(msg.encrypted).to.be.true;
                     expect(msg.decrypted).to.be.false;
                     expect(message.loadingBody).to.be.false;
-                    
+
                     expect(localListStub.calledOnce).to.be.true;
 
                     done();
@@ -1045,7 +1045,7 @@ define(function(require) {
                 });
 
 
-                dao.getMessageContent({
+                dao.getBody({
                     message: message,
                     folder: folder
                 }, function(err, msg) {
@@ -1096,18 +1096,18 @@ define(function(require) {
                 });
 
 
-                dao.getMessageContent({
+                dao.getBody({
                     message: message,
                     folder: folder
                 }, function(err, msg) {
                     expect(err).to.not.exist;
-                    
+
                     expect(msg).to.equal(message);
                     expect(msg.body).to.not.be.empty;
                     expect(msg.encrypted).to.be.true;
                     expect(msg.decrypted).to.be.false;
                     expect(msg.loadingBody).to.be.false;
-                    
+
                     expect(localListStub.calledOnce).to.be.true;
                     expect(imapStreamStub.calledOnce).to.be.true;
                     expect(localStoreStub.calledOnce).to.be.true;
@@ -1141,7 +1141,7 @@ define(function(require) {
                     emails: [message]
                 }).yields({});
 
-                dao.getMessageContent({
+                dao.getBody({
                     message: message,
                     folder: folder
                 }, function(err, msg) {
@@ -1178,7 +1178,7 @@ define(function(require) {
 
                 localStoreStub = sinon.stub(dao, '_localStoreMessages');
 
-                dao.getMessageContent({
+                dao.getBody({
                     message: message,
                     folder: folder
                 }, function(err, msg) {
@@ -1225,7 +1225,9 @@ define(function(require) {
                 var message, parsedBody, mimeBody, parseStub;
 
                 message = {
-                    from: [{address: 'asdasdasd'}],
+                    from: [{
+                        address: 'asdasdasd'
+                    }],
                     encrypted: true,
                     decrypted: false,
                     body: '-----BEGIN PGP MESSAGE-----asdasdasd-----END PGP MESSAGE-----'
@@ -1236,7 +1238,7 @@ define(function(require) {
 
                 keychainStub.getReceiverPublicKey.withArgs(message.from[0].address).yieldsAsync(null, mockKeyPair.publicKey);
                 pgpStub.decrypt.withArgs(message.body, mockKeyPair.publicKey.publicKey).yieldsAsync(null, mimeBody);
-                parseStub = sinon.stub(dao, '_imapParseMessageBlock', function(o, cb){
+                parseStub = sinon.stub(dao, '_imapParseMessageBlock', function(o, cb) {
                     expect(o.message).to.equal(message);
                     expect(o.block).to.equal(mimeBody);
 
@@ -1248,12 +1250,12 @@ define(function(require) {
                     message: message
                 }, function(error, msg) {
                     expect(error).to.not.exist;
-                    
+
                     expect(msg).to.equal(message);
                     expect(msg.decrypted).to.be.true;
                     expect(msg.body).to.equal(parsedBody);
                     expect(msg.decryptingBody).to.be.false;
-                    
+
                     expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
                     expect(pgpStub.decrypt.calledOnce).to.be.true;
                     expect(parseStub.calledOnce).to.be.true;
@@ -1268,7 +1270,9 @@ define(function(require) {
                 var message, plaintextBody, parseStub;
 
                 message = {
-                    from: [{address: 'asdasdasd'}],
+                    from: [{
+                        address: 'asdasdasd'
+                    }],
                     encrypted: true,
                     decrypted: false,
                     body: '-----BEGIN PGP MESSAGE-----asdasdasd-----END PGP MESSAGE-----'
@@ -1284,12 +1288,12 @@ define(function(require) {
                     message: message
                 }, function(error, msg) {
                     expect(error).to.not.exist;
-                    
+
                     expect(msg).to.equal(message);
                     expect(msg.decrypted).to.be.true;
                     expect(msg.body).to.equal(plaintextBody);
                     expect(msg.decryptingBody).to.be.false;
-                    
+
                     expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
                     expect(pgpStub.decrypt.calledOnce).to.be.true;
                     expect(parseStub.called).to.be.false;
@@ -1303,7 +1307,9 @@ define(function(require) {
                 var message, plaintextBody, parseStub, errMsg;
 
                 message = {
-                    from: [{address: 'asdasdasd'}],
+                    from: [{
+                        address: 'asdasdasd'
+                    }],
                     encrypted: true,
                     decrypted: false,
                     body: '-----BEGIN PGP MESSAGE-----asdasdasd-----END PGP MESSAGE-----'
@@ -1322,7 +1328,7 @@ define(function(require) {
                     message: message
                 }, function(error, msg) {
                     expect(error).to.not.exist;
-                    
+
                     expect(msg).to.equal(message);
                     expect(msg.decrypted).to.be.true;
                     expect(msg.body).to.equal(errMsg);
@@ -1340,7 +1346,9 @@ define(function(require) {
                 var message, parseStub;
 
                 message = {
-                    from: [{address: 'asdasdasd'}],
+                    from: [{
+                        address: 'asdasdasd'
+                    }],
                     encrypted: true,
                     decrypted: false,
                     body: '-----BEGIN PGP MESSAGE-----asdasdasd-----END PGP MESSAGE-----'
@@ -1353,12 +1361,12 @@ define(function(require) {
                     message: message
                 }, function(error, msg) {
                     expect(error).to.exist;
-                    
+
                     expect(msg).to.not.exist;
-                    
+
                     expect(message.decrypted).to.be.false;
                     expect(message.decryptingBody).to.be.false;
-                    
+
                     expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
                     expect(pgpStub.decrypt.called).to.be.false;
                     expect(parseStub.called).to.be.false;
