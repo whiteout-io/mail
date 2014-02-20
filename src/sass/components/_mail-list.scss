@@ -11,6 +11,7 @@
     }
 
     li {
+        position: relative;
         display: block;
         margin-bottom: 7px;
         padding: $padding-vertical $padding-horizontal;
@@ -26,10 +27,20 @@
             font-weight: normal;
             margin: 0;
         }
+
+        .encrypted {
+            position: absolute;
+            color: $color-grey-medium;
+            line-height: 30px;
+            top: $padding-vertical;
+            right: $padding-vertical;
+        }
+
         p {
             font-size: $font-size-small;
             margin: 0;
         }
+
         .head {
             position: relative;
             padding-right: 6.5em;
@@ -64,6 +75,7 @@
                 margin-left: -1.3em;
             }
         }
+
         .body {
             color: $color-grey;
             height: 2.5em;
@@ -120,6 +132,9 @@
             color: $color-white;
 
             h3 {
+                color: $color-white;
+            }
+            .encrypted {
                 color: $color-white;
             }
             .head {
