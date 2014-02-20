@@ -437,12 +437,6 @@ define(function(require) {
                     var inMemoryUids = _.pluck(folder.messages, 'uid'),
                         delta4 = _.difference(inImapUids, inMemoryUids);
 
-                    // no delta, we're done here
-                    if (_.isEmpty(delta4)) {
-                        doDeltaF4();
-                        return;
-                    }
-
                     // eliminate uids smaller than the biggest local uid, i.e. just fetch everything
                     // that came in AFTER the most recent email we have in memory. Keep in mind that
                     // uids are strictly ascending, so there can't be a NEW mail in the mailbox with a 
@@ -454,6 +448,12 @@ define(function(require) {
                         delta4 = _.filter(delta4, function(uid) {
                             return uid > maxInMemoryUid;
                         });
+                    }
+
+                    // no delta, we're done here
+                    if (_.isEmpty(delta4)) {
+                        doDeltaF4();
+                        return;
                     }
 
                     self._imapListMessages({

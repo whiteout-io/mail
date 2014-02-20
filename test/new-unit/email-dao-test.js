@@ -1476,7 +1476,7 @@ define(function(require) {
                 imapSearchStub = sinon.stub(dao, '_imapSearch');
                 imapSearchStub.withArgs({
                     folder: folder
-                }).yields(null, [dummyEncryptedMail.uid]);
+                }).yields(null, [dummyEncryptedMail.uid - 10, dummyEncryptedMail.uid]);
                 imapSearchStub.withArgs({
                     folder: folder,
                     unread: true
