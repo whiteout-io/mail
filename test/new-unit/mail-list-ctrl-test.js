@@ -10,6 +10,8 @@ define(function(require) {
         KeychainDAO = require('js/dao/keychain-dao'),
         appController = require('js/app-controller');
 
+    chai.Assertion.includeStack = true;
+
     describe('Mail List controller unit test', function() {
         var scope, ctrl, origEmailDao, emailDaoMock, keychainMock, deviceStorageMock,
             emailAddress, notificationClickedHandler, emails,
@@ -220,6 +222,77 @@ define(function(require) {
 
                 // emails array is also used as the outbox's pending mail
                 expect(scope.state.mailList.selected).to.deep.equal(emails[emails.length - 1]);
+            });
+        });
+
+        describe('getBody', function() {
+            it('should get the mail content', function() {
+                scope.state.nav = {
+                    currentFolder: {
+                        type: 'asd',
+                    }
+                };
+
+                scope.getBody();
+                expect(emailDaoMock.getBody.calledOnce).to.be.true;
+            });
+        });
+
+        describe('select', function() {
+            it('should decrypt, focus mark an unread mail as read', function() {
+                var mail, synchronizeMock;
+
+                mail = {
+                    unread: true
+                };
+                synchronizeMock = sinon.stub(scope, 'synchronize');
+                scope.state = {
+                    nav: {
+                        currentFolder: {
+                            type: 'asd'
+                        }
+                    },
+                    mailList: {},
+                    read: {
+                        toggle: function() {}
+                    }
+                };
+
+                scope.select(mail);
+
+                expect(emailDaoMock.decryptMessageContent.calledOnce).to.be.true;
+                expect(synchronizeMock.calledOnce).to.be.true;
+                expect(scope.state.mailList.selected).to.equal(mail);
+
+                scope.synchronize.restore();
+            });
+
+            it('should decrypt and focus a read mail', function() {
+                var mail, synchronizeMock;
+
+                mail = {
+                    unread: false
+                };
+                synchronizeMock = sinon.stub(scope, 'synchronize');
+                scope.state = {
+                    mailList: {},
+                    read: {
+                        toggle: function() {}
+                    },
+                    nav: {
+                        currentFolder: {
+                            type: 'asd'
+                        }
+                    }
+                };
+
+                scope.select(mail);
+
+                expect(emailDaoMock.decryptMessageContent.calledOnce).to.be.true;
+                expect(synchronizeMock.called).to.be.false;
+                expect(scope.state.mailList.selected).to.equal(mail);
+
+                scope.synchronize.restore();
             });
         });
 

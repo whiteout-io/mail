@@ -10,6 +10,7 @@ define(function(require) {
         str = require('js/app-config').string,
         expect = chai.expect;
 
+    chai.Assertion.includeStack = true;
 
     describe('Email DAO unit tests', function() {
         var dao, keychainStub, imapClientStub, pgpMailerStub, pgpStub, devicestorageStub;
@@ -757,55 +758,113 @@ define(function(require) {
             });
         });
 
-        describe('_imapGetMessage', function() {
+        describe('_imapListMessages', function() {
+            it('should work', function(done) {
+                var path = 'FOLDAAAA',
+                    firstUid = 1337,
+                    lastUid = 1339;
+
+                imapClientStub.listMessagesByUid.withArgs({
+                    path: path,
+                    firstUid: firstUid,
+                    lastUid: lastUid
+                }).yields(null, []);
+
+                dao._imapListMessages({
+                    folder: path,
+                    firstUid: firstUid,
+                    lastUid: lastUid
+                }, function(err, msgs) {
+                    expect(err).to.not.exist;
+                    expect(msgs).to.exist;
+
+                    expect(imapClientStub.listMessagesByUid.calledOnce).to.be.true;
+
+                    done();
+                });
+            });
+
+            it('should not work when listMessagesByUid fails', function(done) {
+                var path = 'FOLDAAAA',
+                    firstUid = 1337,
+                    lastUid = 1339;
+
+                imapClientStub.listMessagesByUid.yields({});
+
+                dao._imapListMessages({
+                    folder: path,
+                    firstUid: firstUid,
+                    lastUid: lastUid
+                }, function(err, msgs) {
+                    expect(err).to.exist;
+                    expect(msgs).to.not.exist;
+
+                    expect(imapClientStub.listMessagesByUid.calledOnce).to.be.true;
+
+                    done();
+                });
+            });
+
             it('should fail when disconnected', function(done) {
                 dao.onDisconnect(null, function(err) {
                     expect(err).to.not.exist;
 
-                    dao._imapGetMessage({}, function(err) {
+                    dao._imapListMessages({}, function(err) {
                         expect(err.code).to.equal(42);
                         done();
                     });
                 });
             });
+        });
 
+        describe('_imapStreamText', function() {
             it('should work', function(done) {
-                var path = 'FOLDAAAA',
-                    uid = 1337;
+                var path = 'FOLDAAAA';
 
-                imapClientStub.getMessage.withArgs({
+                imapClientStub.getBody.withArgs({
                     path: path,
-                    uid: uid
+                    message: {}
                 }).yields(null, {});
 
-                dao._imapGetMessage({
+                dao._imapStreamText({
                     folder: path,
-                    uid: uid
+                    message: {}
                 }, function(err, msg) {
                     expect(err).to.not.exist;
                     expect(msg).to.exist;
 
-                    expect(imapClientStub.getMessage.calledOnce).to.be.true;
+                    expect(imapClientStub.getBody.calledOnce).to.be.true;
 
                     done();
                 });
             });
-            it('should not work when getMessage fails', function(done) {
-                var path = 'FOLDAAAA',
-                    uid = 1337;
 
-                imapClientStub.getMessage.yields({});
+            it('should not work when getBody fails', function(done) {
+                var path = 'FOLDAAAA';
 
-                dao._imapGetMessage({
+                imapClientStub.getBody.yields({});
+
+                dao._imapStreamText({
                     folder: path,
-                    uid: uid
+                    message: {}
                 }, function(err, msg) {
                     expect(err).to.exist;
                     expect(msg).to.not.exist;
 
-                    expect(imapClientStub.getMessage.calledOnce).to.be.true;
+                    expect(imapClientStub.getBody.calledOnce).to.be.true;
 
                     done();
+                });
+            });
+
+            it('should fail when disconnected', function(done) {
+                dao.onDisconnect(null, function(err) {
+                    expect(err).to.not.exist;
+
+                    dao._imapStreamText({}, function(err) {
+                        expect(err.code).to.equal(42);
+                        done();
+                    });
                 });
             });
         });
@@ -869,9 +928,458 @@ define(function(require) {
             });
         });
 
+        describe('getBody', function() {
+            it('should not do anything if the message already has content', function() {
+                var message = {
+                    body: 'bender is great!'
+                };
+
+                dao.getBody({
+                    message: message
+                });
+
+                // should do nothing
+            });
+
+            it('should read an unencrypted body from the device', function(done) {
+                var message, uid, folder, body, localListStub;
+
+                folder = 'asdasdasdasdasd';
+                body = 'bender is great! bender is great!';
+                uid = 1234;
+                message = {
+                    uid: uid
+                };
+
+                localListStub = sinon.stub(dao, '_localListMessages').withArgs({
+                    folder: folder,
+                    uid: uid
+                }).yieldsAsync(null, [{
+                    body: body
+                }]);
+
+
+                dao.getBody({
+                    message: message,
+                    folder: folder
+                }, function(err, msg) {
+                    expect(err).to.not.exist;
+
+                    expect(msg).to.equal(message);
+                    expect(msg.body).to.not.be.empty;
+                    expect(msg.encrypted).to.be.false;
+                    expect(msg.loadingBody).to.be.false;
+
+                    expect(localListStub.calledOnce).to.be.true;
+
+                    done();
+                });
+                expect(message.loadingBody).to.be.true;
+            });
+
+            it('should read an encrypted body from the device', function(done) {
+                var message, uid, folder, body, localListStub;
+
+                folder = 'asdasdasdasdasd';
+                body = '-----BEGIN PGP MESSAGE-----asdasdasd-----END PGP MESSAGE-----';
+                uid = 1234;
+                message = {
+                    uid: uid
+                };
+
+                localListStub = sinon.stub(dao, '_localListMessages').withArgs({
+                    folder: folder,
+                    uid: uid
+                }).yieldsAsync(null, [{
+                    body: body
+                }]);
+
+
+                dao.getBody({
+                    message: message,
+                    folder: folder
+                }, function(err, msg) {
+                    expect(err).to.not.exist;
+
+                    expect(msg).to.equal(message);
+                    expect(msg.body).to.not.be.empty;
+                    expect(msg.encrypted).to.be.true;
+                    expect(msg.decrypted).to.be.false;
+                    expect(message.loadingBody).to.be.false;
+
+                    expect(localListStub.calledOnce).to.be.true;
+
+                    done();
+                });
+                expect(message.loadingBody).to.be.true;
+            });
+
+            it('should stream an unencrypted body from imap', function(done) {
+                var message, uid, folder, body, localListStub, localStoreStub, imapStreamStub;
+
+                folder = 'asdasdasdasdasd';
+                body = 'bender is great! bender is great!';
+                uid = 1234;
+                message = {
+                    uid: uid
+                };
+
+                localListStub = sinon.stub(dao, '_localListMessages').withArgs({
+                    folder: folder,
+                    uid: uid
+                }).yieldsAsync(null, [{}]);
+
+                localStoreStub = sinon.stub(dao, '_localStoreMessages').withArgs({
+                    folder: folder,
+                    emails: [message]
+                }).yieldsAsync();
+
+                imapStreamStub = sinon.stub(dao, '_imapStreamText', function(opts, cb) {
+                    expect(opts).to.deep.equal({
+                        folder: folder,
+                        message: message
+                    });
+
+                    message.body = body;
+                    cb();
+                });
+
+
+                dao.getBody({
+                    message: message,
+                    folder: folder
+                }, function(err, msg) {
+                    expect(err).to.not.exist;
+
+                    expect(msg).to.equal(message);
+                    expect(msg.body).to.not.be.empty;
+                    expect(msg.encrypted).to.be.false;
+                    expect(msg.loadingBody).to.be.false;
+
+                    expect(localListStub.calledOnce).to.be.true;
+                    expect(imapStreamStub.calledOnce).to.be.true;
+                    expect(localStoreStub.calledOnce).to.be.true;
+
+                    done();
+                });
+                expect(message.loadingBody).to.be.true;
+            });
+
+            it('should stream an encrypted body from imap', function(done) {
+                var message, uid, folder, body, localListStub, localStoreStub, imapStreamStub;
+
+                folder = 'asdasdasdasdasd';
+                body = '-----BEGIN PGP MESSAGE-----asdasdasd-----END PGP MESSAGE-----';
+                uid = 1234;
+                message = {
+                    uid: uid
+                };
+
+                localListStub = sinon.stub(dao, '_localListMessages').withArgs({
+                    folder: folder,
+                    uid: uid
+                }).yieldsAsync(null, [{}]);
+
+                localStoreStub = sinon.stub(dao, '_localStoreMessages').withArgs({
+                    folder: folder,
+                    emails: [message]
+                }).yieldsAsync();
+
+                imapStreamStub = sinon.stub(dao, '_imapStreamText', function(opts, cb) {
+                    expect(opts).to.deep.equal({
+                        folder: folder,
+                        message: message
+                    });
+
+                    message.body = body;
+                    cb();
+                });
+
+
+                dao.getBody({
+                    message: message,
+                    folder: folder
+                }, function(err, msg) {
+                    expect(err).to.not.exist;
+
+                    expect(msg).to.equal(message);
+                    expect(msg.body).to.not.be.empty;
+                    expect(msg.encrypted).to.be.true;
+                    expect(msg.decrypted).to.be.false;
+                    expect(msg.loadingBody).to.be.false;
+
+                    expect(localListStub.calledOnce).to.be.true;
+                    expect(imapStreamStub.calledOnce).to.be.true;
+                    expect(localStoreStub.calledOnce).to.be.true;
+
+                    done();
+                });
+                expect(message.loadingBody).to.be.true;
+            });
+
+            it('fail to stream from imap due to error when persisting', function(done) {
+                var message, uid, folder, body, localListStub, localStoreStub, imapStreamStub;
+
+                folder = 'asdasdasdasdasd';
+                uid = 1234;
+                message = {
+                    uid: uid
+                };
+
+                localListStub = sinon.stub(dao, '_localListMessages').withArgs({
+                    folder: folder,
+                    uid: uid
+                }).yields(null, [{}]);
+
+                imapStreamStub = sinon.stub(dao, '_imapStreamText', function(opts, cb) {
+                    message.body = body;
+                    cb();
+                });
+
+                localStoreStub = sinon.stub(dao, '_localStoreMessages').withArgs({
+                    folder: folder,
+                    emails: [message]
+                }).yields({});
+
+                dao.getBody({
+                    message: message,
+                    folder: folder
+                }, function(err, msg) {
+                    expect(err).to.exist;
+                    expect(msg).to.not.exist;
+                    expect(localListStub.calledOnce).to.be.true;
+                    expect(imapStreamStub.calledOnce).to.be.true;
+                    expect(localStoreStub.calledOnce).to.be.true;
+
+                    expect(message.loadingBody).to.be.false;
+
+                    done();
+                });
+            });
+
+            it('fail to stream from imap due to stream error', function(done) {
+                var message, uid, folder, body, localListStub, localStoreStub, imapStreamStub;
+
+                folder = 'asdasdasdasdasd';
+                uid = 1234;
+                message = {
+                    uid: uid
+                };
+
+                localListStub = sinon.stub(dao, '_localListMessages').withArgs({
+                    folder: folder,
+                    uid: uid
+                }).yields(null, [{}]);
+
+                imapStreamStub = sinon.stub(dao, '_imapStreamText', function(opts, cb) {
+                    message.body = body;
+                    cb({});
+                });
+
+                localStoreStub = sinon.stub(dao, '_localStoreMessages');
+
+                dao.getBody({
+                    message: message,
+                    folder: folder
+                }, function(err, msg) {
+                    expect(err).to.exist;
+                    expect(msg).to.not.exist;
+                    expect(localListStub.calledOnce).to.be.true;
+                    expect(imapStreamStub.calledOnce).to.be.true;
+                    expect(localStoreStub.called).to.be.false;
+
+                    expect(message.loadingBody).to.be.false;
+
+                    done();
+                });
+            });
+        });
+
+        describe('decryptMessageContent', function() {
+            it('should not do anything when the message is not encrypted', function() {
+                var message = {
+                    encrypted: false
+                };
+
+                dao.decryptMessageContent({
+                    message: message
+                });
+
+                // should do nothing
+            });
+
+            it('should not do anything when the message is already decrypted', function() {
+                var message = {
+                    encrypted: true,
+                    decrypted: true
+                };
+
+                dao.decryptMessageContent({
+                    message: message
+                });
+
+                // should do nothing
+            });
+
+            it('decrypt a pgp/mime message', function(done) {
+                var message, parsedBody, mimeBody, parseStub;
+
+                message = {
+                    from: [{
+                        address: 'asdasdasd'
+                    }],
+                    encrypted: true,
+                    decrypted: false,
+                    body: '-----BEGIN PGP MESSAGE-----asdasdasd-----END PGP MESSAGE-----'
+                };
+
+                mimeBody = 'Content-Transfer-Encoding: Content-Type:';
+                parsedBody = 'body? yes.';
+
+                keychainStub.getReceiverPublicKey.withArgs(message.from[0].address).yieldsAsync(null, mockKeyPair.publicKey);
+                pgpStub.decrypt.withArgs(message.body, mockKeyPair.publicKey.publicKey).yieldsAsync(null, mimeBody);
+                parseStub = sinon.stub(dao, '_imapParseMessageBlock', function(o, cb) {
+                    expect(o.message).to.equal(message);
+                    expect(o.block).to.equal(mimeBody);
+
+                    o.message.body = parsedBody;
+                    cb(null, o.message);
+                });
+
+                dao.decryptMessageContent({
+                    message: message
+                }, function(error, msg) {
+                    expect(error).to.not.exist;
+
+                    expect(msg).to.equal(message);
+                    expect(msg.decrypted).to.be.true;
+                    expect(msg.body).to.equal(parsedBody);
+                    expect(msg.decryptingBody).to.be.false;
+
+                    expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
+                    expect(pgpStub.decrypt.calledOnce).to.be.true;
+                    expect(parseStub.calledOnce).to.be.true;
+
+                    done();
+                });
+
+                expect(message.decryptingBody).to.be.true;
+            });
+
+            it('decrypt a pgp/inline message', function(done) {
+                var message, plaintextBody, parseStub;
+
+                message = {
+                    from: [{
+                        address: 'asdasdasd'
+                    }],
+                    encrypted: true,
+                    decrypted: false,
+                    body: '-----BEGIN PGP MESSAGE-----asdasdasd-----END PGP MESSAGE-----'
+                };
+
+                plaintextBody = 'body? yes.';
+
+                keychainStub.getReceiverPublicKey.withArgs(message.from[0].address).yieldsAsync(null, mockKeyPair.publicKey);
+                pgpStub.decrypt.withArgs(message.body, mockKeyPair.publicKey.publicKey).yieldsAsync(null, plaintextBody);
+                parseStub = sinon.stub(dao, '_imapParseMessageBlock');
+
+                dao.decryptMessageContent({
+                    message: message
+                }, function(error, msg) {
+                    expect(error).to.not.exist;
+
+                    expect(msg).to.equal(message);
+                    expect(msg.decrypted).to.be.true;
+                    expect(msg.body).to.equal(plaintextBody);
+                    expect(msg.decryptingBody).to.be.false;
+
+                    expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
+                    expect(pgpStub.decrypt.calledOnce).to.be.true;
+                    expect(parseStub.called).to.be.false;
+
+                    done();
+                });
+                expect(message.decryptingBody).to.be.true;
+            });
+
+            it('should fail during decryption message', function(done) {
+                var message, plaintextBody, parseStub, errMsg;
+
+                message = {
+                    from: [{
+                        address: 'asdasdasd'
+                    }],
+                    encrypted: true,
+                    decrypted: false,
+                    body: '-----BEGIN PGP MESSAGE-----asdasdasd-----END PGP MESSAGE-----'
+                };
+
+                plaintextBody = 'body? yes.';
+                errMsg = 'yaddayadda';
+
+                keychainStub.getReceiverPublicKey.withArgs(message.from[0].address).yields(null, mockKeyPair.publicKey);
+                pgpStub.decrypt.yields({
+                    errMsg: errMsg
+                });
+                parseStub = sinon.stub(dao, '_imapParseMessageBlock');
+
+                dao.decryptMessageContent({
+                    message: message
+                }, function(error, msg) {
+                    expect(error).to.not.exist;
+
+                    expect(msg).to.equal(message);
+                    expect(msg.decrypted).to.be.true;
+                    expect(msg.body).to.equal(errMsg);
+                    expect(msg.decryptingBody).to.be.false;
+
+                    expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
+                    expect(pgpStub.decrypt.calledOnce).to.be.true;
+                    expect(parseStub.called).to.be.false;
+
+                    done();
+                });
+            });
+
+            it('should fail during key export', function(done) {
+                var message, parseStub;
+
+                message = {
+                    from: [{
+                        address: 'asdasdasd'
+                    }],
+                    encrypted: true,
+                    decrypted: false,
+                    body: '-----BEGIN PGP MESSAGE-----asdasdasd-----END PGP MESSAGE-----'
+                };
+
+                keychainStub.getReceiverPublicKey.yields({});
+                parseStub = sinon.stub(dao, '_imapParseMessageBlock');
+
+                dao.decryptMessageContent({
+                    message: message
+                }, function(error, msg) {
+                    expect(error).to.exist;
+
+                    expect(msg).to.not.exist;
+
+                    expect(message.decrypted).to.be.false;
+                    expect(message.decryptingBody).to.be.false;
+
+                    expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
+                    expect(pgpStub.decrypt.called).to.be.false;
+                    expect(parseStub.called).to.be.false;
+
+                    done();
+                });
+            });
+        });
+
+
         describe('sync', function() {
-            it('should work initially', function(done) {
-                var folder, localListStub, invocations, imapSearchStub, imapParseStub;
+            it('should initially fill from local', function(done) {
+                var folder, localListStub, invocations, imapSearchStub;
 
                 invocations = 0;
                 folder = 'FOLDAAAA';
@@ -879,25 +1387,10 @@ define(function(require) {
                     type: 'Folder',
                     path: folder
                 }];
-                dummyDecryptedMail.unread = true;
-                dummyEncryptedMail.unread = true;
-                dummyDecryptedMail.attachments = [{
-                    filename: 'filename',
-                    filesize: 123,
-                    mimeType: 'text/plain',
-                    content: null
-                }, {
-                    filename: 'filename',
-                    filesize: 123,
-                    mimeType: "application/pgp-signature",
-                    content: null
-                }];
 
                 localListStub = sinon.stub(dao, '_localListMessages').withArgs({
                     folder: folder
                 }).yields(null, [dummyEncryptedMail]);
-                keychainStub.getReceiverPublicKey.withArgs(dummyEncryptedMail.from[0].address).yields(null, mockKeyPair);
-                pgpStub.decrypt.withArgs(dummyEncryptedMail.body, mockKeyPair.publicKey).yields(null, dummyDecryptedMail.body);
                 imapSearchStub = sinon.stub(dao, '_imapSearch');
                 imapSearchStub.withArgs({
                     folder: folder
@@ -905,18 +1398,11 @@ define(function(require) {
                 imapSearchStub.withArgs({
                     folder: folder,
                     unread: true
-                }).yields(null, [dummyEncryptedMail.uid]);
+                }).yields(null, []);
                 imapSearchStub.withArgs({
                     folder: folder,
                     answered: true
                 }).yields(null, []);
-
-                imapParseStub = sinon.stub(dao, '_imapParseMessageBlock');
-                imapParseStub.withArgs({
-                    message: dummyEncryptedMail,
-                    block: dummyDecryptedMail.body
-                }).yields(null, dummyDecryptedMail);
-
 
                 dao.sync({
                     folder: folder
@@ -931,108 +1417,10 @@ define(function(require) {
 
                     expect(dao._account.busy).to.be.false;
                     expect(dao._account.folders[0].messages.length).to.equal(1);
-                    expect(dao._account.folders[0].messages[0]).to.equal(dummyDecryptedMail);
-                    expect(dao._account.folders[0].messages[0].attachments.length).to.equal(1);
-                    expect(localListStub.calledOnce).to.be.true;
-                    expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
-                    expect(pgpStub.decrypt.calledOnce).to.be.true;
-                    expect(imapSearchStub.calledThrice).to.be.true;
-                    expect(dao._account.folders[0].count).to.equal(1);
-                    expect(imapParseStub.calledOnce).to.be.true;
-
-                    done();
-                });
-            });
-
-            it('should initially error on decryption', function(done) {
-                var folder, localListStub, invocations;
-
-                invocations = 0;
-                folder = 'FOLDAAAA';
-                dao._account.folders = [{
-                    type: 'Folder',
-                    path: folder
-                }];
-
-                localListStub = sinon.stub(dao, '_localListMessages').yields(null, [dummyEncryptedMail]);
-                keychainStub.getReceiverPublicKey.yields({});
-
-                dao.sync({
-                    folder: folder
-                }, function(err) {
-                    expect(err).to.exist;
-
-                    expect(dao._account.busy).to.be.false;
-                    expect(dao._account.folders[0].messages).to.be.empty;
-                    expect(localListStub.calledOnce).to.be.true;
-                    expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
-
-                    done();
-                });
-            });
-
-            it('should initially sync downstream when storage is empty', function(done) {
-                var folder, localListStub, localStoreStub, invocations, imapSearchStub, imapGetStub, imapParseStub;
-
-                invocations = 0;
-                folder = 'FOLDAAAA';
-                dao._account.folders = [{
-                    type: 'Folder',
-                    path: folder
-                }];
-
-                dummyDecryptedMail.unread = true;
-                dummyDecryptedMail.answered = true;
-
-                localListStub = sinon.stub(dao, '_localListMessages').withArgs({
-                    folder: folder
-                }).yields(null, []);
-                imapGetStub = sinon.stub(dao, '_imapGetMessage').withArgs({
-                    folder: folder,
-                    uid: dummyEncryptedMail.uid
-                }).yields(null, dummyEncryptedMail);
-                keychainStub.getReceiverPublicKey.withArgs(dummyEncryptedMail.from[0].address).yields(null, mockKeyPair);
-                pgpStub.decrypt.withArgs(dummyEncryptedMail.body, mockKeyPair.publicKey).yields(null, dummyDecryptedMail.body);
-
-                imapSearchStub = sinon.stub(dao, '_imapSearch');
-                imapSearchStub.withArgs({
-                    folder: folder
-                }).yields(null, [dummyEncryptedMail.uid]);
-                imapSearchStub.withArgs({
-                    folder: folder,
-                    unread: true
-                }).yields(null, [dummyEncryptedMail.uid]);
-                imapSearchStub.withArgs({
-                    folder: folder,
-                    answered: true
-                }).yields(null, [dummyEncryptedMail.uid]);
-
-                imapParseStub = sinon.stub(dao, '_imapParseMessageBlock');
-                imapParseStub.yields(null, dummyDecryptedMail);
-
-                localStoreStub = sinon.stub(dao, '_localStoreMessages').yields();
-
-                dao.sync({
-                    folder: folder
-                }, function(err) {
-                    expect(err).to.not.exist;
-
-                    if (invocations === 0) {
-                        expect(dao._account.busy).to.be.true;
-                        invocations++;
-                        return;
-                    }
-
-                    expect(dao._account.busy).to.be.false;
-                    expect(dao._account.folders[0].messages).to.not.be.empty;
+                    expect(dao._account.folders[0].messages[0].uid).to.equal(dummyEncryptedMail.uid);
+                    expect(dao._account.folders[0].messages[0].body).to.not.exist;
                     expect(localListStub.calledOnce).to.be.true;
                     expect(imapSearchStub.calledThrice).to.be.true;
-                    expect(imapGetStub.calledOnce).to.be.true;
-                    expect(localStoreStub.calledOnce).to.be.true;
-                    expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
-                    expect(pgpStub.decrypt.calledOnce).to.be.true;
-                    expect(dao._account.folders[0].count).to.equal(1);
-                    expect(imapParseStub.calledOnce).to.be.true;
 
                     done();
                 });
@@ -1049,7 +1437,7 @@ define(function(require) {
                 });
             });
 
-            it('should fetch messages downstream from the remote', function(done) {
+            it('should not work without providing a folder', function(done) {
                 dao.sync({}, function(err) {
                     expect(err).to.exist;
                     done();
@@ -1096,7 +1484,7 @@ define(function(require) {
                 imapSearchStub = sinon.stub(dao, '_imapSearch');
                 imapSearchStub.withArgs({
                     folder: folder
-                }).yields(null, [dummyEncryptedMail.uid]);
+                }).yields(null, [dummyEncryptedMail.uid - 10, dummyEncryptedMail.uid]);
                 imapSearchStub.withArgs({
                     folder: folder,
                     unread: true
@@ -1389,8 +1777,8 @@ define(function(require) {
                 });
             });
 
-            it('should fetch legacy messages downstream from the remote', function(done) {
-                var invocations, folder, localListStub, imapSearchStub, imapGetStub, localStoreStub;
+            it('should fetch messages downstream from the remote', function(done) {
+                var invocations, folder, localListStub, imapSearchStub, localStoreStub, imapListMessagesStub;
 
                 invocations = 0;
                 folder = 'FOLDAAAA';
@@ -1400,9 +1788,12 @@ define(function(require) {
                     messages: []
                 }];
 
+                delete dummyEncryptedMail.body;
+
                 localListStub = sinon.stub(dao, '_localListMessages').withArgs({
                     folder: folder
                 }).yields(null, []);
+
                 imapSearchStub = sinon.stub(dao, '_imapSearch');
                 imapSearchStub.withArgs({
                     folder: folder
@@ -1416,92 +1807,18 @@ define(function(require) {
                     answered: true
                 }).yields(null, []);
 
-                imapGetStub = sinon.stub(dao, '_imapGetMessage').withArgs({
+                imapListMessagesStub = sinon.stub(dao, '_imapListMessages');
+                imapListMessagesStub.withArgs({
                     folder: folder,
-                    uid: dummyEncryptedMail.uid
-                }).yields(null, dummyEncryptedMail);
+                    firstUid: dummyEncryptedMail.uid,
+                    lastUid: dummyEncryptedMail.uid
+                }).yields(null, [dummyEncryptedMail]);
 
-                localStoreStub = sinon.stub(dao, '_localStoreMessages').yields();
-                keychainStub.getReceiverPublicKey.withArgs(dummyEncryptedMail.from[0].address).yields(null, mockKeyPair);
-                pgpStub.decrypt.withArgs(dummyEncryptedMail.body, mockKeyPair.publicKey).yields(null, dummyLegacyDecryptedMail.body);
-
-
-                dao.sync({
-                    folder: folder
-                }, function(err) {
-                    expect(err).to.not.exist;
-
-                    if (invocations === 0) {
-                        expect(dao._account.busy).to.be.true;
-                        invocations++;
-                        return;
-                    }
-
-                    expect(dao._account.busy).to.be.false;
-                    expect(dao._account.folders[0].messages).to.not.be.empty;
-                    expect(localListStub.calledOnce).to.be.true;
-                    expect(imapSearchStub.calledThrice).to.be.true;
-                    expect(imapGetStub.calledOnce).to.be.true;
-                    expect(localStoreStub.calledOnce).to.be.true;
-                    expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
-                    expect(pgpStub.decrypt.calledOnce).to.be.true;
-                    done();
-                });
-            });
-
-            it('should fetch valid pgp messages downstream from the remote', function(done) {
-                var invocations, folder, localListStub, imapSearchStub, imapGetStub, localStoreStub, imapParseStub;
-
-                invocations = 0;
-                folder = 'FOLDAAAA';
-                dao._account.folders = [{
-                    type: 'Folder',
-                    path: folder,
-                    messages: []
-                }];
-                dummyDecryptedMail.attachments = [{
-                    filename: 'filename',
-                    filesize: 123,
-                    mimeType: 'text/plain',
-                    content: null
-                }, {
-                    filename: 'filename',
-                    filesize: 123,
-                    mimeType: "application/pgp-signature",
-                    content: null
-                }];
-
-
-                localListStub = sinon.stub(dao, '_localListMessages').withArgs({
-                    folder: folder
-                }).yields(null, []);
-                imapSearchStub = sinon.stub(dao, '_imapSearch');
-                imapSearchStub.withArgs({
-                    folder: folder
-                }).yields(null, [dummyEncryptedMail.uid]);
-                imapSearchStub.withArgs({
+                localStoreStub = sinon.stub(dao, '_localStoreMessages');
+                localStoreStub.withArgs({
                     folder: folder,
-                    unread: true
-                }).yields(null, []);
-                imapSearchStub.withArgs({
-                    folder: folder,
-                    answered: true
-                }).yields(null, []);
-
-                imapGetStub = sinon.stub(dao, '_imapGetMessage').withArgs({
-                    folder: folder,
-                    uid: dummyEncryptedMail.uid
-                }).yields(null, dummyEncryptedMail);
-
-                localStoreStub = sinon.stub(dao, '_localStoreMessages').yields();
-                keychainStub.getReceiverPublicKey.withArgs(dummyEncryptedMail.from[0].address).yields(null, mockKeyPair);
-                pgpStub.decrypt.withArgs(dummyEncryptedMail.body, mockKeyPair.publicKey).yields(null, dummyDecryptedMail.body);
-
-                imapParseStub = sinon.stub(dao, '_imapParseMessageBlock');
-                imapParseStub.withArgs({
-                    message: dummyEncryptedMail,
-                    block: dummyDecryptedMail.body
-                }).yields(null, dummyDecryptedMail);
+                    emails: [dummyEncryptedMail]
+                }).yields();
 
                 dao.sync({
                     folder: folder
@@ -1516,21 +1833,17 @@ define(function(require) {
 
                     expect(dao._account.busy).to.be.false;
                     expect(dao._account.folders[0].messages.length).to.equal(1);
-                    expect(dao._account.folders[0].messages[0]).to.equal(dummyDecryptedMail);
-                    expect(dao._account.folders[0].messages[0].attachments.length).to.equal(1);
+                    expect(dao._account.folders[0].messages[0].uid).to.equal(dummyEncryptedMail.uid);
+                    expect(dao._account.folders[0].messages[0].body).to.not.exist;
                     expect(localListStub.calledOnce).to.be.true;
                     expect(imapSearchStub.calledThrice).to.be.true;
-                    expect(imapGetStub.calledOnce).to.be.true;
                     expect(localStoreStub.calledOnce).to.be.true;
-                    expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
-                    expect(pgpStub.decrypt.calledOnce).to.be.true;
-                    expect(imapParseStub.calledOnce).to.be.true;
                     done();
                 });
             });
 
             it('should not fetch non-whitelisted mails', function(done) {
-                var invocations, folder, localListStub, imapSearchStub, imapGetStub, localStoreStub;
+                var invocations, folder, localListStub, imapSearchStub, imapListMessagesStub, localStoreStub;
 
                 invocations = 0;
                 folder = 'FOLDAAAA';
@@ -1553,7 +1866,14 @@ define(function(require) {
                     folder: folder,
                     answered: true
                 }).yields(null, []);
-                imapGetStub = sinon.stub(dao, '_imapGetMessage').yields(null, nonWhitelistedMail);
+
+                imapListMessagesStub = sinon.stub(dao, '_imapListMessages');
+                imapListMessagesStub.withArgs({
+                    folder: folder,
+                    firstUid: nonWhitelistedMail.uid,
+                    lastUid: nonWhitelistedMail.uid
+                }).yields(null, [nonWhitelistedMail]);
+
                 localStoreStub = sinon.stub(dao, '_localStoreMessages');
 
                 dao.sync({
@@ -1571,60 +1891,13 @@ define(function(require) {
                     expect(dao._account.folders[0].messages).to.be.empty;
                     expect(localListStub.calledOnce).to.be.true;
                     expect(imapSearchStub.calledThrice).to.be.true;
-                    expect(imapGetStub.calledOnce).to.be.true;
                     expect(localStoreStub.called).to.be.false;
-                    expect(keychainStub.getReceiverPublicKey.called).to.be.false;
-                    expect(pgpStub.decrypt.called).to.be.false;
-                    done();
-                });
-            });
-
-            it('should error while decrypting fetch messages from the remote', function(done) {
-                var invocations, folder, localListStub, imapSearchStub, imapGetStub, localStoreStub;
-
-                invocations = 0;
-                folder = 'FOLDAAAA';
-                dao._account.folders = [{
-                    type: 'Folder',
-                    path: folder,
-                    messages: []
-                }];
-
-                localListStub = sinon.stub(dao, '_localListMessages').yields(null, []);
-                imapSearchStub = sinon.stub(dao, '_imapSearch');
-                imapSearchStub.withArgs({
-                    folder: folder
-                }).yields(null, [dummyEncryptedMail.uid]);
-                imapGetStub = sinon.stub(dao, '_imapGetMessage').yields(null, dummyEncryptedMail);
-                localStoreStub = sinon.stub(dao, '_localStoreMessages').yields();
-                keychainStub.getReceiverPublicKey.yields({});
-
-                dao.sync({
-                    folder: folder
-                }, function(err) {
-
-                    if (invocations === 0) {
-                        expect(err).to.not.exist;
-                        expect(dao._account.busy).to.be.true;
-                        invocations++;
-                        return;
-                    }
-
-                    expect(err).to.exist;
-                    expect(dao._account.busy).to.be.false;
-                    expect(dao._account.folders[0].messages).to.be.empty;
-                    expect(localListStub.calledOnce).to.be.true;
-                    expect(imapSearchStub.calledOnce).to.be.true;
-                    expect(imapGetStub.calledOnce).to.be.true;
-                    expect(localStoreStub.calledOnce).to.be.true;
-                    expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
-                    expect(pgpStub.decrypt.called).to.be.false;
                     done();
                 });
             });
 
             it('should error while storing messages from the remote locally', function(done) {
-                var invocations, folder, localListStub, imapSearchStub, imapGetStub, localStoreStub;
+                var invocations, folder, localListStub, imapSearchStub, localStoreStub, imapListMessagesStub;
 
                 invocations = 0;
                 folder = 'FOLDAAAA';
@@ -1634,56 +1907,20 @@ define(function(require) {
                     messages: []
                 }];
 
-                localListStub = sinon.stub(dao, '_localListMessages').yields(null, []);
+                delete dummyEncryptedMail.body;
+
+                localListStub = sinon.stub(dao, '_localListMessages').withArgs({
+                    folder: folder
+                }).yields(null, []);
+
                 imapSearchStub = sinon.stub(dao, '_imapSearch');
-                imapSearchStub.withArgs({
-                    folder: folder
-                }).yields(null, [dummyEncryptedMail.uid]);
-                imapGetStub = sinon.stub(dao, '_imapGetMessage').yields(null, dummyEncryptedMail);
-                localStoreStub = sinon.stub(dao, '_localStoreMessages').yields({});
+                imapSearchStub.yields(null, [dummyEncryptedMail.uid]);
 
-                dao.sync({
-                    folder: folder
-                }, function(err) {
+                imapListMessagesStub = sinon.stub(dao, '_imapListMessages');
+                imapListMessagesStub.yields(null, [dummyEncryptedMail]);
 
-                    if (invocations === 0) {
-                        expect(err).to.not.exist;
-                        expect(dao._account.busy).to.be.true;
-                        invocations++;
-                        return;
-                    }
-
-                    expect(err).to.exist;
-                    expect(dao._account.busy).to.be.false;
-                    expect(dao._account.folders[0].messages).to.be.empty;
-                    expect(localListStub.calledOnce).to.be.true;
-                    expect(imapSearchStub.calledOnce).to.be.true;
-                    expect(imapGetStub.calledOnce).to.be.true;
-                    expect(localStoreStub.calledOnce).to.be.true;
-                    expect(keychainStub.getReceiverPublicKey.called).to.be.false;
-                    expect(pgpStub.decrypt.called).to.be.false;
-                    done();
-                });
-            });
-
-            it('should error while fetching messages from the remote', function(done) {
-                var invocations, folder, localListStub, imapSearchStub, imapGetStub, localStoreStub;
-
-                invocations = 0;
-                folder = 'FOLDAAAA';
-                dao._account.folders = [{
-                    type: 'Folder',
-                    path: folder,
-                    messages: []
-                }];
-
-                localListStub = sinon.stub(dao, '_localListMessages').yields(null, []);
-                imapSearchStub = sinon.stub(dao, '_imapSearch');
-                imapSearchStub.withArgs({
-                    folder: folder
-                }).yields(null, [dummyEncryptedMail.uid]);
-                imapGetStub = sinon.stub(dao, '_imapGetMessage').yields({});
                 localStoreStub = sinon.stub(dao, '_localStoreMessages');
+                localStoreStub.yields({});
 
                 dao.sync({
                     folder: folder
@@ -1698,19 +1935,16 @@ define(function(require) {
 
                     expect(err).to.exist;
                     expect(dao._account.busy).to.be.false;
-                    expect(dao._account.folders[0].messages).to.be.empty;
+                    expect(dao._account.folders[0].messages.length).to.equal(0);
                     expect(localListStub.calledOnce).to.be.true;
                     expect(imapSearchStub.calledOnce).to.be.true;
-                    expect(imapGetStub.calledOnce).to.be.true;
-                    expect(localStoreStub.called).to.be.false;
-                    expect(keychainStub.getReceiverPublicKey.called).to.be.false;
-                    expect(pgpStub.decrypt.called).to.be.false;
+                    expect(localStoreStub.calledOnce).to.be.true;
                     done();
                 });
             });
 
             it('should verify an authentication mail', function(done) {
-                var invocations, folder, localListStub, imapSearchStub, imapGetStub, markReadStub, imapDeleteStub;
+                var invocations, folder, localListStub, imapSearchStub, imapGetStub, imapListMessagesStub, imapDeleteStub;
 
                 invocations = 0;
                 folder = 'FOLDAAAA';
@@ -1721,6 +1955,7 @@ define(function(require) {
                 }];
 
                 localListStub = sinon.stub(dao, '_localListMessages').yields(null, []);
+
                 imapSearchStub = sinon.stub(dao, '_imapSearch');
                 imapSearchStub.withArgs({
                     folder: folder
@@ -1733,14 +1968,9 @@ define(function(require) {
                     folder: folder,
                     answered: true
                 }).yields(null, []);
-
-                imapGetStub = sinon.stub(dao, '_imapGetMessage').yields(null, verificationMail);
+                imapListMessagesStub = sinon.stub(dao, '_imapListMessages').yields(null, [verificationMail]);
+                imapGetStub = sinon.stub(dao, '_imapStreamText').yields(null);
                 keychainStub.verifyPublicKey.withArgs(verificationUuid).yields();
-                markReadStub = sinon.stub(dao, '_imapMark').withArgs({
-                    folder: folder,
-                    uid: verificationMail.uid,
-                    unread: false
-                }).yields();
                 imapDeleteStub = sinon.stub(dao, '_imapDeleteMessage').withArgs({
                     folder: folder,
                     uid: verificationMail.uid
@@ -1763,7 +1993,6 @@ define(function(require) {
                     expect(imapSearchStub.calledThrice).to.be.true;
                     expect(imapGetStub.calledOnce).to.be.true;
                     expect(keychainStub.verifyPublicKey.calledOnce).to.be.true;
-                    expect(markReadStub.calledOnce).to.be.true;
                     expect(imapDeleteStub.calledOnce).to.be.true;
 
                     done();
@@ -1771,8 +2000,7 @@ define(function(require) {
             });
 
             it('should fail during deletion of an authentication mail', function(done) {
-                var invocations, folder, localListStub, imapSearchStub,
-                    imapGetStub, markReadStub, imapDeleteStub;
+                var invocations, folder, localListStub, imapSearchStub, imapGetStub, imapListMessagesStub, imapDeleteStub;
 
                 invocations = 0;
                 folder = 'FOLDAAAA';
@@ -1783,148 +2011,7 @@ define(function(require) {
                 }];
 
                 localListStub = sinon.stub(dao, '_localListMessages').yields(null, []);
-                imapSearchStub = sinon.stub(dao, '_imapSearch');
-                imapSearchStub.withArgs({
-                    folder: folder
-                }).yields(null, [verificationMail.uid]);
 
-                imapGetStub = sinon.stub(dao, '_imapGetMessage').yields(null, verificationMail);
-                keychainStub.verifyPublicKey.yields();
-                markReadStub = sinon.stub(dao, '_imapMark').yields();
-                imapDeleteStub = sinon.stub(dao, '_imapDeleteMessage').yields({});
-
-                dao.sync({
-                    folder: folder
-                }, function(err) {
-                    if (invocations === 0) {
-                        expect(err).to.not.exist;
-                        expect(dao._account.busy).to.be.true;
-                        invocations++;
-                        return;
-                    }
-
-                    expect(err).to.exist;
-                    expect(dao._account.busy).to.be.false;
-                    expect(dao._account.folders[0].messages).to.be.empty;
-                    expect(localListStub.calledOnce).to.be.true;
-                    expect(imapSearchStub.calledOnce).to.be.true;
-                    expect(imapGetStub.calledOnce).to.be.true;
-                    expect(keychainStub.verifyPublicKey.calledOnce).to.be.true;
-                    expect(markReadStub.calledOnce).to.be.true;
-                    expect(imapDeleteStub.calledOnce).to.be.true;
-
-                    done();
-                });
-            });
-
-            it('should fail during marking an authentication mail read', function(done) {
-                var invocations, folder, localListStub, imapSearchStub,
-                    imapGetStub, markReadStub, imapDeleteStub;
-
-                invocations = 0;
-                folder = 'FOLDAAAA';
-                dao._account.folders = [{
-                    type: 'Folder',
-                    path: folder,
-                    messages: []
-                }];
-
-                localListStub = sinon.stub(dao, '_localListMessages').yields(null, []);
-                imapSearchStub = sinon.stub(dao, '_imapSearch');
-                imapSearchStub.withArgs({
-                    folder: folder
-                }).yields(null, [verificationMail.uid]);
-
-                imapGetStub = sinon.stub(dao, '_imapGetMessage').yields(null, verificationMail);
-                keychainStub.verifyPublicKey.yields();
-                markReadStub = sinon.stub(dao, '_imapMark').yields({});
-                imapDeleteStub = sinon.stub(dao, '_imapDeleteMessage');
-
-                dao.sync({
-                    folder: folder
-                }, function(err) {
-                    if (invocations === 0) {
-                        expect(err).to.not.exist;
-                        expect(dao._account.busy).to.be.true;
-                        invocations++;
-                        return;
-                    }
-
-                    expect(err).to.exist;
-                    expect(dao._account.busy).to.be.false;
-                    expect(dao._account.folders[0].messages).to.be.empty;
-                    expect(localListStub.calledOnce).to.be.true;
-                    expect(imapSearchStub.calledOnce).to.be.true;
-                    expect(imapGetStub.calledOnce).to.be.true;
-                    expect(keychainStub.verifyPublicKey.calledOnce).to.be.true;
-                    expect(markReadStub.calledOnce).to.be.true;
-                    expect(imapDeleteStub.called).to.be.false;
-
-                    done();
-                });
-            });
-
-            it('should fail during verifying authentication', function(done) {
-                var invocations, folder, localListStub, imapSearchStub,
-                    imapGetStub, markReadStub, imapDeleteStub;
-
-                invocations = 0;
-                folder = 'FOLDAAAA';
-                dao._account.folders = [{
-                    type: 'Folder',
-                    path: folder,
-                    messages: []
-                }];
-
-                localListStub = sinon.stub(dao, '_localListMessages').yields(null, []);
-                imapSearchStub = sinon.stub(dao, '_imapSearch');
-                imapSearchStub.withArgs({
-                    folder: folder
-                }).yields(null, [verificationMail.uid]);
-                imapGetStub = sinon.stub(dao, '_imapGetMessage').yields(null, verificationMail);
-                keychainStub.verifyPublicKey.yields({});
-                markReadStub = sinon.stub(dao, '_imapMark');
-                imapDeleteStub = sinon.stub(dao, '_imapDeleteMessage');
-
-                dao.sync({
-                    folder: folder
-                }, function(err) {
-                    if (invocations === 0) {
-                        expect(err).to.not.exist;
-                        expect(dao._account.busy).to.be.true;
-                        invocations++;
-                        return;
-                    }
-
-                    expect(err).to.exist;
-                    expect(dao._account.busy).to.be.false;
-                    expect(dao._account.folders[0].messages).to.be.empty;
-                    expect(localListStub.calledOnce).to.be.true;
-                    expect(imapSearchStub.calledOnce).to.be.true;
-                    expect(imapGetStub.calledOnce).to.be.true;
-                    expect(keychainStub.verifyPublicKey.calledOnce).to.be.true;
-                    expect(markReadStub.called).to.be.false;
-                    expect(imapDeleteStub.called).to.be.false;
-
-                    done();
-                });
-            });
-
-            it('should not bother about read authentication mails', function(done) {
-                var invocations, folder, localListStub, imapSearchStub,
-                    imapGetStub, markReadStub, imapDeleteStub;
-
-                invocations = 0;
-                folder = 'FOLDAAAA';
-                dao._account.folders = [{
-                    type: 'Folder',
-                    path: folder,
-                    messages: []
-                }];
-
-                verificationMail.unread = false;
-
-                localListStub = sinon.stub(dao, '_localListMessages').yields(null, []);
                 imapSearchStub = sinon.stub(dao, '_imapSearch');
                 imapSearchStub.withArgs({
                     folder: folder
@@ -1937,13 +2024,15 @@ define(function(require) {
                     folder: folder,
                     answered: true
                 }).yields(null, []);
-                imapGetStub = sinon.stub(dao, '_imapGetMessage').yields(null, verificationMail);
-                markReadStub = sinon.stub(dao, '_imapMark');
-                imapDeleteStub = sinon.stub(dao, '_imapDeleteMessage');
+                imapListMessagesStub = sinon.stub(dao, '_imapListMessages').yields(null, [verificationMail]);
+                imapGetStub = sinon.stub(dao, '_imapStreamText').yields(null);
+                keychainStub.verifyPublicKey.withArgs(verificationUuid).yields();
+                imapDeleteStub = sinon.stub(dao, '_imapDeleteMessage').yields({});
 
                 dao.sync({
                     folder: folder
                 }, function(err) {
+
                     if (invocations === 0) {
                         expect(err).to.not.exist;
                         expect(dao._account.busy).to.be.true;
@@ -1951,22 +2040,21 @@ define(function(require) {
                         return;
                     }
 
-                    expect(err).to.not.exist;
+                    expect(err).to.exist;
                     expect(dao._account.busy).to.be.false;
                     expect(dao._account.folders[0].messages).to.be.empty;
                     expect(localListStub.calledOnce).to.be.true;
-                    expect(imapSearchStub.calledThrice).to.be.true;
+                    expect(imapSearchStub.calledOnce).to.be.true;
                     expect(imapGetStub.calledOnce).to.be.true;
-                    expect(keychainStub.verifyPublicKey.called).to.be.false;
-                    expect(markReadStub.called).to.be.false;
-                    expect(imapDeleteStub.called).to.be.false;
+                    expect(keychainStub.verifyPublicKey.calledOnce).to.be.true;
+                    expect(imapDeleteStub.calledOnce).to.be.true;
 
                     done();
                 });
             });
 
-            it('should not bother about corrupted authentication mails', function(done) {
-                var invocations, folder, localListStub, imapSearchStub, imapGetStub, markReadStub, imapDeleteStub;
+            it('should fail during verifying authentication', function(done) {
+                var invocations, folder, localListStub, imapSearchStub, imapGetStub, imapListMessagesStub, imapDeleteStub;
 
                 invocations = 0;
                 folder = 'FOLDAAAA';
@@ -1977,6 +2065,63 @@ define(function(require) {
                 }];
 
                 localListStub = sinon.stub(dao, '_localListMessages').yields(null, []);
+
+                imapSearchStub = sinon.stub(dao, '_imapSearch');
+                imapSearchStub.withArgs({
+                    folder: folder
+                }).yields(null, [verificationMail.uid]);
+                imapSearchStub.withArgs({
+                    folder: folder,
+                    unread: true
+                }).yields(null, []);
+                imapSearchStub.withArgs({
+                    folder: folder,
+                    answered: true
+                }).yields(null, []);
+                imapListMessagesStub = sinon.stub(dao, '_imapListMessages').yields(null, [verificationMail]);
+                imapGetStub = sinon.stub(dao, '_imapStreamText').yields(null);
+                keychainStub.verifyPublicKey.withArgs(verificationUuid).yields({
+                    errMsg: 'fubar'
+                });
+                imapDeleteStub = sinon.stub(dao, '_imapDeleteMessage').yields({});
+
+                dao.sync({
+                    folder: folder
+                }, function(err) {
+
+                    if (invocations === 0) {
+                        expect(err).to.not.exist;
+                        expect(dao._account.busy).to.be.true;
+                        invocations++;
+                        return;
+                    }
+
+                    expect(err).to.exist;
+                    expect(dao._account.busy).to.be.false;
+                    expect(dao._account.folders[0].messages).to.be.empty;
+                    expect(localListStub.calledOnce).to.be.true;
+                    expect(imapSearchStub.calledOnce).to.be.true;
+                    expect(imapGetStub.calledOnce).to.be.true;
+                    expect(keychainStub.verifyPublicKey.calledOnce).to.be.true;
+                    expect(imapDeleteStub.called).to.be.false;
+
+                    done();
+                });
+            });
+
+            it('should not bother about corrupted authentication mails', function(done) {
+                var invocations, folder, localListStub, imapSearchStub, imapGetStub, imapListMessagesStub, imapDeleteStub;
+
+                invocations = 0;
+                folder = 'FOLDAAAA';
+                dao._account.folders = [{
+                    type: 'Folder',
+                    path: folder,
+                    messages: []
+                }];
+
+                localListStub = sinon.stub(dao, '_localListMessages').yields(null, []);
+
                 imapSearchStub = sinon.stub(dao, '_imapSearch');
                 imapSearchStub.withArgs({
                     folder: folder
@@ -1989,65 +2134,12 @@ define(function(require) {
                     folder: folder,
                     answered: true
                 }).yields(null, []);
-
-                imapGetStub = sinon.stub(dao, '_imapGetMessage').yields(null, corruptedVerificationMail);
-                markReadStub = sinon.stub(dao, '_imapMark');
-                imapDeleteStub = sinon.stub(dao, '_imapDeleteMessage');
-
-                dao.sync({
-                    folder: folder
-                }, function(err) {
-                    expect(err).to.not.exist;
-
-                    if (invocations === 0) {
-                        expect(dao._account.busy).to.be.true;
-                        invocations++;
-                        return;
-                    }
-
-                    expect(dao._account.busy).to.be.false;
-                    expect(dao._account.folders[0].messages).to.be.empty;
-                    expect(localListStub.calledOnce).to.be.true;
-                    expect(imapSearchStub.calledThrice).to.be.true;
-                    expect(imapGetStub.calledOnce).to.be.true;
-                    expect(keychainStub.verifyPublicKey.called).to.be.false;
-                    expect(markReadStub.called).to.be.false;
-                    expect(imapDeleteStub.called).to.be.false;
-
-                    done();
+                imapListMessagesStub = sinon.stub(dao, '_imapListMessages').yields(null, [corruptedVerificationMail]);
+                imapGetStub = sinon.stub(dao, '_imapStreamText').yields(null);
+                keychainStub.verifyPublicKey.withArgs(corruptedVerificationUuid).yields({
+                    errMsg: 'fubar'
                 });
-            });
-
-            it('should not bother about corrupted authentication mails no verification link', function(done) {
-                var invocations, folder, localListStub, imapSearchStub,
-                    imapGetStub, markReadStub, imapDeleteStub;
-
-                invocations = 0;
-                folder = 'FOLDAAAA';
-                dao._account.folders = [{
-                    type: 'Folder',
-                    path: folder,
-                    messages: []
-                }];
-
-                verificationMail.body = 'url? there is no url.';
-
-                localListStub = sinon.stub(dao, '_localListMessages').yields(null, []);
-                imapSearchStub = sinon.stub(dao, '_imapSearch');
-                imapSearchStub.withArgs({
-                    folder: folder
-                }).yields(null, [verificationMail.uid]);
-                imapSearchStub.withArgs({
-                    folder: folder,
-                    unread: true
-                }).yields(null, []);
-                imapSearchStub.withArgs({
-                    folder: folder,
-                    answered: true
-                }).yields(null, []);
-                imapGetStub = sinon.stub(dao, '_imapGetMessage').yields(null, verificationMail);
-                markReadStub = sinon.stub(dao, '_imapMark');
-                imapDeleteStub = sinon.stub(dao, '_imapDeleteMessage');
+                imapDeleteStub = sinon.stub(dao, '_imapDeleteMessage').yields({});
 
                 dao.sync({
                     folder: folder
@@ -2066,7 +2158,6 @@ define(function(require) {
                     expect(imapSearchStub.calledThrice).to.be.true;
                     expect(imapGetStub.calledOnce).to.be.true;
                     expect(keychainStub.verifyPublicKey.called).to.be.false;
-                    expect(markReadStub.called).to.be.false;
                     expect(imapDeleteStub.called).to.be.false;
 
                     done();

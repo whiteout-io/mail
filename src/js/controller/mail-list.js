@@ -58,13 +58,39 @@ define(function(require) {
         // scope functions
         //
 
+        $scope.getBody = function(email) {
+            // don't stream message content of outbox messages...
+            if (getFolder().type === 'Outbox') {
+                return;
+            }
+
+            emailDao.getBody({
+                folder: getFolder().path,
+                message: email
+            }, function(error) {
+                $scope.$apply();
+                $scope.onError(error);
+            });
+        };
+
         /**
          * Called when clicking on an email list item
          */
         $scope.select = function(email) {
+            // unselect an item
             if (!email) {
                 $scope.state.mailList.selected = undefined;
                 return;
+            }
+
+            // if we're in the outbox, don't decrypt as usual
+            if (getFolder().type !== 'Outbox') {
+                emailDao.decryptMessageContent({
+                    message: email
+                }, function(error) {
+                    $scope.$apply();
+                    $scope.onError(error);
+                });
             }
 
             $scope.state.mailList.selected = email;
@@ -279,10 +305,88 @@ define(function(require) {
             }]; // list of receivers
             if (attachments) {
                 // body structure with three attachments
-                this.bodystructure = {"1": {"part": "1","type": "text/plain","parameters": {"charset": "us-ascii"},"encoding": "7bit","size": 9,"lines": 2},"2": {"part": "2","type": "application/octet-stream","parameters": {"name": "a.md"},"encoding": "7bit","size": 123,"disposition": [{"type": "attachment","filename": "a.md"}]},"3": {"part": "3","type": "application/octet-stream","parameters": {"name": "b.md"},"encoding": "7bit","size": 456,"disposition": [{"type": "attachment","filename": "b.md"}]},"4": {"part": "4","type": "application/octet-stream","parameters": {"name": "c.md"},"encoding": "7bit","size": 789,"disposition": [{"type": "attachment","filename": "c.md"}]},"type": "multipart/mixed"};
-                this.attachments = [{"filename": "a.md","filesize": 123,"mimeType": "text/x-markdown","part": "2","content": null}, {"filename": "b.md","filesize": 456,"mimeType": "text/x-markdown","part": "3","content": null}, {"filename": "c.md","filesize": 789,"mimeType": "text/x-markdown","part": "4","content": null}];
+                this.bodystructure = {
+                    "1": {
+                        "part": "1",
+                        "type": "text/plain",
+                        "parameters": {
+                            "charset": "us-ascii"
+                        },
+                        "encoding": "7bit",
+                        "size": 9,
+                        "lines": 2
+                    },
+                    "2": {
+                        "part": "2",
+                        "type": "application/octet-stream",
+                        "parameters": {
+                            "name": "a.md"
+                        },
+                        "encoding": "7bit",
+                        "size": 123,
+                        "disposition": [{
+                            "type": "attachment",
+                            "filename": "a.md"
+                        }]
+                    },
+                    "3": {
+                        "part": "3",
+                        "type": "application/octet-stream",
+                        "parameters": {
+                            "name": "b.md"
+                        },
+                        "encoding": "7bit",
+                        "size": 456,
+                        "disposition": [{
+                            "type": "attachment",
+                            "filename": "b.md"
+                        }]
+                    },
+                    "4": {
+                        "part": "4",
+                        "type": "application/octet-stream",
+                        "parameters": {
+                            "name": "c.md"
+                        },
+                        "encoding": "7bit",
+                        "size": 789,
+                        "disposition": [{
+                            "type": "attachment",
+                            "filename": "c.md"
+                        }]
+                    },
+                    "type": "multipart/mixed"
+                };
+                this.attachments = [{
+                    "filename": "a.md",
+                    "filesize": 123,
+                    "mimeType": "text/x-markdown",
+                    "part": "2",
+                    "content": null
+                }, {
+                    "filename": "b.md",
+                    "filesize": 456,
+                    "mimeType": "text/x-markdown",
+                    "part": "3",
+                    "content": null
+                }, {
+                    "filename": "c.md",
+                    "filesize": 789,
+                    "mimeType": "text/x-markdown",
+                    "part": "4",
+                    "content": null
+                }];
             } else {
-                this.bodystructure = {"part": "1","type": "text/plain","parameters": {"charset": "us-ascii"},"encoding": "7bit","size": 9,"lines": 2};
+                this.bodystructure = {
+                    "part": "1",
+                    "type": "text/plain",
+                    "parameters": {
+                        "charset": "us-ascii"
+                    },
+                    "encoding": "7bit",
+                    "size": 9,
+                    "lines": 2
+                };
                 this.attachments = [];
             }
             this.unread = unread;
@@ -306,14 +410,48 @@ define(function(require) {
     ngModule.directive('ngIscroll', function() {
         return {
             link: function(scope, elm, attrs) {
-                var model = attrs.ngIscroll;
+                var model = attrs.ngIscroll,
+                    listEl = elm[0];
+
                 scope.$watch(model, function() {
                     var myScroll;
                     // activate iscroll
-                    myScroll = new IScroll(elm[0], {
+                    myScroll = new IScroll(listEl, {
                         mouseWheel: true
                     });
+
+                    // load the visible message bodies, when the list is re-initialized and when scrolling stopped
+                    loadVisible();
+                    myScroll.on('scrollEnd', loadVisible);
                 }, true);
+
+                /*
+                 * iterates over the mails in the mail list and loads their bodies if they are visible in the viewport
+                 */
+                function loadVisible() {
+                    var listBorder = listEl.getBoundingClientRect(),
+                        top = listBorder.top,
+                        bottom = listBorder.bottom,
+                        listItems = listEl.children[0].children,
+                        i = listItems.length,
+                        listItem, message,
+                        isPartiallyVisibleTop, isPartiallyVisibleBottom, isVisible;
+
+                    while (i--) {
+                        // the n-th list item (the dom representation of an email) corresponds to 
+                        // the n-th message model in the filteredMessages array
+                        listItem = listItems.item(i).getBoundingClientRect();
+                        message = scope.filteredMessages[i];
+
+                        isPartiallyVisibleTop = listItem.top < top && listItem.bottom > top; // a portion of the list item is visible on the top
+                        isPartiallyVisibleBottom = listItem.top < bottom && listItem.bottom > bottom; // a portion of the list item is visible on the bottom
+                        isVisible = listItem.top >= top && listItem.bottom <= bottom; // the list item is visible as a whole
+
+                        if (isPartiallyVisibleTop || isVisible || isPartiallyVisibleBottom) {
+                            scope.getBody(message);
+                        }
+                    }
+                }
             }
         };
     });
