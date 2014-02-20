@@ -6,7 +6,7 @@
 
 <div class="view-read" ng-controller="ReadCtrl">
   <div class="headers">
-    <p class="subject" ng-click="state.read.toggle(false)">{{(state.mailList.selected.subject) ? state.mailList.selected.subject + ((!state.mailList.selected.encrypted) ? ' (not encrypted)' : '') : 'No subject'}}</p>
+    <p class="subject" ng-click="state.read.toggle(false)">{{(state.mailList.selected.subject) ? state.mailList.selected.subject : 'No subject'}}</p>
     <p class="date">{{state.mailList.selected.sentDate | date:'EEEE, MMM d, yyyy h:mm a'}}</p>
     <p class="address">
       From: <span ng-repeat="u in state.mailList.selected.from" class="label" ng-class="{'label-primary': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : ''}}" ng-mouseover="getKeyId(u.address)" popover="#fingerprint-info">{{u.name || u.address}}</span>
