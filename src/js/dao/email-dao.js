@@ -209,7 +209,6 @@ define(function(require) {
         var self = this,
             folder, isFolderInitialized;
 
-
         // validate options
         if (!options.folder) {
             callback({
@@ -244,6 +243,9 @@ define(function(require) {
 
         doLocalDelta();
 
+        /*
+         * pre-fill the memory with the messages stored on the hard disk
+         */
         function initFolderMessages() {
             folder.messages = [];
             self._localListMessages({
@@ -256,7 +258,9 @@ define(function(require) {
                 }
 
                 storedMessages.forEach(function(storedMessage) {
-                    delete storedMessage.body; // do not flood the memory
+                    // remove the body to not load unnecessary data to memory
+                    delete storedMessage.body;
+
                     folder.messages.push(storedMessage);
                 });
 
@@ -265,6 +269,9 @@ define(function(require) {
             });
         }
 
+        /*
+         * compares the messages in memory to the messages on the disk
+         */
         function doLocalDelta() {
             self._localListMessages({
                 folder: folder.path
@@ -278,7 +285,8 @@ define(function(require) {
                 doDelta1();
 
                 /*
-                 * delta1: storage > memory  => we deleted messages, remove from remote
+                 * delta1:
+                 * storage contains messages that are not present in memory => we deleted messages from the memory, so remove the messages from the remote and the disk
                  */
                 function doDelta1() {
                     var inMemoryUids = _.pluck(folder.messages, 'uid'),
@@ -294,7 +302,7 @@ define(function(require) {
                         doDeltaF2();
                     });
 
-                    // deltaF2 contains references to the in-memory messages
+                    // delta1 contains uids of messages on the disk
                     delta1.forEach(function(inMemoryUid) {
                         var deleteMe = {
                             folder: folder.path,
@@ -322,10 +330,11 @@ define(function(require) {
                 }
 
                 /*
-                 * deltaF2: memory > storage => we changed flags, sync them to the remote and memory
+                 * deltaF2:
+                 * memory contains messages that have flags other than those in storage => we changed flags, sync them to the remote and memory
                  */
                 function doDeltaF2() {
-                    var deltaF2 = checkFlags(folder.messages, storedMessages); // deltaf2 contains the message objects, we need those to sync the flags
+                    var deltaF2 = checkFlags(folder.messages, storedMessages); // deltaF2 contains the message objects, we need those to sync the flags
 
                     if (_.isEmpty(deltaF2)) {
                         callback();
@@ -377,6 +386,9 @@ define(function(require) {
             });
         }
 
+        /*
+         * compare the messages on the imap server to the in memory messages
+         */
         function doImapDelta() {
             self._imapSearch({
                 folder: folder.path
@@ -390,7 +402,8 @@ define(function(require) {
                 doDelta3();
 
                 /*
-                 * delta3: memory > imap   => we deleted messages directly from the remote, remove from memory and storage
+                 * delta3:
+                 * memory contains messages that are not present on the imap => we deleted messages directly from the remote, remove from memory and storage
                  */
                 function doDelta3() {
                     var inMemoryUids = _.pluck(folder.messages, 'uid'),
@@ -405,9 +418,9 @@ define(function(require) {
                         doDelta4();
                     });
 
-                    // delta3 contains references to the in-memory messages that have been deleted from the remote
+                    // delta3 contains uids of the in-memory messages that have been deleted from the remote
                     delta3.forEach(function(inMemoryUid) {
-                        // remove delta3 from local storage
+                        // remove from local storage
                         self._localDeleteMessage({
                             folder: folder.path,
                             uid: inMemoryUid
@@ -418,9 +431,9 @@ define(function(require) {
                                 return;
                             }
 
-                            // remove the uid from memory
+                            // remove from memory
                             var inMemoryMessage = _.findWhere(folder.messages, function(msg) {
-                                return msg.uid.a === inMemoryUid;
+                                return msg.uid === inMemoryUid;
                             });
                             folder.messages.splice(folder.messages.indexOf(inMemoryMessage), 1);
 
@@ -429,9 +442,9 @@ define(function(require) {
                     });
                 }
 
-
                 /*
-                 * delta4: imap > memory => we have new messages available, fetch downstream to memory and storage
+                 * delta4:
+                 * imap contains messages that are not present in memory => we have new messages available, fetch downstream to memory and storage
                  */
                 function doDelta4() {
                     var inMemoryUids = _.pluck(folder.messages, 'uid'),
@@ -444,7 +457,7 @@ define(function(require) {
                     if (!_.isEmpty(inMemoryUids)) {
                         var maxInMemoryUid = Math.max.apply(null, inMemoryUids); // apply works with separate arguments rather than an array
 
-                        // eliminate everything prior to maxInMemoryUid, that was already synced
+                        // eliminate everything prior to maxInMemoryUid, i.e. everything that was already synced
                         delta4 = _.filter(delta4, function(uid) {
                             return uid > maxInMemoryUid;
                         });
