@@ -67,10 +67,7 @@ define(function(require) {
             emailDao.getBody({
                 folder: getFolder().path,
                 message: email
-            }, function(error) {
-                $scope.$apply();
-                $scope.onError(error);
-            });
+            }, $scope.onError);
         };
 
         /**
@@ -83,18 +80,15 @@ define(function(require) {
                 return;
             }
 
+            $scope.state.mailList.selected = email;
+            $scope.state.read.toggle(true);
+
             // if we're in the outbox, don't decrypt as usual
             if (getFolder().type !== 'Outbox') {
                 emailDao.decryptMessageContent({
                     message: email
-                }, function(error) {
-                    $scope.$apply();
-                    $scope.onError(error);
-                });
+                }, $scope.onError);
             }
-
-            $scope.state.mailList.selected = email;
-            $scope.state.read.toggle(true);
 
             // if the email is unread, please sync the new state.
             // otherweise forget about it.
