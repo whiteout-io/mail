@@ -6,6 +6,7 @@ define(function() {
     er.attachHandler = function(scope) {
         scope.$root.onError = function(options) {
             if (!options) {
+                scope.$apply();
                 return;
             }
 
