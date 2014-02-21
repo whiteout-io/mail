@@ -17,7 +17,7 @@ define(function(require) {
         emailDao = appController._emailDao;
 
         // set default value so that the popover height is correct on init
-        $scope.fingerprint = 'XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX';
+        $scope.keyId = 'XXXXXXXX';
 
         //
         // Init
@@ -130,17 +130,17 @@ define(function(require) {
             });
         };
 
-        $scope.getFingerprint = function(recipient) {
-            $scope.fingerprint = 'Fingerprint cannot be displayed. Public key not found for that user.';
+        $scope.getKeyId = function(recipient) {
+            $scope.keyId = 'Key not found for that user.';
 
             if (!recipient.key) {
                 return;
             }
 
             var fpr = crypto.getFingerprint(recipient.key.publicKey);
-            var formatted = fpr.slice(0, 4) + ' ' + fpr.slice(4, 8) + ' ' + fpr.slice(8, 12) + ' ' + fpr.slice(12, 16) + ' ' + fpr.slice(16, 20) + ' ' + fpr.slice(20, 24) + ' ' + fpr.slice(24, 28) + ' ' + fpr.slice(28, 32) + ' ' + fpr.slice(32, 36) + ' ' + fpr.slice(36);
+            var formatted = fpr.slice(32);
 
-            $scope.fingerprint = formatted;
+            $scope.keyId = formatted;
         };
 
         /**

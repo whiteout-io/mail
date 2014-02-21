@@ -67,9 +67,21 @@ define(function(require) {
             emailDao.getBody({
                 folder: getFolder().path,
                 message: email
-            }, function(error) {
+            }, function(err) {
+                if (err) {
+                    $scope.onError(err);
+                    return;
+                }
+
+                // display fetched body
                 $scope.$apply();
-                $scope.onError(error);
+
+                // automatically decrypt if it's the selected email
+                if (email === $scope.state.mailList.selected) {
+                    emailDao.decryptMessageContent({
+                        message: email
+                    }, $scope.onError);
+                }
             });
         };
 
@@ -83,18 +95,15 @@ define(function(require) {
                 return;
             }
 
+            $scope.state.mailList.selected = email;
+            $scope.state.read.toggle(true);
+
             // if we're in the outbox, don't decrypt as usual
             if (getFolder().type !== 'Outbox') {
                 emailDao.decryptMessageContent({
                     message: email
-                }, function(error) {
-                    $scope.$apply();
-                    $scope.onError(error);
-                });
+                }, $scope.onError);
             }
-
-            $scope.state.mailList.selected = email;
-            $scope.state.read.toggle(true);
 
             // if the email is unread, please sync the new state.
             // otherweise forget about it.
@@ -121,7 +130,7 @@ define(function(require) {
             // if we're in the outbox, don't do an imap sync
             if (getFolder().type === 'Outbox') {
                 updateStatus('Last update: ', new Date());
-                displayEmails(outboxBo.pendingEmails);
+                selectFirstMessage(outboxBo.pendingEmails);
                 return;
             }
 
@@ -150,7 +159,7 @@ define(function(require) {
                 }
 
                 // sort emails
-                displayEmails(getFolder().messages);
+                selectFirstMessage(getFolder().messages);
                 // display last update
                 updateStatus('Last update: ', new Date());
                 $scope.$apply();
@@ -227,7 +236,7 @@ define(function(require) {
             if (!window.chrome || !chrome.identity) {
                 updateStatus('Last update: ', new Date());
                 getFolder().messages = createDummyMails();
-                displayEmails(getFolder().messages);
+                selectFirstMessage(getFolder().messages);
                 return;
             }
 
@@ -236,11 +245,14 @@ define(function(require) {
             // if we're in the outbox, read directly from there.
             if (getFolder().type === 'Outbox') {
                 updateStatus('Last update: ', new Date());
-                displayEmails(outboxBo.pendingEmails);
+                selectFirstMessage(outboxBo.pendingEmails);
                 return;
             }
 
-            displayEmails(getFolder().messages);
+            // unselect selection from old folder
+            $scope.select();
+            // display and select first
+            selectFirstMessage(getFolder().messages);
 
             $scope.synchronize();
         });
@@ -274,7 +286,7 @@ define(function(require) {
             $scope.lastUpdate = (time) ? time : '';
         }
 
-        function displayEmails(emails) {
+        function selectFirstMessage(emails) {
             if (!emails || emails.length < 1) {
                 $scope.select();
                 return;
@@ -395,6 +407,8 @@ define(function(require) {
             this.sentDate = new Date('Thu Sep 19 2013 20:41:23 GMT+0200 (CEST)');
             this.subject = 'Getting started'; // Subject line
             this.body = 'Here are a few pointers to help you get started with Whiteout Mail.\n\n# Write encrypted message\n- You can compose a message by clicking on the compose button on the upper right (keyboard shortcut is "n" for a new message or "r" to reply).\n- When typing the recipient\'s email address, secure recipients are marked with a blue label and insecure recipients are red.\n- When sending an email to insecure recipients, the default behavior for Whiteout Mail is to invite them to the service and only send the message content in an encrypted form, once they have joined.\n\n# Advanced features\n- To verify a recipient\'s PGP key, you can hover over the blue label containing their email address and their key fingerprint will be displayed.\n- To view your own key fingerprint, open the account view in the navigation bar on the left. You can compare these with your correspondants over a second channel such as a phonecall.\n\nWe hope this helped you to get started with Whiteout Mail.\n\nYour Whiteout Networks team'; // plaintext body
+            this.encrypted = true;
+            this.decrypted = true;
         };
 
         var dummys = [new Email(true, true), new Email(true, false, true, true), new Email(false, true, true), new Email(false, true), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false)];

@@ -85,6 +85,43 @@
         height: 100%;
         overflow-y: scroll;
 
+        .working {
+            margin: 0 auto;
+            height: 100%;
+            width: 230px;
+            display: table;
+
+            .container {
+                display: table-cell;
+                vertical-align: middle;
+
+                .spinner {
+                    position: relative;
+
+                    div {
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        height: 30px;
+                        width: 30px;
+                        animation: rotation .6s linear infinite;
+                        border-left: 5px solid $color-grey-light;
+                        border-right: 5px solid $color-grey-light;
+                        border-bottom: 5px solid $color-grey-light;
+                        border-top: 5px solid $color-grey;
+                        border-radius: 100%;
+                    }
+                }
+
+                h1 {
+                    margin: 0;
+                    padding-left: 40px;
+                    line-height: 30px;
+                    color: $color-grey-input;
+                }
+            }
+        }
+
         .line {
             word-wrap: break-word;
 

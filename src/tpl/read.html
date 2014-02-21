@@ -6,17 +6,17 @@
 
 <div class="view-read" ng-controller="ReadCtrl">
   <div class="headers">
-    <p class="subject" ng-click="state.read.toggle(false)">{{(state.mailList.selected.subject) ? state.mailList.selected.subject + ((!state.mailList.selected.encrypted) ? ' (not encrypted)' : '') : 'No subject'}}</p>
+    <p class="subject" ng-click="state.read.toggle(false)">{{(state.mailList.selected.subject) ? state.mailList.selected.subject : 'No subject'}}</p>
     <p class="date">{{state.mailList.selected.sentDate | date:'EEEE, MMM d, yyyy h:mm a'}}</p>
     <p class="address">
-      From: <span ng-repeat="u in state.mailList.selected.from" class="label" ng-class="{'label-primary': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : (u.secure === true) ? '&#xe009;' : ''}}" ng-mouseover="getFingerprint(u.address)" popover="#fingerprint-info">{{u.name || u.address}}</span>
+      From: <span ng-repeat="u in state.mailList.selected.from" class="label" ng-class="{'label-primary': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : ''}}" ng-mouseover="getKeyId(u.address)" popover="#fingerprint-info">{{u.name || u.address}}</span>
     </p>
     <p class="address">
-      To: <span ng-repeat="u in state.mailList.selected.to" class="label" ng-class="{'label-primary': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : (u.secure === true) ? '&#xe009;' : ''}}" ng-mouseover="getFingerprint(u.address)" popover="#fingerprint-info">{{u.name || u.address}}</span>
+      To: <span ng-repeat="u in state.mailList.selected.to" class="label" ng-class="{'label-primary': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : ''}}" ng-mouseover="getKeyId(u.address)" popover="#fingerprint-info">{{u.name || u.address}}</span>
     </p>
     <div ng-switch="state.mailList.selected.cc !== undefined">
       <p class="address" ng-switch-when="true">
-        Cc: <span ng-repeat="u in state.mailList.selected.cc" class="label" ng-class="{'label-primary': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : (u.secure === true) ? '&#xe009;' : ''}}" ng-mouseover="getFingerprint(u.address)" popover="#fingerprint-info">{{u.name || u.address}}</span>
+        Cc: <span ng-repeat="u in state.mailList.selected.cc" class="label" ng-class="{'label-primary': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : ''}}" ng-mouseover="getKeyId(u.address)" popover="#fingerprint-info">{{u.name || u.address}}</span>
       </p>
     </div>
   </div><!--/.headers-->
@@ -35,21 +35,25 @@
     </div>
   </div><!--/.ng-switch-->
 
-
-  <div class="body" ng-switch="state.mailList.selected.encrypted === true && state.mailList.selected.decrypted === false">
-    <div class="line">
-      <div ng-switch-when="true">This message contains encrypted content.</div>
-      <div ng-switch-default>
-        <!-- Render lines of a text-email in divs for easier styling -->
-        <div ng-repeat="line in state.mailList.selected.body.split('\n') track by $index" ng-class="{'empty-line': lineEmpty(line)}">{{line}}<br></div>
-      </div>
+  <div class="body" ng-switch="state.mailList.selected === undefined || state.mailList.selected.encrypted === false || (state.mailList.selected.encrypted === true && state.mailList.selected.decrypted === true)">
+    <div ng-switch-when="true">
+      <!-- Render lines of a text-email in divs for easier styling -->
+      <div class="line" ng-repeat="line in state.mailList.selected.body.split('\n') track by $index" ng-class="{'empty-line': lineEmpty(line)}">{{line}}<br></div>
+    </div>
+    <div class="working" ng-switch-default>
+      <div class="container">
+        <div class="spinner"><div></div></div>
+        <span ng-switch="state.mailList.selected.loadingBody === true || state.mailList.selected.body === undefined || state.mailList.selected.body === null">
+          <h1 ng-switch-when="true">Loading...</h1>
+          <h1 ng-switch-default>Decrypting...</h1>
+        </span>
+      </div><!--/.container-->
     </div>
   </div><!--/.body-->
 
   <!-- popovers -->
   <div id="fingerprint-info" class="popover right" ng-controller="PopoverCtrl">
     <div class="arrow"></div>
-    <div class="popover-title"><b>PGP Fingerprint</b></div>
-    <div class="popover-content">{{fingerprint}}</div>
+    <div class="popover-content"><b>PGP key:</b> {{keyId}}</div>
   </div><!--/.popover-->
 </div><!--/.view-read-->
