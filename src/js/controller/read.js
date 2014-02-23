@@ -50,8 +50,7 @@ define(function(require) {
             });
         };
 
-        $scope.$watch('state.mailList.selected', function() {
-            var mail = $scope.state.mailList.selected;
+        $scope.$watch('state.mailList.selected', function(mail) {
             if (!mail) {
                 return;
             }
