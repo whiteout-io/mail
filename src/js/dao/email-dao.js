@@ -811,16 +811,30 @@ define(function(require) {
 
                 message.loadingBody = false;
 
-                self._localStoreMessages({
+                // do not write the object from the object used by angular to the disk, instead
+                // do a short round trip and write back the unpolluted object
+                self._localListMessages({
                     folder: folder,
-                    emails: [message]
-                }, function(error) {
+                    uid: message.uid
+                }, function(error, storedMessages) {
                     if (error) {
                         callback(error);
                         return;
                     }
 
-                    handleEncryptedContent();
+                    storedMessages[0].body = message.body;
+
+                    self._localStoreMessages({
+                        folder: folder,
+                        emails: storedMessages
+                    }, function(error) {
+                        if (error) {
+                            callback(error);
+                            return;
+                        }
+
+                        handleEncryptedContent();
+                    });
                 });
             });
         }

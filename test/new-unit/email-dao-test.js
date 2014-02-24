@@ -994,7 +994,6 @@ define(function(require) {
                     body: body
                 }]);
 
-
                 dao.getBody({
                     message: message,
                     folder: folder
@@ -1027,7 +1026,7 @@ define(function(require) {
                 localListStub = sinon.stub(dao, '_localListMessages').withArgs({
                     folder: folder,
                     uid: uid
-                }).yieldsAsync(null, [{}]);
+                }).yieldsAsync(null, [message]);
 
                 localStoreStub = sinon.stub(dao, '_localStoreMessages').withArgs({
                     folder: folder,
@@ -1056,7 +1055,7 @@ define(function(require) {
                     expect(msg.encrypted).to.be.false;
                     expect(msg.loadingBody).to.be.false;
 
-                    expect(localListStub.calledOnce).to.be.true;
+                    expect(localListStub.calledTwice).to.be.true;
                     expect(imapStreamStub.calledOnce).to.be.true;
                     expect(localStoreStub.calledOnce).to.be.true;
 
@@ -1078,7 +1077,7 @@ define(function(require) {
                 localListStub = sinon.stub(dao, '_localListMessages').withArgs({
                     folder: folder,
                     uid: uid
-                }).yieldsAsync(null, [{}]);
+                }).yieldsAsync(null, [message]);
 
                 localStoreStub = sinon.stub(dao, '_localStoreMessages').withArgs({
                     folder: folder,
@@ -1108,7 +1107,7 @@ define(function(require) {
                     expect(msg.decrypted).to.be.false;
                     expect(msg.loadingBody).to.be.false;
 
-                    expect(localListStub.calledOnce).to.be.true;
+                    expect(localListStub.calledTwice).to.be.true;
                     expect(imapStreamStub.calledOnce).to.be.true;
                     expect(localStoreStub.calledOnce).to.be.true;
 
@@ -1121,25 +1120,19 @@ define(function(require) {
                 var message, uid, folder, body, localListStub, localStoreStub, imapStreamStub;
 
                 folder = 'asdasdasdasdasd';
+                body = 'THIS IS THE BODY';
                 uid = 1234;
                 message = {
                     uid: uid
                 };
 
-                localListStub = sinon.stub(dao, '_localListMessages').withArgs({
-                    folder: folder,
-                    uid: uid
-                }).yields(null, [{}]);
+                localListStub = sinon.stub(dao, '_localListMessages').yieldsAsync(null, [message]);
+                localStoreStub = sinon.stub(dao, '_localStoreMessages').yieldsAsync({});
 
                 imapStreamStub = sinon.stub(dao, '_imapStreamText', function(opts, cb) {
                     message.body = body;
                     cb();
                 });
-
-                localStoreStub = sinon.stub(dao, '_localStoreMessages').withArgs({
-                    folder: folder,
-                    emails: [message]
-                }).yields({});
 
                 dao.getBody({
                     message: message,
@@ -1147,7 +1140,7 @@ define(function(require) {
                 }, function(err, msg) {
                     expect(err).to.exist;
                     expect(msg).to.not.exist;
-                    expect(localListStub.calledOnce).to.be.true;
+                    expect(localListStub.calledTwice).to.be.true;
                     expect(imapStreamStub.calledOnce).to.be.true;
                     expect(localStoreStub.calledOnce).to.be.true;
 
@@ -1166,10 +1159,7 @@ define(function(require) {
                     uid: uid
                 };
 
-                localListStub = sinon.stub(dao, '_localListMessages').withArgs({
-                    folder: folder,
-                    uid: uid
-                }).yields(null, [{}]);
+                localListStub = sinon.stub(dao, '_localListMessages').yields(null, [{}]);
 
                 imapStreamStub = sinon.stub(dao, '_imapStreamText', function(opts, cb) {
                     message.body = body;
