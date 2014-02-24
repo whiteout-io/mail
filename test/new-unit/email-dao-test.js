@@ -1028,10 +1028,13 @@ define(function(require) {
                     uid: uid
                 }).yieldsAsync(null, [message]);
 
-                localStoreStub = sinon.stub(dao, '_localStoreMessages').withArgs({
-                    folder: folder,
-                    emails: [message]
-                }).yieldsAsync();
+                localStoreStub = sinon.stub(dao, '_localStoreMessages').withArgs(sinon.match(function(o){
+                    expect(o.folder).to.equal(folder);
+                    expect(o.emails[0].uid).to.equal(uid);
+                    expect(o.emails[0].body).to.equal(body);
+
+                    return true;
+                })).yieldsAsync();
 
                 imapStreamStub = sinon.stub(dao, '_imapStreamText', function(opts, cb) {
                     expect(opts).to.deep.equal({
@@ -1079,10 +1082,13 @@ define(function(require) {
                     uid: uid
                 }).yieldsAsync(null, [message]);
 
-                localStoreStub = sinon.stub(dao, '_localStoreMessages').withArgs({
-                    folder: folder,
-                    emails: [message]
-                }).yieldsAsync();
+                localStoreStub = sinon.stub(dao, '_localStoreMessages').withArgs(sinon.match(function(o){
+                    expect(o.folder).to.equal(folder);
+                    expect(o.emails[0].uid).to.equal(uid);
+                    expect(o.emails[0].body).to.equal(body);
+
+                    return true;
+                })).yieldsAsync();
 
                 imapStreamStub = sinon.stub(dao, '_imapStreamText', function(opts, cb) {
                     expect(opts).to.deep.equal({
