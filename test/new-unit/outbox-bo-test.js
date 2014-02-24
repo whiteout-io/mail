@@ -2,12 +2,13 @@ define(function(require) {
     'use strict';
 
     var expect = chai.expect,
-        _ = require('underscore'),
         OutboxBO = require('js/bo/outbox'),
         KeychainDAO = require('js/dao/keychain-dao'),
         EmailDAO = require('js/dao/email-dao'),
         DeviceStorageDAO = require('js/dao/devicestorage-dao'),
         InvitationDAO = require('js/dao/invitation-dao');
+
+    chai.Assertion.includeStack = true;
 
     describe('Outbox Business Object unit test', function() {
         var outbox, emailDaoStub, devicestorageStub, invitationDaoStub, keychainStub,
@@ -26,23 +27,9 @@ define(function(require) {
             keychainStub = sinon.createStubInstance(KeychainDAO);
             invitationDaoStub = sinon.createStubInstance(InvitationDAO);
             outbox = new OutboxBO(emailDaoStub, keychainStub, devicestorageStub, invitationDaoStub);
-            outbox.init();
         });
 
         afterEach(function() {});
-
-        describe('init', function() {
-            it('should work', function() {
-                expect(outbox).to.exist;
-                expect(outbox._emailDao).to.equal(emailDaoStub);
-                expect(outbox._keychain).to.equal(keychainStub);
-                expect(outbox._devicestorage).to.equal(devicestorageStub);
-                expect(outbox._invitationDao).to.equal(invitationDaoStub);
-                expect(outbox._outboxBusy).to.be.false;
-                expect(outbox.pendingEmails).to.be.empty;
-                expect(emailDaoStub._account.folders[0].messages).to.equal(outbox.pendingEmails);
-            });
-        });
 
         describe('start/stop checking', function() {
             it('should work', function() {
@@ -58,77 +45,171 @@ define(function(require) {
             });
         });
 
-        describe('process outbox', function() {
-            it('should send to registered users and update pending mails', function(done) {
-                var member, invited, notinvited, dummyMails, unsentCount;
+        describe('put', function() {
+            it('should encrypt and store a mail', function(done) {
+                var mail, senderKey, receiverKey;
 
-                member = {
-                    id: '123',
-                    to: [{
+                senderKey = {
+                    publicKey: 'SENDER PUBLIC KEY'
+                };
+                receiverKey = {
+                    publicKey: 'RECEIVER PUBLIC KEY'
+                };
+                mail = {
+                    from: [{
                         name: 'member',
                         address: 'member@whiteout.io'
-                    }]
+                    }],
+                    to: [{
+                        name: 'member',
+                        address: 'member'
+                    }, {
+                        name: 'notamember',
+                        address: 'notamember'
+                    }],
+                    cc: [],
+                    bcc: []
+                };
+
+                keychainStub.getReceiverPublicKey.withArgs(mail.from[0].address).yieldsAsync(null, senderKey);
+                keychainStub.getReceiverPublicKey.withArgs(mail.to[0].address).yieldsAsync(null, receiverKey);
+                keychainStub.getReceiverPublicKey.withArgs(mail.to[1].address).yieldsAsync();
+
+                emailDaoStub.encrypt.withArgs({
+                    mail: mail,
+                    publicKeysArmored: [senderKey.publicKey, receiverKey.publicKey]
+                }).yieldsAsync();
+
+                devicestorageStub.storeList.withArgs([mail]).yieldsAsync();
+
+                outbox.put(mail, function(error) {
+                    expect(error).to.not.exist;
+
+                    expect(mail.publicKeysArmored.length).to.equal(2);
+                    expect(mail.unregisteredUsers.length).to.equal(1);
+
+                    done();
+                });
+            });
+        });
+
+        describe('process outbox', function() {
+            it('should send to registered users and update pending mails', function(done) {
+                var from, member, invited, notinvited, newlyjoined, dummyMails, newlyjoinedKey;
+
+                from = [{
+                    name: 'member',
+                    address: 'member@whiteout.io'
+                }];
+                member = {
+                    id: '12',
+                    from: from,
+                    to: [{
+                        name: 'member',
+                        address: 'member'
+                    }],
+                    publicKeysArmored: ['ARMORED KEY OF MEMBER'],
+                    unregisteredUsers: []
                 };
                 invited = {
-                    id: '456',
+                    id: '34',
+                    from: from,
                     to: [{
                         name: 'invited',
-                        address: 'invited@whiteout.io'
+                        address: 'invited'
+                    }],
+                    publicKeysArmored: [],
+                    unregisteredUsers: [{
+                        name: 'invited',
+                        address: 'invited'
                     }]
                 };
                 notinvited = {
-                    id: '789',
+                    id: '56',
+                    from: from,
                     to: [{
                         name: 'notinvited',
-                        address: 'notinvited@whiteout.io'
+                        address: 'notinvited'
+                    }],
+                    publicKeysArmored: [],
+                    unregisteredUsers: [{
+                        name: 'notinvited',
+                        address: 'notinvited'
                     }]
                 };
-                dummyMails = [member, invited, notinvited];
+                newlyjoined = {
+                    id: '78',
+                    from: from,
+                    to: [{
+                        name: 'newlyjoined',
+                        address: 'newlyjoined'
+                    }],
+                    publicKeysArmored: [],
+                    unregisteredUsers: [{
+                        name: 'newlyjoined',
+                        address: 'newlyjoined'
+                    }]
+                };
+                newlyjoinedKey = {
+                    publicKey: 'THIS IS THE NEWLY JOINED PUBLIC KEY!'
+                };
 
-                emailDaoStub.listForOutbox.yieldsAsync(null, dummyMails);
-                emailDaoStub.sendEncrypted.withArgs(sinon.match(function(opts) {
-                    return typeof opts.email !== 'undefined' && opts.email.to.address === member.to.address;
-                })).yieldsAsync();
+                dummyMails = [member, invited, notinvited, newlyjoined];
+
+                devicestorageStub.listItems.yieldsAsync(null, dummyMails);
+
+                keychainStub.getReceiverPublicKey.withArgs(invited.unregisteredUsers[0].address).yieldsAsync();
+                keychainStub.getReceiverPublicKey.withArgs(notinvited.unregisteredUsers[0].address).yieldsAsync();
+                keychainStub.getReceiverPublicKey.withArgs(newlyjoined.unregisteredUsers[0].address).yieldsAsync(null, newlyjoinedKey);
+
+                invitationDaoStub.check.withArgs({
+                    recipient: invited.to[0].address,
+                    sender: invited.from[0].address
+                }).yieldsAsync(null, InvitationDAO.INVITE_PENDING);
+
+                invitationDaoStub.check.withArgs({
+                    recipient: notinvited.to[0].address,
+                    sender: notinvited.from[0].address
+                }).yieldsAsync(null, InvitationDAO.INVITE_MISSING);
+
+                invitationDaoStub.invite.withArgs({
+                    recipient: notinvited.to[0].address,
+                    sender: notinvited.from[0].address
+                }).yieldsAsync(null, InvitationDAO.INVITE_SUCCESS);
+
                 emailDaoStub.sendPlaintext.yieldsAsync();
-                devicestorageStub.removeList.yieldsAsync();
-                invitationDaoStub.check.withArgs(sinon.match(function(o) {
-                    return o.recipient === 'invited@whiteout.io';
-                })).yieldsAsync(null, InvitationDAO.INVITE_PENDING);
-                invitationDaoStub.check.withArgs(sinon.match(function(o) {
-                    return o.recipient === 'notinvited@whiteout.io';
-                })).yieldsAsync(null, InvitationDAO.INVITE_MISSING);
-                invitationDaoStub.invite.withArgs(sinon.match(function(o) {
-                    return o.recipient === 'notinvited@whiteout.io';
-                })).yieldsAsync(null, InvitationDAO.INVITE_SUCCESS);
-                keychainStub.getReceiverPublicKey.withArgs(sinon.match(function(o) {
-                    return o === 'member@whiteout.io';
-                })).yieldsAsync(null, 'this is not the key you are looking for...');
-                keychainStub.getReceiverPublicKey.withArgs(sinon.match(function(o) {
-                    return o === 'invited@whiteout.io' || o === 'notinvited@whiteout.io';
-                })).yieldsAsync();
 
-                var check = _.after(dummyMails.length + 1, function() {
-                    expect(outbox._outboxBusy).to.be.false;
+                emailDaoStub.reEncrypt.withArgs({
+                    mail: newlyjoined,
+                    publicKeysArmored: [newlyjoinedKey.publicKey]
+                }).yieldsAsync(null, newlyjoined);
 
-                    expect(unsentCount).to.equal(2);
-                    expect(emailDaoStub.listForOutbox.callCount).to.equal(1);
-                    expect(emailDaoStub.sendEncrypted.callCount).to.equal(1);
-                    expect(emailDaoStub.sendPlaintext.callCount).to.equal(1);
-                    expect(devicestorageStub.removeList.callCount).to.equal(1);
-                    expect(invitationDaoStub.check.callCount).to.equal(2);
-                    expect(invitationDaoStub.invite.callCount).to.equal(1);
+                emailDaoStub.sendEncrypted.withArgs({
+                    email: newlyjoined
+                }).yieldsAsync();
 
-                    expect(outbox.pendingEmails.length).to.equal(2);
-                    expect(outbox.pendingEmails).to.contain(invited);
-                    expect(outbox.pendingEmails).to.contain(notinvited);
-                    done();
-                });
+                emailDaoStub.sendEncrypted.withArgs({
+                    email: member
+                }).yieldsAsync();
+
+                devicestorageStub.storeList.withArgs([newlyjoined]).yieldsAsync();
+
+                devicestorageStub.removeList.withArgs('email_OUTBOX_' + member.id).yieldsAsync();
+                devicestorageStub.removeList.withArgs('email_OUTBOX_' + newlyjoined.id).yieldsAsync();
 
                 function onOutboxUpdate(err, count) {
                     expect(err).to.not.exist;
-                    expect(count).to.exist;
-                    unsentCount = count;
-                    check();
+                    expect(count).to.equal(2);
+
+                    expect(outbox._outboxBusy).to.be.false;
+                    expect(emailDaoStub.sendEncrypted.calledTwice).to.be.true;
+                    expect(emailDaoStub.reEncrypt.calledOnce).to.be.true;
+                    expect(emailDaoStub.sendPlaintext.calledOnce).to.be.true;
+                    expect(devicestorageStub.listItems.calledOnce).to.be.true;
+                    expect(keychainStub.getReceiverPublicKey.calledThrice).to.be.true;
+                    expect(invitationDaoStub.check.calledTwice).to.be.true;
+
+                    done();
                 }
 
                 outbox._processOutbox(onOutboxUpdate);
@@ -136,30 +217,15 @@ define(function(require) {
 
             it('should not process outbox in offline mode', function(done) {
                 emailDaoStub._account.online = false;
-                emailDaoStub.listForOutbox.yieldsAsync(null, [{
-                    id: '123',
-                    to: [{
-                        name: 'member',
-                        address: 'member@whiteout.io'
-                    }]
-                }]);
+                devicestorageStub.listItems.yieldsAsync(null, [{}]);
 
                 outbox._processOutbox(function(err, count) {
                     expect(err).to.not.exist;
                     expect(count).to.equal(1);
-                    expect(emailDaoStub.listForOutbox.callCount).to.equal(1);
+                    expect(devicestorageStub.listItems.callCount).to.equal(1);
                     expect(outbox._outboxBusy).to.be.false;
                     done();
                 });
-            });
-
-            it('should fire notification', function(done) {
-                outbox.onSent = function(email) {
-                    expect(email).to.exist;
-                    done();
-                };
-
-                outbox._onSent({});
             });
         });
     });

@@ -76,7 +76,7 @@ define(function(require) {
         self._pgpMailer = options.pgpMailer;
         // set private key
         if (self._crypto && self._crypto._privateKey) {
-            self._pgpMailer._privateKey = self._crypto._privateKey;
+            self._pgpMailer._pgpbuilder._privateKey = self._crypto._privateKey;
         }
 
         // delegation-esque pattern to mitigate between node-style events and plain js
@@ -137,9 +137,17 @@ define(function(require) {
                 passphrase: options.passphrase,
                 privateKeyArmored: options.keypair.privateKey.encryptedKey,
                 publicKeyArmored: options.keypair.publicKey.publicKey
-            }, callback);
-            // set decrypted privateKey to pgpMailer
-            self._pgpMailer._privateKey = self._crypto._privateKey;
+            }, function(err) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                // HANDLE THIS PROPERLY!!!
+                // set decrypted privateKey to pgpMailer
+                self._pgpMailer._pgpbuilder._privateKey = self._crypto._privateKey;
+                callback();
+            });
             return;
         }
 
@@ -182,9 +190,71 @@ define(function(require) {
                         encryptedKey: generatedKeypair.privateKeyArmored
                     }
                 };
-                self._keychain.putUserKeyPair(newKeypair, callback);
+                self._keychain.putUserKeyPair(newKeypair, function(err) {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+
+                    // HANDLE THIS PROPERLY!!!
+                    // set decrypted privateKey to pgpMailer
+                    self._pgpMailer._pgpbuilder._privateKey = self._crypto._privateKey;
+                    callback();
+                });
             });
         }
+    };
+
+    EmailDAO.prototype.syncOutbox = function(options, callback) {
+        var self = this;
+
+        // make sure two syncs for the same folder don't interfere
+        self._account.busy = true;
+
+        var folder = _.findWhere(self._account.folders, {
+            path: options.folder
+        });
+
+        folder.messages = folder.messages || [];
+
+        self._localListMessages({
+            folder: folder.path
+        }, function(err, storedMessages) {
+            if (err) {
+                self._account.busy = false;
+                callback(err);
+                return;
+            }
+
+            var storedIds = _.pluck(storedMessages, 'id'),
+                inMemoryIds = _.pluck(folder.messages, 'id'),
+                newIds = _.difference(storedIds, inMemoryIds),
+                removedIds = _.difference(inMemoryIds, storedIds);
+
+            var newMessages = _.filter(storedMessages, function(msg) {
+                return _.contains(newIds, msg.id);
+            });
+
+            var removedMessages = _.filter(folder.messages, function(msg) {
+                return _.contains(removedIds, msg.id);
+            });
+
+            newMessages.forEach(function(newMessage) {
+                // remove the body to not load unnecessary data to memory
+                delete newMessage.body;
+
+                folder.messages.push(newMessage);
+            });
+
+            removedMessages.forEach(function(removedMessage) {
+                var index = folder.messages.indexOf(removedMessage);
+                folder.messages.splice(index, 1);
+            });
+
+            folder.count = folder.messages.length;
+            self._account.busy = false;
+            callback();
+        });
     };
 
     EmailDAO.prototype.sync = function(options, callback) {
@@ -206,8 +276,7 @@ define(function(require) {
          * deltaF4: imap > memory  => we changed flags directly on the remote, sync them to the storage and memory
          */
 
-        var self = this,
-            folder, isFolderInitialized;
+        var self = this;
 
         // validate options
         if (!options.folder) {
@@ -226,16 +295,18 @@ define(function(require) {
             return;
         }
 
-        // not busy -> set busy
+        // make sure two syncs for the same folder don't interfere
         self._account.busy = true;
 
-        folder = _.findWhere(self._account.folders, {
+        var folder = _.findWhere(self._account.folders, {
             path: options.folder
         });
-        isFolderInitialized = !! folder.messages;
 
-        // initial filling from local storage is an exception from the normal sync.
-        // after reading from local storage, do imap sync
+        /*
+         * if the folder is not initialized with the messages from the memory, we need to fill it first, otherwise the delta sync obviously breaks.
+         * initial filling from local storage is an exception from the normal sync. after reading from local storage, do imap sync
+         */
+        var isFolderInitialized = !! folder.messages;
         if (!isFolderInitialized) {
             initFolderMessages();
             return;
@@ -293,6 +364,7 @@ define(function(require) {
                         storedMessageUids = _.pluck(storedMessages, 'uid'),
                         delta1 = _.difference(storedMessageUids, inMemoryUids); // delta1 contains only uids
 
+                    // if we're we are done here
                     if (_.isEmpty(delta1)) {
                         doDeltaF2();
                         return;
@@ -664,17 +736,20 @@ define(function(require) {
 
                     });
                 }
-
-                function finishSync() {
-                    // after all the tags are up to date, let's adjust the unread mail count
-                    folder.count = _.filter(folder.messages, function(msg) {
-                        return msg.unread === true;
-                    }).length;
-                    // allow the next sync to take place
-                    self._account.busy = false;
-                    callback();
-                }
             }
+        }
+
+        function finishSync() {
+            // whereas normal folders show the unread messages count only,
+            // the outbox shows the total count
+            // after all the tags are up to date, let's adjust the unread mail count
+            folder.count = _.filter(folder.messages, function(msg) {
+                return msg.unread === true;
+            }).length;
+
+            // allow the next sync to take place
+            self._account.busy = false;
+            callback();
         }
 
         /*
@@ -867,7 +942,7 @@ define(function(require) {
 
     };
 
-    EmailDAO.prototype.decryptMessageContent = function(options, callback) {
+    EmailDAO.prototype.decryptBody = function(options, callback) {
         var self = this,
             message = options.message;
 
@@ -934,39 +1009,6 @@ define(function(require) {
         });
     };
 
-    EmailDAO.prototype._imapMark = function(options, callback) {
-        if (!this._account.online) {
-            callback({
-                errMsg: 'Client is currently offline!',
-                code: 42
-            });
-            return;
-        }
-
-        this._imapClient.updateFlags({
-            path: options.folder,
-            uid: options.uid,
-            unread: options.unread,
-            answered: options.answered
-        }, callback);
-    };
-
-    EmailDAO.prototype.move = function(options, callback) {
-        if (!this._account.online) {
-            callback({
-                errMsg: 'Client is currently offline!',
-                code: 42
-            });
-            return;
-        }
-
-        this._imapClient.moveMessage({
-            path: options.folder,
-            uid: options.uid,
-            destination: options.destination
-        }, callback);
-    };
-
     EmailDAO.prototype.getAttachment = function(options, callback) {
         if (!this._account.online) {
             callback({
@@ -980,8 +1022,7 @@ define(function(require) {
     };
 
     EmailDAO.prototype.sendEncrypted = function(options, callback) {
-        var self = this,
-            email = options.email;
+        var self = this;
 
         if (!this._account.online) {
             callback({
@@ -991,35 +1032,16 @@ define(function(require) {
             return;
         }
 
-        // validate the email input
-        if (!email.to || !email.from || !email.to[0].address || !email.from[0].address || !Array.isArray(email.receiverKeys)) {
-            callback({
-                errMsg: 'Invalid email object!'
-            });
-            return;
-        }
+        // add whiteout tag to subject
+        options.email.subject = str.subjectPrefix + options.email.subject;
 
-        // get own public key so send message can be read
-        self._crypto.exportKeys(function(err, ownKeys) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            // add own public key to receiver list
-            email.receiverKeys.push(ownKeys.publicKeyArmored);
-
-            // add whiteout tag to subject
-            email.subject = str.subjectPrefix + email.subject;
-
-            // mime encode, sign, encrypt and send email via smtp
-            self._pgpMailer.send({
-                encrypt: true,
-                cleartextMessage: str.message,
-                mail: email,
-                publicKeysArmored: email.receiverKeys
-            }, callback);
-        });
+        // mime encode, sign, encrypt and send email via smtp
+        self._pgpMailer.send({
+            encrypt: true,
+            cleartextMessage: str.message,
+            mail: options.email,
+            publicKeysArmored: options.email.publicKeysArmored
+        }, callback);
     };
 
     EmailDAO.prototype.sendPlaintext = function(options, callback) {
@@ -1038,6 +1060,14 @@ define(function(require) {
         this._pgpMailer.send({
             mail: options.email
         }, callback);
+    };
+
+    EmailDAO.prototype.encrypt = function(options, callback) {
+        this._pgpMailer.encrypt(options, callback);
+    };
+
+    EmailDAO.prototype.reEncrypt = function(options, callback) {
+        this._pgpMailer.reEncrypt(options, callback);
     };
 
     //
@@ -1080,8 +1110,27 @@ define(function(require) {
         this._pgpMailer.login();
     };
 
-
     // IMAP API
+
+    /**
+     * Mark imap messages as un-/read or un-/answered
+     */
+    EmailDAO.prototype._imapMark = function(options, callback) {
+        if (!this._account.online) {
+            callback({
+                errMsg: 'Client is currently offline!',
+                code: 42
+            });
+            return;
+        }
+
+        this._imapClient.updateFlags({
+            path: options.folder,
+            uid: options.uid,
+            unread: options.unread,
+            answered: options.answered
+        }, callback);
+    };
 
     /**
      * Login the imap client
@@ -1275,82 +1324,6 @@ define(function(require) {
                 });
             });
         }
-    };
-
-    /**
-     * Persists an email object for the outbox, encrypted with the user's public key
-     * @param {Object} email The email object
-     * @param {Function} callback(error) Invoked when the email was encrypted and persisted, contains information in case of an error
-     */
-    EmailDAO.prototype.storeForOutbox = function(email, callback) {
-        var self = this,
-            dbType = 'email_OUTBOX',
-            plaintext = email.body;
-
-        // give the email a random identifier (used for storage)
-        email.id = util.UUID();
-
-        // get own public key so send message can be read
-        self._crypto.exportKeys(function(err, ownKeys) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            // encrypt the email with the user's public key
-            self._crypto.encrypt(plaintext, [ownKeys.publicKeyArmored], function(err, ciphertext) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-
-                // replace plaintext body with pgp message
-                email.body = ciphertext;
-
-                // store to local storage
-                self._devicestorage.storeList([email], dbType, callback);
-            });
-        });
-    };
-
-    /**
-     * Reads and decrypts persisted email objects for the outbox
-     * @param {Function} callback(error, emails) Invoked when the email was encrypted and persisted, contains information in case of an error
-     */
-    EmailDAO.prototype.listForOutbox = function(callback) {
-        var self = this,
-            dbType = 'email_OUTBOX';
-
-        self._devicestorage.listItems(dbType, 0, null, function(err, mails) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            if (mails.length === 0) {
-                callback(null, []);
-                return;
-            }
-
-            self._crypto.exportKeys(function(err, ownKeys) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-
-                var after = _.after(mails.length, function() {
-                    callback(null, mails);
-                });
-
-                mails.forEach(function(mail) {
-                    self._crypto.decrypt(mail.body, ownKeys.publicKeyArmored, function(err, decrypted) {
-                        mail.body = err ? err.errMsg : decrypted;
-                        after();
-                    });
-                    mail.encrypted = true;
-                });
-            });
-        });
     };
 
     return EmailDAO;
