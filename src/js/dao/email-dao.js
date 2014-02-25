@@ -240,9 +240,6 @@ define(function(require) {
             });
 
             newMessages.forEach(function(newMessage) {
-                // remove the body to not load unnecessary data to memory
-                delete newMessage.body;
-
                 folder.messages.push(newMessage);
             });
 

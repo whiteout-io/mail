@@ -58,6 +58,7 @@ define(function(require) {
                 $scope.state.mailList.synchronize();
             } else {
                 outbox.count = count;
+                $scope.$apply();
             }
         };
 
