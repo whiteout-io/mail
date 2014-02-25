@@ -6,7 +6,7 @@ define(function(require) {
         aes = require('cryptoLib/aes-cbc'),
         util = require('cryptoLib/util'),
         str = require('js/app-config').string,
-        crypto, emailDao;
+        crypto, emailDao, outbox;
 
     //
     // Controller
@@ -14,7 +14,8 @@ define(function(require) {
 
     var WriteCtrl = function($scope, $filter) {
         crypto = appController._crypto;
-        emailDao = appController._emailDao;
+        emailDao = appController._emailDao,
+        outbox = appController._outboxBo;
 
         // set default value so that the popover height is correct on init
         $scope.keyId = 'XXXXXXXX';
@@ -211,83 +212,63 @@ define(function(require) {
 
             // build email model for smtp-client
             email = {
-                to: [],
-                cc: [],
-                bcc: [],
+                from: [{
+                    address: emailDao._account.emailAddress
+                }],
+                to: $scope.to.filter(filterEmptyAddresses),
+                cc: $scope.cc.filter(filterEmptyAddresses),
+                bcc: $scope.bcc.filter(filterEmptyAddresses),
                 subject: $scope.subject.trim() ? $scope.subject.trim() : str.fallbackSubject, // Subject line, or the fallback subject, if nothing valid was entered
-                body: $scope.body.trim() // use parsed plaintext body
+                body: $scope.body.trim(), // use parsed plaintext body
+                attachments: $scope.attachments
             };
-            email.from = [{
-                name: '',
-                address: emailDao._account.emailAddress
-            }];
 
-            // validate recipients and gather public keys
-            email.receiverKeys = []; // gather public keys for emailDao._encrypt
-
-            appendReceivers($scope.to, email.to);
-            appendReceivers($scope.cc, email.cc);
-            appendReceivers($scope.bcc, email.bcc);
-
-            function appendReceivers(srcField, destField) {
-                srcField.forEach(function(recipient) {
-                    // validate address
-                    if (!util.validateEmailAddress(recipient.address)) {
-                        return;
-                    }
-
-                    // append address to email model
-                    destField.push({
-                        address: recipient.address
-                    });
-
-                    // add public key to list of recipient keys
-                    if (recipient.key && recipient.key.publicKey) {
-                        email.receiverKeys.push(recipient.key.publicKey);
-                    }
-                });
-            }
-
-            // add attachment to email object
-            if ($scope.attachments.length > 0) {
-                email.attachments = $scope.attachments;
-            }
-
-            // persist the email locally for later smtp transmission
-            emailDao.storeForOutbox(email, function(err) {
+            // persist the email to disk for later sending
+            outbox.put(email, function(err) {
                 if (err) {
                     $scope.onError(err);
                     return;
                 }
 
+                // helper flag to remember if we need to sync back to imap
+                // in case the replyTo.answered changed
+                var needsSync = false;
+
+                // mark replyTo as answered, if necessary
+                if ($scope.replyTo && !$scope.replyTo.answered) {
+                    $scope.replyTo.answered = true;
+                    needsSync = true;
+                }
+
+                // close the writer
                 $scope.state.writer.close();
+
+                // update the ui the scope
                 $scope.$apply();
-                $scope.emptyOutbox($scope.onOutboxUpdate);
 
-                markAnswered();
-            });
-        };
-
-        function markAnswered() {
-            // mark replyTo as answered
-            if (!$scope.replyTo) {
-                return;
-            }
-
-            // mark list object
-            $scope.replyTo.answered = true;
-            emailDao.sync({
-                folder: $scope.state.nav.currentFolder.path
-            }, function(err) {
-                if (err && err.code === 42) {
-                    // offline
-                    $scope.onError();
+                // if we need to synchronize replyTo.answered, let's do that.
+                // otherwise, we're done
+                if (!needsSync) {
                     return;
                 }
 
-                $scope.onError(err);
+                emailDao.sync({
+                    folder: $scope.state.nav.currentFolder.path
+                }, function(err) {
+                    if (err && err.code === 42) {
+                        // offline
+                        $scope.onError();
+                        return;
+                    }
+
+                    $scope.onError(err);
+                });
             });
-        }
+
+            function filterEmptyAddresses(addr) {
+                return !!addr.address;
+            }
+        };
     };
 
     //

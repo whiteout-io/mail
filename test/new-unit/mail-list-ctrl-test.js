@@ -205,24 +205,6 @@ define(function(require) {
                 });
 
             });
-
-            it('should read directly from outbox instead of doing a full imap sync', function() {
-                scope._stopWatchTask();
-
-                var currentFolder = {
-                    type: 'Outbox'
-                };
-                scope.folders = [currentFolder];
-                scope.state.nav = {
-                    currentFolder: currentFolder
-                };
-                scope.state.mailList.selected = undefined;
-
-                scope.synchronize();
-
-                // emails array is also used as the outbox's pending mail
-                expect(scope.state.mailList.selected).to.deep.equal(emails[emails.length - 1]);
-            });
         });
 
         describe('getBody', function() {
@@ -260,7 +242,7 @@ define(function(require) {
 
                 scope.select(mail);
 
-                expect(emailDaoMock.decryptMessageContent.calledOnce).to.be.true;
+                expect(emailDaoMock.decryptBody.calledOnce).to.be.true;
                 expect(synchronizeMock.calledOnce).to.be.true;
                 expect(scope.state.mailList.selected).to.equal(mail);
 
@@ -288,7 +270,7 @@ define(function(require) {
 
                 scope.select(mail);
 
-                expect(emailDaoMock.decryptMessageContent.calledOnce).to.be.true;
+                expect(emailDaoMock.decryptBody.calledOnce).to.be.true;
                 expect(synchronizeMock.called).to.be.false;
                 expect(scope.state.mailList.selected).to.equal(mail);
 

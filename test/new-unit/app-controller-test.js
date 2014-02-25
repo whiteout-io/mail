@@ -261,13 +261,11 @@ define(function(require) {
                 emailDaoStub.init.yields(null, {});
 
                 onConnectStub.yields();
-                outboxStub.init.returns();
 
                 controller.init({}, function(err, keypair) {
                     expect(err).to.not.exist;
                     expect(keypair).to.exist;
                     expect(onConnectStub.calledOnce).to.be.true;
-                    expect(outboxStub.init.calledOnce).to.be.true;
                     done();
                 });
             });

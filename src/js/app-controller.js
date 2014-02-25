@@ -385,9 +385,6 @@ define(function(require) {
                     return;
                 }
 
-                // init outbox
-                self._outboxBo.init();
-
                 callback(null, keypair);
             });
         });
