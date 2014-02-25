@@ -2579,7 +2579,7 @@ define(function(require) {
             it('should work', function(done) {
                 var publicKeys = ["PUBLIC KEY"];
                 dummyDecryptedMail.publicKeysArmored = publicKeys;
-                
+
                 pgpMailerStub.send.withArgs({
                     encrypt: true,
                     cleartextMessage: str.message,
@@ -2608,6 +2608,29 @@ define(function(require) {
                     expect(err).to.exist;
 
                     expect(pgpMailerStub.send.calledOnce).to.be.true;
+
+                    done();
+                });
+            });
+        });
+        describe('syncOutbox', function() {
+            it('should sync the outbox', function(done) {
+                var folder = 'FOLDAAAA';
+                dao._account.folders = [{
+                    type: 'Folder',
+                    path: folder
+                }];
+
+                var localListStub = sinon.stub(dao, '_localListMessages').withArgs({
+                    folder: folder
+                }).yields(null, [dummyEncryptedMail]);
+
+                dao.syncOutbox({
+                    folder: folder
+                }, function(err) {
+                    expect(err).to.not.exist;
+                    expect(localListStub.calledOnce).to.be.true;
+                    expect(dao._account.folders[0].messages.length).to.equal(1);
 
                     done();
                 });
