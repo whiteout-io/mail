@@ -215,9 +215,9 @@ define(function(require) {
                 from: [{
                     address: emailDao._account.emailAddress
                 }],
-                to: $scope.to,
-                cc: $scope.cc,
-                bcc: $scope.bcc,
+                to: $scope.to.filter(filterEmptyAddresses),
+                cc: $scope.cc.filter(filterEmptyAddresses),
+                bcc: $scope.bcc.filter(filterEmptyAddresses),
                 subject: $scope.subject.trim() ? $scope.subject.trim() : str.fallbackSubject, // Subject line, or the fallback subject, if nothing valid was entered
                 body: $scope.body.trim(), // use parsed plaintext body
                 attachments: $scope.attachments
@@ -264,6 +264,10 @@ define(function(require) {
                     $scope.onError(err);
                 });
             });
+
+            function filterEmptyAddresses(addr) {
+                return !!addr.address;
+            }
         };
     };
 
