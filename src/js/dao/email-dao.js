@@ -6,12 +6,11 @@ define(function(require) {
         str = require('js/app-config').string,
         config = require('js/app-config').config;
 
-    var EmailDAO = function(keychain, crypto, devicestorage) {
-        var self = this;
-
-        self._keychain = keychain;
-        self._crypto = crypto;
-        self._devicestorage = devicestorage;
+    var EmailDAO = function(keychain, crypto, devicestorage, pgpbuilder) {
+        this._keychain = keychain;
+        this._crypto = crypto;
+        this._devicestorage = devicestorage;
+        this._pgpbuilder = pgpbuilder;
     };
 
     //
@@ -76,7 +75,7 @@ define(function(require) {
         self._pgpMailer = options.pgpMailer;
         // set private key
         if (self._crypto && self._crypto._privateKey) {
-            self._pgpMailer._pgpbuilder._privateKey = self._crypto._privateKey;
+            self._pgpbuilder._privateKey = self._crypto._privateKey;
         }
 
         // delegation-esque pattern to mitigate between node-style events and plain js
@@ -143,9 +142,8 @@ define(function(require) {
                     return;
                 }
 
-                // HANDLE THIS PROPERLY!!!
                 // set decrypted privateKey to pgpMailer
-                self._pgpMailer._pgpbuilder._privateKey = self._crypto._privateKey;
+                self._pgpbuilder._privateKey = self._crypto._privateKey;
                 callback();
             });
             return;
@@ -196,9 +194,8 @@ define(function(require) {
                         return;
                     }
 
-                    // HANDLE THIS PROPERLY!!!
                     // set decrypted privateKey to pgpMailer
-                    self._pgpMailer._pgpbuilder._privateKey = self._crypto._privateKey;
+                    self._pgpbuilder._privateKey = self._crypto._privateKey;
                     callback();
                 });
             });
@@ -1060,11 +1057,11 @@ define(function(require) {
     };
 
     EmailDAO.prototype.encrypt = function(options, callback) {
-        this._pgpMailer.encrypt(options, callback);
+        this._pgpbuilder.encrypt(options, callback);
     };
 
     EmailDAO.prototype.reEncrypt = function(options, callback) {
-        this._pgpMailer.reEncrypt(options, callback);
+        this._pgpbuilder.reEncrypt(options, callback);
     };
 
     //

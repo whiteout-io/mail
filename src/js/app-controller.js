@@ -16,6 +16,7 @@ define(function(require) {
         InvitationDAO = require('js/dao/invitation-dao'),
         OutboxBO = require('js/bo/outbox'),
         PGP = require('js/crypto/pgp'),
+        PgpBuilder = require('pgpbuilder'),
         config = require('js/app-config').config;
 
     var self = {};
@@ -117,7 +118,7 @@ define(function(require) {
             };
 
             imapClient = new ImapClient(imapOptions);
-            pgpMailer = new PgpMailer(smtpOptions);
+            pgpMailer = new PgpMailer(smtpOptions, self._pgpbuilder);
 
             imapClient.onError = function(err) {
                 console.log('IMAP error.', err);
@@ -341,7 +342,7 @@ define(function(require) {
 
     self.buildModules = function() {
         var lawnchairDao, restDao, pubkeyDao, invitationDao,
-            emailDao, keychain, pgp, userStorage;
+            emailDao, keychain, pgp, userStorage, pgpbuilder;
 
         // init objects and inject dependencies
         restDao = new RestDAO();
@@ -354,7 +355,8 @@ define(function(require) {
         self._keychain = keychain;
         pgp = new PGP();
         self._crypto = pgp;
-        self._emailDao = emailDao = new EmailDAO(keychain, pgp, userStorage);
+        self._pgpbuilder = pgpbuilder = new PgpBuilder({}); // set the worker path?!
+        self._emailDao = emailDao = new EmailDAO(keychain, pgp, userStorage, pgpbuilder);
         self._outboxBo = new OutboxBO(emailDao, keychain, userStorage, invitationDao);
     };
 

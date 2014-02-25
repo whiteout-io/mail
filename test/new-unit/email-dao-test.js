@@ -5,6 +5,7 @@ define(function(require) {
         KeychainDAO = require('js/dao/keychain-dao'),
         ImapClient = require('imap-client'),
         PgpMailer = require('pgpmailer'),
+        PgpBuilder = require('pgpbuilder'),
         PGP = require('js/crypto/pgp'),
         DeviceStorageDAO = require('js/dao/devicestorage-dao'),
         str = require('js/app-config').string,
@@ -13,7 +14,7 @@ define(function(require) {
     chai.Assertion.includeStack = true;
 
     describe('Email DAO unit tests', function() {
-        var dao, keychainStub, imapClientStub, pgpMailerStub, pgpStub, devicestorageStub;
+        var dao, keychainStub, imapClientStub, pgpMailerStub, pgpBuilderStub, pgpStub, devicestorageStub;
 
         var emailAddress, passphrase, asymKeySize, mockkeyId, dummyEncryptedMail,
             dummyDecryptedMail, mockKeyPair, account, verificationMail, verificationUuid,
@@ -111,10 +112,11 @@ define(function(require) {
             keychainStub = sinon.createStubInstance(KeychainDAO);
             imapClientStub = sinon.createStubInstance(ImapClient);
             pgpMailerStub = sinon.createStubInstance(PgpMailer);
+            pgpBuilderStub = sinon.createStubInstance(PgpBuilder);
             pgpStub = sinon.createStubInstance(PGP);
             devicestorageStub = sinon.createStubInstance(DeviceStorageDAO);
 
-            dao = new EmailDAO(keychainStub, pgpStub, devicestorageStub);
+            dao = new EmailDAO(keychainStub, pgpStub, devicestorageStub, pgpBuilderStub);
             dao._account = account;
 
             expect(dao._keychain).to.equal(keychainStub);
@@ -2613,6 +2615,29 @@ define(function(require) {
                 });
             });
         });
+
+        describe('encrypt', function() {
+            it('should encrypt', function(done) {
+                pgpBuilderStub.encrypt.yields();
+
+                dao.encrypt({}, function() {
+                    expect(pgpBuilderStub.encrypt.calledOnce).to.be.true;
+                    done();
+                });
+            });
+        });
+
+        describe('reEncrypt', function() {
+            it('should re-encrypt', function(done) {
+                pgpBuilderStub.reEncrypt.yields();
+
+                dao.reEncrypt({}, function() {
+                    expect(pgpBuilderStub.reEncrypt.calledOnce).to.be.true;
+                    done();
+                });
+            });
+        });
+
         describe('syncOutbox', function() {
             it('should sync the outbox', function(done) {
                 var folder = 'FOLDAAAA';
