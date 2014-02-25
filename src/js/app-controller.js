@@ -6,6 +6,7 @@ define(function(require) {
 
     var $ = require('jquery'),
         ImapClient = require('imap-client'),
+        mailreader = require('mailreader'),
         PgpMailer = require('pgpmailer'),
         EmailDAO = require('js/dao/email-dao'),
         RestDAO = require('js/dao/rest-dao'),
@@ -117,7 +118,7 @@ define(function(require) {
                 onError: console.error
             };
 
-            imapClient = new ImapClient(imapOptions);
+            imapClient = new ImapClient(imapOptions, mailreader);
             pgpMailer = new PgpMailer(smtpOptions, self._pgpbuilder);
 
             imapClient.onError = function(err) {
@@ -356,7 +357,7 @@ define(function(require) {
         pgp = new PGP();
         self._crypto = pgp;
         self._pgpbuilder = pgpbuilder = new PgpBuilder({}); // set the worker path?!
-        self._emailDao = emailDao = new EmailDAO(keychain, pgp, userStorage, pgpbuilder);
+        self._emailDao = emailDao = new EmailDAO(keychain, pgp, userStorage, pgpbuilder, mailreader);
         self._outboxBo = new OutboxBO(emailDao, keychain, userStorage, invitationDao);
     };
 

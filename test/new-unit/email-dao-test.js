@@ -8,6 +8,7 @@ define(function(require) {
         PgpBuilder = require('pgpbuilder'),
         PGP = require('js/crypto/pgp'),
         DeviceStorageDAO = require('js/dao/devicestorage-dao'),
+        mailreader = require('mailreader'),
         str = require('js/app-config').string,
         expect = chai.expect;
 
@@ -116,7 +117,7 @@ define(function(require) {
             pgpStub = sinon.createStubInstance(PGP);
             devicestorageStub = sinon.createStubInstance(DeviceStorageDAO);
 
-            dao = new EmailDAO(keychainStub, pgpStub, devicestorageStub, pgpBuilderStub);
+            dao = new EmailDAO(keychainStub, pgpStub, devicestorageStub, pgpBuilderStub, mailreader);
             dao._account = account;
 
             expect(dao._keychain).to.equal(keychainStub);
@@ -478,14 +479,12 @@ define(function(require) {
 
         describe('_imapParseMessageBlock', function() {
             it('should parse a message', function(done) {
-                imapClientStub.parseDecryptedMessageBlock.yields(null, {});
+                var parseRfc = sinon.stub(mailreader, 'parseRfc').withArgs({}).yields();
 
-                dao._imapParseMessageBlock(function(err, msg) {
-                    expect(err).to.not.exist;
-                    expect(msg).to.exist;
+                dao._imapParseMessageBlock({}, function() {
+                    expect(parseRfc.calledOnce).to.be.true;
                     done();
                 });
-
             });
         });
 
@@ -1206,14 +1205,14 @@ define(function(require) {
                     body: '-----BEGIN PGP MESSAGE-----asdasdasd-----END PGP MESSAGE-----'
                 };
 
-                mimeBody = 'Content-Transfer-Encoding: Content-Type:';
+                mimeBody = 'Content-Type: asdasdasd';
                 parsedBody = 'body? yes.';
 
                 keychainStub.getReceiverPublicKey.withArgs(message.from[0].address).yieldsAsync(null, mockKeyPair.publicKey);
                 pgpStub.decrypt.withArgs(message.body, mockKeyPair.publicKey.publicKey).yieldsAsync(null, mimeBody);
                 parseStub = sinon.stub(dao, '_imapParseMessageBlock', function(o, cb) {
                     expect(o.message).to.equal(message);
-                    expect(o.block).to.equal(mimeBody);
+                    expect(o.raw).to.equal(mimeBody);
 
                     o.message.body = parsedBody;
                     cb(null, o.message);

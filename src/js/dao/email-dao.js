@@ -6,11 +6,12 @@ define(function(require) {
         str = require('js/app-config').string,
         config = require('js/app-config').config;
 
-    var EmailDAO = function(keychain, crypto, devicestorage, pgpbuilder) {
+    var EmailDAO = function(keychain, crypto, devicestorage, pgpbuilder, mailreader) {
         this._keychain = keychain;
         this._crypto = crypto;
         this._devicestorage = devicestorage;
         this._pgpbuilder = pgpbuilder;
+        this._mailreader = mailreader;
     };
 
     //
@@ -969,7 +970,7 @@ define(function(require) {
                 decrypted = decrypted || err.errMsg || 'Error occurred during decryption';
 
                 // this is a very primitive detection if we have PGP/MIME or PGP/INLINE
-                if (decrypted.indexOf('Content-Transfer-Encoding:') === -1 && decrypted.indexOf('Content-Type:') === -1) {
+                if (!self._mailreader.isRfc(decrypted)) {
                     message.body = decrypted;
                     message.decrypted = true;
                     message.decryptingBody = false;
@@ -980,7 +981,7 @@ define(function(require) {
                 // parse the decrypted MIME message
                 self._imapParseMessageBlock({
                     message: message,
-                    block: decrypted
+                    raw: decrypted
                 }, function(error) {
                     if (error) {
                         message.decryptingBody = false;
@@ -1204,7 +1205,7 @@ define(function(require) {
     };
 
     EmailDAO.prototype._imapParseMessageBlock = function(options, callback) {
-        this._imapClient.parseDecryptedMessageBlock(options, callback);
+        this._mailreader.parseRfc(options, callback);
     };
 
     /**
