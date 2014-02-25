@@ -199,8 +199,20 @@ define(function(require) {
         }
     };
 
+    /**
+     * Syncs outbox content from disk to memory, not vice-versa
+     */
     EmailDAO.prototype.syncOutbox = function(options, callback) {
         var self = this;
+
+        // check busy status
+        if (self._account.busy) {
+            callback({
+                errMsg: 'Sync aborted: Previous sync still in progress',
+                code: 409
+            });
+            return;
+        }
 
         // make sure two syncs for the same folder don't interfere
         self._account.busy = true;
@@ -220,30 +232,37 @@ define(function(require) {
                 return;
             }
 
+            // calculate the diffs between memory and disk
             var storedIds = _.pluck(storedMessages, 'id'),
                 inMemoryIds = _.pluck(folder.messages, 'id'),
                 newIds = _.difference(storedIds, inMemoryIds),
                 removedIds = _.difference(inMemoryIds, storedIds);
 
+            // which messages are new on the disk that are not yet in memory?
             var newMessages = _.filter(storedMessages, function(msg) {
                 return _.contains(newIds, msg.id);
             });
 
+            // which messages are no longer on disk, i.e. have been sent
             var removedMessages = _.filter(folder.messages, function(msg) {
                 return _.contains(removedIds, msg.id);
             });
 
+            // add the new messages to memory
             newMessages.forEach(function(newMessage) {
                 folder.messages.push(newMessage);
             });
 
+            // remove the sent messages from memory
             removedMessages.forEach(function(removedMessage) {
                 var index = folder.messages.indexOf(removedMessage);
                 folder.messages.splice(index, 1);
             });
 
+            // update the folder count and we're done.
             folder.count = folder.messages.length;
             self._account.busy = false;
+
             callback();
         });
     };
