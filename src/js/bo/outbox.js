@@ -2,10 +2,11 @@ define(function(require) {
     'use strict';
 
     var _ = require('underscore'),
+        util = require('cryptoLib/util'),
         str = require('js/app-config').string,
         config = require('js/app-config').config,
         InvitationDAO = require('js/dao/invitation-dao'),
-        dbType = 'email_OUTBOX';
+        outboxDb = 'email_OUTBOX';
 
     /**
      * High level business object that orchestrates the local outbox.
@@ -30,18 +31,6 @@ define(function(require) {
          * Semaphore-esque flag to avoid 'concurrent' calls to _processOutbox when the timeout fires, but a call is still in process.
          * @private */
         this._outboxBusy = false;
-
-        /**
-         * Pending, unsent emails stored in the outbox. Updated on each call to _processOutbox
-         * @public */
-        this.pendingEmails = [];
-    };
-
-    OutboxBO.prototype.init = function() {
-        var outboxFolder = _.findWhere(this._emailDao._account.folders, {
-            type: 'Outbox'
-        });
-        outboxFolder.messages = this.pendingEmails;
     };
 
     /** 
@@ -66,12 +55,60 @@ define(function(require) {
     };
 
     /**
-     * Private Api which is called whenever a message has been sent
-     * The public callback "onSent" can be set by the caller to get notified.
+     * Put a email dto in the outbox for sending when ready
+     * @param  {Object}   mail     The Email DTO
+     * @param  {Function} callback Invoked when the object was encrypted and persisted to disk
      */
-    OutboxBO.prototype._onSent = function(message) {
-        if (typeof this.onSent === 'function') {
-            this.onSent(message);
+    OutboxBO.prototype.put = function(mail, callback) {
+        var self = this,
+            allReaders = mail.from.concat(mail.to.concat(mail.cc.concat(mail.bcc))); // all the users that should be able to read the mail
+
+        mail.publicKeysArmored = []; // gather the public keys
+        mail.unregisteredUsers = []; // gather the recipients for which no public key is available
+        mail.id = util.UUID(); // the mail needs a random uuid for storage in the database
+
+        checkRecipients(allReaders);
+
+        // check if there are unregistered recipients
+        function checkRecipients(recipients) {
+            var after = _.after(recipients.length, function() {
+                encryptAndPersist();
+            });
+
+            // find out if there are unregistered users
+            recipients.forEach(function(recipient) {
+                self._keychain.getReceiverPublicKey(recipient.address, function(err, key) {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+
+                    // if a public key is available, add the recipient's key to the armored public keys,
+                    // otherwise remember the recipient as unregistered for later sending
+                    if (key) {
+                        mail.publicKeysArmored.push(key.publicKey);
+                    } else {
+                        mail.unregisteredUsers.push(recipient);
+                    }
+
+                    after();
+                });
+            });
+        }
+
+        // encrypts the body and attachments and persists the mail object
+        function encryptAndPersist() {
+            self._emailDao.encrypt({
+                mail: mail,
+                publicKeysArmored: mail.publicKeysArmored
+            }, function(err) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                self._devicestorage.storeList([mail], outboxDb, callback);
+            });
         }
     };
 
@@ -81,152 +118,213 @@ define(function(require) {
      */
     OutboxBO.prototype._processOutbox = function(callback) {
         var self = this,
-            emails;
+            unsentMails = 0;
 
-        // if a _processOutbox call is still in progress when a new timeout kicks 
-        // in, since sending mails might take time, ignore it. otherwise, mails
-        // could get sent multiple times
+        // also, if a _processOutbox call is still in progress, ignore it.
         if (self._outboxBusy) {
             return;
         }
 
-        checkStorage();
+        self._outboxBusy = true;
 
-        function checkStorage() {
-            self._outboxBusy = true;
+        // get pending mails from the outbox
+        self._devicestorage.listItems(outboxDb, 0, null, function(err, pendingMails) {
+            // error, we're done here
+            if (err) {
+                self._outboxBusy = false;
+                callback(err);
+                return;
+            }
 
-            // get last item from outbox
-            self._emailDao.listForOutbox(function(err, pending) {
+            // if we're not online, don't even bother sending mails.
+            if (!self._emailDao._account.online || _.isEmpty(pendingMails)) {
+                self._outboxBusy = false;
+                callback(null, pendingMails.length);
+                return;
+            }
+
+            // we're done after all the mails have been handled
+            // update the outbox count...
+            var after = _.after(pendingMails.length, function() {
+                self._outboxBusy = false;
+                callback(null, unsentMails);
+            });
+
+            // send pending mails if possible
+            pendingMails.forEach(function(mail) {
+                handleMail(mail, after);
+            });
+        });
+
+        // if we can send the mail, do that. otherwise check if there are users that need to be invited
+        function handleMail(mail, done) {
+            // no unregistered users, go straight to send
+            if (mail.unregisteredUsers.length === 0) {
+                send(mail, done);
+                return;
+            }
+
+            var after = _.after(mail.unregisteredUsers.length, function() {
+                // invite unregistered users if necessary
+                if (mail.unregisteredUsers.length > 0) {
+                    unsentMails++;
+                    self._invite({
+                        sender: mail.from[0],
+                        recipients: mail.unregisteredUsers
+                    }, done);
+                    return;
+                }
+
+                // there are public keys available for the missing users,
+                // so let's re-encrypt the mail for them and send it
+                reencryptAndSend(mail, done);
+            });
+
+            // find out if the unregistered users have registered in the meantime
+            mail.unregisteredUsers.forEach(function(recipient) {
+                self._keychain.getReceiverPublicKey(recipient.address, function(err, key) {
+                    var index;
+
+                    if (err) {
+                        self._outboxBusy = false;
+                        callback(err);
+                        return;
+                    }
+
+                    if (key) {
+                        // remove the newly joined users from the unregistered users
+                        index = mail.unregisteredUsers.indexOf(recipient);
+                        mail.unregisteredUsers.splice(index, 1);
+                        mail.publicKeysArmored.push(key.publicKey);
+                    }
+
+                    after();
+                });
+            });
+        }
+
+        // all the recipients have public keys available, so let's re-encrypt the mail
+        // to make it available for them, too
+        function reencryptAndSend(mail, done) {
+            self._emailDao.reEncrypt({
+                mail: mail,
+                publicKeysArmored: mail.publicKeysArmored
+            }, function(err) {
                 if (err) {
                     self._outboxBusy = false;
                     callback(err);
                     return;
                 }
 
-                // update outbox folder count
-                emails = pending;
+                // stores the newly encrypted mail object to disk in case something funky
+                // happens during sending and we need do re-send the mail later.
+                // avoids doing the encryption twice...
+                self._devicestorage.storeList([mail], outboxDb, function(err) {
+                    if (err) {
+                        self._outboxBusy = false;
+                        callback(err);
+                        return;
+                    }
 
-                // fill all the pending mails into the pending mails array
-                self.pendingEmails.length = 0; //fastest way to empty an array
-                pending.forEach(function(i) {
-                    self.pendingEmails.push(i);
+                    send(mail, done);
                 });
+            });
+        }
 
-                // we're not online, don't even bother sending mails
-                if (!self._emailDao._account.online) {
+        // send the encrypted message
+        function send(mail, done) {
+            self._emailDao.sendEncrypted({
+                email: mail
+            }, function(err) {
+                if (err) {
                     self._outboxBusy = false;
-                    callback(null, self.pendingEmails.length);
+                    if (err.code === 42) {
+                        // offline try again later
+                        done();
+                    } else {
+                        self._outboxBusy = false;
+                        callback(err);
+                    }
                     return;
                 }
 
-                // sending pending mails
-                processMails();
+                // remove the pending mail from the storage
+                removeFromStorage(mail, done);
+
+                // fire sent notification
+                if (typeof self.onSent === 'function') {
+                    self.onSent(mail);
+                }
             });
         }
 
-        // process the next pending mail
-        function processMails() {
-            if (emails.length === 0) {
-                // in the navigation controller, this updates the folder count
-                self._outboxBusy = false;
-                callback(null, self.pendingEmails.length);
-                return;
-            }
-
-            // in the navigation controller, this updates the folder count
-            callback(null, self.pendingEmails.length);
-            var email = emails.shift();
-            checkReceivers(email);
-        }
-
-        // check whether there are unregistered receivers, i.e. receivers without a public key
-        function checkReceivers(email) {
-            var unregisteredUsers, receiverChecked;
-
-            unregisteredUsers = [];
-            receiverChecked = _.after(email.to.length, function() {
-                // invite unregistered users if necessary
-                if (unregisteredUsers.length > 0) {
-                    invite(unregisteredUsers);
+        // removes the mail object from disk after successfully sending it
+        function removeFromStorage(mail, done) {
+            self._devicestorage.removeList(outboxDb + '_' + mail.id, function(err) {
+                if (err) {
+                    self._outboxBusy = false;
+                    callback(err);
                     return;
                 }
 
-                sendEncrypted(email);
+                done();
             });
+        }
+    };
 
-            // find out if there are unregistered users
-            email.to.forEach(function(recipient) {
-                self._keychain.getReceiverPublicKey(recipient.address, function(err, key) {
-                    if (err) {
-                        self._outboxBusy = false;
-                        callback(err);
-                        return;
-                    }
+    /**
+     * Sends an invitation mail to an array of users that have no public key available yet
+     * @param {Array} recipients Array of objects with information on the sender (name, address)
+     * @param {Function} callback Invoked when the mail was sent
+     */
+    OutboxBO.prototype._invite = function(options, callback) {
+        var self = this,
+            sender = options.sender;
 
-                    if (!key) {
-                        unregisteredUsers.push(recipient);
-                    }
+        var after = _.after(options.recipients.length, callback);
 
-                    receiverChecked();
-                });
+        options.recipients.forEach(function(recipient) {
+            checkInvitationStatus(recipient, after);
+        });
+
+        // checks the invitation status. if an invitation is pending, we do not need to resend the invitation mail
+        function checkInvitationStatus(recipient, done) {
+            self._invitationDao.check({
+                recipient: recipient.address,
+                sender: sender.address
+            }, function(err, status) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                if (status === InvitationDAO.INVITE_PENDING) {
+                    // the recipient is already invited, we're done here.
+                    done();
+                    return;
+                }
+
+                invite(recipient, done);
             });
         }
 
-        // invite the unregistered receivers, if necessary
-        function invite(addresses) {
-            var sender = self._emailDao._account.emailAddress;
-
-            var invitationFinished = _.after(addresses.length, function() {
-                // after all of the invitations are checked and sent (if necessary),
-                processMails();
-            });
-
-            // check which of the adresses has pending invitations
-            addresses.forEach(function(recipient) {
-                var recipientAddress = recipient.address;
-
-                self._invitationDao.check({
-                    recipient: recipientAddress,
-                    sender: sender
-                }, function(err, status) {
-                    if (err) {
-                        self._outboxBusy = false;
-                        callback(err);
-                        return;
-                    }
-
-                    if (status === InvitationDAO.INVITE_PENDING) {
-                        // the recipient is already invited, we're done here.
-                        invitationFinished();
-                        return;
-                    }
-
-                    // the recipient is not yet invited, so let's do that
-                    self._invitationDao.invite({
-                        recipient: recipientAddress,
-                        sender: sender
-                    }, function(err, status) {
-                        if (err) {
-                            self._outboxBusy = false;
-                            callback(err);
-                            return;
-                        }
-                        if (status !== InvitationDAO.INVITE_SUCCESS) {
-                            self._outboxBusy = false;
-                            callback({
-                                errMsg: 'could not successfully invite ' + recipientAddress
-                            });
-                            return;
-                        }
-
-                        sendInvitationMail(recipient, sender);
+        // let's invite the recipient and send him a mail to inform him to join whiteout
+        function invite(recipient, done) {
+            self._invitationDao.invite({
+                recipient: recipient.address,
+                sender: sender.address
+            }, function(err, status) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+                if (status !== InvitationDAO.INVITE_SUCCESS) {
+                    callback({
+                        errMsg: 'Could not successfully invite ' + recipient
                     });
+                    return;
+                }
 
-                });
-            });
-
-            // send an invitation to the unregistered user, aka the recipient
-            function sendInvitationMail(recipient, sender) {
                 var invitationMail = {
                     from: [sender],
                     to: [recipient],
@@ -239,10 +337,9 @@ define(function(require) {
                     email: invitationMail
                 }, function(err) {
                     if (err) {
-                        self._outboxBusy = false;
                         if (err.code === 42) {
                             // offline try again later
-                            callback();
+                            done();
                         } else {
                             callback(err);
                         }
@@ -250,63 +347,12 @@ define(function(require) {
                     }
 
                     // fire sent notification
-                    self._onSent(invitationMail);
-
-                    invitationFinished();
-                });
-            }
-        }
-
-        function sendEncrypted(email) {
-            self._emailDao.sendEncrypted({
-                email: email
-            }, function(err) {
-                if (err) {
-                    self._outboxBusy = false;
-                    if (err.code === 42) {
-                        // offline try again later
-                        callback();
-                    } else {
-                        callback(err);
+                    if (typeof self.onSent === 'function') {
+                        self.onSent(invitationMail);
                     }
-                    return;
-                }
 
-                // the email has been sent, remove from pending mails
-                removeFromPendingMails(email);
-
-                // fire sent notification
-                self._onSent(email);
-
-                removeFromStorage(email.id);
-            });
-        }
-
-        // update the member so that the outbox can visualize
-        function removeFromPendingMails(email) {
-            var i = self.pendingEmails.indexOf(email);
-            self.pendingEmails.splice(i, 1);
-        }
-
-        function removeFromStorage(id) {
-            if (!id) {
-                self._outboxBusy = false;
-                callback({
-                    errMsg: 'Cannot remove email from storage without a valid id!'
+                    done();
                 });
-                return;
-            }
-
-            // delete email from local storage
-            var key = dbType + '_' + id;
-            self._devicestorage.removeList(key, function(err) {
-                if (err) {
-                    self._outboxBusy = false;
-                    callback(err);
-                    return;
-                }
-
-                processMails();
             });
         }
     };

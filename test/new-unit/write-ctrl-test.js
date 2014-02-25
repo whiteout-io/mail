@@ -6,14 +6,24 @@ define(function(require) {
         mocks = require('angularMocks'),
         WriteCtrl = require('js/controller/write'),
         EmailDAO = require('js/dao/email-dao'),
+        OutboxBO = require('js/bo/outbox'),
         KeychainDAO = require('js/dao/keychain-dao'),
         appController = require('js/app-controller');
 
     describe('Write controller unit test', function() {
-        var ctrl, scope, origEmailDao, emailDaoMock, keychainMock, emailAddress;
+        var ctrl, scope,
+            origEmailDao, origOutbox,
+            emailDaoMock, keychainMock, outboxMock, emailAddress;
 
         beforeEach(function() {
+            // the app controller is a singleton, we need to remember the
+            // outbox and email dao to restore it after the tests
             origEmailDao = appController._emailDao;
+            origOutbox = appController._outboxBo;
+
+            outboxMock = sinon.createStubInstance(OutboxBO);
+            appController._outboxBo = outboxMock;
+
             emailDaoMock = sinon.createStubInstance(EmailDAO);
             appController._emailDao = emailDaoMock;
 
@@ -37,8 +47,9 @@ define(function(require) {
         });
 
         afterEach(function() {
-            // restore the module
+            // restore the app controller
             appController._emailDao = origEmailDao;
+            appController._outboxBo = origOutbox;
         });
 
         describe('scope variables', function() {
@@ -259,127 +270,38 @@ define(function(require) {
         });
 
         describe('send to outbox', function() {
-            it('should work when offline', function(done) {
-                var re = {
-                    from: [{
-                        address: 'pity@dafool'
-                    }],
-                    subject: 'Ermahgerd!',
-                    sentDate: new Date(),
-                    body: 'so much body!'
-                };
-
+            it('should work', function() {
+                scope.from = [{
+                    address: 'pity@dafool'
+                }];
+                scope.to = [{
+                    address: 'pity@dafool'
+                }];
+                scope.cc = [];
+                scope.bcc = [];
+                scope.subject = 'Ermahgerd!';
+                scope.body = 'wow. much body! very text!';
+                scope.attachments = [];
                 scope.state.nav = {
                     currentFolder: 'currentFolder'
                 };
 
-                scope.emptyOutbox = function() {};
-                scope.onError = function(err) {
-                    expect(err).to.not.exist;
-                    expect(scope.state.writer.open).to.be.false;
-                    expect(emailDaoMock.storeForOutbox.calledOnce).to.be.true;
-                    expect(emailDaoMock.sync.calledOnce).to.be.true;
+                scope.replyTo = {};
 
-                    done();
-                };
-
-                emailDaoMock.storeForOutbox.yields();
-                emailDaoMock.sync.yields({
-                    code: 42
-                });
-
-                scope.state.writer.write(re);
-                scope.sendToOutbox();
-            });
-
-            it('should work', function(done) {
-                var re = {
-                    from: [{
-                        address: 'pity@dafool'
-                    }],
-                    subject: 'Ermahgerd!',
-                    sentDate: new Date(),
-                    body: 'so much body!'
-                };
-
-                scope.state.nav = {
-                    currentFolder: 'currentFolder'
-                };
-
-                scope.emptyOutbox = function() {};
-                scope.onError = function(err) {
-                    expect(err).to.not.exist;
-                    expect(scope.state.writer.open).to.be.false;
-                    expect(emailDaoMock.storeForOutbox.calledOnce).to.be.true;
-                    expect(emailDaoMock.sync.calledOnce).to.be.true;
-
-                    done();
-                };
-
-                emailDaoMock.storeForOutbox.yields();
+                outboxMock.put.yields();
                 emailDaoMock.sync.yields();
 
-                scope.state.writer.write(re);
-                scope.sendToOutbox();
-            });
-
-            it('should fail', function(done) {
-                var re = {
-                    from: [{
-                        address: 'pity@dafool'
-                    }],
-                    subject: 'Ermahgerd!',
-                    sentDate: new Date(),
-                    body: 'so much body!'
-                };
-
-                scope.state.nav = {
-                    currentFolder: 'currentFolder'
-                };
-
-                scope.emptyOutbox = function() {};
                 scope.onError = function(err) {
-                    expect(err).to.exist;
-                    expect(scope.state.writer.open).to.be.false;
-                    expect(emailDaoMock.storeForOutbox.calledOnce).to.be.true;
-                    expect(emailDaoMock.sync.calledOnce).to.be.true;
-
-                    done();
+                    expect(err).to.not.exist;
                 };
 
-                emailDaoMock.storeForOutbox.yields();
-                emailDaoMock.sync.yields({});
-
-                scope.state.writer.write(re);
                 scope.sendToOutbox();
-            });
 
-            it('should not work and not close the write view', function(done) {
-                scope.state.writer.write();
+                expect(outboxMock.put.calledOnce).to.be.true;
+                expect(emailDaoMock.sync.calledOnce).to.be.true;
 
-                scope.to = [{
-                    address: 'pity@dafool.de',
-                    key: {
-                        publicKey: '----- PGP Stuff -----'
-                    }
-                }];
-                scope.body = 'asd';
-                scope.subject = 'yaddablabla';
-                scope.toKey = 'Public Key';
-
-                emailDaoMock.storeForOutbox.withArgs(sinon.match(function(mail) {
-                    return mail.from[0].address === emailAddress && mail.to.length === 1 && mail.receiverKeys.length === 1;
-                })).yields({
-                    errMsg: 'snafu'
-                });
-
-                scope.onError = function(err) {
-                    expect(err).to.exist;
-                    expect(scope.state.writer.open).to.be.true;
-                    expect(emailDaoMock.storeForOutbox.calledOnce).to.be.true;
-                    done();
-                };
-                scope.sendToOutbox();
+                expect(scope.state.writer.open).to.be.false;
+                expect(scope.replyTo.answered).to.be.true;
             });
         });
     });

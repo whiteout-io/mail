@@ -6,6 +6,7 @@ define(function(require) {
 
     var $ = require('jquery'),
         ImapClient = require('imap-client'),
+        mailreader = require('mailreader'),
         PgpMailer = require('pgpmailer'),
         EmailDAO = require('js/dao/email-dao'),
         RestDAO = require('js/dao/rest-dao'),
@@ -16,6 +17,7 @@ define(function(require) {
         InvitationDAO = require('js/dao/invitation-dao'),
         OutboxBO = require('js/bo/outbox'),
         PGP = require('js/crypto/pgp'),
+        PgpBuilder = require('pgpbuilder'),
         config = require('js/app-config').config;
 
     var self = {};
@@ -116,8 +118,8 @@ define(function(require) {
                 onError: console.error
             };
 
-            imapClient = new ImapClient(imapOptions);
-            pgpMailer = new PgpMailer(smtpOptions);
+            imapClient = new ImapClient(imapOptions, mailreader);
+            pgpMailer = new PgpMailer(smtpOptions, self._pgpbuilder);
 
             imapClient.onError = function(err) {
                 console.log('IMAP error.', err);
@@ -341,7 +343,7 @@ define(function(require) {
 
     self.buildModules = function() {
         var lawnchairDao, restDao, pubkeyDao, invitationDao,
-            emailDao, keychain, pgp, userStorage;
+            emailDao, keychain, pgp, userStorage, pgpbuilder;
 
         // init objects and inject dependencies
         restDao = new RestDAO();
@@ -354,7 +356,8 @@ define(function(require) {
         self._keychain = keychain;
         pgp = new PGP();
         self._crypto = pgp;
-        self._emailDao = emailDao = new EmailDAO(keychain, pgp, userStorage);
+        self._pgpbuilder = pgpbuilder = new PgpBuilder();
+        self._emailDao = emailDao = new EmailDAO(keychain, pgp, userStorage, pgpbuilder, mailreader);
         self._outboxBo = new OutboxBO(emailDao, keychain, userStorage, invitationDao);
     };
 
@@ -384,9 +387,6 @@ define(function(require) {
                     callback(err);
                     return;
                 }
-
-                // init outbox
-                self._outboxBo.init();
 
                 callback(null, keypair);
             });

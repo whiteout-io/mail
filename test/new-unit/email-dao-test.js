@@ -5,18 +5,20 @@ define(function(require) {
         KeychainDAO = require('js/dao/keychain-dao'),
         ImapClient = require('imap-client'),
         PgpMailer = require('pgpmailer'),
+        PgpBuilder = require('pgpbuilder'),
         PGP = require('js/crypto/pgp'),
         DeviceStorageDAO = require('js/dao/devicestorage-dao'),
+        mailreader = require('mailreader'),
         str = require('js/app-config').string,
         expect = chai.expect;
 
     chai.Assertion.includeStack = true;
 
     describe('Email DAO unit tests', function() {
-        var dao, keychainStub, imapClientStub, pgpMailerStub, pgpStub, devicestorageStub;
+        var dao, keychainStub, imapClientStub, pgpMailerStub, pgpBuilderStub, pgpStub, devicestorageStub;
 
         var emailAddress, passphrase, asymKeySize, mockkeyId, dummyEncryptedMail,
-            dummyDecryptedMail, dummyLegacyDecryptedMail, mockKeyPair, account, publicKey, verificationMail, verificationUuid,
+            dummyDecryptedMail, mockKeyPair, account, verificationMail, verificationUuid,
             corruptedVerificationMail, corruptedVerificationUuid,
             nonWhitelistedMail;
 
@@ -78,21 +80,6 @@ define(function(require) {
                 body: 'Content-Type: multipart/signed;\r\n  boundary="Apple-Mail=_1D8756C0-F347-4D7A-A8DB-7869CBF14FD2";\r\n    protocol="application/pgp-signature";\r\n   micalg=pgp-sha512\r\n\r\n\r\n--Apple-Mail=_1D8756C0-F347-4D7A-A8DB-7869CBF14FD2\r\nContent-Type: multipart/mixed;\r\n   boundary="Apple-Mail=_8ED7DC84-6AD9-4A08-8327-80B62D6BCBFA"\r\n\r\n\r\n--Apple-Mail=_8ED7DC84-6AD9-4A08-8327-80B62D6BCBFA\r\nContent-Transfer-Encoding: 7bit\r\nContent-Type: text/plain;\r\n   charset=us-ascii\r\n\r\nasdasd \r\n--Apple-Mail=_8ED7DC84-6AD9-4A08-8327-80B62D6BCBFA\r\nContent-Disposition: attachment;\r\n   filename=dummy.txt\r\nContent-Type: text/plain;\r\n name="dummy.txt"\r\nContent-Transfer-Encoding: 7bit\r\n\r\noaudbcoaurbvosuabvlasdjbfalwubjvawvb\r\n--Apple-Mail=_8ED7DC84-6AD9-4A08-8327-80B62D6BCBFA--\r\n\r\n--Apple-Mail=_1D8756C0-F347-4D7A-A8DB-7869CBF14FD2\r\nContent-Transfer-Encoding: 7bit\r\nContent-Disposition: attachment;\r\n    filename=signature.asc\r\nContent-Type: application/pgp-signature;\r\n  name=signature.asc\r\nContent-Description: Message signed with OpenPGP using GPGMail\r\n\r\n-----BEGIN PGP SIGNATURE-----\r\nComment: GPGTools - https://gpgtools.org\r\n\r\niQEcBAEBCgAGBQJS2kO1AAoJEDzmUwH7XO/cP+YH/2PSBxX1ZZd83Uf9qBGDY807\r\niHOdgPFXm64YjSnohO7XsPcnmihqP1ipS2aaCXFC3/Vgb9nc4isQFS+i1VdPwfuR\r\n1Pd2l3dC4/nD4xO9h/W6JW7Yd24NS5TJD5cA7LYwQ8LF+rOzByMatiTMmecAUCe8\r\nEEalEjuogojk4IacA8dg/bfLqQu9E+0GYUJBcI97dx/0jZ0qMOxbWOQLsJ3DnUnV\r\nOad7pAIbHEO6T0EBsH7TyTj4RRHkP6SKE0mm6ZYUC7KCk2Z3MtkASTxUrnqW5qZ5\r\noaXUO9GEc8KZcmbCdhZY2Y5h+dmucaO0jpbeSKkvtYyD4KZrSvt7NTb/0dSLh4Y=\r\n=G8km\r\n-----END PGP SIGNATURE-----\r\n\r\n--Apple-Mail=_1D8756C0-F347-4D7A-A8DB-7869CBF14FD2--\r\n',
                 unread: false,
                 answered: false,
-                receiverKeys: ['-----BEGIN PGP PUBLIC KEY-----\nasd\n-----END PGP PUBLIC KEY-----']
-            };
-            dummyLegacyDecryptedMail = {
-                uid: 1234,
-                from: [{
-                    address: 'asd@asd.de'
-                }],
-                to: [{
-                    address: 'qwe@qwe.de'
-                }],
-                subject: 'qweasd',
-                body: 'asd',
-                unread: false,
-                answered: false,
-                receiverKeys: ['-----BEGIN PGP PUBLIC KEY-----\nasd\n-----END PGP PUBLIC KEY-----']
             };
             nonWhitelistedMail = {
                 uid: 1234,
@@ -122,15 +109,15 @@ define(function(require) {
                 asymKeySize: asymKeySize,
                 busy: false
             };
-            publicKey = "-----BEGIN PUBLIC KEY-----\r\n" + "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCxy+Te5dyeWd7g0P+8LNO7fZDQ\r\n" + "g96xTb1J6pYE/pPTMlqhB6BRItIYjZ1US5q2vk5Zk/5KasBHAc9RbCqvh9v4XFEY\r\n" + "JVmTXC4p8ft1LYuNWIaDk+R3dyYXmRNct/JC4tks2+8fD3aOvpt0WNn3R75/FGBt\r\n" + "h4BgojAXDE+PRQtcVQIDAQAB\r\n" + "-----END PUBLIC KEY-----";
 
             keychainStub = sinon.createStubInstance(KeychainDAO);
             imapClientStub = sinon.createStubInstance(ImapClient);
             pgpMailerStub = sinon.createStubInstance(PgpMailer);
+            pgpBuilderStub = sinon.createStubInstance(PgpBuilder);
             pgpStub = sinon.createStubInstance(PGP);
             devicestorageStub = sinon.createStubInstance(DeviceStorageDAO);
 
-            dao = new EmailDAO(keychainStub, pgpStub, devicestorageStub);
+            dao = new EmailDAO(keychainStub, pgpStub, devicestorageStub, pgpBuilderStub, mailreader);
             dao._account = account;
 
             expect(dao._keychain).to.equal(keychainStub);
@@ -369,14 +356,15 @@ define(function(require) {
 
         describe('unlock', function() {
             it('should unlock', function(done) {
-                var importMatcher = sinon.match(function(o) {
-                    expect(o.passphrase).to.equal(passphrase);
-                    expect(o.privateKeyArmored).to.equal(mockKeyPair.privateKey.encryptedKey);
-                    expect(o.publicKeyArmored).to.equal(mockKeyPair.publicKey.publicKey);
-                    return true;
-                });
+                dao._pgpMailer = {
+                    _pgpbuilder: {}
+                };
 
-                pgpStub.importKeys.withArgs(importMatcher).yields();
+                pgpStub.importKeys.withArgs({
+                    passphrase: passphrase,
+                    privateKeyArmored: mockKeyPair.privateKey.encryptedKey,
+                    publicKeyArmored: mockKeyPair.publicKey.publicKey
+                }).yields();
 
                 dao.unlock({
                     passphrase: passphrase,
@@ -391,33 +379,29 @@ define(function(require) {
             });
 
             it('should generate a keypair and unlock', function(done) {
-                var genKeysMatcher, persistKeysMatcher, importMatcher, keypair;
+                var keypair;
+
+                dao._pgpMailer = {
+                    _pgpbuilder: {}
+                };
 
                 keypair = {
                     keyId: 123,
                     publicKeyArmored: mockKeyPair.publicKey.publicKey,
                     privateKeyArmored: mockKeyPair.privateKey.encryptedKey
                 };
-                genKeysMatcher = sinon.match(function(o) {
-                    expect(o.emailAddress).to.equal(emailAddress);
-                    expect(o.keySize).to.equal(asymKeySize);
-                    expect(o.passphrase).to.equal(passphrase);
-                    return true;
-                });
-                importMatcher = sinon.match(function(o) {
-                    expect(o.passphrase).to.equal(passphrase);
-                    expect(o.privateKeyArmored).to.equal(mockKeyPair.privateKey.encryptedKey);
-                    expect(o.publicKeyArmored).to.equal(mockKeyPair.publicKey.publicKey);
-                    return true;
-                });
-                persistKeysMatcher = sinon.match(function(o) {
-                    expect(o).to.deep.equal(mockKeyPair);
-                    return true;
-                });
 
+                pgpStub.generateKeys.withArgs({
+                    emailAddress: emailAddress,
+                    keySize: asymKeySize,
+                    passphrase: passphrase
+                }).yields(null, keypair);
 
-                pgpStub.generateKeys.withArgs(genKeysMatcher).yields(null, keypair);
-                pgpStub.importKeys.withArgs(importMatcher).yields();
+                pgpStub.importKeys.withArgs({
+                    passphrase: passphrase,
+                    privateKeyArmored: mockKeyPair.privateKey.encryptedKey,
+                    publicKeyArmored: mockKeyPair.publicKey.publicKey
+                }).yields();
                 keychainStub.putUserKeyPair.withArgs().yields();
 
                 dao.unlock({
@@ -495,14 +479,12 @@ define(function(require) {
 
         describe('_imapParseMessageBlock', function() {
             it('should parse a message', function(done) {
-                imapClientStub.parseDecryptedMessageBlock.yields(null, {});
+                var parseRfc = sinon.stub(mailreader, 'parseRfc').withArgs({}).yields();
 
-                dao._imapParseMessageBlock(function(err, msg) {
-                    expect(err).to.not.exist;
-                    expect(msg).to.exist;
+                dao._imapParseMessageBlock({}, function() {
+                    expect(parseRfc.calledOnce).to.be.true;
                     done();
                 });
-
             });
         });
 
@@ -1185,13 +1167,13 @@ define(function(require) {
             });
         });
 
-        describe('decryptMessageContent', function() {
+        describe('decryptBody', function() {
             it('should not do anything when the message is not encrypted', function() {
                 var message = {
                     encrypted: false
                 };
 
-                dao.decryptMessageContent({
+                dao.decryptBody({
                     message: message
                 });
 
@@ -1204,7 +1186,7 @@ define(function(require) {
                     decrypted: true
                 };
 
-                dao.decryptMessageContent({
+                dao.decryptBody({
                     message: message
                 });
 
@@ -1223,20 +1205,20 @@ define(function(require) {
                     body: '-----BEGIN PGP MESSAGE-----asdasdasd-----END PGP MESSAGE-----'
                 };
 
-                mimeBody = 'Content-Transfer-Encoding: Content-Type:';
+                mimeBody = 'Content-Type: asdasdasd';
                 parsedBody = 'body? yes.';
 
                 keychainStub.getReceiverPublicKey.withArgs(message.from[0].address).yieldsAsync(null, mockKeyPair.publicKey);
                 pgpStub.decrypt.withArgs(message.body, mockKeyPair.publicKey.publicKey).yieldsAsync(null, mimeBody);
                 parseStub = sinon.stub(dao, '_imapParseMessageBlock', function(o, cb) {
                     expect(o.message).to.equal(message);
-                    expect(o.block).to.equal(mimeBody);
+                    expect(o.raw).to.equal(mimeBody);
 
                     o.message.body = parsedBody;
                     cb(null, o.message);
                 });
 
-                dao.decryptMessageContent({
+                dao.decryptBody({
                     message: message
                 }, function(error, msg) {
                     expect(error).to.not.exist;
@@ -1274,7 +1256,7 @@ define(function(require) {
                 pgpStub.decrypt.withArgs(message.body, mockKeyPair.publicKey.publicKey).yieldsAsync(null, plaintextBody);
                 parseStub = sinon.stub(dao, '_imapParseMessageBlock');
 
-                dao.decryptMessageContent({
+                dao.decryptBody({
                     message: message
                 }, function(error, msg) {
                     expect(error).to.not.exist;
@@ -1314,7 +1296,7 @@ define(function(require) {
                 });
                 parseStub = sinon.stub(dao, '_imapParseMessageBlock');
 
-                dao.decryptMessageContent({
+                dao.decryptBody({
                     message: message
                 }, function(error, msg) {
                     expect(error).to.not.exist;
@@ -1347,7 +1329,7 @@ define(function(require) {
                 keychainStub.getReceiverPublicKey.yields({});
                 parseStub = sinon.stub(dao, '_imapParseMessageBlock');
 
-                dao.decryptMessageContent({
+                dao.decryptBody({
                     message: message
                 }, function(error, msg) {
                     expect(error).to.exist;
@@ -2566,26 +2548,6 @@ define(function(require) {
             });
         });
 
-        describe('move', function() {
-            it('should work', function(done) {
-                imapClientStub.moveMessage.withArgs({
-                    path: 'asdf',
-                    uid: 1,
-                    destination: 'asdasd'
-                }).yields();
-
-                dao.move({
-                    folder: 'asdf',
-                    uid: 1,
-                    destination: 'asdasd'
-                }, function(err) {
-                    expect(imapClientStub.moveMessage.calledOnce).to.be.true;
-                    expect(err).to.not.exist;
-                    done();
-                });
-            });
-        });
-
         describe('sendPlaintext', function() {
             it('should work', function(done) {
                 pgpMailerStub.send.withArgs({
@@ -2616,16 +2578,14 @@ define(function(require) {
 
         describe('sendEncrypted', function() {
             it('should work', function(done) {
-                pgpStub.exportKeys.yields(null, {
-                    privateKeyArmored: mockKeyPair.privateKey.encryptedKey,
-                    publicKeyArmored: mockKeyPair.publicKey.publicKey
-                });
+                var publicKeys = ["PUBLIC KEY"];
+                dummyDecryptedMail.publicKeysArmored = publicKeys;
 
                 pgpMailerStub.send.withArgs({
                     encrypt: true,
                     cleartextMessage: str.message,
                     mail: dummyDecryptedMail,
-                    publicKeysArmored: dummyDecryptedMail.receiverKeys
+                    publicKeysArmored: publicKeys
                 }).yields();
 
                 dao.sendEncrypted({
@@ -2633,17 +2593,14 @@ define(function(require) {
                 }, function(err) {
                     expect(err).to.not.exist;
 
-                    expect(pgpStub.exportKeys.calledOnce).to.be.true;
                     expect(pgpMailerStub.send.calledOnce).to.be.true;
 
                     done();
                 });
             });
             it('should not work when pgpmailer fails', function(done) {
-                pgpStub.exportKeys.yields(null, {
-                    privateKeyArmored: mockKeyPair.privateKey.encryptedKey,
-                    publicKeyArmored: mockKeyPair.publicKey.publicKey
-                });
+                var publicKeys = ["PUBLIC KEY"];
+                dummyDecryptedMail.publicKeysArmored = publicKeys;
                 pgpMailerStub.send.yields({});
 
                 dao.sendEncrypted({
@@ -2651,176 +2608,53 @@ define(function(require) {
                 }, function(err) {
                     expect(err).to.exist;
 
-                    expect(pgpStub.exportKeys.calledOnce).to.be.true;
                     expect(pgpMailerStub.send.calledOnce).to.be.true;
 
                     done();
                 });
             });
-            it('should not work when sender key export fails', function(done) {
-                pgpStub.exportKeys.yields({});
+        });
 
-                dao.sendEncrypted({
-                    email: dummyDecryptedMail
+        describe('encrypt', function() {
+            it('should encrypt', function(done) {
+                pgpBuilderStub.encrypt.yields();
+
+                dao.encrypt({}, function() {
+                    expect(pgpBuilderStub.encrypt.calledOnce).to.be.true;
+                    done();
+                });
+            });
+        });
+
+        describe('reEncrypt', function() {
+            it('should re-encrypt', function(done) {
+                pgpBuilderStub.reEncrypt.yields();
+
+                dao.reEncrypt({}, function() {
+                    expect(pgpBuilderStub.reEncrypt.calledOnce).to.be.true;
+                    done();
+                });
+            });
+        });
+
+        describe('syncOutbox', function() {
+            it('should sync the outbox', function(done) {
+                var folder = 'FOLDAAAA';
+                dao._account.folders = [{
+                    type: 'Folder',
+                    path: folder
+                }];
+
+                var localListStub = sinon.stub(dao, '_localListMessages').withArgs({
+                    folder: folder
+                }).yields(null, [dummyEncryptedMail]);
+
+                dao.syncOutbox({
+                    folder: folder
                 }, function(err) {
-                    expect(err).to.exist;
-
-                    expect(pgpStub.exportKeys.calledOnce).to.be.true;
-                    expect(pgpMailerStub.send.calledOnce).to.be.false;
-
-                    done();
-                });
-            });
-        });
-
-        describe('storeForOutbox', function() {
-            it('should work', function(done) {
-                var key = 'omgsocrypto';
-
-                pgpStub.exportKeys.yields(null, {
-                    publicKeyArmored: key
-                });
-                pgpStub.encrypt.withArgs(dummyDecryptedMail.body, [key]).yields(null, 'asdfasfd');
-                devicestorageStub.storeList.withArgs([dummyDecryptedMail], 'email_OUTBOX').yields();
-
-                dao.storeForOutbox(dummyDecryptedMail, function(err) {
                     expect(err).to.not.exist;
-
-                    expect(pgpStub.exportKeys.calledOnce).to.be.true;
-                    expect(pgpStub.encrypt.calledOnce).to.be.true;
-                    expect(devicestorageStub.storeList.calledOnce).to.be.true;
-
-                    done();
-                });
-            });
-
-            it('should work when store fails', function(done) {
-                var key = 'omgsocrypto';
-
-                pgpStub.exportKeys.yields(null, {
-                    publicKeyArmored: key
-                });
-                pgpStub.encrypt.yields(null, 'asdfasfd');
-                devicestorageStub.storeList.yields({});
-
-                dao.storeForOutbox(dummyDecryptedMail, function(err) {
-                    expect(err).to.exist;
-
-                    expect(pgpStub.exportKeys.calledOnce).to.be.true;
-                    expect(pgpStub.encrypt.calledOnce).to.be.true;
-                    expect(devicestorageStub.storeList.calledOnce).to.be.true;
-
-                    done();
-                });
-            });
-
-            it('should work when encryption fails', function(done) {
-                var key = 'omgsocrypto';
-
-                pgpStub.exportKeys.yields(null, {
-                    publicKeyArmored: key
-                });
-                pgpStub.encrypt.yields({});
-
-                dao.storeForOutbox(dummyDecryptedMail, function(err) {
-                    expect(err).to.exist;
-
-                    expect(pgpStub.exportKeys.calledOnce).to.be.true;
-                    expect(pgpStub.encrypt.calledOnce).to.be.true;
-                    expect(devicestorageStub.storeList.called).to.be.false;
-
-                    done();
-                });
-            });
-
-            it('should work when key export fails', function(done) {
-                pgpStub.exportKeys.yields({});
-
-                dao.storeForOutbox(dummyDecryptedMail, function(err) {
-                    expect(err).to.exist;
-
-                    expect(pgpStub.exportKeys.calledOnce).to.be.true;
-                    expect(pgpStub.encrypt.called).to.be.false;
-                    expect(devicestorageStub.storeList.called).to.be.false;
-
-                    done();
-                });
-            });
-        });
-
-        describe('listForOutbox', function() {
-            it('should work', function(done) {
-                var key = 'omgsocrypto';
-
-                devicestorageStub.listItems.withArgs('email_OUTBOX', 0, null).yields(null, [dummyEncryptedMail]);
-                pgpStub.exportKeys.yields(null, {
-                    publicKeyArmored: key
-                });
-                pgpStub.decrypt.withArgs(dummyEncryptedMail.body, key).yields(null, dummyDecryptedMail.body);
-
-                dao.listForOutbox(function(err, mails) {
-                    expect(err).to.not.exist;
-
-                    expect(devicestorageStub.listItems.calledOnce).to.be.true;
-                    expect(pgpStub.exportKeys.calledOnce).to.be.true;
-                    expect(pgpStub.decrypt.calledOnce).to.be.true;
-                    expect(mails.length).to.equal(1);
-                    expect(mails[0].body).to.equal(dummyDecryptedMail.body);
-
-                    done();
-                });
-            });
-
-            it('should not work when decryption fails', function(done) {
-                var key = 'omgsocrypto',
-                    errMsg = 'THIS IS AN ERROR!';
-
-                devicestorageStub.listItems.yields(null, [dummyEncryptedMail]);
-                pgpStub.exportKeys.yields(null, {
-                    publicKeyArmored: key
-                });
-                pgpStub.decrypt.yields({
-                    errMsg: errMsg
-                });
-
-                dao.listForOutbox(function(err, mails) {
-                    expect(err).to.not.exist;
-                    expect(mails[0].body).to.equal(errMsg);
-
-                    expect(devicestorageStub.listItems.calledOnce).to.be.true;
-                    expect(pgpStub.exportKeys.calledOnce).to.be.true;
-                    expect(pgpStub.decrypt.calledOnce).to.be.true;
-
-                    done();
-                });
-            });
-
-            it('should not work when key export fails', function(done) {
-                devicestorageStub.listItems.yields(null, [dummyEncryptedMail]);
-                pgpStub.exportKeys.yields({});
-
-                dao.listForOutbox(function(err, mails) {
-                    expect(err).to.exist;
-                    expect(mails).to.not.exist;
-
-                    expect(devicestorageStub.listItems.calledOnce).to.be.true;
-                    expect(pgpStub.exportKeys.calledOnce).to.be.true;
-                    expect(pgpStub.decrypt.called).to.be.false;
-
-                    done();
-                });
-            });
-
-            it('should not work when list from storage fails', function(done) {
-                devicestorageStub.listItems.yields({});
-
-                dao.listForOutbox(function(err, mails) {
-                    expect(err).to.exist;
-                    expect(mails).to.not.exist;
-
-                    expect(devicestorageStub.listItems.calledOnce).to.be.true;
-                    expect(pgpStub.exportKeys.called).to.be.false;
-                    expect(pgpStub.decrypt.called).to.be.false;
+                    expect(localListStub.calledOnce).to.be.true;
+                    expect(dao._account.folders[0].messages.length).to.equal(1);
 
                     done();
                 });

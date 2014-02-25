@@ -59,11 +59,6 @@ define(function(require) {
         //
 
         $scope.getBody = function(email) {
-            // don't stream message content of outbox messages...
-            if (getFolder().type === 'Outbox') {
-                return;
-            }
-
             emailDao.getBody({
                 folder: getFolder().path,
                 message: email
@@ -78,7 +73,7 @@ define(function(require) {
 
                 // automatically decrypt if it's the selected email
                 if (email === $scope.state.mailList.selected) {
-                    emailDao.decryptMessageContent({
+                    emailDao.decryptBody({
                         message: email
                     }, $scope.onError);
                 }
@@ -98,12 +93,9 @@ define(function(require) {
             $scope.state.mailList.selected = email;
             $scope.state.read.toggle(true);
 
-            // if we're in the outbox, don't decrypt as usual
-            if (getFolder().type !== 'Outbox') {
-                emailDao.decryptMessageContent({
-                    message: email
-                }, $scope.onError);
-            }
+            emailDao.decryptBody({
+                message: email
+            }, $scope.onError);
 
             // if the email is unread, please sync the new state.
             // otherweise forget about it.
@@ -127,19 +119,21 @@ define(function(require) {
          * Synchronize the selected imap folder to local storage
          */
         $scope.synchronize = function(callback) {
-            // if we're in the outbox, don't do an imap sync
-            if (getFolder().type === 'Outbox') {
-                updateStatus('Last update: ', new Date());
-                selectFirstMessage(outboxBo.pendingEmails);
-                return;
-            }
-
             updateStatus('Syncing ...');
 
             // let email dao handle sync transparently
-            emailDao.sync({
-                folder: getFolder().path
-            }, function(err) {
+            if ($scope.state.nav.currentFolder.type === 'Outbox') {
+                emailDao.syncOutbox({
+                    folder: getFolder().path
+                }, done);
+            } else {
+                emailDao.sync({
+                    folder: getFolder().path
+                }, done);
+            }
+            
+
+            function done(err) {
                 if (err && err.code === 409) {
                     // sync still busy
                     return;
@@ -167,7 +161,7 @@ define(function(require) {
                 if (callback) {
                     callback();
                 }
-            });
+            }
         };
 
         /**
@@ -178,17 +172,7 @@ define(function(require) {
                 return;
             }
 
-            var index, currentFolder, outboxFolder;
-
-            currentFolder = getFolder();
-            // trashFolder = _.findWhere($scope.folders, {
-            //     type: 'Trash'
-            // });
-            outboxFolder = _.findWhere($scope.account.folders, {
-                type: 'Outbox'
-            });
-
-            if (currentFolder === outboxFolder) {
+            if (getFolder().type === 'Outbox') {
                 $scope.onError({
                     errMsg: 'Deleting messages from the outbox is not yet supported.'
                 });
@@ -199,7 +183,7 @@ define(function(require) {
             $scope.synchronize();
 
             function removeAndShowNext() {
-                index = getFolder().messages.indexOf(email);
+                var index = getFolder().messages.indexOf(email);
                 // show the next mail
                 if (getFolder().messages.length > 1) {
                     // if we're about to delete the last entry of the array, show the previous (i.e. the one below in the list), 
@@ -241,13 +225,6 @@ define(function(require) {
             }
 
             // production... in chrome packaged app
-
-            // if we're in the outbox, read directly from there.
-            if (getFolder().type === 'Outbox') {
-                updateStatus('Last update: ', new Date());
-                selectFirstMessage(outboxBo.pendingEmails);
-                return;
-            }
 
             // unselect selection from old folder
             $scope.select();
