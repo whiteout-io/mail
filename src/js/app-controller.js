@@ -356,7 +356,7 @@ define(function(require) {
         self._keychain = keychain;
         pgp = new PGP();
         self._crypto = pgp;
-        self._pgpbuilder = pgpbuilder = new PgpBuilder({}); // set the worker path?!
+        self._pgpbuilder = pgpbuilder = new PgpBuilder();
         self._emailDao = emailDao = new EmailDAO(keychain, pgp, userStorage, pgpbuilder, mailreader);
         self._outboxBo = new OutboxBO(emailDao, keychain, userStorage, invitationDao);
     };
