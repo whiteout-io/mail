@@ -271,12 +271,14 @@ define(function(require) {
 
         describe('send to outbox', function() {
             it('should work', function() {
-                scope.to = [{
-                    address: 'pity@dafool'
-                }];
                 scope.from = [{
                     address: 'pity@dafool'
                 }];
+                scope.to = [{
+                    address: 'pity@dafool'
+                }];
+                scope.cc = [];
+                scope.bcc = [];
                 scope.subject = 'Ermahgerd!';
                 scope.body = 'wow. much body! very text!';
                 scope.attachments = [];
