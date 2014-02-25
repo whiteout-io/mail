@@ -409,6 +409,8 @@ define(function(require) {
                 element.on('keydown', function(e) {
                     var code = e.keyCode;
 
+                    scope.$apply();
+
                     if (code === 32 || code === 188 || code === 186) {
                         // catch space, comma, semicolon
                         e.preventDefault();
