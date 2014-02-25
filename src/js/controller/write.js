@@ -223,6 +223,9 @@ define(function(require) {
                 attachments: $scope.attachments
             };
 
+            // close the writer
+            $scope.state.writer.close();
+
             // persist the email to disk for later sending
             outbox.put(email, function(err) {
                 if (err) {
@@ -237,14 +240,10 @@ define(function(require) {
                 // mark replyTo as answered, if necessary
                 if ($scope.replyTo && !$scope.replyTo.answered) {
                     $scope.replyTo.answered = true;
+                    // update the ui
+                    $scope.$apply();
                     needsSync = true;
                 }
-
-                // close the writer
-                $scope.state.writer.close();
-
-                // update the ui the scope
-                $scope.$apply();
 
                 // if we need to synchronize replyTo.answered, let's do that.
                 // otherwise, we're done
