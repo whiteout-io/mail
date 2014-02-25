@@ -74,10 +74,6 @@ define(function(require) {
 
         self._imapClient = options.imapClient;
         self._pgpMailer = options.pgpMailer;
-        // set private key
-        if (self._crypto && self._crypto._privateKey) {
-            self._pgpbuilder._privateKey = self._crypto._privateKey;
-        }
 
         // delegation-esque pattern to mitigate between node-style events and plain js
         self._imapClient.onIncomingMessage = function(message) {
