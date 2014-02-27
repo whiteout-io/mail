@@ -57,6 +57,21 @@
     }
 }
 
+.btn-primary {
+    background-color: $label-primary-back-color;
+    color: $label-primary-color;
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAGCAYAAADgzO9IAAAAJUlEQVQIW2NkQABJIPM5lCvJCGMgC4LYIAkUlTAFMB0gjRQaBQCw8go5lVnl5wAAAABJRU5ErkJggg==);
+
+    @include respond-to(retina) {
+        background-size: 3px 3px;
+    }
+
+    &:hover,
+    &:focus {
+        background-color: lighten($label-primary-back-color, 5%);
+    }
+}
+
 .btn-alt {
     background-color: $color-grey-input;
 

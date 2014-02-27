@@ -4,7 +4,8 @@ define(function(require) {
     var appController = require('js/app-controller'),
         download = require('js/util/download'),
         angular = require('angular'),
-        emailDao, crypto, keychain;
+        str = require('js/app-config').string,
+        emailDao, invitationDao, outbox, crypto, keychain;
 
     //
     // Controller
@@ -13,6 +14,8 @@ define(function(require) {
     var ReadCtrl = function($scope) {
 
         emailDao = appController._emailDao;
+        invitationDao = appController._invitationDao;
+        outbox = appController._outboxBo;
         crypto = appController._crypto;
         keychain = appController._keychain;
 
@@ -112,6 +115,29 @@ define(function(require) {
                 }, $scope.onError);
             }
         };
+
+        $scope.inviteUser = function(address) {
+            invitationDao.invite({
+                recipient: address,
+                sender: emailDao._account.emailAddress
+            }, function(err) {
+                if (err) {
+                    $scope.onError(err);
+                    return;
+                }
+
+                var invitationMail = {
+                    from: [emailDao._account.emailAddress],
+                    to: [address],
+                    subject: str.invitationSubject,
+                    body: str.invitationMessage
+                };
+
+                // send invitation mail
+                outbox.put(invitationMail, $scope.onError);
+            });
+        };
+
     };
 
     //

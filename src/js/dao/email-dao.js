@@ -1034,9 +1034,6 @@ define(function(require) {
             return;
         }
 
-        // add whiteout tag to subject
-        options.email.subject = str.subjectPrefix + options.email.subject;
-
         // mime encode, sign, encrypt and send email via smtp
         self._pgpMailer.send({
             encrypt: true,
@@ -1055,8 +1052,8 @@ define(function(require) {
             return;
         }
 
-        // add whiteout tag to subject
-        options.email.subject = str.subjectPrefix + options.email.subject;
+        // append the signature to plaintext mails
+        options.email.body += str.signature;
 
         // mime encode, sign and send email via smtp
         this._pgpMailer.send({
@@ -1066,10 +1063,6 @@ define(function(require) {
 
     EmailDAO.prototype.encrypt = function(options, callback) {
         this._pgpbuilder.encrypt(options, callback);
-    };
-
-    EmailDAO.prototype.reEncrypt = function(options, callback) {
-        this._pgpbuilder.reEncrypt(options, callback);
     };
 
     //

@@ -53,15 +53,15 @@ define(function(require) {
         subjectPrefix: '[whiteout] ',
         fallbackSubject: '(no subject)',
         invitationSubject: 'Invitation to a private conversation',
-        invitationMessage: 'I would like to invite you to a private conversation!\n\nIn order to read my encrypted message please install the Whiteout Mail application. This application is used to read and write messages securely with strong encryption applied.\n\nGo to the Whiteout Networks homepage to learn more and to download the application: https://whiteout.io',
+        invitationMessage: 'Hi,\n\nI would like to invite you to a private conversation!\n\nPlease install the Whiteout Mail application. This application is used to read and write messages securely with strong encryption applied.\n\nGo to the Whiteout Networks homepage to learn more and to download the application: https://whiteout.io\n\n',
         message: 'Hi,\n\nthis is a private conversation. To read my encrypted message below, simply open it in Whiteout Mail.\n\nOpen Whiteout Mail: https://chrome.google.com/webstore/detail/jjgghafhamholjigjoghcfcekhkonijg\n\n',
         cryptPrefix: '-----BEGIN PGP MESSAGE-----',
         cryptSuffix: '-----END PGP MESSAGE-----',
-        signature: 'Sent securely from Whiteout Mail',
+        signature: '\n\n\n--\nSent from Whiteout Mail - get the app for easy end-to-end encryption\nhttps://whiteout.io\n\n',
         webSite: 'http://whiteout.io',
         verificationSubject: 'New public key uploaded',
-        sendBtnInvite: 'Invite & send securely',
-        sendBtnSecure: 'Send securely'
+        sendBtnClear: 'Send',
+        sendBtnSecure: 'Secure send'
     };
 
     return app;

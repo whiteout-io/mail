@@ -171,16 +171,21 @@ define(function(require) {
                 }
             }
 
-            // sender can invite only one use at a time
-            if (!allSecure && numReceivers === 1) {
-                $scope.sendBtnText = str.sendBtnInvite;
+            // only allow sending if receviers exist
+            if (numReceivers < 1) {
+                return;
+            }
+
+            if (allSecure) {
+                // send encrypted if all secure
                 $scope.okToSend = true;
-                $scope.sendBtnSecure = false;
-            } else if (allSecure && numReceivers > 0) {
-                // all recipients are secure
                 $scope.sendBtnText = str.sendBtnSecure;
-                $scope.okToSend = true;
                 $scope.sendBtnSecure = true;
+            } else {
+                // send plaintext
+                $scope.okToSend = true;
+                $scope.sendBtnText = str.sendBtnClear;
+                $scope.sendBtnSecure = false;
             }
         };
 
