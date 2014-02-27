@@ -278,12 +278,11 @@ define(function(require) {
         });
 
         describe('onConnect', function() {
-            var imapLoginStub, imapListFoldersStub, pgpmailerLoginStub;
+            var imapLoginStub, imapListFoldersStub;
 
             beforeEach(function(done) {
                 // imap login
                 imapLoginStub = sinon.stub(dao, '_imapLogin');
-                pgpmailerLoginStub = sinon.stub(dao, '_pgpmailerLogin');
                 imapListFoldersStub = sinon.stub(dao, '_imapListFolders');
 
                 dao.onDisconnect(null, function(err) {
@@ -297,20 +296,17 @@ define(function(require) {
 
             afterEach(function() {
                 imapLoginStub.restore();
-                pgpmailerLoginStub.restore();
                 imapListFoldersStub.restore();
             });
 
             it('should fail due to error in imap login', function(done) {
                 imapLoginStub.yields({});
-                pgpmailerLoginStub.returns();
 
                 dao.onConnect({
                     imapClient: imapClientStub,
                     pgpMailer: pgpMailerStub
                 }, function(err) {
                     expect(err).to.exist;
-                    expect(pgpmailerLoginStub.calledOnce).to.be.true;
                     expect(imapLoginStub.calledOnce).to.be.true;
                     expect(dao._account.online).to.be.false;
                     done();
@@ -320,7 +316,6 @@ define(function(require) {
             it('should work when folder already initiated', function(done) {
                 dao._account.folders = [];
                 imapLoginStub.yields();
-                pgpmailerLoginStub.returns();
 
                 dao.onConnect({
                     imapClient: imapClientStub,
@@ -337,7 +332,6 @@ define(function(require) {
             it('should work when folder not yet initiated', function(done) {
                 var folders = [];
                 imapLoginStub.yields();
-                pgpmailerLoginStub.returns();
                 imapListFoldersStub.yields(null, folders);
 
                 dao.onConnect({
@@ -487,20 +481,6 @@ define(function(require) {
                 });
             });
         });
-
-        describe('_pgpmailerLogin', function() {
-            it('should work', function() {
-                // called once in onConnect
-                expect(pgpMailerStub.login.calledOnce).to.be.true;
-
-                pgpMailerStub.login.returns();
-
-                dao._pgpmailerLogin();
-
-                expect(pgpMailerStub.login.calledTwice).to.be.true;
-            });
-        });
-
 
         describe('_imapLogin', function() {
             it('should fail when disconnected', function(done) {
