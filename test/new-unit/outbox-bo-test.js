@@ -5,8 +5,7 @@ define(function(require) {
         OutboxBO = require('js/bo/outbox'),
         KeychainDAO = require('js/dao/keychain-dao'),
         EmailDAO = require('js/dao/email-dao'),
-        DeviceStorageDAO = require('js/dao/devicestorage-dao'),
-        InvitationDAO = require('js/dao/invitation-dao');
+        DeviceStorageDAO = require('js/dao/devicestorage-dao');
 
     chai.Assertion.includeStack = true;
 
@@ -25,7 +24,6 @@ define(function(require) {
             };
             devicestorageStub = sinon.createStubInstance(DeviceStorageDAO);
             keychainStub = sinon.createStubInstance(KeychainDAO);
-            invitationDaoStub = sinon.createStubInstance(InvitationDAO);
             outbox = new OutboxBO(emailDaoStub, keychainStub, devicestorageStub, invitationDaoStub);
         });
 
@@ -46,7 +44,7 @@ define(function(require) {
         });
 
         describe('put', function() {
-            it('should encrypt and store a mail', function(done) {
+            it('should not encrypt and store a mail', function(done) {
                 var mail, senderKey, receiverKey;
 
                 senderKey = {
@@ -75,9 +73,51 @@ define(function(require) {
                 keychainStub.getReceiverPublicKey.withArgs(mail.to[0].address).yieldsAsync(null, receiverKey);
                 keychainStub.getReceiverPublicKey.withArgs(mail.to[1].address).yieldsAsync();
 
+                devicestorageStub.storeList.withArgs([mail]).yieldsAsync();
+
+                outbox.put(mail, function(error) {
+                    expect(error).to.not.exist;
+
+                    expect(mail.publicKeysArmored.length).to.equal(2);
+                    expect(emailDaoStub.encrypt.called).to.be.false;
+                    expect(devicestorageStub.storeList.calledOnce).to.be.true;
+
+                    done();
+                });
+            });
+
+            it('should encrypt and store a mail', function(done) {
+                var mail, senderKey, receiverKey;
+
+                senderKey = {
+                    publicKey: 'SENDER PUBLIC KEY'
+                };
+                receiverKey = {
+                    publicKey: 'RECEIVER PUBLIC KEY'
+                };
+                mail = {
+                    from: [{
+                        name: 'member',
+                        address: 'member@whiteout.io'
+                    }],
+                    to: [{
+                        name: 'member',
+                        address: 'member'
+                    }, {
+                        name: 'notamember',
+                        address: 'notamember'
+                    }],
+                    cc: [],
+                    bcc: []
+                };
+
+                keychainStub.getReceiverPublicKey.withArgs(mail.from[0].address).yieldsAsync(null, senderKey);
+                keychainStub.getReceiverPublicKey.withArgs(mail.to[0].address).yieldsAsync(null, receiverKey);
+                keychainStub.getReceiverPublicKey.withArgs(mail.to[1].address).yieldsAsync(null, receiverKey);
+
                 emailDaoStub.encrypt.withArgs({
                     mail: mail,
-                    publicKeysArmored: [senderKey.publicKey, receiverKey.publicKey]
+                    publicKeysArmored: [senderKey.publicKey, receiverKey.publicKey, receiverKey.publicKey]
                 }).yieldsAsync();
 
                 devicestorageStub.storeList.withArgs([mail]).yieldsAsync();
@@ -85,8 +125,9 @@ define(function(require) {
                 outbox.put(mail, function(error) {
                     expect(error).to.not.exist;
 
-                    expect(mail.publicKeysArmored.length).to.equal(2);
-                    expect(mail.unregisteredUsers.length).to.equal(1);
+                    expect(mail.publicKeysArmored.length).to.equal(3);
+                    expect(emailDaoStub.encrypt.calledOnce).to.be.true;
+                    expect(devicestorageStub.storeList.calledOnce).to.be.true;
 
                     done();
                 });
@@ -162,27 +203,7 @@ define(function(require) {
                 keychainStub.getReceiverPublicKey.withArgs(notinvited.unregisteredUsers[0].address).yieldsAsync();
                 keychainStub.getReceiverPublicKey.withArgs(newlyjoined.unregisteredUsers[0].address).yieldsAsync(null, newlyjoinedKey);
 
-                invitationDaoStub.check.withArgs({
-                    recipient: invited.to[0].address,
-                    sender: invited.from[0].address
-                }).yieldsAsync(null, InvitationDAO.INVITE_PENDING);
-
-                invitationDaoStub.check.withArgs({
-                    recipient: notinvited.to[0].address,
-                    sender: notinvited.from[0].address
-                }).yieldsAsync(null, InvitationDAO.INVITE_MISSING);
-
-                invitationDaoStub.invite.withArgs({
-                    recipient: notinvited.to[0].address,
-                    sender: notinvited.from[0].address
-                }).yieldsAsync(null, InvitationDAO.INVITE_SUCCESS);
-
                 emailDaoStub.sendPlaintext.yieldsAsync();
-
-                emailDaoStub.reEncrypt.withArgs({
-                    mail: newlyjoined,
-                    publicKeysArmored: [newlyjoinedKey.publicKey]
-                }).yieldsAsync(null, newlyjoined);
 
                 emailDaoStub.sendEncrypted.withArgs({
                     email: newlyjoined

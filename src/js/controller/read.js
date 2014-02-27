@@ -20,7 +20,7 @@ define(function(require) {
         keychain = appController._keychain;
 
         // set default value so that the popover height is correct on init
-        $scope.keyId = 'XXXXXXXX';
+        $scope.keyId = 'No key found.';
 
         $scope.state.read = {
             open: false,
@@ -34,7 +34,7 @@ define(function(require) {
         };
 
         $scope.getKeyId = function(address) {
-            $scope.keyId = 'unknown user';
+            $scope.keyId = 'Searching...';
             keychain.getReceiverPublicKey(address, function(err, pubkey) {
                 if (err) {
                     $scope.onError(err);
@@ -42,13 +42,15 @@ define(function(require) {
                 }
 
                 if (!pubkey) {
+                    $scope.keyId = 'User has no key. Click to invite.';
+                    $scope.$apply();
                     return;
                 }
 
                 var fpr = crypto.getFingerprint(pubkey.publicKey);
                 var formatted = fpr.slice(32);
 
-                $scope.keyId = formatted;
+                $scope.keyId = 'PGP key: ' + formatted;
                 $scope.$apply();
             });
         };
@@ -116,10 +118,20 @@ define(function(require) {
             }
         };
 
-        $scope.inviteUser = function(address) {
+        $scope.invite = function(user) {
+            // only invite non-pgp users
+            if (user.secure) {
+                return;
+            }
+
+            $scope.keyId = 'Sending invitation...';
+
+            var sender = emailDao._account.emailAddress,
+                recipient = user.address;
+
             invitationDao.invite({
-                recipient: address,
-                sender: emailDao._account.emailAddress
+                recipient: recipient,
+                sender: sender
             }, function(err) {
                 if (err) {
                     $scope.onError(err);
@@ -127,8 +139,14 @@ define(function(require) {
                 }
 
                 var invitationMail = {
-                    from: [emailDao._account.emailAddress],
-                    to: [address],
+                    from: [{
+                        address: sender
+                    }],
+                    to: [{
+                        address: recipient
+                    }],
+                    cc: [],
+                    bcc: [],
                     subject: str.invitationSubject,
                     body: str.invitationMessage
                 };

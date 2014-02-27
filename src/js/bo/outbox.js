@@ -32,8 +32,10 @@ define(function(require) {
      * @param {Function} callback(error, pendingMailsCount) Callback that informs you about the count of pending mails.
      */
     OutboxBO.prototype.startChecking = function(callback) {
+        // remember global callback
+        this._onError = callback;
         // start periodic checking of outbox
-        this._intervalId = setInterval(this._processOutbox.bind(this, callback), config.checkOutboxInterval);
+        this._intervalId = setInterval(this._processOutbox.bind(this, this._onError), config.checkOutboxInterval);
     };
 
     /**
@@ -65,7 +67,7 @@ define(function(require) {
         // check if there are unregistered recipients
         function checkRecipients(recipients) {
             var after = _.after(recipients.length, function() {
-                encryptAndPersist();
+                checkEncrypt();
             });
 
             // find out if there are unregistered users
@@ -87,11 +89,10 @@ define(function(require) {
             });
         }
 
-
-        function encryptAndPersist() {
+        function checkEncrypt() {
             // only encrypt if all recipients have public keys
             if (mail.publicKeysArmored.length < allReaders.length) {
-                self._devicestorage.storeList([mail], outboxDb, callback);
+                storeAndForward(mail);
                 return;
             }
 
@@ -105,7 +106,21 @@ define(function(require) {
                     return;
                 }
 
-                self._devicestorage.storeList([mail], outboxDb, callback);
+                storeAndForward(mail);
+            });
+        }
+
+        function storeAndForward(mail) {
+            // store in outbox
+            self._devicestorage.storeList([mail], outboxDb, function(err) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                callback();
+                // don't wait for next round
+                self._processOutbox(self._onError);
             });
         }
     };
