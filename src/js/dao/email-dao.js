@@ -82,9 +82,6 @@ define(function(require) {
             }
         };
 
-        // connect the pgpmailer
-        self._pgpmailerLogin();
-
         // connect to newly created imap client
         self._imapLogin(function(err) {
             if (err) {
@@ -1108,16 +1105,6 @@ define(function(require) {
         }
         var dbType = 'email_' + options.folder + '_' + options.uid;
         this._devicestorage.removeList(dbType, callback);
-    };
-
-
-    // PGP Mailer API
-
-    /**
-     * Login the smtp client
-     */
-    EmailDAO.prototype._pgpmailerLogin = function() {
-        this._pgpMailer.login();
     };
 
     // IMAP API
