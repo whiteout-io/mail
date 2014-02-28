@@ -33,9 +33,9 @@ define(function(require) {
      */
     OutboxBO.prototype.startChecking = function(callback) {
         // remember global callback
-        this._onError = callback;
+        this._onUpdate = callback;
         // start periodic checking of outbox
-        this._intervalId = setInterval(this._processOutbox.bind(this, this._onError), config.checkOutboxInterval);
+        this._intervalId = setInterval(this._processOutbox.bind(this, this._onUpdate), config.checkOutboxInterval);
     };
 
     /**
@@ -120,7 +120,7 @@ define(function(require) {
 
                 callback();
                 // don't wait for next round
-                self._processOutbox(self._onError);
+                self._processOutbox(self._onUpdate);
             });
         }
     };
