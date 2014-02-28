@@ -2,21 +2,24 @@ define(function(require) {
     'use strict';
 
     var RestDAO = require('js/dao/rest-dao'),
-        $ = require('jquery'),
         expect = chai.expect;
 
     describe('Rest DAO unit tests', function() {
 
-        var restDao;
+        var restDao, xhrMock, requests;
 
         beforeEach(function() {
             restDao = new RestDAO();
+            xhrMock = sinon.useFakeXMLHttpRequest();
+            requests = [];
+
+            xhrMock.onCreate = function(xhr) {
+                requests.push(xhr);
+            };
         });
 
         afterEach(function() {
-            if (typeof $.ajax.callCount !== 'undefined') {
-                $.ajax.restore();
-            }
+            xhrMock.restore();
         });
 
         describe('contructor', function() {
@@ -38,96 +41,86 @@ define(function(require) {
         });
 
         describe('get', function() {
-            it('should work with json as default type', function(done) {
-                var spy = sinon.stub($, 'ajax').yieldsTo('success', {
-                    foo: 'bar'
-                }, 'success', {
-                    status: 200
+            it('should work with json as default type', function() {
+                restDao.get({
+                    uri: '/asdf'
+                }, function(err, data, status) {
+                    expect(err).to.not.exist;
+                    expect(data.foo).to.equal('bar');
+                    var req = requests[0];
+                    expect(req.requestHeaders.Accept).to.equal('application/json');
+                    expect(status).to.equal(200);
                 });
 
+                expect(requests.length).to.equal(1);
+                requests[0].respond(200, {
+                    "Content-Type": "application/json"
+                }, '{"foo": "bar"}');
+            });
+
+            it('should work with jsonz', function() {
                 restDao.get({
                     uri: '/asdf',
                     type: 'json'
                 }, function(err, data, status) {
                     expect(err).to.not.exist;
                     expect(data.foo).to.equal('bar');
-                    expect(spy.calledWith(sinon.match(function(request) {
-                        return request.headers.Accept === 'application/json' && request.dataType === 'json';
-                    }))).to.be.true;
+                    var req = requests[0];
+                    expect(req.requestHeaders.Accept).to.equal('application/json');
                     expect(status).to.equal(200);
-                    done();
                 });
+
+                expect(requests.length).to.equal(1);
+                requests[0].respond(200, {
+                    "Content-Type": "application/json"
+                }, '{"foo": "bar"}');
             });
 
-            it('should work with json', function(done) {
-                var spy = sinon.stub($, 'ajax').yieldsTo('success', {
-                    foo: 'bar'
-                }, 'success', {
-                    status: 200
-                });
-
-                restDao.get({
-                    uri: '/asdf',
-                    type: 'json'
-                }, function(err, data, status) {
-                    expect(err).to.not.exist;
-                    expect(data.foo).to.equal('bar');
-                    expect(spy.calledWith(sinon.match(function(request) {
-                        return request.headers.Accept === 'application/json' && request.dataType === 'json';
-                    }))).to.be.true;
-                    expect(status).to.equal(200);
-                    done();
-                });
-            });
-
-            it('should work with plain text', function(done) {
-                var spy = sinon.stub($, 'ajax').yieldsTo('success', 'foobar!', 'success', {
-                    status: 200
-                });
-
+            it('should work with plain text', function() {
                 restDao.get({
                     uri: '/asdf',
                     type: 'text'
                 }, function(err, data, status) {
                     expect(err).to.not.exist;
                     expect(data).to.equal('foobar!');
-                    expect(spy.calledWith(sinon.match(function(request) {
-                        return request.headers.Accept === 'text/plain' && request.dataType === 'text';
-                    }))).to.be.true;
+                    var req = requests[0];
+                    expect(req.requestHeaders.Accept).to.equal('text/plain');
                     expect(status).to.equal(200);
-                    done();
                 });
+
+                expect(requests.length).to.equal(1);
+                requests[0].respond(200, {
+                    "Content-Type": "text/plain"
+                }, 'foobar!');
             });
 
-            it('should work with xml', function(done) {
-                var spy = sinon.stub($, 'ajax').yieldsTo('success', '<foo>bar</foo>', 'success', {
-                    status: 200
-                });
-
+            it('should work with xml', function() {
                 restDao.get({
                     uri: '/asdf',
                     type: 'xml'
                 }, function(err, data, status) {
                     expect(err).to.not.exist;
-                    expect(data).to.equal('<foo>bar</foo>'); // that's probably not right, but in the unit test, it is :)
-                    expect(spy.calledWith(sinon.match(function(request) {
-                        return request.headers.Accept === 'application/xml' && request.dataType === 'xml';
-                    }))).to.be.true;
+                    expect(data).to.equal('<foo>bar</foo>');
+                    var req = requests[0];
+                    expect(req.requestHeaders.Accept).to.equal('application/xml');
                     expect(status).to.equal(200);
-                    done();
                 });
+
+                expect(requests.length).to.equal(1);
+                requests[0].respond(200, {
+                    "Content-Type": "application/xml"
+                }, '<foo>bar</foo>');
             });
 
-            it('should fail for missing uri parameter', function(done) {
+            it('should fail for missing uri parameter', function() {
                 restDao.get({}, function(err, data) {
                     expect(err).to.exist;
                     expect(err.code).to.equal(400);
                     expect(data).to.not.exist;
-                    done();
                 });
             });
 
-            it('should fail for unhandled data type', function(done) {
+            it('should fail for unhandled data type', function() {
                 restDao.get({
                     uri: '/asdf',
                     type: 'snafu'
@@ -135,84 +128,72 @@ define(function(require) {
                     expect(err).to.exist;
                     expect(err.code).to.equal(400);
                     expect(data).to.not.exist;
-                    done();
                 });
             });
 
-            it('should fail for server error', function(done) {
-                sinon.stub($, 'ajax').yieldsTo('error', {
-                    status: 500
-                }, {
-                    statusText: 'Internal error'
-                }, {});
-
+            it('should fail for server error', function() {
                 restDao.get({
                     uri: '/asdf'
                 }, function(err, data) {
                     expect(err).to.exist;
                     expect(err.code).to.equal(500);
                     expect(data).to.not.exist;
-                    done();
                 });
+
+                expect(requests.length).to.equal(1);
+                requests[0].respond(500, {
+                    "Content-Type": "text/plain"
+                }, 'Internal error');
             });
         });
 
         describe('put', function() {
-            it('should fail', function(done) {
-                sinon.stub($, 'ajax').yieldsTo('error', {
-                    status: 500
-                }, {
-                    statusText: 'Internal error'
-                }, {});
-
+            it('should fail', function() {
                 restDao.put('/asdf', {}, function(err) {
                     expect(err).to.exist;
                     expect(err.code).to.equal(500);
-                    done();
                 });
+
+                expect(requests.length).to.equal(1);
+                requests[0].respond(500, {
+                    "Content-Type": "text/plain"
+                }, 'Internal error');
             });
 
-            it('should work', function(done) {
-                var spy = sinon.stub($, 'ajax').yieldsTo('success', undefined, 'success', {
-                    status: 201
-                });
-
+            it('should work', function() {
                 restDao.put('/asdf', {}, function(err, res, status) {
                     expect(err).to.not.exist;
-                    expect(res).to.not.exist;
-                    expect(spy.callCount).to.equal(1);
+                    expect(res).to.equal('');
                     expect(status).to.equal(201);
-                    done();
                 });
+
+                expect(requests.length).to.equal(1);
+                requests[0].respond(201);
             });
         });
 
         describe('remove', function() {
-            it('should fail', function(done) {
-                sinon.stub($, 'ajax').yieldsTo('error', {
-                    status: 500
-                }, {
-                    statusText: 'Internal error'
-                }, {});
-
+            it('should fail', function() {
                 restDao.remove('/asdf', function(err) {
                     expect(err).to.exist;
                     expect(err.code).to.equal(500);
-                    done();
                 });
+
+                expect(requests.length).to.equal(1);
+                requests[0].respond(500, {
+                    "Content-Type": "text/plain"
+                }, 'Internal error');
             });
 
-            it('should work', function(done) {
-                var spy = sinon.stub($, 'ajax').yieldsTo('success', undefined, 'success', {
-                    status: 204
-                });
+            it('should work', function() {
                 restDao.remove('/asdf', function(err, res, status) {
                     expect(err).to.not.exist;
-                    expect(res).to.not.exist;
-                    expect(spy.callCount).to.equal(1);
-                    expect(status).to.equal(204);
-                    done();
+                    expect(res).to.equal('');
+                    expect(status).to.equal(200);
                 });
+
+                expect(requests.length).to.equal(1);
+                requests[0].respond(200);
             });
         });
 

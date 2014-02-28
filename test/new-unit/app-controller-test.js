@@ -5,13 +5,7 @@ define(function(require) {
         EmailDAO = require('js/dao/email-dao'),
         OutboxBO = require('js/bo/outbox'),
         DeviceStorageDAO = require('js/dao/devicestorage-dao'),
-        $ = require('jquery'),
         expect = chai.expect;
-
-    var appControllerTest = {
-        user: 'test@exmaple.com',
-        passphrase: 'asdf'
-    };
 
     describe('App Controller unit tests', function() {
         var emailDaoStub, outboxStub, appConfigStoreStub, isOnlineStub,
@@ -27,11 +21,6 @@ define(function(require) {
 
             isOnlineStub = sinon.stub(controller, 'isOnline');
 
-            sinon.stub($, 'get');
-            sinon.stub($, 'ajax').yieldsTo('success', {
-                email: appControllerTest.user
-            });
-
             window.chrome = window.chrome || {};
             window.chrome.identity = window.chrome.identity || {};
             if (typeof window.chrome.identity.getAuthToken !== 'function') {
@@ -41,8 +30,6 @@ define(function(require) {
         });
 
         afterEach(function() {
-            $.get.restore();
-            $.ajax.restore();
             identityStub.restore();
             isOnlineStub.restore();
         });
@@ -180,30 +167,49 @@ define(function(require) {
         });
 
         describe('fetchOAuthToken', function() {
-            it('should work the first time', function(done) {
-                appConfigStoreStub.listItems.yields(null, []);
-                appConfigStoreStub.storeList.yields();
-                identityStub.yields('token42');
+            var queryEmailAddressStub;
 
-                controller.fetchOAuthToken(function(err) {
+            beforeEach(function() {
+                // buildModules
+                queryEmailAddressStub = sinon.stub(controller, 'queryEmailAddress');
+            });
+
+            afterEach(function() {
+                queryEmailAddressStub.restore();
+            });
+
+            it('should work', function(done) {
+                identityStub.yields('token42');
+                queryEmailAddressStub.yields(null, 'bob@asdf.com');
+
+                controller.fetchOAuthToken(function(err, res) {
                     expect(err).to.not.exist;
-                    expect(appConfigStoreStub.listItems.calledOnce).to.be.true;
-                    expect(appConfigStoreStub.storeList.calledOnce).to.be.true;
+                    expect(res.emailAddress).to.equal('bob@asdf.com');
+                    expect(res.token).to.equal('token42');
+                    expect(queryEmailAddressStub.calledOnce).to.be.true;
                     expect(identityStub.calledOnce).to.be.true;
-                    expect($.ajax.calledOnce).to.be.true;
                     done();
                 });
             });
 
-            it('should work when the email address is cached', function(done) {
-                appConfigStoreStub.listItems.yields(null, ['asdf']);
-                identityStub.yields('token42');
+            it('should fail due to chrome api error', function(done) {
+                identityStub.yields();
 
                 controller.fetchOAuthToken(function(err) {
-                    expect(err).to.not.exist;
-                    expect(appConfigStoreStub.listItems.calledOnce).to.be.true;
+                    expect(err).to.exist;
                     expect(identityStub.calledOnce).to.be.true;
-                    expect($.ajax.called).to.be.false;
+                    done();
+                });
+            });
+
+            it('should fail due error querying email address', function(done) {
+                identityStub.yields('token42');
+                queryEmailAddressStub.yields();
+
+                controller.fetchOAuthToken(function(err) {
+                    expect(err).to.exist;
+                    expect(queryEmailAddressStub.calledOnce).to.be.true;
+                    expect(identityStub.calledOnce).to.be.true;
                     done();
                 });
             });
