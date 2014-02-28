@@ -14,7 +14,7 @@
     <p class="address">
       To: <span ng-repeat="u in state.mailList.selected.to" class="label" ng-class="{'label-primary': u.secure === false, 'label-primary-click': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : ''}}" ng-mouseover="getKeyId(u.address)" ng-click="invite(u)" popover="#fingerprint-info">{{u.name || u.address}}</span>
     </p>
-    <div ng-switch="state.mailList.selected.cc !== undefined">
+    <div ng-switch="state.mailList.selected.cc && state.mailList.selected.cc.length > 0">
       <p class="address" ng-switch-when="true">
         Cc: <span ng-repeat="u in state.mailList.selected.cc" class="label" ng-class="{'label-primary': u.secure === false, 'label-primary-click': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : ''}}" ng-mouseover="getKeyId(u.address)" ng-click="invite(u)" popover="#fingerprint-info">{{u.name || u.address}}</span>
       </p>
