@@ -105,6 +105,7 @@ define(function(require) {
             // set display to insecure while fetching keys
             recipient.key = undefined;
             recipient.secure = false;
+            $scope.checkSendStatus();
 
             // verify email address
             if (!util.validateEmailAddress(recipient.address)) {
@@ -171,16 +172,21 @@ define(function(require) {
                 }
             }
 
-            // sender can invite only one use at a time
-            if (!allSecure && numReceivers === 1) {
-                $scope.sendBtnText = str.sendBtnInvite;
+            // only allow sending if receviers exist
+            if (numReceivers < 1) {
+                return;
+            }
+
+            if (allSecure) {
+                // send encrypted if all secure
                 $scope.okToSend = true;
-                $scope.sendBtnSecure = false;
-            } else if (allSecure && numReceivers > 0) {
-                // all recipients are secure
                 $scope.sendBtnText = str.sendBtnSecure;
-                $scope.okToSend = true;
                 $scope.sendBtnSecure = true;
+            } else {
+                // send plaintext
+                $scope.okToSend = true;
+                $scope.sendBtnText = str.sendBtnClear;
+                $scope.sendBtnSecure = false;
             }
         };
 
@@ -461,7 +467,8 @@ define(function(require) {
 
     ngModule.directive('attachmentBtn', function() {
         return function(scope, elm) {
-            elm.on('click', function() {
+            elm.on('click touchstart', function(e) {
+                e.preventDefault();
                 document.querySelector('#attachment-input').click();
             });
         };

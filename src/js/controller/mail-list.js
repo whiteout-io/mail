@@ -20,15 +20,6 @@ define(function(require) {
         // push handler
         if (emailDao) {
             emailDao.onIncomingMessage = function(email) {
-                if (!email.subject) {
-                    return;
-                }
-
-                if (email.subject.indexOf(str.subjectPrefix) === -1 ||
-                    email.subject === str.subjectPrefix + str.verificationSubject) {
-                    return;
-                }
-
                 // sync
                 $scope.synchronize(function() {
                     // show notification
@@ -36,22 +27,6 @@ define(function(require) {
                 });
             };
             chrome.notifications.onClicked.addListener(notificationClicked);
-        }
-
-        function notificationClicked(uidString) {
-            var email, uid = parseInt(uidString, 10);
-
-            if (isNaN(uid)) {
-                return;
-            }
-
-            email = _.findWhere(getFolder().messages, {
-                uid: uid
-            });
-
-            if (email) {
-                $scope.select(email);
-            }
         }
 
         //
@@ -131,7 +106,7 @@ define(function(require) {
                     folder: getFolder().path
                 }, done);
             }
-            
+
 
             function done(err) {
                 if (err && err.code === 409) {
@@ -248,6 +223,22 @@ define(function(require) {
         //
         // helper functions
         //
+
+        function notificationClicked(uidString) {
+            var email, uid = parseInt(uidString, 10);
+
+            if (isNaN(uid)) {
+                return;
+            }
+
+            email = _.findWhere(getFolder().messages, {
+                uid: uid
+            });
+
+            if (email) {
+                $scope.select(email);
+            }
+        }
 
         function notificationForEmail(email) {
             chrome.notifications.create('' + email.uid, {

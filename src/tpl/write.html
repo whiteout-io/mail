@@ -26,7 +26,7 @@
           <input ng-model="subject" class="subject" spellcheck="true" tabindex="2" placeholder="Subject" ng-change="updatePreview()">
         </div><!--/.subject-line-->
         <input id="attachment-input" type="file" multiple attachment-input>
-        <button class="btn-attachment" attachment-btn>
+        <button class="btn btn-attachment" ng-class="{'btn-primary': sendBtnSecure === false}" attachment-btn>
           <div data-icon="&#xe003;"></div>
         </button><!--/.btn-attachment-->
       </div><!--/.subject-box-->
@@ -46,13 +46,13 @@
       <div class="body" focus-child>
         <p ng-model="body" contentEditable="true" spellcheck="false" ng-change="updatePreview()" tabindex="3" focus-me="state.writer.open && writerTitle === 'Reply'"></p>
 
-        <div class="encrypt-preview" ng-class="{'invisible': !ciphertextPreview}">
+        <div class="encrypt-preview" ng-class="{'invisible': !ciphertextPreview || !sendBtnSecure}">
           <p>-----BEGIN ENCRYPTED PREVIEW-----<br>{{ciphertextPreview}}<br>-----END ENCRYPTED PREVIEW-----</p>
         </div><!--/.encrypt-preview-->
       </div><!--/.body-->
 
       <div class="send-control">
-        <button ng-click="sendToOutbox()" class="btn" data-icon="{{(sendBtnSecure === false) ? '&#xe001;' : (sendBtnSecure === true) ? '&#xe009;' : ''}}" ng-disabled="!okToSend" tabindex="4">{{sendBtnText || 'Send'}}</button>
+        <button ng-click="sendToOutbox()" class="btn" ng-class="{'btn-primary': sendBtnSecure === false}" ng-disabled="!okToSend" tabindex="4">{{sendBtnText || 'Send'}}</button>
       </div>
     </div><!--/.write-view-->
 

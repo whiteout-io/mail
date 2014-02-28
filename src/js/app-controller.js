@@ -348,17 +348,15 @@ define(function(require) {
         // init objects and inject dependencies
         restDao = new RestDAO();
         pubkeyDao = new PublicKeyDAO(restDao);
-        invitationDao = new InvitationDAO(restDao);
         lawnchairDao = new LawnchairDAO();
         userStorage = new DeviceStorageDAO(lawnchairDao);
 
-        keychain = new KeychainDAO(lawnchairDao, pubkeyDao);
-        self._keychain = keychain;
-        pgp = new PGP();
-        self._crypto = pgp;
+        self._invitationDao = invitationDao = new InvitationDAO(restDao);
+        self._keychain = keychain = new KeychainDAO(lawnchairDao, pubkeyDao);
+        self._crypto = pgp = new PGP();
         self._pgpbuilder = pgpbuilder = new PgpBuilder();
         self._emailDao = emailDao = new EmailDAO(keychain, pgp, userStorage, pgpbuilder, mailreader);
-        self._outboxBo = new OutboxBO(emailDao, keychain, userStorage, invitationDao);
+        self._outboxBo = new OutboxBO(emailDao, keychain, userStorage);
     };
 
     /**

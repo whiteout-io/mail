@@ -4,7 +4,8 @@ define(function(require) {
     var appController = require('js/app-controller'),
         download = require('js/util/download'),
         angular = require('angular'),
-        emailDao, crypto, keychain;
+        str = require('js/app-config').string,
+        emailDao, invitationDao, outbox, crypto, keychain;
 
     //
     // Controller
@@ -13,11 +14,13 @@ define(function(require) {
     var ReadCtrl = function($scope) {
 
         emailDao = appController._emailDao;
+        invitationDao = appController._invitationDao;
+        outbox = appController._outboxBo;
         crypto = appController._crypto;
         keychain = appController._keychain;
 
         // set default value so that the popover height is correct on init
-        $scope.keyId = 'XXXXXXXX';
+        $scope.keyId = 'No key found.';
 
         $scope.state.read = {
             open: false,
@@ -31,7 +34,7 @@ define(function(require) {
         };
 
         $scope.getKeyId = function(address) {
-            $scope.keyId = 'unknown user';
+            $scope.keyId = 'Searching...';
             keychain.getReceiverPublicKey(address, function(err, pubkey) {
                 if (err) {
                     $scope.onError(err);
@@ -39,13 +42,15 @@ define(function(require) {
                 }
 
                 if (!pubkey) {
+                    $scope.keyId = 'User has no key. Click to invite.';
+                    $scope.$apply();
                     return;
                 }
 
                 var fpr = crypto.getFingerprint(pubkey.publicKey);
                 var formatted = fpr.slice(32);
 
-                $scope.keyId = formatted;
+                $scope.keyId = 'PGP key: ' + formatted;
                 $scope.$apply();
             });
         };
@@ -112,6 +117,45 @@ define(function(require) {
                 }, $scope.onError);
             }
         };
+
+        $scope.invite = function(user) {
+            // only invite non-pgp users
+            if (user.secure) {
+                return;
+            }
+
+            $scope.keyId = 'Sending invitation...';
+
+            var sender = emailDao._account.emailAddress,
+                recipient = user.address;
+
+            invitationDao.invite({
+                recipient: recipient,
+                sender: sender
+            }, function(err) {
+                if (err) {
+                    $scope.onError(err);
+                    return;
+                }
+
+                var invitationMail = {
+                    from: [{
+                        address: sender
+                    }],
+                    to: [{
+                        address: recipient
+                    }],
+                    cc: [],
+                    bcc: [],
+                    subject: str.invitationSubject,
+                    body: str.invitationMessage
+                };
+
+                // send invitation mail
+                outbox.put(invitationMail, $scope.onError);
+            });
+        };
+
     };
 
     //

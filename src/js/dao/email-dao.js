@@ -566,11 +566,13 @@ define(function(require) {
 
                         if (verificationMessage) {
                             handleVerification(verificationMessage, function(err) {
-                                // TODO: show usable error when the verification failed
+                                // eliminate the verification mail if the verification worked, otherwise display an error and it in the mail list
                                 if (err) {
-                                    self._account.busy = false;
                                     callback(err);
-                                    return;
+                                } else {
+                                    messages = _.filter(messages, function(message) {
+                                        return message.subject !== (str.subjectPrefix + str.verificationSubject);
+                                    });
                                 }
 
                                 storeHeaders();
@@ -581,22 +583,11 @@ define(function(require) {
                         storeHeaders();
 
                         function storeHeaders() {
-                            // eliminate non-whiteout mails
-                            messages = _.filter(messages, function(message) {
-                                // we don't want to display "[whiteout] "-prefixed mails for now
-                                return message.subject.indexOf(str.subjectPrefix) === 0 && message.subject !== (str.subjectPrefix + str.verificationSubject);
-                            });
-
                             // no delta, we're done here
                             if (_.isEmpty(messages)) {
                                 doDeltaF4();
                                 return;
                             }
-
-                            // filter out the "[whiteout] " prefix
-                            messages.forEach(function(messages) {
-                                messages.subject = messages.subject.replace(/^\[whiteout\] /, '');
-                            });
 
                             // persist the encrypted message to the local storage
                             self._localStoreMessages({
@@ -820,7 +811,11 @@ define(function(require) {
                     self._imapDeleteMessage({
                         folder: options.folder,
                         uid: message.uid
-                    }, localCallback);
+                    }, function() {
+                        // if we could successfully not delete the message or not doesn't matter.
+                        // just don't show it in whiteout and keep quiet about it
+                        localCallback();
+                    });
                 });
             });
         }
@@ -1039,13 +1034,10 @@ define(function(require) {
             return;
         }
 
-        // add whiteout tag to subject
-        options.email.subject = str.subjectPrefix + options.email.subject;
-
         // mime encode, sign, encrypt and send email via smtp
         self._pgpMailer.send({
             encrypt: true,
-            cleartextMessage: str.message,
+            cleartextMessage: str.message + str.signature,
             mail: options.email,
             publicKeysArmored: options.email.publicKeysArmored
         }, callback);
@@ -1060,8 +1052,8 @@ define(function(require) {
             return;
         }
 
-        // add whiteout tag to subject
-        options.email.subject = str.subjectPrefix + options.email.subject;
+        // append the signature to plaintext mails
+        options.email.body += str.signature;
 
         // mime encode, sign and send email via smtp
         this._pgpMailer.send({
@@ -1071,10 +1063,6 @@ define(function(require) {
 
     EmailDAO.prototype.encrypt = function(options, callback) {
         this._pgpbuilder.encrypt(options, callback);
-    };
-
-    EmailDAO.prototype.reEncrypt = function(options, callback) {
-        this._pgpbuilder.reEncrypt(options, callback);
     };
 
     //
@@ -1177,8 +1165,7 @@ define(function(require) {
         }
 
         var o = {
-            path: options.folder,
-            subject: str.subjectPrefix
+            path: options.folder
         };
 
         if (typeof options.answered !== 'undefined') {
