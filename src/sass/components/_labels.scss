@@ -30,6 +30,22 @@
     }
 }
 
+.label-primary-click {
+    position: relative;
+
+    &:hover,
+    &:focus {
+        transition: none;
+        background-color: lighten($label-primary-back-color, 5%);
+    }
+
+    &:active,
+    &.active {
+        top: 1px;
+        left: 1px;
+    }
+}
+
 .label-light {
     background-color: $label-light-back-color;
     color: $label-light-color;
