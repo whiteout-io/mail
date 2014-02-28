@@ -2536,7 +2536,7 @@ define(function(require) {
 
                 pgpMailerStub.send.withArgs({
                     encrypt: true,
-                    cleartextMessage: str.message,
+                    cleartextMessage: str.message + str.signature,
                     mail: dummyDecryptedMail,
                     publicKeysArmored: publicKeys
                 }).yields();
@@ -2574,17 +2574,6 @@ define(function(require) {
 
                 dao.encrypt({}, function() {
                     expect(pgpBuilderStub.encrypt.calledOnce).to.be.true;
-                    done();
-                });
-            });
-        });
-
-        describe('reEncrypt', function() {
-            it('should re-encrypt', function(done) {
-                pgpBuilderStub.reEncrypt.yields();
-
-                dao.reEncrypt({}, function() {
-                    expect(pgpBuilderStub.reEncrypt.calledOnce).to.be.true;
                     done();
                 });
             });

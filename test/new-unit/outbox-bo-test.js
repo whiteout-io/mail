@@ -10,7 +10,7 @@ define(function(require) {
     chai.Assertion.includeStack = true;
 
     describe('Outbox Business Object unit test', function() {
-        var outbox, emailDaoStub, devicestorageStub, invitationDaoStub, keychainStub,
+        var outbox, emailDaoStub, devicestorageStub, keychainStub,
             dummyUser = 'spiderpig@springfield.com';
 
         beforeEach(function() {
@@ -24,7 +24,7 @@ define(function(require) {
             };
             devicestorageStub = sinon.createStubInstance(DeviceStorageDAO);
             keychainStub = sinon.createStubInstance(KeychainDAO);
-            outbox = new OutboxBO(emailDaoStub, keychainStub, devicestorageStub, invitationDaoStub);
+            outbox = new OutboxBO(emailDaoStub, keychainStub, devicestorageStub);
         });
 
         afterEach(function() {});
@@ -149,6 +149,7 @@ define(function(require) {
                         name: 'member',
                         address: 'member'
                     }],
+                    encrypted: true,
                     publicKeysArmored: ['ARMORED KEY OF MEMBER'],
                     unregisteredUsers: []
                 };
@@ -185,6 +186,7 @@ define(function(require) {
                         name: 'newlyjoined',
                         address: 'newlyjoined'
                     }],
+                    encrypted: true,
                     publicKeysArmored: [],
                     unregisteredUsers: [{
                         name: 'newlyjoined',
@@ -199,10 +201,6 @@ define(function(require) {
 
                 devicestorageStub.listItems.yieldsAsync(null, dummyMails);
 
-                keychainStub.getReceiverPublicKey.withArgs(invited.unregisteredUsers[0].address).yieldsAsync();
-                keychainStub.getReceiverPublicKey.withArgs(notinvited.unregisteredUsers[0].address).yieldsAsync();
-                keychainStub.getReceiverPublicKey.withArgs(newlyjoined.unregisteredUsers[0].address).yieldsAsync(null, newlyjoinedKey);
-
                 emailDaoStub.sendPlaintext.yieldsAsync();
 
                 emailDaoStub.sendEncrypted.withArgs({
@@ -213,22 +211,18 @@ define(function(require) {
                     email: member
                 }).yieldsAsync();
 
-                devicestorageStub.storeList.withArgs([newlyjoined]).yieldsAsync();
-
-                devicestorageStub.removeList.withArgs('email_OUTBOX_' + member.id).yieldsAsync();
-                devicestorageStub.removeList.withArgs('email_OUTBOX_' + newlyjoined.id).yieldsAsync();
+                devicestorageStub.removeList.yieldsAsync();
 
                 function onOutboxUpdate(err, count) {
                     expect(err).to.not.exist;
-                    expect(count).to.equal(2);
+                    expect(count).to.equal(0);
 
                     expect(outbox._outboxBusy).to.be.false;
-                    expect(emailDaoStub.sendEncrypted.calledTwice).to.be.true;
-                    expect(emailDaoStub.reEncrypt.calledOnce).to.be.true;
-                    expect(emailDaoStub.sendPlaintext.calledOnce).to.be.true;
-                    expect(devicestorageStub.listItems.calledOnce).to.be.true;
-                    expect(keychainStub.getReceiverPublicKey.calledThrice).to.be.true;
-                    expect(invitationDaoStub.check.calledTwice).to.be.true;
+                    expect(emailDaoStub.sendEncrypted.callCount).to.equal(2);
+                    expect(emailDaoStub.sendPlaintext.callCount).to.equal(2);
+                    expect(devicestorageStub.listItems.callCount).to.equal(1);
+                    expect(devicestorageStub.removeList.callCount).to.equal(4);
+                    expect(keychainStub.getReceiverPublicKey.callCount).to.equal(0);
 
                     done();
                 }

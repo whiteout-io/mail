@@ -169,7 +169,7 @@ define(function(require) {
 
                 expect(recipient.key).to.be.undefined;
                 expect(recipient.secure).to.be.undefined;
-                expect(scope.checkSendStatus.calledOnce).to.be.true;
+                expect(scope.checkSendStatus.callCount).to.equal(2);
                 expect(keychainMock.getReceiverPublicKey.called).to.be.false;
             });
 
@@ -184,7 +184,7 @@ define(function(require) {
                 scope.onError = function() {
                     expect(recipient.key).to.be.undefined;
                     expect(recipient.secure).to.be.false;
-                    expect(scope.checkSendStatus.called).to.be.false;
+                    expect(scope.checkSendStatus.callCount).to.equal(1);
                     expect(keychainMock.getReceiverPublicKey.calledOnce).to.be.true;
                     done();
                 };
@@ -205,7 +205,7 @@ define(function(require) {
                         userId: 'asdf@example.com'
                     });
                     expect(recipient.secure).to.be.true;
-                    expect(scope.checkSendStatus.calledOnce).to.be.true;
+                    expect(scope.checkSendStatus.callCount).to.equal(2);
                     expect(keychainMock.getReceiverPublicKey.calledOnce).to.be.true;
                     done();
                 };
@@ -229,28 +229,29 @@ define(function(require) {
                 expect(scope.sendBtnSecure).to.be.undefined;
             });
 
-            it('should not be to invite 1 user', function() {
+            it('should be able to send plaintext', function() {
                 scope.to = [{
                     address: 'asdf@asdf.de'
                 }];
                 scope.checkSendStatus();
 
                 expect(scope.okToSend).to.be.true;
-                expect(scope.sendBtnText).to.equal('Invite & send securely');
+                expect(scope.sendBtnText).to.equal('Send');
                 expect(scope.sendBtnSecure).to.be.false;
             });
 
-            it('should not be able to invite multiple recipients', function() {
+            it('should send plaintext if one receiver is not secure', function() {
                 scope.to = [{
-                    address: 'asdf@asdf.de'
+                    address: 'asdf@asdf.de',
+                    secure: true
                 }, {
                     address: 'asdf@asdfg.de'
                 }];
                 scope.checkSendStatus();
 
-                expect(scope.okToSend).to.be.false;
-                expect(scope.sendBtnText).to.be.undefined;
-                expect(scope.sendBtnSecure).to.be.undefined;
+                expect(scope.okToSend).to.be.true;
+                expect(scope.sendBtnText).to.equal('Send');
+                expect(scope.sendBtnSecure).to.be.false;
             });
 
             it('should be able to send securely to multiple recipients', function() {
