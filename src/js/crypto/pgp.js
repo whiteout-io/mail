@@ -223,6 +223,14 @@ define(function(require) {
         openpgp.decryptAndVerifyMessage(this._privateKey, [publicKey], message, onDecrypted);
 
         function onDecrypted(err, decrypted) {
+            if (err) {
+                callback({
+                    errMsg: 'Error decrypting PGP message!',
+                    err: err
+                });
+                return;
+            }
+
             // check if signatures are valid
             signaturesValid = true;
             decrypted.signatures.forEach(function(sig) {
