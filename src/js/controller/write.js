@@ -105,6 +105,7 @@ define(function(require) {
             // set display to insecure while fetching keys
             recipient.key = undefined;
             recipient.secure = false;
+            $scope.checkSendStatus();
 
             // verify email address
             if (!util.validateEmailAddress(recipient.address)) {
@@ -466,7 +467,8 @@ define(function(require) {
 
     ngModule.directive('attachmentBtn', function() {
         return function(scope, elm) {
-            elm.on('click', function() {
+            elm.on('click touchstart', function(e) {
+                e.preventDefault();
                 document.querySelector('#attachment-input').click();
             });
         };

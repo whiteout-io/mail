@@ -26,7 +26,7 @@
           <input ng-model="subject" class="subject" spellcheck="true" tabindex="2" placeholder="Subject" ng-change="updatePreview()">
         </div><!--/.subject-line-->
         <input id="attachment-input" type="file" multiple attachment-input>
-        <button class="btn-attachment" attachment-btn>
+        <button class="btn btn-attachment" ng-class="{'btn-primary': sendBtnSecure === false}" attachment-btn>
           <div data-icon="&#xe003;"></div>
         </button><!--/.btn-attachment-->
       </div><!--/.subject-box-->

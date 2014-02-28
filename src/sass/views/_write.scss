@@ -70,14 +70,8 @@
             right: 0;
             padding: em(7.5) em(7.5) em(4) em(7.5);
             margin: em(5);
-            outline: none;
-            color: $color-grey-lightest;
-            background-color: $color-blue;
-
-            &:hover,
-            &:focus {
-                background-color: lighten($color-blue, 10%);
-            }
+            font-size: 1em;
+            outline: 0;
 
             &:active,
             &.active {
