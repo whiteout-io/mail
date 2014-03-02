@@ -209,6 +209,7 @@ module.exports = function(grunt) {
                 dest: 'test/integration/src/'
             }
         },
+
         compress: {
             chrome: {
                 options: {
@@ -219,18 +220,20 @@ module.exports = function(grunt) {
                 cwd: 'dist/',
                 src: ['**/*'],
                 dest: 'release/'
-            },
-            nodeWebkit: {
-                options: {
-                    mode: 'zip',
-                    archive: 'release/whiteout_mail_' + zipName + '.nw'
-                },
-                expand: true,
-                cwd: 'dist/',
-                src: ['**/*'],
-                dest: '/'
             }
-        }
+        },
+
+        nodewebkit: {
+            options: {
+                version: '0.9.2', // node-webkit version
+                build_dir: './release', // Where the build version of my node-webkit app is saved
+                mac: true, // We want to build it for mac
+                win: false, // We want to build it for win
+                linux32: false, // We don't need linux32
+                linux64: false, // We don't need linux64
+            },
+            src: ['./dist/**/*'] // Your node-webkit app
+        },
     });
 
     // Load the plugin(s)
@@ -245,6 +248,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-contrib-compress');
+    grunt.loadNpmTasks('grunt-node-webkit-builder');
 
     // Build tasks
     grunt.registerTask('dist-npm', ['copy:npm', 'copy:npmDev', 'copy:cryptoLib']);
