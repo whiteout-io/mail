@@ -29,6 +29,7 @@
 			"deepEqual",
 			"start",
 			"chrome",
+			"requirejs",
 			"define",
 			"self",
 			"describe",

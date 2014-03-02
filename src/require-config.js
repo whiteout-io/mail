@@ -1,7 +1,8 @@
 (function() {
 	'use strict';
 
-	require.config({
+	requirejs.config({
+		nodeRequire: (typeof module !== 'undefined' && module.exports) ? require : undefined,
 		baseUrl: 'lib',
 		paths: {
 			js: '../js',

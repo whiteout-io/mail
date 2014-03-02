@@ -1,7 +1,7 @@
 // hey Angular, we're bootstrapping manually!
 window.name = 'NG_DEFER_BOOTSTRAP!';
 
-require([
+requirejs([
     'angular',
     'js/controller/dialog',
     'js/controller/popover',
@@ -18,7 +18,21 @@ require([
     'cryptoLib/util',
     'angularRoute',
     'angularTouch'
-], function(angular, DialogCtrl, PopoverCtrl, AddAccountCtrl, AccountCtrl, LoginCtrl, LoginInitialCtrl, LoginNewDeviceCtrl, LoginExistingCtrl, MailListCtrl, ReadCtrl, WriteCtrl, NavigationCtrl, util) {
+], function(
+    angular,
+    DialogCtrl,
+    PopoverCtrl,
+    AddAccountCtrl,
+    AccountCtrl,
+    LoginCtrl,
+    LoginInitialCtrl,
+    LoginNewDeviceCtrl,
+    LoginExistingCtrl,
+    MailListCtrl,
+    ReadCtrl,
+    WriteCtrl,
+    NavigationCtrl,
+    util) {
     'use strict';
 
     // reset window.name
