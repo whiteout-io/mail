@@ -210,15 +210,25 @@ module.exports = function(grunt) {
             }
         },
         compress: {
-            main: {
+            chrome: {
                 options: {
                     mode: 'zip',
-                    archive: zipName + '.zip'
+                    archive: 'release/whiteout_mail_' + zipName + '.zip'
                 },
                 expand: true,
                 cwd: 'dist/',
                 src: ['**/*'],
                 dest: 'release/'
+            },
+            nodeWebkit: {
+                options: {
+                    mode: 'zip',
+                    archive: 'release/whiteout_mail_' + zipName + '.nw'
+                },
+                expand: true,
+                cwd: 'dist/',
+                src: ['**/*'],
+                dest: '/'
             }
         }
     });
