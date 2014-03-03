@@ -211,10 +211,10 @@ module.exports = function(grunt) {
         },
 
         compress: {
-            chrome: {
+            main: {
                 options: {
                     mode: 'zip',
-                    archive: 'release/whiteout_mail_' + zipName + '.zip'
+                    archive: 'release/whiteout-mail_' + zipName + '.zip'
                 },
                 expand: true,
                 cwd: 'dist/',
@@ -226,7 +226,7 @@ module.exports = function(grunt) {
         nodewebkit: {
             options: {
                 version: '0.9.2', // node-webkit version
-                build_dir: './release', // Where the build version of my node-webkit app is saved
+                build_dir: './release/node-webkit/', // Where the build version of my node-webkit app is saved
                 mac: true, // We want to build it for mac
                 win: false, // We want to build it for win
                 linux32: false, // We don't need linux32
