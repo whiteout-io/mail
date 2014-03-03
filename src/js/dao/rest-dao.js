@@ -1,8 +1,7 @@
 define(function(require) {
     'use strict';
 
-    var $ = require('jquery'),
-        config = require('js/app-config').config;
+    var config = require('js/app-config').config;
 
     var RestDAO = function(options) {
         if (options && options.baseUri) {
@@ -18,7 +17,7 @@ define(function(require) {
      * @param {String} options.type (optional) The type of data that you're expecting back from the server: json, xml, text. Default: json.
      */
     RestDAO.prototype.get = function(options, callback) {
-        var acceptHeader;
+        var xhr, acceptHeader;
 
         if (typeof options.uri === 'undefined') {
             callback({
@@ -44,66 +43,97 @@ define(function(require) {
             return;
         }
 
-        $.ajax({
-            url: this._baseUri + options.uri,
-            type: 'GET',
-            dataType: options.type,
-            headers: {
-                'Accept': acceptHeader
-            },
-            success: function(res, textStatus, xhr) {
+        xhr = new XMLHttpRequest();
+        xhr.open('GET', this._baseUri + options.uri);
+        xhr.setRequestHeader('Accept', acceptHeader);
+
+        xhr.onload = function() {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                var res;
+                if (options.type === 'json') {
+                    res = JSON.parse(xhr.responseText);
+                } else {
+                    res = xhr.responseText;
+                }
+
                 callback(null, res, xhr.status);
-            },
-            error: function(xhr, textStatus, err) {
-                callback({
-                    code: xhr.status,
-                    errMsg: xhr.statusText,
-                    err: err
-                });
+                return;
             }
-        });
+
+            callback({
+                code: xhr.status,
+                errMsg: xhr.statusText
+            });
+        };
+
+        xhr.onerror = function(e) {
+            callback({
+                errMsg: 'Error: ' + e.error
+            });
+        };
+
+        xhr.send();
     };
 
     /**
      * PUT (create/update) request
      */
     RestDAO.prototype.put = function(item, uri, callback) {
-        $.ajax({
-            url: this._baseUri + uri,
-            type: 'PUT',
-            data: JSON.stringify(item),
-            contentType: 'application/json',
-            success: function(res, textStatus, xhr) {
-                callback(null, res, xhr.status);
-            },
-            error: function(xhr, textStatus, err) {
-                callback({
-                    code: xhr.status,
-                    errMsg: xhr.statusText,
-                    err: err
-                });
+        var xhr;
+
+        xhr = new XMLHttpRequest();
+        xhr.open('PUT', this._baseUri + uri);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+
+        xhr.onload = function() {
+            if (xhr.readyState === 4 && (xhr.status === 200 || xhr.status === 201 || xhr.status === 304)) {
+                callback(null, xhr.responseText, xhr.status);
+                return;
             }
-        });
+
+            callback({
+                code: xhr.status,
+                errMsg: xhr.statusText
+            });
+        };
+
+        xhr.onerror = function(e) {
+            callback({
+                errMsg: 'Error: ' + e.error
+            });
+        };
+
+        xhr.send(JSON.stringify(item));
     };
 
     /**
      * DELETE (remove) request
      */
     RestDAO.prototype.remove = function(uri, callback) {
-        $.ajax({
-            url: this._baseUri + uri,
-            type: 'DELETE',
-            success: function(res, textStatus, xhr) {
-                callback(null, res, xhr.status);
-            },
-            error: function(xhr, textStatus, err) {
-                callback({
-                    code: xhr.status,
-                    errMsg: xhr.statusText,
-                    err: err
-                });
+        var xhr;
+
+        xhr = new XMLHttpRequest();
+        xhr.open('DELETE', this._baseUri + uri);
+
+        xhr.onload = function() {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                callback(null, xhr.responseText, xhr.status);
+                return;
             }
-        });
+
+            callback({
+                code: xhr.status,
+                errMsg: xhr.statusText
+            });
+        };
+
+        xhr.onerror = function(e) {
+            callback({
+                errMsg: 'Error: ' + e.error
+            });
+        };
+
+        xhr.send();
     };
 
     return RestDAO;

@@ -14,7 +14,6 @@
 			lawnchair: 'lawnchair/lawnchair-git',
 			lawnchairSQL: 'lawnchair/lawnchair-adapter-webkit-sqlite-git',
 			lawnchairIDB: 'lawnchair/lawnchair-adapter-indexed-db-git',
-			jquery: 'jquery/jquery-2.0.3.min',
 			angular: 'angular/angular.min',
 			angularRoute: 'angular/angular-route.min',
 			angularTouch: 'angular/angular-touch.min',

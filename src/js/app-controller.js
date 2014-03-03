@@ -4,8 +4,7 @@
 define(function(require) {
     'use strict';
 
-    var $ = require('jquery'),
-        ImapClient = require('imap-client'),
+    var ImapClient = require('imap-client'),
         mailreader = require('mailreader'),
         PgpMailer = require('pgpmailer'),
         EmailDAO = require('js/dao/email-dao'),
@@ -149,32 +148,31 @@ define(function(require) {
     };
 
     self.getCertficate = function(localCallback) {
-        var xhr;
-
         if (self.certificate) {
             localCallback(null, self.certificate);
             return;
         }
 
         // fetch pinned local ssl certificate
-        xhr = new XMLHttpRequest();
-        xhr.open('GET', '/ca/Google_Internet_Authority_G2.pem');
-        xhr.onload = function() {
-            if (xhr.readyState === 4 && xhr.status === 200 && xhr.responseText) {
-                self.certificate = xhr.responseText;
-                localCallback(null, self.certificate);
-            } else {
+        var ca = new RestDAO({
+            baseUri: '/ca'
+        });
+
+        ca.get({
+            uri: '/Google_Internet_Authority_G2.pem',
+            type: 'text'
+        }, function(err, cert) {
+            if (err || !cert) {
                 localCallback({
                     errMsg: 'Could not fetch pinned certificate!'
                 });
+                return;
             }
-        };
-        xhr.onerror = function() {
-            localCallback({
-                errMsg: 'Could not fetch pinned certificate!'
-            });
-        };
-        xhr.send();
+
+            self.certificate = cert;
+            localCallback(null, self.certificate);
+            return;
+        });
     };
 
     self.isOnline = function() {
@@ -277,29 +275,24 @@ define(function(require) {
             }
 
             // fetch gmail user's email address from the Google Authorization Server endpoint
-            $.ajax({
-                url: 'https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=' + token,
-                type: 'GET',
-                dataType: 'json',
-                success: function(info) {
-                    if (!info || !info.email) {
-                        callback({
-                            errMsg: 'Error looking up email address on google api!'
-                        });
-                        return;
-                    }
+            var googleEndpoint = new RestDAO({
+                baseUri: 'https://www.googleapis.com'
+            });
 
-                    // cache the email address on the device
-                    self._appConfigStore.storeList([info.email], itemKey, function(err) {
-                        callback(err, info.email);
-                    });
-                },
-                error: function(xhr, textStatus, err) {
+            googleEndpoint.get({
+                uri: '/oauth2/v1/tokeninfo?access_token=' + token
+            }, function(err, info) {
+                if (err || !info || !info.email) {
                     callback({
-                        errMsg: xhr.status + ': ' + xhr.statusText,
-                        err: err
+                        errMsg: 'Error looking up email address on google api!'
                     });
+                    return;
                 }
+
+                // cache the email address on the device
+                self._appConfigStore.storeList([info.email], itemKey, function(err) {
+                    callback(err, info.email);
+                });
             });
         }
     };
@@ -310,35 +303,34 @@ define(function(require) {
     self.fetchOAuthToken = function(callback) {
         // get OAuth Token from chrome
         chrome.identity.getAuthToken({
-                'interactive': true
-            },
-            function(token) {
-                if ((chrome && chrome.runtime && chrome.runtime.lastError) || !token) {
+            'interactive': true
+        }, onToken);
+
+        function onToken(token) {
+            if ((chrome && chrome.runtime && chrome.runtime.lastError) || !token) {
+                callback({
+                    errMsg: 'Error fetching an OAuth token for the user!'
+                });
+                return;
+            }
+
+            // get email address for the token
+            self.queryEmailAddress(token, function(err, emailAddress) {
+                if (err || !emailAddress) {
                     callback({
-                        errMsg: 'Error fetching an OAuth token for the user!',
-                        err: chrome.runtime.lastError
+                        errMsg: 'Error looking up email address on login!',
+                        err: err
                     });
                     return;
                 }
 
-                // get email address for the token
-                self.queryEmailAddress(token, function(err, emailAddress) {
-                    if (err || !emailAddress) {
-                        callback({
-                            errMsg: 'Error looking up email address on login!',
-                            err: err
-                        });
-                        return;
-                    }
-
-                    // init the email dao
-                    callback(null, {
-                        emailAddress: emailAddress,
-                        token: token
-                    });
+                // init the email dao
+                callback(null, {
+                    emailAddress: emailAddress,
+                    token: token
                 });
-            }
-        );
+            });
+        }
     };
 
     self.buildModules = function() {
