@@ -337,6 +337,8 @@ define(function(require) {
         var lawnchairDao, restDao, pubkeyDao, invitationDao,
             emailDao, keychain, pgp, userStorage, pgpbuilder;
 
+        mailreader.startWorker(config.workerPath + '/../lib/mailreader-parser-worker.js');
+
         // init objects and inject dependencies
         restDao = new RestDAO();
         pubkeyDao = new PublicKeyDAO(restDao);
