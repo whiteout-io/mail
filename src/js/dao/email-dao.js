@@ -1052,9 +1052,6 @@ define(function(require) {
             return;
         }
 
-        // append the signature to plaintext mails
-        options.email.body += str.signature;
-
         // mime encode, sign and send email via smtp
         this._pgpMailer.send({
             mail: options.email
