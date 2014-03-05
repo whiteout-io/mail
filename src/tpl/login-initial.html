@@ -6,7 +6,7 @@
   <div class="content" ng-switch on="state.ui">
 
     <div ng-switch-when="1">
-      <p><b>Set passphrase.</b> The passphrase protects your private key. If you forget your passphrase you will not be able to recover your messages.</p>
+      <p><b>Generate PGP key.</b> Choose a passphrase to protect your new key. If you forget it at a later time you will not be able to read past messages.</p><p>Alternatively you can also <a href="#" ng-click="$event.preventDefault(); importKey()">import an existing PGP key</a>.</p>
       <form>
         <div>
           <label class="input-error-message" ng-class="{'passphrase-label-ok': passphraseRating >= 2}">{{passphraseMsg}}</label><br>

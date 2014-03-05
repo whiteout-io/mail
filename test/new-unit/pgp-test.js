@@ -139,9 +139,21 @@ define(function(require) {
             });
 
             describe('Get KeyId', function() {
-                it('should work', function() {
+                it('should work without param', function() {
                     var keyId = pgp.getKeyId();
                     expect(keyId).to.equal('F6F60E9B42CDFF4C');
+                });
+
+                it('should work with param', function() {
+                    var keyId = pgp.getKeyId(pubkey);
+                    expect(keyId).to.equal('F6F60E9B42CDFF4C');
+                });
+            });
+
+            describe('Get UserId', function() {
+                it('should work with param', function() {
+                    var userId = pgp.getUserId(pubkey);
+                    expect(userId).to.contain(user);
                 });
             });
 

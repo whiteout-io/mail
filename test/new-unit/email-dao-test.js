@@ -354,11 +354,16 @@ define(function(require) {
                     _pgpbuilder: {}
                 };
 
+                pgpStub.getUserId.returns('Whiteout User <' + emailAddress + '>');
+
                 pgpStub.importKeys.withArgs({
                     passphrase: passphrase,
                     privateKeyArmored: mockKeyPair.privateKey.encryptedKey,
                     publicKeyArmored: mockKeyPair.publicKey.publicKey
                 }).yields();
+                pgpStub._privateKey = {
+                    foo: 'bar'
+                };
 
                 dao.unlock({
                     passphrase: passphrase,
@@ -367,6 +372,7 @@ define(function(require) {
                     expect(err).to.not.exist;
 
                     expect(pgpStub.importKeys.calledOnce).to.be.true;
+                    expect(dao._pgpbuilder._privateKey).to.equal(pgpStub._privateKey);
 
                     done();
                 });

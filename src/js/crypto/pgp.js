@@ -68,23 +68,33 @@ define(function(require) {
         return fingerprint(this._publicKey);
     };
 
+    PGP.prototype.getUserId = function(keyArmored) {
+        var key = openpgp.key.readArmored(keyArmored).keys[0];
+        return key.getUserIds()[0];
+    };
+
     /**
      * Show a user's key id
      */
-    PGP.prototype.getKeyId = function() {
-        var pubKeyId, privKeyId;
+    PGP.prototype.getKeyId = function(keyArmored) {
+        var key, pubKeyId, privKeyId;
 
-        // check keys
+        // process armored key input
+        if (keyArmored) {
+            key = openpgp.key.readArmored(keyArmored).keys[0];
+            return key.getKeyPacket().getKeyId().toHex().toUpperCase();
+        }
+
+        // check already imported keys
         if (!this._privateKey || !this._publicKey) {
-            return;
+            throw new Error('Cannot read key IDs... keys not set!');
         }
 
         pubKeyId = this._publicKey.getKeyPacket().getKeyId().toHex().toUpperCase();
         privKeyId = this._privateKey.getKeyPacket().getKeyId().toHex().toUpperCase();
 
         if (!pubKeyId || !privKeyId || pubKeyId !== privKeyId) {
-            console.error('Key IDs do not match!');
-            return;
+            throw new Error('Key IDs do not match!');
         }
 
         return pubKeyId;

@@ -4,13 +4,14 @@ define(function(require) {
     var expect = chai.expect,
         angular = require('angular'),
         mocks = require('angularMocks'),
+        PGP = require('js/crypto/pgp'),
         LoginNewDeviceCtrl = require('js/controller/login-new-device'),
         KeychainDAO = require('js/dao/keychain-dao'),
         EmailDAO = require('js/dao/email-dao'),
         appController = require('js/app-controller');
 
     describe('Login (new device) Controller unit test', function() {
-        var scope, ctrl, origEmailDao, emailDaoMock,
+        var scope, ctrl, origEmailDao, emailDaoMock, pgpMock,
             emailAddress = 'fred@foo.com',
             passphrase = 'asd',
             keyId,
@@ -24,8 +25,8 @@ define(function(require) {
             appController._emailDao = emailDaoMock;
 
             keyId = '9FEB47936E712926';
-            keychainMock = sinon.createStubInstance(KeychainDAO);
-            emailDaoMock._keychain = keychainMock;
+            emailDaoMock._keychain = keychainMock = sinon.createStubInstance(KeychainDAO);
+            appController._crypto = pgpMock = sinon.createStubInstance(PGP);
 
             emailDaoMock._account = {
                 emailAddress: emailAddress,
@@ -57,15 +58,37 @@ define(function(require) {
         });
 
         describe('confirm passphrase', function() {
-            it('should unlock crypto', function() {
+            it('should unlock crypto with a public key on the server', function() {
                 scope.passphrase = passphrase;
                 scope.key = {
                     privateKeyArmored: 'b'
                 };
+
+                pgpMock.getKeyId.returns(keyId);
+
                 keychainMock.getUserKeyPair.withArgs(emailAddress).yields(null, {
                     _id: keyId,
                     publicKey: 'a'
                 });
+                emailDaoMock.unlock.withArgs(sinon.match.any, passphrase).yields();
+                keychainMock.putUserKeyPair.yields();
+
+                scope.confirmPassphrase();
+
+                expect(emailDaoMock.unlock.calledOnce).to.be.true;
+                expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
+            });
+
+            it('should unlock crypto with no key on the server', function() {
+                scope.passphrase = passphrase;
+                scope.key = {
+                    privateKeyArmored: 'b',
+                    publicKeyArmored: 'a'
+                };
+
+                pgpMock.getKeyId.returns(keyId);
+
+                keychainMock.getUserKeyPair.withArgs(emailAddress).yields();
                 emailDaoMock.unlock.withArgs(sinon.match.any, passphrase).yields();
                 keychainMock.putUserKeyPair.yields();
 

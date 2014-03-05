@@ -126,20 +126,7 @@ define(function(require) {
 
         if (options.keypair) {
             // import existing key pair into crypto module
-            self._crypto.importKeys({
-                passphrase: options.passphrase,
-                privateKeyArmored: options.keypair.privateKey.encryptedKey,
-                publicKeyArmored: options.keypair.publicKey.publicKey
-            }, function(err) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-
-                // set decrypted privateKey to pgpMailer
-                self._pgpbuilder._privateKey = self._crypto._privateKey;
-                callback();
-            });
+            handleExistingKeypair(options.keypair);
             return;
         }
 
@@ -156,6 +143,44 @@ define(function(require) {
 
             handleGenerated(generatedKeypair);
         });
+
+        function handleExistingKeypair(keypair) {
+            var pubUserID, privUserID;
+
+            // check if key IDs match
+            if (!keypair.privateKey._id || keypair.privateKey._id !== keypair.publicKey._id) {
+                callback({
+                    errMsg: 'Key IDs dont match!'
+                });
+                return;
+            }
+
+            // check if the key's user ID matches the current account
+            pubUserID = self._crypto.getUserId(keypair.publicKey.publicKey);
+            privUserID = self._crypto.getUserId(keypair.privateKey.encryptedKey);
+            if (pubUserID.indexOf(self._account.emailAddress) === -1 || privUserID.indexOf(self._account.emailAddress) === -1) {
+                callback({
+                    errMsg: 'User IDs dont match!'
+                });
+                return;
+            }
+
+            // import existing key pair into crypto module
+            self._crypto.importKeys({
+                passphrase: options.passphrase,
+                privateKeyArmored: keypair.privateKey.encryptedKey,
+                publicKeyArmored: keypair.publicKey.publicKey
+            }, function(err) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                // set decrypted privateKey to pgpMailer
+                self._pgpbuilder._privateKey = self._crypto._privateKey;
+                callback();
+            });
+        }
 
         function handleGenerated(generatedKeypair) {
             // import the new key pair into crypto module

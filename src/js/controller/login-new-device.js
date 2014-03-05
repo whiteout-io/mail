@@ -11,7 +11,8 @@ define(function(require) {
         // attach global error handler
         errorUtil.attachHandler($scope);
 
-        var emailDao = appController._emailDao;
+        var emailDao = appController._emailDao,
+            pgp = appController._crypto;
 
         $scope.incorrect = false;
 
@@ -27,18 +28,32 @@ define(function(require) {
 
         function unlockCrypto() {
             var userId = emailDao._account.emailAddress;
+            // check if user already has a public key on the key server
             emailDao._keychain.getUserKeyPair(userId, function(err, keypair) {
                 if (err) {
                     $scope.onError(err);
                     return;
                 }
 
+                keypair = keypair || {};
+
+                // set parsed private key
                 keypair.privateKey = {
-                    _id: keypair.publicKey._id,
+                    _id: pgp.getKeyId($scope.key.privateKeyArmored),
                     userId: userId,
                     encryptedKey: $scope.key.privateKeyArmored
                 };
 
+                if (!keypair.publicKey) {
+                    // there is no public key on the key server yet... use parsed
+                    keypair.publicKey = {
+                        _id: pgp.getKeyId($scope.key.publicKeyArmored),
+                        userId: userId,
+                        publicKey: $scope.key.publicKeyArmored
+                    };
+                }
+
+                // import and validate keypair
                 emailDao.unlock({
                     keypair: keypair,
                     passphrase: $scope.passphrase
