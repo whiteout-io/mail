@@ -1,0 +1,42 @@
+.view-contacts {
+
+    .key-controls {
+        margin: 30px;
+
+        input[type=text] {
+            line-height: 23px;
+        }
+
+        input[type=file] {
+            visibility: hidden;
+            width: 0;
+            height: 0;
+        }
+    }
+
+    .key-list {
+        max-height: 400px;
+        margin: 20px;
+        overflow-y: scroll;
+
+        table {
+            th, td {
+                padding: 5px 10px;
+            }
+
+            .hover {
+                cursor: pointer;
+            }
+
+            button.remove {
+                font-family: $font-family-icons;
+                font-size: 0.75em;
+                color: $color-grey-input;
+                border: none;
+                background: none;
+                outline: none;
+            }
+        }
+    }
+    
+}

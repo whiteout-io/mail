@@ -20,10 +20,8 @@ define(function(require) {
 
         beforeEach(function() {
             origEmailDao = appController._emailDao;
-            cryptoMock = sinon.createStubInstance(PGP);
-            emailDaoMock = sinon.createStubInstance(EmailDAO);
-            emailDaoMock._crypto = cryptoMock;
-            appController._emailDao = emailDaoMock;
+            appController._emailDao = emailDaoMock = sinon.createStubInstance(EmailDAO);
+            emailDaoMock._crypto = cryptoMock = sinon.createStubInstance(PGP);
 
             dummyFingerprint = '3A2D39B4E1404190B8B949DE7D7E99036E712926';
             expectedFingerprint = '3A2D 39B4 E140 4190 B8B9 49DE 7D7E 9903 6E71 2926';

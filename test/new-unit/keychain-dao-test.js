@@ -32,6 +32,30 @@ define(function(require) {
             });
         });
 
+        describe('listLocalPublicKeys', function() {
+            it('should work', function(done) {
+                lawnchairDaoStub.list.withArgs('publickey', 0, null).yields();
+
+                keychainDao.listLocalPublicKeys(function() {
+                    expect(lawnchairDaoStub.list.callCount).to.equal(1);
+                    done();
+                });
+            });
+        });
+
+        describe('removeLocalPublicKey', function() {
+            it('should work', function(done) {
+                var id = 'asdf';
+
+                lawnchairDaoStub.remove.withArgs('publickey_' + id).yields();
+
+                keychainDao.removeLocalPublicKey(id, function() {
+                    expect(lawnchairDaoStub.remove.callCount).to.equal(1);
+                    done();
+                });
+            });
+        });
+
         describe('lookup public key', function() {
             it('should fail', function(done) {
                 keychainDao.lookupPublicKey(undefined, function(err, key) {

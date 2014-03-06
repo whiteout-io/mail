@@ -256,29 +256,41 @@ define(function(require) {
                 return;
             }
 
-            if (!pubkey) {
-                // fetch from cloud storage
-                self._publicKeyDao.get(id, function(err, cloudPubkey) {
+            if (pubkey) {
+                callback(null, pubkey);
+                return;
+            }
+
+            // fetch from cloud storage
+            self._publicKeyDao.get(id, function(err, cloudPubkey) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                // cache public key in cache
+                self.saveLocalPublicKey(cloudPubkey, function(err) {
                     if (err) {
                         callback(err);
                         return;
                     }
 
-                    // cache public key in cache
-                    self.saveLocalPublicKey(cloudPubkey, function(err) {
-                        if (err) {
-                            callback(err);
-                            return;
-                        }
-
-                        callback(null, cloudPubkey);
-                    });
+                    callback(null, cloudPubkey);
                 });
-
-            } else {
-                callback(null, pubkey);
-            }
+            });
         });
+    };
+
+    /**
+     * List all the locally stored public keys
+     */
+    KeychainDAO.prototype.listLocalPublicKeys = function(callback) {
+        // search local keyring for public key
+        this._localDbDao.list('publickey', 0, null, callback);
+    };
+
+    KeychainDAO.prototype.removeLocalPublicKey = function(id, callback) {
+        this._localDbDao.remove('publickey_' + id, callback);
     };
 
     KeychainDAO.prototype.lookupPrivateKey = function(id, callback) {

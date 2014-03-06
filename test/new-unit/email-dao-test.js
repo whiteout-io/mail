@@ -354,7 +354,9 @@ define(function(require) {
                     _pgpbuilder: {}
                 };
 
-                pgpStub.getUserId.returns('Whiteout User <' + emailAddress + '>');
+                pgpStub.getKeyParams.returns({
+                    userId: emailAddress
+                });
 
                 pgpStub.importKeys.withArgs({
                     passphrase: passphrase,

@@ -20,6 +20,7 @@
     transition: background-color 0.3s;
     text-decoration: none;
     font-weight: normal;
+    outline: 0;
 
     &:hover,
     &:focus {
@@ -28,7 +29,6 @@
 
     &:active,
     &.active {
-        outline: 0;
         background-image: none;
         box-shadow: none;
         top: 1px;

@@ -79,6 +79,8 @@
             margin-top: em(50, 16);
             padding: 0 $nav-padding;
             li {
+                margin-bottom: 0.25em;
+
                 a {
                     font-size: $font-size-big;
                 }

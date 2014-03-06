@@ -1,0 +1,45 @@
+<div class="lightbox-body" ng-controller="ContactsCtrl">
+  <header>
+    <h2>Contacts</h2>
+    <button class="close" ng-click="state.contacts.toggle(false)" data-action="lightbox-close">&#xe007;</button>
+  </header>
+
+  <div class="content">
+    <div class="view-contacts">
+
+      <div class="key-controls">
+        <input class="input-text" type="text" placeholder="Search..." ng-model="searchText">
+        <span>
+          <input id="keyfile-input" type="file" multiple accept=".asc" keyfile-input>
+          <button class="btn" ng-class="{'btn-primary': sendBtnSecure === false}" keyfile-btn>Import public keys</button>
+        </span>
+      </div>
+
+      <div class="key-list">
+        <table>
+          <tr>
+            <th>Key ID</th>
+            <th>Email</th>
+            <th>Created</th>
+            <th>Size</th>
+          </tr>
+          <tr ng-repeat="key in keys | orderBy:'userId' | filter:searchText">
+            <td class="hover" ng-mouseover="getFingerprint(key)" popover="#fingerprint-contact">{{key._id.slice(8)}}</td>
+            <td>{{key.userId}}</td>
+            <td>{{key.created | date:'mediumDate'}}</td>
+            <td>{{key.bitSize}} bit</td>
+            <td><button class="remove" ng-click="removeKey(key)">&#xe007;</button></td>
+          </tr>
+        </table>
+      </div>
+
+    </div><!-- /.view-contacts -->
+  </div><!-- /.content -->
+
+  <!-- popovers -->
+  <div id="fingerprint-contact" class="popover right" ng-controller="PopoverCtrl">
+    <div class="popover-title"><b>Fingerprint</b></div>
+    <div class="popover-content">{{fingerprint}}</div>
+  </div><!--/.popover-->
+
+</div><!-- /.lightbox-body -->
