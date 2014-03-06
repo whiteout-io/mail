@@ -2035,7 +2035,7 @@ define(function(require) {
             });
 
             it('should not bother about corrupted authentication mails', function(done) {
-                var invocations, folder, localListStub, imapSearchStub, imapGetStub, imapListMessagesStub, imapDeleteStub;
+                var invocations, folder, localListStub, imapSearchStub, imapGetStub, imapListMessagesStub, imapDeleteStub, localStoreStub;
 
                 invocations = 0;
                 folder = 'FOLDAAAA';
@@ -2059,6 +2059,13 @@ define(function(require) {
                     folder: folder,
                     answered: true
                 }).yields(null, []);
+
+                localStoreStub = sinon.stub(dao, '_localStoreMessages').withArgs({
+                    folder: folder,
+                    emails: [corruptedVerificationMail]
+                }).yields();
+
+
                 imapListMessagesStub = sinon.stub(dao, '_imapListMessages').yields(null, [corruptedVerificationMail]);
                 imapGetStub = sinon.stub(dao, '_imapStreamText').yields(null);
                 keychainStub.verifyPublicKey.withArgs(corruptedVerificationUuid).yields({
@@ -2078,12 +2085,14 @@ define(function(require) {
                     }
 
                     expect(dao._account.busy).to.be.false;
-                    expect(dao._account.folders[0].messages).to.be.empty;
+                    expect(dao._account.folders[0].messages).to.not.be.empty;
                     expect(localListStub.calledOnce).to.be.true;
                     expect(imapSearchStub.calledThrice).to.be.true;
                     expect(imapGetStub.calledOnce).to.be.true;
+                    expect(localStoreStub.calledOnce).to.be.true;
                     expect(keychainStub.verifyPublicKey.called).to.be.false;
                     expect(imapDeleteStub.called).to.be.false;
+
 
                     done();
                 });

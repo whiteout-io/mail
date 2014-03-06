@@ -548,6 +548,7 @@ define(function(require) {
                         return;
                     }
 
+                    // list the messages starting from the lowest new uid to the highest new uid
                     self._imapListMessages({
                         folder: folder.path,
                         firstUid: Math.min.apply(null, delta4),
@@ -559,27 +560,40 @@ define(function(require) {
                             return;
                         }
 
-                        // if there is a verification message in the synced messages, handle it
-                        var verificationMessage = _.findWhere(messages, {
-                            subject: str.subjectPrefix + str.verificationSubject
+                        // if there are verification messages in the synced messages, handle it
+                        var verificationMessages = _.filter(messages, function(message) {
+                            return message.subject === (str.subjectPrefix + str.verificationSubject);
                         });
 
-                        if (verificationMessage) {
-                            handleVerification(verificationMessage, function(err) {
-                                // eliminate the verification mail if the verification worked, otherwise display an error and it in the mail list
-                                if (err) {
-                                    callback(err);
-                                } else {
-                                    messages = _.filter(messages, function(message) {
-                                        return message.subject !== (str.subjectPrefix + str.verificationSubject);
-                                    });
-                                }
+                        // if there are verification messages, continue after we've tried to verify
+                        if (verificationMessages.length > 0) {
+                            var after = _.after(verificationMessages.length, storeHeaders);
 
-                                storeHeaders();
+                            verificationMessages.forEach(function(verificationMessage) {
+                                handleVerification(verificationMessage, function(err, isValid) {
+                                    // if it was NOT a valid verification mail, do nothing
+                                    if (!isValid) {
+                                        after();
+                                        return;
+                                    }
+
+                                    // if an error occurred and the mail was a valid verification mail, display the error, but
+                                    // keep the mail in the list so the user can see it and verify manually
+                                    if (err) {
+                                        callback(err);
+                                        after();
+                                        return;
+                                    }
+
+                                    // if verification worked, we remove the mail from the list.
+                                    messages.splice(messages.indexOf(verificationMessage), 1);
+                                    after();
+                                });
                             });
                             return;
                         }
 
+                        // no verification messages, just proceed as usual
                         storeHeaders();
 
                         function storeHeaders() {
@@ -776,34 +790,29 @@ define(function(require) {
                 folder: options.folder,
                 message: message
             }, function(error) {
-                var verificationUrlPrefix = config.cloudUrl + config.verificationUrl,
-                    uuid, isValidUuid, index;
-
+                // we could not stream the text to determine if the verification was valid or not
+                // so handle it as if it were valid
                 if (error) {
-                    localCallback(error);
+                    localCallback(error, true);
                     return;
                 }
 
-                index = message.body.indexOf(verificationUrlPrefix);
-                if (index === -1) {
-                    // there's no url in the message, so forget about that.
-                    localCallback();
-                    return;
-                }
+                var verificationUrlPrefix = config.cloudUrl + config.verificationUrl,
+                    uuid = message.body.split(verificationUrlPrefix).pop().substr(0, config.verificationUuidLength),
+                    isValidUuid = new RegExp('[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}').test(uuid);
 
-                uuid = message.body.substr(index + verificationUrlPrefix.length, config.verificationUuidLength);
-                isValidUuid = new RegExp('[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}').test(uuid);
+                // there's no valid uuid in the message, so forget about it
                 if (!isValidUuid) {
-                    // there's no valid uuid in the message, so forget about that, too.
-                    localCallback();
+                    localCallback(null, false);
                     return;
                 }
 
+                // there's a valid uuid in the message, so try to verify it
                 self._keychain.verifyPublicKey(uuid, function(err) {
                     if (err) {
                         localCallback({
                             errMsg: 'Verifying your public key failed: ' + err.errMsg
-                        });
+                        }, true);
                         return;
                     }
 
@@ -814,7 +823,7 @@ define(function(require) {
                     }, function() {
                         // if we could successfully not delete the message or not doesn't matter.
                         // just don't show it in whiteout and keep quiet about it
-                        localCallback();
+                        localCallback(null, true);
                     });
                 });
             });
