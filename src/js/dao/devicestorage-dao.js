@@ -84,8 +84,6 @@ define(function() {
         // put uid in key if available... for easy querying
         if (i.uid) {
             key = type + '_' + i.uid;
-        } else if (i.sentDate && i.id) {
-            key = type + '_' + i.sentDate + '_' + i.id;
         } else if (i.id) {
             key = type + '_' + i.id;
         } else {

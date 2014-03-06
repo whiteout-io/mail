@@ -272,9 +272,6 @@ define(function(require) {
 
         describe('send to outbox', function() {
             it('should work', function() {
-                scope.from = [{
-                    address: 'pity@dafool'
-                }];
                 scope.to = [{
                     address: 'pity@dafool'
                 }];
@@ -289,7 +286,21 @@ define(function(require) {
 
                 scope.replyTo = {};
 
-                outboxMock.put.yields();
+                outboxMock.put.withArgs(sinon.match(function(mail) {
+                    expect(mail.from).to.deep.equal([{
+                        address: emailAddress
+                    }]);
+                    expect(mail.to).to.deep.equal(scope.to);
+                    expect(mail.cc).to.deep.equal(scope.cc);
+                    expect(mail.bcc).to.deep.equal(scope.bcc);
+                    expect(mail.body).to.contain(scope.body);
+                    expect(mail.subject).to.equal(scope.subject);
+                    expect(mail.attachments).to.be.empty;
+                    expect(mail.sentDate).to.exist;
+
+
+                    return true;
+                })).yields();
                 emailDaoMock.sync.yields();
 
                 scope.onError = function(err) {
