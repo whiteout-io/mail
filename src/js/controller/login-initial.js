@@ -25,6 +25,10 @@ define(function(require) {
         // scope functions
         //
 
+        $scope.importKey = function() {
+            $location.path('/login-new-device');
+        };
+
         /*
          * Taken from jQuery validate.password plug-in 1.0
          * http://bassistance.de/jquery-plugins/jquery-plugin-validate.password/

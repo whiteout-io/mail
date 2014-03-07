@@ -220,6 +220,16 @@ module.exports = function(grunt) {
                 cwd: 'dist/',
                 src: ['**/*'],
                 dest: 'release/'
+            },
+            nodeWebkit: {
+                options: {
+                    mode: 'zip',
+                    archive: 'release/whiteout-mail_' + zipName + '.nw'
+                },
+                expand: true,
+                cwd: 'dist/',
+                src: ['**/*'],
+                dest: '/'
             }
         },
 
