@@ -56,8 +56,24 @@ define(function(require) {
         };
 
         $scope.importKey = function(publicKeyArmored) {
-            var keyParams = pgp.getKeyParams(publicKeyArmored);
-            var pubkey = {
+            var keyParams, pubkey;
+
+            // verifiy public key string
+            if (publicKeyArmored.indexOf('-----BEGIN PGP PUBLIC KEY BLOCK-----') < 0) {
+                $scope.onError({
+                    errMsg: 'Invalid public key!'
+                });
+                return;
+            }
+
+            try {
+                keyParams = pgp.getKeyParams(publicKeyArmored);
+            } catch (e) {
+                $scope.onError(e);
+                return;
+            }
+
+            pubkey = {
                 _id: keyParams._id,
                 userId: keyParams.userId,
                 publicKey: publicKeyArmored

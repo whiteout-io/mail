@@ -91,7 +91,7 @@ define(function(require) {
 
         describe('importKey', function() {
             it('should work', function(done) {
-                var keyArmored = 'ARMORED PUBLICKEY';
+                var keyArmored = '-----BEGIN PGP PUBLIC KEY BLOCK-----';
 
                 cryptoMock.getKeyParams.returns({
                     _id: '12345',
@@ -101,7 +101,7 @@ define(function(require) {
                 keychainMock.saveLocalPublicKey.withArgs({
                     _id: '12345',
                     userId: 'max@example.com',
-                    publicKey: 'ARMORED PUBLICKEY'
+                    publicKey: '-----BEGIN PGP PUBLIC KEY BLOCK-----'
                 }).yields();
 
                 scope.listKeys = function() {
@@ -111,19 +111,39 @@ define(function(require) {
                 scope.importKey(keyArmored);
             });
 
+            it('should fail due to invalid armored key', function(done) {
+                var keyArmored = '-----BEGIN PGP PRIVATE KEY BLOCK-----';
+
+                scope.onError = function(err) {
+                    expect(err).to.exist;
+                    done();
+                };
+
+                scope.importKey(keyArmored);
+            });
+
+            it('should fail due to error in pgp.getKeyParams', function(done) {
+                var keyArmored = '-----BEGIN PGP PUBLIC KEY BLOCK-----';
+
+                cryptoMock.getKeyParams.throws(new Error('WAT'));
+
+                scope.onError = function(err) {
+                    expect(err).to.exist;
+                    done();
+                };
+
+                scope.importKey(keyArmored);
+            });
+
             it('should fail due to error in keychain.saveLocalPublicKey', function(done) {
-                var keyArmored = 'ARMORED PUBLICKEY';
+                var keyArmored = '-----BEGIN PGP PUBLIC KEY BLOCK-----';
 
                 cryptoMock.getKeyParams.returns({
                     _id: '12345',
                     userId: 'max@example.com'
                 });
 
-                keychainMock.saveLocalPublicKey.withArgs({
-                    _id: '12345',
-                    userId: 'max@example.com',
-                    publicKey: 'ARMORED PUBLICKEY'
-                }).yields(42);
+                keychainMock.saveLocalPublicKey.yields(42);
 
                 scope.onError = function(err) {
                     expect(err).to.equal(42);
