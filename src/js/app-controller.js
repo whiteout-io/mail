@@ -179,7 +179,7 @@ define(function(require) {
         return navigator.onLine;
     };
 
-    self.checkForUpdate = function() {
+    self.checkForUpdate = function(callback) {
         if (!chrome || !chrome.runtime || !chrome.runtime.onUpdateAvailable) {
             return;
         }
@@ -187,7 +187,17 @@ define(function(require) {
         // check for update and restart
         chrome.runtime.onUpdateAvailable.addListener(function(details) {
             console.log("Updating to version " + details.version);
-            chrome.runtime.reload();
+            // wipe user datastore to prevent data loss due to delta-sync
+            self._userStorage.removeList('email_', function(err) {
+                if (err) {
+                    callback({
+                        errMsg: 'Fatal error, please reinstall the app! Do not relaunch the app, or you may experience irrecoverable data loss!'
+                    });
+                    return;
+                }
+
+                chrome.runtime.reload();
+            });
         });
         chrome.runtime.requestUpdateCheck(function(status) {
             if (status === "update_found") {
@@ -343,7 +353,7 @@ define(function(require) {
         restDao = new RestDAO();
         pubkeyDao = new PublicKeyDAO(restDao);
         lawnchairDao = new LawnchairDAO();
-        userStorage = new DeviceStorageDAO(lawnchairDao);
+        self._userStorage = userStorage = new DeviceStorageDAO(lawnchairDao);
 
         self._invitationDao = invitationDao = new InvitationDAO(restDao);
         self._keychain = keychain = new KeychainDAO(lawnchairDao, pubkeyDao);

@@ -10,9 +10,6 @@ define(function(require) {
         // attach global error handler
         errorUtil.attachHandler($scope);
 
-        // check for app update
-        appController.checkForUpdate();
-
         // start main application controller
         appController.start({
             onError: $scope.onError
@@ -47,6 +44,9 @@ define(function(require) {
                         $scope.onError(err);
                         return;
                     }
+
+                    // check for app update
+                    appController.checkForUpdate($scope.onError);
 
                     redirect(availableKeys);
                 });
