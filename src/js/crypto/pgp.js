@@ -68,13 +68,8 @@ define(function(require) {
         return fingerprint(this._publicKey);
     };
 
-    PGP.prototype.getUserId = function(keyArmored) {
-        var key = openpgp.key.readArmored(keyArmored).keys[0];
-        return key.getUserIds()[0];
-    };
-
     /**
-     * Show a user's key id
+     * Show a user's key id.
      */
     PGP.prototype.getKeyId = function(keyArmored) {
         var key, pubKeyId, privKeyId;
@@ -98,6 +93,23 @@ define(function(require) {
         }
 
         return pubKeyId;
+    };
+
+    /**
+     * Read all relevant params of an armored key.
+     */
+    PGP.prototype.getKeyParams = function(keyArmored) {
+        var key = openpgp.key.readArmored(keyArmored).keys[0],
+            packet = key.getKeyPacket();
+
+        return {
+            _id: packet.getKeyId().toHex().toUpperCase(),
+            userId: key.getUserIds()[0].split('<')[1].split('>')[0],
+            fingerprint: util.hexstrdump(packet.getFingerprint()).toUpperCase(),
+            algorithm: packet.algorithm,
+            bitSize: packet.getBitSize(),
+            created: packet.created,
+        };
     };
 
     /**

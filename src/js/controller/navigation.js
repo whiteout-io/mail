@@ -172,6 +172,11 @@ define(function(require) {
                     e.preventDefault();
                     scope.state.account.toggle(false);
 
+                } else if (e.keyCode === 27 && scope.state.contacts.open) {
+                    // escape -> close contacts view
+                    e.preventDefault();
+                    scope.state.contacts.toggle(false);
+
                 } else if (e.keyCode === 27 && scope.state.nav.open) {
                     // escape -> close nav view
                     e.preventDefault();

@@ -7,6 +7,7 @@ requirejs([
     'js/controller/popover',
     'js/controller/add-account',
     'js/controller/account',
+    'js/controller/contacts',
     'js/controller/login',
     'js/controller/login-initial',
     'js/controller/login-new-device',
@@ -24,6 +25,7 @@ requirejs([
     PopoverCtrl,
     AddAccountCtrl,
     AccountCtrl,
+    ContactsCtrl,
     LoginCtrl,
     LoginInitialCtrl,
     LoginNewDeviceCtrl,
@@ -32,14 +34,25 @@ requirejs([
     ReadCtrl,
     WriteCtrl,
     NavigationCtrl,
-    util) {
+    util
+) {
     'use strict';
 
     // reset window.name
     window.name = util.UUID();
 
     // init main angular module including dependencies
-    var app = angular.module('mail', ['ngRoute', 'ngTouch', 'navigation', 'mail-list', 'write', 'read', 'login-new-device', 'popover']);
+    var app = angular.module('mail', [
+        'ngRoute',
+        'ngTouch',
+        'navigation',
+        'mail-list',
+        'write',
+        'read',
+        'contacts',
+        'login-new-device',
+        'popover'
+    ]);
 
     // set router paths
     app.config(function($routeProvider) {
@@ -77,6 +90,7 @@ requirejs([
     app.controller('WriteCtrl', WriteCtrl);
     app.controller('MailListCtrl', MailListCtrl);
     app.controller('AccountCtrl', AccountCtrl);
+    app.controller('ContactsCtrl', ContactsCtrl);
     app.controller('DialogCtrl', DialogCtrl);
     app.controller('PopoverCtrl', PopoverCtrl);
 

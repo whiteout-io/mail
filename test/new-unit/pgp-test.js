@@ -5,7 +5,7 @@ define(function(require) {
         expect = chai.expect;
 
     describe('PGP Crypto Api unit tests', function() {
-        this.timeout(10000);
+        this.timeout(20000);
 
         var pgp,
             user = 'whiteout.test@t-online.de',
@@ -150,13 +150,6 @@ define(function(require) {
                 });
             });
 
-            describe('Get UserId', function() {
-                it('should work with param', function() {
-                    var userId = pgp.getUserId(pubkey);
-                    expect(userId).to.contain(user);
-                });
-            });
-
             describe('Get Fingerprint', function() {
                 it('should work without param', function() {
                     var fingerprint = pgp.getFingerprint();
@@ -166,6 +159,17 @@ define(function(require) {
                 it('should work with param', function() {
                     var fingerprint = pgp.getFingerprint(pubkey);
                     expect(fingerprint).to.equal('5856CEF789C3A307E8A1B976F6F60E9B42CDFF4C');
+                });
+            });
+
+            describe('getKeyParams', function() {
+                it('should work with param', function() {
+                    var params = pgp.getKeyParams(pubkey);
+                    expect(params.fingerprint).to.equal('5856CEF789C3A307E8A1B976F6F60E9B42CDFF4C');
+                    expect(params._id).to.equal("F6F60E9B42CDFF4C");
+                    expect(params.bitSize).to.equal(keySize);
+                    expect(params.userId).to.equal("whiteout.test@t-online.de");
+                    expect(params.algorithm).to.equal("rsa_encrypt_sign");
                 });
             });
 

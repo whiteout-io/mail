@@ -156,8 +156,8 @@ define(function(require) {
             }
 
             // check if the key's user ID matches the current account
-            pubUserID = self._crypto.getUserId(keypair.publicKey.publicKey);
-            privUserID = self._crypto.getUserId(keypair.privateKey.encryptedKey);
+            pubUserID = self._crypto.getKeyParams(keypair.publicKey.publicKey).userId;
+            privUserID = self._crypto.getKeyParams(keypair.privateKey.encryptedKey).userId;
             if (pubUserID.indexOf(self._account.emailAddress) === -1 || privUserID.indexOf(self._account.emailAddress) === -1) {
                 callback({
                     errMsg: 'User IDs dont match!'
