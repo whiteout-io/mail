@@ -39,18 +39,15 @@ define(function(require) {
         initKeychain();
 
         function initKeychain() {
-            // init user's local database
-            self._devicestorage.init(emailAddress, function() {
-                // call getUserKeyPair to read/sync keypair with devicestorage/cloud
-                self._keychain.getUserKeyPair(emailAddress, function(err, storedKeypair) {
-                    if (err) {
-                        callback(err);
-                        return;
-                    }
+            // call getUserKeyPair to read/sync keypair with devicestorage/cloud
+            self._keychain.getUserKeyPair(emailAddress, function(err, storedKeypair) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
 
-                    keypair = storedKeypair;
-                    initFolders();
-                });
+                keypair = storedKeypair;
+                initFolders();
             });
         }
 
