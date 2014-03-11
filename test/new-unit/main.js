@@ -49,7 +49,8 @@ function startTests() {
 			'test/new-unit/mail-list-ctrl-test',
 			'test/new-unit/write-ctrl-test',
 			'test/new-unit/outbox-bo-test',
-			'test/new-unit/invitation-dao-test'
+			'test/new-unit/invitation-dao-test',
+			'test/new-unit/update-handler-test'
 		], function() {
 			//Tests loaded, run tests
 			mocha.run();
