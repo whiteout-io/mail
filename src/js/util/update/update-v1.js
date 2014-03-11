@@ -2,7 +2,7 @@ define(function() {
     'use strict';
 
     /**
-     * Update handler for transition databasae version 0 -> 1
+     * Update handler for transition database version 0 -> 1
      *
      * In database version 1, the stored email objects have to be purged, otherwise
      * every non-prefixed mail in the IMAP folders would be nuked due to the implementation
