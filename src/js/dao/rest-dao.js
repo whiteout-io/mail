@@ -66,9 +66,10 @@ define(function(require) {
             });
         };
 
-        xhr.onerror = function(e) {
+        xhr.onerror = function() {
             callback({
-                errMsg: 'Error: ' + e.error
+                code: 404,
+                errMsg: 'Error calling GET on ' + options.uri
             });
         };
 
@@ -97,9 +98,9 @@ define(function(require) {
             });
         };
 
-        xhr.onerror = function(e) {
+        xhr.onerror = function() {
             callback({
-                errMsg: 'Error: ' + e.error
+                errMsg: 'Error calling PUT on ' + uri
             });
         };
 
@@ -127,9 +128,9 @@ define(function(require) {
             });
         };
 
-        xhr.onerror = function(e) {
+        xhr.onerror = function() {
             callback({
-                errMsg: 'Error: ' + e.error
+                errMsg: 'Error calling DELETE on ' + uri
             });
         };
 
