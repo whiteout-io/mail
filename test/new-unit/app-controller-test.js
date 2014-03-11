@@ -16,7 +16,7 @@ define(function(require) {
             controller._emailDao = emailDaoStub = sinon.createStubInstance(EmailDAO);
             controller._outboxBo = outboxStub = sinon.createStubInstance(OutboxBO);
             controller._appConfigStore = appConfigStoreStub = sinon.createStubInstance(DeviceStorageDAO);
-            controller._devicestorage = devicestorageStub = sinon.createStubInstance(DeviceStorageDAO);
+            controller._userStorage = devicestorageStub = sinon.createStubInstance(DeviceStorageDAO);
             controller._updateHandler = updateHandlerStub = sinon.createStubInstance(UpdateHandler);
 
             isOnlineStub = sinon.stub(controller, 'isOnline');

@@ -335,7 +335,7 @@ define(function(require) {
     };
 
     self.buildModules = function() {
-        var lawnchairDao, restDao, pubkeyDao, emailDao, keychain, pgp, devicestorage, pgpbuilder;
+        var lawnchairDao, restDao, pubkeyDao, emailDao, keychain, pgp, userStorage, pgpbuilder;
 
         // start the mailreader's worker thread 
         mailreader.startWorker(config.workerPath + '/../lib/mailreader-parser-worker.js');
@@ -345,14 +345,14 @@ define(function(require) {
         pubkeyDao = new PublicKeyDAO(restDao);
         lawnchairDao = new LawnchairDAO();
 
-        self._devicestorage = devicestorage = new DeviceStorageDAO(lawnchairDao);
+        self._userStorage = userStorage = new DeviceStorageDAO(lawnchairDao);
         self._invitationDao = new InvitationDAO(restDao);
         self._keychain = keychain = new KeychainDAO(lawnchairDao, pubkeyDao);
         self._crypto = pgp = new PGP();
         self._pgpbuilder = pgpbuilder = new PgpBuilder();
-        self._emailDao = emailDao = new EmailDAO(keychain, pgp, devicestorage, pgpbuilder, mailreader);
-        self._outboxBo = new OutboxBO(emailDao, keychain, devicestorage);
-        self._updateHandler = new UpdateHandler(self._appConfigStore, devicestorage);
+        self._emailDao = emailDao = new EmailDAO(keychain, pgp, userStorage, pgpbuilder, mailreader);
+        self._outboxBo = new OutboxBO(emailDao, keychain, userStorage);
+        self._updateHandler = new UpdateHandler(self._appConfigStore, userStorage);
     };
 
     /**
@@ -362,7 +362,7 @@ define(function(require) {
         self.buildModules();
 
         // init user's local database
-        self._devicestorage.init(options.emailAddress, function() {
+        self._userStorage.init(options.emailAddress, function() {
 
             // Migrate the databases if necessary
             self._updateHandler.update(onUpdate);
