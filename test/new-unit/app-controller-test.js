@@ -243,11 +243,25 @@ define(function(require) {
                 onConnectStub.restore();
             });
 
+            it('should fail due to error in storage initialization', function(done) {
+                devicestorageStub.init.withArgs(undefined).yields({});
+
+                controller.init({}, function(err, keypair) {
+                    expect(err).to.exist;
+                    expect(keypair).to.not.exist;
+                    expect(devicestorageStub.init.calledOnce).to.be.true;
+                    expect(updateHandlerStub.update.calledOnce).to.be.false;
+                    done();
+                });
+            });
+
             it('should fail due to error in update handler', function(done) {
                 devicestorageStub.init.yields();
                 updateHandlerStub.update.yields({});
 
-                controller.init({}, function(err, keypair) {
+                controller.init({
+                    emailAddress: emailAddress
+                }, function(err, keypair) {
                     expect(err).to.exist;
                     expect(keypair).to.not.exist;
                     expect(updateHandlerStub.update.calledOnce).to.be.true;
@@ -261,7 +275,9 @@ define(function(require) {
                 updateHandlerStub.update.yields();
                 emailDaoStub.init.yields({});
 
-                controller.init({}, function(err, keypair) {
+                controller.init({
+                    emailAddress: emailAddress
+                }, function(err, keypair) {
                     expect(err).to.exist;
                     expect(keypair).to.not.exist;
                     expect(updateHandlerStub.update.calledOnce).to.be.true;
@@ -278,7 +294,9 @@ define(function(require) {
 
                 onConnectStub.yields({});
 
-                controller.init({}, function(err) {
+                controller.init({
+                    emailAddress: emailAddress
+                }, function(err) {
                     expect(err).to.exist;
                     expect(updateHandlerStub.update.calledOnce).to.be.true;
                     expect(emailDaoStub.init.calledOnce).to.be.true;

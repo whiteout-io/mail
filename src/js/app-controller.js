@@ -362,7 +362,11 @@ define(function(require) {
         self.buildModules();
 
         // init user's local database
-        self._userStorage.init(options.emailAddress, function() {
+        self._userStorage.init(options.emailAddress, function(err) {
+            if (err) {
+                callback(err);
+                return;
+            }
 
             // Migrate the databases if necessary
             self._updateHandler.update(onUpdate);
