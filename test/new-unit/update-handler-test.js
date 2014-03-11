@@ -37,8 +37,8 @@ define(function(require) {
             var versionDbType = 'dbVersion';
 
             it('should not update when up to date', function(done) {
-                cfg.dbVersion = 3; // app requires database version 3
-                appConfigStorageStub.listItems.withArgs(versionDbType).yieldsAsync(null, '3'); // database version is 3
+                cfg.dbVersion = 10; // app requires database version 10
+                appConfigStorageStub.listItems.withArgs(versionDbType).yieldsAsync(null, ['10']); // database version is 10
 
                 updateHandler.update(function(error) {
                     expect(error).to.not.exist;
@@ -48,12 +48,12 @@ define(function(require) {
                 });
             });
 
-            describe('dummy updates for v0 through v4', function() {
+            describe('dummy updates for v2 to v4', function() {
                 var updateCounter;
 
                 beforeEach(function() {
                     updateCounter = 0;
-                    appConfigStorageStub.listItems.withArgs(versionDbType).yieldsAsync(); // database version is 0
+                    appConfigStorageStub.listItems.withArgs(versionDbType).yieldsAsync(null, ['2']); // database version is 0
                 });
 
                 afterEach(function() {
@@ -76,7 +76,7 @@ define(function(require) {
                     // execute test
                     updateHandler.update(function(error) {
                         expect(error).to.not.exist;
-                        expect(updateCounter).to.equal(4);
+                        expect(updateCounter).to.equal(2);
 
                         done();
                     });
@@ -91,7 +91,6 @@ define(function(require) {
                     }
 
                     function failingUpdate(options, callback) {
-                        updateCounter++;
                         callback({});
                     }
 
@@ -101,7 +100,7 @@ define(function(require) {
                     // execute test
                     updateHandler.update(function(error) {
                         expect(error).to.exist;
-                        expect(updateCounter).to.equal(3);
+                        expect(updateCounter).to.equal(0);
 
                         done();
                     });
