@@ -8,6 +8,7 @@ define(function(require) {
         mailreader = require('mailreader'),
         PgpMailer = require('pgpmailer'),
         EmailDAO = require('js/dao/email-dao'),
+        EmailSync = require('js/dao/email-sync'),
         RestDAO = require('js/dao/rest-dao'),
         PublicKeyDAO = require('js/dao/publickey-dao'),
         LawnchairDAO = require('js/dao/lawnchair-dao'),
@@ -335,7 +336,7 @@ define(function(require) {
     };
 
     self.buildModules = function() {
-        var lawnchairDao, restDao, pubkeyDao, emailDao, keychain, pgp, userStorage, pgpbuilder;
+        var lawnchairDao, restDao, pubkeyDao, emailDao, emailSync, keychain, pgp, userStorage, pgpbuilder;
 
         // start the mailreader's worker thread 
         mailreader.startWorker(config.workerPath + '/../lib/mailreader-parser-worker.js');
@@ -350,7 +351,8 @@ define(function(require) {
         self._keychain = keychain = new KeychainDAO(lawnchairDao, pubkeyDao);
         self._crypto = pgp = new PGP();
         self._pgpbuilder = pgpbuilder = new PgpBuilder();
-        self._emailDao = emailDao = new EmailDAO(keychain, pgp, userStorage, pgpbuilder, mailreader);
+        emailSync = new EmailSync(keychain, userStorage);
+        self._emailDao = emailDao = new EmailDAO(keychain, pgp, userStorage, pgpbuilder, mailreader, emailSync);
         self._outboxBo = new OutboxBO(emailDao, keychain, userStorage);
         self._updateHandler = new UpdateHandler(self._appConfigStore, userStorage);
     };
