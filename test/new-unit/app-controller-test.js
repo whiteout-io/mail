@@ -5,19 +5,19 @@ define(function(require) {
         EmailDAO = require('js/dao/email-dao'),
         OutboxBO = require('js/bo/outbox'),
         DeviceStorageDAO = require('js/dao/devicestorage-dao'),
+        UpdateHandler = require('js/util/update/update-handler'),
         expect = chai.expect;
 
     describe('App Controller unit tests', function() {
-        var emailDaoStub, outboxStub, appConfigStoreStub, isOnlineStub,
+        var emailDaoStub, outboxStub, updateHandlerStub, appConfigStoreStub, devicestorageStub, isOnlineStub,
             identityStub;
 
         beforeEach(function() {
-            emailDaoStub = sinon.createStubInstance(EmailDAO);
-            controller._emailDao = emailDaoStub;
-            outboxStub = sinon.createStubInstance(OutboxBO);
-            controller._outboxBo = outboxStub;
-            appConfigStoreStub = sinon.createStubInstance(DeviceStorageDAO);
-            controller._appConfigStore = appConfigStoreStub;
+            controller._emailDao = emailDaoStub = sinon.createStubInstance(EmailDAO);
+            controller._outboxBo = outboxStub = sinon.createStubInstance(OutboxBO);
+            controller._appConfigStore = appConfigStoreStub = sinon.createStubInstance(DeviceStorageDAO);
+            controller._userStorage = devicestorageStub = sinon.createStubInstance(DeviceStorageDAO);
+            controller._updateHandler = updateHandlerStub = sinon.createStubInstance(UpdateHandler);
 
             isOnlineStub = sinon.stub(controller, 'isOnline');
 
@@ -226,9 +226,11 @@ define(function(require) {
         });
 
         describe('init', function() {
-            var buildModulesStub, onConnectStub;
+            var buildModulesStub, onConnectStub, emailAddress;
 
             beforeEach(function() {
+                emailAddress = 'alice@bob.com';
+
                 // buildModules
                 buildModulesStub = sinon.stub(controller, 'buildModules');
                 buildModulesStub.returns();
@@ -241,42 +243,88 @@ define(function(require) {
                 onConnectStub.restore();
             });
 
-            it('should fail due to error in emailDao.init', function(done) {
-                emailDaoStub.init.yields({});
+            it('should fail due to error in storage initialization', function(done) {
+                devicestorageStub.init.withArgs(undefined).yields({});
 
                 controller.init({}, function(err, keypair) {
                     expect(err).to.exist;
                     expect(keypair).to.not.exist;
+                    expect(devicestorageStub.init.calledOnce).to.be.true;
+                    expect(updateHandlerStub.update.calledOnce).to.be.false;
+                    done();
+                });
+            });
+
+            it('should fail due to error in update handler', function(done) {
+                devicestorageStub.init.yields();
+                updateHandlerStub.update.yields({});
+
+                controller.init({
+                    emailAddress: emailAddress
+                }, function(err, keypair) {
+                    expect(err).to.exist;
+                    expect(keypair).to.not.exist;
+                    expect(updateHandlerStub.update.calledOnce).to.be.true;
+                    expect(devicestorageStub.init.calledOnce).to.be.true;
+                    done();
+                });
+            });
+
+            it('should fail due to error in emailDao.init', function(done) {
+                devicestorageStub.init.yields();
+                updateHandlerStub.update.yields();
+                emailDaoStub.init.yields({});
+
+                controller.init({
+                    emailAddress: emailAddress
+                }, function(err, keypair) {
+                    expect(err).to.exist;
+                    expect(keypair).to.not.exist;
+                    expect(updateHandlerStub.update.calledOnce).to.be.true;
+                    expect(emailDaoStub.init.calledOnce).to.be.true;
+                    expect(devicestorageStub.init.calledOnce).to.be.true;
                     done();
                 });
             });
 
             it('should fail due to error in onConnect', function(done) {
+                devicestorageStub.init.yields();
+                updateHandlerStub.update.yields();
                 emailDaoStub.init.yields();
 
                 onConnectStub.yields({});
 
-                controller.init({}, function(err) {
+                controller.init({
+                    emailAddress: emailAddress
+                }, function(err) {
                     expect(err).to.exist;
+                    expect(updateHandlerStub.update.calledOnce).to.be.true;
+                    expect(emailDaoStub.init.calledOnce).to.be.true;
+                    expect(devicestorageStub.init.calledOnce).to.be.true;
                     expect(onConnectStub.calledOnce).to.be.true;
                     done();
                 });
             });
 
             it('should work and return a keypair', function(done) {
+                devicestorageStub.init.withArgs(emailAddress).yields();
                 emailDaoStub.init.yields(null, {});
+                updateHandlerStub.update.yields();
 
                 onConnectStub.yields();
 
-                controller.init({}, function(err, keypair) {
+                controller.init({
+                    emailAddress: emailAddress
+                }, function(err, keypair) {
                     expect(err).to.not.exist;
                     expect(keypair).to.exist;
+                    expect(updateHandlerStub.update.calledOnce).to.be.true;
+                    expect(emailDaoStub.init.calledOnce).to.be.true;
+                    expect(devicestorageStub.init.calledOnce).to.be.true;
                     expect(onConnectStub.calledOnce).to.be.true;
                     done();
                 });
             });
         });
-
     });
-
 });

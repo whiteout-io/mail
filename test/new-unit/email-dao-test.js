@@ -177,7 +177,6 @@ define(function(require) {
                 folders = [{}, {}];
 
                 // initKeychain
-                devicestorageStub.init.withArgs(emailAddress).yields();
                 keychainStub.getUserKeyPair.yields(null, mockKeyPair);
 
                 // initFolders
@@ -194,7 +193,6 @@ define(function(require) {
 
                     expect(dao._account).to.equal(account);
                     expect(dao._account.folders).to.equal(folders);
-                    expect(devicestorageStub.init.calledOnce).to.be.true;
                     expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
 
                     expect(listFolderStub.calledOnce).to.be.true;
@@ -207,7 +205,6 @@ define(function(require) {
                 var listFolderStub;
 
                 // initKeychain
-                devicestorageStub.init.withArgs(emailAddress).yields();
                 keychainStub.getUserKeyPair.yields(null, mockKeyPair);
 
                 // initFolders
@@ -226,7 +223,6 @@ define(function(require) {
 
                     expect(dao._account).to.equal(account);
                     expect(dao._account.folders).to.equal(undefined);
-                    expect(devicestorageStub.init.calledOnce).to.be.true;
                     expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
                     expect(listFolderStub.calledOnce).to.be.true;
 
@@ -238,7 +234,6 @@ define(function(require) {
                 var listFolderStub;
 
                 // initKeychain
-                devicestorageStub.init.withArgs(emailAddress).yields();
                 keychainStub.getUserKeyPair.yields(null, mockKeyPair);
 
                 // initFolders
@@ -252,7 +247,6 @@ define(function(require) {
                     expect(keyPair).to.not.exist;
 
                     expect(dao._account).to.equal(account);
-                    expect(devicestorageStub.init.calledOnce).to.be.true;
                     expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
                     expect(listFolderStub.calledOnce).to.be.true;
 
@@ -261,7 +255,6 @@ define(function(require) {
             });
 
             it('should fail due to error in getUserKeyPair', function(done) {
-                devicestorageStub.init.yields();
                 keychainStub.getUserKeyPair.yields({});
 
                 dao.init({
@@ -269,8 +262,6 @@ define(function(require) {
                 }, function(err, keyPair) {
                     expect(err).to.exist;
                     expect(keyPair).to.not.exist;
-
-                    expect(devicestorageStub.init.calledOnce).to.be.true;
 
                     done();
                 });

@@ -17,6 +17,7 @@ define(function(require) {
         OutboxBO = require('js/bo/outbox'),
         PGP = require('js/crypto/pgp'),
         PgpBuilder = require('pgpbuilder'),
+        UpdateHandler = require('js/util/update/update-handler'),
         config = require('js/app-config').config;
 
     var self = {};
@@ -334,23 +335,24 @@ define(function(require) {
     };
 
     self.buildModules = function() {
-        var lawnchairDao, restDao, pubkeyDao, invitationDao,
-            emailDao, keychain, pgp, userStorage, pgpbuilder;
+        var lawnchairDao, restDao, pubkeyDao, emailDao, keychain, pgp, userStorage, pgpbuilder;
 
+        // start the mailreader's worker thread 
         mailreader.startWorker(config.workerPath + '/../lib/mailreader-parser-worker.js');
 
         // init objects and inject dependencies
         restDao = new RestDAO();
         pubkeyDao = new PublicKeyDAO(restDao);
         lawnchairDao = new LawnchairDAO();
-        userStorage = new DeviceStorageDAO(lawnchairDao);
 
-        self._invitationDao = invitationDao = new InvitationDAO(restDao);
+        self._userStorage = userStorage = new DeviceStorageDAO(lawnchairDao);
+        self._invitationDao = new InvitationDAO(restDao);
         self._keychain = keychain = new KeychainDAO(lawnchairDao, pubkeyDao);
         self._crypto = pgp = new PGP();
         self._pgpbuilder = pgpbuilder = new PgpBuilder();
         self._emailDao = emailDao = new EmailDAO(keychain, pgp, userStorage, pgpbuilder, mailreader);
         self._outboxBo = new OutboxBO(emailDao, keychain, userStorage);
+        self._updateHandler = new UpdateHandler(self._appConfigStore, userStorage);
     };
 
     /**
@@ -359,30 +361,52 @@ define(function(require) {
     self.init = function(options, callback) {
         self.buildModules();
 
-        // init email dao
-        var account = {
-            emailAddress: options.emailAddress,
-            asymKeySize: config.asymKeySize
-        };
-
-        self._emailDao.init({
-            account: account
-        }, function(err, keypair) {
+        // init user's local database
+        self._userStorage.init(options.emailAddress, function(err) {
             if (err) {
                 callback(err);
                 return;
             }
 
-            // connect tcp clients on first startup
-            self.onConnect(function(err) {
+            // Migrate the databases if necessary
+            self._updateHandler.update(onUpdate);
+        });
+
+        function onUpdate(err) {
+            if (err) {
+                callback({
+                    errMsg: 'Update failed, please reinstall the app.',
+                    err: err
+                });
+                return;
+            }
+
+            // account information for the email dao
+            var account = {
+                emailAddress: options.emailAddress,
+                asymKeySize: config.asymKeySize
+            };
+
+            // init email dao
+            self._emailDao.init({
+                account: account
+            }, function(err, keypair) {
                 if (err) {
                     callback(err);
                     return;
                 }
 
-                callback(null, keypair);
+                // connect tcp clients on first startup
+                self.onConnect(function(err) {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+
+                    callback(null, keypair);
+                });
             });
-        });
+        }
     };
 
     return self;
