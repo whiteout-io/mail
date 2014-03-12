@@ -24,6 +24,8 @@ define(function(require) {
                 $scope.synchronize(function() {
                     // show notification
                     notificationForEmail(email);
+                    // get message body
+                    $scope.getBody($scope.filteredMessages[0]);
                 });
             };
             chrome.notifications.onClicked.addListener(notificationClicked);
