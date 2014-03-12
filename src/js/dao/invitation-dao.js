@@ -35,7 +35,8 @@ define(function() {
             return;
         }
 
-        this._restDao.put({}, uri(options.recipient, options.sender), completed);
+        var uri = '/invitation/recipient/' + options.recipient + '/sender/' + options.sender;
+        this._restDao.put({}, uri, completed);
 
         function completed(error, res, status) {
             if (error) {
@@ -56,54 +57,6 @@ define(function() {
             });
         }
     };
-
-    /**
-     * Checks if an invitation for the recipient by the sender is present in the invitation web service
-     * @param {String} options.recipient User ID of the recipient
-     * @param {String} options.sender User ID of the sender
-     * @param {Function} callback(error, status) Returns information about the invitation status, either an invitation is already on place (INVITE_PENDING), or not (INVITE_MISSING), or information if an error occurred.
-     */
-    InvitationDAO.prototype.check = function(options, callback) {
-        if (typeof options !== 'object' || typeof options.recipient !== 'string' || typeof options.recipient !== 'string') {
-            callback({
-                errMsg: 'erroneous usage of api: incorrect parameters!'
-            });
-            return;
-        }
-
-        this._restDao.get({
-            uri: uri(options.recipient, options.sender),
-            type: 'text'
-        }, completed);
-
-        function completed(error, res, status) {
-            // 404 is a meaningful return value from the web service
-            if (error && error.code !== 404) {
-                callback(error);
-                return;
-            }
-
-            if (error && error.code === 404) {
-                callback(null, InvitationDAO.INVITE_MISSING);
-                return;
-            } else if (status === 200) {
-                callback(null, InvitationDAO.INVITE_PENDING);
-                return;
-            }
-
-            callback({
-                errMsg: 'unexpected invitation state'
-            });
-        }
-    };
-
-    //
-    // Helper functions
-    //
-
-    function uri(a, b) {
-        return '/invitation/recipient/' + a + '/sender/' + b;
-    }
 
     return InvitationDAO;
 });
