@@ -24,8 +24,6 @@ define(function(require) {
                 $scope.synchronize(function() {
                     // show notification
                     notificationForEmail(email);
-                    // get message body
-                    $scope.getBody($scope.filteredMessages[0]);
                 });
             };
             chrome.notifications.onClicked.addListener(notificationClicked);
@@ -134,6 +132,9 @@ define(function(require) {
                 // display last update
                 updateStatus('Last update: ', new Date());
                 $scope.$apply();
+
+                // fetch visible bodies at the end of a successful sync
+                $scope.loadVisibleBodies();
 
                 if (callback) {
                     callback();
@@ -397,22 +398,10 @@ define(function(require) {
                 var model = attrs.ngIscroll,
                     listEl = elm[0];
 
-                scope.$watch(model, function() {
-                    var myScroll;
-                    // activate iscroll
-                    myScroll = new IScroll(listEl, {
-                        mouseWheel: true
-                    });
-
-                    // load the visible message bodies, when the list is re-initialized and when scrolling stopped
-                    loadVisible();
-                    myScroll.on('scrollEnd', loadVisible);
-                }, true);
-
                 /*
                  * iterates over the mails in the mail list and loads their bodies if they are visible in the viewport
                  */
-                function loadVisible() {
+                scope.loadVisibleBodies = function() {
                     var listBorder = listEl.getBoundingClientRect(),
                         top = listBorder.top,
                         bottom = listBorder.bottom,
@@ -435,7 +424,20 @@ define(function(require) {
                             scope.getBody(message);
                         }
                     }
-                }
+                };
+
+                // re-init iScroll when model length changes
+                scope.$watch(model, function() {
+                    var myScroll;
+                    // activate iscroll
+                    myScroll = new IScroll(listEl, {
+                        mouseWheel: true
+                    });
+
+                    // load the visible message bodies, when the list is re-initialized and when scrolling stopped
+                    scope.loadVisibleBodies();
+                    myScroll.on('scrollEnd', scope.loadVisibleBodies);
+                }, true);
             }
         };
     });

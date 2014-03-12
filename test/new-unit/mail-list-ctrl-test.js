@@ -82,6 +82,8 @@ define(function(require) {
                         toggle: function() {}
                     }
                 };
+
+                scope.loadVisibleBodies = function() {};
                 ctrl = $controller(MailListCtrl, {
                     $scope: scope
                 });
@@ -148,13 +150,9 @@ define(function(require) {
                     expect(opts.type).to.equal('basic');
                     expect(opts.message).to.equal('asdasd');
                     expect(opts.title).to.equal('asd');
-                };
-
-                scope.getBody = function() {
                     done();
                 };
 
-                scope.filteredMessages = [{}];
                 emailDaoMock.onIncomingMessage(mail);
             });
         });
