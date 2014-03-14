@@ -17,6 +17,7 @@ requirejs([
     'js/controller/write',
     'js/controller/navigation',
     'cryptoLib/util',
+    'angularSanitize',
     'angularRoute',
     'angularTouch'
 ], function(
@@ -43,6 +44,7 @@ requirejs([
 
     // init main angular module including dependencies
     var app = angular.module('mail', [
+        'ngSanitize',
         'ngRoute',
         'ngTouch',
         'navigation',

@@ -17,6 +17,7 @@
 			angular: 'angular/angular.min',
 			angularRoute: 'angular/angular-route.min',
 			angularTouch: 'angular/angular-touch.min',
+			angularSanitize: 'angular/angular-sanitize.min',
 			uuid: 'uuid/uuid',
 			openpgp: 'openpgp/openpgp.min',
 			iscroll: 'iscroll/iscroll-min'
@@ -24,6 +25,10 @@
 		shim: {
 			angular: {
 				exports: 'angular'
+			},
+			angularSanitize: {
+				exports: 'angular',
+				deps: ['angular']
 			},
 			angularRoute: {
 				exports: 'angular',
