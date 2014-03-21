@@ -163,12 +163,22 @@ define(function(require) {
     //
 
     var ngModule = angular.module('read', []);
+
     ngModule.directive('frameLoad', function() {
         return function(scope, elm) {
             elm.bind('load', function() {
                 var frame = elm[0];
                 frame.height = frame.contentWindow.document.body.scrollHeight + 'px';
             });
+        };
+    });
+
+    ngModule.filter('createAnchors', function($sce) {
+        return function(str) {
+            // replace all urls with anchors
+            return $sce.trustAsHtml(str.replace(/(https?:\/\/[^\s]+)/g, function(url) {
+                return '<a href="' + url + '" target="_blank">' + url + '</a>';
+            }));
         };
     });
 

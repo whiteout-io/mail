@@ -125,6 +125,10 @@
         .line {
             word-wrap: break-word;
 
+            a {
+                color: $color-blue;
+            }
+
             &.empty-line {
                 line-height: 1em;
             }
