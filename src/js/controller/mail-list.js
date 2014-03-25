@@ -406,11 +406,11 @@ define(function(require) {
                         top = listBorder.top,
                         bottom = listBorder.bottom,
                         listItems = listEl.children[0].children,
-                        i = listItems.length,
+                        inViewport = false,
                         listItem, message,
                         isPartiallyVisibleTop, isPartiallyVisibleBottom, isVisible;
 
-                    while (i--) {
+                    for (var i = 0, len = listItems.length; i < len; i++) {
                         // the n-th list item (the dom representation of an email) corresponds to 
                         // the n-th message model in the filteredMessages array
                         listItem = listItems.item(i).getBoundingClientRect();
@@ -421,7 +421,13 @@ define(function(require) {
                         isVisible = listItem.top >= top && listItem.bottom <= bottom; // the list item is visible as a whole
 
                         if (isPartiallyVisibleTop || isVisible || isPartiallyVisibleBottom) {
+                            // we are now iterating over visible elements
+                            inViewport = true;
+                            // load mail body of visible
                             scope.getBody(message);
+                        } else if (inViewport) {
+                            // we are leaving the viewport, so stop iterating over the items
+                            break;
                         }
                     }
                 };
