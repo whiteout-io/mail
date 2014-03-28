@@ -119,7 +119,7 @@ define(function(require) {
         var pubKeyId, privKeyId, self = this;
 
         // check options
-        if (typeof options.passphrase !== 'string' || !options.privateKeyArmored || !options.publicKeyArmored) {
+        if (!options.privateKeyArmored || !options.publicKeyArmored) {
             callback({
                 errMsg: 'Importing keys failed. Not all options set!'
             });

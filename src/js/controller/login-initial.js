@@ -53,12 +53,13 @@ define(function(require) {
                 return str.substring(0, 1).toLowerCase() + str.substring(1);
             }
 
-            if (!passphrase || passphrase.length < 10) {
-                $scope.passphraseMsg = 'Too short';
+            if (!passphrase) {
+                // no rating for empty passphrase
+                $scope.passphraseMsg = '';
                 return;
             }
 
-            if (SAME.test(passphrase)) {
+            if (passphrase.length < 8 || SAME.test(passphrase)) {
                 $scope.passphraseMsg = 'Very weak';
                 return;
             }
@@ -85,14 +86,14 @@ define(function(require) {
             var passphrase = $scope.state.passphrase,
                 confirmation = $scope.state.confirmation;
 
-            if (!passphrase || passphrase !== confirmation) {
+            if (passphrase !== confirmation) {
                 return;
             }
 
             $scope.setState(states.PROCESSING);
             setTimeout(function() {
                 emailDao.unlock({
-                    passphrase: passphrase
+                    passphrase: (passphrase) ? passphrase : undefined
                 }, function(err) {
                     if (err) {
                         $scope.setState(states.IDLE);
