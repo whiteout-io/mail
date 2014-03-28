@@ -19,7 +19,7 @@ define(function(require) {
     PGP.prototype.generateKeys = function(options, callback) {
         var userId;
 
-        if (!util.emailRegEx.test(options.emailAddress) || !options.keySize || typeof options.passphrase !== 'string') {
+        if (!util.emailRegEx.test(options.emailAddress) || !options.keySize) {
             callback({
                 errMsg: 'Crypto init failed. Not all options set!'
             });

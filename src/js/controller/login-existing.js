@@ -15,23 +15,6 @@ define(function(require) {
         $scope.buttonEnabled = true;
         $scope.incorrect = false;
 
-        //
-        // Try unlocking without passphrase
-        //
-
-        unlockCrypto(function(err) {
-            if (err) {
-                return;
-            }
-
-            $location.path('/desktop');
-            $scope.$apply();
-        });
-
-        //
-        // Unlock using passphrase
-        //
-
         $scope.change = function() {
             $scope.incorrect = false;
         };
@@ -44,10 +27,10 @@ define(function(require) {
             // disable button once loggin has started
             $scope.buttonEnabled = false;
             $scope.incorrect = false;
-            unlockCrypto(onUnlock);
+            unlockCrypto();
         };
 
-        function unlockCrypto(callback) {
+        function unlockCrypto() {
             var userId = emailDao._account.emailAddress;
             appController._emailDao._keychain.getUserKeyPair(userId, function(err, keypair) {
                 if (err) {
@@ -58,7 +41,7 @@ define(function(require) {
                 emailDao.unlock({
                     keypair: keypair,
                     passphrase: $scope.passphrase
-                }, callback);
+                }, onUnlock);
             });
         }
 

@@ -73,7 +73,24 @@ define(function(require) {
                     return;
                 }
 
-                self._account.folders = folders;
+                // if empty (first time login) use dummy folders ... overwritten in onConnect
+                self._account.folders = (folders) ? folders : [{
+                    type: 'Inbox',
+                    path: 'INBOX'
+                }, {
+                    type: 'Sent',
+                    path: 'SENT'
+                }, {
+                    type: 'Outbox',
+                    path: 'OUTBOX'
+                }, {
+                    type: 'Drafts',
+                    path: 'DRAFTS'
+                }, {
+                    type: 'Trash',
+                    path: 'TRASH'
+                }];
+
                 callback(null, keypair);
             });
         }
@@ -113,13 +130,6 @@ define(function(require) {
 
             // set status to online
             self._account.online = true;
-
-            // check memory
-            if (self._account.folders) {
-                // no need to init folder again on connect... already in memory
-                callback();
-                return;
-            }
 
             // init folders
             self._imapListFolders(function(err, folders) {
