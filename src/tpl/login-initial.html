@@ -6,7 +6,7 @@
   <div class="content" ng-switch on="state.ui">
 
     <div ng-switch-when="1">
-      <p><b>Generate PGP key.</b> You can set a passphrase to protect your key on disk. But you will have to enter it everytime you open the app. If not just press continue.</p><p>Alternatively you can also <a href="#" ng-click="$event.preventDefault(); importKey()">import an existing PGP key</a>.</p>
+      <p><b>Generate PGP key.</b> You can set a passphrase to protect your key on disk. This must be entered everytime you start the app. For no passphrase just press continue.</p><p>Alternatively you can also <a href="#" ng-click="$event.preventDefault(); importKey()">import an existing PGP key</a>.</p>
       <form>
         <div>
           <label class="input-error-message" ng-class="{'passphrase-label-ok': passphraseRating >= 2}">{{passphraseMsg}}</label><br>
@@ -22,12 +22,6 @@
 
     <div ng-switch-when="2">
       <p><b>Generating key.</b> Please stand by. This can take a while...</p>
-    </div>
-
-    <div ng-switch-when="4">
-      <p><b>Keypair generated.</b> Your personal keypair has been generated. You can export it (e.g. to a USB flash drive) to setup Whiteout Mail on another computer or as a backup.</p>
-      <button ng-click="exportKeypair()" class="btn" tabindex="4">Export now</button>
-      <button ng-click="proceed()" class="btn btn-alt" tabindex="5">Do it later</button>
     </div>
 
   </div><!--/content-->

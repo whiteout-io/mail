@@ -101,40 +101,10 @@ define(function(require) {
                         return;
                     }
 
-                    $scope.setState(states.DONE);
+                    $location.path('/desktop');
                     $scope.$apply();
                 });
             }, 500);
-        };
-
-        $scope.exportKeypair = function() {
-            // export keys from keychain
-            emailDao._crypto.exportKeys(function(err, keys) {
-                if (err) {
-                    $scope.onError(err);
-                    return;
-                }
-
-                var id = keys.keyId.substring(8, keys.keyId.length);
-                dl.createDownload({
-                    content: keys.publicKeyArmored + keys.privateKeyArmored,
-                    filename: 'whiteout_mail_' + emailDao._account.emailAddress + '_' + id + '.asc',
-                    contentType: 'text/plain'
-                }, onSave);
-            });
-
-            function onSave(err) {
-                if (err) {
-                    $scope.onError(err);
-                    return;
-                }
-                $scope.proceed();
-                $scope.$apply();
-            }
-        };
-
-        $scope.proceed = function() {
-            $location.path('/desktop');
         };
 
         $scope.setState = function(state) {
