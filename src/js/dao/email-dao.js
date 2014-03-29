@@ -73,23 +73,7 @@ define(function(require) {
                     return;
                 }
 
-                // if empty (first time login) use dummy folders ... overwritten in onConnect
-                self._account.folders = (folders) ? folders : [{
-                    type: 'Inbox',
-                    path: 'INBOX'
-                }, {
-                    type: 'Sent',
-                    path: 'SENT'
-                }, {
-                    type: 'Outbox',
-                    path: 'OUTBOX'
-                }, {
-                    type: 'Drafts',
-                    path: 'DRAFTS'
-                }, {
-                    type: 'Trash',
-                    path: 'TRASH'
-                }];
+                self._account.folders = folders;
 
                 callback(null, keypair);
             });

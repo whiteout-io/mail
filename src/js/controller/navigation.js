@@ -66,9 +66,21 @@ define(function(require) {
         // init folders
         initFolders();
         // select inbox as the current folder on init
-        $scope.openFolder($scope.account.folders[0]);
+        if ($scope.account.folders && $scope.account.folders.length > 0) {
+            $scope.openFolder($scope.account.folders[0]);
+        }
         // connect imap/smtp clients on first startup
-        appController.onConnect($scope.onError);
+        appController.onConnect(function(err) {
+            if (err) {
+                $scope.onError(err);
+                return;
+            }
+
+            // select inbox if not yet selected
+            if (!$scope.state.nav.currentFolder) {
+                $scope.openFolder($scope.account.folders[0]);
+            }
+        });
 
         //
         // helper functions
