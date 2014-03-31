@@ -185,6 +185,55 @@ define(function(require) {
     };
 
     /**
+     * Change the passphrase of an ascii armored private key.
+     */
+    PGP.prototype.changePassphrase = function(options, callback) {
+        var privKey, packets;
+
+        if (!options.privateKeyArmored ||
+            typeof options.oldPassphrase !== 'string' ||
+            typeof options.newPassphrase !== 'string') {
+            callback({
+                errMsg: 'Could not export keys!'
+            });
+            return;
+        }
+
+        // read armored key
+        try {
+            privKey = openpgp.key.readArmored(options.privateKeyArmored).keys[0];
+        } catch (e) {
+            callback({
+                errMsg: 'Importing key failed. Parsing error!'
+            });
+            return;
+        }
+
+        // decrypt private key with passphrase
+        if (!privKey.decrypt(options.oldPassphrase)) {
+            callback({
+                errMsg: 'Old passphrase incorrect!'
+            });
+            return;
+        }
+
+        // encrypt key with new passphrase
+        try {
+            packets = privKey.getAllKeyPackets();
+            for (var i = 0; i < packets.length; i++) {
+                packets[i].encrypt(options.newPassphrase);
+            }
+        } catch (e) {
+            callback({
+                errMsg: 'Setting new passphrase failed!'
+            });
+            return;
+        }
+
+        callback(null, privKey.armor());
+    };
+
+    /**
      * Encrypt and sign a pgp message for a list of receivers
      */
     PGP.prototype.encrypt = function(plaintext, publicKeysArmored, callback) {
