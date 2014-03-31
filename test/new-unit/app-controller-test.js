@@ -291,31 +291,10 @@ define(function(require) {
                 });
             });
 
-            it('should fail due to error in onConnect', function(done) {
-                devicestorageStub.init.yields();
-                updateHandlerStub.update.yields();
-                emailDaoStub.init.yields();
-
-                onConnectStub.yields({});
-
-                controller.init({
-                    emailAddress: emailAddress
-                }, function(err) {
-                    expect(err).to.exist;
-                    expect(updateHandlerStub.update.calledOnce).to.be.true;
-                    expect(emailDaoStub.init.calledOnce).to.be.true;
-                    expect(devicestorageStub.init.calledOnce).to.be.true;
-                    expect(onConnectStub.calledOnce).to.be.true;
-                    done();
-                });
-            });
-
             it('should work and return a keypair', function(done) {
                 devicestorageStub.init.withArgs(emailAddress).yields();
                 emailDaoStub.init.yields(null, {});
                 updateHandlerStub.update.yields();
-
-                onConnectStub.yields();
 
                 controller.init({
                     emailAddress: emailAddress
@@ -325,7 +304,6 @@ define(function(require) {
                     expect(updateHandlerStub.update.calledOnce).to.be.true;
                     expect(emailDaoStub.init.calledOnce).to.be.true;
                     expect(devicestorageStub.init.calledOnce).to.be.true;
-                    expect(onConnectStub.calledOnce).to.be.true;
                     done();
                 });
             });

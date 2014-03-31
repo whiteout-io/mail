@@ -5,7 +5,6 @@ define(function(require) {
         angular = require('angular'),
         mocks = require('angularMocks'),
         LoginInitialCtrl = require('js/controller/login-initial'),
-        dl = require('js/util/download'),
         PGP = require('js/crypto/pgp'),
         EmailDAO = require('js/dao/email-dao'),
         appController = require('js/app-controller');
@@ -54,8 +53,6 @@ define(function(require) {
 
         describe('initial state', function() {
             it('should be well defined', function() {
-                expect(scope.proceed).to.exist;
-                expect(scope.exportKeypair).to.exist;
                 expect(scope.confirmPassphrase).to.exist;
                 expect(scope.state.ui).to.equal(1);
             });
@@ -63,10 +60,10 @@ define(function(require) {
 
         describe('check passphrase quality', function() {
             it('should be too short', function() {
-                scope.state.passphrase = '&§DG36abc';
+                scope.state.passphrase = '&§DG36';
                 scope.checkPassphraseQuality();
 
-                expect(scope.passphraseMsg).to.equal('Too short');
+                expect(scope.passphraseMsg).to.equal('Very weak');
                 expect(scope.passphraseRating).to.equal(0);
             });
 
@@ -112,16 +109,12 @@ define(function(require) {
                 emailDaoMock.unlock.withArgs({
                     passphrase: passphrase
                 }).yields();
-                setStateStub = sinon.stub(scope, 'setState', function(state) {
-                    if (setStateStub.calledOnce) {
-                        expect(state).to.equal(2);
-                    } else if (setStateStub.calledTwice) {
-                        expect(state).to.equal(4);
-                        expect(emailDaoMock.unlock.calledOnce).to.be.true;
-                        scope.setState.restore();
-                        done();
-                    }
-                });
+
+                scope.$apply = function() {
+                    expect(location.$$path).to.equal('/desktop');
+                    expect(emailDaoMock.unlock.calledOnce).to.be.true;
+                    done();
+                };
 
                 scope.confirmPassphrase();
             });
@@ -139,6 +132,7 @@ define(function(require) {
                 emailDaoMock.unlock.withArgs({
                     passphrase: passphrase
                 }).yields(new Error('asd'));
+
                 setStateStub = sinon.stub(scope, 'setState', function(state) {
                     if (setStateStub.calledOnce) {
                         expect(state).to.equal(2);
@@ -154,64 +148,5 @@ define(function(require) {
             });
         });
 
-        describe('proceed', function() {
-            it('should forward', function() {
-                var locationSpy = sinon.spy(location, 'path');
-
-                scope.proceed();
-
-                expect(locationSpy.calledWith('/desktop')).to.be.true;
-            });
-        });
-
-        describe('export keypair', function() {
-            it('should work', function() {
-                var locationSpy, createDownloadMock;
-
-                createDownloadMock = sinon.stub(dl, 'createDownload');
-                cryptoMock.exportKeys.yields(null, {
-                    publicKeyArmored: 'a',
-                    privateKeyArmored: 'b',
-                    keyId: keyId
-                });
-                createDownloadMock.withArgs(sinon.match(function(arg) {
-                    return arg.content === 'ab' && arg.filename === 'whiteout_mail_' + emailAddress + '_' + expectedKeyId + '.asc' && arg.contentType === 'text/plain';
-                })).yields();
-
-                locationSpy = sinon.spy(location, 'path');
-
-                scope.exportKeypair();
-
-                expect(cryptoMock.exportKeys.calledOnce).to.be.true;
-                expect(createDownloadMock.calledOnce).to.be.true;
-                expect(locationSpy.calledWith('/desktop')).to.be.true;
-                dl.createDownload.restore();
-            });
-
-            it('should not work when download fails', function() {
-                var createDownloadMock = sinon.stub(dl, 'createDownload');
-                cryptoMock.exportKeys.yields(null, {
-                    publicKeyArmored: 'a',
-                    privateKeyArmored: 'b',
-                    keyId: keyId
-                });
-                createDownloadMock.yields({
-                    errMsg: 'snafu.'
-                });
-                scope.exportKeypair();
-
-                expect(cryptoMock.exportKeys.calledOnce).to.be.true;
-                expect(createDownloadMock.calledOnce).to.be.true;
-                dl.createDownload.restore();
-            });
-
-            it('should not work when export fails', function() {
-                cryptoMock.exportKeys.yields(new Error('snafu.'));
-
-                scope.exportKeypair();
-
-                expect(cryptoMock.exportKeys.calledOnce).to.be.true;
-            });
-        });
     });
 });

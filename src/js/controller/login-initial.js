@@ -2,8 +2,7 @@ define(function(require) {
     'use strict';
 
     var appController = require('js/app-controller'),
-        errorUtil = require('js/util/error'),
-        dl = require('js/util/download');
+        errorUtil = require('js/util/error');
 
     var LoginInitialCtrl = function($scope, $location) {
         var emailDao = appController._emailDao,

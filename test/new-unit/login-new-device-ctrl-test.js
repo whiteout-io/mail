@@ -98,14 +98,6 @@ define(function(require) {
                 expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
             });
 
-            it('should not do anything without passphrase', function() {
-                scope.state.passphrase = '';
-
-                scope.confirmPassphrase();
-
-                expect(scope.incorrect).to.be.true;
-            });
-
             it('should not work when keypair upload fails', function() {
                 scope.passphrase = passphrase;
                 scope.key = {
