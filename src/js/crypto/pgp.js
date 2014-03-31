@@ -10,7 +10,7 @@ define(function(require) {
 
     var PGP = function() {
         openpgp.config.prefer_hash_algorithm = openpgp.enums.hash.sha256;
-        openpgp.initWorker(config.workerPath + '/../lib/openpgp/openpgp.worker.js');
+        openpgp.initWorker(config.workerPath + '/../lib/openpgp/openpgp.worker.min.js');
     };
 
     /**
@@ -52,7 +52,7 @@ define(function(require) {
      */
     PGP.prototype.getFingerprint = function(keyArmored) {
         function fingerprint(key) {
-            return util.hexstrdump(key.getKeyPacket().getFingerprint()).toUpperCase();
+            return key.getKeyPacket().getFingerprint().toUpperCase();
         }
 
         // process armored key input
@@ -105,7 +105,7 @@ define(function(require) {
         return {
             _id: packet.getKeyId().toHex().toUpperCase(),
             userId: key.getUserIds()[0].split('<')[1].split('>')[0],
-            fingerprint: util.hexstrdump(packet.getFingerprint()).toUpperCase(),
+            fingerprint: packet.getFingerprint().toUpperCase(),
             algorithm: packet.algorithm,
             bitSize: packet.getBitSize(),
             created: packet.created,
