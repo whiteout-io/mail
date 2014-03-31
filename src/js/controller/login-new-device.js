@@ -17,11 +17,6 @@ define(function(require) {
         $scope.incorrect = false;
 
         $scope.confirmPassphrase = function() {
-            if (!$scope.passphrase) {
-                $scope.incorrect = true;
-                return;
-            }
-
             $scope.incorrect = false;
             unlockCrypto();
         };

@@ -19,7 +19,7 @@ define(function(require) {
     PGP.prototype.generateKeys = function(options, callback) {
         var userId;
 
-        if (!util.emailRegEx.test(options.emailAddress) || !options.keySize || typeof options.passphrase !== 'string') {
+        if (!util.emailRegEx.test(options.emailAddress) || !options.keySize) {
             callback({
                 errMsg: 'Crypto init failed. Not all options set!'
             });
@@ -119,7 +119,7 @@ define(function(require) {
         var pubKeyId, privKeyId, self = this;
 
         // check options
-        if (typeof options.passphrase !== 'string' || !options.privateKeyArmored || !options.publicKeyArmored) {
+        if (!options.privateKeyArmored || !options.publicKeyArmored) {
             callback({
                 errMsg: 'Importing keys failed. Not all options set!'
             });
@@ -182,6 +182,55 @@ define(function(require) {
             privateKeyArmored: this._privateKey.armor(),
             publicKeyArmored: this._publicKey.armor()
         });
+    };
+
+    /**
+     * Change the passphrase of an ascii armored private key.
+     */
+    PGP.prototype.changePassphrase = function(options, callback) {
+        var privKey, packets;
+
+        if (!options.privateKeyArmored ||
+            typeof options.oldPassphrase !== 'string' ||
+            typeof options.newPassphrase !== 'string') {
+            callback({
+                errMsg: 'Could not export keys!'
+            });
+            return;
+        }
+
+        // read armored key
+        try {
+            privKey = openpgp.key.readArmored(options.privateKeyArmored).keys[0];
+        } catch (e) {
+            callback({
+                errMsg: 'Importing key failed. Parsing error!'
+            });
+            return;
+        }
+
+        // decrypt private key with passphrase
+        if (!privKey.decrypt(options.oldPassphrase)) {
+            callback({
+                errMsg: 'Old passphrase incorrect!'
+            });
+            return;
+        }
+
+        // encrypt key with new passphrase
+        try {
+            packets = privKey.getAllKeyPackets();
+            for (var i = 0; i < packets.length; i++) {
+                packets[i].encrypt(options.newPassphrase);
+            }
+        } catch (e) {
+            callback({
+                errMsg: 'Setting new passphrase failed!'
+            });
+            return;
+        }
+
+        callback(null, privKey.armor());
     };
 
     /**

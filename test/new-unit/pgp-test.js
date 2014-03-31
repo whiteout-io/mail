@@ -120,6 +120,28 @@ define(function(require) {
             });
         });
 
+        describe('Change passphrase of private key', function() {
+            it('should work', function(done) {
+                pgp.changePassphrase({
+                    privateKeyArmored: privkey,
+                    oldPassphrase: passphrase,
+                    newPassphrase: 'yxcv'
+                }, function(err, reEncryptedKey) {
+                    expect(err).to.not.exist;
+                    expect(reEncryptedKey).to.exist;
+
+                    pgp.importKeys({
+                        passphrase: 'yxcv',
+                        privateKeyArmored: reEncryptedKey,
+                        publicKeyArmored: pubkey
+                    }, function(err) {
+                        expect(err).to.not.exist;
+                        done();
+                    });
+                });
+            });
+        });
+
         describe('Encrypt/Sign/Decrypt/Verify', function() {
             var message = 'asdfs\n\nThursday, Nov 21, 2013 7:38 PM asdf@example.com wrote:\n' +
                 '> asdf\n' +

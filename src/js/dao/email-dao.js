@@ -74,6 +74,7 @@ define(function(require) {
                 }
 
                 self._account.folders = folders;
+
                 callback(null, keypair);
             });
         }
@@ -113,13 +114,6 @@ define(function(require) {
 
             // set status to online
             self._account.online = true;
-
-            // check memory
-            if (self._account.folders) {
-                // no need to init folder again on connect... already in memory
-                callback();
-                return;
-            }
 
             // init folders
             self._imapListFolders(function(err, folders) {

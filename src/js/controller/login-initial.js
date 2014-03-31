@@ -2,8 +2,7 @@ define(function(require) {
     'use strict';
 
     var appController = require('js/app-controller'),
-        errorUtil = require('js/util/error'),
-        dl = require('js/util/download');
+        errorUtil = require('js/util/error');
 
     var LoginInitialCtrl = function($scope, $location) {
         var emailDao = appController._emailDao,
@@ -53,12 +52,13 @@ define(function(require) {
                 return str.substring(0, 1).toLowerCase() + str.substring(1);
             }
 
-            if (!passphrase || passphrase.length < 10) {
-                $scope.passphraseMsg = 'Too short';
+            if (!passphrase) {
+                // no rating for empty passphrase
+                $scope.passphraseMsg = '';
                 return;
             }
 
-            if (SAME.test(passphrase)) {
+            if (passphrase.length < 8 || SAME.test(passphrase)) {
                 $scope.passphraseMsg = 'Very weak';
                 return;
             }
@@ -85,14 +85,14 @@ define(function(require) {
             var passphrase = $scope.state.passphrase,
                 confirmation = $scope.state.confirmation;
 
-            if (!passphrase || passphrase !== confirmation) {
+            if (passphrase !== confirmation) {
                 return;
             }
 
             $scope.setState(states.PROCESSING);
             setTimeout(function() {
                 emailDao.unlock({
-                    passphrase: passphrase
+                    passphrase: (passphrase) ? passphrase : undefined
                 }, function(err) {
                     if (err) {
                         $scope.setState(states.IDLE);
@@ -100,40 +100,10 @@ define(function(require) {
                         return;
                     }
 
-                    $scope.setState(states.DONE);
+                    $location.path('/desktop');
                     $scope.$apply();
                 });
             }, 500);
-        };
-
-        $scope.exportKeypair = function() {
-            // export keys from keychain
-            emailDao._crypto.exportKeys(function(err, keys) {
-                if (err) {
-                    $scope.onError(err);
-                    return;
-                }
-
-                var id = keys.keyId.substring(8, keys.keyId.length);
-                dl.createDownload({
-                    content: keys.publicKeyArmored + keys.privateKeyArmored,
-                    filename: 'whiteout_mail_' + emailDao._account.emailAddress + '_' + id + '.asc',
-                    contentType: 'text/plain'
-                }, onSave);
-            });
-
-            function onSave(err) {
-                if (err) {
-                    $scope.onError(err);
-                    return;
-                }
-                $scope.proceed();
-                $scope.$apply();
-            }
-        };
-
-        $scope.proceed = function() {
-            $location.path('/desktop');
         };
 
         $scope.setState = function(state) {

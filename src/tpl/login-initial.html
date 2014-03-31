@@ -6,28 +6,22 @@
   <div class="content" ng-switch on="state.ui">
 
     <div ng-switch-when="1">
-      <p><b>Generate PGP key.</b> Choose a passphrase to protect your new key. If you forget it at a later time you will not be able to read past messages.</p><p>Alternatively you can also <a href="#" ng-click="$event.preventDefault(); importKey()">import an existing PGP key</a>.</p>
+      <p><b>Generate PGP key.</b> You can set a passphrase to protect your key on disk. This must be entered everytime you start the app. For no passphrase just press continue.</p><p>Alternatively you can also <a href="#" ng-click="$event.preventDefault(); importKey()">import an existing PGP key</a>.</p>
       <form>
         <div>
           <label class="input-error-message" ng-class="{'passphrase-label-ok': passphraseRating >= 2}">{{passphraseMsg}}</label><br>
-          <input class="input-text" ng-class="{'input-text-error': passphraseRating < 2}" type="password" ng-model="state.passphrase" ng-change="checkPassphraseQuality()" placeholder="Enter passphrase" tabindex="1" focus-me="true">
-          <input class="input-text" type="password" ng-model="state.confirmation" ng-class="{'input-text-error': state.confirmation && state.confirmation !== state.passphrase}" placeholder="Confirm passphrase" tabindex="2">
+          <input class="input-text" type="password" ng-model="state.passphrase" ng-change="checkPassphraseQuality()" placeholder="Enter passphrase" tabindex="1" focus-me="true">
+          <input class="input-text" type="password" ng-model="state.confirmation" ng-class="{'input-text-error': (state.confirmation || state.passphrase) && state.confirmation !== state.passphrase}" placeholder="Confirm passphrase" tabindex="2">
           <span class="popover-info" data-icon-append="&#xe010;" popover="#passphrase-info"></span>
         </div>
         <div>
-          <button type="submit" ng-click="confirmPassphrase()" class="btn" ng-disabled="!state.passphrase || passphraseRating < 2 || state.passphrase !== state.confirmation" tabindex="3">Generate keypair</button>
+          <button type="submit" ng-click="confirmPassphrase()" class="btn" ng-disabled="(state.confirmation || state.passphrase) && state.confirmation !== state.passphrase" tabindex="3">Continue</button>
         </div>
       </form>
     </div>
 
     <div ng-switch-when="2">
-      <p><b>Generating keypair.</b> Please stand by. This can take a while...</p>
-    </div>
-
-    <div ng-switch-when="4">
-      <p><b>Keypair generated.</b> Your personal keypair has been generated. You can export it (e.g. to a USB flash drive) to setup Whiteout Mail on another computer or as a backup.</p>
-      <button ng-click="exportKeypair()" class="btn" tabindex="4">Export now</button>
-      <button ng-click="proceed()" class="btn btn-alt" tabindex="5">Do it later</button>
+      <p><b>Generating key.</b> Please stand by. This can take a while...</p>
     </div>
 
   </div><!--/content-->
@@ -43,9 +37,8 @@
   <div class="arrow"></div>
   <div class="popover-title"><b>What is this?</b></div>
   <div class="popover-content">
-    <p>A passphrase is like a password but longer.</p>
+    <p>A passphrase is like a password that protects your PGP key.</p>
     <p>If your device is lost or stolen the passphrase protects the contents of your mailbox.</p>
-    <p>It must be at least 10 characters long and contain one special character or digit.</p>
     <p>You cannot change your passphrase at a later time.</p>
   </div>
 </div><!--/.popover-->

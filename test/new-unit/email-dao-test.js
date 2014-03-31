@@ -133,14 +133,18 @@ define(function(require) {
             dao._account.folders = [];
             imapClientStub.login.yields();
 
+            var listFolderStub = sinon.stub(dao, '_imapListFolders').yields(null, []);
+
             dao.onConnect({
                 imapClient: imapClientStub,
                 pgpMailer: pgpMailerStub
             }, function(err) {
                 expect(err).to.not.exist;
                 expect(dao._account.online).to.be.true;
+                expect(dao._account.folders).to.deep.equal([]);
                 expect(dao._imapClient).to.equal(dao._imapClient);
                 expect(dao._smtpClient).to.equal(dao._smtpClient);
+                listFolderStub.restore();
                 done();
             });
         });
@@ -306,23 +310,7 @@ define(function(require) {
                 });
             });
 
-            it('should work when folder already initiated', function(done) {
-                dao._account.folders = [];
-                imapLoginStub.yields();
-
-                dao.onConnect({
-                    imapClient: imapClientStub,
-                    pgpMailer: pgpMailerStub
-                }, function(err) {
-                    expect(err).to.not.exist;
-                    expect(dao._account.online).to.be.true;
-                    expect(dao._imapClient).to.equal(dao._imapClient);
-                    expect(dao._smtpClient).to.equal(dao._smtpClient);
-                    done();
-                });
-            });
-
-            it('should work when folder not yet initiated', function(done) {
+            it('should work', function(done) {
                 var folders = [];
                 imapLoginStub.yields();
                 imapListFoldersStub.yields(null, folders);

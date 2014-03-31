@@ -19,9 +19,6 @@ define(function(require) {
         // attach global error handler
         errorUtil.attachHandler($scope);
 
-        // app controller is initialized
-        appController._initialized = true;
-
         emailDao = appController._emailDao;
         outboxBo = appController._outboxBo;
 
@@ -69,7 +66,21 @@ define(function(require) {
         // init folders
         initFolders();
         // select inbox as the current folder on init
-        $scope.openFolder($scope.account.folders[0]);
+        if ($scope.account.folders && $scope.account.folders.length > 0) {
+            $scope.openFolder($scope.account.folders[0]);
+        }
+        // connect imap/smtp clients on first startup
+        appController.onConnect(function(err) {
+            if (err) {
+                $scope.onError(err);
+                return;
+            }
+
+            // select inbox if not yet selected
+            if (!$scope.state.nav.currentFolder) {
+                $scope.openFolder($scope.account.folders[0]);
+            }
+        });
 
         //
         // helper functions

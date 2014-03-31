@@ -60,13 +60,55 @@ define(function(require) {
                 initStub.restore();
             });
 
-            it('should forward to existing user login', function(done) {
-                startAppStub.yields();
-                getEmailAddressStub.yields(null, emailAddress);
-                initStub.yields(null, {
+            it('should forward directly to desktop for empty passphrase', function(done) {
+                var testKeys = {
                     privateKey: 'a',
                     publicKey: 'b'
+                };
+
+                startAppStub.yields();
+                getEmailAddressStub.yields(null, emailAddress);
+                initStub.yields(null, testKeys);
+
+                emailDaoMock.unlock.withArgs({
+                    keypair: testKeys,
+                    passphrase: undefined
+                }).yields();
+
+                angular.module('logintest', []);
+                mocks.module('logintest');
+                mocks.inject(function($controller, $rootScope, $location) {
+                    location = $location;
+                    sinon.stub(location, 'path', function(path) {
+                        expect(path).to.equal('/desktop');
+                        expect(startAppStub.calledOnce).to.be.true;
+                        expect(checkForUpdateStub.calledOnce).to.be.true;
+                        expect(getEmailAddressStub.calledOnce).to.be.true;
+                        done();
+                    });
+                    scope = $rootScope.$new();
+                    scope.state = {};
+                    ctrl = $controller(LoginCtrl, {
+                        $location: location,
+                        $scope: scope
+                    });
                 });
+            });
+
+            it('should forward to existing user login', function(done) {
+                var testKeys = {
+                    privateKey: 'a',
+                    publicKey: 'b'
+                };
+
+                startAppStub.yields();
+                getEmailAddressStub.yields(null, emailAddress);
+                initStub.yields(null, testKeys);
+
+                emailDaoMock.unlock.withArgs({
+                    keypair: testKeys,
+                    passphrase: undefined
+                }).yields({});
 
                 angular.module('logintest', []);
                 mocks.module('logintest');

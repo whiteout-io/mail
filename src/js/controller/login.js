@@ -35,7 +35,7 @@ define(function(require) {
 
                 // check if account needs to be selected
                 if (!emailAddress) {
-                    firstLogin();
+                    goTo('/add-account');
                     return;
                 }
 
@@ -53,23 +53,32 @@ define(function(require) {
             });
         }
 
-        function firstLogin() {
-            $location.path('/add-account');
-            $scope.$apply();
-        }
-
         function redirect(availableKeys) {
             // redirect if needed
             if (typeof availableKeys === 'undefined') {
                 // no public key available, start onboarding process
-                $location.path('/login-initial');
+                goTo('/login-initial');
             } else if (!availableKeys.privateKey) {
                 // no private key, import key
-                $location.path('/login-new-device');
+                goTo('/login-new-device');
             } else {
-                // public and private key available, just login 
-                $location.path('/login-existing');
+                // public and private key available, try empty passphrase
+                appController._emailDao.unlock({
+                    keypair: availableKeys,
+                    passphrase: undefined
+                }, function(err) {
+                    if (err) {
+                        goTo('/login-existing');
+                        return;
+                    }
+
+                    goTo('/desktop');
+                });
             }
+        }
+
+        function goTo(location) {
+            $location.path(location);
             $scope.$apply();
         }
     };

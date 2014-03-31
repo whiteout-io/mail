@@ -127,11 +127,6 @@ define(function(require) {
                 console.log('IMAP reconnecting...');
                 // re-init client modules on error
                 self.onConnect(function(err) {
-                    if (!self._initialized) {
-                        callback(err);
-                        return;
-                    }
-
                     if (err) {
                         console.error('IMAP reconnect failed!', err);
                         return;
@@ -398,15 +393,7 @@ define(function(require) {
                     return;
                 }
 
-                // connect tcp clients on first startup
-                self.onConnect(function(err) {
-                    if (err) {
-                        callback(err);
-                        return;
-                    }
-
-                    callback(null, keypair);
-                });
+                callback(null, keypair);
             });
         }
     };
