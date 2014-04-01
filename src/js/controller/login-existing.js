@@ -32,7 +32,7 @@ define(function(require) {
 
         function unlockCrypto() {
             var userId = emailDao._account.emailAddress;
-            appController._emailDao._keychain.getUserKeyPair(userId, function(err, keypair) {
+            emailDao._keychain.getUserKeyPair(userId, function(err, keypair) {
                 if (err) {
                     handleError(err);
                     return;

@@ -28,6 +28,8 @@ function startTests() {
 
 	require(
 		[
+			'test/new-unit/oauth-test',
+			'test/new-unit/auth-test',
 			'test/new-unit/email-dao-test',
 			'test/new-unit/email-sync-test',
 			'test/new-unit/app-controller-test',

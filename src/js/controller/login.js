@@ -27,7 +27,7 @@ define(function(require) {
 
         function initializeUser() {
             // get OAuth token from chrome
-            appController.getEmailAddress(function(err, emailAddress) {
+            appController._auth.getEmailAddress(function(err, emailAddress) {
                 if (err) {
                     $scope.onError(err);
                     return;

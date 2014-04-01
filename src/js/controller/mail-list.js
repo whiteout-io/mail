@@ -6,7 +6,7 @@ define(function(require) {
         appController = require('js/app-controller'),
         IScroll = require('iscroll'),
         str = require('js/app-config').string,
-        cfg = require('js/app-config').config,
+        notification = require('js/util/notification'),
         emailDao, outboxBo;
 
     var MailListCtrl = function($scope) {
@@ -26,7 +26,7 @@ define(function(require) {
                     notificationForEmail(email);
                 });
             };
-            chrome.notifications.onClicked.addListener(notificationClicked);
+            notification.setOnClickedListener(notificationClicked);
         }
 
         //
@@ -38,7 +38,7 @@ define(function(require) {
                 folder: getFolder().path,
                 message: email
             }, function(err) {
-                if (err) {
+                if (err && err.code !== 42) {
                     $scope.onError(err);
                     return;
                 }
@@ -244,11 +244,10 @@ define(function(require) {
         }
 
         function notificationForEmail(email) {
-            chrome.notifications.create('' + email.uid, {
-                type: 'basic',
+            notification.create({
+                id: '' + email.uid,
                 title: email.from[0].name || email.from[0].address,
-                message: email.subject.replace(str.subjectPrefix, ''),
-                iconUrl: chrome.runtime.getURL(cfg.iconPath)
+                message: email.subject.replace(str.subjectPrefix, '')
             }, function() {});
         }
 

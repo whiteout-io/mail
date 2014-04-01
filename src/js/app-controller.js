@@ -4,22 +4,24 @@
 define(function(require) {
     'use strict';
 
-    var ImapClient = require('imap-client'),
-        mailreader = require('mailreader'),
+    var Auth = require('js/bo/auth'),
+        PGP = require('js/crypto/pgp'),
         PgpMailer = require('pgpmailer'),
-        EmailDAO = require('js/dao/email-dao'),
-        EmailSync = require('js/dao/email-sync'),
+        OAuth = require('js/util/oauth'),
+        PgpBuilder = require('pgpbuilder'),
+        OutboxBO = require('js/bo/outbox'),
+        mailreader = require('mailreader'),
+        ImapClient = require('imap-client'),
         RestDAO = require('js/dao/rest-dao'),
+        EmailDAO = require('js/dao/email-dao'),
+        config = require('js/app-config').config,
+        EmailSync = require('js/dao/email-sync'),
+        KeychainDAO = require('js/dao/keychain-dao'),
         PublicKeyDAO = require('js/dao/publickey-dao'),
         LawnchairDAO = require('js/dao/lawnchair-dao'),
-        KeychainDAO = require('js/dao/keychain-dao'),
-        DeviceStorageDAO = require('js/dao/devicestorage-dao'),
         InvitationDAO = require('js/dao/invitation-dao'),
-        OutboxBO = require('js/bo/outbox'),
-        PGP = require('js/crypto/pgp'),
-        PgpBuilder = require('pgpbuilder'),
-        UpdateHandler = require('js/util/update/update-handler'),
-        config = require('js/app-config').config;
+        DeviceStorageDAO = require('js/dao/devicestorage-dao'),
+        UpdateHandler = require('js/util/update/update-handler');
 
     var self = {};
 
@@ -41,64 +43,74 @@ define(function(require) {
         function onDeviceReady() {
             console.log('Starting app.');
 
+            self.buildModules();
+
             // Handle offline and online gracefully
             window.addEventListener('online', self.onConnect.bind(self, options.onError));
             window.addEventListener('offline', self.onDisconnect.bind(self, options.onError));
 
-            // init app config storage
-            self._appConfigStore = new DeviceStorageDAO(new LawnchairDAO());
             self._appConfigStore.init('app-config', callback);
         }
     };
 
-    self.onDisconnect = function(callback) {
-        if (!self._emailDao) {
-            // the following code only makes sense if the email dao has been initialized
-            return;
-        }
+    self.buildModules = function() {
+        var lawnchairDao, restDao, pubkeyDao, emailDao, emailSync, keychain, pgp, userStorage, pgpbuilder, oauth, appConfigStore;
 
+        // start the mailreader's worker thread
+        mailreader.startWorker(config.workerPath + '/../lib/mailreader-parser-worker.js');
+
+        // init objects and inject dependencies
+        restDao = new RestDAO();
+        lawnchairDao = new LawnchairDAO();
+        pubkeyDao = new PublicKeyDAO(restDao);
+        oauth = new OAuth(new RestDAO('https://www.googleapis.com'));
+
+        self._appConfigStore = appConfigStore = new DeviceStorageDAO(new LawnchairDAO());
+        self._auth = new Auth(appConfigStore, oauth, new RestDAO('/ca'));
+        self._userStorage = userStorage = new DeviceStorageDAO(lawnchairDao);
+        self._invitationDao = new InvitationDAO(restDao);
+        self._keychain = keychain = new KeychainDAO(lawnchairDao, pubkeyDao);
+        self._crypto = pgp = new PGP();
+        self._pgpbuilder = pgpbuilder = new PgpBuilder();
+        emailSync = new EmailSync(keychain, userStorage);
+        self._emailDao = emailDao = new EmailDAO(keychain, pgp, userStorage, pgpbuilder, mailreader, emailSync);
+        self._outboxBo = new OutboxBO(emailDao, keychain, userStorage);
+        self._updateHandler = new UpdateHandler(appConfigStore, userStorage);
+    };
+
+    self.isOnline = function() {
+        return navigator.onLine;
+    };
+
+    self.onDisconnect = function(callback) {
         self._emailDao.onDisconnect(null, callback);
     };
 
     self.onConnect = function(callback) {
-        if (!self._emailDao) {
-            // the following code only makes sense if the email dao has been initialized
-            return;
-        }
-
-        if (!self.isOnline()) {
+        if (!self.isOnline() || !self._emailDao._account) {
             // prevent connection infinite loop
-            console.log('Not connecting since user agent is offline.');
             callback();
             return;
         }
 
         // fetch pinned local ssl certificate
-        self.getCertficate(function(err, certificate) {
+        self._auth.getCredentials({}, function(err, credentials) {
             if (err) {
                 callback(err);
                 return;
             }
 
-            // get a fresh oauth token
-            self.fetchOAuthToken(function(err, oauth) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-
-                initClients(oauth, certificate);
-            });
+            initClients(credentials);
         });
 
-        function initClients(oauth, certificate) {
+        function initClients(credentials) {
             var auth, imapOptions, imapClient, smtpOptions, pgpMailer;
 
             auth = {
                 XOAuth2: {
-                    user: oauth.emailAddress,
+                    user: credentials.emailAddress,
                     clientId: config.gmail.clientId,
-                    accessToken: oauth.token
+                    accessToken: credentials.oauthToken
                 }
             };
             imapOptions = {
@@ -106,7 +118,7 @@ define(function(require) {
                 port: config.gmail.imap.port,
                 host: config.gmail.imap.host,
                 auth: auth,
-                ca: [certificate]
+                ca: [credentials.sslCert]
             };
             smtpOptions = {
                 secureConnection: config.gmail.smtp.secure,
@@ -114,27 +126,14 @@ define(function(require) {
                 host: config.gmail.smtp.host,
                 auth: auth,
                 tls: {
-                    ca: [certificate]
+                    ca: [credentials.sslCert]
                 },
                 onError: console.error
             };
 
-            imapClient = new ImapClient(imapOptions, mailreader);
             pgpMailer = new PgpMailer(smtpOptions, self._pgpbuilder);
-
-            imapClient.onError = function(err) {
-                console.log('IMAP error.', err);
-                console.log('IMAP reconnecting...');
-                // re-init client modules on error
-                self.onConnect(function(err) {
-                    if (err) {
-                        console.error('IMAP reconnect failed!', err);
-                        return;
-                    }
-
-                    console.log('IMAP reconnect attempt complete.');
-                });
-            };
+            imapClient = new ImapClient(imapOptions, mailreader);
+            imapClient.onError = onImapError;
 
             // connect to clients
             self._emailDao.onConnect({
@@ -142,42 +141,24 @@ define(function(require) {
                 pgpMailer: pgpMailer
             }, callback);
         }
-    };
 
-    self.getCertficate = function(localCallback) {
-        if (self.certificate) {
-            localCallback(null, self.certificate);
-            return;
+        function onImapError(err) {
+            console.log('IMAP error.', err);
+            console.log('IMAP reconnecting...');
+            // re-init client modules on error
+            self.onConnect(function(err) {
+                if (err) {
+                    console.error('IMAP reconnect failed!', err);
+                    return;
+                }
+
+                console.log('IMAP reconnect attempt complete.');
+            });
         }
-
-        // fetch pinned local ssl certificate
-        var ca = new RestDAO({
-            baseUri: '/ca'
-        });
-
-        ca.get({
-            uri: '/Google_Internet_Authority_G2.pem',
-            type: 'text'
-        }, function(err, cert) {
-            if (err || !cert) {
-                localCallback({
-                    errMsg: 'Could not fetch pinned certificate!'
-                });
-                return;
-            }
-
-            self.certificate = cert;
-            localCallback(null, self.certificate);
-            return;
-        });
-    };
-
-    self.isOnline = function() {
-        return navigator.onLine;
     };
 
     self.checkForUpdate = function() {
-        if (!chrome || !chrome.runtime || !chrome.runtime.onUpdateAvailable) {
+        if (!window.chrome || !chrome.runtime || !chrome.runtime.onUpdateAvailable) {
             return;
         }
 
@@ -198,166 +179,9 @@ define(function(require) {
     };
 
     /**
-     * Gracefully try to fetch the user's email address from local storage.
-     * If not yet stored, handle online/offline cases on first use.
-     */
-    self.getEmailAddress = function(callback) {
-        // try to fetch email address from local storage
-        self.getEmailAddressFromConfig(function(err, cachedEmailAddress) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            if (!cachedEmailAddress && !self.isOnline()) {
-                // first time login... must be online
-                callback({
-                    errMsg: 'The app must be online on first use!'
-                });
-                return;
-            }
-
-            callback(null, cachedEmailAddress);
-        });
-    };
-
-    /**
-     * Get the user's email address from local storage
-     */
-    self.getEmailAddressFromConfig = function(callback) {
-        self._appConfigStore.listItems('emailaddress', 0, null, function(err, cachedItems) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            // no email address is cached yet
-            if (!cachedItems || cachedItems.length < 1) {
-                callback();
-                return;
-            }
-
-            callback(null, cachedItems[0]);
-        });
-    };
-
-    /**
-     * Lookup the user's email address. Check local cache if available
-     * otherwise query google's token info api to learn the user's email address
-     */
-    self.queryEmailAddress = function(token, callback) {
-        var itemKey = 'emailaddress';
-
-        self.getEmailAddressFromConfig(function(err, cachedEmailAddress) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            // do roundtrip to google api if no email address is cached yet
-            if (!cachedEmailAddress) {
-                queryGoogleApi();
-                return;
-            }
-
-            callback(null, cachedEmailAddress);
-        });
-
-        function queryGoogleApi() {
-            if (!token) {
-                callback({
-                    errMsg: 'Invalid OAuth token!'
-                });
-                return;
-            }
-
-            // fetch gmail user's email address from the Google Authorization Server endpoint
-            var googleEndpoint = new RestDAO({
-                baseUri: 'https://www.googleapis.com'
-            });
-
-            googleEndpoint.get({
-                uri: '/oauth2/v1/tokeninfo?access_token=' + token
-            }, function(err, info) {
-                if (err || !info || !info.email) {
-                    callback({
-                        errMsg: 'Error looking up email address on google api!'
-                    });
-                    return;
-                }
-
-                // cache the email address on the device
-                self._appConfigStore.storeList([info.email], itemKey, function(err) {
-                    callback(err, info.email);
-                });
-            });
-        }
-    };
-
-    /**
-     * Request an OAuth token from chrome for gmail users
-     */
-    self.fetchOAuthToken = function(callback) {
-        // get OAuth Token from chrome
-        chrome.identity.getAuthToken({
-            'interactive': true
-        }, onToken);
-
-        function onToken(token) {
-            if ((chrome && chrome.runtime && chrome.runtime.lastError) || !token) {
-                callback({
-                    errMsg: 'Error fetching an OAuth token for the user!'
-                });
-                return;
-            }
-
-            // get email address for the token
-            self.queryEmailAddress(token, function(err, emailAddress) {
-                if (err || !emailAddress) {
-                    callback({
-                        errMsg: 'Error looking up email address on login!',
-                        err: err
-                    });
-                    return;
-                }
-
-                // init the email dao
-                callback(null, {
-                    emailAddress: emailAddress,
-                    token: token
-                });
-            });
-        }
-    };
-
-    self.buildModules = function() {
-        var lawnchairDao, restDao, pubkeyDao, emailDao, emailSync, keychain, pgp, userStorage, pgpbuilder;
-
-        // start the mailreader's worker thread 
-        mailreader.startWorker(config.workerPath + '/../lib/mailreader-parser-worker.js');
-
-        // init objects and inject dependencies
-        restDao = new RestDAO();
-        pubkeyDao = new PublicKeyDAO(restDao);
-        lawnchairDao = new LawnchairDAO();
-
-        self._userStorage = userStorage = new DeviceStorageDAO(lawnchairDao);
-        self._invitationDao = new InvitationDAO(restDao);
-        self._keychain = keychain = new KeychainDAO(lawnchairDao, pubkeyDao);
-        self._crypto = pgp = new PGP();
-        self._pgpbuilder = pgpbuilder = new PgpBuilder();
-        emailSync = new EmailSync(keychain, userStorage);
-        self._emailDao = emailDao = new EmailDAO(keychain, pgp, userStorage, pgpbuilder, mailreader, emailSync);
-        self._outboxBo = new OutboxBO(emailDao, keychain, userStorage);
-        self._updateHandler = new UpdateHandler(self._appConfigStore, userStorage);
-    };
-
-    /**
      * Instanciate the mail email data access object and its dependencies. Login to imap on init.
      */
     self.init = function(options, callback) {
-        self.buildModules();
-
         // init user's local database
         self._userStorage.init(options.emailAddress, function(err) {
             if (err) {

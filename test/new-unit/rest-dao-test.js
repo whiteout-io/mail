@@ -32,9 +32,7 @@ define(function(require) {
             it('should accept default base uri', function() {
                 var baseUri = 'http://custom.com';
 
-                restDao = new RestDAO({
-                    baseUri: baseUri
-                });
+                restDao = new RestDAO(baseUri);
                 expect(restDao).to.exist;
                 expect(restDao._baseUri).to.equal(baseUri);
             });

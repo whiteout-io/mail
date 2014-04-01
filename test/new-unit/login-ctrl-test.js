@@ -6,6 +6,7 @@ define(function(require) {
         mocks = require('angularMocks'),
         LoginCtrl = require('js/controller/login'),
         EmailDAO = require('js/dao/email-dao'),
+        Auth = require('js/bo/auth'),
         appController = require('js/app-controller');
 
     describe('Login Controller unit test', function() {
@@ -13,7 +14,7 @@ define(function(require) {
             emailAddress = 'fred@foo.com',
             startAppStub,
             checkForUpdateStub,
-            getEmailAddressStub,
+            authStub,
             initStub;
 
         describe('initialization', function() {
@@ -27,12 +28,11 @@ define(function(require) {
 
                 // remember original module to restore later, then replace it
                 origEmailDao = appController._emailDao;
-                emailDaoMock = sinon.createStubInstance(EmailDAO);
-                appController._emailDao = emailDaoMock;
+                appController._emailDao = emailDaoMock = sinon.createStubInstance(EmailDAO);
+                appController._auth = authStub = sinon.createStubInstance(Auth);
 
                 startAppStub = sinon.stub(appController, 'start');
                 checkForUpdateStub = sinon.stub(appController, 'checkForUpdate');
-                getEmailAddressStub = sinon.stub(appController, 'getEmailAddress');
                 initStub = sinon.stub(appController, 'init');
             });
 
@@ -50,13 +50,11 @@ define(function(require) {
                 appController._emailDao = origEmailDao;
                 appController.start.restore && appController.start.restore();
                 appController.checkForUpdate.restore && appController.checkForUpdate.restore();
-                appController.fetchOAuthToken.restore && appController.fetchOAuthToken.restore();
                 appController.init.restore && appController.init.restore();
                 location.path.restore && location.path.restore();
 
                 startAppStub.restore();
                 checkForUpdateStub.restore();
-                getEmailAddressStub.restore();
                 initStub.restore();
             });
 
@@ -67,7 +65,7 @@ define(function(require) {
                 };
 
                 startAppStub.yields();
-                getEmailAddressStub.yields(null, emailAddress);
+                authStub.getEmailAddress.yields(null, emailAddress);
                 initStub.yields(null, testKeys);
 
                 emailDaoMock.unlock.withArgs({
@@ -83,7 +81,7 @@ define(function(require) {
                         expect(path).to.equal('/desktop');
                         expect(startAppStub.calledOnce).to.be.true;
                         expect(checkForUpdateStub.calledOnce).to.be.true;
-                        expect(getEmailAddressStub.calledOnce).to.be.true;
+                        expect(authStub.getEmailAddress.calledOnce).to.be.true;
                         done();
                     });
                     scope = $rootScope.$new();
@@ -102,7 +100,7 @@ define(function(require) {
                 };
 
                 startAppStub.yields();
-                getEmailAddressStub.yields(null, emailAddress);
+                authStub.getEmailAddress.yields(null, emailAddress);
                 initStub.yields(null, testKeys);
 
                 emailDaoMock.unlock.withArgs({
@@ -118,7 +116,7 @@ define(function(require) {
                         expect(path).to.equal('/login-existing');
                         expect(startAppStub.calledOnce).to.be.true;
                         expect(checkForUpdateStub.calledOnce).to.be.true;
-                        expect(getEmailAddressStub.calledOnce).to.be.true;
+                        expect(authStub.getEmailAddress.calledOnce).to.be.true;
                         done();
                     });
                     scope = $rootScope.$new();
@@ -132,7 +130,7 @@ define(function(require) {
 
             it('should forward to new device login', function(done) {
                 startAppStub.yields();
-                getEmailAddressStub.yields(null, emailAddress);
+                authStub.getEmailAddress.yields(null, emailAddress);
                 initStub.yields(null, {
                     publicKey: 'b'
                 });
@@ -145,7 +143,7 @@ define(function(require) {
                         expect(path).to.equal('/login-new-device');
                         expect(startAppStub.calledOnce).to.be.true;
                         expect(checkForUpdateStub.calledOnce).to.be.true;
-                        expect(getEmailAddressStub.calledOnce).to.be.true;
+                        expect(authStub.getEmailAddress.calledOnce).to.be.true;
                         done();
                     });
                     scope = $rootScope.$new();
@@ -159,7 +157,7 @@ define(function(require) {
 
             it('should forward to initial login', function(done) {
                 startAppStub.yields();
-                getEmailAddressStub.yields(null, emailAddress);
+                authStub.getEmailAddress.yields(null, emailAddress);
                 initStub.yields();
 
                 angular.module('logintest', []);
@@ -170,7 +168,7 @@ define(function(require) {
                         expect(path).to.equal('/login-initial');
                         expect(startAppStub.calledOnce).to.be.true;
                         expect(checkForUpdateStub.calledOnce).to.be.true;
-                        expect(getEmailAddressStub.calledOnce).to.be.true;
+                        expect(authStub.getEmailAddress.calledOnce).to.be.true;
                         done();
                     });
                     scope = $rootScope.$new();

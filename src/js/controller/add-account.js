@@ -11,7 +11,7 @@ define(function(require) {
         errorUtil.attachHandler($scope);
 
         $scope.connectToGoogle = function() {
-            appController.fetchOAuthToken(function(err) {
+            appController._auth.getCredentials({}, function(err) {
                 if (err) {
                     $scope.onError(err);
                     return;

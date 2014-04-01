@@ -6,11 +6,11 @@ define(function(require) {
         OutboxBO = require('js/bo/outbox'),
         DeviceStorageDAO = require('js/dao/devicestorage-dao'),
         UpdateHandler = require('js/util/update/update-handler'),
+        Auth = require('js/bo/auth'),
         expect = chai.expect;
 
     describe('App Controller unit tests', function() {
-        var emailDaoStub, outboxStub, updateHandlerStub, appConfigStoreStub, devicestorageStub, isOnlineStub,
-            identityStub;
+        var emailDaoStub, outboxStub, updateHandlerStub, appConfigStoreStub, devicestorageStub, isOnlineStub, authStub;
 
         beforeEach(function() {
             controller._emailDao = emailDaoStub = sinon.createStubInstance(EmailDAO);
@@ -18,20 +18,29 @@ define(function(require) {
             controller._appConfigStore = appConfigStoreStub = sinon.createStubInstance(DeviceStorageDAO);
             controller._userStorage = devicestorageStub = sinon.createStubInstance(DeviceStorageDAO);
             controller._updateHandler = updateHandlerStub = sinon.createStubInstance(UpdateHandler);
+            controller._auth = authStub = sinon.createStubInstance(Auth);
 
             isOnlineStub = sinon.stub(controller, 'isOnline');
-
-            window.chrome = window.chrome || {};
-            window.chrome.identity = window.chrome.identity || {};
-            if (typeof window.chrome.identity.getAuthToken !== 'function') {
-                window.chrome.identity.getAuthToken = function() {};
-            }
-            identityStub = sinon.stub(window.chrome.identity, 'getAuthToken');
         });
 
         afterEach(function() {
-            identityStub.restore();
             isOnlineStub.restore();
+        });
+
+        describe('buildModules', function() {
+            it('should work', function() {
+                controller.buildModules();
+                expect(controller._appConfigStore).to.exist;
+                expect(controller._auth).to.exist;
+                expect(controller._userStorage).to.exist;
+                expect(controller._invitationDao).to.exist;
+                expect(controller._keychain).to.exist;
+                expect(controller._crypto).to.exist;
+                expect(controller._pgpbuilder).to.exist;
+                expect(controller._emailDao).to.exist;
+                expect(controller._outboxBo).to.exist;
+                expect(controller._updateHandler).to.exist;
+            });
         });
 
         describe('start', function() {
@@ -57,17 +66,8 @@ define(function(require) {
         });
 
         describe('onConnect', function() {
-            var fetchOAuthTokenStub, getCertficateStub;
-
             beforeEach(function() {
-                // buildModules
-                fetchOAuthTokenStub = sinon.stub(controller, 'fetchOAuthToken');
-                getCertficateStub = sinon.stub(controller, 'getCertficate');
-            });
-
-            afterEach(function() {
-                fetchOAuthTokenStub.restore();
-                getCertficateStub.restore();
+                controller._emailDao._account = {};
             });
 
             it('should not connect if offline', function(done) {
@@ -79,171 +79,55 @@ define(function(require) {
                 });
             });
 
-            it('should fail due to error in certificate', function(done) {
-                isOnlineStub.returns(true);
-                getCertficateStub.yields({});
+            it('should not connect if account is not initialized', function(done) {
+                controller._emailDao._account = null;
 
                 controller.onConnect(function(err) {
-                    expect(err).to.exist;
-                    expect(getCertficateStub.calledOnce).to.be.true;
+                    expect(err).to.not.exist;
                     done();
                 });
             });
 
-            it('should fail due to error in fetch oauth', function(done) {
+            it('should fail due to error in auth.getCredentials', function(done) {
                 isOnlineStub.returns(true);
-                getCertficateStub.yields(null, 'PEM');
-                fetchOAuthTokenStub.yields({});
+                authStub.getCredentials.withArgs({}).yields(new Error());
 
                 controller.onConnect(function(err) {
                     expect(err).to.exist;
-                    expect(fetchOAuthTokenStub.calledOnce).to.be.true;
-                    expect(getCertficateStub.calledOnce).to.be.true;
+                    expect(authStub.getCredentials.calledOnce).to.be.true;
                     done();
                 });
             });
 
             it('should work', function(done) {
                 isOnlineStub.returns(true);
-                fetchOAuthTokenStub.yields(null, {
-                    emailAddress: 'asfd@example.com'
+                authStub.getCredentials.withArgs({}).yields(null, {
+                    emailAddress: 'asdf@example.com',
+                    oauthToken: 'token',
+                    sslCert: 'cert'
                 });
-                getCertficateStub.yields(null, 'PEM');
                 emailDaoStub.onConnect.yields();
 
                 controller.onConnect(function(err) {
                     expect(err).to.not.exist;
-                    expect(fetchOAuthTokenStub.calledOnce).to.be.true;
-                    expect(getCertficateStub.calledOnce).to.be.true;
+                    expect(authStub.getCredentials.calledOnce).to.be.true;
                     expect(emailDaoStub.onConnect.calledOnce).to.be.true;
                     done();
                 });
             });
         });
 
-        describe('getEmailAddress', function() {
-            var fetchOAuthTokenStub;
-
-            beforeEach(function() {
-                // buildModules
-                fetchOAuthTokenStub = sinon.stub(controller, 'fetchOAuthToken');
-            });
-
-            afterEach(function() {
-                fetchOAuthTokenStub.restore();
-            });
-
-            it('should fail due to error in config list items', function(done) {
-                appConfigStoreStub.listItems.yields({});
-
-                controller.getEmailAddress(function(err, emailAddress) {
-                    expect(err).to.exist;
-                    expect(emailAddress).to.not.exist;
-                    done();
-                });
-            });
-
-            it('should work if address is already cached', function(done) {
-                appConfigStoreStub.listItems.yields(null, ['asdf']);
-
-                controller.getEmailAddress(function(err, emailAddress) {
-                    expect(err).to.not.exist;
-                    expect(emailAddress).to.exist;
-                    done();
-                });
-            });
-
-            it('should fail first time if app is offline', function(done) {
-                appConfigStoreStub.listItems.yields(null, []);
-                isOnlineStub.returns(false);
-
-                controller.getEmailAddress(function(err, emailAddress) {
-                    expect(err).to.exist;
-                    expect(emailAddress).to.not.exist;
-                    expect(isOnlineStub.calledOnce).to.be.true;
-                    done();
-                });
-            });
-        });
-
-        describe('fetchOAuthToken', function() {
-            var queryEmailAddressStub;
-
-            beforeEach(function() {
-                // buildModules
-                queryEmailAddressStub = sinon.stub(controller, 'queryEmailAddress');
-            });
-
-            afterEach(function() {
-                queryEmailAddressStub.restore();
-            });
-
-            it('should work', function(done) {
-                identityStub.yields('token42');
-                queryEmailAddressStub.yields(null, 'bob@asdf.com');
-
-                controller.fetchOAuthToken(function(err, res) {
-                    expect(err).to.not.exist;
-                    expect(res.emailAddress).to.equal('bob@asdf.com');
-                    expect(res.token).to.equal('token42');
-                    expect(queryEmailAddressStub.calledOnce).to.be.true;
-                    expect(identityStub.calledOnce).to.be.true;
-                    done();
-                });
-            });
-
-            it('should fail due to chrome api error', function(done) {
-                identityStub.yields();
-
-                controller.fetchOAuthToken(function(err) {
-                    expect(err).to.exist;
-                    expect(identityStub.calledOnce).to.be.true;
-                    done();
-                });
-            });
-
-            it('should fail due error querying email address', function(done) {
-                identityStub.yields('token42');
-                queryEmailAddressStub.yields();
-
-                controller.fetchOAuthToken(function(err) {
-                    expect(err).to.exist;
-                    expect(queryEmailAddressStub.calledOnce).to.be.true;
-                    expect(identityStub.calledOnce).to.be.true;
-                    done();
-                });
-            });
-        });
-
-        describe('buildModules', function() {
-            it('should work', function() {
-                controller.buildModules();
-                expect(controller._userStorage).to.exist;
-                expect(controller._invitationDao).to.exist;
-                expect(controller._keychain).to.exist;
-                expect(controller._crypto).to.exist;
-                expect(controller._pgpbuilder).to.exist;
-                expect(controller._emailDao).to.exist;
-                expect(controller._outboxBo).to.exist;
-                expect(controller._updateHandler).to.exist;
-            });
-        });
-
         describe('init', function() {
-            var buildModulesStub, onConnectStub, emailAddress;
+            var onConnectStub, emailAddress;
 
             beforeEach(function() {
                 emailAddress = 'alice@bob.com';
 
-                // buildModules
-                buildModulesStub = sinon.stub(controller, 'buildModules');
-                buildModulesStub.returns();
                 // onConnect
                 onConnectStub = sinon.stub(controller, 'onConnect');
             });
 
             afterEach(function() {
-                buildModulesStub.restore();
                 onConnectStub.restore();
             });
 
