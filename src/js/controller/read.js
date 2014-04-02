@@ -187,10 +187,7 @@ define(function(require) {
                 popover[0].style.opacity = '1';
             });
 
-            elm.parent().parent().on('touchstart click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-
+            elm.parent().parent().on('touchstart click', function() {
                 if (!visible) {
                     return;
                 }
