@@ -65,7 +65,7 @@
 
             &:hover,
             &:focus {
-                background-color: darken($color-white, 3%);
+                background-color: darken($color-white, 2%);
                 cursor: pointer;
             }
         }
@@ -84,6 +84,7 @@
         line-height: 1.5em;
         height: 100%;
         overflow-y: scroll;
+        user-select: text;
 
         .working {
             margin: 0 auto;
@@ -137,6 +138,24 @@
 
     iframe {
         width: 100%;
+    }
+
+    .reply-selection {
+        .popover-content {
+            padding: 0;
+        }
+
+        .option {
+            padding: 7px 30px;
+            color: $color-blue;
+            user-select: none;
+
+            &:hover,
+            &:focus {
+                background-color: darken($color-white, 2%);
+                cursor: pointer;
+            }
+        }
     }
 }
 

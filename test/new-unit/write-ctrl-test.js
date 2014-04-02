@@ -119,7 +119,7 @@ define(function(require) {
                 expect(scope.subject).to.equal('Re: ' + subject);
                 expect(scope.body).to.contain(body);
                 expect(scope.ciphertextPreview).to.not.be.empty;
-                expect(verifyMock.calledOnce).to.be.true;
+                expect(verifyMock.called).to.be.true;
 
                 scope.verify.restore();
             });

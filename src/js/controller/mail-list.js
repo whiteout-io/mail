@@ -285,6 +285,9 @@ define(function(require) {
             this.to = [{
                 address: 'max.musterman@gmail.com'
             }]; // list of receivers
+            this.cc = [{
+                address: 'john.doe@gmail.com'
+            }]; // list of receivers
             if (attachments) {
                 // body structure with three attachments
                 this.bodystructure = {
