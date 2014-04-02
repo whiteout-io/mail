@@ -1,6 +1,6 @@
 <div class="controls">
   <button ng-click="state.mailList.remove(state.mailList.selected)" class="btn-icon" title="Delete mail">&#xe005;</button>
-  <button ng-click="state.writer.write(state.mailList.selected)" class="btn-icon" title="Reply to">&#xe002;</button>
+  <button class="btn-icon" title="Reply to" reply-selection>&#xe002;</button>
   <button ng-click="state.writer.write()" class="btn-icon" title="New mail">&#xe006;</button>
 </div><!--/.controls-->
 
@@ -59,4 +59,15 @@
     <div class="arrow"></div>
     <div class="popover-content">{{keyId}}</div>
   </div><!--/.popover-->
+
+  <div class="reply-selection popover bottom">
+    <div class="arrow"></div>
+    <div class="popover-content">
+      <div class="option" ng-click="state.writer.write(state.mailList.selected)">Reply</div>
+      <div class="seperator-line"></div>
+      <div class="option" ng-click="state.writer.write(state.mailList.selected, true)">Reply All</div>
+      <div class="seperator-line"></div>
+      <div class="option" ng-click="state.writer.write(state.mailList.selected, null, true)">Forward</div>
+    </div>
+  </div><!--/.reply-selection-->
 </div><!--/.view-read-->

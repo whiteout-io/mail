@@ -164,6 +164,45 @@ define(function(require) {
 
     var ngModule = angular.module('read', []);
 
+    ngModule.directive('replySelection', function() {
+        return function(scope, elm) {
+            var popover = angular.element(document.querySelector('.reply-selection')),
+                visible = false;
+
+            elm.on('touchstart click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                visible = true;
+
+                // set popover position
+                var top = elm[0].offsetTop;
+                var left = elm[0].offsetLeft;
+                var width = elm[0].offsetWidth;
+                var height = elm[0].offsetHeight;
+
+                popover[0].style.transition = 'opacity 0.1s linear';
+                popover[0].style.top = (top + height) + 'px';
+                popover[0].style.left = (left + width / 2 - popover[0].offsetWidth / 2) + 'px';
+                popover[0].style.opacity = '1';
+            });
+
+            elm.parent().parent().on('touchstart click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (!visible) {
+                    return;
+                }
+
+                popover[0].style.transition = 'opacity 0.25s linear, top 0.25s step-end, left 0.25s step-end';
+                popover[0].style.opacity = '0';
+                popover[0].style.top = '-9999px';
+                popover[0].style.left = '-9999px';
+            });
+        };
+    });
+
     ngModule.directive('frameLoad', function() {
         return function(scope, elm) {
             elm.bind('load', function() {

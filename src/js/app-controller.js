@@ -87,7 +87,7 @@ define(function(require) {
     };
 
     self.onConnect = function(callback) {
-        if (!self.isOnline() || !self._emailDao._account) {
+        if (!self.isOnline() || !self._emailDao || !self._emailDao._account) {
             // prevent connection infinite loop
             callback();
             return;

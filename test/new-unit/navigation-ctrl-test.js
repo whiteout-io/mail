@@ -10,16 +10,15 @@ define(function(require) {
         appController = require('js/app-controller');
 
     describe('Navigation Controller unit test', function() {
-        var scope, ctrl, origEmailDao, emailDaoMock, outboxBoMock, hasIdentity, outboxFolder;
+        var scope, ctrl, origEmailDao, emailDaoMock, outboxBoMock, hasIdentity, outboxFolder, onConnectStub;
 
-        beforeEach(function() {
+        beforeEach(function(done) {
             hasIdentity = !! window.chrome.identity;
             if (!hasIdentity) {
                 window.chrome.identity = {};
             }
             // remember original module to restore later
             origEmailDao = appController._emailDao;
-
             emailDaoMock = sinon.createStubInstance(EmailDAO);
             emailDaoMock._account = {
                 folders: [{
@@ -37,6 +36,8 @@ define(function(require) {
             outboxBoMock = sinon.createStubInstance(OutboxBO);
             appController._outboxBo = outboxBoMock;
             outboxBoMock.startChecking.returns();
+            onConnectStub = sinon.stub(appController, 'onConnect');
+            onConnectStub.yields();
 
             angular.module('navigationtest', []);
             mocks.module('navigationtest');
@@ -46,6 +47,7 @@ define(function(require) {
                 ctrl = $controller(NavigationCtrl, {
                     $scope: scope
                 });
+                done();
             });
         });
 
@@ -55,6 +57,7 @@ define(function(require) {
             if (hasIdentity) {
                 delete window.chrome.identity;
             }
+            onConnectStub.restore();
         });
 
         describe('initial state', function() {

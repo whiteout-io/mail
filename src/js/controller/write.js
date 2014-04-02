@@ -26,14 +26,14 @@ define(function(require) {
 
         $scope.state.writer = {
             open: false,
-            write: function(replyTo) {
+            write: function(replyTo, replyAll, forward) {
                 this.open = true;
                 $scope.replyTo = replyTo;
 
                 resetFields();
 
                 // fill fields depending on replyTo
-                fillFields(replyTo);
+                fillFields(replyTo, replyAll, forward);
                 $scope.updatePreview();
 
                 $scope.verify($scope.to[0]);
@@ -60,24 +60,67 @@ define(function(require) {
             $scope.attachments = [];
         }
 
-        function fillFields(re) {
-            var from, body;
+        function fillFields(re, replyAll, forward) {
+            var from, sentDate, body;
 
             if (!re) {
                 return;
             }
 
-            $scope.writerTitle = 'Reply';
+            $scope.writerTitle = (forward) ? 'Forward' : 'Reply';
+
             // fill recipient field
-            $scope.to.unshift({
-                address: re.from[0].address
-            });
+            if (!forward) {
+                $scope.to.unshift({
+                    address: re.from[0].address
+                });
+                $scope.to.forEach($scope.verify);
+            }
+            if (replyAll) {
+                re.to.concat(re.cc).forEach(function(recipient) {
+                    if (recipient.address === emailDao._account.emailAddress) {
+                        // don't reply to yourself
+                        return;
+                    }
+                    $scope.cc.unshift({
+                        address: recipient.address
+                    });
+                });
+                $scope.cc.forEach($scope.verify);
+            }
+
             // fill subject
-            $scope.subject = 'Re: ' + ((re.subject) ? re.subject.replace('Re: ', '') : '');
+            if (forward) {
+                $scope.subject = 'Fwd: ' + re.subject;
+            } else {
+                $scope.subject = 'Re: ' + ((re.subject) ? re.subject.replace('Re: ', '') : '');
+            }
 
             // fill text body
             from = re.from[0].name || re.from[0].address;
-            body = '\n\n' + $filter('date')(re.sentDate, 'EEEE, MMM d, yyyy h:mm a') + ' ' + from + ' wrote:\n> ';
+            sentDate = $filter('date')(re.sentDate, 'EEEE, MMM d, yyyy h:mm a');
+
+            function createString(array) {
+                var str = '';
+                array.forEach(function(to) {
+                    str += (str) ? ', ' : '';
+                    str += ((to.name) ? to.name : to.address) + ' <' + to.address + '>';
+                });
+                return str;
+            }
+
+            if (forward) {
+                body = '\n\n' +
+                    '---------- Forwarded message ----------\n' +
+                    'From: ' + re.from[0].name + ' <' + re.from[0].address + '>\n' +
+                    'Date: ' + sentDate + '\n' +
+                    'Subject: ' + re.subject + '\n' +
+                    'To: ' + createString(re.to) + '\n' +
+                    'Cc: ' + createString(re.cc) + '\n\n\n';
+
+            } else {
+                body = '\n\n' + sentDate + ' ' + from + ' wrote:\n> ';
+            }
 
             // only display non html mails in reply part
             if (!re.html) {
