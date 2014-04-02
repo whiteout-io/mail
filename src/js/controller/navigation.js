@@ -3,9 +3,9 @@ define(function(require) {
 
     var angular = require('angular'),
         str = require('js/app-config').string,
-        cfg = require('js/app-config').config,
         appController = require('js/app-controller'),
         errorUtil = require('js/util/error'),
+        notification = require('js/util/notification'),
         _ = require('underscore'),
         emailDao, outboxBo;
 
@@ -126,11 +126,10 @@ define(function(require) {
         }
 
         function sentNotification(email) {
-            chrome.notifications.create('o' + email.id, {
-                type: 'basic',
+            notification.create({
+                id: 'o' + email.id,
                 title: 'Message sent',
-                message: email.subject.replace(str.subjectPrefix, ''),
-                iconUrl: chrome.runtime.getURL(cfg.iconPath)
+                message: email.subject.replace(str.subjectPrefix, '')
             }, function() {});
         }
     };

@@ -5,22 +5,21 @@ define(function(require) {
         angular = require('angular'),
         mocks = require('angularMocks'),
         AddAccountCtrl = require('js/controller/add-account'),
+        Auth = require('js/bo/auth'),
         appController = require('js/app-controller');
 
     describe('Add Account Controller unit test', function() {
-        var scope, location, ctrl,
-            fetchOAuthTokenStub;
+        var scope, location, ctrl, authStub;
 
         describe('connectToGoogle', function() {
             beforeEach(function() {
                 // remember original module to restore later, then replace it
-                fetchOAuthTokenStub = sinon.stub(appController, 'fetchOAuthToken');
+                appController._auth = authStub = sinon.createStubInstance(Auth);
             });
 
             afterEach(function() {
                 // restore the app controller module
                 location && location.path && location.path.restore && location.path.restore();
-                fetchOAuthTokenStub.restore();
             });
 
             it('should fail on fetchOAuthToken error', function(done) {
@@ -37,10 +36,10 @@ define(function(require) {
 
                 scope.onError = function(err) {
                     expect(err).to.equal(42);
-                    expect(fetchOAuthTokenStub.calledOnce).to.be.true;
+                    expect(authStub.getCredentials.calledOnce).to.be.true;
                     done();
                 };
-                fetchOAuthTokenStub.yields(42);
+                authStub.getCredentials.yields(42);
 
                 scope.connectToGoogle();
             });
@@ -55,7 +54,7 @@ define(function(require) {
 
                     sinon.stub(location, 'path', function(path) {
                         expect(path).to.equal('/login');
-                        expect(fetchOAuthTokenStub.calledOnce).to.be.true;
+                        expect(authStub.getCredentials.calledOnce).to.be.true;
 
                         location.path.restore();
                         scope.$apply.restore();
@@ -70,7 +69,7 @@ define(function(require) {
                     });
                 });
 
-                fetchOAuthTokenStub.yields();
+                authStub.getCredentials.yields();
 
                 scope.connectToGoogle();
             });

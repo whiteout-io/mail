@@ -3,9 +3,9 @@ define(function(require) {
 
     var config = require('js/app-config').config;
 
-    var RestDAO = function(options) {
-        if (options && options.baseUri) {
-            this._baseUri = options.baseUri;
+    var RestDAO = function(baseUri) {
+        if (baseUri) {
+            this._baseUri = baseUri;
         } else {
             this._baseUri = config.cloudUrl;
         }
