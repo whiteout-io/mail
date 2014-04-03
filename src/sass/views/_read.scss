@@ -145,16 +145,34 @@
             padding: 0;
         }
 
-        .option {
-            padding: 7px 30px;
+        table {
             color: $color-blue;
             user-select: none;
 
-            &:hover,
-            &:focus {
-                background-color: darken($color-white, 2%);
-                cursor: pointer;
+            tr {
+                &:hover,
+                &:focus {
+                    background-color: darken($color-white, 2%);
+                    cursor: pointer;
+                }
+
+                &.seperator {
+                    border-bottom: 1px solid $color-grey-lighter;
+                }
             }
+
+            td {
+                padding: 7px 5px;
+
+                &.left {
+                    padding-left: 15px;
+                    padding-top: 10px;
+                }
+                &.right {
+                    padding-right: 15px;
+                }
+            }
+
         }
     }
 }

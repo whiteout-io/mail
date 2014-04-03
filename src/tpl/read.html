@@ -63,11 +63,20 @@
   <div class="reply-selection popover bottom">
     <div class="arrow"></div>
     <div class="popover-content">
-      <div class="option" ng-click="state.writer.write(state.mailList.selected)">Reply</div>
-      <div class="seperator-line"></div>
-      <div class="option" ng-click="state.writer.write(state.mailList.selected, true)">Reply All</div>
-      <div class="seperator-line"></div>
-      <div class="option" ng-click="state.writer.write(state.mailList.selected, null, true)">Forward</div>
+      <table>
+        <tr class="seperator" ng-click="state.writer.write(state.mailList.selected)">
+          <td class="left" data-icon="&#xe014;"></td>
+          <td class="right">Reply</td>
+        </tr>
+        <tr class="seperator" ng-click="state.writer.write(state.mailList.selected, true)">
+          <td class="left" data-icon="&#xe013;"></td>
+          <td class="right">Reply All</td>
+        </tr>
+        <tr ng-click="state.writer.write(state.mailList.selected, null, true)">
+          <td class="left" data-icon="&#xe015;"></td>
+          <td class="right">Forward</td>
+        </tr>
+      </table>
     </div>
   </div><!--/.reply-selection-->
 </div><!--/.view-read-->
