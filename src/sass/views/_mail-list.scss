@@ -5,8 +5,8 @@
     height: 100%;
     width: 100%;
 
-    background: $color-grey-lightest;
-    background-image: linear-gradient(to right ,$color-grey-lightest 98%, darken($color-grey-lightest, 1%) 100%);
+    background: $color-grey-lighterer;
+    background-image: linear-gradient(to right ,$color-grey-lighterer 98%, darken($color-grey-lighterer, 1%) 100%);
 
     header {
         cursor: pointer;
@@ -52,7 +52,7 @@
         bottom: 0px;
         left: 0px;
         padding: 0 $nav-padding;
-        background: darken($color-grey-lightest, 1%);
+        background: darken($color-grey-lighterer, 1%);
         width: 100%;
         font-size: $font-size-smaller;
         color: $color-grey-dark;
