@@ -200,9 +200,12 @@ define(function(require) {
                     currentFolder: currentFolder
                 };
 
+                var loadVisibleBodiesStub = sinon.stub(scope, 'loadVisibleBodies');
+
                 scope.synchronize(function() {
                     expect(scope.state.nav.currentFolder.messages).to.deep.equal(emails);
-                    expect(scope.state.mailList.selected).to.exist;
+                    expect(loadVisibleBodiesStub.calledOnce).to.be.true;
+                    loadVisibleBodiesStub.restore();
                     done();
                 });
 

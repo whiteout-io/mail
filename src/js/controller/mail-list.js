@@ -9,7 +9,7 @@ define(function(require) {
         notification = require('js/util/notification'),
         emailDao, outboxBo;
 
-    var MailListCtrl = function($scope) {
+    var MailListCtrl = function($scope, $timeout) {
         //
         // Init
         //
@@ -128,7 +128,7 @@ define(function(require) {
                 }
 
                 // sort emails
-                selectFirstMessage(getFolder().messages);
+                selectFirstMessage();
                 // display last update
                 updateStatus('Last update: ', new Date());
                 $scope.$apply();
@@ -198,7 +198,7 @@ define(function(require) {
             if (!window.chrome || !chrome.identity) {
                 updateStatus('Last update: ', new Date());
                 getFolder().messages = createDummyMails();
-                selectFirstMessage(getFolder().messages);
+                selectFirstMessage();
                 return;
             }
 
@@ -206,8 +206,11 @@ define(function(require) {
 
             // unselect selection from old folder
             $scope.select();
-            // display and select first
-            selectFirstMessage(getFolder().messages);
+            $timeout(function() {
+                // display and select first
+                selectFirstMessage();
+                $scope.$apply();
+            });
 
             $scope.synchronize();
         });
@@ -256,7 +259,9 @@ define(function(require) {
             $scope.lastUpdate = (time) ? time : '';
         }
 
-        function selectFirstMessage(emails) {
+        function selectFirstMessage() {
+            var emails = $scope.filteredMessages;
+
             if (!emails || emails.length < 1) {
                 $scope.select();
                 return;
@@ -264,7 +269,7 @@ define(function(require) {
 
             if (!$scope.state.mailList.selected) {
                 // select first message
-                $scope.select(emails[emails.length - 1]);
+                $scope.select(emails[0]);
             }
         }
 
