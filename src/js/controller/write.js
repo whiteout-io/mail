@@ -116,7 +116,8 @@ define(function(require) {
                     'Date: ' + sentDate + '\n' +
                     'Subject: ' + re.subject + '\n' +
                     'To: ' + createString(re.to) + '\n' +
-                    'Cc: ' + createString(re.cc) + '\n\n\n';
+                    ((re.cc && re.cc.length > 0) ? 'Cc: ' + createString(re.cc) + '\n' : '') +
+                    '\n\n';
 
             } else {
                 body = '\n\n' + sentDate + ' ' + from + ' wrote:\n> ';
