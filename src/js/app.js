@@ -7,6 +7,7 @@ requirejs([
     'js/controller/popover',
     'js/controller/add-account',
     'js/controller/account',
+    'js/controller/set-passphrase',
     'js/controller/contacts',
     'js/controller/login',
     'js/controller/login-initial',
@@ -26,6 +27,7 @@ requirejs([
     PopoverCtrl,
     AddAccountCtrl,
     AccountCtrl,
+    SetPassphraseCtrl,
     ContactsCtrl,
     LoginCtrl,
     LoginInitialCtrl,
@@ -92,6 +94,7 @@ requirejs([
     app.controller('WriteCtrl', WriteCtrl);
     app.controller('MailListCtrl', MailListCtrl);
     app.controller('AccountCtrl', AccountCtrl);
+    app.controller('SetPassphraseCtrl', SetPassphraseCtrl);
     app.controller('ContactsCtrl', ContactsCtrl);
     app.controller('DialogCtrl', DialogCtrl);
     app.controller('PopoverCtrl', PopoverCtrl);

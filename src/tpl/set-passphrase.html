@@ -1,0 +1,33 @@
+<div class="lightbox-body" ng-controller="SetPassphraseCtrl">
+  <header>
+    <h2>Set passphrase</h2>
+    <button class="close" ng-click="state.setPassphrase.toggle(false)" data-action="lightbox-close">&#xe007;</button>
+  </header>
+
+  <div class="content">
+    <div class="dialog view-set-passphrase">
+
+      <table>
+        <tbody>
+          <tr>
+            <td><label>Current passphrase</label></td>
+            <td><input class="input-text" type="password" ng-model="oldPassphrase" ng-change="checkPassphraseQuality()" tabindex="1" focus-me="true"></td>
+          </tr>
+          <tr>
+            <td><label>New passphrase</label></td>
+            <td><input class="input-text" type="password" ng-model="newPassphrase" ng-change="checkPassphraseQuality()" tabindex="2"></td>
+          </tr>
+          <tr>
+            <td><label>Confirm passphrase</label></td>
+            <td><input class="input-text" type="password" ng-model="confirmation" ng-class="{'input-text-error': (confirmation || newPassphrase) && confirmation !== newPassphrase}" tabindex="3"></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="control">
+        <button ng-click="setPassphrase()" class="btn" ng-disabled="(confirmation || newPassphrase) && confirmation !== newPassphrase" tabindex="4">Set passphrase</button>
+      </div>
+
+    </div><!-- /.view-set-passphrase -->
+  </div><!-- /.content -->
+</div><!-- /.lightbox-body -->

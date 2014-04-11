@@ -1,29 +1,17 @@
 .view-dialog {
-    padding: 0px;
-    color: $color-grey-dark;    
     max-width: 350px;
     height: auto;
     top: 30%;
 
-    @include respond-to(mobile) {
-        top: 0;
-        max-width: 100%;
-    }
-
     p {
         text-align: center;
         max-width: 80%;
-        margin: 30px auto 70px auto;
+        margin: 30px auto;
     }
 
     .control {
-        position: absolute;
-        bottom: $lightbox-padding;
-        right: $lightbox-padding;
-
         button {
             width: 100px;
-            border: 0!important;
         }
     }
 }

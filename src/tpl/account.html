@@ -5,7 +5,8 @@
   </header>
 
   <div class="content">
-    <div class="view-account">
+    <div class="dialog view-account">
+
       <table>
         <tbody>
           <tr>
@@ -26,9 +27,12 @@
           </tr>
         </tbody>
       </table>
-      <div class="export-control">
+
+      <div class="control">
+        <button ng-click="state.account.toggle(false); state.setPassphrase.toggle(true)" class="btn btn-alt">Set passphrase</button>
         <button ng-click="exportKeyFile()" class="btn">Export keypair</button>
       </div>
+
     </div><!-- /.view-account -->
   </div><!-- /.content -->
 </div><!-- /.lightbox-body -->

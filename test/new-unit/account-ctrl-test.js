@@ -5,23 +5,20 @@ define(function(require) {
         angular = require('angular'),
         mocks = require('angularMocks'),
         AccountCtrl = require('js/controller/account'),
-        EmailDAO = require('js/dao/email-dao'),
         PGP = require('js/crypto/pgp'),
         dl = require('js/util/download'),
-        appController = require('js/app-controller');
+        appController = require('js/app-controller'),
+        KeychainDAO = require('js/dao/keychain-dao');
 
     describe('Account Controller unit test', function() {
-        var scope, accountCtrl, origEmailDao, emailDaoMock,
+        var scope, accountCtrl,
             dummyFingerprint, expectedFingerprint,
             dummyKeyId, expectedKeyId,
-            emailAddress,
-            keySize,
-            cryptoMock;
+            emailAddress, keySize, cryptoMock, keychainMock;
 
         beforeEach(function() {
-            origEmailDao = appController._emailDao;
-            appController._emailDao = emailDaoMock = sinon.createStubInstance(EmailDAO);
-            emailDaoMock._crypto = cryptoMock = sinon.createStubInstance(PGP);
+            appController._crypto = cryptoMock = sinon.createStubInstance(PGP);
+            appController._keychain = keychainMock = sinon.createStubInstance(KeychainDAO);
 
             dummyFingerprint = '3A2D39B4E1404190B8B949DE7D7E99036E712926';
             expectedFingerprint = '3A2D 39B4 E140 4190 B8B9 49DE 7D7E 9903 6E71 2926';
@@ -31,10 +28,18 @@ define(function(require) {
             cryptoMock.getKeyId.returns(dummyKeyId);
             emailAddress = 'fred@foo.com';
             keySize = 1234;
-            emailDaoMock._account = {
-                emailAddress: emailAddress,
-                asymKeySize: keySize
+            appController._emailDao = {
+                _account: {
+                    emailAddress: emailAddress,
+                    asymKeySize: keySize
+                }
             };
+            cryptoMock.getKeyParams.returns({
+                _id: dummyKeyId,
+                fingerprint: dummyFingerprint,
+                userId: emailAddress,
+                bitSize: keySize
+            });
 
             angular.module('accounttest', []);
             mocks.module('accounttest');
@@ -47,10 +52,7 @@ define(function(require) {
             });
         });
 
-        afterEach(function() {
-            // restore the module
-            appController._emailDao = origEmailDao;
-        });
+        afterEach(function() {});
 
         describe('scope variables', function() {
             it('should be set correctly', function() {
@@ -63,16 +65,22 @@ define(function(require) {
         describe('export to key file', function() {
             it('should work', function(done) {
                 var createDownloadMock = sinon.stub(dl, 'createDownload');
-                cryptoMock.exportKeys.yields(null, {
-                    publicKeyArmored: 'a',
-                    privateKeyArmored: 'b',
-                    keyId: dummyKeyId
+                keychainMock.getUserKeyPair.withArgs(emailAddress).yields(null, {
+                    publicKey: {
+                        _id: dummyKeyId,
+                        publicKey: 'a'
+                    },
+                    privateKey: {
+                        encryptedKey: 'b'
+                    }
                 });
                 createDownloadMock.withArgs(sinon.match(function(arg) {
                     return arg.content === 'ab' && arg.filename === 'whiteout_mail_' + emailAddress + '_' + expectedKeyId + '.asc' && arg.contentType === 'text/plain';
                 })).yields();
-                scope.onError = function() {
-                    expect(cryptoMock.exportKeys.calledOnce).to.be.true;
+                scope.onError = function(err) {
+                    expect(err.title).to.equal('Success');
+                    expect(scope.state.account.open).to.be.false;
+                    expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
                     expect(dl.createDownload.calledOnce).to.be.true;
                     dl.createDownload.restore();
                     done();
@@ -82,9 +90,10 @@ define(function(require) {
             });
 
             it('should not work when key export failed', function(done) {
-                cryptoMock.exportKeys.yields(new Error('asdasd'));
-                scope.onError = function() {
-                    expect(cryptoMock.exportKeys.calledOnce).to.be.true;
+                keychainMock.getUserKeyPair.yields(new Error('Boom!'));
+                scope.onError = function(err) {
+                    expect(err.message).to.equal('Boom!');
+                    expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
                     done();
                 };
 
@@ -93,14 +102,19 @@ define(function(require) {
 
             it('should not work when create download failed', function(done) {
                 var createDownloadMock = sinon.stub(dl, 'createDownload');
-                cryptoMock.exportKeys.yields(null, {
-                    publicKeyArmored: 'a',
-                    privateKeyArmored: 'b',
-                    keyId: dummyKeyId
+                keychainMock.getUserKeyPair.withArgs(emailAddress).yields(null, {
+                    publicKey: {
+                        _id: dummyKeyId,
+                        publicKey: 'a'
+                    },
+                    privateKey: {
+                        encryptedKey: 'b'
+                    }
                 });
                 createDownloadMock.withArgs().yields(new Error('asdasd'));
-                scope.onError = function() {
-                    expect(cryptoMock.exportKeys.calledOnce).to.be.true;
+                scope.onError = function(err) {
+                    expect(err.message).to.equal('asdasd');
+                    expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
                     expect(dl.createDownload.calledOnce).to.be.true;
                     dl.createDownload.restore();
                     done();

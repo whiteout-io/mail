@@ -1,0 +1,17 @@
+.dialog {
+    padding: 0px;
+    color: $color-grey-dark;
+
+    @include respond-to(mobile) {
+        top: 0;
+        max-width: 100%;
+    }
+
+    .control {
+        float: right;
+
+        button {
+            border: 0!important;
+        }
+    }
+}
