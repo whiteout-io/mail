@@ -42,6 +42,7 @@ function startTests() {
 			'test/new-unit/dialog-ctrl-test',
 			'test/new-unit/add-account-ctrl-test',
 			'test/new-unit/account-ctrl-test',
+			'test/new-unit/set-passphrase-ctrl-test',
 			'test/new-unit/contacts-ctrl-test',
 			'test/new-unit/login-existing-ctrl-test',
 			'test/new-unit/login-initial-ctrl-test',

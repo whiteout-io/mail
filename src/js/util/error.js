@@ -10,7 +10,11 @@ define(function() {
                 return;
             }
 
-            console.error(options);
+            if (options.stack) {
+                console.error(options.stack);
+            } else {
+                console.error(options);
+            }
 
             scope.state.dialog = {
                 open: true,

@@ -3,14 +3,16 @@ define(function(require) {
 
     var appController = require('js/app-controller'),
         dl = require('js/util/download'),
-        emailDao;
+        pgp, keychain, userId;
 
     //
     // Controller
     //
 
     var AccountCtrl = function($scope) {
-        emailDao = appController._emailDao;
+        userId = appController._emailDao._account.emailAddress;
+        keychain = appController._keychain;
+        pgp = appController._crypto;
 
         $scope.state.account = {
             open: false,
@@ -23,32 +25,49 @@ define(function(require) {
         // scope variables
         //
 
-        var fpr = emailDao._crypto.getFingerprint(),
-            keyId = emailDao._crypto.getKeyId();
-        $scope.eMail = emailDao._account.emailAddress;
-        $scope.keyId = keyId.slice(8);
+        var keyParams = pgp.getKeyParams();
+
+        $scope.eMail = userId;
+        $scope.keyId = keyParams._id.slice(8);
+        var fpr = keyParams.fingerprint;
         $scope.fingerprint = fpr.slice(0, 4) + ' ' + fpr.slice(4, 8) + ' ' + fpr.slice(8, 12) + ' ' + fpr.slice(12, 16) + ' ' + fpr.slice(16, 20) + ' ' + fpr.slice(20, 24) + ' ' + fpr.slice(24, 28) + ' ' + fpr.slice(28, 32) + ' ' + fpr.slice(32, 36) + ' ' + fpr.slice(36);
-        $scope.keysize = emailDao._account.asymKeySize;
+        $scope.keysize = keyParams.bitSize;
 
         //
         // scope functions
         //
 
         $scope.exportKeyFile = function() {
-            emailDao._crypto.exportKeys(function(err, keys) {
+            keychain.getUserKeyPair(userId, function(err, keys) {
                 if (err) {
                     $scope.onError(err);
                     return;
                 }
 
-                var id = 'whiteout_mail_' + emailDao._account.emailAddress + '_' + keys.keyId.substring(8, keys.keyId.length);
+                var keyId = keys.publicKey._id;
+                var file = 'whiteout_mail_' + userId + '_' + keyId.substring(8, keyId.length);
+
                 dl.createDownload({
-                    content: keys.publicKeyArmored + keys.privateKeyArmored,
-                    filename: id + '.asc',
+                    content: keys.publicKey.publicKey + keys.privateKey.encryptedKey,
+                    filename: file + '.asc',
                     contentType: 'text/plain'
-                }, $scope.onError);
+                }, onExport);
             });
         };
+
+        function onExport(err) {
+            if (err) {
+                $scope.onError(err);
+                return;
+            }
+
+            $scope.state.account.toggle(false);
+            $scope.$apply();
+            $scope.onError({
+                title: 'Success',
+                message: 'Exported keypair to file.'
+            });
+        }
     };
 
     return AccountCtrl;

@@ -140,6 +140,30 @@ define(function(require) {
                     });
                 });
             });
+
+            it('should fail when passphrases are equal', function(done) {
+                pgp.changePassphrase({
+                    privateKeyArmored: privkey,
+                    oldPassphrase: passphrase,
+                    newPassphrase: passphrase
+                }, function(err, reEncryptedKey) {
+                    expect(err).to.exist;
+                    expect(reEncryptedKey).to.not.exist;
+                    done();
+                });
+            });
+
+            it('should fail when old passphrase is incorrect', function(done) {
+                pgp.changePassphrase({
+                    privateKeyArmored: privkey,
+                    oldPassphrase: 'asd',
+                    newPassphrase: 'yxcv'
+                }, function(err, reEncryptedKey) {
+                    expect(err).to.exist;
+                    expect(reEncryptedKey).to.not.exist;
+                    done();
+                });
+            });
         });
 
         describe('Encrypt/Sign/Decrypt/Verify', function() {
@@ -187,6 +211,15 @@ define(function(require) {
             describe('getKeyParams', function() {
                 it('should work with param', function() {
                     var params = pgp.getKeyParams(pubkey);
+                    expect(params.fingerprint).to.equal('5856CEF789C3A307E8A1B976F6F60E9B42CDFF4C');
+                    expect(params._id).to.equal("F6F60E9B42CDFF4C");
+                    expect(params.bitSize).to.equal(keySize);
+                    expect(params.userId).to.equal("whiteout.test@t-online.de");
+                    expect(params.algorithm).to.equal("rsa_encrypt_sign");
+                });
+
+                it('should work without param', function() {
+                    var params = pgp.getKeyParams();
                     expect(params.fingerprint).to.equal('5856CEF789C3A307E8A1B976F6F60E9B42CDFF4C');
                     expect(params._id).to.equal("F6F60E9B42CDFF4C");
                     expect(params.bitSize).to.equal(keySize);

@@ -17,7 +17,7 @@ define(function(require) {
      * Generate a key pair for the user
      */
     PGP.prototype.generateKeys = function(options, callback) {
-        var userId;
+        var userId, passphrase;
 
         if (!util.emailRegEx.test(options.emailAddress) || !options.keySize) {
             callback({
@@ -28,7 +28,8 @@ define(function(require) {
 
         // generate keypair (keytype 1=RSA)
         userId = 'Whiteout User <' + options.emailAddress + '>';
-        openpgp.generateKeyPair(1, options.keySize, userId, options.passphrase, onGenerated);
+        passphrase = (options.passphrase) ? options.passphrase : undefined;
+        openpgp.generateKeyPair(1, options.keySize, userId, passphrase, onGenerated);
 
         function onGenerated(err, keys) {
             if (err) {
@@ -99,8 +100,18 @@ define(function(require) {
      * Read all relevant params of an armored key.
      */
     PGP.prototype.getKeyParams = function(keyArmored) {
-        var key = openpgp.key.readArmored(keyArmored).keys[0],
-            packet = key.getKeyPacket();
+        var key, packet;
+
+        // process armored key input
+        if (keyArmored) {
+            key = openpgp.key.readArmored(keyArmored).keys[0];
+        } else if (this._publicKey) {
+            key = this._publicKey;
+        } else {
+            throw new Error('Cannot read key params... keys not set!');
+        }
+
+        packet = key.getKeyPacket();
 
         return {
             _id: packet.getKeyId().toHex().toUpperCase(),
@@ -188,14 +199,21 @@ define(function(require) {
      * Change the passphrase of an ascii armored private key.
      */
     PGP.prototype.changePassphrase = function(options, callback) {
-        var privKey, packets;
+        var privKey, packets, newPassphrase, newKeyArmored;
 
-        if (!options.privateKeyArmored ||
-            typeof options.oldPassphrase !== 'string' ||
-            typeof options.newPassphrase !== 'string') {
+        // set undefined instead of empty string as passphrase
+        newPassphrase = (options.newPassphrase) ? options.newPassphrase : undefined;
+
+        if (!options.privateKeyArmored) {
             callback({
-                errMsg: 'Could not export keys!'
+                errMsg: 'Private key must be specified to change passphrase!'
             });
+            return;
+        }
+
+        if (options.oldPassphrase === newPassphrase ||
+            (!options.oldPassphrase && !newPassphrase)) {
+            callback(new Error('New and old passphrase are the same!'));
             return;
         }
 
@@ -221,8 +239,9 @@ define(function(require) {
         try {
             packets = privKey.getAllKeyPackets();
             for (var i = 0; i < packets.length; i++) {
-                packets[i].encrypt(options.newPassphrase);
+                packets[i].encrypt(newPassphrase);
             }
+            newKeyArmored = privKey.armor();
         } catch (e) {
             callback({
                 errMsg: 'Setting new passphrase failed!'
@@ -230,7 +249,15 @@ define(function(require) {
             return;
         }
 
-        callback(null, privKey.armor());
+        // check if new passphrase really works
+        if (!privKey.decrypt(newPassphrase)) {
+            callback({
+                errMsg: 'Decrypting key with new passphrase failed!'
+            });
+            return;
+        }
+
+        callback(null, newKeyArmored);
     };
 
     /**

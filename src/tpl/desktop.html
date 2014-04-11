@@ -25,9 +25,12 @@
 <div class="lightbox-overlay" ng-class="{'show': state.account.open}">
   <div class="lightbox lightbox-effect" ng-include="'tpl/account.html'"></div>
 </div>
+<div class="lightbox-overlay" ng-class="{'show': state.setPassphrase.open}">
+  <div class="lightbox lightbox-effect" ng-include="'tpl/set-passphrase.html'"></div>
+</div>
 <div class="lightbox-overlay" ng-class="{'show': state.contacts.open}">
   <div class="lightbox lightbox-effect" ng-include="'tpl/contacts.html'"></div>
 </div>
 <div class="lightbox-overlay" ng-class="{'show': state.dialog.open}">
-  <div class="lightbox lightbox-effect view-dialog" ng-include="'tpl/dialog.html'"></div>
+  <div class="lightbox lightbox-effect dialog view-dialog" ng-include="'tpl/dialog.html'"></div>
 </div>
