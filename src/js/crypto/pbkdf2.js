@@ -7,7 +7,7 @@ define(['node-forge'], function(forge) {
     var self = {};
 
     /**
-     * PBKDF2-HMAC-SHA1 key derivation with a constant salt and 1000 iterations
+     * PBKDF2-HMAC-SHA1 key derivation with a random salt and 1000 iterations
      * @param password [String] The password in UTF8
      * @param salt [String] The base64 encoded salt
      * @param keySize [Number] The key size in bits
