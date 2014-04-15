@@ -19,7 +19,6 @@ body {
     line-height: $line-height-base;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-feature-settings: "kern";
     height: 100%;
 }
 
@@ -33,7 +32,6 @@ textarea {
     line-height: inherit;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-feature-settings: "kern";
 }
 
 // add space at the top since ios7 apps are now fullscreen
