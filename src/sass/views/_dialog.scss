@@ -1,7 +1,10 @@
 .view-dialog {
-    max-width: 350px;
     height: auto;
-    top: 30%;
+
+    @include respond-to(desktop) {
+        max-width: 350px;
+        top: 30%;
+    }
 
     p {
         text-align: center;

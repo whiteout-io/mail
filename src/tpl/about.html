@@ -1,0 +1,15 @@
+<div class="lightbox-body" ng-controller="AboutCtrl">
+  <header>
+    <button class="close" ng-click="state.about.toggle(false)" data-action="lightbox-close">&#xe007;</button>
+  </header>
+
+  <div class="content">
+
+    <img src="img/icon.png">
+    <h2>Whiteout Mail</h2>
+    <p>Version {{version}}</p>
+    <p>&copy; {{ date | date:'yyyy'}} Whiteout Networks GmbH</p>
+    <p><a href="https://whiteout.io/imprint.html" target="_blank">Imprint</a> &middot; <a href="https://whiteout.io/privacy.html" target="_blank">Privacy</a> &middot; <a href="https://whiteout.io/terms.html" target="_blank">Terms</a> &middot; <a href="https://github.com/whiteout-io/mail-html5#license" target="_blank">Licenses</a></p>
+
+  </div><!-- /.content -->
+</div><!-- /.lightbox-body -->

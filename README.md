@@ -59,8 +59,8 @@ Then visit [http://localhost:8580/dist/chrome.html#/desktop](http://localhost:85
 
 We work together with existing open source projects wherever possible and contribute any changes we make back upstream. Many of theses libraries are licensed under an open source license. Here are some of them:
 
-* [OpenPGP.js](http://openpgpjs.org): An implementation of OpenPGP in Javascript
-* [Inbox](https://github.com/andris9/inbox): Simple IMAP client for node.js
-* [Nodemailer](http://www.nodemailer.com): SMTP client for node.js
-* [Forge](https://github.com/digitalbazaar/forge): An implementation of TLS in Javascript
-* [node-shims](https://github.com/whiteout-io/node-shims): Shims for wrapping node's net/tls (TCP socket) APIs around chrome.socket
+* [OpenPGP.js](http://openpgpjs.org) (LGPL license): An implementation of OpenPGP in Javascript
+* [Inbox](https://github.com/andris9/inbox) (MIT license): Simple IMAP client for node.js
+* [Nodemailer](http://www.nodemailer.com) (MIT license): SMTP client for node.js
+* [Forge](https://github.com/digitalbazaar/forge) (BSD license): An implementation of TLS in Javascript
+* [node-shims](https://github.com/whiteout-io/node-shims) (MIT license): Shims for wrapping node's net/tls (TCP socket) APIs around chrome.socket

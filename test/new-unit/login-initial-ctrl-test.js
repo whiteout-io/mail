@@ -58,6 +58,25 @@ define(function(require) {
             });
         });
 
+        describe('go to import key', function() {
+            it('should not continue if terms are not accepted', function(done) {
+                scope.state.agree = undefined;
+
+                scope.onError = function(err) {
+                    expect(err.message).to.contain('Terms');
+                    done();
+                };
+
+                scope.importKey();
+            });
+
+            it('should work', function() {
+                scope.state.agree = true;
+                scope.importKey();
+                expect(location.$$path).to.equal('/login-new-device');
+            });
+        });
+
         describe('check passphrase quality', function() {
             it('should be too short', function() {
                 scope.state.passphrase = '&§DG36';
@@ -103,9 +122,24 @@ define(function(require) {
         describe('confirm passphrase', function() {
             var setStateStub;
 
+            it('should not continue if terms are not accepted', function(done) {
+                scope.state.passphrase = passphrase;
+                scope.state.confirmation = passphrase;
+                scope.state.agree = undefined;
+
+                scope.onError = function(err) {
+                    expect(err.message).to.contain('Terms');
+                    done();
+                };
+
+                scope.confirmPassphrase();
+            });
+
             it('should unlock crypto', function(done) {
                 scope.state.passphrase = passphrase;
                 scope.state.confirmation = passphrase;
+                scope.state.agree = true;
+
                 emailDaoMock.unlock.withArgs({
                     passphrase: passphrase
                 }).yields();
@@ -129,6 +163,8 @@ define(function(require) {
             it('should not work when keypair generation fails', function(done) {
                 scope.state.passphrase = passphrase;
                 scope.state.confirmation = passphrase;
+                scope.state.agree = true;
+
                 emailDaoMock.unlock.withArgs({
                     passphrase: passphrase
                 }).yields(new Error('asd'));
