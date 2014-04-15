@@ -48,7 +48,7 @@ Then visit [http://localhost:8580/dist/chrome.html#/desktop](http://localhost:85
 
 ## License
 
-    Copyright © 2013, Whiteout Networks GmbH. All rights reserved.
+    Copyright © 2014, Whiteout Networks GmbH. All rights reserved.
 
     The code is open for inspection and peer review by the security community.
     The code is currently not licensed under an open source license. If you're
