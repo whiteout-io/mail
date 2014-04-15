@@ -24,12 +24,12 @@
         margin-left: auto;
         margin-right: auto;
 
+        b, a {
+            color: $color-blue;
+        }
+
         p {
             line-height: 150%;
-
-            b, a {
-                color: $color-blue;
-            }
         }
 
         div {
@@ -69,6 +69,13 @@
         .passphrase-label-ok {
             color: green;
         }
+
+        .opt-in-terms {
+            .checkbox-wrapper {
+                margin-top: 0;
+                float: left;
+            }
+        }
     }
 }
 
@@ -76,7 +83,9 @@
 }
 
 .view-login-initial {
-    button {
-        margin-right: 10px;
+    .content {
+        button {
+            margin-right: 10px;
+        }
     }
 }

@@ -14,6 +14,12 @@
           <input class="input-text" type="password" ng-model="state.confirmation" ng-class="{'input-text-error': (state.confirmation || state.passphrase) && state.confirmation !== state.passphrase}" placeholder="Confirm passphrase" tabindex="2">
           <span class="popover-info" data-icon-append="&#xe010;" popover="#passphrase-info"></span>
         </div>
+
+        <div class="opt-in-terms">
+          <div class="checkbox-wrapper"><input type="checkbox" ng-model="state.agree"></div>
+          <div>I agree to the Whiteout Networks <a href="https://whiteout.io/terms.html" target="_blank">Terms of Service</a> and have read the <a href="https://whiteout.io/privacy.html" target="_blank">Privacy Policy</a>.</div>
+        </div>
+
         <div>
           <button type="submit" ng-click="confirmPassphrase()" class="btn" ng-disabled="(state.confirmation || state.passphrase) && state.confirmation !== state.passphrase" tabindex="3">Continue</button>
         </div>
@@ -29,7 +35,7 @@
 
 <!-- lightbox -->
 <div class="lightbox-overlay" ng-class="{'show': state.dialog.open}">
-  <div class="lightbox lightbox-effect view-dialog" ng-include="'tpl/dialog.html'"></div>
+  <div class="lightbox lightbox-effect dialog view-dialog" ng-include="'tpl/dialog.html'"></div>
 </div>
 
 <!-- popovers -->

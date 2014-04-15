@@ -3,7 +3,7 @@ define(function(require) {
 
     var _ = require('underscore'),
         app = {},
-        cloudUrl, clientId;
+        appVersion, cloudUrl, clientId;
 
     // parse manifest to get configurations for current runtime
     try {
@@ -16,6 +16,8 @@ define(function(require) {
         cloudUrl = cloudUrl.substring(0, cloudUrl.length - 1);
         // get client ID for OAuth requests
         clientId = manifest.oauth2.client_id;
+        // get the app version
+        appVersion = manifest.version;
     } catch (e) {}
 
     /**
@@ -44,7 +46,8 @@ define(function(require) {
         iconPath: '/img/icon.png',
         verificationUrl: '/verify/',
         verificationUuidLength: 36,
-        dbVersion: 1
+        dbVersion: 1,
+        appVersion: appVersion
     };
 
     /**

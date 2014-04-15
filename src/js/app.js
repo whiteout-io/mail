@@ -9,6 +9,7 @@ requirejs([
     'js/controller/account',
     'js/controller/set-passphrase',
     'js/controller/contacts',
+    'js/controller/about',
     'js/controller/login',
     'js/controller/login-initial',
     'js/controller/login-new-device',
@@ -29,6 +30,7 @@ requirejs([
     AccountCtrl,
     SetPassphraseCtrl,
     ContactsCtrl,
+    AboutCtrl,
     LoginCtrl,
     LoginInitialCtrl,
     LoginNewDeviceCtrl,
@@ -96,6 +98,7 @@ requirejs([
     app.controller('AccountCtrl', AccountCtrl);
     app.controller('SetPassphraseCtrl', SetPassphraseCtrl);
     app.controller('ContactsCtrl', ContactsCtrl);
+    app.controller('AboutCtrl', AboutCtrl);
     app.controller('DialogCtrl', DialogCtrl);
     app.controller('PopoverCtrl', PopoverCtrl);
 

@@ -6,7 +6,7 @@ define(function(require) {
 
     var LoginInitialCtrl = function($scope, $location) {
         var emailDao = appController._emailDao,
-            states;
+            states, termsMsg = 'You must accept the Terms of Service to continue.';
 
         // global state... inherited to all child scopes
         $scope.$root.state = {};
@@ -25,6 +25,13 @@ define(function(require) {
         //
 
         $scope.importKey = function() {
+            if (!$scope.state.agree) {
+                $scope.onError({
+                    message: termsMsg
+                });
+                return;
+            }
+
             $location.path('/login-new-device');
         };
 
@@ -86,6 +93,13 @@ define(function(require) {
                 confirmation = $scope.state.confirmation;
 
             if (passphrase !== confirmation) {
+                return;
+            }
+
+            if (!$scope.state.agree) {
+                $scope.onError({
+                    message: termsMsg
+                });
                 return;
             }
 
