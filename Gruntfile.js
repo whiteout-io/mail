@@ -126,24 +126,10 @@ module.exports = function(grunt) {
                 cwd: 'node_modules/',
                 src: [
                     'requirejs/require.js',
-                    'crypto-lib/node_modules/node-forge/js/*.js',
                     'imap-client/src/*.js',
-                    'imap-client/node_modules/inbox/src/*.js',
-                    'imap-client/node_modules/setimmediate/setImmediate.js',
-                    'imap-client/node_modules/inbox/node_modules/node-shims/src/*.js',
-                    'imap-client/node_modules/inbox/node_modules/utf7/src/utf7.js',
-                    'imap-client/node_modules/inbox/node_modules/xoauth2/src/xoauth2.js',
                     'mailreader/src/*.js',
-                    'mailreader/node_modules/mailparser/src/*.js',
-                    'mailreader/node_modules/mailparser/node_modules/encoding/src/encoding.js',
-                    'mailreader/node_modules/mailparser/node_modules/mimelib/src/mimelib.js',
-                    'mailreader/node_modules/mailparser/node_modules/mimelib/node_modules/addressparser/src/addressparser.js',
-                    'mailreader/node_modules/mailparser/node_modules/encoding/node_modules/iconv-lite/src/*.js',
-                    'mailreader/node_modules/mailparser/node_modules/mime/src/mime.js',
                     'pgpmailer/src/*.js',
-                    'pgpmailer/node_modules/simplesmtp/src/*',
-                    'pgpbuilder/src/*.js',
-                    'pgpbuilder/node_modules/mailbuilder/src/*.js'
+                    'pgpbuilder/src/*.js'
                 ],
                 dest: 'src/lib/'
             },
