@@ -127,8 +127,17 @@ module.exports = function(grunt) {
                 src: [
                     'requirejs/require.js',
                     'imap-client/src/*.js',
+                    'imap-client/node_modules/browserbox/src/*.js',
+                    'imap-client/node_modules/browserbox/node_modules/imap-handler/src/*.js',
+                    'imap-client/node_modules/browserbox/node_modules/mimefuncs/src/*.js',
+                    'imap-client/node_modules/browserbox/node_modules/mimefuncs/node_modules/stringencoding/dist/stringencoding.js',
+                    'imap-client/node_modules/browserbox/node_modules/tcp-socket/src/*.js',
+                    'imap-client/node_modules/browserbox/node_modules/utf7/src/*.js',
                     'mailreader/src/*.js',
-                    'pgpmailer/src/*.js',
+                    'mailreader/node_modules/mimeparser/src/*.js',
+                    'mailreader/node_modules/mimeparser/node_modules/addressparser/src/*.js',
+
+                    'pgpmailer/src/*.js', /* TODO: copy sending deps */
                     'pgpbuilder/src/*.js'
                 ],
                 dest: 'src/lib/'
