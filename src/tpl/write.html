@@ -19,7 +19,7 @@
             <input id="cc{{$index}}" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" ng-class="{'label': recipient.secure === true, 'label label-primary': recipient.secure === false && recipient.valid !== true}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(cc, $index)" address-input="cc" tabindex="1" ng-mouseover="getKeyId(recipient)">
           </span>
         </p>
-      </div><!--/.address-headers-->
+      </div><!--/.headers-->
 
       <div class="subject-box">
         <div class="subject-line">

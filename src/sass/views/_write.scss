@@ -1,4 +1,6 @@
 .view-write {
+    display: flex;
+    flex-direction: column;
     margin: 0px;
     padding: 0px;
     color: $color-grey-dark;
@@ -19,6 +21,7 @@
     }
 
     .headers {
+        flex-shrink: 0;
         margin-top: 10px;
 
         p {
@@ -38,6 +41,7 @@
     }
 
     .subject-box {
+        flex-shrink: 0;
         position: relative;
         margin: 20px 0 7px 0;
         width: inherit;
@@ -47,7 +51,6 @@
         height: em(44);
 
         .subject-line {
-            float: left;
             padding: 10px;
             width: 80%;
             color: $color-grey;
@@ -82,6 +85,7 @@
     }
 
     .attachments-box {
+        flex-shrink: 0;
         position: relative;
         margin: 0 0 5px 0;
         width: inherit;
@@ -126,13 +130,10 @@
     }
 
     .body {
+        flex-grow: 1;
         line-height: 1.5em;
         cursor: text;
-
-        @include respond-to(desktop) {
-            height: 445px;
-            overflow-y: scroll;
-        }
+        overflow-y: scroll;
 
         *[contentEditable] {
             outline: 0px;
