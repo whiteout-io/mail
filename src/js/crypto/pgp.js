@@ -169,7 +169,7 @@ define(function(require) {
         if (!pubKeyId || !privKeyId || pubKeyId !== privKeyId) {
             resetKeys();
             callback({
-                errMsg: 'Key IDs dont match!'
+                errMsg: 'Key IDs don\'t match!'
             });
             return;
         }

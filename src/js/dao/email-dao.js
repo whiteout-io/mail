@@ -67,7 +67,7 @@ define(function(require) {
         function initFolders() {
             // try init folders from memory, since imap client not initiated yet
             self._imapListFolders(function(err, folders) {
-                // dont handle offline case this time
+                // don't handle offline case this time
                 if (err && err.code !== 42) {
                     callback(err);
                     return;
@@ -168,7 +168,7 @@ define(function(require) {
             // check if key IDs match
             if (!keypair.privateKey._id || keypair.privateKey._id !== keypair.publicKey._id) {
                 callback({
-                    errMsg: 'Key IDs dont match!'
+                    errMsg: 'Key IDs don\'t match!'
                 });
                 return;
             }
@@ -178,7 +178,7 @@ define(function(require) {
             privUserID = self._crypto.getKeyParams(keypair.privateKey.encryptedKey).userId;
             if (pubUserID.indexOf(self._account.emailAddress) === -1 || privUserID.indexOf(self._account.emailAddress) === -1) {
                 callback({
-                    errMsg: 'User IDs dont match!'
+                    errMsg: 'User IDs don\'t match!'
                 });
                 return;
             }
