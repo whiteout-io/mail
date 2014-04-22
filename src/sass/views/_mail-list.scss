@@ -63,32 +63,14 @@
             }
         }
 
+        .spinner {
+            display:none;
+        }
+
         &.syncing {
             .spinner {
-                top: 6.5px;
-                left: $padding-horizontal;
-                height: 13px;
-                width: 13px;
-                position: absolute;
-                animation: rotation .6s linear infinite;
-                border-left: 2px solid $color-grey-light;
-                border-right: 2px solid $color-grey-light;
-                border-bottom: 2px solid $color-grey-light;
-                border-top: 2px solid $color-grey;
-                border-radius: 100%;
-            }
-            .text {
-                padding-left: 1.5em;
+                display: inline-block;
             }
         }
-    }
-}
-
-@keyframes rotation {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(359deg);
     }
 }
