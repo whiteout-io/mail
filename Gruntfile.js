@@ -130,15 +130,18 @@ module.exports = function(grunt) {
                     'imap-client/node_modules/browserbox/src/*.js',
                     'imap-client/node_modules/browserbox/node_modules/imap-handler/src/*.js',
                     'imap-client/node_modules/browserbox/node_modules/mimefuncs/src/*.js',
-                    'imap-client/node_modules/browserbox/node_modules/mimefuncs/node_modules/stringencoding/dist/stringencoding.js',
                     'imap-client/node_modules/browserbox/node_modules/tcp-socket/src/*.js',
                     'imap-client/node_modules/browserbox/node_modules/utf7/src/*.js',
                     'mailreader/src/*.js',
                     'mailreader/node_modules/mimeparser/src/*.js',
                     'mailreader/node_modules/mimeparser/node_modules/addressparser/src/*.js',
-
-                    'pgpmailer/src/*.js', /* TODO: copy sending deps */
-                    'pgpbuilder/src/*.js'
+                    'pgpbuilder/src/*.js',
+                    'pgpbuilder/node_modules/mailbuild/src/*.js',
+                    'pgpbuilder/node_modules/mailbuild/node_modules/mimetypes/src/*.js',
+                    'pgpbuilder/node_modules/mailbuild/node_modules/punycode/punycode.min.js',
+                    'pgpmailer/src/*.js',
+                    'pgpmailer/node_modules/smtpclient/src/*.js',
+                    'pgpmailer/node_modules/smtpclient/node_modules/stringencoding/dist/stringencoding.js'
                 ],
                 dest: 'src/lib/'
             },

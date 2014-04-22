@@ -18,6 +18,7 @@
 			angularSanitize: 'angular/angular-sanitize.min',
 			uuid: 'uuid/uuid',
 			forge: 'forge/forge.min',
+			punycode: 'punycode.min',
 			openpgp: 'openpgp/openpgp.min',
 			iscroll: 'iscroll/iscroll-min'
 		},

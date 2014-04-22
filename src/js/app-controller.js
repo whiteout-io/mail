@@ -6,9 +6,9 @@ define(function(require) {
 
     var Auth = require('js/bo/auth'),
         PGP = require('js/crypto/pgp'),
-        /* PgpMailer = require('pgpmailer'), */
+        PgpMailer = require('pgpmailer'),
         OAuth = require('js/util/oauth'),
-        /* PgpBuilder = require('pgpbuilder'), */
+        PgpBuilder = require('pgpbuilder'),
         OutboxBO = require('js/bo/outbox'),
         mailreader = require('mailreader'),
         ImapClient = require('imap-client'),
@@ -71,7 +71,7 @@ define(function(require) {
         self._invitationDao = new InvitationDAO(restDao);
         self._keychain = keychain = new KeychainDAO(lawnchairDao, pubkeyDao);
         self._crypto = pgp = new PGP();
-        self._pgpbuilder = pgpbuilder = {}; //new PgpBuilder();
+        self._pgpbuilder = pgpbuilder = new PgpBuilder();
         emailSync = new EmailSync(keychain, userStorage);
         self._emailDao = emailDao = new EmailDAO(keychain, pgp, userStorage, pgpbuilder, mailreader, emailSync);
         self._outboxBo = new OutboxBO(emailDao, keychain, userStorage);
@@ -128,7 +128,7 @@ define(function(require) {
                 onError: console.error
             };
 
-            //pgpMailer = new PgpMailer(smtpOptions, self._pgpbuilder);
+            pgpMailer = new PgpMailer(smtpOptions, self._pgpbuilder);
             imapClient = new ImapClient(imapOptions, mailreader);
             imapClient.onError = onImapError;
 
