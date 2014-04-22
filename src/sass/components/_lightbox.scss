@@ -21,6 +21,7 @@
         height: 100%;
         padding: $lightbox-padding;
         background: #fff;
+        backface-visibility: hidden;
         header {
             text-align: center;
             position: relative;
@@ -77,11 +78,9 @@
 // effect
 .lightbox-effect .lightbox-body {
     transform: scale(0.7);
-    opacity: 0;
     transition: all 0.3s;
 }
 
 .lightbox-overlay.show .lightbox-effect .lightbox-body {
     transform: scale(1);
-    opacity: 1;
 }
