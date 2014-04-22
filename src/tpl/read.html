@@ -17,27 +17,21 @@
         <label>To:</label>
         <span ng-repeat="u in state.mailList.selected.to" class="label" ng-class="{'label-primary': u.secure === false, 'label-primary-click': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : ''}}" ng-mouseover="getKeyId(u.address)" ng-click="invite(u)" popover="#fingerprint-info">{{u.name || u.address}}</span>
       </p>
-      <div ng-switch="state.mailList.selected.cc && state.mailList.selected.cc.length > 0">
-        <p ng-switch-when="true">
-          <label>Cc:</label>
-          <span ng-repeat="u in state.mailList.selected.cc" class="label" ng-class="{'label-primary': u.secure === false, 'label-primary-click': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : ''}}" ng-mouseover="getKeyId(u.address)" ng-click="invite(u)" popover="#fingerprint-info">{{u.name || u.address}}</span>
-        </p>
-      </div>
+      <p ng-show="state.mailList.selected.cc && state.mailList.selected.cc.length > 0">
+        <label>Cc:</label>
+        <span ng-repeat="u in state.mailList.selected.cc" class="label" ng-class="{'label-primary': u.secure === false, 'label-primary-click': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : ''}}" ng-mouseover="getKeyId(u.address)" ng-click="invite(u)" popover="#fingerprint-info">{{u.name || u.address}}</span>
+      </p>
     </div><!--/.mail-addresses-->
   </div><!--/.headers-->
 
   <div ng-switch="state.mailList.selected.attachments !== undefined && state.mailList.selected.attachments.length > 0">
-    <div ng-switch-when="true">
-      <div class="attachments">
-        <span class="attachment" ng-repeat="attachment in state.mailList.selected.attachments" ng-click="download(attachment)">
-          <span data-icon="&#xe003;"></span>
-          {{attachment.filename}}
-        </span><!--/.attachment-->
-      </div><!--/.attachments-->
-    </div>
-    <div ng-switch-default>
-      <div class="seperator-line"></div>
-    </div>
+    <div ng-switch-when="true" class="attachments">
+      <span class="attachment" ng-repeat="attachment in state.mailList.selected.attachments" ng-click="download(attachment)">
+        <span data-icon="&#xe003;"></span>
+        {{attachment.filename}}
+      </span><!--/.attachment-->
+    </div><!--/.attachments-->
+    <div ng-switch-default class="seperator-line"></div>
   </div><!--/.ng-switch-->
 
   <div class="body" ng-switch="state.mailList.selected === undefined || (state.mailList.selected.encrypted === false && state.mailList.selected.body !== undefined) || (state.mailList.selected.encrypted === true && state.mailList.selected.decrypted === true)">
@@ -46,12 +40,12 @@
       <div class="line" ng-repeat="line in state.mailList.selected.body.split('\n') track by $index" ng-class="{'empty-line': lineEmpty(line)}">
         <span ng-bind-html="line | createAnchors"></span>
         <br>
-      </div>
-    </div>
+      </div><!--/.line-->
+    </div><!--/ng-switch-when-->
     <div class="working" ng-switch-default>
       <span class="spinner"></span>
       <strong ng-bind="(state.mailList.selected.loadingBody === true || state.mailList.selected.body === undefined || state.mailList.selected.body === null) ? 'Loading...' : 'Decrypting...'"></strong>
-    </div>
+    </div><!--/.working-->
   </div><!--/.body-->
 
   <!-- popovers -->

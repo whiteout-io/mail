@@ -50,7 +50,7 @@
       <div class="body" focus-child>
         <p ng-model="body" contentEditable="true" spellcheck="false" ng-change="updatePreview()" tabindex="3" focus-me="state.writer.open && writerTitle === 'Reply'"></p>
 
-        <div class="encrypt-preview" ng-class="{'invisible': !ciphertextPreview || !sendBtnSecure}">
+        <div class="encrypt-preview" ng-show="ciphertextPreview && sendBtnSecure">
           <p>-----BEGIN ENCRYPTED PREVIEW-----<br>{{ciphertextPreview}}<br>-----END ENCRYPTED PREVIEW-----</p>
         </div><!--/.encrypt-preview-->
       </div><!--/.body-->
