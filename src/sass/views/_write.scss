@@ -25,18 +25,44 @@
         margin-top: 10px;
 
         p {
-            margin: 0.2em 0;
-            padding: 0.2em 0;
+            margin: 0.4em 0 0.2em;
             cursor: text;
         }
 
-        span {
+        .label {
+            margin-bottom: 0.2em;
+        }
+
+        label {
+            display: inline-block;
+            width: 2em;
             color: $color-grey;
         }
 
         input {
             margin-left: 0.3em;
-            width: 80%;
+        }
+    }
+
+    .headers-more {
+        float: right;
+        margin: 0.4em 0;
+
+        button {
+            display: inline-block;
+            background: none;
+            padding: 0 0.5em;
+            margin: 0;
+            text-decoration: none;
+            color: $color-black;
+            transition: color 0.3s;
+            outline: 0;
+
+            &:hover,
+            &:focus {
+                color: $color-blue;
+                text-decoration: underline;
+            }
         }
     }
 

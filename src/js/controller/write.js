@@ -48,9 +48,11 @@ define(function(require) {
             $scope.to = [{
                 address: ''
             }];
+            $scope.showCC = false;
             $scope.cc = [{
                 address: ''
             }];
+            $scope.showBCC = false;
             $scope.bcc = [{
                 address: ''
             }];
@@ -85,6 +87,7 @@ define(function(require) {
                     $scope.cc.unshift({
                         address: recipient.address
                     });
+                    $scope.showCC = true;
                 });
                 $scope.cc.forEach($scope.verify);
             }
@@ -404,6 +407,11 @@ define(function(require) {
         scope.$apply();
     }
 
+    function removeInput(field, index, scope) {
+        field.splice(index, 1);
+        scope.$apply();
+    }
+
     function checkForEmptyInput(field) {
         var emptyFieldExists = false;
         field.forEach(function(recipient) {
@@ -413,6 +421,18 @@ define(function(require) {
         });
 
         return emptyFieldExists;
+    }
+
+    function cleanupEmptyInputs(field, scope) {
+        var i;
+
+        for (i = field.length - 2; i >= 0; i--) {
+            if (!field[i].address) {
+                field.splice(i, 1);
+            }
+        }
+
+        scope.$apply();
     }
 
     ngModule.directive('field', function() {
@@ -455,6 +475,8 @@ define(function(require) {
                         // create new field input
                         addInput(field, scope);
                     }
+
+                    cleanupEmptyInputs(field, scope);
                 });
 
                 element.on('keydown', function(e) {
@@ -476,8 +498,7 @@ define(function(require) {
                         // backspace, delete on empty input
                         // remove input
                         e.preventDefault();
-                        field.splice(index, 1);
-                        scope.$apply();
+                        removeInput(field, index, scope);
                         // focus on previous id
                         var previousId = fieldName + (index - 1);
                         document.getElementById(previousId).focus();
