@@ -153,6 +153,7 @@ define(function(require) {
                     // n -> new mail
                     e.preventDefault();
                     scope.state.writer.write();
+                    scope.$apply();
 
                 } else if (modifier && e.keyCode === 70 && !scope.state.writer.open) {
                     // f -> find
@@ -161,39 +162,45 @@ define(function(require) {
                     $timeout(function() {
                         scope.state.mailList.searching = false;
                     }, 200);
+                    scope.$apply();
 
                 } else if (modifier && e.keyCode === 82 && scope.state.writer && !scope.state.writer.open && scope.state.mailList.selected) {
                     // r -> reply
                     e.preventDefault();
                     scope.state.writer.write(scope.state.mailList.selected);
+                    scope.$apply();
 
                 } else if (modifier && e.keyCode === 83 && scope.state.writer && !scope.state.writer.open && scope.state.mailList.synchronize) {
                     // s -> sync folder
                     e.preventDefault();
                     scope.state.mailList.synchronize();
+                    scope.$apply();
 
                 } else if (e.keyCode === 27 && scope.state.writer.open) {
                     // escape -> close writer
                     e.preventDefault();
                     scope.state.writer.close();
+                    scope.$apply();
 
                 } else if (e.keyCode === 27 && scope.state.account.open) {
                     // escape -> close account view
                     e.preventDefault();
                     scope.state.account.toggle(false);
+                    scope.$apply();
 
                 } else if (e.keyCode === 27 && scope.state.contacts.open) {
                     // escape -> close contacts view
                     e.preventDefault();
                     scope.state.contacts.toggle(false);
+                    scope.$apply();
 
                 } else if (e.keyCode === 27 && scope.state.nav.open) {
                     // escape -> close nav view
                     e.preventDefault();
                     scope.state.nav.toggle(false);
+                    scope.$apply();
                 }
 
-                scope.$apply();
             });
         };
     });
