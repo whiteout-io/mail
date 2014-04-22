@@ -49,7 +49,7 @@ textarea {
     background: $color-grey-lighter;
     border: 3px solid transparent;
     background-clip: content-box;
-    cursor: pointer;
+    cursor: pointer !important;
     &:hover {
         background-color: $color-blue;
     }

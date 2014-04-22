@@ -20,31 +20,12 @@
         border: 0!important;
     }
 
-    .headers {
+    .mail-addresses {
         flex-shrink: 0;
         margin-top: 10px;
-
-        p {
-            margin: 0.4em 0 0.2em;
-            cursor: text;
-        }
-
-        .label {
-            margin-bottom: 0.2em;
-        }
-
-        label {
-            display: inline-block;
-            width: 2em;
-            color: $color-grey;
-        }
-
-        input {
-            margin-left: 0.3em;
-        }
     }
 
-    .headers-more {
+    .mail-addresses-more {
         float: right;
         margin: 0.4em 0;
 

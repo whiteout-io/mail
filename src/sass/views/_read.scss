@@ -1,19 +1,19 @@
 .view-read {
+    display: flex;
+    flex-direction: column;
     margin: 0px;
     padding: 10px 15px;
     height: 100%;
+    width: 100%;
     color: $color-grey-dark;
 
     .headers {
+        flex-shrink: 0;
         margin-bottom: 1em;
-
-        p {
-            margin: 0px;
-            padding: 0px;
-        }
 
         .subject {
             font-size: $font-size-bigger;
+            margin: 0;
         }
 
         .date {
@@ -21,24 +21,31 @@
             font-size: $font-size-small;
             margin-top: 0.25em;
             margin-bottom: 1.5em;
-            padding: 0px;
         }
 
-        .address {
-            color: $color-grey;
-            padding: 0.2em 0;
-
+        .mail-addresses {
             .label {
-                margin-left: 0.3em;
+                cursor: pointer;
+            }
 
-                &:hover {
-                    cursor: pointer;
-                }
+            p {
+                margin-top: 0.2em;
+                margin-bottom: 0;
+            }
+        }
+
+        .controls {
+            float: right;
+            margin: 0 15px 10px;
+
+            button {
+                margin-left: 7px;
             }
         }
     }
 
     .attachments {
+        flex-shrink: 0;
         position: relative;
         width: inherit;
         border: 1px;
@@ -72,54 +79,50 @@
     }
 
     .seperator-line {
+        flex-shrink: 0;
         height: 1px;
         color: $color-grey-lighter;
         background-color: $color-grey-lighter;
     }
 
     .body {
+        flex-grow: 1;
+        position: relative;
         margin-top: 1.75em;
         cursor: text;
-        padding-bottom: 250px;
         line-height: 1.5em;
-        height: 100%;
         overflow-y: scroll;
         user-select: text;
 
         .working {
-            margin: 0 auto;
-            height: 100%;
-            width: 230px;
-            display: table;
+            position: absolute;
+            top: 50%;
+            width: 100%;
+            transform: translateY(-50%);
+            vertical-align: middle;
+            text-align: center;
 
-            .container {
-                display: table-cell;
+            .spinner {
+                font-size: 2em;
+                margin-right: 0.2em;
                 vertical-align: middle;
 
-                .spinner {
-                    position: relative;
+                // todo: outsource component
+                display: inline-block;
+                height: 1em;
+                width: 1em;
+                animation: rotation .6s linear infinite;
+                border-left: 0.17em solid $color-grey-light;
+                border-right: 0.17em solid $color-grey-light;
+                border-bottom: 0.17em solid $color-grey-light;
+                border-top: 0.17em solid $color-grey;
+                border-radius: 100%;
+            }
 
-                    div {
-                        position: absolute;
-                        top: 0;
-                        left: 0;
-                        height: 30px;
-                        width: 30px;
-                        animation: rotation .6s linear infinite;
-                        border-left: 5px solid $color-grey-light;
-                        border-right: 5px solid $color-grey-light;
-                        border-bottom: 5px solid $color-grey-light;
-                        border-top: 5px solid $color-grey;
-                        border-radius: 100%;
-                    }
-                }
-
-                h1 {
-                    margin: 0;
-                    padding-left: 40px;
-                    line-height: 30px;
-                    color: $color-grey-input;
-                }
+            strong {
+                color: $color-grey-input;
+                font-size: 2em;
+                vertical-align: middle;
             }
         }
 
@@ -137,6 +140,7 @@
     }
 
     iframe {
+        flex-grow: 1;
         width: 100%;
     }
 
@@ -174,14 +178,5 @@
             }
 
         }
-    }
-}
-
-.controls {
-    float: right;
-    margin: 10px 15px;
-
-    button {
-        margin-left: 7px;
     }
 }

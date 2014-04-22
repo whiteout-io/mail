@@ -1,24 +1,29 @@
-<div class="controls">
-  <button ng-click="state.mailList.remove(state.mailList.selected)" class="btn-icon" title="Delete mail">&#xe005;</button>
-  <button class="btn-icon" title="Reply to" reply-selection>&#xe002;</button>
-  <button ng-click="state.writer.write()" class="btn-icon" title="New mail">&#xe006;</button>
-</div><!--/.controls-->
-
 <div class="view-read" ng-controller="ReadCtrl">
   <div class="headers">
+    <div class="controls">
+      <button ng-click="state.mailList.remove(state.mailList.selected)" class="btn-icon" title="Delete mail">&#xe005;</button>
+      <button class="btn-icon" title="Reply to" reply-selection>&#xe002;</button>
+      <button ng-click="state.writer.write()" class="btn-icon" title="New mail">&#xe006;</button>
+    </div><!--/.controls-->
+
     <p class="subject" ng-click="state.read.toggle(false)">{{(state.mailList.selected.subject) ? state.mailList.selected.subject : 'No subject'}}</p>
     <p class="date">{{state.mailList.selected.sentDate | date:'EEEE, MMM d, yyyy h:mm a'}}</p>
-    <p class="address">
-      From: <span ng-repeat="u in state.mailList.selected.from" class="label" ng-class="{'label-primary': u.secure === false, 'label-primary-click': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : ''}}" ng-mouseover="getKeyId(u.address)" ng-click="invite(u)" popover="#fingerprint-info">{{u.name || u.address}}</span>
-    </p>
-    <p class="address">
-      To: <span ng-repeat="u in state.mailList.selected.to" class="label" ng-class="{'label-primary': u.secure === false, 'label-primary-click': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : ''}}" ng-mouseover="getKeyId(u.address)" ng-click="invite(u)" popover="#fingerprint-info">{{u.name || u.address}}</span>
-    </p>
-    <div ng-switch="state.mailList.selected.cc && state.mailList.selected.cc.length > 0">
-      <p class="address" ng-switch-when="true">
-        Cc: <span ng-repeat="u in state.mailList.selected.cc" class="label" ng-class="{'label-primary': u.secure === false, 'label-primary-click': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : ''}}" ng-mouseover="getKeyId(u.address)" ng-click="invite(u)" popover="#fingerprint-info">{{u.name || u.address}}</span>
+    <div class="mail-addresses">
+      <p>
+        <label>From:</label>
+        <span ng-repeat="u in state.mailList.selected.from" class="label" ng-class="{'label-primary': u.secure === false, 'label-primary-click': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : ''}}" ng-mouseover="getKeyId(u.address)" ng-click="invite(u)" popover="#fingerprint-info">{{u.name || u.address}}</span>
       </p>
-    </div>
+      <p>
+        <label>To:</label>
+        <span ng-repeat="u in state.mailList.selected.to" class="label" ng-class="{'label-primary': u.secure === false, 'label-primary-click': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : ''}}" ng-mouseover="getKeyId(u.address)" ng-click="invite(u)" popover="#fingerprint-info">{{u.name || u.address}}</span>
+      </p>
+      <div ng-switch="state.mailList.selected.cc && state.mailList.selected.cc.length > 0">
+        <p ng-switch-when="true">
+          <label>Cc:</label>
+          <span ng-repeat="u in state.mailList.selected.cc" class="label" ng-class="{'label-primary': u.secure === false, 'label-primary-click': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : ''}}" ng-mouseover="getKeyId(u.address)" ng-click="invite(u)" popover="#fingerprint-info">{{u.name || u.address}}</span>
+        </p>
+      </div>
+    </div><!--/.mail-addresses-->
   </div><!--/.headers-->
 
   <div ng-switch="state.mailList.selected.attachments !== undefined && state.mailList.selected.attachments.length > 0">
@@ -44,13 +49,8 @@
       </div>
     </div>
     <div class="working" ng-switch-default>
-      <div class="container">
-        <div class="spinner"><div></div></div>
-        <span ng-switch="state.mailList.selected.loadingBody === true || state.mailList.selected.body === undefined || state.mailList.selected.body === null">
-          <h1 ng-switch-when="true">Loading...</h1>
-          <h1 ng-switch-default>Decrypting...</h1>
-        </span>
-      </div><!--/.container-->
+      <span class="spinner"></span>
+      <strong ng-bind="(state.mailList.selected.loadingBody === true || state.mailList.selected.body === undefined || state.mailList.selected.body === null) ? 'Loading...' : 'Decrypting...'"></strong>
     </div>
   </div><!--/.body-->
 
