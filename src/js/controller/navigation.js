@@ -143,13 +143,13 @@ define(function(require) {
 
                 var modifier = e.ctrlKey || e.metaKey;
 
-                if (modifier && e.keyCode === 78 && scope.state.writer && !scope.state.writer.open) {
+                if (modifier && e.keyCode === 78 && scope.state.lightbox !== 'write') {
                     // n -> new mail
                     e.preventDefault();
                     scope.state.writer.write();
                     scope.$apply();
 
-                } else if (modifier && e.keyCode === 70 && !scope.state.writer.open) {
+                } else if (modifier && e.keyCode === 70 && scope.state.lightbox !== 'write') {
                     // f -> find
                     e.preventDefault();
                     scope.state.mailList.searching = true;
@@ -158,34 +158,22 @@ define(function(require) {
                     }, 200);
                     scope.$apply();
 
-                } else if (modifier && e.keyCode === 82 && scope.state.writer && !scope.state.writer.open && scope.state.mailList.selected) {
+                } else if (modifier && e.keyCode === 82 && scope.state.lightbox !== 'write' && scope.state.mailList.selected) {
                     // r -> reply
                     e.preventDefault();
                     scope.state.writer.write(scope.state.mailList.selected);
                     scope.$apply();
 
-                } else if (modifier && e.keyCode === 83 && scope.state.writer && !scope.state.writer.open && scope.state.mailList.synchronize) {
+                } else if (modifier && e.keyCode === 83 && scope.state.lightbox !== 'write' && scope.state.mailList.synchronize) {
                     // s -> sync folder
                     e.preventDefault();
                     scope.state.mailList.synchronize();
                     scope.$apply();
 
-                } else if (e.keyCode === 27 && scope.state.writer.open) {
-                    // escape -> close writer
+                } else if (e.keyCode === 27 && scope.state.lightbox !== undefined) {
+                    // escape -> close current lightbox
                     e.preventDefault();
-                    scope.state.writer.close();
-                    scope.$apply();
-
-                } else if (e.keyCode === 27 && scope.state.account.open) {
-                    // escape -> close account view
-                    e.preventDefault();
-                    scope.state.account.toggle(false);
-                    scope.$apply();
-
-                } else if (e.keyCode === 27 && scope.state.contacts.open) {
-                    // escape -> close contacts view
-                    e.preventDefault();
-                    scope.state.contacts.toggle(false);
+                    scope.state.lightbox = undefined;
                     scope.$apply();
 
                 } else if (e.keyCode === 27 && scope.state.nav.open) {
