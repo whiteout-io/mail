@@ -1,15 +1,9 @@
 define(function(require) {
     'use strict';
 
-    var appController = require('js/app-controller'),
-        errorUtil = require('js/util/error');
+    var appController = require('js/app-controller');
 
     var AddAccountCtrl = function($scope, $location) {
-        // global state... inherited to all child scopes
-        $scope.$root.state = {};
-        // attach global error handler
-        errorUtil.attachHandler($scope);
-
         $scope.connectToGoogle = function() {
             appController._auth.getCredentials({}, function(err) {
                 if (err) {

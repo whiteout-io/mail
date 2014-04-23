@@ -11,15 +11,21 @@
     <div class="mail-addresses">
       <p>
         <label>From:</label>
-        <span ng-repeat="u in state.mailList.selected.from" class="label" ng-class="{'label-primary': u.secure === false, 'label-primary-click': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : ''}}" ng-mouseover="getKeyId(u.address)" ng-click="invite(u)" popover="#fingerprint-info">{{u.name || u.address}}</span>
+        <span ng-repeat="u in state.mailList.selected.from">
+          <span class="label" ng-class="{'label-primary': u.secure === false, 'label-primary-click': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : ''}}" ng-mouseover="getKeyId(u.address)" ng-click="invite(u)" popover="#fingerprint-info">{{u.name || u.address}}</span>
+        </span>
       </p>
       <p>
         <label>To:</label>
-        <span ng-repeat="u in state.mailList.selected.to" class="label" ng-class="{'label-primary': u.secure === false, 'label-primary-click': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : ''}}" ng-mouseover="getKeyId(u.address)" ng-click="invite(u)" popover="#fingerprint-info">{{u.name || u.address}}</span>
+        <span ng-repeat="u in state.mailList.selected.to">
+          <span class="label" ng-class="{'label-primary': u.secure === false, 'label-primary-click': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : ''}}" ng-mouseover="getKeyId(u.address)" ng-click="invite(u)" popover="#fingerprint-info">{{u.name || u.address}}</span>
+        </span>
       </p>
       <p ng-show="state.mailList.selected.cc && state.mailList.selected.cc.length > 0">
         <label>Cc:</label>
-        <span ng-repeat="u in state.mailList.selected.cc" class="label" ng-class="{'label-primary': u.secure === false, 'label-primary-click': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : ''}}" ng-mouseover="getKeyId(u.address)" ng-click="invite(u)" popover="#fingerprint-info">{{u.name || u.address}}</span>
+        <span ng-repeat="u in state.mailList.selected.cc">
+          <span class="label" ng-class="{'label-primary': u.secure === false, 'label-primary-click': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : ''}}" ng-mouseover="getKeyId(u.address)" ng-click="invite(u)" popover="#fingerprint-info">{{u.name || u.address}}</span>
+        </span>
       </p>
     </div><!--/.mail-addresses-->
   </div><!--/.headers-->

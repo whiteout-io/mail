@@ -4,7 +4,6 @@ define(function(require) {
     var angular = require('angular'),
         str = require('js/app-config').string,
         appController = require('js/app-controller'),
-        errorUtil = require('js/util/error'),
         notification = require('js/util/notification'),
         _ = require('underscore'),
         emailDao, outboxBo;
@@ -14,11 +13,6 @@ define(function(require) {
     //
 
     var NavigationCtrl = function($scope) {
-        // global state... inherited to all child scopes
-        $scope.$root.state = {};
-        // attach global error handler
-        errorUtil.attachHandler($scope);
-
         emailDao = appController._emailDao;
         outboxBo = appController._outboxBo;
 

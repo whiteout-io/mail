@@ -2,15 +2,9 @@ define(function(require) {
     'use strict';
 
     var angular = require('angular'),
-        errorUtil = require('js/util/error'),
         appController = require('js/app-controller');
 
     var LoginExistingCtrl = function($scope, $location) {
-        // global state... inherited to all child scopes
-        $scope.$root.state = {};
-        // attach global error handler
-        errorUtil.attachHandler($scope);
-
         var emailDao = appController._emailDao,
             pgp = appController._crypto;
 

@@ -1,17 +1,11 @@
 define(function(require) {
     'use strict';
 
-    var appController = require('js/app-controller'),
-        errorUtil = require('js/util/error');
+    var appController = require('js/app-controller');
 
     var LoginInitialCtrl = function($scope, $location) {
         var emailDao = appController._emailDao,
             states, termsMsg = 'You must accept the Terms of Service to continue.';
-
-        // global state... inherited to all child scopes
-        $scope.$root.state = {};
-        // attach global error handler
-        errorUtil.attachHandler($scope);
 
         states = {
             IDLE: 1,
