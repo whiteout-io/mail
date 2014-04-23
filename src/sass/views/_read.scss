@@ -95,11 +95,8 @@
         user-select: text;
 
         .working {
-            position: absolute;
-            top: 50%;
+            @include scut-vcenter-tt;
             width: 100%;
-            transform: translateY(-50%);
-            vertical-align: middle;
             text-align: center;
             font-size: 2em;
 

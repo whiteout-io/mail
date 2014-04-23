@@ -9,12 +9,12 @@
     backface-visibility: hidden;
 
     @include respond-to(desktop) {
-        top: $lightbox-top;
         margin: 0 auto;
         width: $lightbox-width;
         max-width: $lightbox-max-width;
         max-height: $lightbox-min-height;
         height: auto;
+        text-align: left;
     }
 
     .lightbox-body {
@@ -68,6 +68,11 @@
     opacity: 0;
     background: $color-grey-dark-alpha;
     transition: all 0.3s;
+
+    @include respond-to(desktop) {
+        @include scut-vcenter-ib(".lightbox");
+        text-align: center;
+    }
 }
 
 .lightbox-overlay.show {
