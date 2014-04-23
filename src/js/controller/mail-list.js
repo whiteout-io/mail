@@ -401,7 +401,8 @@ define(function(require) {
     //
 
     var ngModule = angular.module('mail-list', []);
-    ngModule.directive('ngIscroll', function() {
+
+    ngModule.directive('ngIscroll', function($timeout) {
         return {
             link: function(scope, elm, attrs) {
                 var model = attrs.ngIscroll,
@@ -451,11 +452,14 @@ define(function(require) {
                 myScroll.on('scrollEnd', scope.loadVisibleBodies);
 
                 // refresh iScroll when model length changes
-                scope.$watch(model, function() {
-                    myScroll.refresh();
+                scope.$watchCollection(model, function() {
+                    $timeout(function() {
+                        myScroll.refresh();
+                        scope.$apply();
+                    });
                     // load the visible message bodies, when the list is re-initialized and when scrolling stopped
                     scope.loadVisibleBodies();
-                }, true);
+                });
             }
         };
     });
