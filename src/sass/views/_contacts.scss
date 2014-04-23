@@ -15,9 +15,13 @@
     }
 
     .key-list {
-        max-height: 400px;
+        position: relative;
         margin: 20px;
-        overflow-y: scroll;
+
+        .key-list-scroll {
+            max-height: 400px;
+            overflow-y: scroll;
+        }
 
         table {
             th, td {
@@ -37,6 +41,11 @@
                 outline: none;
             }
         }
+
+        // pull popover upwards to keep popup inside lightbox
+        .popover {
+            margin-top: -20px;
+        }
     }
-    
+
 }

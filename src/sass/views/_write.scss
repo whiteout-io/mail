@@ -8,7 +8,8 @@
 
     height: 100%;
     @include respond-to(desktop) {
-        height: 600px;
+        // this number depends on max-height set on .lightbox
+        height: 590px; // magic number
     }
 
     input {
