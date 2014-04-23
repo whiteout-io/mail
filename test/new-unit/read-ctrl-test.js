@@ -166,5 +166,28 @@ define(function(require) {
                 });
             });
         });
+
+        describe('parseConversation', function() {
+            it('should work', function() {
+                var body = 'foo\n' +
+                    '\n' +
+                    '> bar\n' +
+                    '>\n' +
+                    '> foofoo\n' +
+                    '>> foofoobar\n' +
+                    '\ncomment\n' +
+                    '>> barbar';
+
+                var nodes = scope.parseConversation({
+                    body: body
+                });
+                expect(nodes).to.exist;
+
+                var expected = '{"children":["foo\\n",{"children":["bar\\n\\nfoofoo",{"children":["foofoobar"]}]},"\\ncomment",{"children":[{"children":["barbar"]}]}]}';
+                var json = JSON.stringify(nodes);
+                expect(json).to.equal(expected);
+            });
+        });
+
     });
 });

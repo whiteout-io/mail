@@ -62,7 +62,10 @@ requirejs([
         'contacts',
         'login-new-device',
         'popover'
-    ]);
+    ], function($rootScopeProvider) {
+        // increase digest iteration limit for large recursive ng-includes in reader
+        $rootScopeProvider.digestTtl(100);
+    });
 
     // set router paths
     app.config(function($routeProvider) {
