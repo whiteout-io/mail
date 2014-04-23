@@ -10,9 +10,8 @@ define(function(require) {
     var AboutCtrl = function($scope) {
 
         $scope.state.about = {
-            open: false,
             toggle: function(to) {
-                this.open = to;
+                $scope.state.lightbox = (to) ? 'about' : undefined;
             }
         };
 

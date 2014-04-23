@@ -15,9 +15,8 @@ define(function(require) {
         pgp = appController._crypto;
 
         $scope.state.account = {
-            open: false,
             toggle: function(to) {
-                this.open = to;
+                $scope.state.lightbox = (to) ? 'account' : undefined;
             }
         };
 

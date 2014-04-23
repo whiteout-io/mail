@@ -5,14 +5,12 @@
     width: 100%;
     height: 100%;
     z-index: 2000;
-    visibility: hidden;
     backface-visibility: hidden;
 
     @include respond-to(desktop) {
         margin: 0 auto;
         width: $lightbox-width;
         max-width: $lightbox-max-width;
-        max-height: $lightbox-min-height;
         height: auto;
         text-align: left;
     }
@@ -22,6 +20,11 @@
         padding: $lightbox-padding;
         background: #fff;
         backface-visibility: hidden;
+
+        @include respond-to(desktop) {
+            max-height: $lightbox-min-height;
+        }
+
         header {
             text-align: center;
             position: relative;
@@ -53,39 +56,54 @@
     }
 }
 
-.lightbox-overlay.show .lightbox {
-    visibility: visible;
-}
-
 .lightbox-overlay {
     position: absolute;
     width: 100%;
     height: 100%;
-    visibility: hidden;
+    display: none;
     top: 0;
     left: 0;
     z-index: 1000;
-    opacity: 0;
     background: $color-grey-dark-alpha;
-    transition: all 0.3s;
 
     @include respond-to(desktop) {
         @include scut-vcenter-ib(".lightbox");
         text-align: center;
     }
-}
 
-.lightbox-overlay.show {
-    opacity: 1;
-    visibility: visible;
-}
+    &.show {
+        display: block;
+    }
 
-// effect
-.lightbox-effect .lightbox-body {
-    transform: scale(0.7);
-    transition: all 0.3s;
-}
-
-.lightbox-overlay.show .lightbox-effect .lightbox-body {
-    transform: scale(1);
+    /* ngAnimate */
+    &.show-add {
+        display: block;
+        opacity: 0;
+        transition: opacity 0.3s;
+        .lightbox-body {
+            transform: scale(0.7);
+            transition: transform 0.3s;
+        }
+    }
+    &.show-add-active {
+        opacity: 1;
+        .lightbox-body {
+            transform: scale(1);
+        }
+    }
+    &.show-remove {
+        display: block;
+        opacity: 1;
+        transition: opacity 0.3s;
+        .lightbox-body {
+            transform: scale(1);
+            transition: transform 0.3s;
+        }
+    }
+    &.show-remove-active {
+        opacity: 0;
+        .lightbox-body {
+            transform: scale(0.7);
+        }
+    }
 }

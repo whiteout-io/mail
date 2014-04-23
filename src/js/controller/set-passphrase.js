@@ -13,9 +13,8 @@ define(function(require) {
         pgp = appController._crypto;
 
         $scope.state.setPassphrase = {
-            open: false,
             toggle: function(to) {
-                this.open = to;
+                $scope.state.lightbox = (to) ? 'set-passphrase' : undefined;
 
                 $scope.newPassphrase = undefined;
                 $scope.oldPassphrase = undefined;

@@ -25,9 +25,8 @@ define(function(require) {
         //
 
         $scope.state.writer = {
-            open: false,
             write: function(replyTo, replyAll, forward) {
-                this.open = true;
+                $scope.state.lightbox = 'write';
                 $scope.replyTo = replyTo;
 
                 resetFields();
@@ -39,7 +38,7 @@ define(function(require) {
                 $scope.verify($scope.to[0]);
             },
             close: function() {
-                this.open = false;
+                $scope.state.lightbox = undefined;
             }
         };
 
