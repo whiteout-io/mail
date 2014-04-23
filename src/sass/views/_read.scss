@@ -129,34 +129,39 @@
             padding: 0;
         }
 
-        table {
+        ul {
+            list-style: none;
+            margin: 0;
+        }
+
+        li {
+            border-bottom: 1px solid $color-grey-lighter;
+            &:last-child {
+                border-bottom: 0;
+            }
+        }
+
+        button {
+            display: block;
+            background: none;
+            width: 100%;
+            border: 0;
+            outline: 0;
+            padding: 0.5em 1em 0.5em 0.3em;
             color: $color-blue;
-            user-select: none;
+            transition: background-color 0.3s;
+            text-align: left;
 
-            tr {
-                &:hover,
-                &:focus {
-                    background-color: darken($color-white, 2%);
-                    cursor: pointer;
-                }
-
-                &.seperator {
-                    border-bottom: 1px solid $color-grey-lighter;
-                }
+            &:before {
+                display: inline-block;
+                width: 2.5em;
+                text-align: center;
+                vertical-align: middle;
             }
-
-            td {
-                padding: 7px 5px;
-
-                &.left {
-                    padding-left: 15px;
-                    padding-top: 10px;
-                }
-                &.right {
-                    padding-right: 15px;
-                }
+            &:hover,
+            &:focus {
+                background-color: darken($color-white, 2%);
             }
-
         }
     }
 }
