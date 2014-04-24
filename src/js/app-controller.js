@@ -107,11 +107,8 @@ define(function(require) {
             var auth, imapOptions, imapClient, smtpOptions, pgpMailer;
 
             auth = {
-                XOAuth2: {
-                    user: credentials.emailAddress,
-                    clientId: config.gmail.clientId,
-                    accessToken: credentials.oauthToken
-                }
+                user: credentials.emailAddress,
+                xoauth2: credentials.oauthToken
             };
             imapOptions = {
                 secure: config.gmail.imap.secure,

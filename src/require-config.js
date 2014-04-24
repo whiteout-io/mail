@@ -7,9 +7,7 @@
 		paths: {
 			js: '../js',
 			test: '../../test',
-			'node-forge': 'forge',
 			cryptoLib: '../js/crypto',
-			'setimmediate': 'setImmediate',
 			underscore: 'underscore/underscore-min',
 			lawnchair: 'lawnchair/lawnchair-git',
 			lawnchairSQL: 'lawnchair/lawnchair-adapter-webkit-sqlite-git',
@@ -19,10 +17,15 @@
 			angularTouch: 'angular/angular-touch.min',
 			angularSanitize: 'angular/angular-sanitize.min',
 			uuid: 'uuid/uuid',
+			forge: 'forge/forge.min',
+			punycode: 'punycode.min',
 			openpgp: 'openpgp/openpgp.min',
 			iscroll: 'iscroll/iscroll-min'
 		},
 		shim: {
+			forge: {
+				exports: 'forge'
+			},
 			angular: {
 				exports: 'angular'
 			},
