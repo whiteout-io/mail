@@ -79,7 +79,7 @@ define(function(require) {
                 })).yields();
                 scope.onError = function(err) {
                     expect(err.title).to.equal('Success');
-                    expect(scope.state.account.open).to.be.false;
+                    expect(scope.state.lightbox).to.equal(undefined);
                     expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
                     expect(dl.createDownload.calledOnce).to.be.true;
                     dl.createDownload.restore();

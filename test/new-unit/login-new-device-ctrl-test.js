@@ -98,7 +98,7 @@ define(function(require) {
                 expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
             });
 
-            it('should not work when keypair upload fails', function() {
+            it('should not work when keypair upload fails', function(done) {
                 scope.passphrase = passphrase;
                 scope.key = {
                     privateKeyArmored: 'b'
@@ -113,6 +113,11 @@ define(function(require) {
                     errMsg: 'yo mamma.'
                 });
 
+                scope.onError = function(err) {
+                    expect(err.errMsg).to.equal('yo mamma.');
+                    done();
+                };
+
                 scope.confirmPassphrase();
 
                 expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
@@ -120,7 +125,7 @@ define(function(require) {
                 expect(keychainMock.putUserKeyPair.calledOnce).to.be.true;
             });
 
-            it('should not work when unlock fails', function() {
+            it('should not work when unlock fails', function(done) {
                 scope.passphrase = passphrase;
                 scope.key = {
                     privateKeyArmored: 'b'
@@ -134,6 +139,11 @@ define(function(require) {
                     errMsg: 'yo mamma.'
                 });
 
+                scope.onError = function(err) {
+                    expect(err.errMsg).to.equal('yo mamma.');
+                    done();
+                };
+
                 scope.confirmPassphrase();
 
                 expect(scope.incorrect).to.be.true;
@@ -141,12 +151,17 @@ define(function(require) {
                 expect(emailDaoMock.unlock.calledOnce).to.be.true;
             });
 
-            it('should not work when keypair retrieval', function() {
+            it('should not work when keypair retrieval', function(done) {
                 scope.passphrase = passphrase;
 
                 keychainMock.getUserKeyPair.withArgs(emailAddress).yields({
                     errMsg: 'yo mamma.'
                 });
+
+                scope.onError = function(err) {
+                    expect(err.errMsg).to.equal('yo mamma.');
+                    done();
+                };
 
                 scope.confirmPassphrase();
 
