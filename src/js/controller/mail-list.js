@@ -425,6 +425,10 @@ define(function(require) {
                         // the n-th message model in the filteredMessages array
                         listItem = listItems.item(i).getBoundingClientRect();
                         message = scope.filteredMessages[i];
+                        if (!message) {
+                            // stop if i get larger than the size of filtered messages
+                            break;
+                        }
 
                         isPartiallyVisibleTop = listItem.top < top && listItem.bottom > top; // a portion of the list item is visible on the top
                         isPartiallyVisibleBottom = listItem.top < bottom && listItem.bottom > bottom; // a portion of the list item is visible on the bottom
