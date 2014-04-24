@@ -12,8 +12,15 @@
     <script src="require-config.js"></script>
     <script src="js/app.js"></script>
   </head>
-  
+
   <body key-shortcuts>
+
     <div ng-view class="main-app-view"></div>
+
+    <!-- error dialog lightbox -->
+    <div class="lightbox-overlay" ng-class="{'show': state.dialog.open}">
+      <div class="lightbox dialog view-dialog" ng-include="'tpl/dialog.html'"></div>
+    </div><!--/.lightbox-overlay-->
+
   </body>
 </html>

@@ -97,10 +97,13 @@ define(function(require) {
                     scope.passphrase = passphrase;
                     keychainMock.getUserKeyPair.withArgs(emailAddress).yields(new Error('asd'));
 
-                    scope.confirmPassphrase();
+                    scope.onError = function(err) {
+                        expect(err.message).to.equal('asd');
+                        expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
+                        done();
+                    };
 
-                    expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
-                    done();
+                    scope.confirmPassphrase();
                 });
             });
         });

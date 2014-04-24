@@ -55,7 +55,7 @@ define(function(require) {
         describe('scope variables', function() {
             it('should be set correctly', function() {
                 expect(scope.state.writer).to.exist;
-                expect(scope.state.writer.open).to.be.false;
+                expect(scope.state.lightbox).to.be.undefined;
                 expect(scope.state.writer.write).to.exist;
                 expect(scope.state.writer.close).to.exist;
                 expect(scope.verify).to.exist;
@@ -68,11 +68,11 @@ define(function(require) {
 
         describe('close', function() {
             it('should close the writer', function() {
-                scope.state.writer.open = true;
+                scope.state.lightbox = 'write';
 
                 scope.state.writer.close();
 
-                expect(scope.state.writer.open).to.be.false;
+                expect(scope.state.lightbox).to.be.undefined;
             });
         });
 
@@ -200,7 +200,7 @@ define(function(require) {
                 keychainMock.getReceiverPublicKey.yields(null, {
                     userId: 'asdf@example.com'
                 });
-                scope.$apply = function() {
+                scope.$digest = function() {
                     expect(recipient.key).to.deep.equal({
                         userId: 'asdf@example.com'
                     });
@@ -311,8 +311,7 @@ define(function(require) {
 
                 expect(outboxMock.put.calledOnce).to.be.true;
                 expect(emailDaoMock.sync.calledOnce).to.be.true;
-
-                expect(scope.state.writer.open).to.be.false;
+                expect(scope.state.lightbox).to.be.undefined;
                 expect(scope.replyTo.answered).to.be.true;
             });
         });

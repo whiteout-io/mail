@@ -44,7 +44,7 @@ define(function(require) {
                 }
 
                 // display fetched body
-                $scope.$apply();
+                $scope.$digest();
 
                 // automatically decrypt if it's the selected email
                 if (email === $scope.state.mailList.selected) {
@@ -164,7 +164,7 @@ define(function(require) {
                 var index = getFolder().messages.indexOf(email);
                 // show the next mail
                 if (getFolder().messages.length > 1) {
-                    // if we're about to delete the last entry of the array, show the previous (i.e. the one below in the list), 
+                    // if we're about to delete the last entry of the array, show the previous (i.e. the one below in the list),
                     // otherwise show the next one (i.e. the one above in the list)
                     $scope.select(_.last(getFolder().messages) === email ? getFolder().messages[index - 1] : getFolder().messages[index + 1]);
                 } else {
@@ -209,7 +209,6 @@ define(function(require) {
             $timeout(function() {
                 // display and select first
                 selectFirstMessage();
-                $scope.$apply();
             });
 
             $scope.synchronize();
@@ -288,6 +287,8 @@ define(function(require) {
                 address: 'support@whiteout.io'
             }]; // sender address
             this.to = [{
+                address: 'max.musterman@gmail.com'
+            }, {
                 address: 'max.musterman@gmail.com'
             }]; // list of receivers
             this.cc = [{
@@ -399,11 +400,13 @@ define(function(require) {
     //
 
     var ngModule = angular.module('mail-list', []);
-    ngModule.directive('ngIscroll', function() {
+
+    ngModule.directive('ngIscroll', function($timeout) {
         return {
             link: function(scope, elm, attrs) {
                 var model = attrs.ngIscroll,
-                    listEl = elm[0];
+                    listEl = elm[0],
+                    myScroll;
 
                 /*
                  * iterates over the mails in the mail list and loads their bodies if they are visible in the viewport
@@ -418,7 +421,7 @@ define(function(require) {
                         isPartiallyVisibleTop, isPartiallyVisibleBottom, isVisible;
 
                     for (var i = 0, len = listItems.length; i < len; i++) {
-                        // the n-th list item (the dom representation of an email) corresponds to 
+                        // the n-th list item (the dom representation of an email) corresponds to
                         // the n-th message model in the filteredMessages array
                         listItem = listItems.item(i).getBoundingClientRect();
                         message = scope.filteredMessages[i];
@@ -439,18 +442,22 @@ define(function(require) {
                     }
                 };
 
-                // re-init iScroll when model length changes
-                scope.$watch(model, function() {
-                    var myScroll;
-                    // activate iscroll
-                    myScroll = new IScroll(listEl, {
-                        mouseWheel: true
-                    });
+                // activate iscroll
+                myScroll = new IScroll(listEl, {
+                    mouseWheel: true,
+                    scrollbars: true,
+                    fadeScrollbars: true
+                });
+                myScroll.on('scrollEnd', scope.loadVisibleBodies);
 
+                // refresh iScroll when model length changes
+                scope.$watchCollection(model, function() {
+                    $timeout(function() {
+                        myScroll.refresh();
+                    });
                     // load the visible message bodies, when the list is re-initialized and when scrolling stopped
                     scope.loadVisibleBodies();
-                    myScroll.on('scrollEnd', scope.loadVisibleBodies);
-                }, true);
+                });
             }
         };
     });

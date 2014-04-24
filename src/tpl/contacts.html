@@ -16,30 +16,34 @@
       </div>
 
       <div class="key-list">
-        <table>
-          <tr>
-            <th>Key ID</th>
-            <th>Email</th>
-            <th>Created</th>
-            <th>Size</th>
-          </tr>
-          <tr ng-repeat="key in keys | orderBy:'userId' | filter:searchText">
-            <td class="hover" ng-mouseover="getFingerprint(key)" popover="#fingerprint-contact">{{key._id.slice(8)}}</td>
-            <td>{{key.userId}}</td>
-            <td>{{key.created | date:'mediumDate'}}</td>
-            <td>{{key.bitSize}} bit</td>
-            <td><button class="remove" ng-click="removeKey(key)">&#xe007;</button></td>
-          </tr>
-        </table>
-      </div>
+        <div class="key-list-scroll">
+          <table>
+            <tr>
+              <th>Key ID</th>
+              <th>Email</th>
+              <th>Created</th>
+              <th>Size</th>
+            </tr>
+            <tr ng-repeat="key in keys | orderBy:'userId' | filter:searchText">
+              <td class="hover" ng-mouseover="getFingerprint(key)" popover="#fingerprint-contact">{{key._id.slice(8)}}</td>
+              <td>{{key.userId}}</td>
+              <td>{{key.created | date:'mediumDate'}}</td>
+              <td>{{key.bitSize}} bit</td>
+              <td><button class="remove" ng-click="removeKey(key)">&#xe007;</button></td>
+            </tr>
+          </table>
+        </div><!--/.key-list-scroll-->
+
+        <!-- popovers -->
+        <div id="fingerprint-contact" class="popover right" ng-controller="PopoverCtrl">
+          <div class="popover-title"><b>Fingerprint</b></div>
+          <div class="popover-content">{{fingerprint}}</div>
+        </div><!--/.popover-->
+      </div><!--/.key-list-->
 
     </div><!-- /.view-contacts -->
   </div><!-- /.content -->
 
-  <!-- popovers -->
-  <div id="fingerprint-contact" class="popover right" ng-controller="PopoverCtrl">
-    <div class="popover-title"><b>Fingerprint</b></div>
-    <div class="popover-content">{{fingerprint}}</div>
-  </div><!--/.popover-->
+
 
 </div><!-- /.lightbox-body -->

@@ -15,9 +15,9 @@ define(function(require) {
         pgp = appController._crypto;
 
         $scope.state.contacts = {
-            open: false,
             toggle: function(to) {
-                this.open = to;
+                $scope.state.lightbox = (to) ? 'contacts' : undefined;
+
                 $scope.listKeys();
             }
         };

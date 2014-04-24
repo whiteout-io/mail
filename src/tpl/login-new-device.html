@@ -5,7 +5,7 @@
 
   <div class="content">
     <p><b>Import keyfile.</b> To access your emails on this device, please import your existing key file.</p>
-    
+
     <form>
       <div>
         <input type="file" accept=".asc" file-reader tabindex="1">
@@ -18,11 +18,6 @@
       <div><button type="submit" ng-click="confirmPassphrase()" class="btn" ng-disabled="!key" tabindex="3">Import</button>
     </form>
   </div>
-</div>
-
-<!-- lightbox -->
-<div class="lightbox-overlay" ng-class="{'show': state.dialog.open}">
-  <div class="lightbox lightbox-effect dialog view-dialog" ng-include="'tpl/dialog.html'"></div>
 </div>
 
 <!-- popovers -->

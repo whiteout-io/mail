@@ -4,7 +4,7 @@ define(function() {
     var er = {};
 
     er.attachHandler = function(scope) {
-        scope.$root.onError = function(options) {
+        scope.onError = function(options) {
             if (!options) {
                 scope.$apply();
                 return;

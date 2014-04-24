@@ -1,4 +1,6 @@
 .view-write {
+    display: flex;
+    flex-direction: column;
     margin: 0px;
     padding: 0px;
     color: $color-grey-dark;
@@ -6,7 +8,8 @@
 
     height: 100%;
     @include respond-to(desktop) {
-        height: 600px;
+        // this number depends on max-height set on .lightbox
+        height: 590px; // magic number
     }
 
     input {
@@ -18,26 +21,35 @@
         border: 0!important;
     }
 
-    .headers {
+    .mail-addresses {
+        flex-shrink: 0;
         margin-top: 10px;
+    }
 
-        p {
-            margin: 0.2em 0;
-            padding: 0.2em 0;
-            cursor: text;
-        }
+    .mail-addresses-more {
+        float: right;
+        margin: 0.4em 0;
 
-        span {
-            color: $color-grey;
-        }
+        button {
+            display: inline-block;
+            background: none;
+            padding: 0 0.5em;
+            margin: 0;
+            text-decoration: none;
+            color: $color-black;
+            transition: color 0.3s;
+            outline: 0;
 
-        input {
-            margin-left: 0.3em;
-            width: 80%;
+            &:hover,
+            &:focus {
+                color: $color-blue;
+                text-decoration: underline;
+            }
         }
     }
 
     .subject-box {
+        flex-shrink: 0;
         position: relative;
         margin: 20px 0 7px 0;
         width: inherit;
@@ -47,7 +59,6 @@
         height: em(44);
 
         .subject-line {
-            float: left;
             padding: 10px;
             width: 80%;
             color: $color-grey;
@@ -82,6 +93,7 @@
     }
 
     .attachments-box {
+        flex-shrink: 0;
         position: relative;
         margin: 0 0 5px 0;
         width: inherit;
@@ -126,13 +138,10 @@
     }
 
     .body {
+        flex-grow: 1;
         line-height: 1.5em;
         cursor: text;
-
-        @include respond-to(desktop) {
-            height: 445px;
-            overflow-y: scroll;
-        }
+        overflow-y: scroll;
 
         *[contentEditable] {
             outline: 0px;

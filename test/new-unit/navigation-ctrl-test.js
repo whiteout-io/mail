@@ -63,10 +63,8 @@ define(function(require) {
         describe('initial state', function() {
             it('should be well defined', function() {
                 expect(scope.state).to.exist;
-                expect(scope.state.nav.open).to.be.false;
+                expect(scope.state.lightbox).to.be.undefined;
                 expect(scope.account.folders).to.not.be.empty;
-
-                expect(scope.onError).to.exist;
                 expect(scope.openFolder).to.exist;
             });
         });

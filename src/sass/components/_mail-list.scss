@@ -19,6 +19,10 @@
         cursor: pointer;
         transition: background-color $time-li-fade, color $time-li-fade;
 
+        &.ng-animate {
+            transition: none;
+        }
+
         h3 {
             @include text-overflow;
 

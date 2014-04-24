@@ -19,9 +19,11 @@ requirejs([
     'js/controller/write',
     'js/controller/navigation',
     'cryptoLib/util',
+    'js/util/error',
     'angularSanitize',
     'angularRoute',
-    'angularTouch'
+    'angularTouch',
+    'angularAnimate'
 ], function(
     angular,
     DialogCtrl,
@@ -39,7 +41,8 @@ requirejs([
     ReadCtrl,
     WriteCtrl,
     NavigationCtrl,
-    util
+    util,
+    errorUtil
 ) {
     'use strict';
 
@@ -51,6 +54,7 @@ requirejs([
         'ngSanitize',
         'ngRoute',
         'ngTouch',
+        'ngAnimate',
         'navigation',
         'mail-list',
         'write',
@@ -89,6 +93,13 @@ requirejs([
         $routeProvider.otherwise({
             redirectTo: '/login'
         });
+    });
+
+    app.run(function($rootScope) {
+        // global state... inherited to all child scopes
+        $rootScope.state = {};
+        // attach global error handler
+        errorUtil.attachHandler($rootScope);
     });
 
     // inject controllers from ng-included view templates

@@ -40,7 +40,6 @@ define(function(require) {
         describe('scope variables', function() {
             it('should be set correctly', function() {
                 expect(scope.fingerprint).to.equal('XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX');
-                expect(scope.state.contacts.open).to.be.false;
                 expect(scope.state.contacts.toggle).to.exist;
             });
         });

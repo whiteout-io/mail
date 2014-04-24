@@ -25,9 +25,8 @@ define(function(require) {
         //
 
         $scope.state.writer = {
-            open: false,
             write: function(replyTo, replyAll, forward) {
-                this.open = true;
+                $scope.state.lightbox = 'write';
                 $scope.replyTo = replyTo;
 
                 resetFields();
@@ -39,7 +38,7 @@ define(function(require) {
                 $scope.verify($scope.to[0]);
             },
             close: function() {
-                this.open = false;
+                $scope.state.lightbox = undefined;
             }
         };
 
@@ -48,9 +47,11 @@ define(function(require) {
             $scope.to = [{
                 address: ''
             }];
+            $scope.showCC = false;
             $scope.cc = [{
                 address: ''
             }];
+            $scope.showBCC = false;
             $scope.bcc = [{
                 address: ''
             }];
@@ -85,6 +86,7 @@ define(function(require) {
                     $scope.cc.unshift({
                         address: recipient.address
                     });
+                    $scope.showCC = true;
                 });
                 $scope.cc.forEach($scope.verify);
             }
@@ -172,7 +174,7 @@ define(function(require) {
                 }
 
                 $scope.checkSendStatus();
-                $scope.$apply();
+                $scope.$digest();
             });
         };
 
@@ -332,10 +334,9 @@ define(function(require) {
             link: function(scope, elm, attrs, ctrl) {
                 // view -> model
                 elm.on('keyup keydown', function() {
-                    scope.$apply(function() {
-                        // set model
-                        ctrl.$setViewValue(elm[0].innerText);
-                    });
+                    // set model
+                    ctrl.$setViewValue(elm[0].innerText);
+                    scope.$digest();
                 });
 
                 // model -> view
@@ -404,6 +405,11 @@ define(function(require) {
         scope.$apply();
     }
 
+    function removeInput(field, index, scope) {
+        field.splice(index, 1);
+        scope.$apply();
+    }
+
     function checkForEmptyInput(field) {
         var emptyFieldExists = false;
         field.forEach(function(recipient) {
@@ -413,6 +419,18 @@ define(function(require) {
         });
 
         return emptyFieldExists;
+    }
+
+    function cleanupEmptyInputs(field, scope) {
+        var i;
+
+        for (i = field.length - 2; i >= 0; i--) {
+            if (!field[i].address) {
+                field.splice(i, 1);
+            }
+        }
+
+        scope.$apply();
     }
 
     ngModule.directive('field', function() {
@@ -455,12 +473,14 @@ define(function(require) {
                         // create new field input
                         addInput(field, scope);
                     }
+
+                    cleanupEmptyInputs(field, scope);
                 });
 
                 element.on('keydown', function(e) {
                     var code = e.keyCode;
 
-                    scope.$apply();
+                    scope.$digest();
 
                     if (code === 32 || code === 188 || code === 186) {
                         // catch space, comma, semicolon
@@ -476,8 +496,7 @@ define(function(require) {
                         // backspace, delete on empty input
                         // remove input
                         e.preventDefault();
-                        field.splice(index, 1);
-                        scope.$apply();
+                        removeInput(field, index, scope);
                         // focus on previous id
                         var previousId = fieldName + (index - 1);
                         document.getElementById(previousId).focus();
@@ -503,7 +522,7 @@ define(function(require) {
                         mimeType: file.type,
                         content: new Uint8Array(e.target.result)
                     });
-                    scope.$apply();
+                    scope.$digest();
                 };
                 reader.readAsArrayBuffer(file);
             }

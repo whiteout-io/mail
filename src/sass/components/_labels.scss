@@ -46,6 +46,14 @@
     }
 }
 
+.label-blank {
+    background-color: transparent;
+    color: $color-black;
+    text-align: left;
+    padding-left: 0;
+    padding-right: 0;
+}
+
 .label-light {
     background-color: $label-light-back-color;
     color: $label-light-color;

@@ -176,9 +176,13 @@ define(function(require) {
                         expect(state).to.equal(1);
                         expect(emailDaoMock.unlock.calledOnce).to.be.true;
                         scope.setState.restore();
-                        done();
                     }
                 });
+
+                scope.onError = function(err) {
+                    expect(err.message).to.equal('asd');
+                    done();
+                };
 
                 scope.confirmPassphrase();
             });

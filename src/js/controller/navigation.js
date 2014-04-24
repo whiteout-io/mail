@@ -4,7 +4,6 @@ define(function(require) {
     var angular = require('angular'),
         str = require('js/app-config').string,
         appController = require('js/app-controller'),
-        errorUtil = require('js/util/error'),
         notification = require('js/util/notification'),
         _ = require('underscore'),
         emailDao, outboxBo;
@@ -14,11 +13,6 @@ define(function(require) {
     //
 
     var NavigationCtrl = function($scope) {
-        // global state... inherited to all child scopes
-        $scope.$root.state = {};
-        // attach global error handler
-        errorUtil.attachHandler($scope);
-
         emailDao = appController._emailDao;
         outboxBo = appController._outboxBo;
 
@@ -149,51 +143,46 @@ define(function(require) {
 
                 var modifier = e.ctrlKey || e.metaKey;
 
-                if (modifier && e.keyCode === 78 && scope.state.writer && !scope.state.writer.open) {
+                if (modifier && e.keyCode === 78 && scope.state.lightbox !== 'write') {
                     // n -> new mail
                     e.preventDefault();
                     scope.state.writer.write();
+                    scope.$apply();
 
-                } else if (modifier && e.keyCode === 70 && !scope.state.writer.open) {
+                } else if (modifier && e.keyCode === 70 && scope.state.lightbox !== 'write') {
                     // f -> find
                     e.preventDefault();
                     scope.state.mailList.searching = true;
                     $timeout(function() {
                         scope.state.mailList.searching = false;
                     }, 200);
+                    scope.$apply();
 
-                } else if (modifier && e.keyCode === 82 && scope.state.writer && !scope.state.writer.open && scope.state.mailList.selected) {
+                } else if (modifier && e.keyCode === 82 && scope.state.lightbox !== 'write' && scope.state.mailList.selected) {
                     // r -> reply
                     e.preventDefault();
                     scope.state.writer.write(scope.state.mailList.selected);
+                    scope.$apply();
 
-                } else if (modifier && e.keyCode === 83 && scope.state.writer && !scope.state.writer.open && scope.state.mailList.synchronize) {
+                } else if (modifier && e.keyCode === 83 && scope.state.lightbox !== 'write' && scope.state.mailList.synchronize) {
                     // s -> sync folder
                     e.preventDefault();
                     scope.state.mailList.synchronize();
+                    scope.$apply();
 
-                } else if (e.keyCode === 27 && scope.state.writer.open) {
-                    // escape -> close writer
+                } else if (e.keyCode === 27 && scope.state.lightbox !== undefined) {
+                    // escape -> close current lightbox
                     e.preventDefault();
-                    scope.state.writer.close();
-
-                } else if (e.keyCode === 27 && scope.state.account.open) {
-                    // escape -> close account view
-                    e.preventDefault();
-                    scope.state.account.toggle(false);
-
-                } else if (e.keyCode === 27 && scope.state.contacts.open) {
-                    // escape -> close contacts view
-                    e.preventDefault();
-                    scope.state.contacts.toggle(false);
+                    scope.state.lightbox = undefined;
+                    scope.$apply();
 
                 } else if (e.keyCode === 27 && scope.state.nav.open) {
                     // escape -> close nav view
                     e.preventDefault();
                     scope.state.nav.toggle(false);
+                    scope.$apply();
                 }
 
-                scope.$apply();
             });
         };
     });

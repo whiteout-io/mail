@@ -6,20 +6,30 @@
   <div class="content">
 
     <div class="view-write">
-      <div class="headers">
+      <div class="mail-addresses">
+        <div class="mail-addresses-more">
+          <button ng-click="showCC = true;" ng-hide="showCC">Cc</button>
+          <button ng-click="showBCC = true;" ng-hide="showBCC">Bcc</button>
+        </div>
         <p field="to">
-          <span>To:</span>
+          <label>To:</label>
           <span ng-repeat="recipient in to track by $index">
-            <input id="to{{$index}}" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" ng-class="{'label': recipient.secure === true, 'label label-primary': recipient.secure === false && recipient.valid !== true}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(to, $index)" address-input="to" tabindex="1" ng-mouseover="getKeyId(recipient)" focus-me="state.writer.open && writerTitle !== 'Reply'">
+            <input id="to{{$index}}" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" class="label" ng-class="{'label-blank': !recipient.address || recipient.secure === undefined, 'label-primary': recipient.secure === false}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(to, $index)" address-input="to" tabindex="1" ng-mouseover="getKeyId(recipient)" focus-me="state.lightbox === 'write' && writerTitle !== 'Reply'">
           </span>
         </p>
-        <p field="cc">
-          <span>Cc:</span>
+        <p field="cc" ng-show="showCC === true">
+          <label>Cc:</label>
           <span ng-repeat="recipient in cc track by $index">
-            <input id="cc{{$index}}" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" ng-class="{'label': recipient.secure === true, 'label label-primary': recipient.secure === false && recipient.valid !== true}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(cc, $index)" address-input="cc" tabindex="1" ng-mouseover="getKeyId(recipient)">
+            <input id="cc{{$index}}" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" class="label" ng-class="{'label-blank': !recipient.address || recipient.secure === undefined, 'label-primary': recipient.secure === false}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(cc, $index)" address-input="cc" tabindex="1" ng-mouseover="getKeyId(recipient)">
           </span>
         </p>
-      </div><!--/.address-headers-->
+        <p field="bcc" ng-show="showBCC === true">
+          <label>Bcc:</label>
+          <span ng-repeat="recipient in bcc track by $index">
+            <input id="bcc{{$index}}" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" class="label" ng-class="{'label-blank': !recipient.address || recipient.secure === undefined, 'label-primary': recipient.secure === false}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(bcc, $index)" address-input="bcc" tabindex="1" ng-mouseover="getKeyId(recipient)">
+          </span>
+        </p>
+      </div><!--/.mail-addresses-->
 
       <div class="subject-box">
         <div class="subject-line">
@@ -44,9 +54,9 @@
       </div><!--/ng-switch-->
 
       <div class="body" focus-child>
-        <p ng-model="body" contentEditable="true" spellcheck="false" ng-change="updatePreview()" tabindex="3" focus-me="state.writer.open && writerTitle === 'Reply'"></p>
+        <p ng-model="body" contentEditable="true" spellcheck="false" ng-change="updatePreview()" tabindex="3" focus-me="state.lightbox === 'write' && writerTitle === 'Reply'"></p>
 
-        <div class="encrypt-preview" ng-class="{'invisible': !ciphertextPreview || !sendBtnSecure}">
+        <div class="encrypt-preview" ng-show="ciphertextPreview && sendBtnSecure">
           <p>-----BEGIN ENCRYPTED PREVIEW-----<br>{{ciphertextPreview}}<br>-----END ENCRYPTED PREVIEW-----</p>
         </div><!--/.encrypt-preview-->
       </div><!--/.body-->
