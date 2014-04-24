@@ -44,7 +44,7 @@ define(function(require) {
                 }
 
                 // display fetched body
-                $scope.$apply();
+                $scope.$digest();
 
                 // automatically decrypt if it's the selected email
                 if (email === $scope.state.mailList.selected) {
@@ -209,7 +209,6 @@ define(function(require) {
             $timeout(function() {
                 // display and select first
                 selectFirstMessage();
-                $scope.$apply();
             });
 
             $scope.synchronize();
@@ -455,7 +454,6 @@ define(function(require) {
                 scope.$watchCollection(model, function() {
                     $timeout(function() {
                         myScroll.refresh();
-                        scope.$apply();
                     });
                     // load the visible message bodies, when the list is re-initialized and when scrolling stopped
                     scope.loadVisibleBodies();

@@ -174,7 +174,7 @@ define(function(require) {
                 }
 
                 $scope.checkSendStatus();
-                $scope.$apply();
+                $scope.$digest();
             });
         };
 
@@ -334,10 +334,9 @@ define(function(require) {
             link: function(scope, elm, attrs, ctrl) {
                 // view -> model
                 elm.on('keyup keydown', function() {
-                    scope.$apply(function() {
-                        // set model
-                        ctrl.$setViewValue(elm[0].innerText);
-                    });
+                    // set model
+                    ctrl.$setViewValue(elm[0].innerText);
+                    scope.$digest();
                 });
 
                 // model -> view
@@ -481,7 +480,7 @@ define(function(require) {
                 element.on('keydown', function(e) {
                     var code = e.keyCode;
 
-                    scope.$apply();
+                    scope.$digest();
 
                     if (code === 32 || code === 188 || code === 186) {
                         // catch space, comma, semicolon
@@ -523,7 +522,7 @@ define(function(require) {
                         mimeType: file.type,
                         content: new Uint8Array(e.target.result)
                     });
-                    scope.$apply();
+                    scope.$digest();
                 };
                 reader.readAsArrayBuffer(file);
             }
