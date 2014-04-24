@@ -14,7 +14,7 @@
         <p field="to">
           <label>To:</label>
           <span ng-repeat="recipient in to track by $index">
-            <input id="to{{$index}}" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" class="label" ng-class="{'label-blank': !recipient.address || recipient.secure === undefined, 'label-primary': recipient.secure === false}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(to, $index)" address-input="to" tabindex="1" ng-mouseover="getKeyId(recipient)" focus-me="state.writer.open && writerTitle !== 'Reply'">
+            <input id="to{{$index}}" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" class="label" ng-class="{'label-blank': !recipient.address || recipient.secure === undefined, 'label-primary': recipient.secure === false}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(to, $index)" address-input="to" tabindex="1" ng-mouseover="getKeyId(recipient)" focus-me="state.lightbox === 'write' && writerTitle !== 'Reply'">
           </span>
         </p>
         <p field="cc" ng-show="showCC === true">
@@ -54,7 +54,7 @@
       </div><!--/ng-switch-->
 
       <div class="body" focus-child>
-        <p ng-model="body" contentEditable="true" spellcheck="false" ng-change="updatePreview()" tabindex="3" focus-me="state.writer.open && writerTitle === 'Reply'"></p>
+        <p ng-model="body" contentEditable="true" spellcheck="false" ng-change="updatePreview()" tabindex="3" focus-me="state.lightbox === 'write' && writerTitle === 'Reply'"></p>
 
         <div class="encrypt-preview" ng-show="ciphertextPreview && sendBtnSecure">
           <p>-----BEGIN ENCRYPTED PREVIEW-----<br>{{ciphertextPreview}}<br>-----END ENCRYPTED PREVIEW-----</p>
