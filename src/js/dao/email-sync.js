@@ -448,6 +448,7 @@ define(function(require) {
 
                                 // if persisting worked, add them to the messages array
                                 folder.messages = folder.messages.concat(messages);
+                                self.onIncomingMessage(messages);
                                 doDeltaF4();
                             });
                         }
