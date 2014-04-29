@@ -72,8 +72,10 @@ define(function(require) {
             }
 
             // select inbox if not yet selected
-            $scope.openFolder($scope.account.folders[0]);
-            $scope.$apply();
+            if (!$scope.state.nav.currentFolder) {
+                $scope.openFolder($scope.account.folders[0]);
+                $scope.$apply();
+            }
         });
 
         //
