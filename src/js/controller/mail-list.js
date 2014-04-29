@@ -5,9 +5,8 @@ define(function(require) {
         _ = require('underscore'),
         appController = require('js/app-controller'),
         IScroll = require('iscroll'),
-        str = require('js/app-config').string,
         notification = require('js/util/notification'),
-        emailDao, outboxBo;
+        emailDao, outboxBo, emailSync;
 
     var MailListCtrl = function($scope, $timeout) {
         //
@@ -16,18 +15,58 @@ define(function(require) {
 
         emailDao = appController._emailDao;
         outboxBo = appController._outboxBo;
+        emailSync = appController._emailSync;
 
-        // push handler
-        if (emailDao) {
-            emailDao.onIncomingMessage = function(email) {
-                // sync
-                $scope.synchronize(function() {
-                    // show notification
-                    notificationForEmail(email);
-                });
-            };
-            notification.setOnClickedListener(notificationClicked);
-        }
+        emailDao.onNeedsSync = function(error, folder) {
+            if (error) {
+                $scope.onError(error);
+                return;
+            }
+
+            $scope.synchronize({
+                folder: folder
+            });
+        };
+
+        emailSync.onIncomingMessage = function(msgs) {
+            var popupId, popupTitle, popupMessage, unreadMsgs;
+
+            unreadMsgs = msgs.filter(function(msg) {
+                return msg.unread;
+            });
+
+            if (unreadMsgs.length === 0) {
+                return;
+            }
+
+            popupId = '' + unreadMsgs[0].uid;
+            if (unreadMsgs.length > 1) {
+                popupTitle = unreadMsgs.length + ' new messages';
+                popupMessage = _.pluck(unreadMsgs, 'subject').join('\n');
+            } else {
+                popupTitle = unreadMsgs[0].from[0].name || unreadMsgs[0].from[0].address;
+                popupMessage = unreadMsgs[0].subject;
+            }
+
+            notification.create({
+                id: popupId,
+                title: popupTitle,
+                message: popupMessage
+            });
+        };
+
+        notification.setOnClickedListener(function(uidString) {
+            var uid = parseInt(uidString, 10);
+
+            if (isNaN(uid)) {
+                return;
+            }
+
+            $scope.select(_.findWhere(currentFolder().messages, {
+                uid: uid
+            }));
+        });
+
 
         //
         // scope functions
@@ -35,7 +74,7 @@ define(function(require) {
 
         $scope.getBody = function(email) {
             emailDao.getBody({
-                folder: getFolder().path,
+                folder: currentFolder().path,
                 message: email
             }, function(err) {
                 if (err && err.code !== 42) {
@@ -93,17 +132,20 @@ define(function(require) {
         /**
          * Synchronize the selected imap folder to local storage
          */
-        $scope.synchronize = function(callback) {
+        $scope.synchronize = function(options) {
             updateStatus('Syncing ...');
 
+            options = options || {};
+            options.folder = options.folder || currentFolder().path;
+
             // let email dao handle sync transparently
-            if ($scope.state.nav.currentFolder.type === 'Outbox') {
+            if (currentFolder().type === 'Outbox') {
                 emailDao.syncOutbox({
-                    folder: getFolder().path
+                    folder: currentFolder().path
                 }, done);
             } else {
                 emailDao.sync({
-                    folder: getFolder().path
+                    folder: options.folder || currentFolder().path
                 }, done);
             }
 
@@ -127,18 +169,18 @@ define(function(require) {
                     return;
                 }
 
-                // sort emails
-                selectFirstMessage();
                 // display last update
                 updateStatus('Last update: ', new Date());
+
+                // do not change the selection if we just updated another folder in the background
+                if (currentFolder().path === options.folder) {
+                    selectFirstMessage();
+                }
+
                 $scope.$apply();
 
                 // fetch visible bodies at the end of a successful sync
                 $scope.loadVisibleBodies();
-
-                if (callback) {
-                    callback();
-                }
             }
         };
 
@@ -150,7 +192,7 @@ define(function(require) {
                 return;
             }
 
-            if (getFolder().type === 'Outbox') {
+            if (currentFolder().type === 'Outbox') {
                 $scope.onError({
                     errMsg: 'Deleting messages from the outbox is not yet supported.'
                 });
@@ -161,18 +203,18 @@ define(function(require) {
             $scope.synchronize();
 
             function removeAndShowNext() {
-                var index = getFolder().messages.indexOf(email);
+                var index = currentFolder().messages.indexOf(email);
                 // show the next mail
-                if (getFolder().messages.length > 1) {
+                if (currentFolder().messages.length > 1) {
                     // if we're about to delete the last entry of the array, show the previous (i.e. the one below in the list),
                     // otherwise show the next one (i.e. the one above in the list)
-                    $scope.select(_.last(getFolder().messages) === email ? getFolder().messages[index - 1] : getFolder().messages[index + 1]);
+                    $scope.select(_.last(currentFolder().messages) === email ? currentFolder().messages[index - 1] : currentFolder().messages[index + 1]);
                 } else {
                     // if we have only one email in the array, show nothing
                     $scope.select();
                     $scope.state.mailList.selected = undefined;
                 }
-                getFolder().messages.splice(index, 1);
+                currentFolder().messages.splice(index, 1);
             }
         };
 
@@ -190,14 +232,14 @@ define(function(require) {
          * List emails from folder when user changes folder
          */
         $scope._stopWatchTask = $scope.$watch('state.nav.currentFolder', function() {
-            if (!getFolder()) {
+            if (!currentFolder()) {
                 return;
             }
 
             // development... display dummy mail objects
             if (!window.chrome || !chrome.identity) {
                 updateStatus('Last update: ', new Date());
-                getFolder().messages = createDummyMails();
+                currentFolder().messages = createDummyMails();
                 selectFirstMessage();
                 return;
             }
@@ -229,30 +271,6 @@ define(function(require) {
         // helper functions
         //
 
-        function notificationClicked(uidString) {
-            var email, uid = parseInt(uidString, 10);
-
-            if (isNaN(uid)) {
-                return;
-            }
-
-            email = _.findWhere(getFolder().messages, {
-                uid: uid
-            });
-
-            if (email) {
-                $scope.select(email);
-            }
-        }
-
-        function notificationForEmail(email) {
-            notification.create({
-                id: '' + email.uid,
-                title: email.from[0].name || email.from[0].address,
-                message: email.subject.replace(str.subjectPrefix, '')
-            }, function() {});
-        }
-
         function updateStatus(lbl, time) {
             $scope.lastUpdateLbl = lbl;
             $scope.lastUpdate = (time) ? time : '';
@@ -272,7 +290,7 @@ define(function(require) {
             }
         }
 
-        function getFolder() {
+        function currentFolder() {
             return $scope.state.nav.currentFolder;
         }
     };

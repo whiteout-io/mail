@@ -86,13 +86,6 @@ define(function(require) {
         self._imapClient = options.imapClient;
         self._pgpMailer = options.pgpMailer;
 
-        // delegation-esque pattern to mitigate between node-style events and plain js
-        self._imapClient.onIncomingMessage = function(message) {
-            if (typeof self.onIncomingMessage === 'function') {
-                self.onIncomingMessage(message);
-            }
-        };
-
         // notify emailSync
         self._emailSync.onConnect({
             imapClient: self._imapClient
@@ -120,6 +113,20 @@ define(function(require) {
                 if (err) {
                     callback(err);
                     return;
+                }
+
+                var inbox = _.findWhere(folders, {
+                    type: 'Inbox'
+                });
+
+                if (inbox) {
+                    self._imapClient.listenForChanges({
+                        path: inbox.path
+                    },function(error, path) {
+                        if (typeof self.onNeedsSync === 'function') {
+                            self.onNeedsSync(error, path);
+                        }
+                    });
                 }
 
                 self._account.folders = folders;

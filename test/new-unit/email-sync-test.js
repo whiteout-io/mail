@@ -800,7 +800,7 @@ define(function(require) {
             });
 
             it('should fetch messages downstream from the remote', function(done) {
-                var invocations, folder, localListStub, imapSearchStub, localStoreStub, imapListMessagesStub;
+                var invocations, folder, localListStub, imapSearchStub, localStoreStub, imapListMessagesStub, incomingMessagesCalled;
 
                 invocations = 0;
                 folder = 'FOLDAAAA';
@@ -842,6 +842,13 @@ define(function(require) {
                     emails: [dummyEncryptedMail]
                 }).yields();
 
+                incomingMessagesCalled = false;
+                emailSync.onIncomingMessage = function(msgs) {
+                    incomingMessagesCalled = true;
+                    expect(msgs).to.not.be.empty;
+                };
+
+
                 emailSync.sync({
                     folder: folder
                 }, function(err) {
@@ -860,6 +867,8 @@ define(function(require) {
                     expect(localListStub.calledOnce).to.be.true;
                     expect(imapSearchStub.calledThrice).to.be.true;
                     expect(localStoreStub.calledOnce).to.be.true;
+                    expect(incomingMessagesCalled).to.be.true;
+
                     done();
                 });
             });
@@ -1076,6 +1085,8 @@ define(function(require) {
                     emails: [verificationMail]
                 }).yields();
 
+                emailSync.onIncomingMessage = function() {};
+
                 emailSync.sync({
                     folder: folder
                 }, function(err) {
@@ -1145,6 +1156,8 @@ define(function(require) {
                     errMsg: 'fubar'
                 });
                 imapDeleteStub = sinon.stub(emailSync, '_imapDeleteMessage').yields({});
+
+                emailSync.onIncomingMessage = function() {};
 
                 emailSync.sync({
                     folder: folder
