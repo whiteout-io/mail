@@ -127,7 +127,7 @@ define(function(require) {
                     return;
                 }
 
-                // sort emails
+                // display and select first
                 selectFirstMessage();
                 // display last update
                 updateStatus('Last update: ', new Date());
@@ -189,15 +189,15 @@ define(function(require) {
         /**
          * List emails from folder when user changes folder
          */
-        $scope._stopWatchTask = $scope.$watch('state.nav.currentFolder', function() {
-            if (!getFolder()) {
+        $scope._stopWatchTask = $scope.$watch('state.nav.currentFolder', function(currentFolder) {
+            if (!currentFolder) {
                 return;
             }
 
             // development... display dummy mail objects
             if (!window.chrome || !chrome.identity) {
                 updateStatus('Last update: ', new Date());
-                getFolder().messages = createDummyMails();
+                currentFolder.messages = createDummyMails();
                 selectFirstMessage();
                 return;
             }
@@ -206,10 +206,8 @@ define(function(require) {
 
             // unselect selection from old folder
             $scope.select();
-            $timeout(function() {
-                // display and select first
-                selectFirstMessage();
-            });
+            // display and select first
+            selectFirstMessage();
 
             $scope.synchronize();
         });
@@ -259,17 +257,20 @@ define(function(require) {
         }
 
         function selectFirstMessage() {
-            var emails = $scope.filteredMessages;
+            // wait until after first $digest() so $scope.filteredMessages is set
+            $timeout(function() {
+                var emails = $scope.filteredMessages;
 
-            if (!emails || emails.length < 1) {
-                $scope.select();
-                return;
-            }
+                if (!emails || emails.length < 1) {
+                    $scope.select();
+                    return;
+                }
 
-            if (!$scope.state.mailList.selected) {
-                // select first message
-                $scope.select(emails[0]);
-            }
+                if (!$scope.state.mailList.selected) {
+                    // select first message
+                    $scope.select(emails[0]);
+                }
+            });
         }
 
         function getFolder() {
