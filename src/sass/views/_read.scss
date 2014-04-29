@@ -117,6 +117,32 @@
                 line-height: 1em;
             }
         }
+
+        .prev-message {
+            $prev-message-base-color: desaturate($color-blue, 50%);
+            $prev-message-hue-rotate: 40deg;
+
+            border-left: 2px solid $prev-message-base-color;
+            color: $prev-message-base-color;
+            padding-left: 0.5em;
+
+            & > .prev-message {
+                border-left-color: adjust-hue($prev-message-base-color, 1 * $prev-message-hue-rotate);
+                color: adjust-hue($prev-message-base-color, 1 * $prev-message-hue-rotate);
+                & > .prev-message {
+                    border-left-color: adjust-hue($prev-message-base-color, 2 * $prev-message-hue-rotate);
+                    color: adjust-hue($prev-message-base-color, 2 * $prev-message-hue-rotate);
+                    & > .prev-message {
+                        border-left-color: adjust-hue($prev-message-base-color, 3 * $prev-message-hue-rotate);
+                        color: adjust-hue($prev-message-base-color, 3 * $prev-message-hue-rotate);
+                        .prev-message {
+                            border-left-color: adjust-hue($prev-message-base-color, 4 * $prev-message-hue-rotate);
+                            color: adjust-hue($prev-message-base-color, 4 * $prev-message-hue-rotate);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     iframe {

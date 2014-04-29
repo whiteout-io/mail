@@ -385,7 +385,17 @@ define(function(require) {
             this.html = html;
             this.sentDate = new Date('Thu Sep 19 2013 20:41:23 GMT+0200 (CEST)');
             this.subject = 'Getting started'; // Subject line
-            this.body = 'Here are a few pointers to help you get started with Whiteout Mail.\n\nhttp://www.example.com\n\n# Write encrypted message\n- You can compose a message by clicking on the compose button on the upper right (keyboard shortcut is "n" for a new message or "r" to reply).\n- When typing the recipient\'s email address, secure recipients are marked with a blue label and insecure recipients are red.\n- When sending an email to insecure recipients, the default behavior for Whiteout Mail is to invite them to the service and only send the message content in an encrypted form, once they have joined.\n\n# Advanced features\n- To verify a recipient\'s PGP key, you can hover over the blue label containing their email address and their key fingerprint will be displayed.\n- To view your own key fingerprint, open the account view in the navigation bar on the left. You can compare these with your correspondants over a second channel such as a phonecall.\n\nWe hope this helped you to get started with Whiteout Mail.\n\nYour Whiteout Networks team'; // plaintext body
+            this.body = 'And a good day to you too sir. \n' +
+                '\n' +
+                'Thursday, Apr 24, 2014 3:33 PM safewithme.testuser@gmail.com wrote:\n' +
+                '> adsfadfasdfasdfasfdasdfasdfas\n' +
+                '\n' +
+                'http://example.com\n' +
+                '\n' +
+                '> Tuesday, Mar 25, 2014 4:19 PM gianniarcore@gmail.com wrote:\n' +
+                '>> from 0.7.0.1\n' +
+                '>>\n' +
+                '>> God speed!'; // plaintext body
             this.encrypted = true;
             this.decrypted = true;
         };

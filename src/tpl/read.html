@@ -42,11 +42,14 @@
 
   <div class="body" ng-switch="state.mailList.selected === undefined || (state.mailList.selected.encrypted === false && state.mailList.selected.body !== undefined) || (state.mailList.selected.encrypted === true && state.mailList.selected.decrypted === true)">
     <div ng-switch-when="true">
-      <!-- Render lines of a text-email in divs for easier styling -->
-      <div class="line" ng-repeat="line in state.mailList.selected.body.split('\n') track by $index" ng-class="{'empty-line': lineEmpty(line)}">
-        <span ng-bind-html="line | createAnchors"></span>
-        <br>
-      </div><!--/.line-->
+
+      <!-- Render conversation as recursive text nodes -->
+      <div ng-include="'tpl/text-node.html'"
+        ng-if="node !== undefined"
+        ng-repeat="child in node.children track by $index"
+        onload="node = child">
+      </div>
+
     </div><!--/ng-switch-when-->
     <div class="working" ng-switch-default>
       <span class="spinner"></span>
