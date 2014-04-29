@@ -453,11 +453,13 @@ define(function(require) {
                         // the n-th list item (the dom representation of an email) corresponds to
                         // the n-th message model in the filteredMessages array
                         listItem = listItems.item(i).getBoundingClientRect();
-                        message = scope.filteredMessages[i];
-                        if (!message) {
+
+                        if (!scope.filteredMessages || scope.filteredMessages.length <= i) {
                             // stop if i get larger than the size of filtered messages
                             break;
                         }
+                        message = scope.filteredMessages[i];
+
 
                         isPartiallyVisibleTop = listItem.top < top && listItem.bottom > top; // a portion of the list item is visible on the top
                         isPartiallyVisibleBottom = listItem.top < bottom && listItem.bottom > bottom; // a portion of the list item is visible on the bottom
