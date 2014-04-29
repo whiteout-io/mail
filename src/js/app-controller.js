@@ -72,7 +72,7 @@ define(function(require) {
         self._keychain = keychain = new KeychainDAO(lawnchairDao, pubkeyDao);
         self._crypto = pgp = new PGP();
         self._pgpbuilder = pgpbuilder = new PgpBuilder();
-        emailSync = new EmailSync(keychain, userStorage);
+        self._emailSync = emailSync = new EmailSync(keychain, userStorage);
         self._emailDao = emailDao = new EmailDAO(keychain, pgp, userStorage, pgpbuilder, mailreader, emailSync);
         self._outboxBo = new OutboxBO(emailDao, keychain, userStorage);
         self._updateHandler = new UpdateHandler(appConfigStore, userStorage);

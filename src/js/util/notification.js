@@ -6,6 +6,7 @@ define(function(require) {
     var self = {};
 
     self.create = function(options, callback) {
+        callback = callback || function() {};
         if (window.chrome && chrome.notifications) {
             chrome.notifications.create(options.id, {
                 type: 'basic',

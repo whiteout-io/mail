@@ -159,19 +159,6 @@ define(function(require) {
             });
         });
 
-        describe('push', function() {
-            it('should work', function(done) {
-                var o = {};
-
-                dao.onIncomingMessage = function(obj) {
-                    expect(obj).to.equal(o);
-                    done();
-                };
-
-                dao._imapClient.onIncomingMessage(o);
-            });
-        });
-
         describe('init', function() {
             beforeEach(function() {
                 delete dao._account;

@@ -59,6 +59,7 @@ define(function(require) {
 
         // init folders
         initFolders();
+
         // select inbox as the current folder on init
         if ($scope.account.folders && $scope.account.folders.length > 0) {
             $scope.openFolder($scope.account.folders[0]);
@@ -88,8 +89,7 @@ define(function(require) {
                 outboxBo.onSent = sentNotification;
                 // start checking outbox periodically
                 outboxBo.startChecking($scope.onOutboxUpdate);
-                // make function available globally for write controller
-                $scope.emptyOutbox = outboxBo._processOutbox.bind(outboxBo);
+
                 return;
             }
 

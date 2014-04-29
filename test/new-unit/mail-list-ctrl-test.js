@@ -6,34 +6,25 @@ define(function(require) {
         mocks = require('angularMocks'),
         MailListCtrl = require('js/controller/mail-list'),
         EmailDAO = require('js/dao/email-dao'),
+        EmailSync = require('js/dao/email-sync'),
         DeviceStorageDAO = require('js/dao/devicestorage-dao'),
         KeychainDAO = require('js/dao/keychain-dao'),
-        appController = require('js/app-controller');
+        appController = require('js/app-controller'),
+        notification = require('js/util/notification');
 
     chai.Assertion.includeStack = true;
 
     describe('Mail List controller unit test', function() {
-        var scope, ctrl, origEmailDao, emailDaoMock, keychainMock, deviceStorageMock,
+        var scope, ctrl, origEmailDao, origEmailSync, emailDaoMock, emailSyncMock, keychainMock, deviceStorageMock,
             emailAddress, notificationClickedHandler, emails,
-            hasChrome, hasNotifications, hasSocket, hasRuntime, hasIdentity;
+            hasChrome, hasSocket, hasRuntime, hasIdentity;
 
         beforeEach(function() {
             hasChrome = !! window.chrome;
-            hasNotifications = !! window.chrome.notifications;
             hasSocket = !! window.chrome.socket;
             hasIdentity = !! window.chrome.identity;
             if (!hasChrome) {
                 window.chrome = {};
-            }
-            if (!hasNotifications) {
-                window.chrome.notifications = {
-                    onClicked: {
-                        addListener: function(handler) {
-                            notificationClickedHandler = handler;
-                        }
-                    },
-                    create: function() {}
-                };
             }
             if (!hasSocket) {
                 window.chrome.socket = {};
@@ -47,6 +38,10 @@ define(function(require) {
                 window.chrome.identity = {};
             }
 
+            sinon.stub(notification, 'setOnClickedListener', function(func) {
+                notificationClickedHandler = func;
+            });
+
             emails = [{
                 unread: true
             }, {
@@ -59,8 +54,11 @@ define(function(require) {
             };
 
             origEmailDao = appController._emailDao;
+            origEmailSync = appController._emailSync;
             emailDaoMock = sinon.createStubInstance(EmailDAO);
+            emailSyncMock = sinon.createStubInstance(EmailSync);
             appController._emailDao = emailDaoMock;
+            appController._emailSync = emailSyncMock;
             emailAddress = 'fred@foo.com';
             emailDaoMock._account = {
                 emailAddress: emailAddress,
@@ -91,9 +89,8 @@ define(function(require) {
         });
 
         afterEach(function() {
-            if (!hasNotifications) {
-                delete window.chrome.notifications;
-            }
+            notification.setOnClickedListener.restore();
+
             if (!hasSocket) {
                 delete window.chrome.socket;
             }
@@ -109,6 +106,7 @@ define(function(require) {
 
             // restore the module
             appController._emailDao = origEmailDao;
+            appController._emailSync = origEmailDao;
         });
 
         describe('scope variables', function() {
@@ -117,71 +115,104 @@ define(function(require) {
                 expect(scope.synchronize).to.exist;
                 expect(scope.remove).to.exist;
                 expect(scope.state.mailList).to.exist;
-                // expect(emailDaoMock.onIncomingMessage).to.exist;
             });
         });
 
         describe('push notification', function() {
-            it('should focus mail and not mark it read', function(done) {
-                var uid, mail, currentFolder;
-
+            beforeEach(function() {
                 scope._stopWatchTask();
-
-                uid = 123;
-                mail = {
-                    uid: uid,
-                    from: [{
-                        address: 'asd'
-                    }],
-                    subject: '[whiteout] asdasd',
-                    unread: true
-                };
-                currentFolder = 'asd';
-                scope.state.nav = {
-                    currentFolder: currentFolder
-                };
-                scope.state.read = {
-                    toggle: function() {}
-                };
-                scope.emails = [mail];
-                emailDaoMock.sync.yieldsAsync();
-                window.chrome.notifications.create = function(id, opts) {
-                    expect(id).to.equal('123');
-                    expect(opts.type).to.equal('basic');
-                    expect(opts.message).to.equal('asdasd');
-                    expect(opts.title).to.equal('asd');
-                    done();
-                };
-
-                emailDaoMock.onIncomingMessage(mail);
             });
-        });
 
-        describe('clicking push notification', function() {
-            it('should focus mail', function() {
-                var mail, currentFolder;
-
-                scope._stopWatchTask();
-
-                mail = {
+            it('should succeed for single mail', function(done) {
+                var mail = {
                     uid: 123,
                     from: [{
                         address: 'asd'
                     }],
-                    subject: '[whiteout] asdasd',
+                    subject: 'this is the subject!',
                     unread: true
                 };
-                currentFolder = {
-                    type: 'asd',
-                    messages: [mail]
+
+                sinon.stub(notification, 'create', function(opts) {
+                    expect(opts.id).to.equal('' + mail.uid);
+                    expect(opts.title).to.equal(mail.from[0].address);
+                    expect(opts.message).to.equal(mail.subject);
+
+                    notification.create.restore();
+                    done();
+                });
+
+                emailSyncMock.onIncomingMessage([mail]);
+            });
+
+            it('should succeed for multiple mails', function(done) {
+                var mails = [{
+                    uid: 1,
+                    from: [{
+                        address: 'asd'
+                    }],
+                    subject: 'this is the subject!',
+                    unread: true
+                }, {
+                    uid: 2,
+                    from: [{
+                        address: 'qwe'
+                    }],
+                    subject: 'this is the other subject!',
+                    unread: true
+                }, {
+                    uid: 3,
+                    from: [{
+                        address: 'qwe'
+                    }],
+                    subject: 'this is the other subject!',
+                    unread: false
+                }];
+
+                sinon.stub(notification, 'create', function(opts) {
+                    expect(opts.id).to.equal('' + mails[0].uid);
+                    expect(opts.title).to.equal('2 new messages');
+                    expect(opts.message).to.equal(mails[0].subject + '\n' + mails[1].subject);
+
+                    notification.create.restore();
+                    done();
+                });
+
+                emailSyncMock.onIncomingMessage(mails);
+            });
+
+            it('should focus mail when clicked', function() {
+                var mail = {
+                    uid: 123,
+                    from: [{
+                        address: 'asd'
+                    }],
+                    subject: 'asdasd',
+                    unread: true
                 };
+
                 scope.state.nav = {
-                    currentFolder: currentFolder
+                    currentFolder: {
+                        type: 'asd',
+                        messages: [mail]
+                    }
                 };
 
                 notificationClickedHandler('123');
-
                 expect(scope.state.mailList.selected).to.equal(mail);
+            });
+
+            it('should not change focus mail when popup id is NaN', function() {
+                scope.state.nav = {
+                    currentFolder: {
+                        type: 'asd',
+                        messages: []
+                    }
+                };
+                var focus = scope.state.mailList.selected = {};
+
+                notificationClickedHandler('');
+                expect(scope.state.mailList.selected).to.equal(focus);
             });
         });
 
@@ -200,15 +231,15 @@ define(function(require) {
                     currentFolder: currentFolder
                 };
 
-                var loadVisibleBodiesStub = sinon.stub(scope, 'loadVisibleBodies');
-
-                scope.synchronize(function() {
+                var loadVisibleBodiesStub = sinon.stub(scope, 'loadVisibleBodies', function() {
                     expect(scope.state.nav.currentFolder.messages).to.deep.equal(emails);
                     expect(loadVisibleBodiesStub.calledOnce).to.be.true;
                     loadVisibleBodiesStub.restore();
+
                     done();
                 });
 
+                scope.synchronize();
             });
         });
 
