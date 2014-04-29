@@ -289,10 +289,16 @@ define(function(require) {
 
     ngModule.directive('replySelection', function() {
         return function(scope, elm) {
-            var popover = angular.element(document.querySelector('.reply-selection')),
-                visible = false;
+            var popover, visible;
 
-            elm.on('touchstart click', function(e) {
+            popover = angular.element(document.querySelector('.reply-selection'));
+            visible = false;
+
+            elm.on('touchstart click', appear);
+            elm.parent().parent().on('touchstart click', disappear);
+            popover.on('touchstart click', disappear);
+
+            function appear(e) {
                 e.preventDefault();
                 e.stopPropagation();
 
@@ -308,9 +314,9 @@ define(function(require) {
                 popover[0].style.top = (top + height) + 'px';
                 popover[0].style.left = (left + width / 2 - popover[0].offsetWidth / 2) + 'px';
                 popover[0].style.opacity = '1';
-            });
+            }
 
-            elm.parent().parent().on('touchstart click', function() {
+            function disappear() {
                 if (!visible) {
                     return;
                 }
@@ -319,7 +325,8 @@ define(function(require) {
                 popover[0].style.opacity = '0';
                 popover[0].style.top = '-9999px';
                 popover[0].style.left = '-9999px';
-            });
+                visible = false;
+            }
         };
     });
 
