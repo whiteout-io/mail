@@ -30,15 +30,18 @@
     </div><!--/.mail-addresses-->
   </div><!--/.headers-->
 
-  <div ng-switch="state.mailList.selected.attachments !== undefined && state.mailList.selected.attachments.length > 0">
-    <div ng-switch-when="true" class="attachments">
-      <span class="attachment" ng-repeat="attachment in state.mailList.selected.attachments" ng-click="download(attachment)">
+  <div class="attachments-wrapper"
+    ng-switch="state.mailList.selected.attachments !== undefined && state.mailList.selected.attachments.length > 0">
+    <div class="attachments" ng-switch-when="true">
+      <span class="attachment"
+        ng-repeat="attachment in state.mailList.selected.attachments"
+        ng-click="download(attachment)">
         <span data-icon="&#xe003;"></span>
         {{attachment.filename}}
       </span><!--/.attachment-->
     </div><!--/.attachments-->
     <div ng-switch-default class="seperator-line"></div>
-  </div><!--/.ng-switch-->
+  </div><!--/.attachments-wrapper-->
 
   <div class="body" ng-switch="state.mailList.selected === undefined || (state.mailList.selected.encrypted === false && state.mailList.selected.body !== undefined) || (state.mailList.selected.encrypted === true && state.mailList.selected.decrypted === true)">
     <div ng-switch-when="true">

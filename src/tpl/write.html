@@ -41,17 +41,13 @@
         </button><!--/.btn-attachment-->
       </div><!--/.subject-box-->
 
-      <div ng-switch="attachments.length > 0">
-        <div ng-switch-when="true">
-          <div class="attachments-box">
-            <span ng-repeat="attachment in attachments" class="attachment">
-              <span data-icon="&#xe003;"></span>
-              {{attachment.filename}}
-              <span class="close" data-icon="&#xe000;" ng-click="remove(attachment)"></span>
-            </span><!--/.attachment-->
-          </div><!--/.attachments-box-->
-        </div><!--/ng-switch-when-->
-      </div><!--/ng-switch-->
+      <div class="attachments-box" ng-show="attachments.length > 0">
+        <span ng-repeat="attachment in attachments" class="attachment">
+          <span data-icon="&#xe003;"></span>
+          {{attachment.filename}}
+          <span class="close" data-icon="&#xe000;" ng-click="remove(attachment)"></span>
+        </span><!--/.attachment-->
+      </div><!--/.attachments-box-->
 
       <div class="body" focus-child>
         <p ng-model="body" contentEditable="true" spellcheck="false" ng-change="updatePreview()" tabindex="3" focus-me="state.lightbox === 'write' && writerTitle === 'Reply'"></p>

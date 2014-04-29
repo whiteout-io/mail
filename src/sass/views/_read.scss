@@ -44,45 +44,47 @@
         }
     }
 
-    .attachments {
+    .attachments-wrapper {
         flex-shrink: 0;
-        position: relative;
-        width: inherit;
-        border: 1px;
-        border-style: solid;
-        border-color: $color-grey-lighter;
-        min-height: em(44);
 
-        .attachment {
-            height: 32px;
-            border-radius: 16px;
-            vertical-align: middle;
-            margin: 5px 0 5px 5px;
-            padding: 5px 10px 5px 10px;
+        .attachments {
+            position: relative;
+            width: inherit;
             border: 1px;
             border-style: solid;
             border-color: $color-grey-lighter;
-            display: inline-block;
+            min-height: em(44);
 
-            span {
-                font-size: 14px;
-                color: $color-grey-input;
+            .attachment {
+                height: 32px;
+                border-radius: 16px;
                 vertical-align: middle;
-            }
+                margin: 5px 0 5px 5px;
+                padding: 5px 10px 5px 10px;
+                border: 1px;
+                border-style: solid;
+                border-color: $color-grey-lighter;
+                display: inline-block;
 
-            &:hover,
-            &:focus {
-                background-color: darken($color-white, 2%);
-                cursor: pointer;
+                span {
+                    font-size: 14px;
+                    color: $color-grey-input;
+                    vertical-align: middle;
+                }
+
+                &:hover,
+                &:focus {
+                    background-color: darken($color-white, 2%);
+                    cursor: pointer;
+                }
             }
         }
-    }
 
-    .seperator-line {
-        flex-shrink: 0;
-        height: 1px;
-        color: $color-grey-lighter;
-        background-color: $color-grey-lighter;
+        .seperator-line {
+            height: 1px;
+            color: $color-grey-lighter;
+            background-color: $color-grey-lighter;
+        }
     }
 
     .body {
