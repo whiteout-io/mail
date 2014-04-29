@@ -115,21 +115,24 @@ define(function(require) {
                     return;
                 }
 
-                var inbox = _.findWhere(folders, {
+                // only overwrite folders if they are not yet set
+                if (!self._account.folders) {
+                    self._account.folders = folders;
+                }
+
+                var inbox = _.findWhere(self._account.folders, {
                     type: 'Inbox'
                 });
 
                 if (inbox) {
                     self._imapClient.listenForChanges({
                         path: inbox.path
-                    },function(error, path) {
+                    }, function(error, path) {
                         if (typeof self.onNeedsSync === 'function') {
                             self.onNeedsSync(error, path);
                         }
                     });
                 }
-
-                self._account.folders = folders;
 
                 callback();
             });
@@ -300,7 +303,7 @@ define(function(require) {
                     return;
                 }
 
-                // attach the body to the mail object 
+                // attach the body to the mail object
                 message.body = localMessage.body;
                 handleEncryptedContent();
             });
