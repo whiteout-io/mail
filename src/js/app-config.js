@@ -46,7 +46,7 @@ define(function(require) {
         iconPath: '/img/icon.png',
         verificationUrl: '/verify/',
         verificationUuidLength: 36,
-        dbVersion: 1,
+        dbVersion: 2,
         appVersion: appVersion
     };
 

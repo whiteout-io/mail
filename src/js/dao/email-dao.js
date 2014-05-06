@@ -274,123 +274,121 @@ define(function(require) {
             message = options.message,
             folder = options.folder;
 
-        if (message.loadingBody) {
-            return;
-        }
-
-        // the message already has a body, so no need to become active here
-        if (message.body) {
+        // the message either already has a body or is fetching it right now, so no need to become active here
+        if (message.loadingBody || typeof message.body !== 'undefined') {
             return;
         }
 
         message.loadingBody = true;
 
-        // the mail does not have its content in memory
-        readFromDevice();
+        /*
+         * read this before inspecting the method!
+         *
+         * you will wonder about the round trip to the disk where we load the persisted object. there are two reasons for this behavior:
+         * 1) if you work with a message that was loaded from the disk, we strip the message.bodyParts array,
+         *    because it is not really necessary to keep everything in memory
+         * 2) the message in memory is polluted by angular. angular tracks ordering of a list by adding a property
+         *    to the model. this property is auto generated and must not be persisted.
+         */
 
-        // if possible, read the message body from the device
-        function readFromDevice() {
+        retrieveContent();
+
+        function retrieveContent() {
+            // load the local message from memory
             self._emailSync._localListMessages({
                 folder: folder,
                 uid: message.uid
             }, function(err, localMessages) {
-                var localMessage;
-
-                if (err) {
-                    message.loadingBody = false;
-                    callback(err);
+                if (err || localMessages.length === 0) {
+                    done(err);
                     return;
                 }
 
-                localMessage = localMessages[0];
+                var localMessage = localMessages[0];
 
-                if (!localMessage.body) {
-                    streamFromImap();
+                // do we need to fetch content from the imap server?
+                var needsFetch = false;
+                localMessage.bodyParts.forEach(function(part) {
+                    needsFetch = (typeof part.content === 'undefined');
+                });
+
+                if (!needsFetch) {
+                    // if we have all the content we need,
+                    // we can extract the content
+                    message.bodyParts = localMessage.bodyParts;
+                    extractContent();
                     return;
                 }
 
-                // attach the body to the mail object
-                message.body = localMessage.body;
-                handleEncryptedContent();
-            });
-        }
-
-        // if reading the message body from the device was unsuccessful,
-        // stream the message from the imap server
-        function streamFromImap() {
-            self._emailSync._imapStreamText({
-                folder: folder,
-                message: message
-            }, function(error) {
-                if (error) {
-                    message.loadingBody = false;
-                    callback(error);
-                    return;
-                }
-
-                message.loadingBody = false;
-
-                // do not write the object from the object used by angular to the disk, instead
-                // do a short round trip and write back the unpolluted object
-                self._emailSync._localListMessages({
+                // get the raw content from the imap server
+                self._emailSync._getBodyParts({
                     folder: folder,
-                    uid: message.uid
-                }, function(error, storedMessages) {
-                    if (error) {
-                        callback(error);
+                    uid: localMessage.uid,
+                    bodyParts: localMessage.bodyParts
+                }, function(err, parsedBodyParts) {
+                    if (err) {
+                        done(err);
                         return;
                     }
 
-                    storedMessages[0].body = message.body;
+                    message.bodyParts = parsedBodyParts;
+                    localMessage.bodyParts = parsedBodyParts;
 
+                    // persist it to disk
                     self._emailSync._localStoreMessages({
                         folder: folder,
-                        emails: storedMessages
+                        emails: [localMessage]
                     }, function(error) {
                         if (error) {
-                            callback(error);
+                            done(error);
                             return;
                         }
 
-                        handleEncryptedContent();
+                        // extract the content
+                        extractContent();
                     });
                 });
             });
         }
 
-        function handleEncryptedContent() {
-            // normally, the imap-client should already have set the message.encrypted flag. problem: if we have pgp/inline,
-            // we can't reliably determine if the message is encrypted before we have inspected the payload...
-            message.encrypted = containsArmoredCiphertext(message);
-
-            // cleans the message body from everything but the ciphertext
+        function extractContent() {
             if (message.encrypted) {
-                message.decrypted = false;
-                extractCiphertext();
+                // show the encrypted message
+                message.body = self._emailSync.filterBodyParts(message.bodyParts, 'encrypted')[0].content;
+                done();
+                return;
             }
+
+            // for unencrypted messages, this is the array where the body parts are located
+            var root = message.bodyParts;
+
+            if (message.signed) {
+                var signedPart = self._emailSync.filterBodyParts(message.bodyParts, 'signed')[0];
+                message.message = signedPart.message;
+                message.signature = signedPart.signature;
+                // TODO check integrity
+                // in case of a signed message, you only want to show the signed content and ignore the rest
+                root = signedPart.content;
+            }
+
+            message.attachments = self._emailSync.filterBodyParts(root, 'attachment');
+            message.body = _.pluck(self._emailSync.filterBodyParts(root, 'text'), 'content').join('\n');
+            message.html = _.pluck(self._emailSync.filterBodyParts(root, 'html'), 'content').join('\n');
+
+            done();
+        }
+
+        function done(err) {
             message.loadingBody = false;
-            callback(null, message);
+            callback(err, err ? undefined : message);
         }
-
-        function containsArmoredCiphertext() {
-            return message.body.indexOf(str.cryptPrefix) !== -1 && message.body.indexOf(str.cryptSuffix) !== -1;
-        }
-
-        function extractCiphertext() {
-            var start = message.body.indexOf(str.cryptPrefix),
-                end = message.body.indexOf(str.cryptSuffix) + str.cryptSuffix.length;
-
-            // parse message body for encrypted message block
-            message.body = message.body.substring(start, end);
-        }
-
     };
 
     EmailDAO.prototype.decryptBody = function(options, callback) {
         var self = this,
             message = options.message;
 
-        // the message has no body, is not encrypted or has already been decrypted
+        // the message is decrypting has no body, is not encrypted or has already been decrypted
         if (message.decryptingBody || !message.body || !message.encrypted || message.decrypted) {
             return;
         }
@@ -408,61 +406,56 @@ define(function(require) {
             if (!senderPublicKey) {
                 // this should only happen if a mail from another channel is in the inbox
                 message.body = 'Public key for sender not found!';
-                message.decryptingBody = false;
-                callback(null, message);
+                done();
                 return;
             }
 
             // get the receiver's public key to check the message signature
-            self._crypto.decrypt(message.body, senderPublicKey.publicKey, function(err, decrypted) {
-                // if an error occurs during decryption, display the error message as the message content
-                decrypted = decrypted || err.errMsg || 'Error occurred during decryption';
-
-                // this is a very primitive detection if we have PGP/MIME or PGP/INLINE
-                if (!self._mailreader.isRfc(decrypted)) {
-                    message.body = decrypted;
-                    message.decrypted = true;
-                    message.decryptingBody = false;
-                    callback(null, message);
+            var encryptedNode = self._emailSync.filterBodyParts(message.bodyParts, 'encrypted')[0];
+            self._crypto.decrypt(encryptedNode.content, senderPublicKey.publicKey, function(err, decrypted) {
+                if (err || !decrypted) {
+                    err = err || {
+                        errMsg: 'Error occurred during decryption'
+                    };
+                    done(err);
                     return;
                 }
 
-                // parse the decrypted MIME message
-                self._imapParseMessageBlock({
-                    message: message,
-                    raw: decrypted
-                }, function(error) {
+                // the mailparser works on the .raw property
+                encryptedNode.raw = decrypted;
+
+                // parse the decrpyted raw content in the mailparser
+                self._mailreader.parse({
+                    bodyParts: [encryptedNode]
+                }, function(error, parsedBodyParts) {
                     if (error) {
-                        message.decryptingBody = false;
-                        callback(error);
+                        done(error);
                         return;
                     }
 
-                    message.decrypted = true;
+                    // we have successfully interpreted the descrypted message,
+                    // so let's update the views on the message parts
 
-                    // remove the pgp-signature from the attachments
-                    message.attachments = _.reject(message.attachments, function(attmt) {
+                    message.body = _.pluck(self._emailSync.filterBodyParts(parsedBodyParts, 'text'), 'content').join('\n');
+                    message.html = _.pluck(self._emailSync.filterBodyParts(parsedBodyParts, 'html'), 'content').join('\n');
+                    message.attachments = _.reject(self._emailSync.filterBodyParts(parsedBodyParts, 'attachment'), function(attmt) {
+                        // remove the pgp-signature from the attachments
                         return attmt.mimeType === "application/pgp-signature";
                     });
 
+                    message.decrypted = true;
+
+
                     // we're done here!
-                    message.decryptingBody = false;
-                    callback(null, message);
+                    done();
                 });
             });
         });
-    };
 
-    EmailDAO.prototype.getAttachment = function(options, callback) {
-        if (!this._account.online) {
-            callback({
-                errMsg: 'Client is currently offline!',
-                code: 42
-            });
-            return;
+        function done(err) {
+            message.decryptingBody = false;
+            callback(err, err ? undefined : message);
         }
-
-        this._imapClient.getAttachment(options, callback);
     };
 
     EmailDAO.prototype.sendEncrypted = function(options, callback) {
@@ -539,10 +532,6 @@ define(function(require) {
         }
 
         this._imapClient.logout(callback);
-    };
-
-    EmailDAO.prototype._imapParseMessageBlock = function(options, callback) {
-        this._mailreader.parseRfc(options, callback);
     };
 
     /**

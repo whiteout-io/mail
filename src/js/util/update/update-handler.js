@@ -2,7 +2,8 @@ define(function(require) {
     'use strict';
 
     var cfg = require('js/app-config').config,
-        updateV1 = require('js/util/update/update-v1');
+        updateV1 = require('js/util/update/update-v1'),
+        updateV2 = require('js/util/update/update-v2');
 
     /**
      * Handles database migration
@@ -10,7 +11,7 @@ define(function(require) {
     var UpdateHandler = function(appConfigStorage, userStorage) {
         this._appConfigStorage = appConfigStorage;
         this._userStorage = userStorage;
-        this._updateScripts = [updateV1];
+        this._updateScripts = [updateV1, updateV2];
     };
 
     /**

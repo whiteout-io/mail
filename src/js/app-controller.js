@@ -72,7 +72,7 @@ define(function(require) {
         self._keychain = keychain = new KeychainDAO(lawnchairDao, pubkeyDao);
         self._crypto = pgp = new PGP();
         self._pgpbuilder = pgpbuilder = new PgpBuilder();
-        self._emailSync = emailSync = new EmailSync(keychain, userStorage);
+        self._emailSync = emailSync = new EmailSync(keychain, userStorage, mailreader);
         self._emailDao = emailDao = new EmailDAO(keychain, pgp, userStorage, pgpbuilder, mailreader, emailSync);
         self._outboxBo = new OutboxBO(emailDao, keychain, userStorage);
         self._updateHandler = new UpdateHandler(appConfigStore, userStorage);
@@ -129,7 +129,7 @@ define(function(require) {
             };
 
             pgpMailer = new PgpMailer(smtpOptions, self._pgpbuilder);
-            imapClient = new ImapClient(imapOptions, mailreader);
+            imapClient = new ImapClient(imapOptions);
             imapClient.onError = onImapError;
 
             // connect to clients
