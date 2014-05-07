@@ -2,6 +2,7 @@ define(function(require) {
     'use strict';
 
     var angular = require('angular'),
+        _ = require('underscore'),
         appController = require('js/app-controller'),
         aes = require('cryptoLib/aes-cbc'),
         util = require('cryptoLib/util'),
@@ -79,15 +80,21 @@ define(function(require) {
             }
             if (replyAll) {
                 re.to.concat(re.cc).forEach(function(recipient) {
-                    if (recipient.address === emailDao._account.emailAddress) {
+                    var me = emailDao._account.emailAddress;
+                    if (recipient.address === me && re.from[0].address !== me) {
                         // don't reply to yourself
                         return;
                     }
                     $scope.cc.unshift({
                         address: recipient.address
                     });
-                    $scope.showCC = true;
                 });
+
+                // filter duplicates
+                $scope.cc = _.uniq($scope.cc, function(recipient) {
+                    return recipient.address;
+                });
+                $scope.showCC = true;
                 $scope.cc.forEach($scope.verify);
             }
 
