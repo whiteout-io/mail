@@ -91,7 +91,6 @@
         flex-grow: 1;
         position: relative;
         margin-top: 1.75em;
-        cursor: text;
         line-height: 1.5em;
         overflow-y: scroll;
         user-select: text;
@@ -109,6 +108,7 @@
         }
 
         .line {
+            cursor: text;
             word-wrap: break-word;
 
             a {
