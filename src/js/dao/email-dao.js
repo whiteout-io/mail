@@ -25,6 +25,7 @@ define(function(require) {
         self._account = options.account;
         self._account.busy = false;
         self._account.online = false;
+        self._account.loggingIn = false;
 
         // validate email address
         var emailAddress = self._account.emailAddress;
@@ -83,6 +84,8 @@ define(function(require) {
     EmailDAO.prototype.onConnect = function(options, callback) {
         var self = this;
 
+        self._account.loggingIn = true;
+
         self._imapClient = options.imapClient;
         self._pgpMailer = options.pgpMailer;
 
@@ -91,6 +94,7 @@ define(function(require) {
             imapClient: self._imapClient
         }, function(err) {
             if (err) {
+                self._account.loggingIn = false;
                 callback(err);
                 return;
             }
@@ -101,11 +105,13 @@ define(function(require) {
 
         function onLogin(err) {
             if (err) {
+                self._account.loggingIn = false;
                 callback(err);
                 return;
             }
 
             // set status to online
+            self._account.loggingIn = false;
             self._account.online = true;
 
             // init folders

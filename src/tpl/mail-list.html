@@ -23,7 +23,7 @@
     </ul><!--/.mail-list-->
   </div>
 
-  <footer ng-class="{syncing: account.busy}" ng-click="synchronize()">
+  <footer ng-class="{syncing: account.loggingIn || account.busy}" ng-click="synchronize()">
     <span class="spinner"></span>
     <span class="text" ng-switch="account.online">
       <span ng-switch-when="false">
