@@ -1,4 +1,5 @@
 <div class="view-read" ng-controller="ReadCtrl">
+
   <div class="headers">
     <div class="controls">
       <button ng-click="state.mailList.remove(state.mailList.selected)" class="btn-icon" title="Delete mail">&#xe005;</button>
@@ -43,21 +44,28 @@
     <div ng-switch-default class="seperator-line"></div>
   </div><!--/.attachments-wrapper-->
 
-  <div class="body" ng-switch="state.mailList.selected === undefined || (state.mailList.selected.encrypted === false && state.mailList.selected.body !== undefined) || (state.mailList.selected.encrypted === true && state.mailList.selected.decrypted === true)">
-    <div ng-switch-when="true">
-
-      <!-- Render conversation as recursive text nodes -->
-      <div ng-include="'tpl/text-node.html'"
-        ng-if="node !== undefined"
-        ng-repeat="child in node.children track by $index"
-        onload="node = child">
-      </div>
-
-    </div><!--/ng-switch-when-->
-    <div class="working" ng-switch-default>
+  <!-- Show working spinner -->
+  <div class="working-wrapper"
+    ng-if="!html && state.mailList.selected !== undefined && (state.mailList.selected.body === undefined || (state.mailList.selected.encrypted && !state.mailList.selected.decrypted))">
+    <div class="working">
       <span class="spinner"></span>
-      <strong ng-bind="(state.mailList.selected.loadingBody === true || state.mailList.selected.body === undefined || state.mailList.selected.body === null) ? 'Loading...' : 'Decrypting...'"></strong>
+      <strong ng-bind="(state.mailList.selected.decryptingBody) ? 'Decrypting...' : 'Loading...' "></strong>
     </div><!--/.working-->
+  </div><!--/.working-wrapper-->
+
+  <!-- Render html body in sandboxed iframe -->
+  <iframe ng-show="html" sandbox srcdoc="{{html}}"
+    frame-load="state.mailList.selected.html">
+  </iframe>
+
+  <!-- Render text body as colored conversation in recursive text nodes -->
+  <div class="body"
+    ng-if="!html && (state.mailList.selected === undefined || (state.mailList.selected.encrypted === false && state.mailList.selected.body !== undefined) || (state.mailList.selected.encrypted === true && state.mailList.selected.decrypted === true))">
+    <div ng-include="'tpl/text-node.html'"
+      ng-if="node !== undefined"
+      ng-repeat="child in node.children track by $index"
+      onload="node = child">
+    </div>
   </div><!--/.body-->
 
   <!-- popovers -->
@@ -74,4 +82,5 @@
       <li><button data-icon="&#xe015;" ng-click="state.writer.write(state.mailList.selected, null, true)">Forward</button></li>
     </ul>
   </div><!--/.reply-selection-->
+
 </div><!--/.view-read-->

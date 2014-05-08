@@ -87,13 +87,9 @@
         }
     }
 
-    .body {
+    .working-wrapper {
         flex-grow: 1;
         position: relative;
-        margin-top: 1.75em;
-        line-height: 1.5em;
-        overflow-y: scroll;
-        user-select: text;
 
         .working {
             @include scut-vcenter-tt;
@@ -106,6 +102,22 @@
                 vertical-align: middle;
             }
         }
+    }
+
+    iframe {
+        flex-grow: 1;
+        margin-top: 1.75em;
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+    .body {
+        flex-grow: 1;
+        margin-top: 1.75em;
+        line-height: 1.5em;
+        overflow-y: scroll;
+        user-select: text;
 
         .line {
             cursor: text;
@@ -145,11 +157,6 @@
                 }
             }
         }
-    }
-
-    iframe {
-        flex-grow: 1;
-        width: 100%;
     }
 
     .reply-selection {
