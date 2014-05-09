@@ -13,8 +13,8 @@
         "crypto-lib": "https://github.com/whiteout-io/crypto-lib/tarball/v0.1.1",
         "imap-client": "https://github.com/whiteout-io/imap-client/tarball/dev/WO-286",
         "mailreader": "https://github.com/whiteout-io/mailreader/tarball/dev/wo-286",
-        "pgpmailer": "https://github.com/whiteout-io/pgpmailer/tarball/v0.2.2",
-        "pgpbuilder": "https://github.com/whiteout-io/pgpbuilder/tarball/v0.2.3",
+        "pgpmailer": "https://github.com/whiteout-io/pgpmailer/tarball/dev/wo-286",
+        "pgpbuilder": "https://github.com/whiteout-io/pgpbuilder/tarball/dev/wo-286",
         "requirejs": "2.1.10"
     },
     "devDependencies": {
