@@ -336,7 +336,10 @@ define(function(require) {
                 scope.html = undefined;
                 if (value) {
                     $timeout(function() {
-                        scope.html = $sce.trustAsHtml(value);
+                        // wrap in html doc with scrollable html tag, since chrome apps does not scroll by default
+                        var prefix = '<!DOCTYPE html><html style="overflow-y: auto"><head></head><body>';
+                        var suffix = '</body></html>';
+                        scope.html = $sce.trustAsHtml(prefix + value + suffix);
                     });
                 }
             });
