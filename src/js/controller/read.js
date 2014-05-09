@@ -330,7 +330,7 @@ define(function(require) {
         };
     });
 
-    ngModule.directive('frameLoad', function($parse, $sce, $timeout) {
+    ngModule.directive('frameLoad', function($sce, $timeout) {
         return function(scope, elm, attrs) {
             scope.$watch(attrs.frameLoad, function(value) {
                 scope.html = undefined;
