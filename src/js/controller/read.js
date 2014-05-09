@@ -330,11 +330,15 @@ define(function(require) {
         };
     });
 
-    ngModule.directive('frameLoad', function() {
-        return function(scope, elm) {
-            elm.bind('load', function() {
-                var frame = elm[0];
-                frame.height = frame.contentWindow.document.body.scrollHeight + 'px';
+    ngModule.directive('frameLoad', function($sce, $timeout) {
+        return function(scope, elm, attrs) {
+            scope.$watch(attrs.frameLoad, function(value) {
+                scope.html = undefined;
+                if (value) {
+                    $timeout(function() {
+                        scope.html = $sce.trustAsHtml(value);
+                    });
+                }
             });
         };
     });

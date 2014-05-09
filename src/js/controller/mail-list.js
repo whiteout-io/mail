@@ -17,57 +17,6 @@ define(function(require) {
         outboxBo = appController._outboxBo;
         emailSync = appController._emailSync;
 
-        emailDao.onNeedsSync = function(error, folder) {
-            if (error) {
-                $scope.onError(error);
-                return;
-            }
-
-            $scope.synchronize({
-                folder: folder
-            });
-        };
-
-        emailSync.onIncomingMessage = function(msgs) {
-            var popupId, popupTitle, popupMessage, unreadMsgs;
-
-            unreadMsgs = msgs.filter(function(msg) {
-                return msg.unread;
-            });
-
-            if (unreadMsgs.length === 0) {
-                return;
-            }
-
-            popupId = '' + unreadMsgs[0].uid;
-            if (unreadMsgs.length > 1) {
-                popupTitle = unreadMsgs.length + ' new messages';
-                popupMessage = _.pluck(unreadMsgs, 'subject').join('\n');
-            } else {
-                popupTitle = unreadMsgs[0].from[0].name || unreadMsgs[0].from[0].address;
-                popupMessage = unreadMsgs[0].subject;
-            }
-
-            notification.create({
-                id: popupId,
-                title: popupTitle,
-                message: popupMessage
-            });
-        };
-
-        notification.setOnClickedListener(function(uidString) {
-            var uid = parseInt(uidString, 10);
-
-            if (isNaN(uid)) {
-                return;
-            }
-
-            $scope.select(_.findWhere(currentFolder().messages, {
-                uid: uid
-            }));
-        });
-
-
         //
         // scope functions
         //
@@ -294,6 +243,60 @@ define(function(require) {
         function currentFolder() {
             return $scope.state.nav.currentFolder;
         }
+
+        if (!emailDao || !emailSync) {
+            return; // development mode
+        }
+
+        emailDao.onNeedsSync = function(error, folder) {
+            if (error) {
+                $scope.onError(error);
+                return;
+            }
+
+            $scope.synchronize({
+                folder: folder
+            });
+        };
+
+        emailSync.onIncomingMessage = function(msgs) {
+            var popupId, popupTitle, popupMessage, unreadMsgs;
+
+            unreadMsgs = msgs.filter(function(msg) {
+                return msg.unread;
+            });
+
+            if (unreadMsgs.length === 0) {
+                return;
+            }
+
+            popupId = '' + unreadMsgs[0].uid;
+            if (unreadMsgs.length > 1) {
+                popupTitle = unreadMsgs.length + ' new messages';
+                popupMessage = _.pluck(unreadMsgs, 'subject').join('\n');
+            } else {
+                popupTitle = unreadMsgs[0].from[0].name || unreadMsgs[0].from[0].address;
+                popupMessage = unreadMsgs[0].subject;
+            }
+
+            notification.create({
+                id: popupId,
+                title: popupTitle,
+                message: popupMessage
+            });
+        };
+
+        notification.setOnClickedListener(function(uidString) {
+            var uid = parseInt(uidString, 10);
+
+            if (isNaN(uid)) {
+                return;
+            }
+
+            $scope.select(_.findWhere(currentFolder().messages, {
+                uid: uid
+            }));
+        });
     };
 
     function createDummyMails() {
@@ -415,6 +418,7 @@ define(function(require) {
                 '>> from 0.7.0.1\n' +
                 '>>\n' +
                 '>> God speed!'; // plaintext body
+            this.html = '<h1>HTML content</h1>';
             this.encrypted = true;
             this.decrypted = true;
         };
