@@ -297,7 +297,7 @@ module.exports = function(grunt) {
         }
 
         patchManifest({
-            suffix: ' (Alpha)',
+            suffix: ' (Beta)',
             version: version,
             deleteKey: true,
             keyServer: 'https://keys.whiteout.io/'
