@@ -54,7 +54,7 @@
   </div><!--/.working-wrapper-->
 
   <!-- Render html body in sandboxed iframe -->
-  <iframe ng-show="html" sandbox srcdoc="{{html}}"
+  <iframe ng-show="html" sandbox="allow-popups" srcdoc="{{html}}"
     frame-load="state.mailList.selected.html">
   </iframe>
 
