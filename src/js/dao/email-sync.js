@@ -447,6 +447,13 @@ define(function(require) {
                                     return;
                                 }
 
+                                // this enables us to already show the attachment clip in the message list ui
+                                messages.forEach(function(message) {
+                                    message.attachments = message.bodyParts.filter(function(bodyPart) {
+                                        return bodyPart.type === 'attachment';
+                                    });
+                                });
+
                                 // if persisting worked, add them to the messages array
                                 folder.messages = folder.messages.concat(messages);
                                 self.onIncomingMessage(messages);

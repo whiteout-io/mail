@@ -866,6 +866,63 @@ define(function(require) {
             });
         });
 
+        describe('getAttachment', function() {
+            var folder = 'asdasdasdasdasd',
+                uid = 1234,
+                imapGetStub;
+
+            beforeEach(function() {
+                imapGetStub = sinon.stub(emailSync, '_getBodyParts');
+            });
+
+            afterEach(function() {
+                emailSync._getBodyParts.restore();
+            });
+
+            it('should fetch an attachment from imap', function(done) {
+                var attmt = {};
+
+                imapGetStub.withArgs({
+                    folder: folder,
+                    uid: uid,
+                    bodyParts: [attmt]
+                }).yieldsAsync(null, [{
+                    content: 'CONTENT!!!'
+                }]);
+
+                dao.getAttachment({
+                    folder: folder,
+                    uid: uid,
+                    attachment: attmt
+                }, function(err, fetchedAttmt) {
+                    expect(err).to.not.exist;
+                    expect(fetchedAttmt).to.equal(attmt);
+                    expect(attmt.content).to.not.be.empty;
+                    expect(imapGetStub.calledOnce).to.be.true;
+
+                    done();
+                });
+            });
+
+            it('should error during fetch', function(done) {
+                var attmt = {};
+
+                imapGetStub.yieldsAsync({});
+
+                dao.getAttachment({
+                    folder: folder,
+                    uid: uid,
+                    attachment: attmt
+                }, function(err, fetchedAttmt) {
+                    expect(err).to.exist;
+                    expect(fetchedAttmt).to.not.exist;
+                    expect(imapGetStub.calledOnce).to.be.true;
+
+                    done();
+                });
+            });
+        });
+
         describe('decryptBody', function() {
             it('should do nothing when the message is not encrypted', function() {
                 var message = {

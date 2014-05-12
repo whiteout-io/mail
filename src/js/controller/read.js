@@ -117,7 +117,7 @@ define(function(require) {
             var email = $scope.state.mailList.selected;
 
             emailDao.getAttachment({
-                path: folder.path,
+                folder: folder.path,
                 uid: email.uid,
                 attachment: attachment
             }, function(err) {
