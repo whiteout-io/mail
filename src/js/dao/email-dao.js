@@ -398,15 +398,13 @@ define(function(require) {
         // get the sender's public key for signature checking
         self._keychain.getReceiverPublicKey(message.from[0].address, function(err, senderPublicKey) {
             if (err) {
-                message.decryptingBody = false;
-                callback(err);
+                done(err);
                 return;
             }
 
             if (!senderPublicKey) {
                 // this should only happen if a mail from another channel is in the inbox
-                message.body = 'Public key for sender not found!';
-                done();
+                showError('Public key for sender not found!');
                 return;
             }
 
@@ -414,8 +412,7 @@ define(function(require) {
             var encryptedNode = self._emailSync.filterBodyParts(message.bodyParts, 'encrypted')[0];
             self._crypto.decrypt(encryptedNode.content, senderPublicKey.publicKey, function(err, decrypted) {
                 if (err || !decrypted) {
-                    message.body = err.errMsg || err.message;
-                    done();
+                    showError(err.errMsg || err.message);
                     return;
                 }
 
@@ -425,9 +422,9 @@ define(function(require) {
                 // parse the decrpyted raw content in the mailparser
                 self._mailreader.parse({
                     bodyParts: [encryptedNode]
-                }, function(error, parsedBodyParts) {
-                    if (error) {
-                        done(error);
+                }, function(err, parsedBodyParts) {
+                    if (err) {
+                        showError(err.errMsg || err.message);
                         return;
                     }
 
@@ -449,6 +446,12 @@ define(function(require) {
                 });
             });
         });
+
+        function showError(msg) {
+            message.body = msg;
+            message.decrypted = true; // display error msh in body
+            done();
+        }
 
         function done(err) {
             message.decryptingBody = false;

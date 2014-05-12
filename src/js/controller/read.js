@@ -70,10 +70,13 @@ define(function(require) {
             $scope.node = undefined;
         });
         $scope.$watch('state.mailList.selected.body', function(body) {
-            var selected = $scope.state.mailList.selected;
-
             $scope.node = undefined; // reset model
-            if (!body || (body && selected.encrypted && !selected.decrypted)) {
+            if (!body) {
+                return;
+            }
+
+            var selected = $scope.state.mailList.selected;
+            if (selected.encrypted && !selected.decrypted) {
                 return;
             }
 

@@ -994,8 +994,9 @@ define(function(require) {
                 dao.decryptBody({
                     message: message
                 }, function(error, msg) {
-                    expect(error).to.exist;
-                    expect(msg).to.not.exist;
+                    expect(error).to.not.exist;
+                    expect(msg.body).to.equal('asd');
+                    expect(msg).to.exist;
                     expect(message.decryptingBody).to.be.false;
 
                     expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
