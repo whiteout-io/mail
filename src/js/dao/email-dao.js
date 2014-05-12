@@ -414,10 +414,8 @@ define(function(require) {
             var encryptedNode = self._emailSync.filterBodyParts(message.bodyParts, 'encrypted')[0];
             self._crypto.decrypt(encryptedNode.content, senderPublicKey.publicKey, function(err, decrypted) {
                 if (err || !decrypted) {
-                    err = err || {
-                        errMsg: 'Error occurred during decryption'
-                    };
-                    done(err);
+                    message.body = err.errMsg || err.message;
+                    done();
                     return;
                 }
 
