@@ -743,8 +743,26 @@ define(function(require) {
             return;
         }
 
-        options.path = options.folder;
-        this._imapClient.deleteMessage(options, callback);
+        var trash = _.findWhere(this._account.folders, {
+            type: 'Trash'
+        });
+
+        // there's no known trash folder to move the mail to or we're in the trash folder,
+        // so we can purge the message
+        if (!trash || options.folder === trash.path) {
+            this._imapClient.deleteMessage({
+                path: options.folder,
+                uid: options.uid
+            }, callback);
+
+            return;
+        }
+
+        this._imapClient.moveMessage({
+            path: options.folder,
+            destination: trash.path,
+            uid: options.uid
+        }, callback);
     };
 
     /**

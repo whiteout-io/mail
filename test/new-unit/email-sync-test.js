@@ -13,7 +13,7 @@ define(function(require) {
     describe('Email Sync unit tests', function() {
         var emailSync, keychainStub, imapClientStub, devicestorageStub;
 
-        var emailAddress, mockkeyId, dummyEncryptedMail,
+        var emailAddress, mockkeyId, dummyEncryptedMail, trashMailbox,
             dummyDecryptedMail, mockKeyPair, account, verificationMail, verificationUuid, corruptedVerificationUuid,
             nonWhitelistedMail;
 
@@ -106,6 +106,10 @@ define(function(require) {
             expect(emailSync._keychain).to.equal(keychainStub);
             expect(emailSync._devicestorage).to.equal(devicestorageStub);
             expect(emailSync._mailreader).to.equal(mailreader);
+            trashMailbox = {
+                type: 'Trash',
+                path: 'trash'
+            };
 
             // init
             emailSync.init({
@@ -118,7 +122,7 @@ define(function(require) {
                 expect(emailSync._imapClient).to.not.exist;
                 expect(emailSync._smtpClient).to.not.exist;
                 expect(emailSync._account.online).to.be.undefined;
-                emailSync._account.folders = [];
+                emailSync._account.folders = [trashMailbox];
                 imapClientStub.login.yields();
 
                 // this is set in the emailDao.onConnect
@@ -214,15 +218,27 @@ define(function(require) {
                 });
             });
 
-            it('should work', function(done) {
-                imapClientStub.deleteMessage.withArgs({
+            it('should move to trash', function(done) {
+                imapClientStub.moveMessage.withArgs({
                     path: path,
-                    folder: path,
-                    uid: uid
+                    uid: uid,
+                    destination: trashMailbox.path
                 }).yields();
 
                 emailSync._imapDeleteMessage({
                     folder: path,
+                    uid: uid
+                }, done);
+            });
+
+            it('should purge message', function(done) {
+                imapClientStub.deleteMessage.withArgs({
+                    path: trashMailbox.path,
+                    uid: uid
+                }).yields();
+
+                emailSync._imapDeleteMessage({
+                    folder: trashMailbox.path,
                     uid: uid
                 }, done);
             });
