@@ -70,8 +70,13 @@ define(function(require) {
             $scope.node = undefined;
         });
         $scope.$watch('state.mailList.selected.body', function(body) {
-            if (!body || (body && $scope.state.mailList.selected.decrypted === false)) {
-                $scope.node = undefined;
+            $scope.node = undefined; // reset model
+            if (!body) {
+                return;
+            }
+
+            var selected = $scope.state.mailList.selected;
+            if (selected.encrypted && !selected.decrypted) {
                 return;
             }
 
@@ -336,7 +341,10 @@ define(function(require) {
                 scope.html = undefined;
                 if (value) {
                     $timeout(function() {
-                        scope.html = $sce.trustAsHtml(value);
+                        // wrap in html doc with scrollable html tag, since chrome apps does not scroll by default
+                        var prefix = '<!DOCTYPE html><html style="overflow-y: auto"><head></head><body>';
+                        var suffix = '</body></html>';
+                        scope.html = $sce.trustAsHtml(prefix + value + suffix);
                     });
                 }
             });

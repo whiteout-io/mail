@@ -60,7 +60,7 @@
 
   <!-- Render text body as colored conversation in recursive text nodes -->
   <div class="body"
-    ng-if="!html && (state.mailList.selected === undefined || (state.mailList.selected.encrypted === false && state.mailList.selected.body !== undefined) || (state.mailList.selected.encrypted === true && state.mailList.selected.decrypted === true))">
+    ng-if="!html && (state.mailList.selected === undefined || (!state.mailList.selected.encrypted && state.mailList.selected.body !== undefined) || (state.mailList.selected.encrypted === true && state.mailList.selected.decrypted === true))">
     <div ng-include="'tpl/text-node.html'"
       ng-if="node !== undefined"
       ng-repeat="child in node.children track by $index"

@@ -3,6 +3,7 @@ define(function(require) {
 
     var EmailSync = require('js/dao/email-sync'),
         KeychainDAO = require('js/dao/keychain-dao'),
+        mailreader = require('mailreader'),
         ImapClient = require('imap-client'),
         DeviceStorageDAO = require('js/dao/devicestorage-dao'),
         expect = chai.expect;
@@ -13,8 +14,7 @@ define(function(require) {
         var emailSync, keychainStub, imapClientStub, devicestorageStub;
 
         var emailAddress, mockkeyId, dummyEncryptedMail,
-            dummyDecryptedMail, mockKeyPair, account, verificationMail, verificationUuid,
-            corruptedVerificationMail, corruptedVerificationUuid,
+            dummyDecryptedMail, mockKeyPair, account, verificationMail, verificationUuid, corruptedVerificationUuid,
             nonWhitelistedMail;
 
         beforeEach(function(done) {
@@ -29,7 +29,9 @@ define(function(require) {
                     address: 'qwe@qwe.de'
                 }],
                 subject: 'qweasd',
-                body: '-----BEGIN PGP MESSAGE-----\nasd\n-----END PGP MESSAGE-----',
+                bodyParts: [{
+                    type: 'encrypted'
+                }],
                 unread: false,
                 answered: false
             };
@@ -43,24 +45,13 @@ define(function(require) {
                     address: 'safewithme.testuser@gmail.com'
                 }], // list of receivers
                 subject: "[whiteout] New public key uploaded", // Subject line
-                body: 'yadda yadda bla blabla foo bar https://keys.whiteout.io/verify/' + verificationUuid, // plaintext body
+                bodyParts: [{
+                    type: 'text'
+                }],
                 unread: false,
                 answered: false
             };
             corruptedVerificationUuid = 'OMFG_FUCKING_BASTARD_UUID_FROM_HELL!';
-            corruptedVerificationMail = {
-                from: [{
-                    name: 'Whiteout Test',
-                    address: 'whiteout.test@t-online.de'
-                }], // sender address
-                to: [{
-                    address: 'safewithme.testuser@gmail.com'
-                }], // list of receivers
-                subject: "[whiteout] New public key uploaded", // Subject line
-                body: 'yadda yadda bla blabla foo bar https://keys.whiteout.io/verify/' + corruptedVerificationUuid, // plaintext body
-                unread: false,
-                answered: false
-            };
             dummyDecryptedMail = {
                 uid: 1234,
                 from: [{
@@ -70,7 +61,9 @@ define(function(require) {
                     address: 'qwe@qwe.de'
                 }],
                 subject: 'qweasd',
-                body: 'Content-Type: multipart/signed;\r\n  boundary="Apple-Mail=_1D8756C0-F347-4D7A-A8DB-7869CBF14FD2";\r\n    protocol="application/pgp-signature";\r\n   micalg=pgp-sha512\r\n\r\n\r\n--Apple-Mail=_1D8756C0-F347-4D7A-A8DB-7869CBF14FD2\r\nContent-Type: multipart/mixed;\r\n   boundary="Apple-Mail=_8ED7DC84-6AD9-4A08-8327-80B62D6BCBFA"\r\n\r\n\r\n--Apple-Mail=_8ED7DC84-6AD9-4A08-8327-80B62D6BCBFA\r\nContent-Transfer-Encoding: 7bit\r\nContent-Type: text/plain;\r\n   charset=us-ascii\r\n\r\nasdasd \r\n--Apple-Mail=_8ED7DC84-6AD9-4A08-8327-80B62D6BCBFA\r\nContent-Disposition: attachment;\r\n   filename=dummy.txt\r\nContent-Type: text/plain;\r\n name="dummy.txt"\r\nContent-Transfer-Encoding: 7bit\r\n\r\noaudbcoaurbvosuabvlasdjbfalwubjvawvb\r\n--Apple-Mail=_8ED7DC84-6AD9-4A08-8327-80B62D6BCBFA--\r\n\r\n--Apple-Mail=_1D8756C0-F347-4D7A-A8DB-7869CBF14FD2\r\nContent-Transfer-Encoding: 7bit\r\nContent-Disposition: attachment;\r\n    filename=signature.asc\r\nContent-Type: application/pgp-signature;\r\n  name=signature.asc\r\nContent-Description: Message signed with OpenPGP using GPGMail\r\n\r\n-----BEGIN PGP SIGNATURE-----\r\nComment: GPGTools - https://gpgtools.org\r\n\r\niQEcBAEBCgAGBQJS2kO1AAoJEDzmUwH7XO/cP+YH/2PSBxX1ZZd83Uf9qBGDY807\r\niHOdgPFXm64YjSnohO7XsPcnmihqP1ipS2aaCXFC3/Vgb9nc4isQFS+i1VdPwfuR\r\n1Pd2l3dC4/nD4xO9h/W6JW7Yd24NS5TJD5cA7LYwQ8LF+rOzByMatiTMmecAUCe8\r\nEEalEjuogojk4IacA8dg/bfLqQu9E+0GYUJBcI97dx/0jZ0qMOxbWOQLsJ3DnUnV\r\nOad7pAIbHEO6T0EBsH7TyTj4RRHkP6SKE0mm6ZYUC7KCk2Z3MtkASTxUrnqW5qZ5\r\noaXUO9GEc8KZcmbCdhZY2Y5h+dmucaO0jpbeSKkvtYyD4KZrSvt7NTb/0dSLh4Y=\r\n=G8km\r\n-----END PGP SIGNATURE-----\r\n\r\n--Apple-Mail=_1D8756C0-F347-4D7A-A8DB-7869CBF14FD2--\r\n',
+                bodyParts: [{
+                    type: 'text'
+                }],
                 unread: false,
                 answered: false,
             };
@@ -83,7 +76,9 @@ define(function(require) {
                     address: 'qwe@qwe.de'
                 }],
                 subject: 'qweasd',
-                body: 'asd'
+                bodyParts: [{
+                    type: 'text'
+                }],
             };
             mockKeyPair = {
                 publicKey: {
@@ -106,10 +101,11 @@ define(function(require) {
             imapClientStub = sinon.createStubInstance(ImapClient);
             devicestorageStub = sinon.createStubInstance(DeviceStorageDAO);
 
-            emailSync = new EmailSync(keychainStub, devicestorageStub);
+            emailSync = new EmailSync(keychainStub, devicestorageStub, mailreader);
 
             expect(emailSync._keychain).to.equal(keychainStub);
             expect(emailSync._devicestorage).to.equal(devicestorageStub);
+            expect(emailSync._mailreader).to.equal(mailreader);
 
             // init
             emailSync.init({
@@ -154,6 +150,8 @@ define(function(require) {
 
 
         describe('_imapSearch', function() {
+            var path = 'FOLDAAAA';
+
             it('should fail when disconnected', function(done) {
                 // this is set in the emailDao.onDisconnect
                 emailSync._account.online = false;
@@ -164,10 +162,9 @@ define(function(require) {
                 });
             });
 
-            it('should work', function(done) {
-                var path = 'FOLDAAAA';
-
+            it('should list all uids', function(done) {
                 imapClientStub.search.withArgs({
+                    folder: path,
                     path: path
                 }).yields();
 
@@ -175,10 +172,10 @@ define(function(require) {
                     folder: path
                 }, done);
             });
-            it('should work', function(done) {
-                var path = 'FOLDAAAA';
 
+            it('should list answered uids', function(done) {
                 imapClientStub.search.withArgs({
+                    folder: path,
                     path: path,
                     answered: true
                 }).yields();
@@ -188,10 +185,10 @@ define(function(require) {
                     answered: true
                 }, done);
             });
-            it('should work', function(done) {
-                var path = 'FOLDAAAA';
 
+            it('should list unread uids', function(done) {
                 imapClientStub.search.withArgs({
+                    folder: path,
                     path: path,
                     unread: true
                 }).yields();
@@ -204,6 +201,9 @@ define(function(require) {
         });
 
         describe('_imapDeleteMessage', function() {
+            var path = 'FOLDAAAA',
+                uid = 1337;
+
             it('should fail when disconnected', function(done) {
                 // this is set in the emailDao.onDisconnect
                 emailSync._account.online = false;
@@ -215,11 +215,9 @@ define(function(require) {
             });
 
             it('should work', function(done) {
-                var path = 'FOLDAAAA',
-                    uid = 1337;
-
                 imapClientStub.deleteMessage.withArgs({
                     path: path,
+                    folder: path,
                     uid: uid
                 }).yields();
 
@@ -231,13 +229,15 @@ define(function(require) {
         });
 
         describe('_imapListMessages', function() {
-            it('should work', function(done) {
-                var path = 'FOLDAAAA',
-                    firstUid = 1337,
-                    lastUid = 1339;
+            var path = 'FOLDAAAA',
+                firstUid = 1337,
+                lastUid = 1339;
 
-                imapClientStub.listMessagesByUid.withArgs({
+
+            it('should work', function(done) {
+                imapClientStub.listMessages.withArgs({
                     path: path,
+                    folder: path,
                     firstUid: firstUid,
                     lastUid: lastUid
                 }).yields(null, []);
@@ -250,18 +250,14 @@ define(function(require) {
                     expect(err).to.not.exist;
                     expect(msgs).to.exist;
 
-                    expect(imapClientStub.listMessagesByUid.calledOnce).to.be.true;
+                    expect(imapClientStub.listMessages.calledOnce).to.be.true;
 
                     done();
                 });
             });
 
-            it('should not work when listMessagesByUid fails', function(done) {
-                var path = 'FOLDAAAA',
-                    firstUid = 1337,
-                    lastUid = 1339;
-
-                imapClientStub.listMessagesByUid.yields({});
+            it('should not work when listMessages fails', function(done) {
+                imapClientStub.listMessages.yields({});
 
                 emailSync._imapListMessages({
                     folder: path,
@@ -271,7 +267,7 @@ define(function(require) {
                     expect(err).to.exist;
                     expect(msgs).to.not.exist;
 
-                    expect(imapClientStub.listMessagesByUid.calledOnce).to.be.true;
+                    expect(imapClientStub.listMessages.calledOnce).to.be.true;
 
                     done();
                 });
@@ -288,42 +284,50 @@ define(function(require) {
             });
         });
 
-        describe('_imapStreamText', function() {
+        describe('_getBodyParts', function() {
+            var path = 'FOLDAAAA',
+                parseStub;
+
             it('should work', function(done) {
-                var path = 'FOLDAAAA';
-
-                imapClientStub.getBody.withArgs({
-                    path: path,
-                    message: {}
-                }).yields(null, {});
-
-                emailSync._imapStreamText({
+                var o = {
                     folder: path,
-                    message: {}
-                }, function(err, msg) {
+                    uid: 123,
+                    bodyParts: []
+                };
+
+                imapClientStub.getBodyParts.withArgs(o).yields(null, {});
+                parseStub = sinon.stub(mailreader, 'parse').withArgs(o).yields(null, []);
+
+                emailSync._getBodyParts(o, function(err, parts) {
                     expect(err).to.not.exist;
-                    expect(msg).to.exist;
+                    expect(parts).to.exist;
 
-                    expect(imapClientStub.getBody.calledOnce).to.be.true;
+                    expect(imapClientStub.getBodyParts.calledOnce).to.be.true;
+                    expect(parseStub.calledOnce).to.be.true;
 
+                    mailreader.parse.restore();
                     done();
                 });
             });
 
             it('should not work when getBody fails', function(done) {
-                var path = 'FOLDAAAA';
-
-                imapClientStub.getBody.yields({});
-
-                emailSync._imapStreamText({
+                var o = {
                     folder: path,
-                    message: {}
-                }, function(err, msg) {
+                    uid: 123,
+                    bodyParts: []
+                };
+
+                imapClientStub.getBodyParts.yields({});
+                parseStub = sinon.spy(mailreader, 'parse');
+
+                emailSync._getBodyParts(o, function(err, msg) {
                     expect(err).to.exist;
                     expect(msg).to.not.exist;
 
-                    expect(imapClientStub.getBody.calledOnce).to.be.true;
+                    expect(imapClientStub.getBodyParts.calledOnce).to.be.true;
+                    expect(parseStub.called).to.be.false;
 
+                    mailreader.parse.restore();
                     done();
                 });
             });
@@ -332,7 +336,7 @@ define(function(require) {
                 // this is set in the emailDao.onDisconnect
                 emailSync._account.online = false;
 
-                emailSync._imapStreamText({}, function(err) {
+                emailSync._getBodyParts({}, function(err) {
                     expect(err.code).to.equal(42);
                     done();
                 });
@@ -950,13 +954,12 @@ define(function(require) {
                 }).yields(null, []);
 
                 imapListMessagesStub = sinon.stub(emailSync, '_imapListMessages').yields(null, [verificationMail]);
-
-                imapGetStub = sinon.stub(emailSync, '_imapStreamText').yields(null);
-
+                imapGetStub = sinon.stub(emailSync, '_getBodyParts').yields(null, [{
+                    type: 'text',
+                    content: 'yadda yadda bla blabla foo bar https://keys.whiteout.io/verify/' + verificationUuid,
+                }]);
                 keychainStub.verifyPublicKey.withArgs(verificationUuid).yields();
-
                 localStoreStub = sinon.stub(emailSync, '_localStoreMessages');
-
                 imapDeleteStub = sinon.stub(emailSync, '_imapDeleteMessage').withArgs({
                     folder: folder,
                     uid: verificationMail.uid
@@ -1012,7 +1015,10 @@ define(function(require) {
                     answered: true
                 }).yields(null, []);
                 imapListMessagesStub = sinon.stub(emailSync, '_imapListMessages').yields(null, [verificationMail]);
-                imapGetStub = sinon.stub(emailSync, '_imapStreamText').yields(null);
+                imapGetStub = sinon.stub(emailSync, '_getBodyParts').yields(null, [{
+                    type: 'text',
+                    content: 'yadda yadda bla blabla foo bar https://keys.whiteout.io/verify/' + verificationUuid,
+                }]);
                 keychainStub.verifyPublicKey.withArgs(verificationUuid).yields();
                 imapDeleteStub = sinon.stub(emailSync, '_imapDeleteMessage').yields({});
 
@@ -1073,7 +1079,10 @@ define(function(require) {
                     answered: true
                 }).yields(null, []);
                 imapListMessagesStub = sinon.stub(emailSync, '_imapListMessages').yields(null, [verificationMail]);
-                imapGetStub = sinon.stub(emailSync, '_imapStreamText').yields(null);
+                imapGetStub = sinon.stub(emailSync, '_getBodyParts').yields(null, [{
+                    type: 'text',
+                    content: 'yadda yadda bla blabla foo bar https://keys.whiteout.io/verify/' + verificationUuid,
+                }]);
                 keychainStub.verifyPublicKey.withArgs(verificationUuid).yields({
                     errMsg: 'fubar'
                 });
@@ -1134,7 +1143,7 @@ define(function(require) {
                 imapSearchStub = sinon.stub(emailSync, '_imapSearch');
                 imapSearchStub.withArgs({
                     folder: folder
-                }).yields(null, [corruptedVerificationMail.uid]);
+                }).yields(null, [verificationMail.uid]);
                 imapSearchStub.withArgs({
                     folder: folder,
                     unread: true
@@ -1146,12 +1155,15 @@ define(function(require) {
 
                 localStoreStub = sinon.stub(emailSync, '_localStoreMessages').withArgs({
                     folder: folder,
-                    emails: [corruptedVerificationMail]
+                    emails: [verificationMail]
                 }).yields();
 
 
-                imapListMessagesStub = sinon.stub(emailSync, '_imapListMessages').yields(null, [corruptedVerificationMail]);
-                imapGetStub = sinon.stub(emailSync, '_imapStreamText').yields(null);
+                imapListMessagesStub = sinon.stub(emailSync, '_imapListMessages').yields(null, [verificationMail]);
+                imapGetStub = sinon.stub(emailSync, '_getBodyParts').yields(null, [{
+                    type: 'text',
+                    content: 'yadda yadda bla blabla foo bar https://keys.whiteout.io/verify/' + corruptedVerificationUuid,
+                }]);
                 keychainStub.verifyPublicKey.withArgs(corruptedVerificationUuid).yields({
                     errMsg: 'fubar'
                 });
@@ -1602,19 +1614,16 @@ define(function(require) {
 
         describe('mark', function() {
             it('should work', function(done) {
-                imapClientStub.updateFlags.withArgs({
-                    path: 'asdf',
-                    uid: 1,
-                    unread: false,
-                    answered: false
-                }).yields();
-
-                emailSync._imapMark({
+                var o = {
                     folder: 'asdf',
                     uid: 1,
                     unread: false,
                     answered: false
-                }, function(err) {
+                };
+
+                imapClientStub.updateFlags.withArgs(o).yields();
+
+                emailSync._imapMark(o, function(err) {
                     expect(imapClientStub.updateFlags.calledOnce).to.be.true;
                     expect(err).to.not.exist;
                     done();

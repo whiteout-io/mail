@@ -6,10 +6,10 @@ define(function(require) {
         UpdateHandler = require('js/util/update/update-handler'),
         expect = chai.expect;
 
-    chai.Assertion.includeStack = true;
-
     describe('UpdateHandler', function() {
         var updateHandler, appConfigStorageStub, userStorageStub, origDbVersion;
+
+        chai.Assertion.includeStack = true;
 
         beforeEach(function() {
             origDbVersion = cfg.dbVersion;
@@ -125,6 +125,59 @@ define(function(require) {
                 it('should work', function(done) {
                     userStorageStub.removeList.withArgs(emailDbType).yieldsAsync();
                     appConfigStorageStub.storeList.withArgs([1], versionDbType).yieldsAsync();
+
+                    updateHandler.update(function(error) {
+                        expect(error).to.not.exist;
+                        expect(userStorageStub.removeList.calledOnce).to.be.true;
+                        expect(appConfigStorageStub.storeList.calledOnce).to.be.true;
+
+                        done();
+                    });
+                });
+
+                it('should fail when persisting database version fails', function(done) {
+                    userStorageStub.removeList.yieldsAsync();
+                    appConfigStorageStub.storeList.yieldsAsync({});
+
+                    updateHandler.update(function(error) {
+                        expect(error).to.exist;
+                        expect(userStorageStub.removeList.calledOnce).to.be.true;
+                        expect(appConfigStorageStub.storeList.calledOnce).to.be.true;
+
+                        done();
+                    });
+                });
+
+                it('should fail when wiping emails from database fails', function(done) {
+                    userStorageStub.removeList.yieldsAsync({});
+
+                    updateHandler.update(function(error) {
+                        expect(error).to.exist;
+                        expect(userStorageStub.removeList.calledOnce).to.be.true;
+                        expect(appConfigStorageStub.storeList.called).to.be.false;
+
+                        done();
+                    });
+                });
+            });
+
+            describe('v1 -> v2', function() {
+                var emailDbType = 'email_';
+
+                beforeEach(function() {
+                    cfg.dbVersion = 2; // app requires database version 2
+                    appConfigStorageStub.listItems.withArgs(versionDbType).yieldsAsync(null, [1]); // database version is 0
+                });
+
+                afterEach(function() {
+                    // database version is only queried for version checking prior to the update script
+                    // so no need to check this in case-specific tests
+                    expect(appConfigStorageStub.listItems.calledOnce).to.be.true;
+                });
+
+                it('should work', function(done) {
+                    userStorageStub.removeList.withArgs(emailDbType).yieldsAsync();
+                    appConfigStorageStub.storeList.withArgs([2], versionDbType).yieldsAsync();
 
                     updateHandler.update(function(error) {
                         expect(error).to.not.exist;

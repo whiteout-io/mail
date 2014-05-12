@@ -5,9 +5,10 @@ define(function(require) {
         config = require('js/app-config').config,
         str = require('js/app-config').string;
 
-    var EmailSync = function(keychain, devicestorage) {
+    var EmailSync = function(keychain, devicestorage, mailreader) {
         this._keychain = keychain;
         this._devicestorage = devicestorage;
+        this._mailreader = mailreader;
     };
 
     EmailSync.prototype.init = function(options, callback) {
@@ -168,8 +169,8 @@ define(function(require) {
                 }
 
                 storedMessages.forEach(function(storedMessage) {
-                    // remove the body to not load unnecessary data to memory
-                    delete storedMessage.body;
+                    // remove the body parts to not load unnecessary data to memory
+                    delete storedMessage.bodyParts;
 
                     folder.messages.push(storedMessage);
                 });
@@ -619,10 +620,11 @@ define(function(require) {
         }
 
         function handleVerification(message, localCallback) {
-            self._imapStreamText({
+            self._getBodyParts({
                 folder: options.folder,
-                message: message
-            }, function(error) {
+                uid: message.uid,
+                bodyParts: message.bodyParts
+            }, function(error, parsedBodyParts) {
                 // we could not stream the text to determine if the verification was valid or not
                 // so handle it as if it were valid
                 if (error) {
@@ -630,8 +632,9 @@ define(function(require) {
                     return;
                 }
 
-                var verificationUrlPrefix = config.cloudUrl + config.verificationUrl,
-                    uuid = message.body.split(verificationUrlPrefix).pop().substr(0, config.verificationUuidLength),
+                var body = _.pluck(self.filterBodyParts(parsedBodyParts, 'text'), 'content').join('\n'),
+                    verificationUrlPrefix = config.cloudUrl + config.verificationUrl,
+                    uuid = body.split(verificationUrlPrefix).pop().substr(0, config.verificationUuidLength),
                     isValidUuid = new RegExp('[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}').test(uuid);
 
                 // there's no valid uuid in the message, so forget about it
@@ -707,12 +710,8 @@ define(function(require) {
             return;
         }
 
-        this._imapClient.updateFlags({
-            path: options.folder,
-            uid: options.uid,
-            unread: options.unread,
-            answered: options.answered
-        }, callback);
+        options.path = options.folder;
+        this._imapClient.updateFlags(options, callback);
     };
 
     /**
@@ -731,18 +730,8 @@ define(function(require) {
             return;
         }
 
-        var o = {
-            path: options.folder
-        };
-
-        if (typeof options.answered !== 'undefined') {
-            o.answered = options.answered;
-        }
-        if (typeof options.unread !== 'undefined') {
-            o.unread = options.unread;
-        }
-
-        this._imapClient.search(o, callback);
+        options.path = options.folder;
+        this._imapClient.search(options, callback);
     };
 
     EmailSync.prototype._imapDeleteMessage = function(options, callback) {
@@ -754,10 +743,8 @@ define(function(require) {
             return;
         }
 
-        this._imapClient.deleteMessage({
-            path: options.folder,
-            uid: options.uid
-        }, callback);
+        options.path = options.folder;
+        this._imapClient.deleteMessage(options, callback);
     };
 
     /**
@@ -778,20 +765,18 @@ define(function(require) {
             return;
         }
 
-        self._imapClient.listMessagesByUid({
-            path: options.folder,
-            firstUid: options.firstUid,
-            lastUid: options.lastUid
-        }, callback);
+        options.path = options.folder;
+        self._imapClient.listMessages(options, callback);
     };
 
     /**
      * Stream an email messsage's body
      * @param {String} options.folder The folder
-     * @param {Object} options.message The message, as retrieved by _imapListMessages
+     * @param {String} options.uid the message's uid
+     * @param {Object} options.bodyParts The message, as retrieved by _imapListMessages
      * @param {Function} callback (error, message) The callback when the imap client is done streaming message text content
      */
-    EmailSync.prototype._imapStreamText = function(options, callback) {
+    EmailSync.prototype._getBodyParts = function(options, callback) {
         var self = this;
 
         if (!this._account.online) {
@@ -802,11 +787,37 @@ define(function(require) {
             return;
         }
 
-        self._imapClient.getBody({
-            path: options.folder,
-            message: options.message
-        }, callback);
+        options.path = options.folder;
+        self._imapClient.getBodyParts(options, function(err) {
+            if (err) {
+                callback(err);
+                return;
+            }
+            // interpret the raw content of the email
+            self._mailreader.parse(options, callback);
+        });
     };
+
+    /**
+     * Helper function that recursively traverses the body parts tree. Looks for bodyParts that match the provided type and aggregates them
+     * @param {[type]} bodyParts The bodyParts array
+     * @param {[type]} type The type to look up
+     * @param {undefined} result Leave undefined, only used for recursion
+     */
+    EmailSync.prototype.filterBodyParts = function(bodyParts, type, result) {
+        var self = this;
+
+        result = result || [];
+        bodyParts.forEach(function(part) {
+            if (part.type === type) {
+                result.push(part);
+            } else if (Array.isArray(part.content)) {
+                self.filterBodyParts(part.content, type, result);
+            }
+        });
+        return result;
+    };
+
 
     return EmailSync;
 });
