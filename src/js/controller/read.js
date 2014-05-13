@@ -344,7 +344,9 @@ define(function(require) {
                         // wrap in html doc with scrollable html tag, since chrome apps does not scroll by default
                         var prefix = '<!DOCTYPE html><html style="overflow-y: auto"><head></head><body>';
                         var suffix = '</body></html>';
-                        scope.html = $sce.trustAsHtml(prefix + value + suffix);
+                        // open links in new window, otherwise the sandbox with not open them
+                        var clickableHtml = value.replace(/<a /g, '<a target="_blank" ');
+                        scope.html = $sce.trustAsHtml(prefix + clickableHtml + suffix);
                     });
                 }
             });
