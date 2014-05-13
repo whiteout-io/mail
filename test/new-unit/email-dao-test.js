@@ -913,16 +913,7 @@ define(function(require) {
 
         describe('getAttachment', function() {
             var folder = 'asdasdasdasdasd',
-                uid = 1234,
-                imapGetStub;
-
-            beforeEach(function() {
-                imapGetStub = sinon.stub(emailSync, '_getBodyParts');
-            });
-
-            afterEach(function() {
-                emailSync._getBodyParts.restore();
-            });
+                uid = 1234;
 
             it('should fetch an attachment from imap', function(done) {
                 var attmt = {};
