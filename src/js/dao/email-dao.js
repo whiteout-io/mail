@@ -306,9 +306,19 @@ define(function(require) {
 
                 var localMessage = localMessages[0];
 
+                // treat attachment and non-attachment body parts separately:
+                // we need to fetch the content for non-attachment body parts (encrypted, signed, text, html)
+                // but we spare the effort and fetch attachment content later upon explicit user request.
+                var contentParts = localMessage.bodyParts.filter(function(bodyPart) {
+                    return bodyPart.type !== "attachment";
+                });
+                var attachmentParts = localMessage.bodyParts.filter(function(bodyPart) {
+                    return bodyPart.type === "attachment";
+                });
+
                 // do we need to fetch content from the imap server?
                 var needsFetch = false;
-                localMessage.bodyParts.forEach(function(part) {
+                contentParts.forEach(function(part) {
                     needsFetch = (typeof part.content === 'undefined');
                 });
 
@@ -324,15 +334,16 @@ define(function(require) {
                 self._emailSync._getBodyParts({
                     folder: folder,
                     uid: localMessage.uid,
-                    bodyParts: localMessage.bodyParts
+                    bodyParts: contentParts
                 }, function(err, parsedBodyParts) {
                     if (err) {
                         done(err);
                         return;
                     }
 
-                    message.bodyParts = parsedBodyParts;
-                    localMessage.bodyParts = parsedBodyParts;
+                    // piece together the parsed bodyparts and the empty attachments which have not been parsed
+                    message.bodyParts = parsedBodyParts.concat(attachmentParts);
+                    localMessage.bodyParts = parsedBodyParts.concat(attachmentParts);
 
                     // persist it to disk
                     self._emailSync._localStoreMessages({
@@ -382,6 +393,22 @@ define(function(require) {
             message.loadingBody = false;
             callback(err, err ? undefined : message);
         }
+    };
+
+    EmailDAO.prototype.getAttachment = function(options, callback) {
+        this._emailSync._getBodyParts({
+            folder: options.folder,
+            uid: options.uid,
+            bodyParts: [options.attachment]
+        }, function(err, parsedBodyParts) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            options.attachment.content = parsedBodyParts[0].content;
+            callback(err, err ? undefined : options.attachment);
+        });
     };
 
     EmailDAO.prototype.decryptBody = function(options, callback) {
