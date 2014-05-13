@@ -371,8 +371,38 @@ define(function(require) {
                 root = signedPart.content;
             }
 
+            // if the message is plain text and contains pgp/inline, we are only interested in the encrypted
+            // content, the rest (corporate mail footer, attachments, etc.) is discarded.
+            var body = _.pluck(self._emailSync.filterBodyParts(root, 'text'), 'content').join('\n');
+
+            /*
+             * here's how the regex works:
+             * - any content before the PGP block will be discarded
+             * - "-----BEGIN PGP MESSAGE-----" must be at the beginning (and end) of a line
+             * - "-----END PGP MESSAGE-----" must be at the beginning (and end) of a line
+             * - the regex must not match a pgp block in a plain text reply or forward of a pgp/inline message.
+             *   (the encryption will break for replies/forward, because "> " corrupts the PGP block with non-radix-64 characters)
+             */
+            var match = body.match(/^-{5}BEGIN PGP MESSAGE-{5}$[^>]*^-{5}END PGP MESSAGE-{5}$/im);
+            if (match) {
+                // show the plain text content
+                message.body = match[0];
+
+                // - replace the bodyParts info with an artificial bodyPart of type "encrypted"
+                // - _isPgpInline is only used internally to avoid trying to parse non-MIME text with the mailreader
+                // - set the encrypted flag so we can signal the ui that we're handling encrypted content
+                message.encrypted = true;
+                message.bodyParts = [{
+                    type: 'encrypted',
+                    content: match[0],
+                    _isPgpInline: true
+                }];
+                done();
+                return;
+            }
+
             message.attachments = self._emailSync.filterBodyParts(root, 'attachment');
-            message.body = _.pluck(self._emailSync.filterBodyParts(root, 'text'), 'content').join('\n');
+            message.body = body;
             message.html = _.pluck(self._emailSync.filterBodyParts(root, 'html'), 'content').join('\n');
 
             done();
@@ -412,14 +442,23 @@ define(function(require) {
             var encryptedNode = self._emailSync.filterBodyParts(message.bodyParts, 'encrypted')[0];
             self._crypto.decrypt(encryptedNode.content, senderPublicKey.publicKey, function(err, decrypted) {
                 if (err || !decrypted) {
-                    showError(err.errMsg || err.message);
+                    showError(err.errMsg || err.message || 'An error occurred during the decryption.');
+                    return;
+                }
+
+                // if the encrypted node contains pgp/inline, we must not parse it
+                // with the mailreader as it is not well-formed MIME
+                if (encryptedNode._isPgpInline) {
+                    message.body = decrypted;
+                    message.decrypted = true;
+                    done();
                     return;
                 }
 
                 // the mailparser works on the .raw property
                 encryptedNode.raw = decrypted;
 
-                // parse the decrpyted raw content in the mailparser
+                // parse the decrypted raw content in the mailparser
                 self._mailreader.parse({
                     bodyParts: [encryptedNode]
                 }, function(err, parsedBodyParts) {
@@ -439,7 +478,6 @@ define(function(require) {
                     });
 
                     message.decrypted = true;
-
 
                     // we're done here!
                     done();
