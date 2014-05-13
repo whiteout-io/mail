@@ -21,6 +21,7 @@ define(function(require) {
         var emailAddress, passphrase, asymKeySize, mockkeyId, dummyEncryptedMail,
             dummyDecryptedMail, mockKeyPair, account, verificationMail, verificationUuid,
             corruptedVerificationMail, corruptedVerificationUuid,
+            localListStub, localStoreStub, imapGetStub,
             nonWhitelistedMail;
 
         beforeEach(function(done) {
@@ -121,6 +122,10 @@ define(function(require) {
             emailSync = new EmailSync(keychainStub, devicestorageStub);
             dao = new EmailDAO(keychainStub, pgpStub, devicestorageStub, pgpBuilderStub, mailreader, emailSync);
             dao._account = account;
+
+            localListStub = sinon.stub(emailSync, '_localListMessages');
+            localStoreStub = sinon.stub(emailSync, '_localStoreMessages');
+            imapGetStub = sinon.stub(emailSync, '_getBodyParts');
 
             expect(dao._keychain).to.equal(keychainStub);
             expect(dao._crypto).to.equal(pgpStub);
@@ -606,8 +611,7 @@ define(function(require) {
 
         describe('getBody', function() {
             var folder = 'asdasdasdasdasd',
-                uid = 1234,
-                localListStub, localStoreStub, imapGetStub;
+                uid = 1234;
 
             it('should not do anything if the message already has content', function() {
                 var message = {
@@ -629,7 +633,7 @@ define(function(require) {
                     uid: uid
                 };
 
-                localListStub = sinon.stub(emailSync, '_localListMessages').withArgs({
+                localListStub.withArgs({
                     folder: folder,
                     uid: uid
                 }).yieldsAsync(null, [{
@@ -656,7 +660,7 @@ define(function(require) {
                 expect(message.loadingBody).to.be.true;
             });
 
-            it('should read an encrypted body from the device', function(done) {
+            it('should read a pgp/mime from the device', function(done) {
                 var message, ct, pt;
 
                 pt = 'bender is great!';
@@ -666,7 +670,7 @@ define(function(require) {
                     encrypted: true
                 };
 
-                localListStub = sinon.stub(emailSync, '_localListMessages').withArgs({
+                localListStub.withArgs({
                     folder: folder,
                     uid: uid
                 }).yieldsAsync(null, [{
@@ -697,6 +701,48 @@ define(function(require) {
                 expect(message.loadingBody).to.be.true;
             });
 
+            it('should read a pgp/inline from the device', function(done) {
+                var message, ct, pt;
+
+                ct = '-----BEGIN PGP MESSAGE-----\nasdasdasd\n-----END PGP MESSAGE-----';
+                pt = 'bla bla yadda yadda';
+                message = {
+                    uid: uid
+                };
+
+                localListStub.yieldsAsync(null, [{
+                    bodyParts: [{
+                        type: 'text',
+                        content: pt
+                    }, {
+                        type: 'text',
+                        content: ct
+                    }, {
+                        type: 'text',
+                        content: pt
+                    }]
+                }]);
+
+                dao.getBody({
+                    message: message,
+                    folder: folder
+                }, function(err, msg) {
+                    expect(err).to.not.exist;
+
+                    expect(msg).to.equal(message);
+                    expect(msg.body).to.equal(ct);
+                    expect(msg.bodyParts[0].type).to.equal('encrypted');
+                    expect(msg.bodyParts[0].content).to.equal(ct);
+                    expect(msg.encrypted).to.be.true;
+                    expect(message.loadingBody).to.be.false;
+
+                    expect(localListStub.calledOnce).to.be.true;
+
+                    done();
+                });
+                expect(message.loadingBody).to.be.true;
+            });
+
             it('should stream from imap and set plain text body', function(done) {
                 var message, body;
 
@@ -710,17 +756,17 @@ define(function(require) {
                     }]
                 };
 
-                localListStub = sinon.stub(emailSync, '_localListMessages').withArgs({
+                localListStub.withArgs({
                     folder: folder,
                     uid: uid
                 }).yieldsAsync(null, [message]);
 
-                localStoreStub = sinon.stub(emailSync, '_localStoreMessages').withArgs({
+                localStoreStub.withArgs({
                     folder: folder,
                     emails: [message]
                 }).yieldsAsync();
 
-                imapGetStub = sinon.stub(emailSync, '_getBodyParts').withArgs({
+                imapGetStub.withArgs({
                     folder: folder,
                     uid: message.uid,
                     bodyParts: message.bodyParts
@@ -763,17 +809,17 @@ define(function(require) {
                     }]
                 };
 
-                localListStub = sinon.stub(emailSync, '_localListMessages').withArgs({
+                localListStub.withArgs({
                     folder: folder,
                     uid: uid
                 }).yieldsAsync(null, [message]);
 
-                localStoreStub = sinon.stub(emailSync, '_localStoreMessages').withArgs({
+                localStoreStub.withArgs({
                     folder: folder,
                     emails: [message]
                 }).yieldsAsync();
 
-                imapGetStub = sinon.stub(emailSync, '_getBodyParts').withArgs({
+                imapGetStub.withArgs({
                     folder: folder,
                     uid: message.uid,
                     bodyParts: message.bodyParts
@@ -814,9 +860,9 @@ define(function(require) {
                     }]
                 };
 
-                localListStub = sinon.stub(emailSync, '_localListMessages').yieldsAsync(null, [message]);
-                localStoreStub = sinon.stub(emailSync, '_localStoreMessages').yieldsAsync({});
-                imapGetStub = sinon.stub(emailSync, '_getBodyParts').yieldsAsync(null, [{
+                localListStub.yieldsAsync(null, [message]);
+                localStoreStub.yieldsAsync({});
+                imapGetStub.yieldsAsync(null, [{
                     type: 'text',
                     content: 'bender is great! bender is great!'
                 }]);
@@ -845,9 +891,8 @@ define(function(require) {
                     }]
                 };
 
-                localListStub = sinon.stub(emailSync, '_localListMessages').yields(null, [message]);
-                imapGetStub = sinon.stub(emailSync, '_getBodyParts').yieldsAsync({});
-                localStoreStub = sinon.stub(emailSync, '_localStoreMessages');
+                localListStub.yields(null, [message]);
+                imapGetStub.yieldsAsync({});
 
                 dao.getBody({
                     message: message,
@@ -924,6 +969,16 @@ define(function(require) {
         });
 
         describe('decryptBody', function() {
+            var parseStub;
+
+            beforeEach(function() {
+                parseStub = sinon.stub(mailreader, 'parse');
+            });
+
+            afterEach(function() {
+                mailreader.parse.restore();
+            });
+
             it('should do nothing when the message is not encrypted', function() {
                 var message = {
                     encrypted: false,
@@ -974,7 +1029,7 @@ define(function(require) {
             });
 
             it('decrypt a pgp/mime message', function(done) {
-                var message, ct, pt, parsed, parseStub;
+                var message, ct, pt, parsed;
 
                 pt = 'bender is great';
                 ct = '-----BEGIN PGP MESSAGE-----asdasdasd-----END PGP MESSAGE-----';
@@ -991,10 +1046,9 @@ define(function(require) {
                     }]
                 };
 
-
                 keychainStub.getReceiverPublicKey.withArgs(message.from[0].address).yieldsAsync(null, mockKeyPair.publicKey);
                 pgpStub.decrypt.withArgs(ct, mockKeyPair.publicKey.publicKey).yieldsAsync(null, pt);
-                parseStub = sinon.stub(mailreader, 'parse').withArgs({
+                parseStub.withArgs({
                     bodyParts: [{
                         type: 'encrypted',
                         content: ct,
@@ -1012,17 +1066,54 @@ define(function(require) {
                     message: message
                 }, function(error, msg) {
                     expect(error).to.not.exist;
-
                     expect(msg).to.equal(message);
                     expect(message.decrypted).to.be.true;
                     expect(message.body).to.equal(parsed);
                     expect(message.decryptingBody).to.be.false;
-
                     expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
                     expect(pgpStub.decrypt.calledOnce).to.be.true;
                     expect(parseStub.calledOnce).to.be.true;
 
-                    mailreader.parse.restore();
+                    done();
+                });
+
+                expect(message.decryptingBody).to.be.true;
+            });
+
+            it('decrypt a pgp/inline message', function(done) {
+                var message, ct, pt;
+
+                pt = 'bender is great';
+                ct = '-----BEGIN PGP MESSAGE-----asdasdasd-----END PGP MESSAGE-----';
+                message = {
+                    from: [{
+                        address: 'asdasdasd'
+                    }],
+                    body: ct,
+                    encrypted: true,
+                    bodyParts: [{
+                        type: 'encrypted',
+                        content: ct,
+                        _isPgpInline: true
+                    }]
+                };
+
+                keychainStub.getReceiverPublicKey.withArgs(message.from[0].address).yieldsAsync(null, mockKeyPair.publicKey);
+                pgpStub.decrypt.withArgs(ct, mockKeyPair.publicKey.publicKey).yieldsAsync(null, pt);
+
+                dao.decryptBody({
+                    message: message
+                }, function(error, msg) {
+                    expect(error).to.not.exist;
+
+                    expect(msg).to.equal(message);
+                    expect(message.decrypted).to.be.true;
+                    expect(message.body).to.equal(pt);
+                    expect(message.decryptingBody).to.be.false;
+                    expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
+                    expect(pgpStub.decrypt.calledOnce).to.be.true;
+                    expect(parseStub.called).to.be.false;
+
                     done();
                 });
 
@@ -1042,7 +1133,6 @@ define(function(require) {
                     }]
                 };
 
-                var parseStub = sinon.spy(mailreader, 'parse');
                 keychainStub.getReceiverPublicKey.yields(null, mockKeyPair.publicKey);
                 pgpStub.decrypt.yields({
                     errMsg: 'asd'
@@ -1055,12 +1145,10 @@ define(function(require) {
                     expect(msg.body).to.equal('asd');
                     expect(msg).to.exist;
                     expect(message.decryptingBody).to.be.false;
-
                     expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
                     expect(pgpStub.decrypt.calledOnce).to.be.true;
                     expect(parseStub.called).to.be.false;
 
-                    mailreader.parse.restore();
                     done();
                 });
             });
@@ -1078,23 +1166,18 @@ define(function(require) {
                     }]
                 };
 
-                var parseStub = sinon.spy(mailreader, 'parse');
                 keychainStub.getReceiverPublicKey.yields({});
 
                 dao.decryptBody({
                     message: message
                 }, function(error, msg) {
                     expect(error).to.exist;
-
                     expect(msg).to.not.exist;
-
                     expect(message.decryptingBody).to.be.false;
-
                     expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
                     expect(pgpStub.decrypt.called).to.be.false;
                     expect(parseStub.called).to.be.false;
 
-                    mailreader.parse.restore();
                     done();
                 });
             });
