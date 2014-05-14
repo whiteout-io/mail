@@ -98,6 +98,13 @@ define(function(require) {
                 $scope.cc.forEach($scope.verify);
             }
 
+            // fill attachments on forward
+            if (forward) {
+                // create a new array, otherwise removing an attachment will also 
+                // remove it from the original in the mail list as a side effect
+                $scope.attachments = [].concat(re.attachments);
+            }
+
             // fill subject
             if (forward) {
                 $scope.subject = 'Fwd: ' + re.subject;
