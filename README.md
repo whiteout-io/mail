@@ -21,8 +21,6 @@ We take the privacy of your data very seriously. Here are some of the technical 
 
 * [Content Security Policy (CSP)](http://www.html5rocks.com/en/tutorials/security/content-security-policy/) is enforced to prevent against injection attacks.
 
-* The code is still under heavy development and is not yet recommended for production use. That being said, we have done multiple code audits and penetration tests (which will be published regularly once all reported vulnerabilities are fixed).
-
 ### Reporting bugs and feature requests
 
 * We will launch a bug bounty program later on for independant security researchers. If you find any security vulnerabilities, don't hesitate to contact us [security@whiteout.io](mailto:security@whiteout.io).
