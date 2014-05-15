@@ -124,6 +124,40 @@ define(function(require) {
                 scope.verify.restore();
             });
 
+            it('should prefill write view for forward', function() {
+                var verifyMock = sinon.stub(scope, 'verify'),
+                    address = 'pity@dafool',
+                    subject = 'Ermahgerd!',
+                    body = 'so much body!',
+                    re = {
+                        from: [{
+                            address: address
+                        }],
+                        to: [{
+                            address: address
+                        }],
+                        subject: subject,
+                        sentDate: new Date(),
+                        body: body,
+                        attachments: [{}]
+                    };
+
+                scope.state.writer.write(re, null, true);
+
+                expect(scope.writerTitle).to.equal('Forward');
+                expect(scope.to).to.deep.equal([{
+                    address: ''
+                }]);
+                expect(scope.subject).to.equal('Fwd: ' + subject);
+                expect(scope.body).to.contain(body);
+                expect(scope.ciphertextPreview).to.not.be.empty;
+                expect(verifyMock.called).to.be.true;
+                expect(scope.attachments).to.not.equal(re.attachments); // not the same reference
+                expect(scope.attachments).to.deep.equal(re.attachments); // but the same content
+
+                scope.verify.restore();
+            });
+
         });
 
         describe('onAddressUpdate', function() {
