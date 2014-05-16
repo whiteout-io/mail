@@ -62,6 +62,12 @@ define(function(require) {
         mail.publicKeysArmored = []; // gather the public keys
         mail.id = util.UUID(); // the mail needs a random uuid for storage in the database
 
+        // do not encrypt mails with a bcc recipient, due to a possible privacy leak
+        if (mail.bcc.length > 0) {
+            storeAndForward(mail);
+            return;
+        }
+
         checkRecipients(allReaders);
 
         // check if there are unregistered recipients
