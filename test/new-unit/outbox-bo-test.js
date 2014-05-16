@@ -86,6 +86,39 @@ define(function(require) {
                 });
             });
 
+            it('should not encrypt a mail with bcc and store a mail', function(done) {
+                var mail;
+
+                mail = {
+                    from: [{
+                        name: 'member',
+                        address: 'member@whiteout.io'
+                    }],
+                    to: [{
+                        name: 'member',
+                        address: 'member@whiteout.io'
+                    }],
+                    cc: [],
+                    bcc: [{
+                        name: 'member',
+                        address: 'member@whiteout.io'
+                    }]
+                };
+
+                devicestorageStub.storeList.withArgs([mail]).yieldsAsync();
+
+                outbox.put(mail, function(error) {
+                    expect(error).to.not.exist;
+
+                    expect(mail.publicKeysArmored.length).to.equal(0);
+                    expect(keychainStub.getReceiverPublicKey.called).to.be.false;
+                    expect(emailDaoStub.encrypt.called).to.be.false;
+                    expect(devicestorageStub.storeList.calledOnce).to.be.true;
+
+                    done();
+                });
+            });
+
             it('should encrypt and store a mail', function(done) {
                 var mail, senderKey, receiverKey;
 

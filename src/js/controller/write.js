@@ -237,6 +237,11 @@ define(function(require) {
                 return;
             }
 
+            // bcc automatically disables secure sending
+            if ($scope.bcc.filter(filterEmptyAddresses).length > 0) {
+                allSecure = false;
+            }
+
             if (allSecure) {
                 // send encrypted if all secure
                 $scope.okToSend = true;
@@ -331,11 +336,21 @@ define(function(require) {
                 });
             });
 
-            function filterEmptyAddresses(addr) {
-                return !!addr.address;
-            }
         };
     };
+
+    
+    //
+    // Helpers
+    //
+
+    /*
+     * Visitor to filter out objects without an address property, i.e. empty addresses
+     */
+    function filterEmptyAddresses(addr) {
+        return !!addr.address;
+    }
+
 
     //
     // Directives
