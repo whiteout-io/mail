@@ -63,7 +63,7 @@ define(function(require) {
         }
 
         function fillFields(re, replyAll, forward) {
-            var from, sentDate, body;
+            var replyTo, from, sentDate, body;
 
             if (!re) {
                 return;
@@ -71,17 +71,26 @@ define(function(require) {
 
             $scope.writerTitle = (forward) ? 'Forward' : 'Reply';
 
-            // fill recipient field
+            replyTo = re.replyTo && re.replyTo[0] && re.replyTo[0].address || re.from[0].address;
+
+            // fill recipient field and references
             if (!forward) {
                 $scope.to.unshift({
-                    address: re.from[0].address
+                    address: replyTo
                 });
                 $scope.to.forEach($scope.verify);
+                if ((re.references || []).indexOf(re.id) < 0) {
+                    // references might not exist yet, so use the double concat
+                    $scope.references = [].concat(re.references || []).concat(re.id);
+                } else {
+                    $scope.references = re.references;
+                }
+                $scope.inReplyTo = re.id;
             }
             if (replyAll) {
                 re.to.concat(re.cc).forEach(function(recipient) {
                     var me = emailDao._account.emailAddress;
-                    if (recipient.address === me && re.from[0].address !== me) {
+                    if (recipient.address === me && replyTo !== me) {
                         // don't reply to yourself
                         return;
                     }
@@ -98,11 +107,12 @@ define(function(require) {
                 $scope.cc.forEach($scope.verify);
             }
 
-            // fill attachments on forward
+            // fill attachments and references on forward
             if (forward) {
-                // create a new array, otherwise removing an attachment will also 
+                // create a new array, otherwise removing an attachment will also
                 // remove it from the original in the mail list as a side effect
                 $scope.attachments = [].concat(re.attachments);
+                $scope.references = [re.id];
             }
 
             // fill subject
@@ -113,7 +123,7 @@ define(function(require) {
             }
 
             // fill text body
-            from = re.from[0].name || re.from[0].address;
+            from = re.from[0].name || replyTo;
             sentDate = $filter('date')(re.sentDate, 'EEEE, MMM d, yyyy h:mm a');
 
             function createString(array) {
@@ -292,8 +302,19 @@ define(function(require) {
                 subject: $scope.subject.trim() ? $scope.subject.trim() : str.fallbackSubject, // Subject line, or the fallback subject, if nothing valid was entered
                 body: $scope.body.trim() + (!$scope.sendBtnSecure ? str.signature : ''), // use parsed plaintext body
                 attachments: $scope.attachments,
-                sentDate: new Date()
+                sentDate: new Date(),
+                headers: {}
             };
+
+            if ($scope.inReplyTo) {
+                email.headers['in-reply-to'] = '<' + $scope.inReplyTo + '>';
+            }
+
+            if ($scope.references && $scope.references.length) {
+                email.headers.references = $scope.references.map(function(reference) {
+                    return '<' + reference + '>';
+                }).join(' ');
+            }
 
             // close the writer
             $scope.state.writer.close();
@@ -339,7 +360,7 @@ define(function(require) {
         };
     };
 
-    
+
     //
     // Helpers
     //

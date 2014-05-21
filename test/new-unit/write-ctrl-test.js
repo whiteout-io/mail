@@ -100,12 +100,14 @@ define(function(require) {
                     subject = 'Ermahgerd!',
                     body = 'so much body!',
                     re = {
+                        id: 'abc',
                         from: [{
                             address: address
                         }],
                         subject: subject,
                         sentDate: new Date(),
-                        body: body
+                        body: body,
+                        references: ['ghi', 'def']
                     };
 
                 scope.state.writer.write(re);
@@ -118,6 +120,7 @@ define(function(require) {
                 }]);
                 expect(scope.subject).to.equal('Re: ' + subject);
                 expect(scope.body).to.contain(body);
+                expect(scope.references).to.deep.equal(['ghi', 'def', 'abc']);
                 expect(scope.ciphertextPreview).to.not.be.empty;
                 expect(verifyMock.called).to.be.true;
 
