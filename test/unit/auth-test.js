@@ -20,17 +20,19 @@ define(function(require) {
         afterEach(function() {});
 
         describe('getCredentials', function() {
-            var getCertificateStub, queryEmailAddressStub;
+            var getCertificateStub, queryEmailAddressStub, getEmailAddressFromConfigStub;
 
             beforeEach(function() {
                 getCertificateStub = sinon.stub(auth, 'getCertificate');
                 queryEmailAddressStub = sinon.stub(auth, 'queryEmailAddress');
+                getEmailAddressFromConfigStub = sinon.stub(auth, 'getEmailAddressFromConfig');
             });
 
             it('should work', function(done) {
                 getCertificateStub.yields(null, 'cert');
+                getEmailAddressFromConfigStub.yields(null, 'asdf@example.com');
                 queryEmailAddressStub.withArgs('token').yields(null, 'asdf@example.com');
-                oauthStub.getOAuthToken.yields(null, 'token');
+                oauthStub.getOAuthToken.withArgs('asdf@example.com').yields(null, 'token');
 
                 auth.getCredentials({}, function(err, credentials) {
                     expect(err).to.not.exist;
@@ -53,6 +55,7 @@ define(function(require) {
 
             it('should fail due to error in getOAuthToken', function(done) {
                 getCertificateStub.yields(null, 'cert');
+                getEmailAddressFromConfigStub.yields(null, 'asdf@example.com');
                 oauthStub.getOAuthToken.yields(new Error());
 
                 auth.getCredentials({}, function(err, credentials) {
@@ -64,6 +67,7 @@ define(function(require) {
 
             it('should fail due to error in queryEmailAddress', function(done) {
                 getCertificateStub.yields(null, 'cert');
+                getEmailAddressFromConfigStub.yields(null, 'asdf@example.com');
                 queryEmailAddressStub.withArgs('token').yields(new Error());
                 oauthStub.getOAuthToken.yields(null, 'token');
 

@@ -19,24 +19,32 @@ define(function() {
                 return;
             }
 
-            // get a fresh oauth token
-            self._oauth.getOAuthToken(function(err, token) {
+            // try reading email address from local storage
+            self.getEmailAddressFromConfig(function(err, emailAddress) {
                 if (err) {
                     callback(err);
                     return;
                 }
 
-                // get email address for the token
-                self.queryEmailAddress(token, function(err, emailAddress) {
+                // get a fresh oauth token
+                self._oauth.getOAuthToken(emailAddress, function(err, token) {
                     if (err) {
                         callback(err);
                         return;
                     }
 
-                    callback(null, {
-                        emailAddress: emailAddress,
-                        oauthToken: token,
-                        sslCert: certificate
+                    // get email address for the token
+                    self.queryEmailAddress(token, function(err, emailAddress) {
+                        if (err) {
+                            callback(err);
+                            return;
+                        }
+
+                        callback(null, {
+                            emailAddress: emailAddress,
+                            oauthToken: token,
+                            sslCert: certificate
+                        });
                     });
                 });
             });

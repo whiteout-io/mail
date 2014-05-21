@@ -6,22 +6,31 @@ define(function(require) {
         expect = chai.expect;
 
     describe('OAuth unit tests', function() {
-        var oauth, googleApiStub, identityStub;
+        var oauth, googleApiStub, identityStub, getPlatformInfoStub,
+            testEmail = 'test@example.com';
 
         beforeEach(function() {
             googleApiStub = sinon.createStubInstance(RestDAO);
             oauth = new OAuth(googleApiStub);
 
             window.chrome = window.chrome || {};
+
             window.chrome.identity = window.chrome.identity || {};
             if (typeof window.chrome.identity.getAuthToken !== 'function') {
                 window.chrome.identity.getAuthToken = function() {};
             }
             identityStub = sinon.stub(window.chrome.identity, 'getAuthToken');
+
+            window.chrome.runtime = window.chrome.runtime || {};
+            if (typeof window.chrome.runtime.getPlatformInfo !== 'function') {
+                window.chrome.runtime.getPlatformInfo = function() {};
+            }
+            getPlatformInfoStub = sinon.stub(window.chrome.runtime, 'getPlatformInfo');
         });
 
         afterEach(function() {
             identityStub.restore();
+            getPlatformInfoStub.restore();
         });
 
         describe('isSupported', function() {
@@ -31,10 +40,46 @@ define(function(require) {
         });
 
         describe('getOAuthToken', function() {
-            it('should work', function(done) {
-                identityStub.yields('token');
+            it('should work for empty emailAddress', function(done) {
+                getPlatformInfoStub.yields({
+                    os: 'android'
+                });
+                identityStub.withArgs({
+                    interactive: true
+                }).yields('token');
 
-                oauth.getOAuthToken(function(err, token) {
+                oauth.getOAuthToken(undefined, function(err, token) {
+                    expect(err).to.not.exist;
+                    expect(token).to.equal('token');
+                    done();
+                });
+            });
+
+            it('should work on android app', function(done) {
+                getPlatformInfoStub.yields({
+                    os: 'android'
+                });
+                identityStub.withArgs({
+                    interactive: true,
+                    accountHint: testEmail
+                }).yields('token');
+
+                oauth.getOAuthToken(testEmail, function(err, token) {
+                    expect(err).to.not.exist;
+                    expect(token).to.equal('token');
+                    done();
+                });
+            });
+
+            it('should work on desktop chrome', function(done) {
+                getPlatformInfoStub.yields({
+                    os: 'mac'
+                });
+                identityStub.withArgs({
+                    interactive: true
+                }).yields('token');
+
+                oauth.getOAuthToken(testEmail, function(err, token) {
                     expect(err).to.not.exist;
                     expect(token).to.equal('token');
                     done();
@@ -42,9 +87,12 @@ define(function(require) {
             });
 
             it('should fail', function(done) {
+                getPlatformInfoStub.yields({
+                    os: 'android'
+                });
                 identityStub.yields();
 
-                oauth.getOAuthToken(function(err, token) {
+                oauth.getOAuthToken(testEmail, function(err, token) {
                     expect(err).to.exist;
                     expect(token).to.not.exist;
                     done();
@@ -55,7 +103,7 @@ define(function(require) {
         describe('queryEmailAddress', function() {
             it('should work', function(done) {
                 googleApiStub.get.withArgs({
-                    uri: '/oauth2/v1/tokeninfo?access_token=token'
+                    uri: '/oauth2/v3/userinfo?access_token=token'
                 }).yields(null, {
                     email: 'asdf@example.com'
                 });
@@ -77,7 +125,7 @@ define(function(require) {
 
             it('should fail due to error in rest api', function(done) {
                 googleApiStub.get.withArgs({
-                    uri: '/oauth2/v1/tokeninfo?access_token=token'
+                    uri: '/oauth2/v3/userinfo?access_token=token'
                 }).yields(new Error());
 
                 oauth.queryEmailAddress('token', function(err, emailAddress) {
