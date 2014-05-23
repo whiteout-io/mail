@@ -44,6 +44,11 @@ Then visit [http://localhost:8580/dist/chrome.html#/desktop](http://localhost:85
 
     grunt watch
 
+## Releasing
+
+    grunt release-test --release=0.0.0.x
+    grunt release-stable --release=0.x.0
+
 ## License
 
     Copyright © 2014, Whiteout Networks GmbH. All rights reserved.
