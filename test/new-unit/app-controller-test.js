@@ -29,7 +29,9 @@ define(function(require) {
 
         describe('buildModules', function() {
             it('should work', function() {
-                controller.buildModules();
+                controller.buildModules({
+                    onError: function() {}
+                });
                 expect(controller._appConfigStore).to.exist;
                 expect(controller._auth).to.exist;
                 expect(controller._userStorage).to.exist;
@@ -55,13 +57,10 @@ define(function(require) {
         });
 
         describe('onDisconnect', function() {
-            it('should work', function(done) {
-                emailDaoStub.onDisconnect.yields();
+            it('should work', function() {
+                controller.onDisconnect();
 
-                controller.onDisconnect(function(err) {
-                    expect(err).to.not.exist;
-                    done();
-                });
+                expect(emailDaoStub.onDisconnect.calledOnce).to.be.true;
             });
         });
 

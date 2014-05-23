@@ -326,51 +326,44 @@ define(function(require) {
                     return;
                 }
 
-                // helper flag to remember if we need to sync back to imap
-                // in case the replyTo.answered changed
-                var needsSync = false;
-
-                // mark replyTo as answered, if necessary
-                if ($scope.replyTo && !$scope.replyTo.answered) {
-                    $scope.replyTo.answered = true;
-                    // update the ui
-                    $scope.$apply();
-                    needsSync = true;
-                }
-
-                // if we need to synchronize replyTo.answered, let's do that.
-                // otherwise, we're done
-                if (!needsSync) {
+                // if we need to synchronize replyTo.answered = true to imap,
+                // let's do that. otherwise, we're done
+                if (!$scope.replyTo || $scope.replyTo.answered) {
                     return;
                 }
 
-                emailDao.sync({
-                    folder: $scope.state.nav.currentFolder.path
+                $scope.replyTo.answered = true;
+                emailDao.setFlags({
+                    folder: currentFolder(),
+                    message: $scope.replyTo
                 }, function(err) {
-                    if (err && err.code === 42) {
-                        // offline
-                        $scope.onError();
+                    if (err && err.code !== 42) {
+                        $scope.onError(err);
                         return;
                     }
 
-                    $scope.onError(err);
+                    // offline or no error, let's apply the ui changes
+                    $scope.$apply();
                 });
             });
 
         };
+
+        //
+        // Helpers
+        //
+
+        function currentFolder() {
+            return $scope.state.nav.currentFolder;
+        }
+
+        /*
+         * Visitor to filter out objects without an address property, i.e. empty addresses
+         */
+        function filterEmptyAddresses(addr) {
+            return !!addr.address;
+        }
     };
-
-
-    //
-    // Helpers
-    //
-
-    /*
-     * Visitor to filter out objects without an address property, i.e. empty addresses
-     */
-    function filterEmptyAddresses(addr) {
-        return !!addr.address;
-    }
 
 
     //

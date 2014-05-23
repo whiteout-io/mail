@@ -15,7 +15,6 @@ define(function(require) {
         RestDAO = require('js/dao/rest-dao'),
         EmailDAO = require('js/dao/email-dao'),
         config = require('js/app-config').config,
-        EmailSync = require('js/dao/email-sync'),
         KeychainDAO = require('js/dao/keychain-dao'),
         PublicKeyDAO = require('js/dao/publickey-dao'),
         LawnchairDAO = require('js/dao/lawnchair-dao'),
@@ -43,18 +42,18 @@ define(function(require) {
         function onDeviceReady() {
             console.log('Starting app.');
 
-            self.buildModules();
+            self.buildModules(options);
 
             // Handle offline and online gracefully
             window.addEventListener('online', self.onConnect.bind(self, options.onError));
-            window.addEventListener('offline', self.onDisconnect.bind(self, options.onError));
+            window.addEventListener('offline', self.onDisconnect.bind(self));
 
             self._appConfigStore.init('app-config', callback);
         }
     };
 
-    self.buildModules = function() {
-        var lawnchairDao, restDao, pubkeyDao, emailDao, emailSync, keychain, pgp, userStorage, pgpbuilder, oauth, appConfigStore;
+    self.buildModules = function(options) {
+        var lawnchairDao, restDao, pubkeyDao, emailDao, keychain, pgp, userStorage, pgpbuilder, oauth, appConfigStore;
 
         // start the mailreader's worker thread
         mailreader.startWorker(config.workerPath + '/../lib/mailreader-parser-worker.js');
@@ -72,18 +71,19 @@ define(function(require) {
         self._keychain = keychain = new KeychainDAO(lawnchairDao, pubkeyDao);
         self._crypto = pgp = new PGP();
         self._pgpbuilder = pgpbuilder = new PgpBuilder();
-        self._emailSync = emailSync = new EmailSync(keychain, userStorage, mailreader);
-        self._emailDao = emailDao = new EmailDAO(keychain, pgp, userStorage, pgpbuilder, mailreader, emailSync);
+        self._emailDao = emailDao = new EmailDAO(keychain, pgp, userStorage, pgpbuilder, mailreader);
         self._outboxBo = new OutboxBO(emailDao, keychain, userStorage);
         self._updateHandler = new UpdateHandler(appConfigStore, userStorage);
+
+        emailDao.onError = options.onError;
     };
 
     self.isOnline = function() {
         return navigator.onLine;
     };
 
-    self.onDisconnect = function(callback) {
-        self._emailDao.onDisconnect(null, callback);
+    self.onDisconnect = function() {
+        self._emailDao.onDisconnect();
     };
 
     self.onConnect = function(callback) {

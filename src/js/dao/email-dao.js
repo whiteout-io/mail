@@ -3,27 +3,31 @@ define(function(require) {
 
     var util = require('cryptoLib/util'),
         _ = require('underscore'),
+        config = require('js/app-config').config,
         str = require('js/app-config').string;
 
-    var EmailDAO = function(keychain, crypto, devicestorage, pgpbuilder, mailreader, emailSync) {
+    var EmailDAO = function(keychain, crypto, devicestorage, pgpbuilder, mailreader) {
         this._keychain = keychain;
         this._crypto = crypto;
         this._devicestorage = devicestorage;
         this._pgpbuilder = pgpbuilder;
         this._mailreader = mailreader;
-        this._emailSync = emailSync;
     };
 
+
     //
-    // External API
     //
+    // Public API
+    //
+    //
+
 
     EmailDAO.prototype.init = function(options, callback) {
         var self = this,
             keypair;
 
         self._account = options.account;
-        self._account.busy = false;
+        self._account.busy = false; // triggers the spinner
         self._account.online = false;
         self._account.loggingIn = false;
 
@@ -48,111 +52,22 @@ define(function(require) {
                 }
 
                 keypair = storedKeypair;
-                initEmailSync();
-            });
-        }
-
-        function initEmailSync() {
-            self._emailSync.init({
-                account: self._account
-            }, function(err) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-
                 initFolders();
             });
         }
 
         function initFolders() {
             // try init folders from memory, since imap client not initiated yet
-            self._imapListFolders(function(err, folders) {
+            self._initFolders(function(err) {
                 // dont handle offline case this time
                 if (err && err.code !== 42) {
                     callback(err);
                     return;
                 }
 
-                self._account.folders = folders;
-
                 callback(null, keypair);
             });
         }
-    };
-
-    EmailDAO.prototype.onConnect = function(options, callback) {
-        var self = this;
-
-        self._account.loggingIn = true;
-
-        self._imapClient = options.imapClient;
-        self._pgpMailer = options.pgpMailer;
-
-        // notify emailSync
-        self._emailSync.onConnect({
-            imapClient: self._imapClient
-        }, function(err) {
-            if (err) {
-                self._account.loggingIn = false;
-                callback(err);
-                return;
-            }
-
-            // connect to newly created imap client
-            self._imapLogin(onLogin);
-        });
-
-        function onLogin(err) {
-            if (err) {
-                self._account.loggingIn = false;
-                callback(err);
-                return;
-            }
-
-            // set status to online
-            self._account.loggingIn = false;
-            self._account.online = true;
-
-            // init folders
-            self._imapListFolders(function(err, folders) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-
-                // only overwrite folders if they are not yet set
-                if (!self._account.folders) {
-                    self._account.folders = folders;
-                }
-
-                var inbox = _.findWhere(self._account.folders, {
-                    type: 'Inbox'
-                });
-
-                if (inbox) {
-                    self._imapClient.listenForChanges({
-                        path: inbox.path
-                    }, function(error, path) {
-                        if (typeof self.onNeedsSync === 'function') {
-                            self.onNeedsSync(error, path);
-                        }
-                    });
-                }
-
-                callback();
-            });
-        }
-    };
-
-    EmailDAO.prototype.onDisconnect = function(options, callback) {
-        // set status to online
-        this._account.online = false;
-        this._imapClient = undefined;
-        this._pgpMailer = undefined;
-
-        // notify emailSync
-        this._emailSync.onDisconnect(null, callback);
     };
 
     EmailDAO.prototype.unlock = function(options, callback) {
@@ -255,12 +170,335 @@ define(function(require) {
         }
     };
 
-    EmailDAO.prototype.syncOutbox = function(options, callback) {
-        this._emailSync.syncOutbox(options, callback);
+    EmailDAO.prototype.openFolder = function(options, callback) {
+        var self = this;
+
+        if (!self._account.online) {
+            callback({
+                errMsg: 'Client is currently offline!',
+                code: 42
+            });
+            return;
+        }
+
+        if (options.folder.path === config.outboxMailboxPath) {
+            return;
+        }
+
+        this._imapClient.selectMailbox({
+            path: options.folder.path
+        }, callback);
     };
 
-    EmailDAO.prototype.sync = function(options, callback) {
-        this._emailSync.sync(options, callback);
+    EmailDAO.prototype.refreshFolder = function(options, callback) {
+        var self = this,
+            folder = options.folder;
+
+        folder.messages = folder.messages || [];
+        self._localListMessages({
+            folder: folder
+        }, function(err, storedMessages) {
+            if (err) {
+                done(err);
+                return;
+            }
+
+            var storedUids = _.pluck(storedMessages, 'uid'),
+                memoryUids = _.pluck(folder.messages, 'uid'),
+                newUids = _.difference(storedUids, memoryUids),
+                removedUids = _.difference(memoryUids, storedUids);
+
+            // which messages are new on the disk that are not yet in memory?
+            _.filter(storedMessages, function(msg) {
+                return _.contains(newUids, msg.uid);
+            }).forEach(function(newMessage) {
+                // remove the body parts to not load unnecessary data to memory
+                // however, don't do that for the outbox. load the full message there.
+                if (folder.path !== config.outboxMailboxPath) {
+                    delete newMessage.bodyParts;
+                }
+
+                folder.messages.push(newMessage);
+            });
+
+            // which messages are no longer on disk, i.e. have been removed/sent/...
+            _.filter(folder.messages, function(msg) {
+                return _.contains(removedUids, msg.uid);
+            }).forEach(function(removedMessage) {
+                // remove the message
+                var index = folder.messages.indexOf(removedMessage);
+                folder.messages.splice(index, 1);
+            });
+
+            done();
+        });
+
+        function done(err) {
+            self._account.busy = false; // stop the spinner
+            updateUnreadCount(folder); // update the unread count
+            callback(err);
+        }
+    };
+
+    EmailDAO.prototype.fetchMessages = function(options, callback) {
+        var self = this,
+            folder = options.folder;
+
+        self._account.busy = true;
+
+        if (!self._account.online) {
+            done({
+                errMsg: 'Client is currently offline!',
+                code: 42
+            });
+            return;
+        }
+
+        // list the messages starting from the lowest new uid to the highest new uid
+        self._imapListMessages(options, function(err, messages) {
+            if (err) {
+                done(err);
+                return;
+            }
+
+            // if there are verification messages in the synced messages, handle it
+            var verificationMessages = _.filter(messages, function(message) {
+                return message.subject === str.verificationSubject;
+            });
+
+            // if there are verification messages, continue after we've tried to verify
+            if (verificationMessages.length > 0) {
+                var after = _.after(verificationMessages.length, storeHeaders);
+
+                verificationMessages.forEach(function(verificationMessage) {
+                    handleVerification(verificationMessage, function(err, isValid) {
+                        // if it was NOT a valid verification mail, do nothing
+                        // if an error occurred and the mail was a valid verification mail,
+                        // keep the mail in the list so the user can see it and verify manually
+                        if (!isValid || err) {
+                            after();
+                            return;
+                        }
+
+                        // if verification worked, we remove the mail from the list.
+                        messages.splice(messages.indexOf(verificationMessage), 1);
+                        after();
+                    });
+                });
+                return;
+            }
+
+            // no verification messages, just proceed as usual
+            storeHeaders();
+
+            function storeHeaders() {
+                if (_.isEmpty(messages)) {
+                    // nothing to do, we're done here
+                    done();
+                    return;
+                }
+
+                // persist the encrypted message to the local storage
+                self._localStoreMessages({
+                    folder: folder,
+                    emails: messages
+                }, function(err) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+
+                    // this enables us to already show the attachment clip in the message list ui
+                    messages.forEach(function(message) {
+                        message.attachments = message.bodyParts.filter(function(bodyPart) {
+                            return bodyPart.type === 'attachment';
+                        });
+                    });
+
+                    [].unshift.apply(folder.messages, messages); // add the new messages to the folder
+                    updateUnreadCount(folder); // update the unread count
+                    self.onIncomingMessage(messages); // notify about new messages
+                    done();
+                });
+            }
+        });
+
+        function done(err) {
+            self._account.busy = false; // stop the spinner
+            callback(err);
+        }
+
+        function handleVerification(message, localCallback) {
+            self._getBodyParts({
+                folder: folder,
+                uid: message.uid,
+                bodyParts: message.bodyParts
+            }, function(error, parsedBodyParts) {
+                // we could not stream the text to determine if the verification was valid or not
+                // so handle it as if it were valid
+                if (error) {
+                    localCallback(error, true);
+                    return;
+                }
+
+                var body = _.pluck(filterBodyParts(parsedBodyParts, 'text'), 'content').join('\n'),
+                    verificationUrlPrefix = config.cloudUrl + config.verificationUrl,
+                    uuid = body.split(verificationUrlPrefix).pop().substr(0, config.verificationUuidLength),
+                    uuidRegex = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/;
+
+                // there's no valid uuid in the message, so forget about it
+                if (!uuidRegex.test(uuid)) {
+                    localCallback(null, false);
+                    return;
+                }
+
+                // there's a valid uuid in the message, so try to verify it
+                self._keychain.verifyPublicKey(uuid, function(err) {
+                    if (err) {
+                        localCallback({
+                            errMsg: 'Verifying your public key failed: ' + err.errMsg
+                        }, true);
+                        return;
+                    }
+
+                    // public key has been verified, delete the message
+                    self._imapDeleteMessage({
+                        folder: folder,
+                        uid: message.uid
+                    }, function() {
+                        // if we could successfully not delete the message or not doesn't matter.
+                        // just don't show it in whiteout and keep quiet about it
+                        localCallback(null, true);
+                    });
+                });
+            });
+        }
+    };
+
+    EmailDAO.prototype.deleteMessage = function(options, callback) {
+        var self = this,
+            folder = options.folder,
+            message = options.message;
+
+        self._account.busy = true;
+
+        folder.messages.splice(folder.messages.indexOf(message), 1);
+
+        if (options.localOnly || options.folder.path === config.outboxMailboxPath) {
+            deleteLocal();
+            return;
+        }
+
+        deleteImap();
+
+        function deleteImap() {
+            if (!self._account.online) {
+                done({
+                    errMsg: 'Client is currently offline!',
+                    code: 42
+                });
+                return;
+            }
+
+            self._imapDeleteMessage({
+                folder: folder,
+                uid: message.uid
+            }, function(err) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+
+                deleteLocal();
+            });
+        }
+
+        function deleteLocal() {
+            self._localDeleteMessage({
+                folder: folder,
+                uid: message.uid
+            }, done);
+        }
+
+        function done(err) {
+            self._account.busy = false; // stop the spinner
+            if (err) {
+                folder.messages.unshift(message); // re-add the message to the folder in case of an error
+            }
+            updateUnreadCount(folder); // update the unread count, if necessary
+            callback(err);
+        }
+    };
+
+    EmailDAO.prototype.setFlags = function(options, callback) {
+        var self = this,
+            folder = options.folder,
+            message = options.message;
+
+        self._account.busy = true;
+
+        if (folder.messages.indexOf(message) < 0) {
+            self._account.busy = false; // stop the spinner
+            return;
+        }
+
+        if (options.localOnly || options.folder.path === config.outboxMailboxPath) {
+            markStorage();
+            return;
+        }
+
+        if (!self._account.online) {
+            done({
+                errMsg: 'Client is currently offline!',
+                code: 42
+            });
+            return;
+        }
+
+        markImap();
+
+        function markImap() {
+            self._imapMark({
+                folder: folder,
+                uid: options.message.uid,
+                unread: options.message.unread,
+                answered: options.message.answered
+            }, function(err) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+
+                markStorage();
+            });
+        }
+
+        function markStorage() {
+            self._localListMessages({
+                folder: folder,
+                uid: options.message.uid,
+            }, function(err, storedMessages) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+
+                var storedMessage = storedMessages[0];
+                storedMessage.unread = options.message.unread;
+                storedMessage.answered = options.message.answered;
+
+                self._localStoreMessages({
+                    folder: folder,
+                    emails: [storedMessage]
+                }, done);
+            });
+        }
+
+        function done(err) {
+            self._account.busy = false; // stop the spinner // 
+            updateUnreadCount(folder); // update the unread count
+            callback(err);
+        }
     };
 
     /**
@@ -295,7 +533,7 @@ define(function(require) {
 
         function retrieveContent() {
             // load the local message from memory
-            self._emailSync._localListMessages({
+            self._localListMessages({
                 folder: folder,
                 uid: message.uid
             }, function(err, localMessages) {
@@ -331,7 +569,7 @@ define(function(require) {
                 }
 
                 // get the raw content from the imap server
-                self._emailSync._getBodyParts({
+                self._getBodyParts({
                     folder: folder,
                     uid: localMessage.uid,
                     bodyParts: contentParts
@@ -346,7 +584,7 @@ define(function(require) {
                     localMessage.bodyParts = parsedBodyParts.concat(attachmentParts);
 
                     // persist it to disk
-                    self._emailSync._localStoreMessages({
+                    self._localStoreMessages({
                         folder: folder,
                         emails: [localMessage]
                     }, function(error) {
@@ -365,7 +603,7 @@ define(function(require) {
         function extractContent() {
             if (message.encrypted) {
                 // show the encrypted message
-                message.body = self._emailSync.filterBodyParts(message.bodyParts, 'encrypted')[0].content;
+                message.body = filterBodyParts(message.bodyParts, 'encrypted')[0].content;
                 done();
                 return;
             }
@@ -374,7 +612,7 @@ define(function(require) {
             var root = message.bodyParts;
 
             if (message.signed) {
-                var signedPart = self._emailSync.filterBodyParts(message.bodyParts, 'signed')[0];
+                var signedPart = filterBodyParts(message.bodyParts, 'signed')[0];
                 message.message = signedPart.message;
                 message.signature = signedPart.signature;
                 // TODO check integrity
@@ -384,7 +622,7 @@ define(function(require) {
 
             // if the message is plain text and contains pgp/inline, we are only interested in the encrypted
             // content, the rest (corporate mail footer, attachments, etc.) is discarded.
-            var body = _.pluck(self._emailSync.filterBodyParts(root, 'text'), 'content').join('\n');
+            var body = _.pluck(filterBodyParts(root, 'text'), 'content').join('\n');
 
             /*
              * here's how the regex works:
@@ -412,9 +650,9 @@ define(function(require) {
                 return;
             }
 
-            message.attachments = self._emailSync.filterBodyParts(root, 'attachment');
+            message.attachments = filterBodyParts(root, 'attachment');
             message.body = body;
-            message.html = _.pluck(self._emailSync.filterBodyParts(root, 'html'), 'content').join('\n');
+            message.html = _.pluck(filterBodyParts(root, 'html'), 'content').join('\n');
 
             done();
         }
@@ -426,7 +664,7 @@ define(function(require) {
     };
 
     EmailDAO.prototype.getAttachment = function(options, callback) {
-        this._emailSync._getBodyParts({
+        this._getBodyParts({
             folder: options.folder,
             uid: options.uid,
             bodyParts: [options.attachment]
@@ -446,7 +684,7 @@ define(function(require) {
             message = options.message;
 
         // the message is decrypting has no body, is not encrypted or has already been decrypted
-        if (message.decryptingBody || !message.body || !message.encrypted || message.decrypted) {
+        if (!message.bodyParts || message.decryptingBody || !message.body || !message.encrypted || message.decrypted) {
             return;
         }
 
@@ -466,7 +704,7 @@ define(function(require) {
             }
 
             // get the receiver's public key to check the message signature
-            var encryptedNode = self._emailSync.filterBodyParts(message.bodyParts, 'encrypted')[0];
+            var encryptedNode = filterBodyParts(message.bodyParts, 'encrypted')[0];
             self._crypto.decrypt(encryptedNode.content, senderPublicKey.publicKey, function(err, decrypted) {
                 if (err || !decrypted) {
                     showError(err.errMsg || err.message || 'An error occurred during the decryption.');
@@ -497,9 +735,9 @@ define(function(require) {
                     // we have successfully interpreted the descrypted message,
                     // so let's update the views on the message parts
 
-                    message.body = _.pluck(self._emailSync.filterBodyParts(parsedBodyParts, 'text'), 'content').join('\n');
-                    message.html = _.pluck(self._emailSync.filterBodyParts(parsedBodyParts, 'html'), 'content').join('\n');
-                    message.attachments = _.reject(self._emailSync.filterBodyParts(parsedBodyParts, 'attachment'), function(attmt) {
+                    message.body = _.pluck(filterBodyParts(parsedBodyParts, 'text'), 'content').join('\n');
+                    message.html = _.pluck(filterBodyParts(parsedBodyParts, 'html'), 'content').join('\n');
+                    message.attachments = _.reject(filterBodyParts(parsedBodyParts, 'attachment'), function(attmt) {
                         // remove the pgp-signature from the attachments
                         return attmt.mimeType === "application/pgp-signature";
                     });
@@ -527,7 +765,7 @@ define(function(require) {
     EmailDAO.prototype.sendEncrypted = function(options, callback) {
         var self = this;
 
-        if (!this._account.online) {
+        if (!self._account.online) {
             callback({
                 errMsg: 'Client is currently offline!',
                 code: 42
@@ -563,32 +801,295 @@ define(function(require) {
         this._pgpbuilder.encrypt(options, callback);
     };
 
+
+    //
+    //
+    // Event Handlers
+    //
+    //
+
+
+    EmailDAO.prototype.onConnect = function(options, callback) {
+        var self = this;
+
+        self._account.loggingIn = true;
+
+        self._imapClient = options.imapClient;
+        self._pgpMailer = options.pgpMailer;
+
+        this._imapClient.login(function(err) {
+            self._account.loggingIn = false;
+
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            // set status to online
+            self._account.online = true;
+
+            // init folders
+            self._initFolders(function(err) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                // attach sync update handler
+                self._imapClient.onSyncUpdate = self._onSyncUpdate.bind(self);
+
+                // fill the imap mailboxCache
+                var mailboxCache = {};
+                self._account.folders.forEach(function(folder) {
+                    if (folder.messages.length === 0) {
+                        return;
+                    }
+
+                    var uids, highestModseq, lastUid;
+
+                    uids = _.pluck(folder.messages, 'uid').sort(function(a, b) {
+                        return a - b;
+                    });
+                    lastUid = uids[uids.length - 1];
+
+                    highestModseq = _.pluck(folder.messages, 'modseq').sort(function(a, b) {
+                        return a - b;
+                    }).pop();
+
+                    mailboxCache[folder.path] = {
+                        exists: lastUid,
+                        uidNext: lastUid + 1,
+                        uidlist: uids,
+                        highestModseq: highestModseq
+                    };
+                });
+                self._imapClient.mailboxCache = mailboxCache;
+
+                var inbox = _.findWhere(self._account.folders, {
+                    type: 'Inbox'
+                });
+
+                if (!inbox) {
+                    callback();
+                    return;
+                }
+
+                self._imapClient.listenForChanges({
+                    path: inbox.path
+                }, callback);
+            });
+        });
+    };
+
+    EmailDAO.prototype.onDisconnect = function() {
+        this._account.online = false;
+        this._imapClient = undefined;
+        this._pgpMailer = undefined;
+    };
+
+    EmailDAO.prototype._onSyncUpdate = function(options) {
+        var self = this;
+
+        var folder = _.findWhere(self._account.folders, {
+            path: options.path
+        });
+
+        if (!folder) {
+            // ignore updates for an unknown folder
+            return;
+        }
+
+        if (options.type === 'new') {
+            // new messages available on imap, fetch from imap and store to disk and memory
+            self.fetchMessages({
+                folder: folder,
+                firstUid: Math.min.apply(null, options.list),
+                lastUid: Math.max.apply(null, options.list)
+            }, self.onError.bind(self));
+        } else if (options.type === 'deleted') {
+            // messages have been deleted, remove from local storage and memory
+            options.list.forEach(function(uid) {
+                var message = _.findWhere(folder.messages, {
+                    uid: uid
+                });
+
+                if (!message) {
+                    return;
+                }
+
+                self.deleteMessage({
+                    folder: folder,
+                    message: message,
+                    localOnly: true
+                }, self.onError.bind(self));
+            });
+        } else if (options.type === 'messages') {
+            // NB! several possible reasons why this could be called.
+            // if a message in the array has uid value and flag array, it had a possible flag update
+            options.list.forEach(function(changedMsg) {
+                if (!changedMsg.uid || !changedMsg.flags) {
+                    return;
+                }
+
+                var message = _.findWhere(folder.messages, {
+                    uid: changedMsg.uid
+                });
+
+                if (!message) {
+                    return;
+                }
+
+                message.answered = changedMsg.flags.indexOf('\\Answered') > -1;
+                message.unread = changedMsg.flags.indexOf('\\Seen') === -1;
+
+                if (!message) {
+                    return;
+                }
+
+                self.setFlags({
+                    folder: folder,
+                    message: message
+                }, self.onError.bind(self));
+            });
+        }
+    };
+
+
+    //
     //
     // Internal API
     //
+    //
 
-    // IMAP API
 
     /**
-     * Login the imap client
+     * List the folders in the user's IMAP mailbox.
      */
-    EmailDAO.prototype._imapLogin = function(callback) {
-        if (!this._imapClient) {
-            callback({
-                errMsg: 'Client is currently offline!',
-                code: 42
+    EmailDAO.prototype._initFolders = function(callback) {
+        var self = this,
+            folderDbType = 'folders',
+            folders;
+
+        self._account.busy = true;
+
+        if (!self._account.online) {
+            // fetch list from local cache
+            self._devicestorage.listItems(folderDbType, 0, null, function(err, stored) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+
+                self._account.folders = stored[0] || [];
+                readCache();
+            });
+            return;
+        } else {
+            // fetch list from imap server
+            self._imapClient.listWellKnownFolders(function(err, wellKnownFolders) {
+                var foldersChanged = false;
+
+                if (err) {
+                    done(err);
+                    return;
+                }
+
+                // this array is dropped directly into the ui to create the folder list
+                folders = [
+                    wellKnownFolders.inbox,
+                    wellKnownFolders.sent, {
+                        type: 'Outbox',
+                        path: config.outboxMailboxPath
+                    },
+                    wellKnownFolders.drafts,
+                    wellKnownFolders.trash
+                ];
+
+                // are there any new folders?
+                folders.forEach(function(folder) {
+                    if (!_.findWhere(self._account.folders, {
+                        path: folder.path
+                    })) {
+                        // add the missing folder
+                        self._account.folders.push(folder);
+                        foldersChanged = true;
+                    }
+                });
+
+                // have any folders been deleted?
+                self._account.folders.forEach(function(folder) {
+                    if (!_.findWhere(folders, {
+                        path: folder.path
+                    })) {
+                        // remove the obsolete folder
+                        self._account.folders.splice(self._account.folder.indexOf(folder), 1);
+                        foldersChanged = true;
+                    }
+                });
+
+                if (!foldersChanged) {
+                    readCache();
+                    return;
+                }
+
+                // persist encrypted list in device storage
+                self._devicestorage.storeList([folders], folderDbType, function(err) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+
+                    readCache();
+                });
             });
             return;
         }
 
-        // login IMAP client if existent
-        this._imapClient.login(callback);
+        function readCache() {
+            if (!self._account.folders || self._account.folders.length === 0) {
+                done();
+                return;
+            }
+
+            var after = _.after(self._account.folders.length, done);
+
+            self._account.folders.forEach(function(folder) {
+                if (folder.messages) {
+                    // the folder is already initialized
+                    after();
+                    return;
+                }
+
+                self.refreshFolder({
+                    folder: folder
+                }, function(err) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+
+                    after();
+                });
+            });
+        }
+
+        function done(err) {
+            self._account.busy = false; // stop the spinner
+            callback(err);
+        }
     };
 
+
+    //
+    // 
+    // IMAP API
+    //   
+    //   
+
     /**
-     * Cleanup by logging the user off.
+     * Mark imap messages as un-/read or un-/answered
      */
-    EmailDAO.prototype._imapLogout = function(callback) {
+    EmailDAO.prototype._imapMark = function(options, callback) {
         if (!this._account.online) {
             callback({
                 errMsg: 'Client is currently offline!',
@@ -597,73 +1098,160 @@ define(function(require) {
             return;
         }
 
-        this._imapClient.logout(callback);
+        options.path = options.folder.path;
+        this._imapClient.updateFlags(options, callback);
+    };
+
+    EmailDAO.prototype._imapDeleteMessage = function(options, callback) {
+        if (!this._account.online) {
+            callback({
+                errMsg: 'Client is currently offline!',
+                code: 42
+            });
+            return;
+        }
+
+        var trash = _.findWhere(this._account.folders, {
+            type: 'Trash'
+        });
+
+        // there's no known trash folder to move the mail to or we're in the trash folder, so we can purge the message
+        if (!trash || options.folder === trash) {
+            this._imapClient.deleteMessage({
+                path: options.folder.path,
+                uid: options.uid
+            }, callback);
+
+            return;
+        }
+
+        this._imapClient.moveMessage({
+            path: options.folder.path,
+            destination: trash.path,
+            uid: options.uid
+        }, callback);
     };
 
     /**
-     * List the folders in the user's IMAP mailbox.
+     * Get an email messsage without the body
+     * @param {String} options.folder The folder
+     * @param {Number} options.firstUid The lower bound of the uid (inclusive)
+     * @param {Number} options.lastUid The upper bound of the uid range (inclusive)
+     * @param {Function} callback (error, messages) The callback when the imap client is done fetching message metadata
      */
-    EmailDAO.prototype._imapListFolders = function(callback) {
-        var self = this,
-            dbType = 'folders';
+    EmailDAO.prototype._imapListMessages = function(options, callback) {
+        var self = this;
 
-        // check local cache
-        self._devicestorage.listItems(dbType, 0, null, function(err, stored) {
+        if (!this._account.online) {
+            callback({
+                errMsg: 'Client is currently offline!',
+                code: 42
+            });
+            return;
+        }
+
+        options.path = options.folder.path;
+        self._imapClient.listMessages(options, callback);
+    };
+
+    /**
+     * Stream an email messsage's body
+     * @param {String} options.folder The folder
+     * @param {String} options.uid the message's uid
+     * @param {Object} options.bodyParts The message, as retrieved by _imapListMessages
+     * @param {Function} callback (error, message) The callback when the imap client is done streaming message text content
+     */
+    EmailDAO.prototype._getBodyParts = function(options, callback) {
+        var self = this;
+
+        if (!self._account.online) {
+            callback({
+                errMsg: 'Client is currently offline!',
+                code: 42
+            });
+            return;
+        }
+
+        options.path = options.folder.path;
+        self._imapClient.getBodyParts(options, function(err) {
             if (err) {
                 callback(err);
                 return;
             }
-
-            if (!stored || stored.length < 1) {
-                // no folders cached... fetch from server
-                fetchFromServer();
-                return;
-            }
-
-            callback(null, stored[0]);
+            // interpret the raw content of the email
+            self._mailreader.parse(options, callback);
         });
-
-        function fetchFromServer() {
-            var folders;
-
-            if (!self._account.online) {
-                callback({
-                    errMsg: 'Client is currently offline!',
-                    code: 42
-                });
-                return;
-            }
-
-            // fetch list from imap server
-            self._imapClient.listWellKnownFolders(function(err, wellKnownFolders) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-
-                folders = [
-                    wellKnownFolders.inbox,
-                    wellKnownFolders.sent, {
-                        type: 'Outbox',
-                        path: 'OUTBOX'
-                    },
-                    wellKnownFolders.drafts,
-                    wellKnownFolders.trash
-                ];
-
-                // cache locally
-                // persist encrypted list in device storage
-                self._devicestorage.storeList([folders], dbType, function(err) {
-                    if (err) {
-                        callback(err);
-                        return;
-                    }
-
-                    callback(null, folders);
-                });
-            });
-        }
     };
+
+
+    // 
+    // 
+    // Local Storage API
+    // 
+    // 
+
+
+    EmailDAO.prototype._localListMessages = function(options, callback) {
+        var dbType = 'email_' + options.folder.path + (options.uid ? '_' + options.uid : '');
+        this._devicestorage.listItems(dbType, 0, null, callback);
+    };
+
+    EmailDAO.prototype._localStoreMessages = function(options, callback) {
+        var dbType = 'email_' + options.folder.path;
+        this._devicestorage.storeList(options.emails, dbType, callback);
+    };
+
+    EmailDAO.prototype._localDeleteMessage = function(options, callback) {
+        var path = options.folder.path,
+            uid = options.uid,
+            id = options.id;
+
+        if (!path || !(uid || id)) {
+            callback({
+                errMsg: 'Invalid options!'
+            });
+            return;
+        }
+
+        var dbType = 'email_' + path + '_' + (uid || id);
+        this._devicestorage.removeList(dbType, callback);
+    };
+
+
+    //
+    //
+    // Helper Functions
+    //
+    //
+
+    function updateUnreadCount(folder) {
+        var allMsgs = folder.messages.length,
+            unreadMsgs = _.filter(folder.messages, function(msg) {
+                return msg.unread;
+            }).length;
+
+        // for the outbox, the unread count is determined by ALL the messages
+        // whereas for normal folders, only the unread messages matter
+        folder.count = folder.path === config.outboxMailboxPath ? allMsgs : unreadMsgs;
+    }
+
+    /**
+     * Helper function that recursively traverses the body parts tree. Looks for bodyParts that match the provided type and aggregates them
+     * @param {[type]} bodyParts The bodyParts array
+     * @param {[type]} type The type to look up
+     * @param {undefined} result Leave undefined, only used for recursion
+     */
+    function filterBodyParts(bodyParts, type, result) {
+        result = result || [];
+        bodyParts.forEach(function(part) {
+            if (part.type === type) {
+                result.push(part);
+            } else if (Array.isArray(part.content)) {
+                filterBodyParts(part.content, type, result);
+            }
+        });
+        return result;
+    }
 
     return EmailDAO;
 });

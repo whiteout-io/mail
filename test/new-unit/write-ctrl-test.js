@@ -338,7 +338,7 @@ define(function(require) {
 
                     return true;
                 })).yields();
-                emailDaoMock.sync.yields();
+                emailDaoMock.setFlags.yields();
 
                 scope.onError = function(err) {
                     expect(err).to.not.exist;
@@ -347,7 +347,7 @@ define(function(require) {
                 scope.sendToOutbox();
 
                 expect(outboxMock.put.calledOnce).to.be.true;
-                expect(emailDaoMock.sync.calledOnce).to.be.true;
+                expect(emailDaoMock.setFlags.calledOnce).to.be.true;
                 expect(scope.state.lightbox).to.be.undefined;
                 expect(scope.replyTo.answered).to.be.true;
             });

@@ -6,7 +6,7 @@ define(function(require) {
         appController = require('js/app-controller'),
         IScroll = require('iscroll'),
         notification = require('js/util/notification'),
-        emailDao, outboxBo, emailSync;
+        emailDao, outboxBo;
 
     var MailListCtrl = function($scope, $timeout) {
         //
@@ -15,7 +15,6 @@ define(function(require) {
 
         emailDao = appController._emailDao;
         outboxBo = appController._outboxBo;
-        emailSync = appController._emailSync;
 
         //
         // scope functions
@@ -23,7 +22,7 @@ define(function(require) {
 
         $scope.getBody = function(email) {
             emailDao.getBody({
-                folder: currentFolder().path,
+                folder: currentFolder(),
                 message: email
             }, function(err) {
                 if (err && err.code !== 42) {
@@ -35,7 +34,7 @@ define(function(require) {
                 $scope.$digest();
 
                 // automatically decrypt if it's the selected email
-                if (email === $scope.state.mailList.selected) {
+                if (email === currentMessage()) {
                     emailDao.decryptBody({
                         message: email
                     }, $scope.onError);
@@ -66,49 +65,24 @@ define(function(require) {
                 return;
             }
 
-            email.unread = false;
-            $scope.synchronize();
+            $scope.toggleUnread(email);
         };
 
         /**
          * Mark an email as unread or read, respectively
          */
-        $scope.toggleUnread = function(email) {
-            email.unread = !email.unread;
-            $scope.synchronize();
-        };
+        $scope.toggleUnread = function(message) {
+            updateStatus('Updating unread flag...');
 
-        /**
-         * Synchronize the selected imap folder to local storage
-         */
-        $scope.synchronize = function(options) {
-            updateStatus('Syncing ...');
-
-            options = options || {};
-            options.folder = options.folder || currentFolder().path;
-
-            // let email dao handle sync transparently
-            if (currentFolder().type === 'Outbox') {
-                emailDao.syncOutbox({
-                    folder: currentFolder().path
-                }, done);
-            } else {
-                emailDao.sync({
-                    folder: options.folder || currentFolder().path
-                }, done);
-            }
-
-
-            function done(err) {
-                if (err && err.code === 409) {
-                    // sync still busy
-                    return;
-                }
-
+            message.unread = !message.unread;
+            emailDao.setFlags({
+                folder: currentFolder(),
+                message: message
+            }, function(err) {
                 if (err && err.code === 42) {
-                    // offline
-                    updateStatus('Offline mode');
-                    $scope.$apply();
+                    // offline, restore
+                    message.unread = !message.unread;
+                    updateStatus('Unable to mark unread flag in offline mode!');
                     return;
                 }
 
@@ -118,59 +92,46 @@ define(function(require) {
                     return;
                 }
 
-                // display last update
-                updateStatus('Last update: ', new Date());
-
-                // do not change the selection if we just updated another folder in the background
-                if (currentFolder().path === options.folder) {
-                    selectFirstMessage();
-                }
-
+                updateStatus('Flag updated!');
                 $scope.$apply();
-
-                // fetch visible bodies at the end of a successful sync
-                $scope.loadVisibleBodies();
-            }
+            });
         };
 
         /**
-         * Delete an email by moving it to the trash folder or purging it.
+         * Delete a message
          */
-        $scope.remove = function(email) {
-            if (!email) {
+        $scope.remove = function(message) {
+            if (!message) {
                 return;
             }
 
-            if (currentFolder().type === 'Outbox') {
-                $scope.onError({
-                    errMsg: 'Deleting messages from the outbox is not yet supported.'
+            updateStatus('Deleting message...');
+            remove();
+
+            function remove() {
+                emailDao.deleteMessage({
+                    folder: currentFolder(),
+                    message: message
+                }, function(err) {
+                    if (err) {
+                        // show errors where appropriate
+                        if (err.code === 42) {
+                            $scope.select(message);
+                            updateStatus('Unable to delete message in offline mode!');
+                            return;
+                        }
+                        updateStatus('Error during delete!');
+                        $scope.onError(err);
+                    }
+                    updateStatus('Message deleted!');
+                    $scope.$apply();
                 });
-                return;
-            }
-
-            removeAndShowNext();
-            $scope.synchronize();
-
-            function removeAndShowNext() {
-                var index = currentFolder().messages.indexOf(email);
-                // show the next mail
-                if (currentFolder().messages.length > 1) {
-                    // if we're about to delete the last entry of the array, show the previous (i.e. the one below in the list),
-                    // otherwise show the next one (i.e. the one above in the list)
-                    $scope.select(_.last(currentFolder().messages) === email ? currentFolder().messages[index - 1] : currentFolder().messages[index + 1]);
-                } else {
-                    // if we have only one email in the array, show nothing
-                    $scope.select();
-                    $scope.state.mailList.selected = undefined;
-                }
-                currentFolder().messages.splice(index, 1);
             }
         };
 
         // share local scope functions with root state
         $scope.state.mailList = {
-            remove: $scope.remove,
-            synchronize: $scope.synchronize
+            remove: $scope.remove
         };
 
         //
@@ -185,81 +146,84 @@ define(function(require) {
                 return;
             }
 
-            // development... display dummy mail objects
+            // in development, display dummy mail objects
             if (!window.chrome || !chrome.identity) {
                 updateStatus('Last update: ', new Date());
                 currentFolder().messages = createDummyMails();
-                selectFirstMessage();
                 return;
             }
 
-            // production... in chrome packaged app
-
-            // unselect selection from old folder
-            $scope.select();
             // display and select first
-            selectFirstMessage();
-
-            $scope.synchronize();
+            openCurrentFolder();
         });
+
+        $scope.$watch('state.nav.currentFolder.messages', selectFirstMessage);
+        $scope.$watch('state.nav.currentFolder.messages.length', selectFirstMessage);
+
+        function selectFirstMessage() {
+            if (!currentMessages()) {
+                return;
+            }
+
+            // Shows the next message based on the uid of the currently selected element
+            if (currentMessages().indexOf(currentMessage()) === -1) {
+                // wait until after first $digest() so $scope.filteredMessages is set
+                $timeout(function() {
+                    $scope.select($scope.filteredMessages ? $scope.filteredMessages[0] : undefined);
+                });
+            }
+        }
 
         /**
          * Sync current folder when client comes back online
          */
         $scope.$watch('account.online', function(isOnline) {
             if (isOnline) {
-                $scope.synchronize();
+                updateStatus('Online');
+                openCurrentFolder();
             } else {
                 updateStatus('Offline mode');
             }
         }, true);
 
         //
-        // helper functions
+        // Helper Functions
         //
+
+        function openCurrentFolder() {
+            emailDao.openFolder({
+                folder: currentFolder()
+            }, function(error) {
+                if (error && error.code === 42) {
+                    return;
+                }
+
+                $scope.onError(error);
+            });
+        }
 
         function updateStatus(lbl, time) {
             $scope.lastUpdateLbl = lbl;
             $scope.lastUpdate = (time) ? time : '';
         }
 
-        function selectFirstMessage() {
-            // wait until after first $digest() so $scope.filteredMessages is set
-            $timeout(function() {
-                var emails = $scope.filteredMessages;
-
-                if (!emails || emails.length < 1) {
-                    $scope.select();
-                    return;
-                }
-
-                if (!$scope.state.mailList.selected) {
-                    // select first message
-                    $scope.select(emails[0]);
-                }
-            });
-        }
-
         function currentFolder() {
             return $scope.state.nav.currentFolder;
         }
 
-        if (!emailDao || !emailSync) {
-            return; // development mode
+        function currentMessages() {
+            return currentFolder() && currentFolder().messages;
         }
 
-        emailDao.onNeedsSync = function(error, folder) {
-            if (error) {
-                $scope.onError(error);
-                return;
-            }
+        function currentMessage() {
+            return $scope.state.mailList.selected;
+        }
 
-            $scope.synchronize({
-                folder: folder
-            });
-        };
+        //
+        // Notification API
+        //
 
-        emailSync.onIncomingMessage = function(msgs) {
+        (emailDao || {}).onIncomingMessage = function(msgs) {
             var popupId, popupTitle, popupMessage, unreadMsgs;
 
             unreadMsgs = msgs.filter(function(msg) {
@@ -298,6 +262,81 @@ define(function(require) {
             }));
         });
     };
+
+    //
+    // Directives
+    //
+
+    var ngModule = angular.module('mail-list', []);
+
+    ngModule.directive('ngIscroll', function($timeout) {
+        return {
+            link: function(scope, elm, attrs) {
+                var model = attrs.ngIscroll,
+                    listEl = elm[0],
+                    myScroll;
+
+                /*
+                 * iterates over the mails in the mail list and loads their bodies if they are visible in the viewport
+                 */
+                scope.loadVisibleBodies = function() {
+                    var listBorder = listEl.getBoundingClientRect(),
+                        top = listBorder.top,
+                        bottom = listBorder.bottom,
+                        listItems = listEl.children[0].children,
+                        inViewport = false,
+                        listItem, message,
+                        isPartiallyVisibleTop, isPartiallyVisibleBottom, isVisible;
+
+                    for (var i = 0, len = listItems.length; i < len; i++) {
+                        // the n-th list item (the dom representation of an email) corresponds to
+                        // the n-th message model in the filteredMessages array
+                        listItem = listItems.item(i).getBoundingClientRect();
+
+                        if (!scope.filteredMessages || scope.filteredMessages.length <= i) {
+                            // stop if i get larger than the size of filtered messages
+                            break;
+                        }
+                        message = scope.filteredMessages[i];
+
+
+                        isPartiallyVisibleTop = listItem.top < top && listItem.bottom > top; // a portion of the list item is visible on the top
+                        isPartiallyVisibleBottom = listItem.top < bottom && listItem.bottom > bottom; // a portion of the list item is visible on the bottom
+                        isVisible = listItem.top >= top && listItem.bottom <= bottom; // the list item is visible as a whole
+
+                        if (isPartiallyVisibleTop || isVisible || isPartiallyVisibleBottom) {
+                            // we are now iterating over visible elements
+                            inViewport = true;
+                            // load mail body of visible
+                            scope.getBody(message);
+                        } else if (inViewport) {
+                            // we are leaving the viewport, so stop iterating over the items
+                            break;
+                        }
+                    }
+                };
+
+                // activate iscroll
+                myScroll = new IScroll(listEl, {
+                    mouseWheel: true,
+                    scrollbars: true,
+                    fadeScrollbars: true
+                });
+                myScroll.on('scrollEnd', scope.loadVisibleBodies);
+
+                // refresh iScroll when model length changes
+                scope.$watchCollection(model, function() {
+                    $timeout(function() {
+                        myScroll.refresh();
+                    });
+                    // load the visible message bodies, when the list is re-initialized and when scrolling stopped
+                    scope.loadVisibleBodies();
+                });
+            }
+        };
+    });
+
+    // Helper for development mode
 
     function createDummyMails() {
         var uid = 0;
@@ -427,79 +466,6 @@ define(function(require) {
 
         return dummys;
     }
-
-    //
-    // Directives
-    //
-
-    var ngModule = angular.module('mail-list', []);
-
-    ngModule.directive('ngIscroll', function($timeout) {
-        return {
-            link: function(scope, elm, attrs) {
-                var model = attrs.ngIscroll,
-                    listEl = elm[0],
-                    myScroll;
-
-                /*
-                 * iterates over the mails in the mail list and loads their bodies if they are visible in the viewport
-                 */
-                scope.loadVisibleBodies = function() {
-                    var listBorder = listEl.getBoundingClientRect(),
-                        top = listBorder.top,
-                        bottom = listBorder.bottom,
-                        listItems = listEl.children[0].children,
-                        inViewport = false,
-                        listItem, message,
-                        isPartiallyVisibleTop, isPartiallyVisibleBottom, isVisible;
-
-                    for (var i = 0, len = listItems.length; i < len; i++) {
-                        // the n-th list item (the dom representation of an email) corresponds to
-                        // the n-th message model in the filteredMessages array
-                        listItem = listItems.item(i).getBoundingClientRect();
-
-                        if (!scope.filteredMessages || scope.filteredMessages.length <= i) {
-                            // stop if i get larger than the size of filtered messages
-                            break;
-                        }
-                        message = scope.filteredMessages[i];
-
-
-                        isPartiallyVisibleTop = listItem.top < top && listItem.bottom > top; // a portion of the list item is visible on the top
-                        isPartiallyVisibleBottom = listItem.top < bottom && listItem.bottom > bottom; // a portion of the list item is visible on the bottom
-                        isVisible = listItem.top >= top && listItem.bottom <= bottom; // the list item is visible as a whole
-
-                        if (isPartiallyVisibleTop || isVisible || isPartiallyVisibleBottom) {
-                            // we are now iterating over visible elements
-                            inViewport = true;
-                            // load mail body of visible
-                            scope.getBody(message);
-                        } else if (inViewport) {
-                            // we are leaving the viewport, so stop iterating over the items
-                            break;
-                        }
-                    }
-                };
-
-                // activate iscroll
-                myScroll = new IScroll(listEl, {
-                    mouseWheel: true,
-                    scrollbars: true,
-                    fadeScrollbars: true
-                });
-                myScroll.on('scrollEnd', scope.loadVisibleBodies);
-
-                // refresh iScroll when model length changes
-                scope.$watchCollection(model, function() {
-                    $timeout(function() {
-                        myScroll.refresh();
-                    });
-                    // load the visible message bodies, when the list is re-initialized and when scrolling stopped
-                    scope.loadVisibleBodies();
-                });
-            }
-        };
-    });
 
     return MailListCtrl;
 });

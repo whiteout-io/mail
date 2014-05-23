@@ -46,15 +46,16 @@ define(function(require) {
         iconPath: '/img/icon.png',
         verificationUrl: '/verify/',
         verificationUuidLength: 36,
-        dbVersion: 2,
-        appVersion: appVersion
+        dbVersion: 3,
+        appVersion: appVersion,
+        outboxMailboxPath: 'OUTBOX',
+        outboxMailboxType: 'Outbox'
     };
 
     /**
      * Strings are maintained here
      */
     app.string = {
-        subjectPrefix: '[whiteout] ',
         fallbackSubject: '(no subject)',
         invitationSubject: 'Invitation to a private conversation',
         invitationMessage: 'Hi,\n\nI use Whiteout Mail to send and receive encrypted email. I would like to exchange encrypted messages with you as well.\n\nPlease install the Whiteout Mail application. This application makes it easy to read and write messages securely with PGP encryption applied.\n\nGo to the Whiteout Networks homepage to learn more and to download the application: https://whiteout.io\n\n',
@@ -63,7 +64,7 @@ define(function(require) {
         cryptSuffix: '-----END PGP MESSAGE-----',
         signature: '\n\n\n--\nSent from Whiteout Mail - Email encryption for the rest of us\nhttps://whiteout.io\n\n',
         webSite: 'http://whiteout.io',
-        verificationSubject: 'New public key uploaded',
+        verificationSubject: '[whiteout] New public key uploaded',
         sendBtnClear: 'Send',
         sendBtnSecure: 'Send securely'
     };
