@@ -56,6 +56,255 @@ define(function(require) {
             });
         });
 
+        describe('refreshKeyForUserId', function() {
+            var getPubKeyStub,
+                oldKey = {
+                    _id: 123
+                }, newKey = {
+                    _id: 456
+                };
+
+            beforeEach(function() {
+                getPubKeyStub = sinon.stub(keychainDao, 'getReceiverPublicKey');
+            });
+
+            afterEach(function() {
+                keychainDao.getReceiverPublicKey.restore();
+                delete keychainDao.requestPermissionForKeyUpdate;
+            });
+
+            it('should not find a key', function(done) {
+                getPubKeyStub.yields();
+
+                keychainDao.refreshKeyForUserId(testUser, function(err, key) {
+                    expect(err).to.not.exist;
+                    expect(key).to.not.exist;
+
+                    done();
+                });
+            });
+
+            it('should not update the key when up to date', function(done) {
+                getPubKeyStub.yields(null, oldKey);
+                pubkeyDaoStub.get.withArgs(oldKey._id).yields(null, oldKey);
+
+                keychainDao.refreshKeyForUserId(testUser, function(err, key) {
+                    expect(err).to.not.exist;
+                    expect(key).to.to.equal(oldKey);
+
+                    expect(getPubKeyStub.calledOnce).to.be.true;
+                    expect(pubkeyDaoStub.get.calledOnce).to.be.true;
+
+
+                    done();
+                });
+            });
+
+            it('should update key', function(done) {
+                getPubKeyStub.yields(null, oldKey);
+                pubkeyDaoStub.get.withArgs(oldKey._id).yields();
+                pubkeyDaoStub.getByUserId.withArgs(testUser).yields(null, newKey);
+                keychainDao.requestPermissionForKeyUpdate = function(opts, cb) {
+                    expect(opts.userId).to.equal(testUser);
+                    expect(opts.newKey).to.equal(newKey);
+                    cb(true);
+                };
+                lawnchairDaoStub.remove.withArgs('publickey_' + oldKey._id).yields();
+                lawnchairDaoStub.persist.withArgs('publickey_' + newKey._id, newKey).yields();
+
+                keychainDao.refreshKeyForUserId(testUser, function(err, key) {
+                    expect(err).to.not.exist;
+                    expect(key).to.equal(newKey);
+
+                    expect(getPubKeyStub.calledOnce).to.be.true;
+                    expect(pubkeyDaoStub.get.calledOnce).to.be.true;
+                    expect(pubkeyDaoStub.getByUserId.calledOnce).to.be.true;
+                    expect(lawnchairDaoStub.remove.calledOnce).to.be.true;
+                    expect(lawnchairDaoStub.persist.calledOnce).to.be.true;
+
+                    done();
+                });
+            });
+
+            it('should remove key', function(done) {
+                getPubKeyStub.yields(null, oldKey);
+                pubkeyDaoStub.get.withArgs(oldKey._id).yields();
+                pubkeyDaoStub.getByUserId.withArgs(testUser).yields();
+                keychainDao.requestPermissionForKeyUpdate = function(opts, cb) {
+                    expect(opts.userId).to.equal(testUser);
+                    expect(opts.newKey).to.not.exist;
+                    cb(true);
+                };
+                lawnchairDaoStub.remove.withArgs('publickey_' + oldKey._id).yields();
+
+                keychainDao.refreshKeyForUserId(testUser, function(err, key) {
+                    expect(err).to.not.exist;
+                    expect(key).to.not.exist;
+
+                    expect(getPubKeyStub.calledOnce).to.be.true;
+                    expect(pubkeyDaoStub.get.calledOnce).to.be.true;
+                    expect(pubkeyDaoStub.getByUserId.calledOnce).to.be.true;
+                    expect(lawnchairDaoStub.remove.calledOnce).to.be.true;
+                    expect(lawnchairDaoStub.persist.called).to.be.false;
+
+                    done();
+                });
+            });
+
+            it('should go offline while fetching new key', function(done) {
+                getPubKeyStub.yields(null, oldKey);
+                pubkeyDaoStub.get.withArgs(oldKey._id).yields();
+                pubkeyDaoStub.getByUserId.withArgs(testUser).yields({
+                    code: 42
+                });
+
+                keychainDao.refreshKeyForUserId(testUser, function(err, key) {
+                    expect(err).to.not.exist;
+                    expect(key).to.to.equal(oldKey);
+
+                    expect(getPubKeyStub.calledOnce).to.be.true;
+                    expect(pubkeyDaoStub.get.calledOnce).to.be.true;
+                    expect(pubkeyDaoStub.getByUserId.calledOnce).to.be.true;
+                    expect(lawnchairDaoStub.remove.called).to.be.false;
+                    expect(lawnchairDaoStub.persist.called).to.be.false;
+
+                    done();
+                });
+            });
+
+            it('should not remove old key on user rejection', function(done) {
+                getPubKeyStub.yields(null, oldKey);
+                pubkeyDaoStub.get.withArgs(oldKey._id).yields();
+                pubkeyDaoStub.getByUserId.withArgs(testUser).yields(null, newKey);
+                keychainDao.requestPermissionForKeyUpdate = function(opts, cb) {
+                    expect(opts.userId).to.equal(testUser);
+                    expect(opts.newKey).to.exist;
+                    cb(false);
+                };
+
+                keychainDao.refreshKeyForUserId(testUser, function(err, key) {
+                    expect(err).to.not.exist;
+                    expect(key).to.equal(oldKey);
+
+                    expect(getPubKeyStub.calledOnce).to.be.true;
+                    expect(pubkeyDaoStub.get.calledOnce).to.be.true;
+                    expect(pubkeyDaoStub.getByUserId.calledOnce).to.be.true;
+                    expect(lawnchairDaoStub.remove.called).to.be.false;
+                    expect(lawnchairDaoStub.persist.called).to.be.false;
+
+                    done();
+                });
+            });
+
+            it('should update not the key when offline', function(done) {
+                getPubKeyStub.yields(null, oldKey);
+                pubkeyDaoStub.get.withArgs(oldKey._id).yields({
+                    code: 42
+                });
+
+                keychainDao.refreshKeyForUserId(testUser, function(err, key) {
+                    expect(err).to.not.exist;
+                    expect(key).to.to.equal(oldKey);
+
+                    expect(getPubKeyStub.calledOnce).to.be.true;
+                    expect(pubkeyDaoStub.get.calledOnce).to.be.true;
+                    expect(pubkeyDaoStub.getByUserId.called).to.be.false;
+                    expect(lawnchairDaoStub.remove.called).to.be.false;
+                    expect(lawnchairDaoStub.persist.called).to.be.false;
+
+                    done();
+                });
+            });
+
+            it('should error while persisting new key', function(done) {
+                getPubKeyStub.yields(null, oldKey);
+                pubkeyDaoStub.get.withArgs(oldKey._id).yields();
+                pubkeyDaoStub.getByUserId.withArgs(testUser).yields(null, newKey);
+                keychainDao.requestPermissionForKeyUpdate = function(opts, cb) {
+                    expect(opts.userId).to.equal(testUser);
+                    expect(opts.newKey).to.equal(newKey);
+                    cb(true);
+                };
+                lawnchairDaoStub.remove.withArgs('publickey_' + oldKey._id).yields();
+                lawnchairDaoStub.persist.yields({});
+
+                keychainDao.refreshKeyForUserId(testUser, function(err, key) {
+                    expect(err).to.exist;
+                    expect(key).to.not.exist;
+
+                    expect(getPubKeyStub.calledOnce).to.be.true;
+                    expect(pubkeyDaoStub.get.calledOnce).to.be.true;
+                    expect(pubkeyDaoStub.getByUserId.calledOnce).to.be.true;
+                    expect(lawnchairDaoStub.remove.calledOnce).to.be.true;
+                    expect(lawnchairDaoStub.persist.calledOnce).to.be.true;
+
+                    done();
+                });
+            });
+
+            it('should error while deleting old key', function(done) {
+                getPubKeyStub.yields(null, oldKey);
+                pubkeyDaoStub.get.withArgs(oldKey._id).yields();
+                pubkeyDaoStub.getByUserId.withArgs(testUser).yields();
+                keychainDao.requestPermissionForKeyUpdate = function(opts, cb) {
+                    expect(opts.userId).to.equal(testUser);
+                    cb(true);
+                };
+                lawnchairDaoStub.remove.yields({});
+
+                keychainDao.refreshKeyForUserId(testUser, function(err, key) {
+                    expect(err).to.exist;
+                    expect(key).to.not.exist;
+
+                    expect(getPubKeyStub.calledOnce).to.be.true;
+                    expect(pubkeyDaoStub.get.calledOnce).to.be.true;
+                    expect(lawnchairDaoStub.remove.calledOnce).to.be.true;
+                    expect(pubkeyDaoStub.getByUserId.calledOnce).to.be.true;
+                    expect(lawnchairDaoStub.persist.called).to.be.false;
+
+                    done();
+                });
+            });
+
+            it('should error while persisting new key', function(done) {
+                getPubKeyStub.yields(null, oldKey);
+                pubkeyDaoStub.get.withArgs(oldKey._id).yields();
+                pubkeyDaoStub.getByUserId.withArgs(testUser).yields(null, newKey);
+                keychainDao.requestPermissionForKeyUpdate = function(opts, cb) {
+                    expect(opts.userId).to.equal(testUser);
+                    expect(opts.newKey).to.equal(newKey);
+                    cb(true);
+                };
+                lawnchairDaoStub.remove.withArgs('publickey_' + oldKey._id).yields();
+                lawnchairDaoStub.persist.yields({});
+
+                keychainDao.refreshKeyForUserId(testUser, function(err, key) {
+                    expect(err).to.exist;
+                    expect(key).to.not.exist;
+
+                    expect(getPubKeyStub.calledOnce).to.be.true;
+                    expect(pubkeyDaoStub.get.calledOnce).to.be.true;
+                    expect(pubkeyDaoStub.getByUserId.calledOnce).to.be.true;
+                    expect(lawnchairDaoStub.remove.calledOnce).to.be.true;
+                    expect(lawnchairDaoStub.persist.calledOnce).to.be.true;
+
+                    done();
+                });
+            });
+
+            it('should error when get failed', function(done) {
+                getPubKeyStub.yields(null, oldKey);
+                pubkeyDaoStub.get.withArgs(oldKey._id).yields({});
+
+                keychainDao.refreshKeyForUserId(testUser, function(err, key) {
+                    expect(err).to.exist;
+                    expect(key).to.not.exist;
+
+                    done();
+                });
+            });
+        });
+
         describe('lookup public key', function() {
             it('should fail', function(done) {
                 keychainDao.lookupPublicKey(undefined, function(err, key) {
@@ -182,7 +431,7 @@ define(function(require) {
 
             it('should fail due to error in pubkey dao', function(done) {
                 lawnchairDaoStub.list.yields();
-                pubkeyDaoStub.getByUserId.yields(42);
+                pubkeyDaoStub.getByUserId.yields({});
 
                 keychainDao.getReceiverPublicKey(testUser, function(err, key) {
                     expect(err).to.exist;

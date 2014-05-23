@@ -60,13 +60,16 @@ define(function(require) {
         invitationSubject: 'Invitation to a private conversation',
         invitationMessage: 'Hi,\n\nI use Whiteout Mail to send and receive encrypted email. I would like to exchange encrypted messages with you as well.\n\nPlease install the Whiteout Mail application. This application makes it easy to read and write messages securely with PGP encryption applied.\n\nGo to the Whiteout Networks homepage to learn more and to download the application: https://whiteout.io\n\n',
         message: 'Hi,\n\nthis is a private conversation. To read my encrypted message below, simply open it in Whiteout Mail.\nOpen Whiteout Mail: https://chrome.google.com/webstore/detail/jjgghafhamholjigjoghcfcekhkonijg',
-        cryptPrefix: '-----BEGIN PGP MESSAGE-----',
-        cryptSuffix: '-----END PGP MESSAGE-----',
         signature: '\n\n\n--\nSent from Whiteout Mail - Email encryption for the rest of us\nhttps://whiteout.io\n\n',
         webSite: 'http://whiteout.io',
         verificationSubject: '[whiteout] New public key uploaded',
         sendBtnClear: 'Send',
-        sendBtnSecure: 'Send securely'
+        sendBtnSecure: 'Send securely',
+        updatePublicKeyTitle: 'Public Key Updated',
+        updatePublicKeyMsgNewKey: '{0} updated his key and may not be able to read encrypted messages sent with his old key. Update the key?',
+        updatePublicKeyMsgRemovedKey: '{0} revoked his key and may no longer be able to read encrypted messages. Remove the key?',
+        updatePublicKeyPosBtn: 'Yes',
+        updatePublicKeyNegBtn: 'No'
     };
 
     return app;

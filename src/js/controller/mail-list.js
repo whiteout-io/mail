@@ -6,7 +6,7 @@ define(function(require) {
         appController = require('js/app-controller'),
         IScroll = require('iscroll'),
         notification = require('js/util/notification'),
-        emailDao, outboxBo;
+        emailDao, outboxBo, keychainDao;
 
     var MailListCtrl = function($scope, $timeout) {
         //
@@ -15,6 +15,7 @@ define(function(require) {
 
         emailDao = appController._emailDao;
         outboxBo = appController._outboxBo;
+        keychainDao = appController._keychain;
 
         //
         // scope functions
@@ -55,17 +56,25 @@ define(function(require) {
             $scope.state.mailList.selected = email;
             $scope.state.read.toggle(true);
 
-            emailDao.decryptBody({
-                message: email
-            }, $scope.onError);
+            keychainDao.refreshKeyForUserId(email.from[0].address, onKeyRefreshed);
 
-            // if the email is unread, please sync the new state.
-            // otherweise forget about it.
-            if (!email.unread) {
-                return;
+            function onKeyRefreshed(err) {
+                if (err) {
+                    $scope.onError(err);
+                }
+
+                emailDao.decryptBody({
+                    message: email
+                }, $scope.onError);
+
+                // if the email is unread, please sync the new state.
+                // otherweise forget about it.
+                if (!email.unread) {
+                    return;
+                }
+
+                $scope.toggleUnread(email);
             }
-
-            $scope.toggleUnread(email);
         };
 
         /**

@@ -7,7 +7,8 @@
   <div class="content">
     <p>{{state.dialog.message}}</p>
     <div class="control">
-      <button ng-click="confirm(true)" class="btn">Ok</button>
+      <button ng-click="confirm(false)" class="btn btn-alt" ng-show="state.dialog.showNegativeBtn">{{state.dialog.negativeBtnStr}}</button>
+      <button ng-click="confirm(true)" class="btn">{{state.dialog.positiveBtnStr}}</button>
     </div>
   </div><!-- /.content -->
 </div><!-- /.lightbox-body -->

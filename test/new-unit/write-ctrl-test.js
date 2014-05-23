@@ -12,7 +12,7 @@ define(function(require) {
 
     describe('Write controller unit test', function() {
         var ctrl, scope,
-            origEmailDao, origOutbox,
+            origEmailDao, origOutbox, origKeychain,
             emailDaoMock, keychainMock, outboxMock, emailAddress;
 
         beforeEach(function() {
@@ -20,6 +20,7 @@ define(function(require) {
             // outbox and email dao to restore it after the tests
             origEmailDao = appController._emailDao;
             origOutbox = appController._outboxBo;
+            origKeychain = appController._keychain;
 
             outboxMock = sinon.createStubInstance(OutboxBO);
             appController._outboxBo = outboxMock;
@@ -33,7 +34,7 @@ define(function(require) {
             };
 
             keychainMock = sinon.createStubInstance(KeychainDAO);
-            emailDaoMock._keychain = keychainMock;
+            appController._keychain = keychainMock;
 
             angular.module('writetest', []);
             mocks.module('writetest');
@@ -50,6 +51,7 @@ define(function(require) {
             // restore the app controller
             appController._emailDao = origEmailDao;
             appController._outboxBo = origOutbox;
+            appController._keychain = origKeychain;
         });
 
         describe('scope variables', function() {
@@ -215,14 +217,15 @@ define(function(require) {
                     address: 'asds@example.com'
                 };
 
-                keychainMock.getReceiverPublicKey.withArgs(recipient.address).yields({
+                keychainMock.refreshKeyForUserId.withArgs(recipient.address).yields({
                     errMsg: '404 not found yadda yadda'
                 });
+
                 scope.onError = function() {
                     expect(recipient.key).to.be.undefined;
                     expect(recipient.secure).to.be.false;
                     expect(scope.checkSendStatus.callCount).to.equal(1);
-                    expect(keychainMock.getReceiverPublicKey.calledOnce).to.be.true;
+                    expect(keychainMock.refreshKeyForUserId.calledOnce).to.be.true;
                     done();
                 };
 
@@ -234,16 +237,17 @@ define(function(require) {
                     address: 'asdf@example.com'
                 };
 
-                keychainMock.getReceiverPublicKey.yields(null, {
+                keychainMock.refreshKeyForUserId.withArgs(recipient.address).yields(null, {
                     userId: 'asdf@example.com'
                 });
+
                 scope.$digest = function() {
                     expect(recipient.key).to.deep.equal({
                         userId: 'asdf@example.com'
                     });
                     expect(recipient.secure).to.be.true;
                     expect(scope.checkSendStatus.callCount).to.equal(2);
-                    expect(keychainMock.getReceiverPublicKey.calledOnce).to.be.true;
+                    expect(keychainMock.refreshKeyForUserId.calledOnce).to.be.true;
                     done();
                 };
 
