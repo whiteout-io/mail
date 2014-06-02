@@ -157,16 +157,15 @@ define(function(require) {
             openCurrentFolder();
         });
 
-        $scope.$watch('state.nav.currentFolder.messages', selectFirstMessage);
-        $scope.$watch('state.nav.currentFolder.messages.length', selectFirstMessage);
+        $scope.$watchCollection('state.nav.currentFolder.messages', selectFirstMessage);
 
-        function selectFirstMessage() {
-            if (!currentMessages()) {
+        function selectFirstMessage(messages) {
+            if (!messages) {
                 return;
             }
 
             // Shows the next message based on the uid of the currently selected element
-            if (currentMessages().indexOf(currentMessage()) === -1) {
+            if (messages.indexOf(currentMessage()) === -1) {
                 // wait until after first $digest() so $scope.filteredMessages is set
                 $timeout(function() {
                     $scope.select($scope.filteredMessages ? $scope.filteredMessages[0] : undefined);
@@ -209,10 +208,6 @@ define(function(require) {
 
         function currentFolder() {
             return $scope.state.nav.currentFolder;
-        }
-
-        function currentMessages() {
-            return currentFolder() && currentFolder().messages;
         }
 
         function currentMessage() {

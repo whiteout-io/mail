@@ -171,13 +171,13 @@ define(function(require) {
     };
 
     EmailDAO.prototype.openFolder = function(options, callback) {
-        var self = this;
+        var self = this,
+            err;
 
         if (!self._account.online) {
-            callback({
-                errMsg: 'Client is currently offline!',
-                code: 42
-            });
+            err = new Error('Client is currently offline!');
+            err.code = 42;
+            callback(err);
             return;
         }
 
@@ -495,7 +495,7 @@ define(function(require) {
         }
 
         function done(err) {
-            self._account.busy = false; // stop the spinner // 
+            self._account.busy = false; // stop the spinner //
             updateUnreadCount(folder); // update the unread count
             callback(err);
         }
@@ -817,7 +817,7 @@ define(function(require) {
         self._imapClient = options.imapClient;
         self._pgpMailer = options.pgpMailer;
 
-        this._imapClient.login(function(err) {
+        self._imapClient.login(function(err) {
             self._account.loggingIn = false;
 
             if (err) {
@@ -981,7 +981,7 @@ define(function(require) {
                 }
 
                 self._account.folders = stored[0] || [];
-                readCache();
+                readMessagesFromDisk();
             });
             return;
         } else {
@@ -1028,7 +1028,7 @@ define(function(require) {
                 });
 
                 if (!foldersChanged) {
-                    readCache();
+                    readMessagesFromDisk();
                     return;
                 }
 
@@ -1039,13 +1039,13 @@ define(function(require) {
                         return;
                     }
 
-                    readCache();
+                    readMessagesFromDisk();
                 });
             });
             return;
         }
 
-        function readCache() {
+        function readMessagesFromDisk() {
             if (!self._account.folders || self._account.folders.length === 0) {
                 done();
                 return;
@@ -1060,6 +1060,7 @@ define(function(require) {
                     return;
                 }
 
+                // sync: messages on disk -> scope
                 self.refreshFolder({
                     folder: folder
                 }, function(err) {
@@ -1081,10 +1082,10 @@ define(function(require) {
 
 
     //
-    // 
+    //
     // IMAP API
-    //   
-    //   
+    //
+    //
 
     /**
      * Mark imap messages as un-/read or un-/answered
@@ -1184,11 +1185,11 @@ define(function(require) {
     };
 
 
-    // 
-    // 
+    //
+    //
     // Local Storage API
-    // 
-    // 
+    //
+    //
 
 
     EmailDAO.prototype._localListMessages = function(options, callback) {
