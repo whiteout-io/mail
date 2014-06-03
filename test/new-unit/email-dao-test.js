@@ -1584,6 +1584,7 @@ define(function(require) {
                     setFlagsStub.withArgs({
                         folder: inboxFolder,
                         message: msgs[0],
+                        localOnly: true
                     }).yieldsAsync();
 
                     dao.onError = function(err) {
