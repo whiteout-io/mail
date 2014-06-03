@@ -31,7 +31,6 @@ function startTests() {
 			'test/new-unit/oauth-test',
 			'test/new-unit/auth-test',
 			'test/new-unit/email-dao-test',
-			'test/new-unit/email-sync-test',
 			'test/new-unit/app-controller-test',
 			'test/new-unit/pgp-test',
 			'test/new-unit/rest-dao-test',

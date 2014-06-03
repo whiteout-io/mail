@@ -2,8 +2,8 @@ define(function(require) {
     'use strict';
 
     var angular = require('angular'),
-        str = require('js/app-config').string,
         appController = require('js/app-controller'),
+        config = require('js/app-config').config,
         notification = require('js/util/notification'),
         _ = require('underscore'),
         emailDao, outboxBo;
@@ -38,19 +38,16 @@ define(function(require) {
                 return;
             }
 
-            // update the outbox mail count. this should normally happen during the delta sync
-            // problem is that the outbox continuously retries in the background, whereas the delta sync only runs
-            // when the outbox is currently viewed...
+            // update the outbox mail count
             var outbox = _.findWhere($scope.account.folders, {
-                type: 'Outbox'
+                type: config.outboxMailboxType
             });
+            outbox.count = count;
+            $scope.$apply();
 
-            if (outbox === $scope.state.nav.currentFolder) {
-                $scope.state.mailList.synchronize();
-            } else {
-                outbox.count = count;
-                $scope.$apply();
-            }
+            emailDao.refreshFolder({
+                folder: outbox
+            }, $scope.onError);
         };
 
         //
@@ -58,7 +55,7 @@ define(function(require) {
         //
 
         // init folders
-        initFolders();
+        initializeFolders();
 
         // select inbox as the current folder on init
         if ($scope.account.folders && $scope.account.folders.length > 0) {
@@ -82,20 +79,34 @@ define(function(require) {
         // helper functions
         //
 
-        function initFolders() {
-            if (window.chrome && chrome.identity) {
-                // get pointer to account/folder/message tree on root scope
-                $scope.$root.account = emailDao._account;
-
-                // set notificatio handler for sent messages
-                outboxBo.onSent = sentNotification;
-                // start checking outbox periodically
-                outboxBo.startChecking($scope.onOutboxUpdate);
-
+        function initializeFolders() {
+            // create dummy folder in dev environment only
+            if (!window.chrome || !chrome.identity) {
+                createDummyFolders();
                 return;
             }
 
-            // attach dummy folders for development
+            // get pointer to account/folder/message tree on root scope
+            $scope.$root.account = emailDao._account;
+
+            // set notificatio handler for sent messages
+            outboxBo.onSent = sentNotification;
+            // start checking outbox periodically
+            outboxBo.startChecking($scope.onOutboxUpdate);
+
+        }
+
+        function sentNotification(email) {
+            notification.create({
+                id: 'o' + email.id,
+                title: 'Message sent',
+                message: email.subject
+            }, function() {});
+        }
+
+
+        // attach dummy folders for development
+        function createDummyFolders() {
             $scope.$root.account = {};
             $scope.account.folders = [{
                 type: 'Inbox',
@@ -106,9 +117,9 @@ define(function(require) {
                 count: 0,
                 path: 'SENT'
             }, {
-                type: 'Outbox',
+                type: config.outboxMailboxType,
                 count: 0,
-                path: 'OUTBOX'
+                path: config.outboxMailboxPath
             }, {
                 type: 'Drafts',
                 count: 0,
@@ -118,14 +129,6 @@ define(function(require) {
                 count: 0,
                 path: 'TRASH'
             }];
-        }
-
-        function sentNotification(email) {
-            notification.create({
-                id: 'o' + email.id,
-                title: 'Message sent',
-                message: email.subject.replace(str.subjectPrefix, '')
-            }, function() {});
         }
     };
 
@@ -163,12 +166,6 @@ define(function(require) {
                     // r -> reply
                     e.preventDefault();
                     scope.state.writer.write(scope.state.mailList.selected);
-                    scope.$apply();
-
-                } else if (modifier && e.keyCode === 83 && scope.state.lightbox !== 'write' && scope.state.mailList.synchronize) {
-                    // s -> sync folder
-                    e.preventDefault();
-                    scope.state.mailList.synchronize();
                     scope.$apply();
 
                 } else if (e.keyCode === 27 && scope.state.lightbox !== undefined) {

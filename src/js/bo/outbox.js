@@ -60,7 +60,7 @@ define(function(require) {
             allReaders = mail.from.concat(mail.to.concat(mail.cc.concat(mail.bcc))); // all the users that should be able to read the mail
 
         mail.publicKeysArmored = []; // gather the public keys
-        mail.id = util.UUID(); // the mail needs a random uuid for storage in the database
+        mail.uid = mail.id = util.UUID(); // the mail needs a random id & uid for storage in the database
 
         // do not encrypt mails with a bcc recipient, due to a possible privacy leak
         if (mail.bcc.length > 0) {
@@ -216,7 +216,7 @@ define(function(require) {
 
         // removes the mail object from disk after successfully sending it
         function removeFromStorage(mail, done) {
-            self._devicestorage.removeList(outboxDb + '_' + mail.id, function(err) {
+            self._devicestorage.removeList(outboxDb + '_' + mail.uid, function(err) {
                 if (err) {
                     self._outboxBusy = false;
                     callback(err);

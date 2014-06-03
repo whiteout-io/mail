@@ -6,7 +6,6 @@ define(function(require) {
         mocks = require('angularMocks'),
         MailListCtrl = require('js/controller/mail-list'),
         EmailDAO = require('js/dao/email-dao'),
-        EmailSync = require('js/dao/email-sync'),
         DeviceStorageDAO = require('js/dao/devicestorage-dao'),
         KeychainDAO = require('js/dao/keychain-dao'),
         appController = require('js/app-controller'),
@@ -15,7 +14,7 @@ define(function(require) {
     chai.Assertion.includeStack = true;
 
     describe('Mail List controller unit test', function() {
-        var scope, ctrl, origEmailDao, origEmailSync, emailDaoMock, emailSyncMock, keychainMock, deviceStorageMock,
+        var scope, ctrl, origEmailDao, emailDaoMock, keychainMock, deviceStorageMock,
             emailAddress, notificationClickedHandler, emails,
             hasChrome, hasSocket, hasRuntime, hasIdentity;
 
@@ -54,11 +53,8 @@ define(function(require) {
             };
 
             origEmailDao = appController._emailDao;
-            origEmailSync = appController._emailSync;
             emailDaoMock = sinon.createStubInstance(EmailDAO);
-            emailSyncMock = sinon.createStubInstance(EmailSync);
             appController._emailDao = emailDaoMock;
-            appController._emailSync = emailSyncMock;
             emailAddress = 'fred@foo.com';
             emailDaoMock._account = {
                 emailAddress: emailAddress,
@@ -106,13 +102,11 @@ define(function(require) {
 
             // restore the module
             appController._emailDao = origEmailDao;
-            appController._emailSync = origEmailDao;
         });
 
         describe('scope variables', function() {
             it('should be set correctly', function() {
                 expect(scope.select).to.exist;
-                expect(scope.synchronize).to.exist;
                 expect(scope.remove).to.exist;
                 expect(scope.state.mailList).to.exist;
             });
@@ -142,7 +136,7 @@ define(function(require) {
                     done();
                 });
 
-                emailSyncMock.onIncomingMessage([mail]);
+                emailDaoMock.onIncomingMessage([mail]);
             });
 
             it('should succeed for multiple mails', function(done) {
@@ -178,7 +172,7 @@ define(function(require) {
                     done();
                 });
 
-                emailSyncMock.onIncomingMessage(mails);
+                emailDaoMock.onIncomingMessage(mails);
             });
 
             it('should focus mail when clicked', function() {
@@ -216,33 +210,6 @@ define(function(require) {
             });
         });
 
-        describe('synchronize', function() {
-            it('should do imap sync and display mails', function(done) {
-                scope._stopWatchTask();
-
-                emailDaoMock.sync.yieldsAsync();
-
-                var currentFolder = {
-                    type: 'Inbox',
-                    messages: emails
-                };
-                scope.folders = [currentFolder];
-                scope.state.nav = {
-                    currentFolder: currentFolder
-                };
-
-                var loadVisibleBodiesStub = sinon.stub(scope, 'loadVisibleBodies', function() {
-                    expect(scope.state.nav.currentFolder.messages).to.deep.equal(emails);
-                    expect(loadVisibleBodiesStub.calledOnce).to.be.true;
-                    loadVisibleBodiesStub.restore();
-
-                    done();
-                });
-
-                scope.synchronize();
-            });
-        });
-
         describe('getBody', function() {
             it('should get the mail content', function() {
                 scope.state.nav = {
@@ -257,13 +224,10 @@ define(function(require) {
         });
 
         describe('select', function() {
-            it('should decrypt, focus mark an unread mail as read', function() {
-                var mail, synchronizeMock;
-
-                mail = {
+            it('should decrypt, focus, and mark an unread mail as read', function() {
+                var mail = {
                     unread: true
                 };
-                synchronizeMock = sinon.stub(scope, 'synchronize');
                 scope.state = {
                     nav: {
                         currentFolder: {
@@ -279,19 +243,13 @@ define(function(require) {
                 scope.select(mail);
 
                 expect(emailDaoMock.decryptBody.calledOnce).to.be.true;
-                expect(synchronizeMock.calledOnce).to.be.true;
                 expect(scope.state.mailList.selected).to.equal(mail);
-
-                scope.synchronize.restore();
             });
 
             it('should decrypt and focus a read mail', function() {
-                var mail, synchronizeMock;
-
-                mail = {
+                var mail = {
                     unread: false
                 };
-                synchronizeMock = sinon.stub(scope, 'synchronize');
                 scope.state = {
                     mailList: {},
                     read: {
@@ -307,54 +265,13 @@ define(function(require) {
                 scope.select(mail);
 
                 expect(emailDaoMock.decryptBody.calledOnce).to.be.true;
-                expect(synchronizeMock.called).to.be.false;
                 expect(scope.state.mailList.selected).to.equal(mail);
-
-                scope.synchronize.restore();
             });
         });
 
         describe('remove', function() {
             it('should not delete without a selected mail', function() {
                 scope.remove();
-
-                expect(emailDaoMock.sync.called).to.be.false;
-            });
-
-            it('should not delete from the outbox', function(done) {
-                var currentFolder, mail;
-
-                scope._stopWatchTask();
-
-                scope.account = {};
-                mail = {
-                    uid: 123,
-                    from: [{
-                        address: 'asd'
-                    }],
-                    subject: '[whiteout] asdasd',
-                    unread: true
-                };
-                currentFolder = {
-                    type: 'Outbox',
-                    path: 'OUTBOX',
-                    messages: [mail]
-                };
-
-                scope.emails = [mail];
-                scope.account.folders = [currentFolder];
-                scope.state.nav = {
-                    currentFolder: currentFolder
-                };
-
-                scope.onError = function(err) {
-                    expect(err).to.exist; // would normally display the notification
-                    expect(emailDaoMock.sync.called).to.be.false;
-                    done();
-                };
-
-                scope.remove(mail);
-
             });
 
             it('should delete the selected mail', function() {
@@ -381,11 +298,11 @@ define(function(require) {
                 scope.state.nav = {
                     currentFolder: currentFolder
                 };
-                emailDaoMock.sync.yields();
+                emailDaoMock.deleteMessage.yields();
 
                 scope.remove(mail);
 
-                expect(emailDaoMock.sync.calledOnce).to.be.true;
+                expect(emailDaoMock.deleteMessage.calledOnce).to.be.true;
                 expect(scope.state.mailList.selected).to.not.exist;
             });
         });
