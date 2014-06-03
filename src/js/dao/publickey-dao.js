@@ -34,19 +34,17 @@ define(function() {
         this._restDao.get({
             uri: uri
         }, function(err, key) {
+            if (err && err.code === 404) {
+                callback();
+                return;
+            }
+
             if (err) {
                 callback(err);
                 return;
             }
 
-            if (!key || !key._id) {
-                callback({
-                    errMsg: 'No public key for that user!'
-                });
-                return;
-            }
-
-            callback(null, key);
+            callback(null, (key && key._id) ? key : undefined);
         });
     };
 

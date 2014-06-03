@@ -7,7 +7,7 @@ define(function(require) {
         aes = require('cryptoLib/aes-cbc'),
         util = require('cryptoLib/util'),
         str = require('js/app-config').string,
-        crypto, emailDao, outbox;
+        crypto, emailDao, outbox, keychainDao;
 
     //
     // Controller
@@ -17,6 +17,8 @@ define(function(require) {
         crypto = appController._crypto;
         emailDao = appController._emailDao,
         outbox = appController._outboxBo;
+        keychainDao = appController._keychain;
+
 
         // set default value so that the popover height is correct on init
         $scope.keyId = 'XXXXXXXX';
@@ -185,7 +187,8 @@ define(function(require) {
             }
 
             // check if to address is contained in known public keys
-            emailDao._keychain.getReceiverPublicKey(recipient.address, function(err, key) {
+            // when we write an email, we always need to work with the latest keys available
+            keychainDao.refreshKeyForUserId(recipient.address, function(err, key) {
                 if (err) {
                     $scope.onError(err);
                     return;

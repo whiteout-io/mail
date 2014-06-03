@@ -2,7 +2,6 @@ define(function() {
     'use strict';
 
     var er = {};
-
     er.attachHandler = function(scope) {
         scope.onError = function(options) {
             if (!options) {
@@ -19,7 +18,11 @@ define(function() {
             scope.state.dialog = {
                 open: true,
                 title: options.title || 'Error',
-                message: options.errMsg || options.message
+                message: options.errMsg || options.message,
+                positiveBtnStr: options.positiveBtnStr || 'Ok',
+                negativeBtnStr: options.negativeBtnStr || 'Cancel',
+                showNegativeBtn: options.showNegativeBtn || false,
+                callback: options.callback
             };
             // don't call apply for synchronous calls
             if (!options.sync) {

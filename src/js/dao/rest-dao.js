@@ -68,7 +68,7 @@ define(function(require) {
 
         xhr.onerror = function() {
             callback({
-                code: 404,
+                code: 42,
                 errMsg: 'Error calling GET on ' + options.uri
             });
         };

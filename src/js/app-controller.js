@@ -14,7 +14,9 @@ define(function(require) {
         ImapClient = require('imap-client'),
         RestDAO = require('js/dao/rest-dao'),
         EmailDAO = require('js/dao/email-dao'),
-        config = require('js/app-config').config,
+        appConfig = require('js/app-config'),
+        config = appConfig.config,
+        str = appConfig.string,
         KeychainDAO = require('js/dao/keychain-dao'),
         PublicKeyDAO = require('js/dao/publickey-dao'),
         LawnchairDAO = require('js/dao/lawnchair-dao'),
@@ -64,11 +66,25 @@ define(function(require) {
         pubkeyDao = new PublicKeyDAO(restDao);
         oauth = new OAuth(new RestDAO('https://www.googleapis.com'));
 
+        self._keychain = keychain = new KeychainDAO(lawnchairDao, pubkeyDao);
+        keychain.requestPermissionForKeyUpdate = function(params, callback) {
+            var message = params.newKey ? str.updatePublicKeyMsgNewKey : str.updatePublicKeyMsgRemovedKey;
+            message = message.replace('{0}', params.userId);
+
+            options.onError({
+                title: str.updatePublicKeyTitle,
+                message: message,
+                positiveBtnStr: str.updatePublicKeyPosBtn,
+                negativeBtnStr: str.updatePublicKeyNegBtn,
+                showNegativeBtn: true,
+                callback: callback
+            });
+        };
+
         self._appConfigStore = appConfigStore = new DeviceStorageDAO(new LawnchairDAO());
         self._auth = new Auth(appConfigStore, oauth, new RestDAO('/ca'));
         self._userStorage = userStorage = new DeviceStorageDAO(lawnchairDao);
         self._invitationDao = new InvitationDAO(restDao);
-        self._keychain = keychain = new KeychainDAO(lawnchairDao, pubkeyDao);
         self._crypto = pgp = new PGP();
         self._pgpbuilder = pgpbuilder = new PgpBuilder();
         self._emailDao = emailDao = new EmailDAO(keychain, pgp, userStorage, pgpbuilder, mailreader);

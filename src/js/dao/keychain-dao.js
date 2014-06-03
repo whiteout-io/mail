@@ -67,6 +67,96 @@ define(function(require) {
     };
 
     /**
+     * Checks for public key updates of a given user id
+     * @param {String} userId The user id (email address) for which to check the key
+     * @param {Function} callback(error, key) Invoked when the key has been updated or an error occurred
+     */
+    KeychainDAO.prototype.refreshKeyForUserId = function(userId, callback) {
+        var self = this;
+
+        // get the public key corresponding to the userId
+        self.getReceiverPublicKey(userId, function(err, localKey) {
+            if (!localKey || !localKey._id) {
+                // there is no key available, no need to refresh
+                callback();
+                return;
+            }
+
+            // check if the key id still exists on the key server
+            checkKeyExists(localKey);
+        });
+
+        // checks if the user's key has been revoked by looking up the key id
+        function checkKeyExists(localKey) {
+            self._publicKeyDao.get(localKey._id, function(err, cloudKey) {
+                if (err && err.code === 42) {
+                    // we're offline, we're done checking the key
+                    callback(null, localKey);
+                    return;
+                }
+
+                if (err) {
+                    // there was an error, exit and inform
+                    callback(err);
+                    return;
+                }
+
+                if (cloudKey && cloudKey._id === localKey._id) {
+                    // the key is present on the server, all is well
+                    callback(null, localKey);
+                    return;
+                }
+
+                // the key has changed, update the key
+                updateKey(localKey);
+            });
+        }
+
+        function updateKey(localKey) {
+            // look for an updated key for the user id
+            self._publicKeyDao.getByUserId(userId, function(err, newKey) {
+                // offline?
+                if (err && err.code === 42) {
+                    callback(null, localKey);
+                    return;
+                }
+
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                // the public key has changed, we need to ask for permission to update the key
+                self.requestPermissionForKeyUpdate({
+                    userId: userId,
+                    newKey: newKey
+                }, function(granted) {
+                    if (!granted) {
+                        // permission was not given to update the key, so don't overwrite the old one!
+                        callback(null, localKey);
+                        return;
+                    }
+
+                    // permission to update the key was given, so delete the old one and persist the new one
+                    self.removeLocalPublicKey(localKey._id, function(err) {
+                        if (err || !newKey) {
+                            // error or no new key to save
+                            callback(err);
+                            return;
+                        }
+
+                        // persist the new key and return it
+                        self.saveLocalPublicKey(newKey, function(err) {
+                            callback(err, err ? undefined : newKey);
+                        });
+                    });
+                });
+
+            });
+        }
+    };
+
+    /**
      * Look up a reveiver's public key by user id
      * @param userId [String] the receiver's email address
      */
@@ -92,23 +182,27 @@ define(function(require) {
 
             // no public key by that user id in storage
             // find from cloud by email address
-            self._publicKeyDao.getByUserId(userId, onKeyGotten);
+            self._publicKeyDao.getByUserId(userId, onKeyReceived);
         });
 
-        function onKeyGotten(err, cloudPubkey) {
+        function onKeyReceived(err, cloudPubkey) {
+            if (err && err.code === 42) {
+                // offline
+                callback();
+                return;
+            }
+
             if (err) {
                 callback(err);
                 return;
             }
 
             if (!cloudPubkey) {
-                // no public key for that user
+                // public key has been deleted without replacement
                 callback();
                 return;
             }
 
-            // there is a public key for that user already in the cloud...
-            // save to local storage
             self.saveLocalPublicKey(cloudPubkey, function(err) {
                 if (err) {
                     callback(err);

@@ -19,9 +19,9 @@ define(function(require) {
             hasChrome, hasSocket, hasRuntime, hasIdentity;
 
         beforeEach(function() {
-            hasChrome = !! window.chrome;
-            hasSocket = !! window.chrome.socket;
-            hasIdentity = !! window.chrome.identity;
+            hasChrome = !!window.chrome;
+            hasSocket = !!window.chrome.socket;
+            hasIdentity = !!window.chrome.identity;
             if (!hasChrome) {
                 window.chrome = {};
             }
@@ -62,7 +62,7 @@ define(function(require) {
 
 
             keychainMock = sinon.createStubInstance(KeychainDAO);
-            emailDaoMock._keychain = keychainMock;
+            appController._keychain = keychainMock;
 
             deviceStorageMock = sinon.createStubInstance(DeviceStorageDAO);
             emailDaoMock._devicestorage = deviceStorageMock;
@@ -224,9 +224,12 @@ define(function(require) {
         });
 
         describe('select', function() {
-            it('should decrypt, focus, and mark an unread mail as read', function() {
+            it('should decrypt, focus mark an unread mail as read', function() {
                 var mail = {
-                    unread: true
+                    from: [{
+                        address: 'asd'
+                    }],
+                    unread: true,
                 };
                 scope.state = {
                     nav: {
@@ -240,16 +243,23 @@ define(function(require) {
                     }
                 };
 
+                keychainMock.refreshKeyForUserId.withArgs(mail.from[0].address).yields();
+
                 scope.select(mail);
 
                 expect(emailDaoMock.decryptBody.calledOnce).to.be.true;
+                expect(keychainMock.refreshKeyForUserId.calledOnce).to.be.true;
                 expect(scope.state.mailList.selected).to.equal(mail);
             });
 
             it('should decrypt and focus a read mail', function() {
                 var mail = {
+                    from: [{
+                        address: 'asd'
+                    }],
                     unread: false
                 };
+
                 scope.state = {
                     mailList: {},
                     read: {
@@ -262,9 +272,12 @@ define(function(require) {
                     }
                 };
 
+                keychainMock.refreshKeyForUserId.withArgs(mail.from[0].address).yields();
+
                 scope.select(mail);
 
                 expect(emailDaoMock.decryptBody.calledOnce).to.be.true;
+                expect(keychainMock.refreshKeyForUserId.calledOnce).to.be.true;
                 expect(scope.state.mailList.selected).to.equal(mail);
             });
         });
