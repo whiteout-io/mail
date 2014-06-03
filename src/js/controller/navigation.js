@@ -44,7 +44,7 @@ define(function(require) {
             });
             outbox.count = count;
             $scope.$apply();
-            
+
             emailDao.refreshFolder({
                 folder: outbox
             }, $scope.onError);
@@ -166,12 +166,6 @@ define(function(require) {
                     // r -> reply
                     e.preventDefault();
                     scope.state.writer.write(scope.state.mailList.selected);
-                    scope.$apply();
-
-                } else if (modifier && e.keyCode === 83 && scope.state.lightbox !== 'write' && scope.state.mailList.synchronize) {
-                    // s -> sync folder
-                    e.preventDefault();
-                    scope.state.mailList.synchronize();
                     scope.$apply();
 
                 } else if (e.keyCode === 27 && scope.state.lightbox !== undefined) {
