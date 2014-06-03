@@ -7,10 +7,16 @@ define(function(require) {
 
     var _ = require('underscore');
 
-    var KeychainDAO = function(localDbDao, publicKeyDao) {
+    var KeychainDAO = function(localDbDao, publicKeyDao, privateKeyDao, crypto) {
         this._localDbDao = localDbDao;
         this._publicKeyDao = publicKeyDao;
+        this._privateKeyDao = privateKeyDao;
+        this._crypto = crypto;
     };
+
+    //
+    // Public key functions
+    //
 
     /**
      * Verifies the public key of a user o nthe public key store
@@ -233,6 +239,113 @@ define(function(require) {
             });
         }
     };
+
+    //
+    // Device registration functions
+    //
+
+    /**
+     * Set the device's memorable name e.g 'iPhone Work'
+     * @param {String}   deviceName The device name
+     * @param {Function} callback(error)
+     */
+    KeychainDAO.prototype.setDeviceName = function(deviceName, callback) {
+        callback(new Error('Not yet implemented!'));
+    };
+
+    /**
+     * Geneate a device specific key and secret to authenticate to the private key service.
+     * @param {Function} callback(error, deviceSecret:[base64 encoded string])
+     */
+    KeychainDAO.prototype.getDeviceSecret = function(callback) {
+        // check if deviceName is already persisted in storage and if not return an error
+
+        // generate random deviceKeys or get from storage
+
+        // persist deviceKeys to local storage (in plaintext)
+
+        // encrypt: deviceSecret = Es(deviceKeys, deviceName) -> callback
+
+        callback(new Error('Not yet implemented!'));
+    };
+
+    /**
+     * Register the device on the private key server. This will give the device access to upload an encrypted private key.
+     * @param  {String}   userId The user's email address
+     * @param  {String}   deviceName The device's memorable name e.g 'iPhone Work'
+     * @param  {[type]}   deviceSecret The device specific secret derived from the device key and the device name.
+     * @param  {Function} callback(error)
+     */
+    KeychainDAO.prototype.registerDevice = function(userId, deviceName, deviceSecret, callback) {
+        callback(new Error('Not yet implemented!'));
+    };
+
+    //
+    // Private key functions
+    //
+
+    /**
+     * Authenticate to the private key server (required before private PGP key upload).
+     * @param  {String}   userId The user's email address
+     * @param  {Function} callback(error)
+     */
+    KeychainDAO.prototype.authenticateToPrivateKeyServer = function(userId, callback) {
+        callback(new Error('Not yet implemented!'));
+    };
+
+    /**
+     * Encrypt and upload the private PGP key to the server.
+     * @param  {Object}   privkey
+     * @param  {String}   code The randomly generated or self selected code used to derive the key for the encryption of the private PGP key
+     * @param  {Function} callback
+     */
+    KeychainDAO.prototype.uploadPrivateKeyToServer = function(privkey, code, callback) {
+        // generate random salt
+
+        // derive key from the code using PBKDF2
+
+        // encrypt the private key with the derived key (AES-GCM authenticated encryption)
+
+        // upload the 'privatekey' {salt:[base64 encoded string], encryptedPrivateKey:[base64 encoded string]}
+
+        callback(new Error('Not yet implemented!'));
+    };
+
+    /**
+     * Request downloading the user's encrypted private key. This will initiate the server to send the recovery token via email/sms to the user.
+     * @param  {[type]}   userId The user's email address
+     * @param  {Function} callback(error)
+     */
+    KeychainDAO.prototype.requestPrivateKeyDownload = function(userId, callback) {
+        callback(new Error('Not yet implemented!'));
+    };
+
+    /**
+     * Download the encrypted private PGP key from the server using the recovery token.
+     * @param  {[type]}   recoveryToken The recovery token acquired via email/sms from the key server
+     * @param  {Function} callback(error, encryptedPrivateKey)
+     */
+    KeychainDAO.prototype.downloadPrivateKeyFromServer = function(recoveryToken, callback) {
+        callback(new Error('Not yet implemented!'));
+    };
+
+    /**
+     * This is called after the encrypted private key has successfully been downloaded and it's ready to be decrypted and stored in localstorage.
+     * @param  {[type]}   code The randomly generated or self selected code used to derive the key for the decryption of the private PGP key
+     * @param  {Object}   encryptedPrivkey The encrypted private PGP key including the random salt {salt:[base64 encoded string], encryptedPrivateKey:[base64 encoded string]}
+     * @param  {Function} callback(error, privateKey)
+     */
+    KeychainDAO.prototype.decryptAndStorePrivateKeyLocally = function(code, encryptedPrivkey, callback) {
+        // derive key from the code and the salt using PBKDF2
+
+        // decrypt the private key with the derived key (AES-GCM authenticated decryption)
+
+        callback(new Error('Not yet implemented!'));
+    };
+
+    //
+    // Keypair functions
+    //
 
     /**
      * Gets the local user's key either from local storage
