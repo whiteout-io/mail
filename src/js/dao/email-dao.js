@@ -501,7 +501,7 @@ define(function(require) {
      *
      * Please note if you set flags on disk only if you delete from the outbox,
      * since it is not an IMAP folder but a virtual folder that only exists on disk.
-     * 
+     *
      * @param {[type]} options [description]
      * @param {Function} callback [description]
      */
@@ -519,7 +519,7 @@ define(function(require) {
         }
 
         // don't do a roundtrip to IMAP,
-        // especially if you want to mark outbox messages 
+        // especially if you want to mark outbox messages
         if (options.localOnly || options.folder.path === config.outboxMailboxPath) {
             markStorage();
             return;
@@ -787,6 +787,7 @@ define(function(require) {
 
         // the message is decrypting has no body, is not encrypted or has already been decrypted
         if (!message.bodyParts || message.decryptingBody || !message.body || !message.encrypted || message.decrypted) {
+            callback(null, message);
             return;
         }
 
