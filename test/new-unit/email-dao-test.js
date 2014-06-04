@@ -104,7 +104,7 @@ define(function(require) {
 
             //
             // setup the SUT
-            // 
+            //
             dao = new EmailDAO(keychainStub, pgpStub, devicestorageStub, pgpBuilderStub, mailreader);
             dao._account = account;
             dao._pgpMailer = pgpMailerStub;
@@ -1167,7 +1167,7 @@ define(function(require) {
             });
 
             describe('#decryptBody', function() {
-                it('should do nothing when the message is not encrypted', function() {
+                it('should do nothing when the message is not encrypted', function(done) {
                     var message = {
                         encrypted: false,
                         decrypted: true,
@@ -1176,10 +1176,10 @@ define(function(require) {
 
                     dao.decryptBody({
                         message: message
-                    });
+                    }, done);
                 });
 
-                it('should do nothing when the message is already decrypted', function() {
+                it('should do nothing when the message is already decrypted', function(done) {
                     var message = {
                         encrypted: true,
                         decrypted: true,
@@ -1188,10 +1188,10 @@ define(function(require) {
 
                     dao.decryptBody({
                         message: message
-                    });
+                    }, done);
                 });
 
-                it('should do nothing when the message has no body', function() {
+                it('should do nothing when the message has no body', function(done) {
                     var message = {
                         encrypted: true,
                         decrypted: false,
@@ -1200,10 +1200,10 @@ define(function(require) {
 
                     dao.decryptBody({
                         message: message
-                    });
+                    }, done);
                 });
 
-                it('should do nothing when the message is decrypting', function() {
+                it('should do nothing when the message is decrypting', function(done) {
                     var message = {
                         encrypted: true,
                         decrypted: false,
@@ -1213,7 +1213,7 @@ define(function(require) {
 
                     dao.decryptBody({
                         message: message
-                    });
+                    }, done);
                 });
 
                 it('decrypt a pgp/mime message', function(done) {
@@ -1613,7 +1613,9 @@ define(function(require) {
 
                 it('should initialize from disk if offline and not refresh folder', function(done) {
                     account.online = false;
-                    devicestorageStub.listItems.withArgs('folders').yieldsAsync(null, [[inboxFolder]]);
+                    devicestorageStub.listItems.withArgs('folders').yieldsAsync(null, [
+                        [inboxFolder]
+                    ]);
                     refreshFolderStub.withArgs({
                         folder: inboxFolder
                     }).yieldsAsync();
@@ -1629,7 +1631,9 @@ define(function(require) {
                 it('should initialize from disk if offline and refresh folder', function(done) {
                     account.online = false;
                     delete inboxFolder.messages;
-                    devicestorageStub.listItems.withArgs('folders').yieldsAsync(null, [[inboxFolder]]);
+                    devicestorageStub.listItems.withArgs('folders').yieldsAsync(null, [
+                        [inboxFolder]
+                    ]);
                     refreshFolderStub.withArgs({
                         folder: inboxFolder
                     }).yieldsAsync();
@@ -1651,7 +1655,7 @@ define(function(require) {
                         drafts: draftsFolder,
                         trash: trashFolder
                     });
-                    devicestorageStub.storeList.withArgs(sinon.match(function(arg){
+                    devicestorageStub.storeList.withArgs(sinon.match(function(arg) {
                         expect(arg[0][0]).to.deep.equal(inboxFolder);
                         expect(arg[0][1]).to.deep.equal(sentFolder);
                         expect(arg[0][2].path).to.deep.equal(outboxFolder.path);
@@ -1660,7 +1664,7 @@ define(function(require) {
                         expect(arg[0][4]).to.deep.equal(trashFolder);
                         return true;
                     }), 'folders').yieldsAsync();
-                    
+
                     refreshFolderStub.yieldsAsync();
 
                     dao._initFolders(function(err) {
