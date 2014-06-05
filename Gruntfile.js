@@ -44,21 +44,9 @@ module.exports = function(grunt) {
         },
 
         jshint: {
-            all: ['Gruntfile.js', 'src/*.js', 'src/js/**/*.js', 'test/new-unit/*.js', 'test/unit/*.js', 'test/integration/*.js'],
+            all: ['Gruntfile.js', 'src/*.js', 'src/js/**/*.js', 'test/unit/*.js', 'test/integration/*.js'],
             options: {
                 jshintrc: '.jshintrc'
-            }
-        },
-
-        qunit: {
-            all: {
-                options: {
-                    timeout: 20000,
-                    urls: ['http://localhost:<%= connect.test.options.port %>/test/unit/index.html'
-                        /*,
-                            'http://localhost:<%= connect.test.options.port %>/test/integration/index.html'*/
-                    ]
-                }
             }
         },
 
@@ -66,7 +54,7 @@ module.exports = function(grunt) {
             all: {
                 options: {
                     urls: [
-                        'http://localhost:<%= connect.test.options.port %>/test/new-unit/index.html',
+                        'http://localhost:<%= connect.test.options.port %>/test/unit/index.html',
                         'http://localhost:<%= connect.test.options.port %>/test/integration/index.html'
                     ],
                     run: false,

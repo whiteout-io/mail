@@ -6,9 +6,10 @@ define(function(require) {
         expect = chai.expect;
 
     describe('Crypto unit tests', function() {
-        var crypto;
+        this.timeout(20000);
 
-        var password = 'password',
+        var crypto,
+            password = 'password',
             keySize = 128,
             ivSize = 128;
 
