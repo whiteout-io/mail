@@ -4,18 +4,22 @@ define(function(require) {
     var LawnchairDAO = require('js/dao/lawnchair-dao'),
         PublicKeyDAO = require('js/dao/publickey-dao'),
         KeychainDAO = require('js/dao/keychain-dao'),
+        PrivateKeyDAO = require('js/dao/privatekey-dao'),
+        Crypto = require('js/crypto/crypto'),
         expect = chai.expect;
 
     var testUser = 'test@example.com';
 
     describe('Keychain DAO unit tests', function() {
 
-        var keychainDao, lawnchairDaoStub, pubkeyDaoStub;
+        var keychainDao, lawnchairDaoStub, pubkeyDaoStub, privkeyDaoStub, cryptoStub;
 
         beforeEach(function() {
             lawnchairDaoStub = sinon.createStubInstance(LawnchairDAO);
             pubkeyDaoStub = sinon.createStubInstance(PublicKeyDAO);
-            keychainDao = new KeychainDAO(lawnchairDaoStub, pubkeyDaoStub);
+            privkeyDaoStub = new sinon.createStubInstance(PrivateKeyDAO);
+            cryptoStub = new sinon.createStubInstance(Crypto);
+            keychainDao = new KeychainDAO(lawnchairDaoStub, pubkeyDaoStub, privkeyDaoStub, cryptoStub);
         });
 
         afterEach(function() {});
@@ -569,6 +573,84 @@ define(function(require) {
                     expect(keys.privateKey).to.exist;
                     expect(lawnchairDaoStub.list.calledOnce).to.be.true;
                     expect(lawnchairDaoStub.read.calledTwice).to.be.true;
+                    done();
+                });
+            });
+        });
+
+        describe('setDeviceName', function() {
+            it('should work', function(done) {
+                lawnchairDaoStub.persist.yields();
+
+                keychainDao.setDeviceName('iPhone', done);
+            });
+        });
+
+        describe('getDeviceSecret', function() {
+            it('should fail when device name is not set', function(done) {
+                lawnchairDaoStub.read.withArgs('devicename').yields();
+
+                keychainDao.getDeviceSecret(function(err, deviceSecret) {
+                    expect(err.message).to.equal('Device name not set!');
+                    expect(deviceSecret).to.not.exist;
+                    done();
+                });
+            });
+
+            it('should fail due to erorr when reading device name', function(done) {
+                lawnchairDaoStub.read.withArgs('devicename').yields(42);
+
+                keychainDao.getDeviceSecret(function(err, deviceSecret) {
+                    expect(err).to.equal(42);
+                    expect(deviceSecret).to.not.exist;
+                    done();
+                });
+            });
+
+            it('should fail due to erorr when reading device key', function(done) {
+                lawnchairDaoStub.read.withArgs('devicename').yields(null, 'iPhone');
+                lawnchairDaoStub.read.withArgs('devicekey').yields(42);
+
+                keychainDao.getDeviceSecret(function(err, deviceSecret) {
+                    expect(err).to.equal(42);
+                    expect(deviceSecret).to.not.exist;
+                    done();
+                });
+            });
+
+            it('should fail due to erorr when storing device key', function(done) {
+                lawnchairDaoStub.read.withArgs('devicename').yields(null, 'iPhone');
+                lawnchairDaoStub.read.withArgs('devicekey').yields();
+                lawnchairDaoStub.persist.withArgs('devicekey').yields(42);
+
+                keychainDao.getDeviceSecret(function(err, deviceSecret) {
+                    expect(err).to.equal(42);
+                    expect(deviceSecret).to.not.exist;
+                    done();
+                });
+            });
+
+            it('should work when device key is not set', function(done) {
+                lawnchairDaoStub.read.withArgs('devicename').yields(null, 'iPhone');
+                lawnchairDaoStub.read.withArgs('devicekey').yields();
+                lawnchairDaoStub.persist.withArgs('devicekey').yields();
+                cryptoStub.encrypt.yields(null, 'secret');
+
+                keychainDao.getDeviceSecret(function(err, deviceSecret) {
+                    expect(err).to.not.exist;
+                    expect(deviceSecret).to.equal('secret');
+                    done();
+                });
+            });
+
+            it('should work when device key is set', function(done) {
+                lawnchairDaoStub.read.withArgs('devicename').yields(null, 'iPhone');
+                lawnchairDaoStub.read.withArgs('devicekey').yields(null, 'key');
+                cryptoStub.encrypt.withArgs('iPhone', 'key').yields(null, 'secret');
+
+                keychainDao.getDeviceSecret(function(err, deviceSecret) {
+                    expect(err).to.not.exist;
+                    expect(deviceSecret).to.equal('secret');
                     done();
                 });
             });

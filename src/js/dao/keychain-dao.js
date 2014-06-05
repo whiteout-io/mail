@@ -5,7 +5,13 @@
 define(function(require) {
     'use strict';
 
-    var _ = require('underscore');
+    var _ = require('underscore'),
+        util = require('js/crypto/util');
+
+    var DB_PUBLICKEY = 'publickey',
+        DB_PRIVATEKEY = 'privatekey',
+        DB_DEVICENAME = 'devicename',
+        DB_DEVICEKEY = 'devicekey';
 
     var KeychainDAO = function(localDbDao, publicKeyDao, privateKeyDao, crypto) {
         this._localDbDao = localDbDao;
@@ -176,7 +182,7 @@ define(function(require) {
         var self = this;
 
         // search local keyring for public key
-        self._localDbDao.list('publickey', 0, null, function(err, allPubkeys) {
+        self._localDbDao.list(DB_PUBLICKEY, 0, null, function(err, allPubkeys) {
             if (err) {
                 callback(err);
                 return;
@@ -250,7 +256,7 @@ define(function(require) {
      * @param {Function} callback(error)
      */
     KeychainDAO.prototype.setDeviceName = function(deviceName, callback) {
-        callback(new Error('Not yet implemented!'));
+        this._localDbDao.persist(DB_DEVICENAME, deviceName, callback);
     };
 
     /**
@@ -258,15 +264,57 @@ define(function(require) {
      * @param {Function} callback(error, deviceSecret:[base64 encoded string])
      */
     KeychainDAO.prototype.getDeviceSecret = function(callback) {
+        var self = this;
+
         // check if deviceName is already persisted in storage and if not return an error
+        self._localDbDao.read(DB_DEVICENAME, function(err, deviceName) {
+            if (err) {
+                callback(err);
+                return;
+            }
 
-        // generate random deviceKeys or get from storage
+            if (!deviceName) {
+                callback(new Error('Device name not set!'));
+                return;
+            }
 
-        // persist deviceKeys to local storage (in plaintext)
+            readOrGenerateDeviceKey(function(deviceKey) {
+                generateDeciceSecret(deviceName, deviceKey);
+            });
+        });
 
-        // encrypt: deviceSecret = Es(deviceKeys, deviceName) -> callback
+        // generate random deviceKey or get from storage
+        function readOrGenerateDeviceKey(localCallback) {
+            self._localDbDao.read(DB_DEVICEKEY, function(err, storedDevKey) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
 
-        callback(new Error('Not yet implemented!'));
+                if (storedDevKey) {
+                    // a device key is already available locally
+                    localCallback(storedDevKey);
+                    return;
+                }
+
+                // generate random deviceKey
+                var deviceKey = util.random(256);
+                // persist deviceKey to local storage (in plaintext)
+                self._localDbDao.persist(DB_DEVICEKEY, deviceKey, function(err) {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+
+                    localCallback(deviceKey);
+                });
+            });
+        }
+
+        // encrypt: deviceSecret = Es(deviceKey, deviceName) -> callback
+        function generateDeciceSecret(deviceName, deviceKey) {
+            self._crypto.encrypt(deviceName, deviceKey, callback);
+        }
     };
 
     /**
@@ -357,7 +405,7 @@ define(function(require) {
         var self = this;
 
         // search for user's public key locally
-        self._localDbDao.list('publickey', 0, null, function(err, allPubkeys) {
+        self._localDbDao.list(DB_PUBLICKEY, 0, null, function(err, allPubkeys) {
             if (err) {
                 callback(err);
                 return;
@@ -477,7 +525,7 @@ define(function(require) {
         }
 
         // lookup in local storage
-        self._localDbDao.read('publickey_' + id, function(err, pubkey) {
+        self._localDbDao.read(DB_PUBLICKEY + '_' + id, function(err, pubkey) {
             if (err) {
                 callback(err);
                 return;
@@ -513,27 +561,27 @@ define(function(require) {
      */
     KeychainDAO.prototype.listLocalPublicKeys = function(callback) {
         // search local keyring for public key
-        this._localDbDao.list('publickey', 0, null, callback);
+        this._localDbDao.list(DB_PUBLICKEY, 0, null, callback);
     };
 
     KeychainDAO.prototype.removeLocalPublicKey = function(id, callback) {
-        this._localDbDao.remove('publickey_' + id, callback);
+        this._localDbDao.remove(DB_PUBLICKEY + '_' + id, callback);
     };
 
     KeychainDAO.prototype.lookupPrivateKey = function(id, callback) {
         // lookup in local storage
-        this._localDbDao.read('privatekey_' + id, callback);
+        this._localDbDao.read(DB_PRIVATEKEY + '_' + id, callback);
     };
 
     KeychainDAO.prototype.saveLocalPublicKey = function(pubkey, callback) {
         // persist public key (email, _id)
-        var pkLookupKey = 'publickey_' + pubkey._id;
+        var pkLookupKey = DB_PUBLICKEY + '_' + pubkey._id;
         this._localDbDao.persist(pkLookupKey, pubkey, callback);
     };
 
     KeychainDAO.prototype.saveLocalPrivateKey = function(privkey, callback) {
         // persist private key (email, _id)
-        var prkLookupKey = 'privatekey_' + privkey._id;
+        var prkLookupKey = DB_PRIVATEKEY + '_' + privkey._id;
         this._localDbDao.persist(prkLookupKey, privkey, callback);
     };
 
