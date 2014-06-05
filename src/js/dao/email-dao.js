@@ -1,7 +1,7 @@
 define(function(require) {
     'use strict';
 
-    var util = require('cryptoLib/util'),
+    var util = require('js/crypto/util'),
         _ = require('underscore'),
         config = require('js/app-config').config,
         str = require('js/app-config').string;

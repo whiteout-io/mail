@@ -5,120 +5,54 @@
 define(function(require) {
     'use strict';
 
-    var util = require('cryptoLib/util'),
-        aes = require('cryptoLib/aes-cbc'),
-        rsa = require('cryptoLib/rsa'),
-        cryptoBatch = require('cryptoLib/crypto-batch'),
+    var aes = require('js/crypto/aes-gcm'),
         pbkdf2 = require('js/crypto/pbkdf2'),
         config = require('js/app-config').config;
 
-    var passBasedKey,
-        BATCH_WORKER = '/crypto/crypto-batch-worker.js',
-        PBKDF2_WORKER = '/crypto/pbkdf2-worker.js';
+    var PBKDF2_WORKER = '/crypto/pbkdf2-worker.js';
 
-    var Crypto = function() {
-
-    };
+    var Crypto = function() {};
 
     /**
-     * Initializes the crypto modules by fetching the user's
-     * encrypted secret key from storage and storing it in memory.
+     * Encrypt plaintext using AES-GCM.
+     * @param  {String}   plaintext The input string in UTF-16
+     * @param  {String}   key The base64 encoded key
+     * @param  {String}   iv The base64 encoded IV
+     * @param  {Function} callback(error, ciphertext)
+     * @return {String} The base64 encoded ciphertext
      */
-    Crypto.prototype.init = function(args, callback) {
-        var self = this;
+    Crypto.prototype.encrypt = function(plaintext, key, iv, callback) {
+        var ct;
 
-        // valdiate input
-        if (!args.emailAddress || !args.keySize || !args.rsaKeySize || typeof args.password !== 'string' || !args.salt) {
-            callback({
-                errMsg: 'Crypto init failed. Not all args set!'
-            });
+        try {
+            ct = aes.encrypt(plaintext, key, iv);
+        } catch (err) {
+            callback(err);
             return;
         }
 
-        self.emailAddress = args.emailAddress;
-        self.keySize = args.keySize;
-        self.ivSize = args.keySize;
-        self.rsaKeySize = args.rsaKeySize;
+        callback(null, ct);
+    };
 
-        // derive PBKDF2 from password in web worker thread
-        self.deriveKey(args.password, args.salt, self.keySize, function(err, derivedKey) {
-            if (err) {
-                callback(err);
-                return;
-            }
+    /**
+     * Decrypt ciphertext suing AES-GCM
+     * @param  {String}   ciphertext The base64 encoded ciphertext
+     * @param  {String}   key The base64 encoded key
+     * @param  {String}   iv The base64 encoded IV
+     * @param  {Function} callback(error, plaintext)
+     * @return {String} The decrypted plaintext in UTF-16
+     */
+    Crypto.prototype.decrypt = function(ciphertext, key, iv, callback) {
+        var pt;
 
-            // remember pbkdf2 for later use
-            passBasedKey = derivedKey;
-
-            // check if key exists
-            if (!args.storedKeypair) {
-                // generate keys, encrypt and persist if none exists
-                generateKeypair(derivedKey);
-            } else {
-                // decrypt key
-                decryptKeypair(args.storedKeypair, derivedKey);
-            }
-
-        });
-
-        function generateKeypair(derivedKey) {
-            // generate RSA keypair in web worker
-            rsa.generateKeypair(self.rsaKeySize, function(err, generatedKeypair) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-
-                // encrypt keypair
-                var iv = util.random(self.ivSize);
-                var encryptedPrivateKey = aes.encrypt(generatedKeypair.privkeyPem, derivedKey, iv);
-
-                // new encrypted keypair object
-                var newKeypair = {
-                    publicKey: {
-                        _id: generatedKeypair._id,
-                        userId: self.emailAddress,
-                        publicKey: generatedKeypair.pubkeyPem
-                    },
-                    privateKey: {
-                        _id: generatedKeypair._id,
-                        userId: self.emailAddress,
-                        encryptedKey: encryptedPrivateKey,
-                        iv: iv
-                    }
-                };
-
-                // return generated keypair for storage in keychain dao
-                callback(null, newKeypair);
-            });
+        try {
+            pt = aes.decrypt(ciphertext, key, iv);
+        } catch (err) {
+            callback(err);
+            return;
         }
 
-        function decryptKeypair(storedKeypair, derivedKey) {
-            var decryptedPrivateKey;
-
-            // validate input
-            if (!storedKeypair || !storedKeypair.privateKey || !storedKeypair.privateKey.encryptedKey || !storedKeypair.privateKey.iv) {
-                callback({
-                    errMsg: 'Incomplete arguments for private key decryption!'
-                });
-                return;
-            }
-
-            // try to decrypt with derivedKey
-            try {
-                var prK = storedKeypair.privateKey;
-                decryptedPrivateKey = aes.decrypt(prK.encryptedKey, derivedKey, prK.iv);
-            } catch (ex) {
-                callback({
-                    errMsg: 'Wrong password!'
-                });
-                return;
-            }
-            // set rsa keys
-            rsa.init(storedKeypair.publicKey.publicKey, decryptedPrivateKey, storedKeypair.publicKey._id);
-
-            callback();
-        }
+        callback(null, pt);
     };
 
     /**
@@ -135,181 +69,6 @@ define(function(require) {
             callback: callback,
             noWorker: function() {
                 return pbkdf2.getKey(password, salt, keySize);
-            }
-        });
-    };
-
-    //
-    // En/Decrypt a list of items with AES in a WebWorker thread
-    //
-
-    Crypto.prototype.symEncryptList = function(list, callback) {
-        var self = this,
-            key, envelope, envelopes = [];
-
-        // generate single secret key shared for all list items
-        key = util.random(self.keySize);
-
-        // package objects into batchable envelope format
-        list.forEach(function(i) {
-            envelope = {
-                id: i.id,
-                plaintext: i,
-                key: key,
-                iv: util.random(self.ivSize)
-            };
-            envelopes.push(envelope);
-        });
-
-        startWorker({
-            script: BATCH_WORKER,
-            args: {
-                type: 'symEncrypt',
-                list: envelopes
-            },
-            callback: function(err, encryptedList) {
-                // return generated secret key
-                callback(err, {
-                    key: key,
-                    list: encryptedList
-                });
-            },
-            noWorker: function() {
-                return cryptoBatch.authEncryptList(envelopes);
-            }
-        });
-    };
-
-    Crypto.prototype.symDecryptList = function(list, keys, callback) {
-        startWorker({
-            script: BATCH_WORKER,
-            args: {
-                type: 'symDecrypt',
-                list: list,
-                keys: keys
-            },
-            callback: callback,
-            noWorker: function() {
-                return cryptoBatch.authDecryptList(list, keys);
-            }
-        });
-    };
-
-    //
-    // En/Decrypt something speficially using the user's secret key
-    //
-
-    Crypto.prototype.encryptListForUser = function(list, receiverPubkeys, callback) {
-        var self = this,
-            envelope, envelopes = [];
-
-        if (!receiverPubkeys || receiverPubkeys.length !== 1) {
-            callback({
-                errMsg: 'Encryption is currently implemented for only one receiver!'
-            });
-            return;
-        }
-
-        var keypair = rsa.exportKeys();
-        var senderPrivkey = {
-            _id: keypair._id,
-            privateKey: keypair.privkeyPem
-        };
-
-        // package objects into batchable envelope format
-        list.forEach(function(i) {
-            envelope = {
-                id: i.id,
-                plaintext: i,
-                key: util.random(self.keySize),
-                iv: util.random(self.ivSize),
-                receiverPk: receiverPubkeys[0]._id
-            };
-            envelopes.push(envelope);
-        });
-
-        startWorker({
-            script: BATCH_WORKER,
-            args: {
-                type: 'asymEncrypt',
-                list: envelopes,
-                senderPrivkey: senderPrivkey,
-                receiverPubkeys: receiverPubkeys
-            },
-            callback: callback,
-            noWorker: function() {
-                return cryptoBatch.encryptListForUser(envelopes, receiverPubkeys, senderPrivkey);
-            }
-        });
-    };
-
-    Crypto.prototype.decryptListForUser = function(list, senderPubkeys, callback) {
-        if (!senderPubkeys || senderPubkeys < 1) {
-            callback({
-                errMsg: 'Sender public keys must be set!'
-            });
-            return;
-        }
-
-        var keypair = rsa.exportKeys();
-        var receiverPrivkey = {
-            _id: keypair._id,
-            privateKey: keypair.privkeyPem
-        };
-
-        startWorker({
-            script: BATCH_WORKER,
-            args: {
-                type: 'asymDecrypt',
-                list: list,
-                receiverPrivkey: receiverPrivkey,
-                senderPubkeys: senderPubkeys
-            },
-            callback: callback,
-            noWorker: function() {
-                return cryptoBatch.decryptListForUser(list, senderPubkeys, receiverPrivkey);
-            }
-        });
-    };
-
-    //
-    // Re-encrypt keys item and items seperately
-    //
-
-    Crypto.prototype.reencryptListKeysForUser = function(list, senderPubkeys, callback) {
-        var keypair = rsa.exportKeys();
-        var receiverPrivkey = {
-            _id: keypair._id,
-            privateKey: keypair.privkeyPem
-        };
-
-        startWorker({
-            script: BATCH_WORKER,
-            args: {
-                type: 'reencrypt',
-                list: list,
-                receiverPrivkey: receiverPrivkey,
-                senderPubkeys: senderPubkeys,
-                symKey: passBasedKey
-            },
-            callback: callback,
-            noWorker: function() {
-                return cryptoBatch.reencryptListKeysForUser(list, senderPubkeys, receiverPrivkey, passBasedKey);
-            }
-        });
-    };
-
-    Crypto.prototype.decryptKeysAndList = function(list, callback) {
-        startWorker({
-            script: BATCH_WORKER,
-            args: {
-                type: 'decryptItems',
-                list: list,
-                symKey: passBasedKey
-            },
-            callback: callback,
-            noWorker: function() {
-                return cryptoBatch.decryptKeysAndList(list, passBasedKey);
             }
         });
     };

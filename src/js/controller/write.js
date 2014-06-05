@@ -4,8 +4,8 @@ define(function(require) {
     var angular = require('angular'),
         _ = require('underscore'),
         appController = require('js/app-controller'),
-        aes = require('cryptoLib/aes-cbc'),
-        util = require('cryptoLib/util'),
+        aes = require('js/crypto/aes-gcm'),
+        util = require('js/crypto/util'),
         str = require('js/app-config').string,
         crypto, emailDao, outbox, keychainDao;
 

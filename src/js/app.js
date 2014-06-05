@@ -18,7 +18,7 @@ requirejs([
     'js/controller/read',
     'js/controller/write',
     'js/controller/navigation',
-    'cryptoLib/util',
+    'js/crypto/util',
     'js/util/error',
     'fastclick',
     'angularSanitize',

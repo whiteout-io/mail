@@ -7,7 +7,6 @@
 		paths: {
 			js: '../js',
 			test: '../../test',
-			cryptoLib: '../js/crypto',
 			underscore: 'underscore/underscore-min',
 			lawnchair: 'lawnchair/lawnchair-git',
 			lawnchairSQL: 'lawnchair/lawnchair-adapter-webkit-sqlite-git',
