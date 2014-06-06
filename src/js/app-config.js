@@ -25,8 +25,8 @@ define(function(require) {
      */
     app.config = {
         cloudUrl: cloudUrl || 'https://keys.whiteout.io',
-        symKeySize: 128,
-        symIvSize: 128,
+        symKeySize: 256,
+        symIvSize: 96,
         asymKeySize: 2048,
         workerPath: 'js',
         gmail: {

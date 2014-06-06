@@ -3,6 +3,7 @@ define(function(require) {
 
     var Crypto = require('js/crypto/crypto'),
         util = require('js/crypto/util'),
+        config = require('js/app-config').config,
         expect = chai.expect;
 
     describe('Crypto unit tests', function() {
@@ -10,8 +11,8 @@ define(function(require) {
 
         var crypto,
             password = 'password',
-            keySize = 128,
-            ivSize = 128;
+            keySize = config.symKeySize,
+            ivSize = config.symIvSize;
 
         beforeEach(function() {
             crypto = new Crypto();

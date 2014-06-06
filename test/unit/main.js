@@ -36,6 +36,7 @@ function startTests() {
 			'test/unit/crypto-test',
 			'test/unit/rest-dao-test',
 			'test/unit/publickey-dao-test',
+			'test/unit/privatekey-dao-test',
 			'test/unit/lawnchair-dao-test',
 			'test/unit/keychain-dao-test',
 			'test/unit/devicestorage-dao-test',

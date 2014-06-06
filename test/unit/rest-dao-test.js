@@ -145,6 +145,31 @@ define(function(require) {
             });
         });
 
+        describe('post', function() {
+            it('should fail', function() {
+                restDao.post('/asdf', {}, function(err) {
+                    expect(err).to.exist;
+                    expect(err.code).to.equal(500);
+                });
+
+                expect(requests.length).to.equal(1);
+                requests[0].respond(500, {
+                    "Content-Type": "text/plain"
+                }, 'Internal error');
+            });
+
+            it('should work', function() {
+                restDao.post('/asdf', {}, function(err, res, status) {
+                    expect(err).to.not.exist;
+                    expect(res).to.equal('');
+                    expect(status).to.equal(201);
+                });
+
+                expect(requests.length).to.equal(1);
+                requests[0].respond(201);
+            });
+        });
+
         describe('put', function() {
             it('should fail', function() {
                 restDao.put('/asdf', {}, function(err) {

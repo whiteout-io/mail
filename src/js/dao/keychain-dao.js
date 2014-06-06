@@ -6,18 +6,20 @@ define(function(require) {
     'use strict';
 
     var _ = require('underscore'),
-        util = require('js/crypto/util');
+        util = require('js/crypto/util'),
+        config = require('js/app-config').config;
 
     var DB_PUBLICKEY = 'publickey',
         DB_PRIVATEKEY = 'privatekey',
         DB_DEVICENAME = 'devicename',
-        DB_DEVICEKEY = 'devicekey';
+        DB_DEVICE_SECRET = 'devicesecret';
 
-    var KeychainDAO = function(localDbDao, publicKeyDao, privateKeyDao, crypto) {
+    var KeychainDAO = function(localDbDao, publicKeyDao, privateKeyDao, crypto, pgp) {
         this._localDbDao = localDbDao;
         this._publicKeyDao = publicKeyDao;
         this._privateKeyDao = privateKeyDao;
         this._crypto = crypto;
+        this._pgp = pgp;
     };
 
     //
@@ -260,14 +262,13 @@ define(function(require) {
     };
 
     /**
-     * Geneate a device specific key and secret to authenticate to the private key service.
-     * @param {Function} callback(error, deviceSecret:[base64 encoded string])
+     * Get the device' memorable name from local storage. Throws an error if not set
+     * @param  {Function} callback(error, deviceName)
+     * @return {String} The device name
      */
-    KeychainDAO.prototype.getDeviceSecret = function(callback) {
-        var self = this;
-
-        // check if deviceName is already persisted in storage and if not return an error
-        self._localDbDao.read(DB_DEVICENAME, function(err, deviceName) {
+    KeychainDAO.prototype.getDeviceName = function(callback) {
+        // check if deviceName is already persisted in storage
+        this._localDbDao.read(DB_DEVICENAME, function(err, deviceName) {
             if (err) {
                 callback(err);
                 return;
@@ -278,54 +279,130 @@ define(function(require) {
                 return;
             }
 
-            readOrGenerateDeviceKey(function(deviceKey) {
-                generateDeciceSecret(deviceName, deviceKey);
-            });
+            callback(null, deviceName);
         });
+    };
 
-        // generate random deviceKey or get from storage
-        function readOrGenerateDeviceKey(localCallback) {
-            self._localDbDao.read(DB_DEVICEKEY, function(err, storedDevKey) {
+    /**
+     * Geneate a device specific key and secret to authenticate to the private key service.
+     * @param {Function} callback(error, deviceSecret:[base64 encoded string])
+     */
+    KeychainDAO.prototype.getDeviceSecret = function(callback) {
+        var self = this;
+
+        // generate random deviceSecret or get from storage
+        self._localDbDao.read(DB_DEVICE_SECRET, function(err, storedDevSecret) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            if (storedDevSecret) {
+                // a device key is already available locally
+                callback(null, storedDevSecret);
+                return;
+            }
+
+            // generate random deviceSecret
+            var deviceSecret = util.random(config.symKeySize);
+            // persist deviceSecret to local storage (in plaintext)
+            self._localDbDao.persist(DB_DEVICE_SECRET, deviceSecret, function(err) {
                 if (err) {
                     callback(err);
                     return;
                 }
 
-                if (storedDevKey) {
-                    // a device key is already available locally
-                    localCallback(storedDevKey);
+                callback(null, deviceSecret);
+            });
+        });
+    };
+
+    /**
+     * Register the device on the private key server. This will give the device access to upload an encrypted private key.
+     * @param  {String}   options.userId The user's email address
+     * @param  {Function} callback(error)
+     */
+    KeychainDAO.prototype.registerDevice = function(options, callback) {
+        var self = this;
+
+        // check if deviceName is already persisted in storage
+        self.getDeviceName(function(err, deviceName) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            requestDeviceRegistration(deviceName);
+        });
+
+        function requestDeviceRegistration(deviceName) {
+            // request device registration session key
+            self._privateKeyDao.requestDeviceRegistration({
+                userId: options.userId,
+                deviceName: deviceName
+            }, function(err, regSessionKey) {
+                if (err) {
+                    callback(err);
                     return;
                 }
 
-                // generate random deviceKey
-                var deviceKey = util.random(256);
-                // persist deviceKey to local storage (in plaintext)
-                self._localDbDao.persist(DB_DEVICEKEY, deviceKey, function(err) {
+                if (!regSessionKey.encryptedRegSessionKey) {
+                    callback(new Error('Invalid format for session key!'));
+                    return;
+                }
+
+                decryptSessionKey(regSessionKey);
+            });
+        }
+
+        function decryptSessionKey(regSessionKey) {
+            // TODO: fetch public key for service to verify response
+            self.lookupPublicKey('WELL_KNOWN_SERVER_KEY_ID', function(err, serverPubkey) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                // decrypt the session key
+                var ct = regSessionKey.encryptedRegSessionKey;
+                self._pgp.decrypt(ct, serverPubkey, function(err, decrypedSessionKey) {
                     if (err) {
                         callback(err);
                         return;
                     }
 
-                    localCallback(deviceKey);
+                    uploadDeviceSecret(decrypedSessionKey);
                 });
             });
         }
 
-        // encrypt: deviceSecret = Es(deviceKey, deviceName) -> callback
-        function generateDeciceSecret(deviceName, deviceKey) {
-            self._crypto.encrypt(deviceName, deviceKey, callback);
-        }
-    };
+        function uploadDeviceSecret(regSessionKey) {
+            // read device secret from local storage
+            self.getDeviceSecret(function(err, deviceSecret) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
 
-    /**
-     * Register the device on the private key server. This will give the device access to upload an encrypted private key.
-     * @param  {String}   userId The user's email address
-     * @param  {String}   deviceName The device's memorable name e.g 'iPhone Work'
-     * @param  {[type]}   deviceSecret The device specific secret derived from the device key and the device name.
-     * @param  {Function} callback(error)
-     */
-    KeychainDAO.prototype.registerDevice = function(userId, deviceName, deviceSecret, callback) {
-        callback(new Error('Not yet implemented!'));
+                // generate deviceSecretIv
+                var deviceSecretIv = util.random(config.symIvSize);
+                // encrypt deviceSecret
+                self._crypto.encrypt(deviceSecret, regSessionKey, deviceSecretIv, function(err, encryptedDeviceSecret) {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+
+                    // upload encryptedDeviceSecret
+                    self._privateKeyDao.uploadDeviceSecret({
+                        userId: options.userId,
+                        deviceName: options.deviceName,
+                        encryptedDeviceSecret: encryptedDeviceSecret,
+                        deviceSecretIv: deviceSecretIv
+                    }, callback);
+                });
+            });
+        }
     };
 
     //
@@ -335,60 +412,281 @@ define(function(require) {
     /**
      * Authenticate to the private key server (required before private PGP key upload).
      * @param  {String}   userId The user's email address
-     * @param  {Function} callback(error)
+     * @param  {Function} callback(error, authSessionKey)
+     * @return {Object} {sessionId:String, sessionKey:[base64 encoded]}
      */
-    KeychainDAO.prototype.authenticateToPrivateKeyServer = function(userId, callback) {
-        callback(new Error('Not yet implemented!'));
+    KeychainDAO.prototype._authenticateToPrivateKeyServer = function(userId, callback) {
+        var self = this,
+            sessionId;
+
+        // request auth session key required for upload
+        self._privateKeyDao.requestAuthSessionKeys({
+            userId: userId
+        }, function(err, authSessionKey) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            if (!authSessionKey.encryptedAuthSessionKey || !authSessionKey.encryptedChallenge || !authSessionKey.sessionId) {
+                callback(new Error('Invalid format for session key!'));
+                return;
+            }
+
+            // remember session id for verification
+            sessionId = authSessionKey.sessionId;
+
+            decryptSessionKey(authSessionKey);
+        });
+
+        function decryptSessionKey(authSessionKey) {
+            // TODO: fetch public key for service to verify response
+            self.lookupPublicKey('WELL_KNOWN_SERVER_KEY_ID', function(err, serverPubkey) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                // decrypt the session key
+                var ct1 = authSessionKey.encryptedAuthSessionKey;
+                self._pgp.decrypt(ct1, serverPubkey.publicKey, function(err, decryptedSessionKey) {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+
+                    // decrypt the challenge
+                    var ct2 = authSessionKey.encryptedAuthSessionKey;
+                    self._pgp.decrypt(ct2, serverPubkey.publicKey, function(err, decryptedChallenge) {
+                        if (err) {
+                            callback(err);
+                            return;
+                        }
+
+                        encryptChallenge(decryptedSessionKey, decryptedChallenge);
+                    });
+                });
+            });
+        }
+
+        function encryptChallenge(sessionKey, challenge) {
+            // get device secret
+            self.getDeviceSecret(function(err, deviceSecret) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                var iv = util.random(config.symIvSize);
+                // encrypt the challenge
+                self._crypto.encrypt(challenge, sessionKey, iv, function(err, encryptedChallenge) {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+
+                    // encrypt the device secret
+                    self._crypto.encrypt(deviceSecret, sessionKey, iv, function(err, encryptedDeviceSecret) {
+                        if (err) {
+                            callback(err);
+                            return;
+                        }
+
+                        replyChallenge({
+                            encryptedChallenge: encryptedChallenge,
+                            encryptedDeviceSecret: encryptedDeviceSecret,
+                            iv: iv
+                        }, sessionKey);
+                    });
+                });
+            });
+        }
+
+        function replyChallenge(encryptedChallenge, sessionKey) {
+            // respond to challenge by uploading the with the session key encrypted challenge
+            self._privateKeyDao.verifyAuthentication({
+                userId: userId,
+                sessionId: sessionId,
+                encryptedChallenge: encryptedChallenge
+            }, function(err) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                callback(null, {
+                    sessionId: sessionId,
+                    sessionKey: sessionKey
+                });
+            });
+        }
     };
 
     /**
      * Encrypt and upload the private PGP key to the server.
-     * @param  {Object}   privkey
-     * @param  {String}   code The randomly generated or self selected code used to derive the key for the encryption of the private PGP key
-     * @param  {Function} callback
+     * @param  {String}   options.userId   The user's email address
+     * @param  {String}   options.code     The randomly generated or self selected code used to derive the key for the encryption of the private PGP key
+     * @param  {Function} callback(error)
      */
-    KeychainDAO.prototype.uploadPrivateKeyToServer = function(privkey, code, callback) {
-        // generate random salt
+    KeychainDAO.prototype.uploadPrivateKey = function(options, callback) {
+        var self = this,
+            keySize = config.symKeySize,
+            salt;
 
-        // derive key from the code using PBKDF2
+        if (!options.userId || !options.code) {
+            callback(new Error('Incomplete arguments!'));
+            return;
+        }
 
-        // encrypt the private key with the derived key (AES-GCM authenticated encryption)
+        deriveKey(options.code);
 
-        // upload the 'privatekey' {salt:[base64 encoded string], encryptedPrivateKey:[base64 encoded string]}
+        function deriveKey(code) {
+            // generate random salt
+            salt = util.random(keySize);
+            // derive key from the code using PBKDF2
+            self._crypto.deriveKey(code, salt, keySize, function(err, key) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
 
-        callback(new Error('Not yet implemented!'));
+                encryptPrivateKey(key);
+            });
+        }
+
+        function encryptPrivateKey(encryptionKey) {
+            // get private key from local storage
+            self.getUserKeyPair(options.userId, function(err, keypair) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                var privkeyId = keypair.privateKey._id,
+                    pgpBlock = keypair.privateKey.encryptedKey;
+
+                // encrypt the private key with the derived key (AES-GCM authenticated encryption)
+                var iv = util.random(config.symIvSize);
+                self._crypto.encrypt(pgpBlock, encryptionKey, iv, function(err, ct) {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+
+                    var payload = {
+                        _id: privkeyId,
+                        encryptedPrivateKey: ct,
+                        salt: salt,
+                        iv: iv
+                    };
+
+                    uploadPrivateKey(payload);
+                });
+            });
+        }
+
+        function uploadPrivateKey(payload) {
+            // authenticate to server for upload
+            self._authenticateToPrivateKeyServer(options.userId, function(err, authSessionKey) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                // encrypt encryptedPrivateKey again using authSessionKey
+                var pt = payload.encryptedPrivateKey,
+                    iv = payload.iv,
+                    key = authSessionKey.sessionKey;
+                self._crypto.encrypt(pt, key, iv, function(err, ct) {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+
+                    // replace the encryptedPrivateKey with the double wrapped ciphertext
+                    payload.encryptedPrivateKey = ct;
+                    // set sessionId
+                    payload.sessionId = authSessionKey.sessionId;
+
+                    // upload the encrypted priavet key
+                    self._privateKeyDao.upload(payload, callback);
+                });
+            });
+        }
     };
 
     /**
      * Request downloading the user's encrypted private key. This will initiate the server to send the recovery token via email/sms to the user.
-     * @param  {[type]}   userId The user's email address
+     * @param  {String}   userId The user's email address
      * @param  {Function} callback(error)
      */
     KeychainDAO.prototype.requestPrivateKeyDownload = function(userId, callback) {
-        callback(new Error('Not yet implemented!'));
+        this._privateKeyDao.requestDownload({
+            userId: userId
+        }, callback);
     };
 
     /**
      * Download the encrypted private PGP key from the server using the recovery token.
-     * @param  {[type]}   recoveryToken The recovery token acquired via email/sms from the key server
+     * @param  {String}   options.userId The user's email address
+     * @param  {String}   options.keyId The user's email address
+     * @param  {String}   options.recoveryToken The recovery token acquired via email/sms from the key server
      * @param  {Function} callback(error, encryptedPrivateKey)
      */
-    KeychainDAO.prototype.downloadPrivateKeyFromServer = function(recoveryToken, callback) {
-        callback(new Error('Not yet implemented!'));
+    KeychainDAO.prototype.downloadPrivateKey = function(options, callback) {
+        this._privateKeyDao.download(options, callback);
     };
 
     /**
      * This is called after the encrypted private key has successfully been downloaded and it's ready to be decrypted and stored in localstorage.
-     * @param  {[type]}   code The randomly generated or self selected code used to derive the key for the decryption of the private PGP key
-     * @param  {Object}   encryptedPrivkey The encrypted private PGP key including the random salt {salt:[base64 encoded string], encryptedPrivateKey:[base64 encoded string]}
-     * @param  {Function} callback(error, privateKey)
+     * @param  {String}   options.userId The user's email address
+     * @param  {String}   options.keyId The user's email address
+     * @param  {String}   options.code The randomly generated or self selected code used to derive the key for the decryption of the private PGP key
+     * @param  {String}   options.encryptedPrivkey The encrypted private PGP key
+     * @param  {String}   options.salt The salt required to derive the code derived key
+     * @param  {String}   options.iv The iv used to encrypt the private PGP key
+     * @param  {Function} callback(error)
      */
-    KeychainDAO.prototype.decryptAndStorePrivateKeyLocally = function(code, encryptedPrivkey, callback) {
+    KeychainDAO.prototype.decryptAndStorePrivateKeyLocally = function(options, callback) {
+        var self = this,
+            code = options.code,
+            salt = options.salt,
+            keySize = config.keySize;
+
+        if (!options.keyId || !options.userId) {
+            callback(new Error('Incomplete arguments!'));
+            return;
+        }
+
         // derive key from the code and the salt using PBKDF2
+        self._crypto.deriveKey(code, salt, keySize, function(err, key) {
+            if (err) {
+                callback(err);
+                return;
+            }
 
-        // decrypt the private key with the derived key (AES-GCM authenticated decryption)
+            decryptAndStore(key);
+        });
 
-        callback(new Error('Not yet implemented!'));
+        function decryptAndStore(derivedKey) {
+            // decrypt the private key with the derived key
+            var pt = options.encryptedPrivkey,
+                iv = options.iv;
+
+            self._crypto.decrypt(pt, derivedKey, iv, function(err, pgpBlock) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                // store private key locally
+                self.saveLocalPrivateKey({
+                    _id: options.keyId,
+                    userId: options.userId,
+                    encryptedKey: pgpBlock
+                }, callback);
+            });
+        }
     };
 
     //
