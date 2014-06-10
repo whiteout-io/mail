@@ -15,6 +15,7 @@
         <input class="input-text" type="password" ng-model="passphrase" ng-class="{'input-text-error':incorrect}" placeholder="Passphrase" tabindex="2" focus-me="true">
         <span class="popover-info" data-icon-append="&#xe010;" popover="#passphrase-info"></span>
       </div>
+      <a href="https://whiteout.io/revocation.html" title="Click here to reset your account." target="_blank">Lost your keyfile or passphrase?</a>
       <div><button type="submit" ng-click="confirmPassphrase()" class="btn" ng-disabled="!key" tabindex="3">Import</button>
     </form>
   </div>
