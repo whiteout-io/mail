@@ -101,7 +101,7 @@ define(function(require) {
                     return;
                 }
 
-                updateStatus('Flag updated!');
+                updateStatus('Online');
                 $scope.$apply();
             });
         };
