@@ -1382,6 +1382,7 @@ define(function(require) {
                         encrypt: true,
                         cleartextMessage: str.message + str.signature,
                         mail: dummyMail,
+                        smtpclient: undefined,
                         publicKeysArmored: publicKeys
                     }).yieldsAsync();
 
@@ -1427,6 +1428,7 @@ define(function(require) {
 
                 it('should send in the plain', function(done) {
                     pgpMailerStub.send.withArgs({
+                        smtpclient: undefined,
                         mail: dummyMail
                     }).yieldsAsync();
 
