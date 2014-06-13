@@ -26,10 +26,15 @@ define(function(require) {
             return;
         }
 
-        // generate keypair (keytype 1=RSA)
+        // generate keypair
         userId = 'Whiteout User <' + options.emailAddress + '>';
         passphrase = (options.passphrase) ? options.passphrase : undefined;
-        openpgp.generateKeyPair(1, options.keySize, userId, passphrase, onGenerated);
+        openpgp.generateKeyPair({
+            keyType: 1, // (keytype 1=RSA)
+            numBits: options.keySize,
+            userId: userId,
+            passphrase: passphrase
+        }, onGenerated);
 
         function onGenerated(err, keys) {
             if (err) {
