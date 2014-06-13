@@ -114,7 +114,7 @@ define(function(require) {
             // check configuration
             //
             expect(dao._keychain).to.equal(keychainStub);
-            expect(dao._crypto).to.equal(pgpStub);
+            expect(dao._pgp).to.equal(pgpStub);
             expect(dao._devicestorage).to.equal(devicestorageStub);
             expect(dao._mailreader).to.equal(mailreader);
             expect(dao._pgpbuilder).to.equal(pgpBuilderStub);

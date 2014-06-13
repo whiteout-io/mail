@@ -92,7 +92,7 @@ define(function(require) {
                     publicKeyArmored: pubkey
                 }, function(err) {
                     expect(err).to.exist;
-                    expect(err.errMsg).to.equal('Incorrect passphrase!');
+                    expect(err.message).to.equal('Incorrect passphrase!');
 
                     pgp.exportKeys(function(err, keys) {
                         expect(err).to.exist;

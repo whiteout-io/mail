@@ -14,18 +14,18 @@ define(function(require) {
         var scope, accountCtrl,
             dummyFingerprint, expectedFingerprint,
             dummyKeyId, expectedKeyId,
-            emailAddress, keySize, cryptoMock, keychainMock;
+            emailAddress, keySize, pgpMock, keychainMock;
 
         beforeEach(function() {
-            appController._crypto = cryptoMock = sinon.createStubInstance(PGP);
+            appController._pgp = pgpMock = sinon.createStubInstance(PGP);
             appController._keychain = keychainMock = sinon.createStubInstance(KeychainDAO);
 
             dummyFingerprint = '3A2D39B4E1404190B8B949DE7D7E99036E712926';
             expectedFingerprint = '3A2D 39B4 E140 4190 B8B9 49DE 7D7E 9903 6E71 2926';
             dummyKeyId = '9FEB47936E712926';
             expectedKeyId = '6E712926';
-            cryptoMock.getFingerprint.returns(dummyFingerprint);
-            cryptoMock.getKeyId.returns(dummyKeyId);
+            pgpMock.getFingerprint.returns(dummyFingerprint);
+            pgpMock.getKeyId.returns(dummyKeyId);
             emailAddress = 'fred@foo.com';
             keySize = 1234;
             appController._emailDao = {
@@ -34,7 +34,7 @@ define(function(require) {
                     asymKeySize: keySize
                 }
             };
-            cryptoMock.getKeyParams.returns({
+            pgpMock.getKeyParams.returns({
                 _id: dummyKeyId,
                 fingerprint: dummyFingerprint,
                 userId: emailAddress,

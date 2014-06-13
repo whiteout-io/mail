@@ -30,21 +30,22 @@ define(function() {
 
     /**
      * Authenticate device registration by uploading the deviceSecret encrypted with the regSessionKeys.
-     * @param  {String}   options.userId      The user's email address
-     * @param  {String}   options.deviceName  The device's memorable name
-     * @param  {Object}   options.encryptedDeviceSecret     {encryptedDeviceSecret:[base64 encoded]}
+     * @param  {String}   options.userId                The user's email address
+     * @param  {String}   options.deviceName            The device's memorable name
+     * @param  {String}   options.encryptedDeviceSecret The base64 encoded encrypted device secret
+     * @param  {String}   options.iv                    The iv used for encryption
      * @param  {Function} callback(error)
      */
     PrivateKeyDAO.prototype.uploadDeviceSecret = function(options, callback) {
         var uri;
 
-        if (!options.userId || !options.deviceName || !options.encryptedDeviceSecret) {
+        if (!options.userId || !options.deviceName || !options.encryptedDeviceSecret || !options.iv) {
             callback(new Error('Incomplete arguments!'));
             return;
         }
 
         uri = '/device/user/' + options.userId + '/devicename/' + options.deviceName;
-        this._restDao.put(options.encryptedDeviceSecret, uri, callback);
+        this._restDao.put(options, uri, callback);
     };
 
     //
@@ -55,9 +56,9 @@ define(function() {
      * Request authSessionKeys required for upload the encrypted private PGP key.
      * @param  {String}   options.userId    The user's email address
      * @param  {Function} callback(error, authSessionKey)
-     * @return {Object} {sessionId, encryptedAuthSessionKeys:[base64 encoded], encryptedChallenge:[base64 encoded]}
+     * @return {Object} {sessionId, encryptedAuthSessionKey:[base64 encoded], encryptedChallenge:[base64 encoded]}
      */
-    PrivateKeyDAO.prototype.requestAuthSessionKeys = function(options, callback) {
+    PrivateKeyDAO.prototype.requestAuthSessionKey = function(options, callback) {
         var uri;
 
         if (!options.userId) {
@@ -71,44 +72,50 @@ define(function() {
 
     /**
      * Verifiy authentication by uploading the challenge and deviceSecret encrypted with the authSessionKeys as a response.
-     * @param  {String}   options.userId    The user's email address
-     * @param  {Object}   options.encryptedChallenge  The server's challenge encrypted using the authSessionKey {encryptedChallenge:[base64 encoded], encryptedDeviceSecret:[base64 encoded], iv}
+     * @param  {String}   options.userId                    The user's email address
+     * @param  {String}   options.encryptedChallenge        The server's base64 encoded challenge encrypted using the authSessionKey
+     * @param  {String}   options.encryptedDeviceSecret     The server's base64 encoded deviceSecret encrypted using the authSessionKey
+     * @param  {String}   options.iv                        The iv used for encryption
      * @param  {Function} callback(error)
      */
     PrivateKeyDAO.prototype.verifyAuthentication = function(options, callback) {
         var uri;
 
-        if (!options.userId || !options.sessionId || !options.encryptedChallenge) {
+        if (!options.userId || !options.sessionId || !options.encryptedChallenge || !options.encryptedDeviceSecret || !options.iv) {
             callback(new Error('Incomplete arguments!'));
             return;
         }
 
         uri = '/auth/user/' + options.userId + '/session/' + options.sessionId;
-        this._restDao.put(options.encryptedChallenge, uri, callback);
+        this._restDao.put(options, uri, callback);
     };
 
     /**
      * Upload the encrypted private PGP key.
-     * @param  {String}   options.encryptedPrivateKey {_id:[hex encoded capital 16 char key id], encryptedPrivateKey:[base64 encoded], sessionId: [base64 encoded]}
+     * @param  {String}   options._id                   The hex encoded capital 16 char key id
+     * @param  {String}   options.userId                The user's email address
+     * @param  {String}   options.encryptedPrivateKey   The base64 encoded encrypted private PGP key
+     * @param  {String}   options.sessionId             The session id
      * @param  {Function} callback(error)
      */
     PrivateKeyDAO.prototype.upload = function(options, callback) {
-        var uri,
-            key = options.encryptedPrivateKey;
+        var uri;
 
-        if (!options.userId || !key || !key._id) {
+        if (!options._id || !options.userId || !options.encryptedPrivateKey || !options.sessionId || !options.salt || !options.iv) {
             callback(new Error('Incomplete arguments!'));
             return;
         }
 
-        uri = '/privatekey/user/' + options.userId + '/key/' + key._id;
-        this._restDao.post(key, uri, callback);
+        uri = '/privatekey/user/' + options.userId + '/session/' + options.sessionId;
+        this._restDao.post(options, uri, callback);
     };
 
     /**
      * Request download for the encrypted private PGP key.
-     * @param  {[type]}   options.userId The user's email address
-     * @param  {Function} callback(error)
+     * @param  {String}   options.userId    The user's email address
+     * @param  {String}   options.keyId     The private PGP key id
+     * @param  {Function} callback(error, found)
+     * @return {Boolean} weather the key was found on the server or not.
      */
     PrivateKeyDAO.prototype.requestDownload = function(options, callback) {
         var uri;
@@ -121,7 +128,20 @@ define(function() {
         uri = '/privatekey/user/' + options.userId + '/key/' + options.keyId;
         this._restDao.get({
             uri: uri
-        }, callback);
+        }, function(err) {
+            // 404: there is no encrypted private key on the server
+            if (err && err.code !== 200) {
+                callback(null, false);
+                return;
+            }
+
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            callback(null, true);
+        });
     };
 
     /**

@@ -48,6 +48,8 @@ function startTests() {
 			'test/unit/login-existing-ctrl-test',
 			'test/unit/login-initial-ctrl-test',
 			'test/unit/login-new-device-ctrl-test',
+			'test/unit/login-privatekey-download-ctrl-test',
+			'test/unit/privatekey-upload-ctrl-test',
 			'test/unit/login-ctrl-test',
 			'test/unit/read-ctrl-test',
 			'test/unit/navigation-ctrl-test',

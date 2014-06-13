@@ -12,6 +12,7 @@ define(function(require) {
         OutboxBO = require('js/bo/outbox'),
         mailreader = require('mailreader'),
         ImapClient = require('imap-client'),
+        Crypto = require('js/crypto/crypto'),
         RestDAO = require('js/dao/rest-dao'),
         EmailDAO = require('js/dao/email-dao'),
         appConfig = require('js/app-config'),
@@ -20,6 +21,7 @@ define(function(require) {
         KeychainDAO = require('js/dao/keychain-dao'),
         PublicKeyDAO = require('js/dao/publickey-dao'),
         LawnchairDAO = require('js/dao/lawnchair-dao'),
+        PrivateKeyDAO = require('js/dao/privatekey-dao'),
         InvitationDAO = require('js/dao/invitation-dao'),
         DeviceStorageDAO = require('js/dao/devicestorage-dao'),
         UpdateHandler = require('js/util/update/update-handler');
@@ -55,7 +57,7 @@ define(function(require) {
     };
 
     self.buildModules = function(options) {
-        var lawnchairDao, restDao, pubkeyDao, emailDao, keychain, pgp, userStorage, pgpbuilder, oauth, appConfigStore;
+        var lawnchairDao, restDao, pubkeyDao, privkeyDao, crypto, emailDao, keychain, pgp, userStorage, pgpbuilder, oauth, appConfigStore;
 
         // start the mailreader's worker thread
         mailreader.startWorker(config.workerPath + '/../lib/mailreader-parser-worker.js');
@@ -64,9 +66,12 @@ define(function(require) {
         restDao = new RestDAO();
         lawnchairDao = new LawnchairDAO();
         pubkeyDao = new PublicKeyDAO(restDao);
+        privkeyDao = new PrivateKeyDAO(new RestDAO(config.privkeyServerUrl));
         oauth = new OAuth(new RestDAO('https://www.googleapis.com'));
 
-        self._keychain = keychain = new KeychainDAO(lawnchairDao, pubkeyDao);
+        crypto = new Crypto();
+        self._pgp = pgp = new PGP();
+        self._keychain = keychain = new KeychainDAO(lawnchairDao, pubkeyDao, privkeyDao, crypto, pgp);
         keychain.requestPermissionForKeyUpdate = function(params, callback) {
             var message = params.newKey ? str.updatePublicKeyMsgNewKey : str.updatePublicKeyMsgRemovedKey;
             message = message.replace('{0}', params.userId);
@@ -85,7 +90,6 @@ define(function(require) {
         self._auth = new Auth(appConfigStore, oauth, new RestDAO('/ca'));
         self._userStorage = userStorage = new DeviceStorageDAO(lawnchairDao);
         self._invitationDao = new InvitationDAO(restDao);
-        self._crypto = pgp = new PGP();
         self._pgpbuilder = pgpbuilder = new PgpBuilder();
         self._emailDao = emailDao = new EmailDAO(keychain, pgp, userStorage, pgpbuilder, mailreader);
         self._outboxBo = new OutboxBO(emailDao, keychain, userStorage);

@@ -6,7 +6,7 @@ define(function(require) {
 
     var LoginExistingCtrl = function($scope, $location) {
         var emailDao = appController._emailDao,
-            pgp = appController._crypto;
+            pgp = appController._pgp;
 
         $scope.incorrect = false;
 

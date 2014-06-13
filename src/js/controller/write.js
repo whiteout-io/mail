@@ -7,14 +7,14 @@ define(function(require) {
         aes = require('js/crypto/aes-gcm'),
         util = require('js/crypto/util'),
         str = require('js/app-config').string,
-        crypto, emailDao, outbox, keychainDao;
+        pgp, emailDao, outbox, keychainDao;
 
     //
     // Controller
     //
 
     var WriteCtrl = function($scope, $filter) {
-        crypto = appController._crypto;
+        pgp = appController._pgp;
         emailDao = appController._emailDao,
         outbox = appController._outboxBo;
         keychainDao = appController._keychain;
@@ -218,7 +218,7 @@ define(function(require) {
                 return;
             }
 
-            var fpr = crypto.getFingerprint(recipient.key.publicKey);
+            var fpr = pgp.getFingerprint(recipient.key.publicKey);
             var formatted = fpr.slice(32);
 
             $scope.keyId = formatted;

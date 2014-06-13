@@ -7,10 +7,13 @@ define(function(require) {
         LoginCtrl = require('js/controller/login'),
         EmailDAO = require('js/dao/email-dao'),
         Auth = require('js/bo/auth'),
-        appController = require('js/app-controller');
+        appController = require('js/app-controller'),
+        KeychainDAO = require('js/dao/keychain-dao');
 
     describe('Login Controller unit test', function() {
-        var scope, location, ctrl, origEmailDao, emailDaoMock,
+        var scope, location, ctrl,
+            origEmailDao, emailDaoMock,
+            origKeychain, keychainMock,
             emailAddress = 'fred@foo.com',
             startAppStub,
             checkForUpdateStub,
@@ -21,14 +24,16 @@ define(function(require) {
             var hasChrome, hasIdentity;
 
             beforeEach(function() {
-                hasChrome = !! window.chrome;
-                hasIdentity = !! window.chrome.identity;
+                hasChrome = !!window.chrome;
+                hasIdentity = !!window.chrome.identity;
                 window.chrome = window.chrome || {};
                 window.chrome.identity = window.chrome.identity || {};
 
                 // remember original module to restore later, then replace it
                 origEmailDao = appController._emailDao;
+                origKeychain = appController._keychain;
                 appController._emailDao = emailDaoMock = sinon.createStubInstance(EmailDAO);
+                appController._keychain = keychainMock = sinon.createStubInstance(KeychainDAO);
                 appController._auth = authStub = sinon.createStubInstance(Auth);
 
                 startAppStub = sinon.stub(appController, 'start');
@@ -48,6 +53,7 @@ define(function(require) {
 
                 // restore the app controller module
                 appController._emailDao = origEmailDao;
+                appController._keychain = origKeychain;
                 appController.start.restore && appController.start.restore();
                 appController.checkForUpdate.restore && appController.checkForUpdate.restore();
                 appController.init.restore && appController.init.restore();
@@ -128,12 +134,42 @@ define(function(require) {
                 });
             });
 
+            it('should forward to privatekey download login', function(done) {
+                startAppStub.yields();
+                authStub.getEmailAddress.yields(null, emailAddress);
+                initStub.yields(null, {
+                    publicKey: 'b'
+                });
+                keychainMock.requestPrivateKeyDownload.yields(null, {});
+
+                angular.module('logintest', []);
+                mocks.module('logintest');
+                mocks.inject(function($controller, $rootScope, $location) {
+                    location = $location;
+                    sinon.stub(location, 'path', function(path) {
+                        expect(path).to.equal('/login-privatekey-download');
+                        expect(startAppStub.calledOnce).to.be.true;
+                        expect(checkForUpdateStub.calledOnce).to.be.true;
+                        expect(authStub.getEmailAddress.calledOnce).to.be.true;
+                        expect(keychainMock.requestPrivateKeyDownload.calledOnce).to.be.true;
+                        done();
+                    });
+                    scope = $rootScope.$new();
+                    scope.state = {};
+                    ctrl = $controller(LoginCtrl, {
+                        $location: location,
+                        $scope: scope
+                    });
+                });
+            });
+
             it('should forward to new device login', function(done) {
                 startAppStub.yields();
                 authStub.getEmailAddress.yields(null, emailAddress);
                 initStub.yields(null, {
                     publicKey: 'b'
                 });
+                keychainMock.requestPrivateKeyDownload.yields();
 
                 angular.module('logintest', []);
                 mocks.module('logintest');
@@ -144,6 +180,7 @@ define(function(require) {
                         expect(startAppStub.calledOnce).to.be.true;
                         expect(checkForUpdateStub.calledOnce).to.be.true;
                         expect(authStub.getEmailAddress.calledOnce).to.be.true;
+                        expect(keychainMock.requestPrivateKeyDownload.calledOnce).to.be.true;
                         done();
                     });
                     scope = $rootScope.$new();

@@ -37,7 +37,7 @@ define(function(require) {
                 expect(controller._userStorage).to.exist;
                 expect(controller._invitationDao).to.exist;
                 expect(controller._keychain).to.exist;
-                expect(controller._crypto).to.exist;
+                expect(controller._pgp).to.exist;
                 expect(controller._pgpbuilder).to.exist;
                 expect(controller._emailDao).to.exist;
                 expect(controller._outboxBo).to.exist;

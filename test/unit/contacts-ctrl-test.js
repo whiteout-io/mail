@@ -12,11 +12,11 @@ define(function(require) {
     describe('Contacts Controller unit test', function() {
         var scope, contactsCtrl,
             origKeychain, keychainMock,
-            origCrypto, cryptoMock;
+            origPgp, pgpMock;
 
         beforeEach(function() {
-            origCrypto = appController._crypto;
-            appController._crypto = cryptoMock = sinon.createStubInstance(PGP);
+            origPgp = appController._pgp;
+            appController._pgp = pgpMock = sinon.createStubInstance(PGP);
             origKeychain = appController._keychain;
             appController._keychain = keychainMock = sinon.createStubInstance(KeychainDAO);
 
@@ -33,7 +33,7 @@ define(function(require) {
 
         afterEach(function() {
             // restore the module
-            appController._crypto = origCrypto;
+            appController._pgp = origPgp;
             appController._keychain = origKeychain;
         });
 
@@ -60,7 +60,7 @@ define(function(require) {
                 keychainMock.listLocalPublicKeys.yields(null, [{
                     _id: '12345'
                 }]);
-                cryptoMock.getKeyParams.returns({
+                pgpMock.getKeyParams.returns({
                     fingerprint: 'asdf'
                 });
 
@@ -92,7 +92,7 @@ define(function(require) {
             it('should work', function(done) {
                 var keyArmored = '-----BEGIN PGP PUBLIC KEY BLOCK-----';
 
-                cryptoMock.getKeyParams.returns({
+                pgpMock.getKeyParams.returns({
                     _id: '12345',
                     userId: 'max@example.com',
                     userIds: []
@@ -127,7 +127,7 @@ define(function(require) {
             it('should fail due to error in pgp.getKeyParams', function(done) {
                 var keyArmored = '-----BEGIN PGP PUBLIC KEY BLOCK-----';
 
-                cryptoMock.getKeyParams.throws(new Error('WAT'));
+                pgpMock.getKeyParams.throws(new Error('WAT'));
 
                 scope.onError = function(err) {
                     expect(err).to.exist;
@@ -140,7 +140,7 @@ define(function(require) {
             it('should fail due to error in keychain.saveLocalPublicKey', function(done) {
                 var keyArmored = '-----BEGIN PGP PUBLIC KEY BLOCK-----';
 
-                cryptoMock.getKeyParams.returns({
+                pgpMock.getKeyParams.returns({
                     _id: '12345',
                     userId: 'max@example.com'
                 });

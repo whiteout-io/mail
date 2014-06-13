@@ -57,7 +57,8 @@ define(function(require) {
                 privkeyDao.uploadDeviceSecret({
                     userId: emailAddress,
                     deviceName: deviceName,
-                    encryptedDeviceSecret: 'asdf'
+                    encryptedDeviceSecret: 'asdf',
+                    iv: 'iv'
                 }, function(err) {
                     expect(err).to.not.exist;
                     done();
@@ -65,9 +66,9 @@ define(function(require) {
             });
         });
 
-        describe('requestAuthSessionKeys', function() {
+        describe('requestAuthSessionKey', function() {
             it('should fail due to invalid args', function(done) {
-                privkeyDao.requestAuthSessionKeys({}, function(err) {
+                privkeyDao.requestAuthSessionKey({}, function(err) {
                     expect(err).to.exist;
                     done();
                 });
@@ -76,7 +77,7 @@ define(function(require) {
             it('should work', function(done) {
                 restDaoStub.post.withArgs(undefined, '/auth/user/' + emailAddress).yields();
 
-                privkeyDao.requestAuthSessionKeys({
+                privkeyDao.requestAuthSessionKey({
                     userId: emailAddress
                 }, function(err) {
                     expect(err).to.not.exist;
@@ -96,13 +97,17 @@ define(function(require) {
             it('should work', function(done) {
                 var sessionId = '1';
 
-                restDaoStub.put.withArgs('asdf', '/auth/user/' + emailAddress + '/session/' + sessionId).yields();
-
-                privkeyDao.verifyAuthentication({
+                var options = {
                     userId: emailAddress,
                     sessionId: sessionId,
-                    encryptedChallenge: 'asdf'
-                }, function(err) {
+                    encryptedChallenge: 'asdf',
+                    encryptedDeviceSecret: 'qwer',
+                    iv: ' iv'
+                };
+
+                restDaoStub.put.withArgs(options, '/auth/user/' + emailAddress + '/session/' + sessionId).yields();
+
+                privkeyDao.verifyAuthentication(options, function(err) {
                     expect(err).to.not.exist;
                     done();
                 });
@@ -118,16 +123,18 @@ define(function(require) {
             });
 
             it('should work', function(done) {
-                var key = {
-                    _id: '12345'
+                var options = {
+                    _id: '12345',
+                    userId: emailAddress,
+                    encryptedPrivateKey: 'asdf',
+                    sessionId: '1',
+                    salt: 'salt',
+                    iv: 'iv'
                 };
 
-                restDaoStub.post.withArgs(key, '/privatekey/user/' + emailAddress + '/key/' + key._id).yields();
+                restDaoStub.post.withArgs(options, '/privatekey/user/' + emailAddress + '/session/' + options.sessionId).yields();
 
-                privkeyDao.upload({
-                    userId: emailAddress,
-                    encryptedPrivateKey: key
-                }, function(err) {
+                privkeyDao.upload(options, function(err) {
                     expect(err).to.not.exist;
                     done();
                 });

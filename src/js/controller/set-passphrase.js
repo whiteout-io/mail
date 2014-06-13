@@ -10,7 +10,7 @@ define(function(require) {
 
     var SetPassphraseCtrl = function($scope) {
         keychain = appController._keychain;
-        pgp = appController._crypto;
+        pgp = appController._pgp;
 
         $scope.state.setPassphrase = {
             toggle: function(to) {

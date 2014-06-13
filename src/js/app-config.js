@@ -25,6 +25,8 @@ define(function(require) {
      */
     app.config = {
         cloudUrl: cloudUrl || 'https://keys.whiteout.io',
+        privkeyServerUrl: 'https://keychain-test.whiteout.io',
+        serverPrivateKeyId: 'EE342F0DDBB0F3BE',
         symKeySize: 256,
         symIvSize: 96,
         asymKeySize: 2048,
