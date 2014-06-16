@@ -9,20 +9,30 @@
     & > li {
         position: relative;
         display: block;
-        margin-bottom: 7px;
         padding: $padding-vertical $padding-horizontal;
         background: $color-white;
         cursor: pointer;
         transition: background-color $time-li-fade, color $time-li-fade;
 
-        border-top: 5px solid $color-white;
-        box-shadow: 0 -1px 0 $color-grey-light;
-        margin-top: 5px;
+        margin-top: 11px;
+        &:before {
+            content: '';
+            display: block;
+            position: absolute;
+            top: -6px;
+            left: 0;
+            right: 0;
+            height: 0;
+            border-top: 1px solid $color-grey-light;
+        }
 
         &:first-child {
             box-shadow: none;
             border-top: 0;
             margin-top: 0;
+            &:before {
+                display: none;
+            }
         }
         &:last-child {
             margin-bottom: 5px;
@@ -150,10 +160,11 @@
         }
 
         @include respond-to(desktop) {
-            box-shadow: none;
-            border-top: 0;
             margin-top: 0;
-
+            margin-bottom: 7px;
+            &:before {
+                display: none;
+            }
             &:last-child {
                 margin-bottom: 0;
             }
