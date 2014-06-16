@@ -1,16 +1,16 @@
 .view-mail-list {
     $padding-horizontal: 15px;
     $padding-vertical: 10px;
-    position: relative;
+
+    display: flex;
+    flex-direction: column;
     height: 100%;
     width: 100%;
-    background: $color-grey-lighterer;
-    background-image: linear-gradient(to right ,$color-grey-lighterer 98%, darken($color-grey-lighterer, 1%) 100%);
 
     header {
+        flex-shrink: 0;
         cursor: pointer;
         padding: $padding-vertical $padding-horizontal;
-        text-shadow: 0px 1px 1px $color-grey-lighter;
         &:before {
             color: $color-blue;
             font-size: $font-size-bigger;
@@ -24,6 +24,7 @@
             font-size: $font-size-bigger;
             font-weight: normal;
             vertical-align: middle;
+            text-shadow: 0px 1px 1px $color-grey-lighter;
         }
         button {
             float: right;
@@ -36,33 +37,40 @@
     }
 
     .search {
+        flex-shrink: 0;
         padding: 0 $padding-horizontal $padding-vertical $padding-horizontal;
         margin: 0 auto;
         width: 100%;
     }
 
     .list-wrapper {
-        height: 100%;
+        flex-grow: 1;
         padding: 0 $padding-horizontal;
         overflow-y: hidden;
-
-        .mail-list {
-            padding-bottom: 126px;
-        }
     }
 
     footer {
+        flex-shrink: 0;
+        position: relative;
         height: 28px;
         cursor: pointer;
-        position: absolute;
-        bottom: 0px;
-        left: 0px;
         padding: 0 $nav-padding;
-        background: darken($color-grey-lighterer, 1%);
+        background: $color-white;
         width: 100%;
         font-size: $font-size-smaller;
         color: $color-grey-dark;
         line-height: em(28,12);
+
+        &:before {
+            content: '';
+            display: block;
+            position: absolute;
+            top: 0;
+            left: $nav-padding;
+            right: $nav-padding;
+            height: 0;
+            border-top: 1px solid $color-grey-medium;
+        }
 
         .offline {
             &[data-icon]:before {
@@ -77,6 +85,18 @@
         &.syncing {
             .spinner {
                 display: inline-block;
+            }
+        }
+    }
+
+    @include respond-to(desktop) {
+        background: $color-grey-lighterer;
+        background-image: linear-gradient(to right ,$color-grey-lighterer 98%, darken($color-grey-lighterer, 1%) 100%);
+
+        footer {
+            background: darken($color-grey-lighterer, 1%);
+            &:before {
+                display: none;
             }
         }
     }
