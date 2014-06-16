@@ -2,6 +2,7 @@
   <!-- nav controll and section headline -->
   <header data-icon="&#xe004;" ng-click="state.nav.toggle(true); $event.stopPropagation()">
     <h2>{{state.nav.currentFolder.type}}</h2>
+    <button ng-click="state.writer.write()" class="btn-icon" title="New mail"></button>
   </header>
 
   <div class="search">
@@ -10,15 +11,19 @@
 
   <div class="list-wrapper" ng-iscroll="filteredMessages">
     <ul class="mail-list">
-      <li ng-class="{'mail-list-active': email === state.mailList.selected, 'mail-list-attachment': email.attachments !== undefined && email.attachments.length > 0, 'mail-list-unread': email.unread, 'mail-list-replied': !email.unread && email.answered}" ng-click="select(email)" ng-repeat="email in (filteredMessages = (state.nav.currentFolder.messages | filter:searchText | orderBy:'uid':true | limitTo:100))">
+      <li ng-class="{'mail-list-active': email === state.mailList.selected}" ng-click="select(email)" ng-repeat="email in (filteredMessages = (state.nav.currentFolder.messages | filter:searchText | orderBy:'uid':true | limitTo:100))">
         <h3>{{email.from[0].name || email.from[0].address}}</h3>
         <div class="encrypted" data-icon="{{email.encrypted && email.decrypted ? '&#xe012;' : email.encrypted ? '&#xe009;' : ''}}"></div>
         <div class="head">
-          <div class="flag" data-icon="{{(!email.unread && email.answered) ? '&#xe002;' : ''}}" ng-click="toggleUnread(email); $event.stopPropagation()"></div>
           <p class="subject">{{email.subject || 'No subject'}}</p>
           <time>{{email.sentDate | date:'mediumDate'}}</time>
         </div>
         <p class="body">{{email.body}}</p>
+        <ul class="flags">
+          <li ng-show="email.unread"></li>
+          <li data-icon="&#xe002;" ng-show="!email.unread && email.answered"></li>
+          <li data-icon="&#xe003;" ng-show="email.attachments !== undefined && email.attachments.length > 0"></li>
+        </ul>
       </li>
     </ul><!--/.mail-list-->
   </div>

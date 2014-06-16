@@ -25,7 +25,14 @@
             font-weight: normal;
             vertical-align: middle;
         }
+        button {
+            float: right;
+            margin-top: -0.05em; // for perfect vertical alignment with headline
 
+            @include respond-to(desktop) {
+                display: none;
+            }
+        }
     }
 
     .search {
@@ -38,10 +45,10 @@
         height: 100%;
         padding: 0 $padding-horizontal;
         overflow-y: hidden;
-    }
 
-    ul {
-        padding-bottom: 126px;
+        .mail-list {
+            padding-bottom: 126px;
+        }
     }
 
     footer {
