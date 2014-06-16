@@ -46,8 +46,8 @@
 
     .list-wrapper {
         flex-grow: 1;
-        padding: 0 $padding-horizontal;
-        overflow-y: hidden;
+        padding: 0 ($padding-horizontal - $scrollbar-width) 0 $padding-horizontal;
+        overflow-y: scroll;
     }
 
     footer {

@@ -273,12 +273,12 @@ define(function(require) {
 
     var ngModule = angular.module('mail-list', []);
 
-    ngModule.directive('ngIscroll', function($timeout) {
+    ngModule.directive('listScroll', function() {
         return {
             link: function(scope, elm, attrs) {
-                var model = attrs.ngIscroll,
+                var model = attrs.listScroll,
                     listEl = elm[0],
-                    myScroll;
+                    scrollTimeout;
 
                 /*
                  * iterates over the mails in the mail list and loads their bodies if they are visible in the viewport
@@ -320,20 +320,19 @@ define(function(require) {
                     }
                 };
 
-                // activate iscroll
-                myScroll = new IScroll(listEl, {
-                    mouseWheel: true,
-                    scrollbars: true,
-                    fadeScrollbars: true
-                });
-                myScroll.on('scrollEnd', scope.loadVisibleBodies);
+                // load body when scrolling
+                listEl.onscroll = function() {
+                    if (scrollTimeout) {
+                        // remove timeout so that only scroll end
+                        clearTimeout(scrollTimeout);
+                    }
+                    scrollTimeout = setTimeout(function() {
+                        scope.loadVisibleBodies();
+                    }, 300);
+                };
 
-                // refresh iScroll when model length changes
+                // load the visible message bodies, when the list is re-initialized and when scrolling stopped
                 scope.$watchCollection(model, function() {
-                    $timeout(function() {
-                        myScroll.refresh();
-                    });
-                    // load the visible message bodies, when the list is re-initialized and when scrolling stopped
                     scope.loadVisibleBodies();
                 });
             }
