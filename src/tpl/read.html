@@ -7,7 +7,7 @@
       <button ng-click="state.writer.write()" class="btn-icon" title="New mail">&#xe006;</button>
     </div><!--/.controls-->
 
-    <p class="subject" ng-click="state.read.toggle(false)">{{(state.mailList.selected.subject) ? state.mailList.selected.subject : 'No subject'}}</p>
+    <p class="subject" ng-click="state.read.toggle(false)" data-icon="&#xe016;">{{(state.mailList.selected.subject) ? state.mailList.selected.subject : 'No subject'}}</p>
     <p class="date">{{state.mailList.selected.sentDate | date:'EEEE, MMM d, yyyy h:mm a'}}</p>
     <div class="mail-addresses">
       <p>
