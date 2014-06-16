@@ -20,8 +20,7 @@
 			uuid: 'uuid/uuid',
 			forge: 'forge/forge.min',
 			punycode: 'punycode.min',
-			openpgp: 'openpgp/openpgp.min',
-			iscroll: 'iscroll/iscroll-min'
+			openpgp: 'openpgp/openpgp.min'
 		},
 		shim: {
 			forge: {
@@ -45,9 +44,6 @@
 			angularAnimate: {
 				exports: 'angular',
 				deps: ['angular']
-			},
-			iscroll: {
-				exports: 'IScroll'
 			},
 			lawnchair: {
 				exports: 'Lawnchair'

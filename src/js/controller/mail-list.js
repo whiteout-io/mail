@@ -4,7 +4,6 @@ define(function(require) {
     var angular = require('angular'),
         _ = require('underscore'),
         appController = require('js/app-controller'),
-        IScroll = require('iscroll'),
         notification = require('js/util/notification'),
         emailDao, outboxBo, keychainDao;
 
