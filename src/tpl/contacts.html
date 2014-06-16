@@ -8,11 +8,13 @@
     <div class="view-contacts">
 
       <div class="key-controls">
-        <input class="input-text" type="text" placeholder="Search..." ng-model="searchText">
-        <span>
+        <div class="key-controls-search">
+          <input class="input-text" type="text" placeholder="Search..." ng-model="searchText">
+        </div>
+        <div class="key-controls-import">
           <input id="keyfile-input" type="file" multiple accept=".asc" keyfile-input>
-          <button class="btn" ng-class="{'btn-primary': sendBtnSecure === false}" keyfile-btn>Import public keys</button>
-        </span>
+          <button class="btn" ng-class="{'btn-primary': sendBtnSecure === false}" keyfile-btn>Import keys</button>
+        </div>
       </div>
 
       <div class="key-list">

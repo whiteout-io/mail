@@ -1,16 +1,35 @@
 .view-contacts {
 
     .key-controls {
+        display: flex;
+        flex-direction: row;
         margin: 30px;
 
-        input[type=text] {
-            line-height: 23px;
+        .key-controls-search {
+            flex-grow: 1;
+            input[type=text] {
+                line-height: 23px;
+                width: 100%;
+            }
         }
+        .key-controls-import {
+            display: block;
+            width: 8em;
+            flex-shrink: 0;
+            margin-left: 0.5em;
+            input[type=file] {
+                visibility: hidden;
+                width: 0;
+                height: 0;
+                position: absolute;
+            }
+            .btn {
+                width: 100%;
+            }
 
-        input[type=file] {
-            visibility: hidden;
-            width: 0;
-            height: 0;
+            @include respond-to(desktop) {
+                width: 10em;
+            }
         }
     }
 
