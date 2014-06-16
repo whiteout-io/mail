@@ -18,7 +18,7 @@
         "requirejs": "2.1.10"
     },
     "devDependencies": {
-        "angular": "https://github.com/angular/angular.js/tarball/v1.2.8",
+        "angularjs": "https://github.com/angular/angular.js/tarball/v1.2.8",
         "grunt": "~0.4.1",
         "mocha": "~1.13.0",
         "chai": "~1.7.2",
