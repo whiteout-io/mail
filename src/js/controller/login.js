@@ -29,7 +29,7 @@ define(function(require) {
 
                 // check if account needs to be selected
                 if (!emailAddress) {
-                    //goTo('/add-account');
+                    goTo('/add-account');
                     return;
                 }
 
