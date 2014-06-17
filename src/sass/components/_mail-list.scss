@@ -6,18 +6,37 @@
     margin: 0;
     padding: 0;
 
-    &:last-child {
-        margin-bottom: 0;
-    }
-
-    li {
+    & > li {
         position: relative;
         display: block;
-        margin-bottom: 7px;
         padding: $padding-vertical $padding-horizontal;
         background: $color-white;
         cursor: pointer;
         transition: background-color $time-li-fade, color $time-li-fade;
+
+        margin-top: 11px;
+        &:before {
+            content: '';
+            display: block;
+            position: absolute;
+            top: -6px;
+            left: 0;
+            right: 0;
+            height: 0;
+            border-top: 1px solid $color-grey-lighter;
+        }
+
+        &:first-child {
+            box-shadow: none;
+            border-top: 0;
+            margin-top: 0;
+            &:before {
+                display: none;
+            }
+        }
+        &:last-child {
+            margin-bottom: 5px;
+        }
 
         &.ng-animate {
             transition: none;
@@ -67,16 +86,31 @@
                 text-align: right;
                 line-height: 1.5em * ($font-size-small / $font-size-smaller);
             }
-            .flag {
-                width: 1em;
-                height: 1em;
-                border-radius: 50%;
-                box-shadow: inset 1px 1px 1px $color-grey-light;
-                position: absolute;
-                top: 0;
-                left: 0;
-                margin-top: 0.2em;
-                margin-left: -1.3em;
+        }
+        .flags {
+            position: absolute;
+            top: 0;
+            left: 0;
+            list-style: none;
+            margin: 0.8em 0 0;
+            padding: 0;
+            color: $color-grey-medium;
+            width: 30px;
+            line-height: 1.6em;
+            & > li {
+                font-size: 90%;
+                text-align: center;
+
+                &:nth-child(1) {
+                    &:after {
+                        display: inline-block;
+                        content: '';
+                        width: 1em;
+                        height: 1em;
+                        border-radius: 50%;
+                        background-color: $color-blue;
+                    }
+                }
             }
         }
 
@@ -88,46 +122,6 @@
 
         &:hover {
             background-color: mix($color-white, $color-blue, 90%);
-        }
-
-        &.mail-list-attachment {
-            .head:after {
-                content: "\e003";
-                color: $color-grey-medium;
-                font-family: $font-family-icons;
-                position: absolute;
-                right: 0;
-                top: 0;
-                margin-top: -0.3em;
-                margin-right: -1 * $padding-horizontal;
-                text-align: center;
-                line-height: 1.8em;
-                width: $padding-horizontal;
-            }
-        }
-
-        &.mail-list-unread {
-            .flag {
-                background-color: $color-blue;
-                box-shadow: inset 0.5px 1px 1px $color-grey-medium;
-            }
-        }
-
-        &.mail-list-replied {
-            .flag {
-                color: $color-grey-medium;
-                font-family: $font-family-icons;
-                position: absolute;
-                left: 0;
-                top: 0;
-                margin-left: -1 * $padding-horizontal;
-                text-align: center;
-                line-height: 1.8em / 0.8em;
-                box-shadow: none;
-                width: $padding-horizontal;
-                height: auto;
-                font-size: 0.8em;
-            }
         }
 
         &.mail-list-active,
@@ -152,27 +146,27 @@
             .body {
                 color: $color-white;
             }
-            .flag {
-                box-shadow: inset 1px 1px 1px $color-grey-light;
-                background-color: $color-white;
-            }
-            &.mail-list-attachment {
-                .head:after {
+            .flags {
+                & > li {
                     color: $color-white;
+
+                    &:nth-child(1) {
+                        &:after {
+                            background-color: $color-white;
+                        }
+                    }
                 }
             }
-            &.mail-list-unread {
-                .flag {
-                    box-shadow: inset 1px 1px 1px $color-grey-light;
-                    background-color: $color-white;
-                }
+        }
+
+        @include respond-to(desktop) {
+            margin-top: 0;
+            margin-bottom: 7px;
+            &:before {
+                display: none;
             }
-            &.mail-list-replied {
-                .flag {
-                    color: $color-white;
-                    background: transparent;
-                    box-shadow: none;
-                }
+            &:last-child {
+                margin-bottom: 0;
             }
         }
     }

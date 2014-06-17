@@ -2,6 +2,7 @@
     @include clearfix();
     height: 100%;
     overflow: hidden;
+    backface-visibility: hidden;
 
     // double in modile to allow slide transition
     @include respond-to(mobile) {

@@ -20,7 +20,7 @@ $color-white:                       #fff;
 $color-grey:                        #666;
 $color-grey-input:                  #949494;
 $color-grey-dark:                   #333;
-$color-grey-medium:                 #aaa;
+$color-grey-medium:                 #999;
 $color-grey-light:                  #ccc;
 $color-grey-lighter:                #ddd;
 $color-grey-lighterer:              #f0eff5;
@@ -37,11 +37,13 @@ $content-nav-width:                 344px;
 // Animations
 // -------------------------------------------
 
-$time-nav-animation:                0.2s;
+$time-nav-animation:                0.15s;
 $time-li-fade:                      0.15s;
 
 // Components
 // -------------------------------------------
+
+$scrollbar-width:                   10px;
 
 $nav-max-width:                     347px;
 $nav-width:                         80%;

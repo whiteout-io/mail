@@ -14,14 +14,13 @@
 			lawnchairIDB: 'lawnchair/lawnchair-adapter-indexed-db-git',
 			angular: 'angular/angular.min',
 			angularRoute: 'angular/angular-route.min',
-			angularTouch: 'angular/angular-touch.min',
 			angularSanitize: 'angular/angular-sanitize.min',
 			angularAnimate: 'angular/angular-animate.min',
 			uuid: 'uuid/uuid',
 			forge: 'forge/forge.min',
 			punycode: 'punycode.min',
 			openpgp: 'openpgp/openpgp.min',
-			iscroll: 'iscroll/iscroll-min'
+			fastclick: 'fastclick/fastclick'
 		},
 		shim: {
 			forge: {
@@ -38,16 +37,9 @@
 				exports: 'angular',
 				deps: ['angular']
 			},
-			angularTouch: {
-				exports: 'angular',
-				deps: ['angular']
-			},
 			angularAnimate: {
 				exports: 'angular',
 				deps: ['angular']
-			},
-			iscroll: {
-				exports: 'IScroll'
 			},
 			lawnchair: {
 				exports: 'Lawnchair'
