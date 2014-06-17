@@ -1,7 +1,6 @@
 .view-login {
     position: relative;
-    overflow: hidden;
-    height: 100%;
+    min-height: 100%;
     background-color: $color-grey-lightest;
     color: $color-grey-dark;
     text-align: center;
@@ -9,15 +8,18 @@
 
     .logo {
         max-width: 700px;
-        margin: 135px auto 75px;
+        margin: 75px auto;
         img {
             display: block;
             max-width: 100%;
             width: 320px;
             margin-left: auto;
             margin-right: auto;
+        }
 
-            @include respond-to(desktop) {
+        @include respond-to(desktop) {
+            margin-top: 135px;
+            img {
                 margin-left: 0;
             }
         }
