@@ -19,12 +19,3 @@
     color: red;
     font-size: em(13);
 }
-
-// need to be more specific than normalize.css
-.input-search,
-input[type="search"].input-search {
-    box-sizing: border-box;
-    width: 100%;
-    border-radius: 0;
-    -webkit-appearance: searchfield;
-}

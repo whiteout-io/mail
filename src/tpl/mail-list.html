@@ -5,8 +5,8 @@
     <button ng-click="state.writer.write()" class="btn-icon" title="New mail"></button>
   </header>
 
-  <div class="search">
-    <input class="input-text input-search" type="search" results="5" ng-model="searchText" placeholder=" Filter..." focus-me="state.mailList.searching">
+  <div class="search" data-icon="&#xe017;">
+    <input class="input-text" type="text" ng-model="searchText" placeholder="Filter..." focus-me="state.mailList.searching">
   </div>
 
   <div class="list-wrapper" ng-iscroll="filteredMessages">
