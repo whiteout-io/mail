@@ -7,6 +7,9 @@
     font-size: $font-size-base;
     padding: 8px 10px;
     outline: none;
+    // ios
+    border-radius: 0;
+    -webkit-appearance: none;
 }
 
 .input-text-error {
