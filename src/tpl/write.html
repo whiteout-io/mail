@@ -32,13 +32,9 @@
       </div><!--/.mail-addresses-->
 
       <div class="subject-box">
-        <div class="subject-line">
-          <input ng-model="subject" class="subject" spellcheck="true" tabindex="2" placeholder="Subject" ng-change="updatePreview()">
-        </div><!--/.subject-line-->
+        <input class="input-text" ng-model="subject" spellcheck="true" tabindex="2" placeholder="Subject" ng-change="updatePreview()">
         <input id="attachment-input" type="file" multiple attachment-input>
-        <button class="btn btn-attachment" ng-class="{'btn-primary': sendBtnSecure === false}" attachment-btn>
-          <div data-icon="&#xe003;"></div>
-        </button><!--/.btn-attachment-->
+        <button class="btn btn-attachment" data-icon="&#xe003;" ng-class="{'btn-primary': sendBtnSecure === false}" attachment-btn></button>
       </div><!--/.subject-box-->
 
       <div class="attachments-box" ng-show="attachments.length > 0">
