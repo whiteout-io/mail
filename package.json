@@ -6,7 +6,7 @@
     },
     "scripts": {
         "postinstall": "grunt dist-npm",
-        "test": "grunt test && grunt",
+        "test": "grunt && grunt test",
         "start": "grunt && grunt dev"
     },
     "dependencies": {
@@ -19,6 +19,8 @@
     },
     "devDependencies": {
         "angularjs": "https://github.com/angular/angular.js/tarball/v1.2.8",
+        "browsercrow": "https://github.com/whiteout-io/browsercrow/tarball/master",
+        "browsersmtp": "https://github.com/whiteout-io/browsersmtp/tarball/master",
         "grunt": "~0.4.1",
         "mocha": "~1.13.0",
         "chai": "~1.7.2",

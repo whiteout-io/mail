@@ -2,7 +2,14 @@
 
 require(['src/require-config'], function() {
 	require.config({
-		baseUrl: 'src/lib'
+		baseUrl: 'src/lib',
+		paths: {
+			'browsercrow': '../../../lib/browsercrow',
+			'browsercrow-envelope': '../../../lib/browsercrow-envelope',
+			'browsercrow-bodystructure': '../../../lib/browsercrow-bodystructure',
+			'browsercrow-mimeparser': '../../../lib/browsercrow-mimeparser',
+			'browsersmtp': '../../../lib/browsersmtp'
+		}
 	});
 
 	// Start the main app logic.

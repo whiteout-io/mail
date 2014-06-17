@@ -28,6 +28,7 @@ module.exports = function(grunt) {
                     middleware: function(connect, options) {
                         // Return array of whatever middlewares you want
                         return [
+
                             function(req, res, next) {
                                 res.setHeader('Content-Security-Policy', "default-src 'self'; object-src 'none'; connect-src 'self' https://keys.whiteout.io; img-src 'self' data:;");
 
@@ -64,9 +65,16 @@ module.exports = function(grunt) {
         mocha: {
             all: {
                 options: {
-                    urls: ['http://localhost:<%= connect.test.options.port %>/test/new-unit/index.html'],
+                    urls: [
+                        'http://localhost:<%= connect.test.options.port %>/test/new-unit/index.html',
+                        'http://localhost:<%= connect.test.options.port %>/test/integration/index.html'
+                    ],
                     run: false,
-                    reporter: 'Spec'
+                    reporter: 'Spec',
+                    log: false,
+
+                    // phanotmjs is soooo slow
+                    timeout: 100000
                 }
             }
         },
@@ -149,7 +157,7 @@ module.exports = function(grunt) {
                 expand: true,
                 flatten: true,
                 cwd: 'node_modules/',
-                src: ['requirejs/require.js', 'mocha/mocha.css', 'mocha/mocha.js', 'chai/chai.js', 'sinon/pkg/sinon.js', 'angularjs/src/ngMock/angular-mocks.js'],
+                src: ['requirejs/require.js', 'mocha/mocha.css', 'mocha/mocha.js', 'chai/chai.js', 'sinon/pkg/sinon.js', 'angularjs/src/ngMock/angular-mocks.js', 'browsercrow/src/*.js', 'browsersmtp/src/*.js'],
                 dest: 'test/lib/'
             },
             cryptoLib: {
