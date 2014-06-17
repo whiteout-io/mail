@@ -483,7 +483,11 @@ define(function(require) {
         return {
             //scope: true,   // optionally create a child scope
             link: function(scope, element, attrs) {
-                element.on('click', function() {
+                element.on('click', function(e) {
+                    if(e.target.nodeName === 'INPUT') {
+                        return;
+                    }
+
                     var fieldName = attrs.field;
                     var field = scope[fieldName];
 
@@ -509,11 +513,6 @@ define(function(require) {
                 var field = scope[fieldName];
                 var index = parseInt(attrs.id.replace(fieldName, ''), 10);
 
-                element.on('click', function(e) {
-                    // focus on this one and dont bubble to field click handler
-                    e.stopPropagation();
-                });
-
                 element.on('blur', function() {
                     if (!checkForEmptyInput(field)) {
                         // create new field input
@@ -532,12 +531,14 @@ define(function(require) {
                         // catch space, comma, semicolon
                         e.preventDefault();
 
-                        // create new field input
-                        addInput(field, scope);
-                        // find next input and focus
-                        var nextId = fieldName + (index + 1);
-                        document.getElementById(nextId).focus();
-
+                        // add next field only if current input is not empty
+                        if(field[index].address) {
+                            // create new field input
+                            addInput(field, scope);
+                            // find next input and focus
+                            var nextId = fieldName + (index + 1);
+                            document.getElementById(nextId).focus();
+                        }
                     } else if ((code === 8 || code === 46) && !field[index].address && field.length > 1) {
                         // backspace, delete on empty input
                         // remove input
