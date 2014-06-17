@@ -531,12 +531,14 @@ define(function(require) {
                         // catch space, comma, semicolon
                         e.preventDefault();
 
-                        // create new field input
-                        addInput(field, scope);
-                        // find next input and focus
-                        var nextId = fieldName + (index + 1);
-                        document.getElementById(nextId).focus();
-
+                        // add next field only if current input is not empty
+                        if(field[index].address) {
+                            // create new field input
+                            addInput(field, scope);
+                            // find next input and focus
+                            var nextId = fieldName + (index + 1);
+                            document.getElementById(nextId).focus();
+                        }
                     } else if ((code === 8 || code === 46) && !field[index].address && field.length > 1) {
                         // backspace, delete on empty input
                         // remove input
