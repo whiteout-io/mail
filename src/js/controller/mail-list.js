@@ -53,7 +53,10 @@ define(function(require) {
             }
 
             $scope.state.mailList.selected = email;
-            $scope.state.read.toggle(true);
+            $timeout(function() {
+                // toogle read ste in next digest step to speed up css transition to read mode
+                $scope.state.read.toggle(true);
+            });
 
             keychainDao.refreshKeyForUserId(email.from[0].address, onKeyRefreshed);
 
