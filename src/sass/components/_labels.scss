@@ -7,7 +7,6 @@
     vertical-align: middle;
     border-radius: ($line-height-base * $label-font-size) + 2 * $label-padding-vertical;
     white-space: nowrap;
-    user-select: none;
     background-color: $label-back-color;
     color: $label-color;
     transition: background-color 0.3s;

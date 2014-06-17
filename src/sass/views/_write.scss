@@ -141,6 +141,7 @@
         flex-grow: 1;
         line-height: 1.5em;
         overflow-y: scroll;
+        user-select: text;
 
         *[contentEditable] {
             outline: 0px;
