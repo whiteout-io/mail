@@ -40,6 +40,20 @@
     .search {
         flex-shrink: 0;
         padding: 0 $padding-horizontal $padding-vertical $padding-horizontal;
+        margin: 0 auto;
+        width: 100%;
+        position: relative;
+        input {
+            width: 100%;
+            padding-left: 1.7em;
+        }
+        &:before {
+            position: absolute;
+            left: 25px;
+            color: $color-grey-medium;
+            top: 8px;
+            line-height: 1.3em;
+        }
     }
 
     .list-wrapper {
