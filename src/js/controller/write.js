@@ -432,7 +432,7 @@ define(function(require) {
                 scope.$watch(model, function(value) {
                     var width;
 
-                    if (value.length < 12) {
+                    if (!value || value.length < 12) {
                         width = (14 * 8) + 'px';
                     } else {
                         width = ((value.length + 2) * 8) + 'px';
@@ -484,7 +484,7 @@ define(function(require) {
             //scope: true,   // optionally create a child scope
             link: function(scope, element, attrs) {
                 element.on('click', function(e) {
-                    if(e.target.nodeName === 'INPUT') {
+                    if (e.target.nodeName === 'INPUT') {
                         return;
                     }
 
@@ -532,7 +532,7 @@ define(function(require) {
                         e.preventDefault();
 
                         // add next field only if current input is not empty
-                        if(field[index].address) {
+                        if (field[index].address) {
                             // create new field input
                             addInput(field, scope);
                             // find next input and focus
