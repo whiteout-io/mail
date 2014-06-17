@@ -886,7 +886,7 @@ define(function(require) {
         self._pgpMailer.send({
             encrypt: true,
             cleartextMessage: str.message + str.signature,
-            smtpclient: options.smtpclient,
+            smtpclient: options.smtpclient, // filled solely in the integration test, undefined in normal usage
             mail: options.email,
             publicKeysArmored: options.email.publicKeysArmored
         }, callback);
@@ -909,7 +909,7 @@ define(function(require) {
 
         // mime encode, sign and send email via smtp
         this._pgpMailer.send({
-            smtpclient: options.smtpclient,
+            smtpclient: options.smtpclient, // filled solely in the integration test, undefined in normal usage
             mail: options.email
         }, callback);
     };
