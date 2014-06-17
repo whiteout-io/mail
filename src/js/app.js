@@ -20,9 +20,9 @@ requirejs([
     'js/controller/navigation',
     'cryptoLib/util',
     'js/util/error',
+    'fastclick',
     'angularSanitize',
     'angularRoute',
-    'angularTouch',
     'angularAnimate'
 ], function(
     angular,
@@ -42,7 +42,8 @@ requirejs([
     WriteCtrl,
     NavigationCtrl,
     util,
-    errorUtil
+    errorUtil,
+    FastClick
 ) {
     'use strict';
 
@@ -53,7 +54,6 @@ requirejs([
     var app = angular.module('mail', [
         'ngSanitize',
         'ngRoute',
-        'ngTouch',
         'ngAnimate',
         'navigation',
         'mail-list',
@@ -103,6 +103,8 @@ requirejs([
         $rootScope.state = {};
         // attach global error handler
         errorUtil.attachHandler($rootScope);
+        // attach fastclick
+        FastClick.attach(document.body);
     });
 
     // inject controllers from ng-included view templates
