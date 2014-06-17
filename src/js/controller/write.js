@@ -445,15 +445,17 @@ define(function(require) {
     });
 
     function addInput(field, scope) {
-        field.push({
-            address: ''
+        scope.$apply(function() {
+            field.push({
+                address: ''
+            });
         });
-        scope.$apply();
     }
 
     function removeInput(field, index, scope) {
-        field.splice(index, 1);
-        scope.$apply();
+        scope.$apply(function() {
+            field.splice(index, 1);
+        });
     }
 
     function checkForEmptyInput(field) {
@@ -463,20 +465,25 @@ define(function(require) {
                 emptyFieldExists = true;
             }
         });
-
         return emptyFieldExists;
     }
 
     function cleanupEmptyInputs(field, scope) {
-        var i;
-
-        for (i = field.length - 2; i >= 0; i--) {
-            if (!field[i].address) {
-                field.splice(i, 1);
+        scope.$apply(function() {
+            for (var i = field.length - 2; i >= 0; i--) {
+                if (!field[i].address) {
+                    field.splice(i, 1);
+                }
             }
-        }
+        });
+    }
 
-        scope.$apply();
+    function focusInput(fieldName, index) {
+        var fieldId = fieldName + (index);
+        var fieldEl = document.getElementById(fieldId);
+        if (fieldEl) {
+            fieldEl.focus();
+        }
     }
 
     ngModule.directive('field', function() {
@@ -497,8 +504,7 @@ define(function(require) {
                     }
 
                     // focus on last input when clicking on field
-                    var id = fieldName + (field.length - 1);
-                    document.getElementById(id).focus();
+                    focusInput(fieldName, field.length - 1);
                 });
             }
         };
@@ -525,8 +531,6 @@ define(function(require) {
                 element.on('keydown', function(e) {
                     var code = e.keyCode;
 
-                    scope.$digest();
-
                     if (code === 32 || code === 188 || code === 186) {
                         // catch space, comma, semicolon
                         e.preventDefault();
@@ -535,18 +539,20 @@ define(function(require) {
                         if (field[index].address) {
                             // create new field input
                             addInput(field, scope);
+
                             // find next input and focus
-                            var nextId = fieldName + (index + 1);
-                            document.getElementById(nextId).focus();
+                            focusInput(fieldName, index + 1);
                         }
+
                     } else if ((code === 8 || code === 46) && !field[index].address && field.length > 1) {
                         // backspace, delete on empty input
                         // remove input
                         e.preventDefault();
+
                         removeInput(field, index, scope);
+
                         // focus on previous id
-                        var previousId = fieldName + (index - 1);
-                        document.getElementById(previousId).focus();
+                        focusInput(fieldName, index - 1);
                     }
                 });
             }

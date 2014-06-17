@@ -14,19 +14,19 @@
         <p field="to">
           <label>To:</label>
           <span ng-repeat="recipient in to track by $index">
-            <input id="to{{$index}}" type="email" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" class="label" ng-class="{'label-blank': !recipient.address || recipient.secure === undefined, 'label-primary': recipient.secure === false}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(to, $index)" address-input="to" tabindex="1" ng-mouseover="getKeyId(recipient)" focus-me="$index === 0 && state.lightbox === 'write' && writerTitle !== 'Reply'">
+            <input id="to{{$index}}" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" class="label" ng-class="{'label-blank': !recipient.address || recipient.secure === undefined, 'label-primary': recipient.secure === false}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(to, $index)" address-input="to" tabindex="1" ng-mouseover="getKeyId(recipient)" focus-me="$index === 0 && state.lightbox === 'write' && writerTitle !== 'Reply'">
           </span>
         </p>
         <p field="cc" ng-show="showCC === true">
           <label>Cc:</label>
           <span ng-repeat="recipient in cc track by $index">
-            <input id="cc{{$index}}" type="email" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" class="label" ng-class="{'label-blank': !recipient.address || recipient.secure === undefined, 'label-primary': recipient.secure === false}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(cc, $index)" address-input="cc" tabindex="1" ng-mouseover="getKeyId(recipient)">
+            <input id="cc{{$index}}" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" class="label" ng-class="{'label-blank': !recipient.address || recipient.secure === undefined, 'label-primary': recipient.secure === false}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(cc, $index)" address-input="cc" tabindex="1" ng-mouseover="getKeyId(recipient)">
           </span>
         </p>
         <p field="bcc" ng-show="showBCC === true">
           <label>Bcc:</label>
           <span ng-repeat="recipient in bcc track by $index">
-            <input id="bcc{{$index}}" type="email" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" class="label" ng-class="{'label-blank': !recipient.address || recipient.secure === undefined, 'label-primary': recipient.secure === false}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(bcc, $index)" address-input="bcc" tabindex="1" ng-mouseover="getKeyId(recipient)">
+            <input id="bcc{{$index}}" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" class="label" ng-class="{'label-blank': !recipient.address || recipient.secure === undefined, 'label-primary': recipient.secure === false}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(bcc, $index)" address-input="bcc" tabindex="1" ng-mouseover="getKeyId(recipient)">
           </span>
         </p>
       </div><!--/.mail-addresses-->
