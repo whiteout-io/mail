@@ -483,7 +483,11 @@ define(function(require) {
         return {
             //scope: true,   // optionally create a child scope
             link: function(scope, element, attrs) {
-                element.on('click', function() {
+                element.on('click', function(e) {
+                    if(e.target.nodeName === 'INPUT') {
+                        return;
+                    }
+
                     var fieldName = attrs.field;
                     var field = scope[fieldName];
 
@@ -508,11 +512,6 @@ define(function(require) {
                 var fieldName = attrs.addressInput;
                 var field = scope[fieldName];
                 var index = parseInt(attrs.id.replace(fieldName, ''), 10);
-
-                element.on('click', function(e) {
-                    // focus on this one and dont bubble to field click handler
-                    e.stopPropagation();
-                });
 
                 element.on('blur', function() {
                     if (!checkForEmptyInput(field)) {
