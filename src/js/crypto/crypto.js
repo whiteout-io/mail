@@ -7,7 +7,8 @@ define(function(require) {
 
     var aes = require('js/crypto/aes-gcm'),
         pbkdf2 = require('js/crypto/pbkdf2'),
-        config = require('js/app-config').config;
+        config = require('js/app-config').config,
+        axe = require('axe');
 
     var PBKDF2_WORKER = '/crypto/pbkdf2-worker.js';
 
@@ -91,8 +92,8 @@ define(function(require) {
                 options.callback(null, e.data);
             };
             worker.onerror = function(e) {
-                // show error message in console
-                console.error('Error handling web worker: Line ' + e.lineno + ' in ' + e.filename + ': ' + e.message);
+                // show error message in logger
+                axe.error('Error handling web worker: Line ' + e.lineno + ' in ' + e.filename + ': ' + e.message);
                 // return error
                 options.callback({
                     errMsg: (e.message) ? e.message : e

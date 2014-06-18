@@ -13,6 +13,7 @@ define(function(require) {
         mailreader = require('mailreader'),
         ImapClient = require('imap-client'),
         Crypto = require('js/crypto/crypto'),
+        axe = require('axe'),
         RestDAO = require('js/dao/rest-dao'),
         EmailDAO = require('js/dao/email-dao'),
         appConfig = require('js/app-config'),
@@ -35,16 +36,16 @@ define(function(require) {
         // are we running in a cordova app or in a browser environment?
         if (window.cordova) {
             // wait for 'deviceready' event to make sure plugins are loaded
-            console.log('Assuming Cordova environment...');
+            axe.debug('Assuming Cordova environment...');
             document.addEventListener("deviceready", onDeviceReady, false);
         } else {
             // No need to wait on events... just start the app
-            console.log('Assuming Browser environment...');
+            axe.debug('Assuming Browser environment...');
             onDeviceReady();
         }
 
         function onDeviceReady() {
-            console.log('Starting app.');
+            axe.debug('Starting app.');
 
             self.buildModules(options);
 
@@ -144,8 +145,7 @@ define(function(require) {
                 auth: auth,
                 tls: {
                     ca: [credentials.sslCert]
-                },
-                onError: console.error
+                }
             };
 
             pgpMailer = new PgpMailer(smtpOptions, self._pgpbuilder);
@@ -159,17 +159,17 @@ define(function(require) {
             }, callback);
         }
 
-        function onImapError(err) {
-            console.log('IMAP error.', err);
-            console.log('IMAP reconnecting...');
+        function onImapError(error) {
+            axe.debug('IMAP error.' + (error.errMsg || error.message) + (error.stack ? ('\n' + error.stack) : ''));
+            axe.debug('IMAP reconnecting...');
             // re-init client modules on error
             self.onConnect(function(err) {
                 if (err) {
-                    console.error('IMAP reconnect failed!', err);
+                    axe.error('IMAP reconnect failed! ' + (err.errMsg || err.message) + (err.stack ? ('\n' + err.stack) : ''));
                     return;
                 }
 
-                console.log('IMAP reconnect attempt complete.');
+                axe.debug('IMAP reconnect attempt complete.');
             });
         }
     };
@@ -181,16 +181,16 @@ define(function(require) {
 
         // check for update and restart
         chrome.runtime.onUpdateAvailable.addListener(function(details) {
-            console.log("Updating to version " + details.version);
+            axe.debug("Updating to version " + details.version);
             chrome.runtime.reload();
         });
         chrome.runtime.requestUpdateCheck(function(status) {
             if (status === "update_found") {
-                console.log("Update pending...");
+                axe.debug("Update pending...");
             } else if (status === "no_update") {
-                console.log("No update found.");
+                axe.debug("No update found.");
             } else if (status === "throttled") {
-                console.log("Checking updates too frequently.");
+                axe.debug("Checking updates too frequently.");
             }
         });
     };

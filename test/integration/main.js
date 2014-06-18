@@ -13,11 +13,13 @@ require(['src/require-config'], function() {
 	});
 
 	// Start the main app logic.
-	require(['js/app-config'], function(app) {
+	require(['js/app-config', 'axe'], function(app, axe) {
 		window.Worker = undefined; // disable web workers since mocha doesn't support them
 
 		app.config.workerPath = '../../src/js';
 		//app.config.cloudUrl = 'http://localhost:8888';
+
+		axe.removeAppender(axe.defaultAppender);
 
 		startTests();
 	});

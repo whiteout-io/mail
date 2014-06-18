@@ -77,7 +77,11 @@ define(function(require) {
         updatePublicKeyMsgNewKey: '{0} updated his key and may not be able to read encrypted messages sent with his old key. Update the key?',
         updatePublicKeyMsgRemovedKey: '{0} revoked his key and may no longer be able to read encrypted messages. Remove the key?',
         updatePublicKeyPosBtn: 'Yes',
-        updatePublicKeyNegBtn: 'No'
+        updatePublicKeyNegBtn: 'No',
+        bugReportTitle: 'Report a bug',
+        bugReportSubject: '[Bug] I want to report a bug',
+        bugReportBody: 'Steps to reproduce\n1. \n2. \n3. \n\nWhat happens?\n\n\nWhat do you expect to happen instead?\n\n\n\n== PLEASE DONT PUT ANY KEYS HERE! ==\n\n\n## Log\n\nBelow is the log. It includes your interactions with your email provider in an anonymized way from the point where you started the app for the last time. Any information provided by you will be used for the porpose of locating and fixing the bug you reported. It will be deleted subsequently. However, you can edit this log and/or remove log data in the event that something would show up.\n\n',
+        supportAddress: 'mail.support@whiteout.io'
     };
 
     return app;

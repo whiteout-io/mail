@@ -16,8 +16,11 @@ require(['../../src/require-config'], function() {
 
 
 	// Start the main app logic.
-	require(['js/app-config'], function(app) {
+	require(['js/app-config', 'axe'], function(app, axe) {
 		app.config.workerPath = '../../src/js';
+
+		// turn off logging in the test
+		axe.removeAppender(axe.defaultAppender);
 
 		startTests();
 	});
