@@ -100,7 +100,7 @@ define(function(require) {
      * Read all relevant params of an armored key.
      */
     PGP.prototype.getKeyParams = function(keyArmored) {
-        var key, packet;
+        var key, packet, userIds;
 
         // process armored key input
         if (keyArmored) {
@@ -113,9 +113,19 @@ define(function(require) {
 
         packet = key.getKeyPacket();
 
+        // read user names and email addresses
+        userIds = [];
+        key.getUserIds().forEach(function(userId) {
+            userIds.push({
+                name: userId.split('<')[0].trim(),
+                emailAddress: userId.split('<')[1].split('>')[0].trim()
+            });
+        });
+
         return {
             _id: packet.getKeyId().toHex().toUpperCase(),
-            userId: key.getUserIds()[0].split('<')[1].split('>')[0],
+            userId: userIds[0].emailAddress, // the primary (first) email address of the key
+            userIds: userIds, // a dictonary of all the key's name/address pairs
             fingerprint: packet.getFingerprint().toUpperCase(),
             algorithm: packet.algorithm,
             bitSize: packet.getBitSize(),
@@ -277,7 +287,7 @@ define(function(require) {
         // parse armored public keys
         try {
             publicKeysArmored.forEach(function(pubkeyArmored) {
-                publicKeys.push(openpgp.key.readArmored(pubkeyArmored).keys[0]);
+                publicKeys = publicKeys.concat(openpgp.key.readArmored(pubkeyArmored).keys);
             });
         } catch (err) {
             callback({
@@ -295,7 +305,7 @@ define(function(require) {
      * Decrypt and verify a pgp message for a single sender
      */
     PGP.prototype.decrypt = function(ciphertext, publicKeyArmored, callback) {
-        var publicKey, message, signaturesValid;
+        var publicKeys, message, signaturesValid;
 
         // check keys
         if (!this._privateKey || !publicKeyArmored) {
@@ -307,7 +317,7 @@ define(function(require) {
 
         // read keys and ciphertext message
         try {
-            publicKey = openpgp.key.readArmored(publicKeyArmored).keys[0];
+            publicKeys = openpgp.key.readArmored(publicKeyArmored).keys;
             message = openpgp.message.readArmored(ciphertext);
         } catch (err) {
             callback({
@@ -318,7 +328,7 @@ define(function(require) {
         }
 
         // decrypt and verify pgp message
-        openpgp.decryptAndVerifyMessage(this._privateKey, [publicKey], message, onDecrypted);
+        openpgp.decryptAndVerifyMessage(this._privateKey, publicKeys, message, onDecrypted);
 
         function onDecrypted(err, decrypted) {
             if (err) {

@@ -32,6 +32,7 @@ define(function(require) {
                 _id: dummyKeyId,
                 fingerprint: dummyFingerprint,
                 userId: emailAddress,
+                userIds: [],
                 bitSize: keySize
             });
 
@@ -66,6 +67,7 @@ define(function(require) {
                 keychainMock.saveLocalPrivateKey.withArgs({
                     _id: dummyKeyId,
                     userId: emailAddress,
+                    userIds: [],
                     encryptedKey: 'newArmoredKey'
                 }).yields();
 

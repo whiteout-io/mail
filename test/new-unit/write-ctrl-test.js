@@ -232,7 +232,7 @@ define(function(require) {
                 scope.verify(recipient);
             });
 
-            it('should work', function(done) {
+            it('should work for main userId', function(done) {
                 var recipient = {
                     address: 'asdf@example.com'
                 };
@@ -245,6 +245,30 @@ define(function(require) {
                     expect(recipient.key).to.deep.equal({
                         userId: 'asdf@example.com'
                     });
+                    expect(recipient.secure).to.be.true;
+                    expect(scope.checkSendStatus.callCount).to.equal(2);
+                    expect(keychainMock.refreshKeyForUserId.calledOnce).to.be.true;
+                    done();
+                };
+
+                scope.verify(recipient);
+            });
+
+            it('should work for secondary userId', function(done) {
+                var recipient = {
+                    address: 'asdf@example.com'
+                };
+                var key = {
+                    userId: 'qwer@example.com',
+                    userIds: [{
+                        emailAddress: 'asdf@example.com'
+                    }]
+                };
+
+                keychainMock.refreshKeyForUserId.withArgs(recipient.address).yields(null, key);
+
+                scope.$digest = function() {
+                    expect(recipient.key).to.deep.equal(key);
                     expect(recipient.secure).to.be.true;
                     expect(scope.checkSendStatus.callCount).to.equal(2);
                     expect(keychainMock.refreshKeyForUserId.calledOnce).to.be.true;

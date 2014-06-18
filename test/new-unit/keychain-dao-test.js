@@ -60,8 +60,13 @@ define(function(require) {
             var getPubKeyStub,
                 oldKey = {
                     _id: 123
-                }, newKey = {
+                },
+                newKey = {
                     _id: 456
+                },
+                importedKey = {
+                    _id: 789,
+                    imported: true
                 };
 
             beforeEach(function() {
@@ -191,6 +196,20 @@ define(function(require) {
                     expect(pubkeyDaoStub.getByUserId.calledOnce).to.be.true;
                     expect(lawnchairDaoStub.remove.called).to.be.false;
                     expect(lawnchairDaoStub.persist.called).to.be.false;
+
+                    done();
+                });
+            });
+
+            it('should not remove manually imported key', function(done) {
+                getPubKeyStub.yields(null, importedKey);
+
+                keychainDao.refreshKeyForUserId(testUser, function(err, key) {
+                    expect(err).to.not.exist;
+                    expect(key).to.equal(importedKey);
+
+                    expect(getPubKeyStub.calledOnce).to.be.true;
+                    expect(pubkeyDaoStub.get.calledOnce).to.be.false;
 
                     done();
                 });
@@ -429,8 +448,27 @@ define(function(require) {
                 });
             });
 
+            it('should work for keys with secondary userIds', function(done) {
+                lawnchairDaoStub.list.yields(null, [{
+                    _id: '12345',
+                    userId: 'not testUser',
+                    userIds: [{
+                        emailAddress: testUser
+                    }],
+                    publicKey: 'asdf'
+                }]);
+
+                keychainDao.getReceiverPublicKey(testUser, function(err, key) {
+                    expect(err).to.not.exist;
+                    expect(key).to.exist;
+                    expect(key._id).to.equal('12345');
+                    expect(lawnchairDaoStub.list.calledOnce).to.be.true;
+                    done();
+                });
+            });
+
             it('should fail due to error in pubkey dao', function(done) {
-                lawnchairDaoStub.list.yields();
+                lawnchairDaoStub.list.yields(null, []);
                 pubkeyDaoStub.getByUserId.yields({});
 
                 keychainDao.getReceiverPublicKey(testUser, function(err, key) {
@@ -443,7 +481,7 @@ define(function(require) {
             });
 
             it('should work from pubkey dao with empty result', function(done) {
-                lawnchairDaoStub.list.yields();
+                lawnchairDaoStub.list.yields(null, []);
                 pubkeyDaoStub.getByUserId.yields();
 
                 keychainDao.getReceiverPublicKey(testUser, function(err, key) {
@@ -456,7 +494,7 @@ define(function(require) {
             });
 
             it('should work from pubkey dao', function(done) {
-                lawnchairDaoStub.list.yields();
+                lawnchairDaoStub.list.yields(null, []);
                 pubkeyDaoStub.getByUserId.yields(null, {
                     _id: '12345',
                     publicKey: 'asdf'

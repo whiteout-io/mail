@@ -26,18 +26,29 @@ define(function(require) {
 
                 keypair = keypair || {};
 
+                var privKeyParams, pubKeyParams;
+                try {
+                    privKeyParams = pgp.getKeyParams($scope.key.privateKeyArmored);
+                    pubKeyParams = pgp.getKeyParams($scope.key.publicKeyArmored);
+                } catch (e) {
+                    $scope.onError(new Error('Error reading key params!'));
+                    return;
+                }
+
                 // set parsed private key
                 keypair.privateKey = {
-                    _id: pgp.getKeyId($scope.key.privateKeyArmored),
+                    _id: privKeyParams._id,
                     userId: userId,
+                    userIds: privKeyParams.userIds,
                     encryptedKey: $scope.key.privateKeyArmored
                 };
 
                 if (!keypair.publicKey) {
                     // there is no public key on the key server yet... use parsed
                     keypair.publicKey = {
-                        _id: pgp.getKeyId($scope.key.publicKeyArmored),
+                        _id: pubKeyParams._id,
                         userId: userId,
+                        userIds: pubKeyParams.userIds,
                         publicKey: $scope.key.publicKeyArmored
                     };
                 }
@@ -82,18 +93,30 @@ define(function(require) {
 
                 reader.onload = function(e) {
                     var rawKeys = e.target.result,
-                        index = rawKeys.indexOf('-----BEGIN PGP PRIVATE KEY BLOCK-----');
+                        privKeyPrexix = '-----BEGIN PGP PRIVATE KEY BLOCK-----',
+                        pubKeyPrefix = '-----BEGIN PGP PUBLIC KEY BLOCK-----',
+                        index = rawKeys.indexOf(privKeyPrexix),
+                        errMsg = 'Keyfile must be formatted like so:\n' + pubKeyPrefix + '\n ... \n' + privKeyPrexix,
+                        keyParts;
 
                     if (index === -1) {
-                        console.error('Erroneous key file format!');
+                        scope.onError(new Error(errMsg));
                         return;
                     }
 
-                    scope.key = {
-                        publicKeyArmored: rawKeys.substring(0, index),
-                        privateKeyArmored: rawKeys.substring(index, rawKeys.length)
+                    keyParts = {
+                        publicKeyArmored: rawKeys.substring(0, index).trim(),
+                        privateKeyArmored: rawKeys.substring(index, rawKeys.length).trim()
                     };
-                    scope.$apply();
+
+                    if (keyParts.publicKeyArmored.indexOf(pubKeyPrefix) < 0 || keyParts.privateKeyArmored.indexOf(privKeyPrexix) < 0) {
+                        scope.onError(new Error(errMsg));
+                        return;
+                    }
+
+                    scope.$apply(function() {
+                        scope.key = keyParts;
+                    });
                 };
                 reader.readAsText(files[0]);
             });
