@@ -64,7 +64,10 @@ define(function(require) {
                     privateKeyArmored: 'b'
                 };
 
-                pgpMock.getKeyId.returns(keyId);
+                pgpMock.getKeyParams.returns({
+                    _id: 'id',
+                    userIds: []
+                });
 
                 keychainMock.getUserKeyPair.withArgs(emailAddress).yields(null, {
                     _id: keyId,
@@ -86,7 +89,10 @@ define(function(require) {
                     publicKeyArmored: 'a'
                 };
 
-                pgpMock.getKeyId.returns(keyId);
+                pgpMock.getKeyParams.returns({
+                    _id: 'id',
+                    userIds: []
+                });
 
                 keychainMock.getUserKeyPair.withArgs(emailAddress).yields();
                 emailDaoMock.unlock.withArgs(sinon.match.any, passphrase).yields();
@@ -103,6 +109,11 @@ define(function(require) {
                 scope.key = {
                     privateKeyArmored: 'b'
                 };
+
+                pgpMock.getKeyParams.returns({
+                    _id: 'id',
+                    userIds: []
+                });
 
                 keychainMock.getUserKeyPair.withArgs(emailAddress).yields(null, {
                     _id: keyId,
@@ -130,6 +141,11 @@ define(function(require) {
                 scope.key = {
                     privateKeyArmored: 'b'
                 };
+
+                pgpMock.getKeyParams.returns({
+                    _id: 'id',
+                    userIds: []
+                });
 
                 keychainMock.getUserKeyPair.withArgs(emailAddress).yields(null, {
                     _id: keyId,

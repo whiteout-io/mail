@@ -42,7 +42,7 @@ define(function(require) {
         });
 
         _.each(ids, function(i) {
-            // lookup locally and in storage            
+            // lookup locally and in storage
             self.lookupPublicKey(i._id, function(err, pubkey) {
                 if (err || !pubkey) {
                     callback({
@@ -79,6 +79,12 @@ define(function(require) {
             if (!localKey || !localKey._id) {
                 // there is no key available, no need to refresh
                 callback();
+                return;
+            }
+
+            // no need to refresh manually imported public keys
+            if (localKey.imported) {
+                callback(null, localKey);
                 return;
             }
 
@@ -170,9 +176,23 @@ define(function(require) {
                 return;
             }
 
+            // query primary email address
             var pubkey = _.findWhere(allPubkeys, {
                 userId: userId
             });
+
+            // query mutliple userIds (for imported public keys)
+            if (!pubkey) {
+                for (var i = 0, match; i < allPubkeys.length; i++) {
+                    match = _.findWhere(allPubkeys[i].userIds, {
+                        emailAddress: userId
+                    });
+                    if (match) {
+                        pubkey = allPubkeys[i];
+                        break;
+                    }
+                }
+            }
 
             if (pubkey && pubkey._id) {
                 // that user's public key is already in local storage

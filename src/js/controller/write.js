@@ -194,10 +194,16 @@ define(function(require) {
                     return;
                 }
 
-                // compare again since model could have changed during the roundtrip
-                if (key && key.userId === recipient.address) {
-                    recipient.key = key;
-                    recipient.secure = true;
+                if (key) {
+                    // compare again since model could have changed during the roundtrip
+                    var matchingUserId = _.findWhere(key.userIds, {
+                        emailAddress: recipient.address
+                    });
+                    // compare either primary userId or (if available) multiple IDs
+                    if (key.userId === recipient.address || matchingUserId) {
+                        recipient.key = key;
+                        recipient.secure = true;
+                    }
                 }
 
                 $scope.checkSendStatus();

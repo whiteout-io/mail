@@ -168,7 +168,11 @@ define(function(require) {
             describe('#unlock', function() {
                 it('should unlock', function(done) {
                     pgpStub.getKeyParams.returns({
-                        userId: emailAddress
+                        _id: mockKeyPair.publicKey._id,
+                        userId: emailAddress,
+                        userIds: [{
+                            emailAddress: emailAddress
+                        }]
                     });
 
                     pgpStub.importKeys.withArgs({

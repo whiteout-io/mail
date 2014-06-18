@@ -94,13 +94,16 @@ define(function(require) {
 
                 cryptoMock.getKeyParams.returns({
                     _id: '12345',
-                    userId: 'max@example.com'
+                    userId: 'max@example.com',
+                    userIds: []
                 });
 
                 keychainMock.saveLocalPublicKey.withArgs({
                     _id: '12345',
                     userId: 'max@example.com',
-                    publicKey: '-----BEGIN PGP PUBLIC KEY BLOCK-----'
+                    userIds: [],
+                    publicKey: '-----BEGIN PGP PUBLIC KEY BLOCK-----',
+                    imported: true
                 }).yields();
 
                 scope.listKeys = function() {

@@ -119,23 +119,31 @@ define(function(require) {
         });
 
         function handleExistingKeypair(keypair) {
-            var pubUserID, privUserID;
-
-            // check if key IDs match
-            if (!keypair.privateKey._id || keypair.privateKey._id !== keypair.publicKey._id) {
-                callback({
-                    errMsg: 'Key IDs dont match!'
-                });
+            var privKeyParams, pubKeyParams;
+            try {
+                privKeyParams = self._crypto.getKeyParams(keypair.privateKey.encryptedKey);
+                pubKeyParams = self._crypto.getKeyParams(keypair.publicKey.publicKey);
+            } catch (e) {
+                callback(new Error('Error reading key params!'));
                 return;
             }
 
-            // check if the key's user ID matches the current account
-            pubUserID = self._crypto.getKeyParams(keypair.publicKey.publicKey).userId;
-            privUserID = self._crypto.getKeyParams(keypair.privateKey.encryptedKey).userId;
-            if (pubUserID.indexOf(self._account.emailAddress) === -1 || privUserID.indexOf(self._account.emailAddress) === -1) {
-                callback({
-                    errMsg: 'User IDs dont match!'
-                });
+            // check if key IDs match
+            if (!keypair.privateKey._id || keypair.privateKey._id !== keypair.publicKey._id || keypair.privateKey._id !== privKeyParams._id || keypair.publicKey._id !== pubKeyParams._id) {
+                callback(new Error('Key IDs dont match!'));
+                return;
+            }
+
+            // check that key userIds contain email address of user account
+            var matchingPrivUserId = _.findWhere(privKeyParams.userIds, {
+                emailAddress: self._account.emailAddress
+            });
+            var matchingPubUserId = _.findWhere(pubKeyParams.userIds, {
+                emailAddress: self._account.emailAddress
+            });
+
+            if (!matchingPrivUserId || !matchingPubUserId || keypair.privateKey.userId !== self._account.emailAddress || keypair.publicKey.userId !== self._account.emailAddress) {
+                callback(new Error('User IDs dont match!'));
                 return;
             }
 

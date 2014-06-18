@@ -69,14 +69,16 @@ define(function(require) {
             try {
                 keyParams = pgp.getKeyParams(publicKeyArmored);
             } catch (e) {
-                $scope.onError(e);
+                $scope.onError(new Error('Error reading public key params!'));
                 return;
             }
 
             pubkey = {
                 _id: keyParams._id,
                 userId: keyParams.userId,
-                publicKey: publicKeyArmored
+                userIds: keyParams.userIds,
+                publicKey: publicKeyArmored,
+                imported: true // mark manually imported keys
             };
 
             keychain.saveLocalPublicKey(pubkey, function(err) {

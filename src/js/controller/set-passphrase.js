@@ -57,6 +57,7 @@ define(function(require) {
             var privateKey = {
                 _id: keyParams._id,
                 userId: keyParams.userId,
+                userIds: keyParams.userIds,
                 encryptedKey: newPrivateKeyArmored
             };
 
