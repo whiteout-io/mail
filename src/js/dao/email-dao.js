@@ -965,9 +965,6 @@ define(function(require) {
                 return;
             }
 
-            // set status to online
-            self._account.online = true;
-
             // init folders
             self._initFolders(function(err) {
                 if (err) {
@@ -1008,6 +1005,9 @@ define(function(require) {
                     };
                 });
                 self._imapClient.mailboxCache = mailboxCache;
+
+                // set status to online after setting cache to prevent race condition
+                self._account.online = true;
 
                 // set up the imap client to listen for changes in the inbox
                 var inbox = _.findWhere(self._account.folders, {
