@@ -204,10 +204,13 @@ define(function(require) {
             emailDao.openFolder({
                 folder: currentFolder()
             }, function(error) {
+                // dont wait until scroll to load visible mail bodies
+                $scope.loadVisibleBodies();
+
+                // don't display error for offline case
                 if (error && error.code === 42) {
                     return;
                 }
-
                 $scope.onError(error);
             });
         }
