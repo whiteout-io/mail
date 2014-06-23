@@ -78,7 +78,7 @@ define(function(require) {
 
         function initFolders() {
             // try init folders from memory, since imap client not initiated yet
-            self._initFolders(function(err) {
+            self._initFoldersFromDisk(function(err) {
                 // dont handle offline case this time
                 if (err && err.code !== 42) {
                     callback(err);
@@ -966,7 +966,7 @@ define(function(require) {
             }
 
             // init folders
-            self._initFolders(function(err) {
+            self._initFoldersFromImap(function(err) {
                 if (err) {
                     callback(err);
                     return;
@@ -1121,128 +1121,140 @@ define(function(require) {
 
 
     /**
-     * Updates the folder information from memory (if we're offline), or from imap (if we're online),
-     * and adds/removes folders in account.folders, if we added/removed folder in IMAP. If we have an
-     * uninitialized folder that lacks folder.messages, all the locally available messages are loaded
-     * from memory
+     * Updates the folder information from memory, and adds/removes folders in account.folders.
+     * The locally available messages are loaded from memory
      *
      * @param {Function} callback Invoked when the folders are up to date
      */
-    EmailDAO.prototype._initFolders = function(callback) {
+    EmailDAO.prototype._initFoldersFromDisk = function(callback) {
         var self = this,
             folderDbType = 'folders';
 
         self._account.busy = true; // start the spinner
 
-        if (!self._account.online) {
-            // fetch list from local cache
-            self._devicestorage.listItems(folderDbType, 0, null, function(err, stored) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-
-                self._account.folders = stored[0] || [];
-                readMessagesFromDisk();
-            });
-            return;
-        } else {
-            // fetch list from imap server
-            self._imapClient.listWellKnownFolders(function(err, wellKnownFolders) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-
-                // this array is dropped directly into the ui to create the folder list
-                var folders = [
-                    wellKnownFolders.inbox,
-                    wellKnownFolders.sent, {
-                        type: 'Outbox',
-                        path: config.outboxMailboxPath
-                    },
-                    wellKnownFolders.drafts,
-                    wellKnownFolders.trash
-                ];
-
-                var foldersChanged = false; // indicates if are there any new/removed folders?
-
-                // check for added folders
-                folders.forEach(function(folder) {
-                    if (!_.findWhere(self._account.folders, {
-                        path: folder.path
-                    })) {
-                        // add the missing folder
-                        self._account.folders.push(folder);
-                        foldersChanged = true;
-                    }
-                });
-
-                // check for deleted folders
-                self._account.folders.forEach(function(folder) {
-                    if (!_.findWhere(folders, {
-                        path: folder.path
-                    })) {
-                        // remove the obsolete folder
-                        self._account.folders.splice(self._account.folder.indexOf(folder), 1);
-                        foldersChanged = true;
-                    }
-                });
-
-                // if folder have changed, we need to persist them to disk.
-                if (!foldersChanged) {
-                    readMessagesFromDisk();
-                    return;
-                }
-
-                // persist encrypted list in device storage
-                // NB! persis the array we received from IMAP! do *not* persist self._account.folders with all the messages...
-                self._devicestorage.storeList([folders], folderDbType, function(err) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-
-                    readMessagesFromDisk();
-                });
-            });
-            return;
-        }
-
-        // fill uninitialized folders with the locally available messages
-        function readMessagesFromDisk() {
-            if (!self._account.folders || self._account.folders.length === 0) {
-                done();
-                return;
+        // fetch list from local cache
+        self._devicestorage.listItems(folderDbType, 0, null, function(err, stored) {
+            if (err) {
+                return done(err);
             }
 
-            var after = _.after(self._account.folders.length, done);
-
-            self._account.folders.forEach(function(folder) {
-                if (folder.messages) {
-                    // the folder is already initialized
-                    after();
-                    return;
-                }
-
-                // sync messages from disk to the folder model
-                self.refreshFolder({
-                    folder: folder
-                }, function(err) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-
-                    after();
-                });
-            });
-        }
+            self._account.folders = stored[0] || [];
+            self._initMessagesFromDisk(done);
+        });
 
         function done(err) {
             self._account.busy = false; // stop the spinner
             callback(err);
         }
+    };
+
+    /**
+     * Updates the folder information from imap (if we're online). Adds/removes folders in account.folders,
+     * if we added/removed folder in IMAP. If we have an uninitialized folder that lacks folder.messages, 
+     * all the locally available messages are loaded from memory.
+     *
+     * @param {Function} callback Invoked when the folders are up to date
+     */
+    EmailDAO.prototype._initFoldersFromImap = function(callback) {
+        var self = this,
+            folderDbType = 'folders';
+
+        self._account.busy = true; // start the spinner
+
+        // fetch list from imap server
+        self._imapClient.listWellKnownFolders(function(err, wellKnownFolders) {
+            if (err) {
+                return done(err);
+            }
+
+            // this array is dropped directly into the ui to create the folder list
+            var folders = [
+                wellKnownFolders.inbox,
+                wellKnownFolders.sent, {
+                    type: 'Outbox',
+                    path: config.outboxMailboxPath
+                },
+                wellKnownFolders.drafts,
+                wellKnownFolders.trash
+            ];
+
+            var foldersChanged = false; // indicates if are there any new/removed folders?
+
+            // check for added folders
+            folders.forEach(function(folder) {
+                if (!_.findWhere(self._account.folders, {
+                    path: folder.path
+                })) {
+                    // add the missing folder
+                    self._account.folders.push(folder);
+                    foldersChanged = true;
+                }
+            });
+
+            // check for deleted folders
+            self._account.folders.forEach(function(folder) {
+                if (!_.findWhere(folders, {
+                    path: folder.path
+                })) {
+                    // remove the obsolete folder
+                    self._account.folders.splice(self._account.folder.indexOf(folder), 1);
+                    foldersChanged = true;
+                }
+            });
+
+            // if folder have changed, we need to persist them to disk.
+            if (!foldersChanged) {
+                return self._initMessagesFromDisk(done);
+            }
+
+            // persist encrypted list in device storage
+            // NB! persis the array we received from IMAP! do *not* persist self._account.folders with all the messages...
+            self._devicestorage.storeList([folders], folderDbType, function(err) {
+                if (err) {
+                    return done(err);
+                }
+
+                self._initMessagesFromDisk(done);
+            });
+        });
+
+        function done(err) {
+            self._account.busy = false; // stop the spinner
+            callback(err);
+        }
+    };
+
+    /**
+     * Fill uninitialized folders with the locally available messages.
+     *
+     * @param {Function} callback Invoked when the folders are filled with messages
+     */
+    EmailDAO.prototype._initMessagesFromDisk = function(callback) {
+        var self = this;
+
+        if (!self._account.folders || self._account.folders.length === 0) {
+            return callback();
+        }
+
+        var after = _.after(self._account.folders.length, callback);
+
+        self._account.folders.forEach(function(folder) {
+            if (folder.messages) {
+                // the folder is already initialized
+                return after();
+            }
+
+            // sync messages from disk to the folder model
+            self.refreshFolder({
+                folder: folder
+            }, function(err) {
+                if (err) {
+                    return callback(err);
+                }
+
+                after();
+            });
+        });
     };
 
 

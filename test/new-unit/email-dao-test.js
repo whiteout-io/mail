@@ -130,7 +130,7 @@ define(function(require) {
 
                 beforeEach(function() {
                     delete dao._account;
-                    initFoldersStub = sinon.stub(dao, '_initFolders');
+                    initFoldersStub = sinon.stub(dao, '_initFoldersFromDisk');
                 });
 
                 it('should initialize folders and return keypair', function(done) {
@@ -1486,7 +1486,7 @@ define(function(require) {
                 var initFoldersStub;
 
                 beforeEach(function() {
-                    initFoldersStub = sinon.stub(dao, '_initFolders');
+                    initFoldersStub = sinon.stub(dao, '_initFoldersFromImap');
                     delete dao._imapClient;
                     delete dao._pgpMailer;
                 });
@@ -1610,50 +1610,51 @@ define(function(require) {
 
 
         describe('internal API', function() {
-            describe('#_initFolders', function() {
-                var refreshFolderStub;
-
+            describe('#_initFoldersFromDisk', function() {
                 beforeEach(function() {
-                    refreshFolderStub = sinon.stub(dao, 'refreshFolder');
+                    sinon.stub(dao, 'refreshFolder');
                 });
 
                 it('should initialize from disk if offline and not refresh folder', function(done) {
-                    account.online = false;
                     devicestorageStub.listItems.withArgs('folders').yieldsAsync(null, [
                         [inboxFolder]
                     ]);
-                    refreshFolderStub.withArgs({
+                    dao.refreshFolder.withArgs({
                         folder: inboxFolder
                     }).yieldsAsync();
 
-                    dao._initFolders(function(err) {
+                    dao._initFoldersFromDisk(function(err) {
                         expect(err).to.not.exist;
                         expect(devicestorageStub.listItems.calledOnce).to.be.true;
-                        expect(refreshFolderStub.called).to.be.false;
+                        expect(dao.refreshFolder.called).to.be.false;
                         done();
                     });
                 });
 
                 it('should initialize from disk if offline and refresh folder', function(done) {
-                    account.online = false;
                     delete inboxFolder.messages;
                     devicestorageStub.listItems.withArgs('folders').yieldsAsync(null, [
                         [inboxFolder]
                     ]);
-                    refreshFolderStub.withArgs({
+                    dao.refreshFolder.withArgs({
                         folder: inboxFolder
                     }).yieldsAsync();
 
-                    dao._initFolders(function(err) {
+                    dao._initFoldersFromDisk(function(err) {
                         expect(err).to.not.exist;
                         expect(devicestorageStub.listItems.calledOnce).to.be.true;
-                        expect(refreshFolderStub.calledOnce).to.be.true;
+                        expect(dao.refreshFolder.calledOnce).to.be.true;
                         done();
                     });
                 });
+            });
+
+            describe('#_initFoldersFromImap', function() {
+                beforeEach(function() {
+                    sinon.stub(dao, 'refreshFolder');
+                });
 
                 it('should initialize from imap if online', function(done) {
-                    account.online = true;
                     account.folders = [];
                     imapClientStub.listWellKnownFolders.yieldsAsync(null, {
                         inbox: inboxFolder,
@@ -1671,9 +1672,9 @@ define(function(require) {
                         return true;
                     }), 'folders').yieldsAsync();
 
-                    refreshFolderStub.yieldsAsync();
+                    dao.refreshFolder.yieldsAsync();
 
-                    dao._initFolders(function(err) {
+                    dao._initFoldersFromImap(function(err) {
                         expect(err).to.not.exist;
                         expect(imapClientStub.listWellKnownFolders.calledOnce).to.be.true;
                         expect(devicestorageStub.storeList.calledOnce).to.be.true;
