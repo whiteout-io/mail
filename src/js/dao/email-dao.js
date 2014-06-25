@@ -1492,7 +1492,6 @@ define(function(require) {
             });
 
             if (internalReference) {
-                // message.attachments.splice(message.attachments.indexOf(internalReference), 1);
                 payload = '';
                 for (var i = 0; i < internalReference.content.byteLength; i++) {
                     payload += String.fromCharCode(internalReference.content[i]);
