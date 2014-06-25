@@ -338,14 +338,40 @@ define(function(require) {
     ngModule.directive('frameLoad', function($sce, $timeout) {
         return function(scope, elm, attrs) {
             scope.$watch(attrs.frameLoad, function(value) {
+                var html = value;
                 scope.html = undefined;
-                if (value) {
-                    $timeout(function() {
-                        scope.html = true;
-                        var iframe = elm[0];
-                        iframe.contentWindow.postMessage(value, '*');
-                    });
+                var iframe = elm[0];
+
+                if (!html) {
+                    return;
                 }
+
+                // if there are image tags in the html?
+                var hasImages = /<img[^>]+\bsrc=['"][^'">]+['"]/ig.test(html);
+                scope.showImageButton = hasImages;
+
+                // inital loading
+                $timeout(function() {
+                    scope.html = true;
+                    iframe.contentWindow.postMessage({
+                        html: html,
+                        removeImages: hasImages // avoids doing unnecessary work on the html
+                    }, '*');
+                });
+
+                // no need to add a scope function to reload the html if there are no images
+                if (!hasImages) {
+                    return;
+                }
+
+                // reload WITH images
+                scope.displayImages = function() {
+                    scope.showImageButton = false;
+                    iframe.contentWindow.postMessage({
+                        html: html,
+                        removeImages: false
+                    }, '*');
+                };
             });
         };
     });

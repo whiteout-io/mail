@@ -53,6 +53,10 @@
     </div><!--/.working-->
   </div><!--/.working-wrapper-->
 
+  <div class="showImages" ng-show="html && showImageButton">
+    <a href='#' ng-click="displayImages(); $event.preventDefault()">Display images</a>
+  </div>
+
   <!-- Render html body in sandboxed iframe -->
   <iframe ng-show="html" sandbox="allow-popups allow-scripts" src="sandbox.html" 
     frame-load="state.mailList.selected.html">
