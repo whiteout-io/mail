@@ -1477,32 +1477,33 @@ define(function(require) {
 
     /**
      * Helper function that looks through the HTML content for <img src="cid:..."> and
-     * inlines the images linked internally. Manipulates message.html as a side-effect
+     * inlines the images linked internally. Manipulates message.html as a side-effect.
+     * If no attachment matching the internal reference is found, or constructing a data
+     * uri fails, just remove the source.
      *
      * @param {Object} message DTO
      */
     function inlineExternalImages(message) {
-        var imgRegex = /<img[^>]+src=['"]cid:([^'">]+)['"]/ig,
-            match, internalReference, payload;
+        message.html = message.html.replace(/(<img[^>]+\bsrc=['"])cid:([^'">]+)(['"])/ig, function(match, prefix, src, suffix) {
+            var localSource = '',
+                payload = '';
 
-        // find internally referenced images and replace them with a base64 data uri
-        for (match = imgRegex.exec(message.html); !!match; match = imgRegex.exec(message.html)) {
-            internalReference = _.findWhere(message.attachments, {
-                id: match[1]
+            var internalReference = _.findWhere(message.attachments, {
+                id: src
             });
 
             if (internalReference) {
-                payload = '';
                 for (var i = 0; i < internalReference.content.byteLength; i++) {
                     payload += String.fromCharCode(internalReference.content[i]);
                 }
 
                 try {
-                    // btoa fails for all kinds of angry reasons, so if it fails ignore it, we just don't see the img then
-                    message.html = message.html.replace('cid:' + match[1], 'data:application/octet-stream;base64,' + btoa(payload));
-                } catch (e) { /* ignore*/ }
+                    localSource = 'data:application/octet-stream;base64,' + btoa(payload); // try to replace the source
+                } catch (e) {}
             }
-        }
+
+            return prefix + localSource + suffix;
+        });
     }
 
     return EmailDAO;
