@@ -639,13 +639,13 @@ define(function(require) {
                 var localMessage = localMessages[0];
 
                 // treat attachment and non-attachment body parts separately:
-                // we need to fetch the content for non-attachment body parts (encrypted, signed, text, html)
+                // we need to fetch the content for non-attachment body parts (encrypted, signed, text, html, resources referenced from the html)
                 // but we spare the effort and fetch attachment content later upon explicit user request.
                 var contentParts = localMessage.bodyParts.filter(function(bodyPart) {
-                    return bodyPart.type !== "attachment";
+                    return bodyPart.type !== "attachment" || (bodyPart.type === "attachment" && bodyPart.id);
                 });
                 var attachmentParts = localMessage.bodyParts.filter(function(bodyPart) {
-                    return bodyPart.type === "attachment";
+                    return bodyPart.type === "attachment" && !bodyPart.id;
                 });
 
                 // do we need to fetch content from the imap server?
@@ -747,9 +747,11 @@ define(function(require) {
             message.attachments = filterBodyParts(root, 'attachment');
             message.body = body;
             message.html = _.pluck(filterBodyParts(root, 'html'), 'content').join('\n');
+            inlineExternalImages(message);
 
             done();
         }
+
 
         function done(err) {
             message.loadingBody = false;
@@ -852,6 +854,7 @@ define(function(require) {
                         // remove the pgp-signature from the attachments
                         return attmt.mimeType === "application/pgp-signature";
                     });
+                    inlineExternalImages(message);
 
                     message.decrypted = true;
 
@@ -1150,7 +1153,7 @@ define(function(require) {
 
     /**
      * Updates the folder information from imap (if we're online). Adds/removes folders in account.folders,
-     * if we added/removed folder in IMAP. If we have an uninitialized folder that lacks folder.messages, 
+     * if we added/removed folder in IMAP. If we have an uninitialized folder that lacks folder.messages,
      * all the locally available messages are loaded from memory.
      *
      * @param {Function} callback Invoked when the folders are up to date
@@ -1470,6 +1473,37 @@ define(function(require) {
             }
         });
         return result;
+    }
+
+    /**
+     * Helper function that looks through the HTML content for <img src="cid:..."> and
+     * inlines the images linked internally. Manipulates message.html as a side-effect
+     *
+     * @param {Object} message DTO
+     */
+    function inlineExternalImages(message) {
+        var imgRegex = /<img[^>]+src=['"]cid:([^'">]+)['"]/ig,
+            match, internalReference, payload;
+
+        // find internally referenced images and replace them with a base64 data uri
+        for (match = imgRegex.exec(message.html); !!match; match = imgRegex.exec(message.html)) {
+            internalReference = _.findWhere(message.attachments, {
+                id: match[1]
+            });
+
+            if (internalReference) {
+                // message.attachments.splice(message.attachments.indexOf(internalReference), 1);
+                payload = '';
+                for (var i = 0; i < internalReference.content.byteLength; i++) {
+                    payload += String.fromCharCode(internalReference.content[i]);
+                }
+
+                try {
+                    // btoa fails for all kinds of angry reasons, so if it fails ignore it, we just don't see the img then
+                    message.html = message.html.replace('cid:' + match[1], 'data:application/octet-stream;base64,' + btoa(payload));
+                } catch (e) { /* ignore*/ }
+            }
+        }
     }
 
     return EmailDAO;
