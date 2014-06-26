@@ -12,19 +12,34 @@ define(function() {
     /**
      * Request an OAuth token from chrome for gmail users
      */
-    OAuth.prototype.getOAuthToken = function(callback) {
-        // get OAuth Token from chrome
-        chrome.identity.getAuthToken({
-            'interactive': true
-        }, function(token) {
-            if ((chrome && chrome.runtime && chrome.runtime.lastError) || !token) {
-                callback({
-                    errMsg: 'Error fetching an OAuth token for the user!'
-                });
+    OAuth.prototype.getOAuthToken = function(emailAddress, callback) {
+        var idOptions = {
+            interactive: true
+        };
+
+        // check which runtime the app is running under
+        chrome.runtime.getPlatformInfo(function(platformInfo) {
+            if ((chrome && chrome.runtime && chrome.runtime.lastError) || !platformInfo) {
+                callback(new Error('Error getting chrome platform info!'));
                 return;
             }
 
-            callback(null, token);
+            if (emailAddress && platformInfo.os.indexOf('android') !== -1) {
+                // set accountHint so that native Android account picker does not show up each time
+                idOptions.accountHint = emailAddress;
+            }
+
+            // get OAuth Token from chrome
+            chrome.identity.getAuthToken(idOptions, function(token) {
+                if ((chrome && chrome.runtime && chrome.runtime.lastError) || !token) {
+                    callback({
+                        errMsg: 'Error fetching an OAuth token for the user!'
+                    });
+                    return;
+                }
+
+                callback(null, token);
+            });
         });
     };
 
@@ -38,7 +53,7 @@ define(function() {
 
         // fetch gmail user's email address from the Google Authorization Server
         this._googleApi.get({
-            uri: '/oauth2/v1/tokeninfo?access_token=' + token
+            uri: '/oauth2/v3/userinfo?access_token=' + token
         }, function(err, info) {
             if (err || !info || !info.email) {
                 callback({

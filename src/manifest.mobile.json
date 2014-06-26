@@ -1,0 +1,12 @@
+{
+    "packageId": "io.whiteout.WhiteoutMail",
+    "versionCode": 1,
+    "CFBundleVersion": "1.1.1",
+
+    // platform overrides
+    "ios": {
+        "oauth2": {
+            "client_id": "440907777130-m0cn01eot554ik1h70hfcmvidnq61oer.apps.googleusercontent.com"
+        }
+    }
+}
