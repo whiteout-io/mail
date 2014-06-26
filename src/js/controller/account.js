@@ -12,7 +12,7 @@ define(function(require) {
     var AccountCtrl = function($scope) {
         userId = appController._emailDao._account.emailAddress;
         keychain = appController._keychain;
-        pgp = appController._crypto;
+        pgp = appController._pgp;
 
         $scope.state.account = {
             toggle: function(to) {

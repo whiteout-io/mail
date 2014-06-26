@@ -1,7 +1,7 @@
 define(function(require) {
     'use strict';
 
-    var util = require('cryptoLib/util'),
+    var util = require('js/crypto/util'),
         _ = require('underscore'),
         config = require('js/app-config').config,
         str = require('js/app-config').string;
@@ -11,14 +11,14 @@ define(function(require) {
      * PGP de-/encryption, receiving via IMAP, sending via SMTP, MIME parsing, local db persistence
      *
      * @param {Object} keychain The keychain DAO handles keys transparently
-     * @param {Object} crypto Orchestrates decryption
+     * @param {Object} pgp Orchestrates decryption
      * @param {Object} devicestorage Handles persistence to the local indexed db
      * @param {Object} pgpbuilder Generates and encrypts MIME and SMTP messages
      * @param {Object} mailreader Parses MIME messages received from IMAP
      */
-    var EmailDAO = function(keychain, crypto, devicestorage, pgpbuilder, mailreader) {
+    var EmailDAO = function(keychain, pgp, devicestorage, pgpbuilder, mailreader) {
         this._keychain = keychain;
-        this._crypto = crypto;
+        this._pgp = pgp;
         this._devicestorage = devicestorage;
         this._pgpbuilder = pgpbuilder;
         this._mailreader = mailreader;
@@ -105,7 +105,7 @@ define(function(require) {
         }
 
         // no keypair for is stored for the user... generate a new one
-        self._crypto.generateKeys({
+        self._pgp.generateKeys({
             emailAddress: self._account.emailAddress,
             keySize: self._account.asymKeySize,
             passphrase: options.passphrase
@@ -121,8 +121,8 @@ define(function(require) {
         function handleExistingKeypair(keypair) {
             var privKeyParams, pubKeyParams;
             try {
-                privKeyParams = self._crypto.getKeyParams(keypair.privateKey.encryptedKey);
-                pubKeyParams = self._crypto.getKeyParams(keypair.publicKey.publicKey);
+                privKeyParams = self._pgp.getKeyParams(keypair.privateKey.encryptedKey);
+                pubKeyParams = self._pgp.getKeyParams(keypair.publicKey.publicKey);
             } catch (e) {
                 callback(new Error('Error reading key params!'));
                 return;
@@ -148,7 +148,7 @@ define(function(require) {
             }
 
             // import existing key pair into crypto module
-            self._crypto.importKeys({
+            self._pgp.importKeys({
                 passphrase: options.passphrase,
                 privateKeyArmored: keypair.privateKey.encryptedKey,
                 publicKeyArmored: keypair.publicKey.publicKey
@@ -159,14 +159,14 @@ define(function(require) {
                 }
 
                 // set decrypted privateKey to pgpMailer
-                self._pgpbuilder._privateKey = self._crypto._privateKey;
+                self._pgpbuilder._privateKey = self._pgp._privateKey;
                 callback();
             });
         }
 
         function handleGenerated(generatedKeypair) {
             // import the new key pair into crypto module
-            self._crypto.importKeys({
+            self._pgp.importKeys({
                 passphrase: options.passphrase,
                 privateKeyArmored: generatedKeypair.privateKeyArmored,
                 publicKeyArmored: generatedKeypair.publicKeyArmored
@@ -196,7 +196,7 @@ define(function(require) {
                     }
 
                     // set decrypted privateKey to pgpMailer
-                    self._pgpbuilder._privateKey = self._crypto._privateKey;
+                    self._pgpbuilder._privateKey = self._pgp._privateKey;
                     callback();
                 });
             });
@@ -818,7 +818,7 @@ define(function(require) {
 
             // get the receiver's public key to check the message signature
             var encryptedNode = filterBodyParts(message.bodyParts, 'encrypted')[0];
-            self._crypto.decrypt(encryptedNode.content, senderPublicKey.publicKey, function(err, decrypted) {
+            self._pgp.decrypt(encryptedNode.content, senderPublicKey.publicKey, function(err, decrypted) {
                 if (err || !decrypted) {
                     showError(err.errMsg || err.message || 'An error occurred during the decryption.');
                     return;

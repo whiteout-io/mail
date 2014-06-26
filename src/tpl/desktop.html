@@ -31,6 +31,10 @@
   <div class="lightbox" ng-include="'tpl/set-passphrase.html'"></div>
 </div>
 
+<div class="lightbox-overlay" ng-class="{'show': state.lightbox === 'privatekey-upload'}">
+  <div class="lightbox" ng-include="'tpl/privatekey-upload.html'"></div>
+</div>
+
 <div class="lightbox-overlay" ng-class="{'show': state.lightbox === 'contacts'}">
   <div class="lightbox" ng-include="'tpl/contacts.html'"></div>
 </div>

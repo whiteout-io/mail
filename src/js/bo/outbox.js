@@ -2,7 +2,7 @@ define(function(require) {
     'use strict';
 
     var _ = require('underscore'),
-        util = require('cryptoLib/util'),
+        util = require('js/crypto/util'),
         config = require('js/app-config').config,
         outboxDb = 'email_OUTBOX';
 
@@ -27,7 +27,7 @@ define(function(require) {
         this._outboxBusy = false;
     };
 
-    /** 
+    /**
      * This function activates the periodic checking of the local device storage for pending mails.
      * @param {Function} callback(error, pendingMailsCount) Callback that informs you about the count of pending mails.
      */

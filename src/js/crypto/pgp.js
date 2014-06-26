@@ -20,23 +20,23 @@ define(function(require) {
         var userId, passphrase;
 
         if (!util.emailRegEx.test(options.emailAddress) || !options.keySize) {
-            callback({
-                errMsg: 'Crypto init failed. Not all options set!'
-            });
+            callback(new Error('Crypto init failed. Not all options set!'));
             return;
         }
 
-        // generate keypair (keytype 1=RSA)
+        // generate keypair
         userId = 'Whiteout User <' + options.emailAddress + '>';
         passphrase = (options.passphrase) ? options.passphrase : undefined;
-        openpgp.generateKeyPair(1, options.keySize, userId, passphrase, onGenerated);
+        openpgp.generateKeyPair({
+            keyType: 1, // (keytype 1=RSA)
+            numBits: options.keySize,
+            userId: userId,
+            passphrase: passphrase
+        }, onGenerated);
 
         function onGenerated(err, keys) {
             if (err) {
-                callback({
-                    errMsg: 'Keygeneration failed!',
-                    err: err
-                });
+                callback(new Error('Keygeneration failed!'));
                 return;
             }
 
@@ -141,9 +141,7 @@ define(function(require) {
 
         // check options
         if (!options.privateKeyArmored || !options.publicKeyArmored) {
-            callback({
-                errMsg: 'Importing keys failed. Not all options set!'
-            });
+            callback(new Error('Importing keys failed. Not all options set!'));
             return;
         }
 
@@ -158,18 +156,14 @@ define(function(require) {
             this._privateKey = openpgp.key.readArmored(options.privateKeyArmored).keys[0];
         } catch (e) {
             resetKeys();
-            callback({
-                errMsg: 'Importing keys failed. Parsing error!'
-            });
+            callback(new Error('Importing keys failed. Parsing error!'));
             return;
         }
 
         // decrypt private key with passphrase
         if (!this._privateKey.decrypt(options.passphrase)) {
             resetKeys();
-            callback({
-                errMsg: 'Incorrect passphrase!'
-            });
+            callback(new Error('Incorrect passphrase!'));
             return;
         }
 
@@ -178,9 +172,7 @@ define(function(require) {
         privKeyId = this._privateKey.getKeyPacket().getKeyId().toHex();
         if (!pubKeyId || !privKeyId || pubKeyId !== privKeyId) {
             resetKeys();
-            callback({
-                errMsg: 'Key IDs dont match!'
-            });
+            callback(new Error('Key IDs dont match!'));
             return;
         }
 
@@ -192,9 +184,7 @@ define(function(require) {
      */
     PGP.prototype.exportKeys = function(callback) {
         if (!this._publicKey || !this._privateKey) {
-            callback({
-                errMsg: 'Could not export keys!'
-            });
+            callback(new Error('Could not export keys!'));
             return;
         }
 
@@ -215,9 +205,7 @@ define(function(require) {
         newPassphrase = (options.newPassphrase) ? options.newPassphrase : undefined;
 
         if (!options.privateKeyArmored) {
-            callback({
-                errMsg: 'Private key must be specified to change passphrase!'
-            });
+            callback(new Error('Private key must be specified to change passphrase!'));
             return;
         }
 
@@ -231,17 +219,13 @@ define(function(require) {
         try {
             privKey = openpgp.key.readArmored(options.privateKeyArmored).keys[0];
         } catch (e) {
-            callback({
-                errMsg: 'Importing key failed. Parsing error!'
-            });
+            callback(new Error('Importing key failed. Parsing error!'));
             return;
         }
 
         // decrypt private key with passphrase
         if (!privKey.decrypt(options.oldPassphrase)) {
-            callback({
-                errMsg: 'Old passphrase incorrect!'
-            });
+            callback(new Error('Old passphrase incorrect!'));
             return;
         }
 
@@ -253,17 +237,13 @@ define(function(require) {
             }
             newKeyArmored = privKey.armor();
         } catch (e) {
-            callback({
-                errMsg: 'Setting new passphrase failed!'
-            });
+            callback(new Error('Setting new passphrase failed!'));
             return;
         }
 
         // check if new passphrase really works
         if (!privKey.decrypt(newPassphrase)) {
-            callback({
-                errMsg: 'Decrypting key with new passphrase failed!'
-            });
+            callback(new Error('Decrypting key with new passphrase failed!'));
             return;
         }
 
@@ -278,9 +258,7 @@ define(function(require) {
 
         // check keys
         if (!this._privateKey || publicKeysArmored.length < 1) {
-            callback({
-                errMsg: 'Error encrypting. Keys must be set!'
-            });
+            callback(new Error('Error encrypting. Keys must be set!'));
             return;
         }
 
@@ -290,10 +268,7 @@ define(function(require) {
                 publicKeys = publicKeys.concat(openpgp.key.readArmored(pubkeyArmored).keys);
             });
         } catch (err) {
-            callback({
-                errMsg: 'Error encrypting plaintext!',
-                err: err
-            });
+            callback(new Error('Error encrypting plaintext!'));
             return;
         }
 
@@ -309,9 +284,7 @@ define(function(require) {
 
         // check keys
         if (!this._privateKey || !publicKeyArmored) {
-            callback({
-                errMsg: 'Error decrypting. Keys must be set!'
-            });
+            callback(new Error('Error decrypting. Keys must be set!'));
             return;
         }
 
@@ -320,10 +293,7 @@ define(function(require) {
             publicKeys = openpgp.key.readArmored(publicKeyArmored).keys;
             message = openpgp.message.readArmored(ciphertext);
         } catch (err) {
-            callback({
-                errMsg: 'Error decrypting PGP message!',
-                err: err
-            });
+            callback(new Error('Error decrypting PGP message!'));
             return;
         }
 
@@ -332,10 +302,7 @@ define(function(require) {
 
         function onDecrypted(err, decrypted) {
             if (err) {
-                callback({
-                    errMsg: 'Error decrypting PGP message!',
-                    err: err
-                });
+                callback(new Error('Error decrypting PGP message!'));
                 return;
             }
 
@@ -347,9 +314,7 @@ define(function(require) {
                 }
             });
             if (!signaturesValid) {
-                callback({
-                    errMsg: 'Verifying PGP signature failed!'
-                });
+                callback(new Error('Verifying PGP signature failed!'));
                 return;
             }
 

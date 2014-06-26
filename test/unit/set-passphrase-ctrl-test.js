@@ -16,7 +16,7 @@ define(function(require) {
             emailAddress, keySize, cryptoMock, keychainMock;
 
         beforeEach(function() {
-            appController._crypto = cryptoMock = sinon.createStubInstance(PGP);
+            appController._pgp = cryptoMock = sinon.createStubInstance(PGP);
             appController._keychain = keychainMock = sinon.createStubInstance(KeychainDAO);
 
             dummyFingerprint = '3A2D39B4E1404190B8B949DE7D7E99036E712926';

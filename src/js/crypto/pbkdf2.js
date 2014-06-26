@@ -1,23 +1,24 @@
 /**
  * A Wrapper for Forge's PBKDF2 function
  */
-define(['node-forge'], function(forge) {
+define(['forge'], function(forge) {
     'use strict';
 
     var self = {};
 
     /**
-     * PBKDF2-HMAC-SHA1 key derivation with a random salt and 1000 iterations
-     * @param password [String] The password in UTF8
-     * @param salt [String] The base64 encoded salt
-     * @param keySize [Number] The key size in bits
-     * @return [String] The base64 encoded key
+     * PBKDF2-HMAC-SHA256 key derivation with a random salt and 10000 iterations
+     * @param  {String} password  The password in UTF8
+     * @param  {String} salt      The base64 encoded salt
+     * @param  {String} keySize   The key size in bits
+     * @return {String}           The base64 encoded key
      */
     self.getKey = function(password, salt, keySize) {
-        var key = forge.pkcs5.pbkdf2(password, forge.util.decode64(salt), 1000, keySize / 8);
-        var keyBase64 = forge.util.encode64(key);
+        var saltUtf8 = forge.util.decode64(salt);
+        var md = forge.md.sha256.create();
+        var key = forge.pkcs5.pbkdf2(password, saltUtf8, 10000, keySize / 8, md);
 
-        return keyBase64;
+        return forge.util.encode64(key);
     };
 
     return self;

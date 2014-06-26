@@ -1,0 +1,46 @@
+<div class="lightbox-body" ng-controller="PrivateKeyUploadCtrl">
+  <header>
+    <h2>Setup Key Sync</h2>
+    <button class="close" ng-click="state.privateKeyUpload.toggle(false)" data-action="lightbox-close">&#xe007;</button>
+  </header>
+
+  <div class="content">
+    <div class="dialog view-privatekey-upload">
+
+      <div class="step" ng-show="step === 1">
+        <p>Your keychain code can be used to securely backup and sync your PGP key between devices. This feature is experimental and not recommended for production use. <a href="" target="_blank">Learn more</a>.</p>
+
+        <h2>{{displayedCode}}</h2>
+
+        <p>Please write down your keychain code and keep it in a safe place. Whiteout Networks cannot recover a lost code.</p>
+      </div>
+
+      <div class="step" ng-show="step === 2">
+        <p>Please confirm the keychain code you have written down.</p>
+        <input type="text" class="input-text" size="4" maxlength="4" ng-model="code0" focus-me="step === 2"> -
+        <input type="text" class="input-text" size="4" maxlength="4" ng-model="code1"> -
+        <input type="text" class="input-text" size="4" maxlength="4" ng-model="code2"> -
+        <input type="text" class="input-text" size="4" maxlength="4" ng-model="code3"> -
+        <input type="text" class="input-text" size="4" maxlength="4" ng-model="code4"> -
+        <input type="text" class="input-text" size="4" maxlength="4" ng-model="code5">
+      </div>
+
+      <div class="step" ng-show="step === 3">
+        <p>Please enter a memorable name for this device e.g. "MacBook Work".</p>
+        <input type="text" class="input-text" ng-model="deviceName" placeholder="Device name" focus-me="step === 3">
+      </div>
+
+      <div class="step" ng-show="step === 4">
+        <div class="working">
+          <span class="spinner"></span>
+        </div><!--/.working-->
+      </div>
+
+      <div class="control">
+        <button ng-show="step > 1 && step < 4" class="btn btn-alt" ng-click="goBack()">Go back</button>
+        <button ng-show="step < 4" class="btn" ng-click="goForward()">Continue</button>
+      </div>
+
+    </div><!-- /.view-privatekey-upload -->
+  </div><!-- /.content -->
+</div><!-- /.lightbox-body -->

@@ -52,9 +52,28 @@ define(function(require) {
             if (typeof availableKeys === 'undefined') {
                 // no public key available, start onboarding process
                 goTo('/login-initial');
-            } else if (!availableKeys.privateKey) {
-                // no private key, import key
-                goTo('/login-new-device');
+
+            } else if (availableKeys && !availableKeys.privateKey) {
+                // check if private key is synced
+                appController._keychain.requestPrivateKeyDownload({
+                    userId: availableKeys.publicKey.userId,
+                    keyId: availableKeys.publicKey._id,
+                }, function(err, privateKeySynced) {
+                    if (err) {
+                        $scope.onError(err);
+                        return;
+                    }
+
+                    if (privateKeySynced) {
+                        // private key is synced, proceed to download
+                        goTo('/login-privatekey-download');
+                        return;
+                    }
+
+                    // no private key, import key file
+                    goTo('/login-new-device');
+                });
+
             } else {
                 // public and private key available, try empty passphrase
                 appController._emailDao.unlock({

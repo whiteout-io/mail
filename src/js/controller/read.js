@@ -5,7 +5,7 @@ define(function(require) {
         download = require('js/util/download'),
         angular = require('angular'),
         str = require('js/app-config').string,
-        emailDao, invitationDao, outbox, crypto, keychain;
+        emailDao, invitationDao, outbox, pgp, keychain;
 
     //
     // Controller
@@ -16,7 +16,7 @@ define(function(require) {
         emailDao = appController._emailDao;
         invitationDao = appController._invitationDao;
         outbox = appController._outboxBo;
-        crypto = appController._crypto;
+        pgp = appController._pgp;
         keychain = appController._keychain;
 
         // set default value so that the popover height is correct on init
@@ -47,7 +47,7 @@ define(function(require) {
                     return;
                 }
 
-                var fpr = crypto.getFingerprint(pubkey.publicKey);
+                var fpr = pgp.getFingerprint(pubkey.publicKey);
                 var formatted = fpr.slice(32);
 
                 $scope.keyId = 'PGP key: ' + formatted;

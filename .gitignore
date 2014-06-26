@@ -8,7 +8,5 @@ dist/
 release/
 test/integration/src/
 src/lib/*.js
-src/js/crypto/aes-cbc.js
-src/js/crypto/crypto-batch.js
-src/js/crypto/rsa.js
+src/js/crypto/aes-gcm.js
 src/js/crypto/util.js

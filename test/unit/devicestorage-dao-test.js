@@ -1,106 +1,105 @@
-define(['underscore', 'cryptoLib/util', 'js/crypto/crypto', 'js/dao/devicestorage-dao', 'test/test-data', 'js/dao/lawnchair-dao'], function(_, util, Crypto, DeviceStorageDAO, testData, LawnchairDAO) {
+define(function(require) {
     'use strict';
 
-    module("DeviceStorage");
+    var LawnchairDAO = require('js/dao/lawnchair-dao'),
+        DeviceStorageDAO = require('js/dao/devicestorage-dao'),
+        expect = chai.expect;
 
-    var devicestorageTest = {
-        user: 'devicestorage_test@example.com',
-        password: 'Password',
-        keySize: 128,
-        ivSize: 128,
-        rsaKeySize: 1024
-    };
+    var testUser = 'test@example.com';
 
-    var crypto, storage;
+    describe('Device Storage DAO unit tests', function() {
 
-    asyncTest("Init", 3, function() {
-        // init dependencies
-        storage = new DeviceStorageDAO(new LawnchairDAO());
-        storage.init(devicestorageTest.user, function() {
-            ok(storage, 'DeviceStorageDAO');
+        var storageDao, lawnchairDaoStub;
 
-            // generate test data
-            devicestorageTest.list = testData.getEmailCollection(100);
+        beforeEach(function() {
+            lawnchairDaoStub = sinon.createStubInstance(LawnchairDAO);
+            storageDao = new DeviceStorageDAO(lawnchairDaoStub);
+        });
 
-            // init crypto
-            crypto = new Crypto();
-            crypto.init({
-                emailAddress: devicestorageTest.user,
-                password: devicestorageTest.password,
-                salt: util.random(devicestorageTest.keySize),
-                keySize: devicestorageTest.keySize,
-                rsaKeySize: devicestorageTest.rsaKeySize
-            }, function(err, generatedKeypair) {
-                ok(!err && generatedKeypair, 'Init crypto');
-                devicestorageTest.generatedKeypair = generatedKeypair;
+        afterEach(function() {});
 
-                // clear db before tests
-                storage.clear(function(err) {
-                    ok(!err, 'DB cleared. Error status: ' + err);
+        describe('init', function() {
+            it('should work', function(done) {
+                lawnchairDaoStub.init.yields();
 
-                    start();
+                storageDao.init(testUser, function(err) {
+                    expect(err).to.not.exist;
+                    expect(lawnchairDaoStub.init.calledOnce).to.be.true;
+                    done();
                 });
-
             });
         });
-    });
 
-    asyncTest("Encrypt list for user", 2, function() {
-        var receiverPubkeys = [devicestorageTest.generatedKeypair.publicKey];
+        describe('store list', function() {
+            it('should fail', function(done) {
+                var list = [{}];
 
-        crypto.encryptListForUser(devicestorageTest.list, receiverPubkeys, function(err, encryptedList) {
-            ok(!err);
-            equal(encryptedList.length, devicestorageTest.list.length, 'Encrypt list');
-
-            encryptedList.forEach(function(i) {
-                i.sentDate = _.findWhere(devicestorageTest.list, {
-                    id: i.id
-                }).sentDate;
+                storageDao.storeList(list, '', function(err) {
+                    expect(err).to.exist;
+                    done();
+                });
             });
 
-            devicestorageTest.encryptedList = encryptedList;
-            start();
-        });
-    });
+            it('should work with empty list', function(done) {
+                var list = [];
 
-    asyncTest("Store encrypted list", 1, function() {
-        storage.storeList(devicestorageTest.encryptedList, 'email_inbox', function() {
-            ok(true, 'Store encrypted list');
+                storageDao.storeList(list, 'email', function(err) {
+                    expect(err).to.not.exist;
+                    done();
+                });
+            });
 
-            start();
-        });
-    });
+            it('should work', function(done) {
+                lawnchairDaoStub.batch.yields();
 
-    asyncTest("List items", 4, function() {
-        var senderPubkeys = [devicestorageTest.generatedKeypair.publicKey];
+                var list = [{
+                    foo: 'bar'
+                }];
 
-        var offset = 2,
-            num = 6;
-
-        // list encrypted items from storage
-        storage.listItems('email_inbox', offset, num, function(err, encryptedList) {
-            ok(!err);
-
-            // decrypt list
-            crypto.decryptListForUser(encryptedList, senderPubkeys, function(err, decryptedList) {
-                ok(!err);
-                equal(decryptedList.length, num, 'Found ' + decryptedList.length + ' items in store (and decrypted)');
-
-                var origSet = devicestorageTest.list.splice(92, num);
-                deepEqual(decryptedList, origSet, 'Messages decrypted correctly');
-
-                start();
+                storageDao.storeList(list, 'email', function(err) {
+                    expect(err).to.not.exist;
+                    expect(lawnchairDaoStub.batch.calledOnce).to.be.true;
+                    done();
+                });
             });
         });
-    });
 
-    asyncTest("Delete List items", 1, function() {
-        // list encrypted items from storage
-        storage.removeList('email_inbox', function(err) {
-            ok(!err);
+        describe('remove list', function() {
+            it('should work', function(done) {
+                lawnchairDaoStub.removeList.yields();
 
-            start();
+                storageDao.removeList('email', function(err) {
+                    expect(err).to.not.exist;
+                    expect(lawnchairDaoStub.removeList.calledOnce).to.be.true;
+                    done();
+                });
+            });
         });
+
+        describe('list items', function() {
+            it('should work', function(done) {
+                lawnchairDaoStub.list.yields();
+
+                storageDao.listItems('email', 0, null, function(err) {
+                    expect(err).to.not.exist;
+                    expect(lawnchairDaoStub.list.calledOnce).to.be.true;
+                    done();
+                });
+            });
+        });
+
+        describe('clear', function() {
+            it('should work', function(done) {
+                lawnchairDaoStub.clear.yields();
+
+                storageDao.clear(function(err) {
+                    expect(err).to.not.exist;
+                    expect(lawnchairDaoStub.clear.calledOnce).to.be.true;
+                    done();
+                });
+            });
+        });
+
     });
 
 });

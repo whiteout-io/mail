@@ -8,17 +8,19 @@ requirejs([
     'js/controller/add-account',
     'js/controller/account',
     'js/controller/set-passphrase',
+    'js/controller/privatekey-upload',
     'js/controller/contacts',
     'js/controller/about',
     'js/controller/login',
     'js/controller/login-initial',
     'js/controller/login-new-device',
     'js/controller/login-existing',
+    'js/controller/login-privatekey-download',
     'js/controller/mail-list',
     'js/controller/read',
     'js/controller/write',
     'js/controller/navigation',
-    'cryptoLib/util',
+    'js/crypto/util',
     'js/util/error',
     'fastclick',
     'angularSanitize',
@@ -31,12 +33,14 @@ requirejs([
     AddAccountCtrl,
     AccountCtrl,
     SetPassphraseCtrl,
+    PrivateKeyUploadCtrl,
     ContactsCtrl,
     AboutCtrl,
     LoginCtrl,
     LoginInitialCtrl,
     LoginNewDeviceCtrl,
     LoginExistingCtrl,
+    LoginPrivateKeyDownloadCtrl,
     MailListCtrl,
     ReadCtrl,
     WriteCtrl,
@@ -89,6 +93,10 @@ requirejs([
             templateUrl: 'tpl/login-new-device.html',
             controller: LoginNewDeviceCtrl
         });
+        $routeProvider.when('/login-privatekey-download', {
+            templateUrl: 'tpl/login-privatekey-download.html',
+            controller: LoginPrivateKeyDownloadCtrl
+        });
         $routeProvider.when('/desktop', {
             templateUrl: 'tpl/desktop.html',
             controller: NavigationCtrl
@@ -113,6 +121,7 @@ requirejs([
     app.controller('MailListCtrl', MailListCtrl);
     app.controller('AccountCtrl', AccountCtrl);
     app.controller('SetPassphraseCtrl', SetPassphraseCtrl);
+    app.controller('PrivateKeyUploadCtrl', PrivateKeyUploadCtrl);
     app.controller('ContactsCtrl', ContactsCtrl);
     app.controller('AboutCtrl', AboutCtrl);
     app.controller('DialogCtrl', DialogCtrl);

@@ -25,8 +25,10 @@ define(function(require) {
      */
     app.config = {
         cloudUrl: cloudUrl || 'https://keys.whiteout.io',
-        symKeySize: 128,
-        symIvSize: 128,
+        privkeyServerUrl: 'https://keychain-test.whiteout.io',
+        serverPrivateKeyId: 'EE342F0DDBB0F3BE',
+        symKeySize: 256,
+        symIvSize: 96,
         asymKeySize: 2048,
         workerPath: 'js',
         gmail: {

@@ -1,0 +1,30 @@
+<div class="view-login view-login-privatekey-download">
+  <div class="logo">
+    <img src="img/whiteout_logo.svg" alt="whiteout.io">
+  </div><!--/logo-->
+
+  <div class="content">
+
+    <div class="step" ng-show="step === 1">
+      <p><b>Key sync.</b> We have sent you an email containing a recovery token. Please copy and paste the identifier below.</p>
+
+      <input type="text" class="input-text" size="42" ng-model="recoveryToken" placeholder="Recovery token" focus-me="step === 1">
+    </div>
+
+    <div class="step" ng-show="step === 2">
+      <p><b>Key sync.</b> Please enter the keychain code you wrote down during sync setup.</p>
+      <input type="text" class="input-text code" size="4" maxlength="4" ng-model="code0" focus-me="step === 2"> -
+      <input type="text" class="input-text code" size="4" maxlength="4" ng-model="code1"> -
+      <input type="text" class="input-text code" size="4" maxlength="4" ng-model="code2"> -
+      <input type="text" class="input-text code" size="4" maxlength="4" ng-model="code3"> -
+      <input type="text" class="input-text code" size="4" maxlength="4" ng-model="code4"> -
+      <input type="text" class="input-text code" size="4" maxlength="4" ng-model="code5">
+      <!--<a href="https://whiteout.io/revocation.html" title="Click here to reset your account." target="_blank">Lost your keychain code?</a>-->
+    </div>
+
+    <div>
+      <button class="btn" ng-click="goForward()">Continue</button>
+    </div>
+
+  </div><!--/content-->
+</div>
