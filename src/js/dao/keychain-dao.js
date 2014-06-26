@@ -364,7 +364,6 @@ define(function(require) {
         }
 
         function decryptSessionKey(regSessionKey) {
-            // TODO: fetch public key for service to verify response
             self.lookupPublicKey(config.serverPrivateKeyId, function(err, serverPubkey) {
                 if (err) {
                     callback(err);
@@ -453,7 +452,6 @@ define(function(require) {
         });
 
         function decryptSessionKey(authSessionKey) {
-            // TODO: fetch public key for service to verify response
             self.lookupPublicKey(config.serverPrivateKeyId, function(err, serverPubkey) {
                 if (err) {
                     callback(err);
