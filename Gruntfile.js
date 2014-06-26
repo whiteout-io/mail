@@ -295,7 +295,8 @@ module.exports = function(grunt) {
             suffix: ' (Beta)',
             version: version,
             deleteKey: true,
-            keyServer: 'https://keys.whiteout.io/'
+            keyServer: 'https://keys.whiteout.io/',
+            keychainServer: 'https://keychain.whiteout.io/'
         });
     });
 
@@ -316,6 +317,10 @@ module.exports = function(grunt) {
         if (options.keyServer) {
             var ksIndex = manifest.permissions.indexOf('https://keys-test.whiteout.io/');
             manifest.permissions[ksIndex] = options.keyServer;
+        }
+        if (options.keychainServer) {
+            var kcsIndex = manifest.permissions.indexOf('https://keychain-test.whiteout.io/');
+            manifest.permissions[kcsIndex] = options.keychainServer;
         }
         if (options.deleteKey) {
             delete manifest.key;

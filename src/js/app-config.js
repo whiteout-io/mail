@@ -3,7 +3,7 @@ define(function(require) {
 
     var _ = require('underscore'),
         app = {},
-        appVersion, cloudUrl, clientId;
+        appVersion, cloudUrl, keychainUrl, clientId;
 
     // parse manifest to get configurations for current runtime
     try {
@@ -14,6 +14,12 @@ define(function(require) {
         });
         // remove last '/' from url due to required syntax in manifest
         cloudUrl = cloudUrl.substring(0, cloudUrl.length - 1);
+        // get keychain server base url
+        keychainUrl = _.find(manifest.permissions, function(permission) {
+            return typeof permission === 'string' && permission.indexOf('https://keychain') === 0;
+        });
+        // remove last '/' from url due to required syntax in manifest
+        keychainUrl = keychainUrl.substring(0, keychainUrl.length - 1);
         // get client ID for OAuth requests
         clientId = manifest.oauth2.client_id;
         // get the app version
@@ -25,7 +31,7 @@ define(function(require) {
      */
     app.config = {
         cloudUrl: cloudUrl || 'https://keys.whiteout.io',
-        privkeyServerUrl: 'https://keychain-test.whiteout.io',
+        privkeyServerUrl: keychainUrl || 'https://keychain.whiteout.io',
         serverPrivateKeyId: 'EE342F0DDBB0F3BE',
         symKeySize: 256,
         symIvSize: 96,

@@ -13,6 +13,7 @@
     },
     "notifications",
     "https://keys-test.whiteout.io/",
+    "https://keychain-test.whiteout.io/",
     "https://www.googleapis.com/",
     "identity", {
       "socket": [
