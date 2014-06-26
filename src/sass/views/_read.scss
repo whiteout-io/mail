@@ -114,6 +114,17 @@
         }
     }
 
+    .showImages {
+        flex-shrink: 0;
+        padding: 1em;
+        text-align: center;
+
+        a {
+            text-decoration: none;
+            color: $color-blue;
+        }
+    }
+
     iframe {
         flex-grow: 1;
         margin-top: 1.75em;

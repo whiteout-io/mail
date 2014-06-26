@@ -338,17 +338,40 @@ define(function(require) {
     ngModule.directive('frameLoad', function($sce, $timeout) {
         return function(scope, elm, attrs) {
             scope.$watch(attrs.frameLoad, function(value) {
+                var html = value;
                 scope.html = undefined;
-                if (value) {
-                    $timeout(function() {
-                        // wrap in html doc with scrollable html tag, since chrome apps does not scroll by default
-                        var prefix = '<!DOCTYPE html><html style="overflow-y: auto"><head></head><body>';
-                        var suffix = '</body></html>';
-                        // open links in new window, otherwise the sandbox with not open them
-                        var clickableHtml = value.replace(/<a /g, '<a target="_blank" ');
-                        scope.html = $sce.trustAsHtml(prefix + clickableHtml + suffix);
-                    });
+                var iframe = elm[0];
+
+                if (!html) {
+                    return;
                 }
+
+                // if there are image tags in the html?
+                var hasImages = /<img[^>]+\bsrc=['"][^'">]+['"]/ig.test(html);
+                scope.showImageButton = hasImages;
+
+                // inital loading
+                $timeout(function() {
+                    scope.html = true;
+                    iframe.contentWindow.postMessage({
+                        html: html,
+                        removeImages: hasImages // avoids doing unnecessary work on the html
+                    }, '*');
+                });
+
+                // no need to add a scope function to reload the html if there are no images
+                if (!hasImages) {
+                    return;
+                }
+
+                // reload WITH images
+                scope.displayImages = function() {
+                    scope.showImageButton = false;
+                    iframe.contentWindow.postMessage({
+                        html: html,
+                        removeImages: false
+                    }, '*');
+                };
             });
         };
     });

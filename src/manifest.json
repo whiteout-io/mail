@@ -32,5 +32,9 @@
     "background": {
       "scripts": ["background.js"]
     }
+  },
+  "sandbox": {
+    "pages": ["sandbox.html"],
+    "content_security_policy": "sandbox allow-popups allow-scripts; default-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'; img-src *"
   }
 }
