@@ -5,7 +5,9 @@
     width: 100%;
     height: 100%;
     z-index: 2000;
-    backface-visibility: hidden;
+    @include respond-to(desktop) {
+        backface-visibility: hidden;
+    }
 
     @include respond-to(desktop) {
         margin: 0 auto;
@@ -41,6 +43,11 @@
                 margin: 0;
                 color: $color-grey-dark;
                 outline: none;
+
+                &.active {
+                    top: 2px;
+                    right: -2px;
+                }
             }
             h2 {
                 margin: 0;
@@ -81,10 +88,14 @@
     &.show-add {
         display: block;
         opacity: 0;
-        transition: opacity 0.3s;
+        @include respond-to(desktop) {
+            transition: opacity 0.3s;
+        }
         .lightbox-body {
             transform: scale(0.7);
-            transition: transform 0.3s;
+            @include respond-to(desktop) {
+                transition: transform 0.3s;
+            }
         }
     }
     &.show-add-active {
@@ -96,10 +107,14 @@
     &.show-remove {
         display: block;
         opacity: 1;
-        transition: opacity 0.3s;
+        @include respond-to(desktop) {
+            transition: opacity 0.3s;
+        }
         .lightbox-body {
             transform: scale(1);
-            transition: transform 0.3s;
+            @include respond-to(desktop) {
+                transition: transform 0.3s;
+            }
         }
     }
     &.show-remove-active {

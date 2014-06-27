@@ -24,6 +24,10 @@
                     display: none;
                 }
             }
+
+            &.active {
+                background-color: darken($color-white, 10%);
+            }
         }
 
         .date {
