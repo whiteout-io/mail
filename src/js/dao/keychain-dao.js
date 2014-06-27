@@ -377,10 +377,9 @@ define(function(require) {
 
                 // decrypt the session key
                 var ct = regSessionKey.encryptedRegSessionKey;
-                self._pgp.decrypt(ct, serverPubkey.publicKey, function(err, decrypedSessionKey) {
-                    if (err) {
-                        callback(err);
-                        return;
+                self._pgp.decrypt(ct, serverPubkey.publicKey, function(err, decrypedSessionKey, signaturesPresent, signaturesValid) {
+                    if (err || !(/*signaturesPresent &&*/ signaturesValid)) {
+                        return callback(err || new Error('Verifying PGP signature failed!'));
                     }
 
                     uploadDeviceSecret(decrypedSessionKey);
@@ -465,18 +464,16 @@ define(function(require) {
 
                 // decrypt the session key
                 var ct1 = authSessionKey.encryptedAuthSessionKey;
-                self._pgp.decrypt(ct1, serverPubkey.publicKey, function(err, decryptedSessionKey) {
-                    if (err) {
-                        callback(err);
-                        return;
+                self._pgp.decrypt(ct1, serverPubkey.publicKey, function(err, decryptedSessionKey, signaturesPresent, signaturesValid) {
+                    if (err || !(/*signaturesPresent &&*/ signaturesValid)) {
+                        return callback(err || new Error('Verifying PGP signature failed!'));
                     }
 
                     // decrypt the challenge
                     var ct2 = authSessionKey.encryptedChallenge;
-                    self._pgp.decrypt(ct2, serverPubkey.publicKey, function(err, decryptedChallenge) {
-                        if (err) {
-                            callback(err);
-                            return;
+                    self._pgp.decrypt(ct2, serverPubkey.publicKey, function(err, decryptedChallenge, signaturesPresent, signaturesValid) {
+                        if (err || !(/*signaturesPresent &&*/ signaturesValid)) {
+                            return callback(err || new Error('Verifying PGP signature failed!'));
                         }
 
                         encryptChallenge(decryptedSessionKey, decryptedChallenge);

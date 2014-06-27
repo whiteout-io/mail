@@ -1326,15 +1326,13 @@ define(function(require) {
                     };
 
                     keychainStub.getReceiverPublicKey.yieldsAsync(null, mockKeyPair.publicKey);
-                    pgpStub.decrypt.yieldsAsync({
-                        errMsg: 'asd'
-                    });
+                    pgpStub.decrypt.yieldsAsync(new Error('fail.'));
 
                     dao.decryptBody({
                         message: message
                     }, function(error, msg) {
                         expect(error).to.not.exist;
-                        expect(msg.body).to.equal('asd');
+                        expect(msg.body).to.equal('fail.');
                         expect(msg).to.exist;
                         expect(message.decryptingBody).to.be.false;
                         expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;

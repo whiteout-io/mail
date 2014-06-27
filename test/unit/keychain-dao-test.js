@@ -799,7 +799,7 @@ define(function(require) {
                 lookupPublicKeyStub.yields(null, {
                     publicKey: 'pubkey'
                 });
-                pgpStub.decrypt.withArgs('asdf', 'pubkey').yields(null, 'decrypted');
+                pgpStub.decrypt.withArgs('asdf', 'pubkey').yields(null, 'decrypted', true, true);
                 getDeviceSecretStub.yields(42);
 
                 keychainDao.registerDevice({
@@ -823,7 +823,7 @@ define(function(require) {
                 lookupPublicKeyStub.yields(null, {
                     publicKey: 'pubkey'
                 });
-                pgpStub.decrypt.withArgs('asdf', 'pubkey').yields(null, 'decrypted');
+                pgpStub.decrypt.withArgs('asdf', 'pubkey').yields(null, 'decrypted', true, true);
                 getDeviceSecretStub.yields(null, 'secret');
                 cryptoStub.encrypt.withArgs('secret', 'decrypted').yields(42);
 
@@ -848,7 +848,7 @@ define(function(require) {
                 lookupPublicKeyStub.yields(null, {
                     publicKey: 'pubkey'
                 });
-                pgpStub.decrypt.withArgs('asdf', 'pubkey').yields(null, 'decrypted');
+                pgpStub.decrypt.withArgs('asdf', 'pubkey').yields(null, 'decrypted', true, true);
                 getDeviceSecretStub.yields(null, 'secret');
                 cryptoStub.encrypt.withArgs('secret', 'decrypted').yields(null, 'encryptedDeviceSecret');
                 privkeyDaoStub.uploadDeviceSecret.yields();
@@ -987,7 +987,7 @@ define(function(require) {
                     publickKey: 'publicKey'
                 });
 
-                pgpStub.decrypt.yields(null, 'decryptedStuff');
+                pgpStub.decrypt.yields(null, 'decryptedStuff', true, true);
                 getDeviceSecretStub.yields(null, 'deviceSecret');
                 cryptoStub.encrypt.yields(null, 'encryptedStuff');
                 privkeyDaoStub.verifyAuthentication.yields(42);
@@ -1008,7 +1008,7 @@ define(function(require) {
 
                 lookupPublicKeyStub.yields();
 
-                pgpStub.decrypt.yields(null, 'decryptedStuff');
+                pgpStub.decrypt.yields(null, 'decryptedStuff', true, true);
                 getDeviceSecretStub.yields(null, 'deviceSecret');
                 cryptoStub.encrypt.yields(null, 'encryptedStuff');
                 privkeyDaoStub.verifyAuthentication.yields();
@@ -1031,7 +1031,7 @@ define(function(require) {
                     publicKey: 'publicKey'
                 });
 
-                pgpStub.decrypt.yields(null, 'decryptedStuff');
+                pgpStub.decrypt.yields(null, 'decryptedStuff', true, true);
                 getDeviceSecretStub.yields(null, 'deviceSecret');
                 cryptoStub.encrypt.yields(null, 'encryptedStuff');
                 privkeyDaoStub.verifyAuthentication.yields();
