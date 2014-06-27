@@ -60,6 +60,7 @@
         flex-grow: 1;
         padding: 0 ($padding-horizontal - $scrollbar-width) 0 $padding-horizontal;
         overflow-y: scroll;
+        transform: translatez(0);
     }
 
     footer {
