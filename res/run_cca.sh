@@ -6,4 +6,4 @@ cd ..
 
 cd release/cca/Whiteout
 #cca run ios
-cca run android
+cca run android --device

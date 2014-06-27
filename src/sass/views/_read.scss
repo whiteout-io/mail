@@ -24,6 +24,10 @@
                     display: none;
                 }
             }
+
+            &.active {
+                background-color: darken($color-white, 10%);
+            }
         }
 
         .date {
@@ -46,7 +50,6 @@
 
         .controls {
             float: right;
-            margin: 0 15px 10px;
 
             button {
                 margin-left: 7px;
@@ -137,6 +140,7 @@
         line-height: 1.5em;
         overflow-y: scroll;
         user-select: text;
+        transform: translatez(0);
 
         .line {
             cursor: text;

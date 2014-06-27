@@ -1,15 +1,15 @@
 <div class="lightbox-body" ng-controller="WriteCtrl">
   <header>
     <h2>{{writerTitle}}</h2>
-    <button class="close" ng-click="state.writer.close()" data-action="lightbox-close">&#xe007;</button>
+    <button class="close" wo-touch="state.writer.close()" data-action="lightbox-close">&#xe007;</button>
   </header>
   <div class="content">
 
     <div class="view-write">
       <div class="mail-addresses">
         <div class="mail-addresses-more">
-          <button ng-click="showCC = true;" ng-hide="showCC">Cc</button>
-          <button ng-click="showBCC = true;" ng-hide="showBCC">Bcc</button>
+          <button wo-touch="showCC = true;" ng-hide="showCC">Cc</button>
+          <button wo-touch="showBCC = true;" ng-hide="showBCC">Bcc</button>
         </div>
         <p field="to">
           <label>To:</label>
@@ -41,7 +41,7 @@
         <span ng-repeat="attachment in attachments" class="attachment">
           <span data-icon="&#xe003;"></span>
           {{attachment.filename}}
-          <span class="close" data-icon="&#xe000;" ng-click="remove(attachment)"></span>
+          <span class="close" data-icon="&#xe000;" wo-touch="remove(attachment)"></span>
         </span><!--/.attachment-->
       </div><!--/.attachments-box-->
 
@@ -54,7 +54,7 @@
       </div><!--/.body-->
 
       <div class="send-control">
-        <button ng-click="sendToOutbox()" class="btn" ng-class="{'btn-primary': sendBtnSecure === false}" ng-disabled="!okToSend" tabindex="4">{{sendBtnText || 'Send'}}</button>
+        <button wo-touch="sendToOutbox()" class="btn" ng-class="{'btn-primary': sendBtnSecure === false}" ng-disabled="!okToSend" tabindex="4">{{sendBtnText || 'Send'}}</button>
       </div>
     </div><!--/.write-view-->
 

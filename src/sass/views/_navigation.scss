@@ -65,8 +65,8 @@
                         vertical-align: middle;
                         text-shadow: none;
                     }
-                    &:hover, &:focus {
-                        background-color: mix($color-blue, $color-white, 80%);
+                    &.active, &:hover, &:focus {
+                        background-color: mix($color-blue, $color-white, 70%);
                     }
                 }
             }

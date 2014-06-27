@@ -12,7 +12,7 @@
         padding: $padding-vertical $padding-horizontal;
         background: $color-white;
         cursor: pointer;
-        transition: background-color $time-li-fade, color $time-li-fade;
+        //transition: background-color $time-li-fade, color $time-li-fade;
 
         margin-top: 11px;
         &:before {
@@ -120,8 +120,9 @@
             overflow: hidden;
         }
 
+        &.active,
         &:hover {
-            background-color: mix($color-white, $color-blue, 90%);
+            background-color: mix($color-white, $color-blue, 85%);
         }
 
         &.mail-list-active,

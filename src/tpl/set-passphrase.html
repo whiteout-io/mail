@@ -1,7 +1,7 @@
 <div class="lightbox-body" ng-controller="SetPassphraseCtrl">
   <header>
     <h2>Set passphrase</h2>
-    <button class="close" ng-click="state.setPassphrase.toggle(false)" data-action="lightbox-close">&#xe007;</button>
+    <button class="close" wo-touch="state.setPassphrase.toggle(false)" data-action="lightbox-close">&#xe007;</button>
   </header>
 
   <div class="content">
@@ -25,7 +25,7 @@
       </table>
 
       <div class="control">
-        <button ng-click="setPassphrase()" class="btn" ng-disabled="(confirmation || newPassphrase) && confirmation !== newPassphrase" tabindex="4">Set passphrase</button>
+        <button wo-touch="setPassphrase()" class="btn" ng-disabled="(confirmation || newPassphrase) && confirmation !== newPassphrase" tabindex="4">Set passphrase</button>
       </div>
 
     </div><!-- /.view-set-passphrase -->
