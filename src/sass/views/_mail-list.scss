@@ -12,6 +12,10 @@
         flex-shrink: 0;
         cursor: pointer;
         padding: $padding-vertical $padding-horizontal;
+        @include respond-to(mobile) {
+            padding: ($padding-vertical + 5px) $padding-horizontal;
+        }
+
         &:before {
             color: $color-blue;
             font-size: $font-size-bigger;
@@ -27,17 +31,34 @@
             vertical-align: middle;
             text-shadow: 0px 1px 1px $color-grey-lighter;
         }
-        button {
-            float: right;
-            margin-top: -0.05em; // for perfect vertical alignment with headline
-
-            @include respond-to(desktop) {
-                display: none;
-            }
-        }
 
         &.active {
             background-color: darken($color-white, 10%);
+        }
+    }
+
+    .compose {
+        position: absolute;
+        top: $padding-vertical;
+        right: $padding-horizontal;
+        margin-top: -0.05em; // for perfect vertical alignment with headline
+        padding-left: 40px;
+
+        &.active {
+            top: $padding-vertical + 2px;
+            right: $padding-horizontal - 2px;
+        }
+
+        @include respond-to(desktop) {
+            display: none;
+        }
+
+        button {
+            &:active,
+            &.active {
+                top: 0;
+                right: 0;
+            }
         }
     }
 

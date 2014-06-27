@@ -2,8 +2,11 @@
   <!-- nav controll and section headline -->
   <header data-icon="&#xe004;" wo-touch="state.nav.toggle(true); $event.stopPropagation()">
     <h2>{{state.nav.currentFolder.type}}</h2>
-    <button wo-touch="state.writer.write(); $event.stopPropagation()" class="btn-icon" title="New mail"></button>
   </header>
+
+  <div class="compose" wo-touch="state.writer.write(); $event.stopPropagation()">
+    <button class="btn-icon" title="New mail"></button>
+  </div>
 
   <div class="search" data-icon="&#xe017;">
     <input class="input-text" type="text" ng-model="searchText" placeholder="Filter..." focus-me="state.mailList.searching">

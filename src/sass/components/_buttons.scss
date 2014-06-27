@@ -104,8 +104,8 @@
     font-size: $font-size-base;
     font-family: $font-family-icons;
     line-height: 1;
-    height: 2em;
-    width: 2em;
+    height: 2.5em;
+    width: 2.5em;
     text-align: center;
     -webkit-font-smoothing: antialiased;
     @include respond-to(desktop) {
@@ -127,7 +127,7 @@
     &.active {
         outline: 0;
         top: 2px;
-        left: 2px;
+        right: -2px;
     }
 
     &:after {
