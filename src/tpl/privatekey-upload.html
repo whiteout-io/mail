@@ -1,7 +1,7 @@
 <div class="lightbox-body" ng-controller="PrivateKeyUploadCtrl">
   <header>
     <h2>Setup Key Sync</h2>
-    <button class="close" ng-click="state.privateKeyUpload.toggle(false)" data-action="lightbox-close">&#xe007;</button>
+    <button class="close" wo-touch="state.privateKeyUpload.toggle(false)" data-action="lightbox-close">&#xe007;</button>
   </header>
 
   <div class="content">
@@ -37,8 +37,8 @@
       </div>
 
       <div class="control">
-        <button ng-show="step > 1 && step < 4" class="btn btn-alt" ng-click="goBack()">Go back</button>
-        <button ng-show="step < 4" class="btn" ng-click="goForward()">Continue</button>
+        <button ng-show="step > 1 && step < 4" class="btn btn-alt" wo-touch="goBack()">Go back</button>
+        <button ng-show="step < 4" class="btn" wo-touch="goForward()">Continue</button>
       </div>
 
     </div><!-- /.view-privatekey-upload -->

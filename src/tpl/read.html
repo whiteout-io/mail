@@ -2,30 +2,30 @@
 
   <div class="headers">
     <div class="controls">
-      <button ng-click="state.mailList.remove(state.mailList.selected)" class="btn-icon" title="Delete mail">&#xe005;</button>
+      <button wo-touch="state.mailList.remove(state.mailList.selected)" class="btn-icon" title="Delete mail">&#xe005;</button>
       <button class="btn-icon" title="Reply to" reply-selection>&#xe002;</button>
-      <button ng-click="state.writer.write()" class="btn-icon" title="New mail">&#xe006;</button>
+      <button wo-touch="state.writer.write()" class="btn-icon" title="New mail">&#xe006;</button>
     </div><!--/.controls-->
 
-    <p class="subject" ng-click="state.read.toggle(false)" data-icon="&#xe016;">{{(state.mailList.selected.subject) ? state.mailList.selected.subject : 'No subject'}}</p>
+    <p class="subject" wo-touch="state.read.toggle(false)" data-icon="&#xe016;">{{(state.mailList.selected.subject) ? state.mailList.selected.subject : 'No subject'}}</p>
     <p class="date">{{state.mailList.selected.sentDate | date:'EEEE, MMM d, yyyy h:mm a'}}</p>
     <div class="mail-addresses">
       <p>
         <label>From:</label>
         <span ng-repeat="u in state.mailList.selected.from">
-          <span class="label" ng-class="{'label-primary': u.secure === false, 'label-primary-click': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : ''}}" ng-mouseover="getKeyId(u.address)" ng-click="invite(u)" popover="#fingerprint-info">{{u.name || u.address}}</span>
+          <span class="label" ng-class="{'label-primary': u.secure === false, 'label-primary-click': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : ''}}" ng-mouseover="getKeyId(u.address)" wo-touch="invite(u)" popover="#fingerprint-info">{{u.name || u.address}}</span>
         </span>
       </p>
       <p>
         <label>To:</label>
         <span ng-repeat="u in state.mailList.selected.to">
-          <span class="label" ng-class="{'label-primary': u.secure === false, 'label-primary-click': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : ''}}" ng-mouseover="getKeyId(u.address)" ng-click="invite(u)" popover="#fingerprint-info">{{u.name || u.address}}</span>
+          <span class="label" ng-class="{'label-primary': u.secure === false, 'label-primary-click': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : ''}}" ng-mouseover="getKeyId(u.address)" wo-touch="invite(u)" popover="#fingerprint-info">{{u.name || u.address}}</span>
         </span>
       </p>
       <p ng-show="state.mailList.selected.cc && state.mailList.selected.cc.length > 0">
         <label>Cc:</label>
         <span ng-repeat="u in state.mailList.selected.cc">
-          <span class="label" ng-class="{'label-primary': u.secure === false, 'label-primary-click': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : ''}}" ng-mouseover="getKeyId(u.address)" ng-click="invite(u)" popover="#fingerprint-info">{{u.name || u.address}}</span>
+          <span class="label" ng-class="{'label-primary': u.secure === false, 'label-primary-click': u.secure === false}" data-icon-append="{{(u.secure === false) ? '&#xe001;' : ''}}" ng-mouseover="getKeyId(u.address)" wo-touch="invite(u)" popover="#fingerprint-info">{{u.name || u.address}}</span>
         </span>
       </p>
     </div><!--/.mail-addresses-->
@@ -36,7 +36,7 @@
     <div class="attachments" ng-switch-when="true">
       <span class="attachment"
         ng-repeat="attachment in state.mailList.selected.attachments"
-        ng-click="download(attachment)">
+        wo-touch="download(attachment)">
         <span data-icon="&#xe003;"></span>
         {{attachment.filename}}
       </span><!--/.attachment-->
@@ -54,7 +54,7 @@
   </div><!--/.working-wrapper-->
 
   <div class="display-images">
-    <a ng-show="html && showImageButton" href='#' ng-click="displayImages(); $event.preventDefault()">Display images</a>
+    <a ng-show="html && showImageButton" href='#' wo-touch="displayImages(); $event.preventDefault()">Display images</a>
   </div>
 
   <!-- Render html body in sandboxed iframe -->
@@ -81,9 +81,9 @@
   <div class="reply-selection popover bottom">
     <div class="arrow"></div>
     <ul class="popover-content">
-      <li><button data-icon="&#xe014;" ng-click="state.writer.write(state.mailList.selected)">Reply</button></li>
-      <li><button data-icon="&#xe013;" ng-click="state.writer.write(state.mailList.selected, true)">Reply All</button></li>
-      <li><button data-icon="&#xe015;" ng-click="state.writer.write(state.mailList.selected, null, true)">Forward</button></li>
+      <li><button data-icon="&#xe014;" wo-touch="state.writer.write(state.mailList.selected)">Reply</button></li>
+      <li><button data-icon="&#xe013;" wo-touch="state.writer.write(state.mailList.selected, true)">Reply All</button></li>
+      <li><button data-icon="&#xe015;" wo-touch="state.writer.write(state.mailList.selected, null, true)">Forward</button></li>
     </ul>
   </div><!--/.reply-selection-->
 

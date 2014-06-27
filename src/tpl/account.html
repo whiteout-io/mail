@@ -1,7 +1,7 @@
 <div class="lightbox-body" ng-controller="AccountCtrl">
   <header>
     <h2>Account</h2>
-    <button class="close" ng-click="state.account.toggle(false)" data-action="lightbox-close">&#xe007;</button>
+    <button class="close" wo-touch="state.account.toggle(false)" data-action="lightbox-close">&#xe007;</button>
   </header>
 
   <div class="content">
@@ -29,8 +29,8 @@
       </table>
 
       <div class="control">
-        <button ng-click="state.account.toggle(false); state.setPassphrase.toggle(true)" class="btn btn-alt">Set passphrase</button>
-        <button ng-click="exportKeyFile()" class="btn">Export keypair</button>
+        <button wo-touch="state.account.toggle(false); state.setPassphrase.toggle(true)" class="btn btn-alt">Set passphrase</button>
+        <button wo-touch="exportKeyFile()" class="btn">Export keypair</button>
       </div>
 
     </div><!-- /.view-account -->

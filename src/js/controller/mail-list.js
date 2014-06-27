@@ -275,6 +275,29 @@ define(function(require) {
 
     var ngModule = angular.module('mail-list', []);
 
+    ngModule.directive('woTouch', function($parse) {
+        return function(scope, elm, attrs) {
+            var handler = $parse(attrs.woTouch);
+
+            elm.on('touchstart', function() {
+                elm.addClass('active');
+            });
+            elm.on('touchleave touchcancel touchmove', function() {
+                elm.removeClass('active');
+            });
+
+            elm.on('touchend click', function(event) {
+                event.preventDefault();
+                elm.removeClass('active');
+                scope.$apply(function() {
+                    handler(scope, {
+                        $event: event
+                    });
+                });
+            });
+        };
+    });
+
     ngModule.directive('listScroll', function() {
         return {
             link: function(scope, elm, attrs) {
