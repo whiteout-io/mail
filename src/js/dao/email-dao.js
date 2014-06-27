@@ -707,7 +707,7 @@ define(function(require) {
 
             if (message.signed) {
                 var signedPart = filterBodyParts(message.bodyParts, 'signed')[0];
-                message.message = signedPart.message;
+                message.signedMessage = signedPart.signedMessage;
                 message.signature = signedPart.signature;
                 // TODO check integrity
                 // in case of a signed message, you only want to show the signed content and ignore the rest
@@ -719,17 +719,18 @@ define(function(require) {
             var body = _.pluck(filterBodyParts(root, 'text'), 'content').join('\n');
 
             /*
-             * here's how the regex works:
+             * here's how the pgp/inline regex works:
              * - any content before the PGP block will be discarded
              * - "-----BEGIN PGP MESSAGE-----" must be at the beginning (and end) of a line
              * - "-----END PGP MESSAGE-----" must be at the beginning (and end) of a line
              * - the regex must not match a pgp block in a plain text reply or forward of a pgp/inline message.
              *   (the encryption will break for replies/forward, because "> " corrupts the PGP block with non-radix-64 characters)
              */
-            var match = body.match(/^-{5}BEGIN PGP MESSAGE-{5}$[^>]*^-{5}END PGP MESSAGE-{5}$/im);
-            if (match) {
+            var pgpInlineRegex = /^-{5}BEGIN PGP MESSAGE-{5}$[^>]*^-{5}END PGP MESSAGE-{5}$/im;
+            var pgpInlineMatch = pgpInlineRegex.exec(body);
+            if (pgpInlineMatch) {
                 // show the plain text content
-                message.body = match[0];
+                message.body = pgpInlineMatch[0];
 
                 // - replace the bodyParts info with an artificial bodyPart of type "encrypted"
                 // - _isPgpInline is only used internally to avoid trying to parse non-MIME text with the mailreader
@@ -737,15 +738,35 @@ define(function(require) {
                 message.encrypted = true;
                 message.bodyParts = [{
                     type: 'encrypted',
-                    content: match[0],
+                    content: pgpInlineMatch[0],
                     _isPgpInline: true
                 }];
                 done();
                 return;
             }
 
+
+            /*
+             * here's how the clear signing regex works:
+             * - any content before the PGP block will be discarded
+             * - "-----BEGIN PGP SIGNED MESSAGE-----" must be at the beginning (and end) of a line
+             * - "-----END PGP SIGNATURE-----" must be at the beginning (and end) of a line
+             * - the regex must not match a pgp block in a plain text reply or forward of a pgp/signed message.
+             *   (the encryption will break for replies/forward, because "> " corrupts the PGP block with non-radix-64 characters)
+             */
+            var clearSignedRegex = /^-{5}BEGIN PGP SIGNED MESSAGE-{5}[\s\S]*\n{2}([\S\s]*)(-{5}BEGIN PGP SIGNATURE-{5}[\S\s]*-{5}END PGP SIGNATURE-{5})$/im;
+            var clearSignedMatch = clearSignedRegex.exec(body);
+            if (clearSignedMatch) {
+                message.clearSignedMessage = clearSignedMatch[0];
+                message.signed = true;
+                // TODO check integrity
+
+                message.body = clearSignedMatch[1].trim();
+            } else {
+                message.body = body;
+            }
+
             message.attachments = filterBodyParts(root, 'attachment');
-            message.body = body;
             message.html = _.pluck(filterBodyParts(root, 'html'), 'content').join('\n');
             inlineExternalImages(message);
 
@@ -818,10 +839,13 @@ define(function(require) {
 
             // get the receiver's public key to check the message signature
             var encryptedNode = filterBodyParts(message.bodyParts, 'encrypted')[0];
-            self._pgp.decrypt(encryptedNode.content, senderPublicKey.publicKey, function(err, decrypted) {
+            self._pgp.decrypt(encryptedNode.content, senderPublicKey.publicKey, function(err, decrypted, signaturesPresent, signaturesValid) {
                 if (err || !decrypted) {
-                    showError(err.errMsg || err.message || 'An error occurred during the decryption.');
-                    return;
+                    return showError(err.message || 'An error occurred during the decryption.');
+                }
+
+                if (signaturesPresent && !signaturesValid) {
+                    return callback(new Error('Could not verifying the authenticity of this message because PGP signature check failed! This message may have been tampered with!'));
                 }
 
                 // if the encrypted node contains pgp/inline, we must not parse it
@@ -847,7 +871,6 @@ define(function(require) {
 
                     // we have successfully interpreted the descrypted message,
                     // so let's update the views on the message parts
-
                     message.body = _.pluck(filterBodyParts(parsedBodyParts, 'text'), 'content').join('\n');
                     message.html = _.pluck(filterBodyParts(parsedBodyParts, 'html'), 'content').join('\n');
                     message.attachments = _.reject(filterBodyParts(parsedBodyParts, 'attachment'), function(attmt) {
@@ -856,6 +879,9 @@ define(function(require) {
                     });
                     inlineExternalImages(message);
 
+                    // if the decryption worked and signatures are present, everything's fine.
+                    // no error is thrown if signatures are not present
+                    message.signed = signaturesPresent;
                     message.decrypted = true;
 
                     // we're done here!

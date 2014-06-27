@@ -277,10 +277,11 @@ define(function(require) {
     };
 
     /**
-     * Decrypt and verify a pgp message for a single sender
+     * Decrypt and verify a pgp message for a single sender.
+     * You need to check if signatures are both present and valid in the callback!
      */
     PGP.prototype.decrypt = function(ciphertext, publicKeyArmored, callback) {
-        var publicKeys, message, signaturesValid;
+        var publicKeys, message, signaturesValid, signaturesPresent;
 
         // check keys
         if (!this._privateKey || !publicKeyArmored) {
@@ -308,18 +309,15 @@ define(function(require) {
 
             // check if signatures are valid
             signaturesValid = true;
+            signaturesPresent = !!decrypted.signatures.length;
             decrypted.signatures.forEach(function(sig) {
                 if (!sig.valid) {
                     signaturesValid = false;
                 }
             });
-            if (!signaturesValid) {
-                callback(new Error('Verifying PGP signature failed!'));
-                return;
-            }
 
             // return decrypted plaintext
-            callback(null, decrypted.text);
+            callback(null, decrypted.text, signaturesPresent, signaturesValid);
         }
     };
 
