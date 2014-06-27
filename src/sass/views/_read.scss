@@ -137,6 +137,7 @@
         line-height: 1.5em;
         overflow-y: scroll;
         user-select: text;
+        transform: translatez(0);
 
         .line {
             cursor: text;
