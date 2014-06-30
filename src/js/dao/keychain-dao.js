@@ -377,8 +377,8 @@ define(function(require) {
 
                 // decrypt the session key
                 var ct = regSessionKey.encryptedRegSessionKey;
-                self._pgp.decrypt(ct, serverPubkey.publicKey, function(err, decrypedSessionKey, signaturesPresent, signaturesValid) {
-                    if (err || !(/*signaturesPresent &&*/ signaturesValid)) {
+                self._pgp.decrypt(ct, serverPubkey.publicKey, function(err, decrypedSessionKey, signaturesValid) {
+                    if (err || !signaturesValid) {
                         return callback(err || new Error('Verifying PGP signature failed!'));
                     }
 
@@ -464,15 +464,15 @@ define(function(require) {
 
                 // decrypt the session key
                 var ct1 = authSessionKey.encryptedAuthSessionKey;
-                self._pgp.decrypt(ct1, serverPubkey.publicKey, function(err, decryptedSessionKey, signaturesPresent, signaturesValid) {
-                    if (err || !(/*signaturesPresent &&*/ signaturesValid)) {
+                self._pgp.decrypt(ct1, serverPubkey.publicKey, function(err, decryptedSessionKey, signaturesValid) {
+                    if (err || !signaturesValid) {
                         return callback(err || new Error('Verifying PGP signature failed!'));
                     }
 
                     // decrypt the challenge
                     var ct2 = authSessionKey.encryptedChallenge;
-                    self._pgp.decrypt(ct2, serverPubkey.publicKey, function(err, decryptedChallenge, signaturesPresent, signaturesValid) {
-                        if (err || !(/*signaturesPresent &&*/ signaturesValid)) {
+                    self._pgp.decrypt(ct2, serverPubkey.publicKey, function(err, decryptedChallenge, signaturesValid) {
+                        if (err || !signaturesValid) {
                             return callback(err || new Error('Verifying PGP signature failed!'));
                         }
 

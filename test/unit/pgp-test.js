@@ -13,7 +13,7 @@ define(function(require) {
             keySize = 512,
             keyId = 'F6F60E9B42CDFF4C',
             pubkey = '-----BEGIN PGP PUBLIC KEY BLOCK-----\r\n' +
-            'Version: OpenPGP.js v0.6.0\r\n' +
+            'Version: OpenPGP.js v0.6.5\r\n' +
             'Comment: http://openpgpjs.org\r\n' +
             '\r\n' +
             'xk0EUlhMvAEB/2MZtCUOAYvyLFjDp3OBMGn3Ev8FwjzyPbIF0JUw+L7y2XR5\r\n' +
@@ -24,7 +24,7 @@ define(function(require) {
             '=6XMW\r\n' +
             '-----END PGP PUBLIC KEY BLOCK-----\r\n\r\n',
             privkey = '-----BEGIN PGP PRIVATE KEY BLOCK-----\r\n' +
-            'Version: OpenPGP.js v0.6.0\r\n' +
+            'Version: OpenPGP.js v0.6.5\r\n' +
             'Comment: http://openpgpjs.org\r\n' +
             '\r\n' +
             'xcBeBFJYTLwBAf9jGbQlDgGL8ixYw6dzgTBp9xL/BcI88j2yBdCVMPi+8tl0\r\n' +
@@ -69,11 +69,24 @@ define(function(require) {
                     done();
                 });
             });
-            it('should work', function(done) {
+            it('should work with passphrase', function(done) {
                 pgp.generateKeys({
                     emailAddress: user,
                     keySize: keySize,
                     passphrase: passphrase
+                }, function(err, keys) {
+                    expect(err).to.not.exist;
+                    expect(keys.keyId).to.exist;
+                    expect(keys.privateKeyArmored).to.exist;
+                    expect(keys.publicKeyArmored).to.exist;
+                    done();
+                });
+            });
+            it('should work without passphrase', function(done) {
+                pgp.generateKeys({
+                    emailAddress: user,
+                    keySize: keySize,
+                    passphrase: ''
                 }, function(err, keys) {
                     expect(err).to.not.exist;
                     expect(keys.keyId).to.exist;
@@ -121,7 +134,7 @@ define(function(require) {
         });
 
         describe('Change passphrase of private key', function() {
-            it('should work', function(done) {
+            it('should work with new passphrase', function(done) {
                 pgp.changePassphrase({
                     privateKeyArmored: privkey,
                     oldPassphrase: passphrase,
@@ -140,7 +153,25 @@ define(function(require) {
                     });
                 });
             });
+            it('should work with empty passphrase', function(done) {
+                pgp.changePassphrase({
+                    privateKeyArmored: privkey,
+                    oldPassphrase: passphrase,
+                    newPassphrase: undefined
+                }, function(err, reEncryptedKey) {
+                    expect(err).to.not.exist;
+                    expect(reEncryptedKey).to.exist;
 
+                    pgp.importKeys({
+                        passphrase: undefined,
+                        privateKeyArmored: reEncryptedKey,
+                        publicKeyArmored: pubkey
+                    }, function(err) {
+                        expect(err).to.not.exist;
+                        done();
+                    });
+                });
+            });
             it('should fail when passphrases are equal', function(done) {
                 pgp.changePassphrase({
                     privateKeyArmored: privkey,
@@ -152,7 +183,6 @@ define(function(require) {
                     done();
                 });
             });
-
             it('should fail when old passphrase is incorrect', function(done) {
                 pgp.changePassphrase({
                     privateKeyArmored: privkey,
@@ -275,9 +305,21 @@ define(function(require) {
                 });
 
                 it('should work', function(done) {
-                    pgp.decrypt(ciphertext, pubkey, function(err, pt) {
+                    pgp.decrypt(ciphertext, pubkey, function(err, pt, signValid) {
                         expect(err).to.not.exist;
                         expect(pt).to.equal(message);
+                        expect(signValid).to.be.true;
+                        done();
+                    });
+                });
+
+                it('should decrypt but signValid should be undefined for wrong public key', function(done) {
+                    var wrongPubkey = '-----BEGIN PGP PUBLIC KEY BLOCK-----\r\nVersion: OpenPGP.js v.1.20131116\r\nComment: Whiteout Mail - http://whiteout.io\r\n\r\nxsBNBFKODs4BB/9iOF4THsjQMY+WEpT7ShgKxj4bHzRRaQkqczS4nZvP0U3g\r\nqeqCnbpagyeKXA+bhWFQW4GmXtgAoeD5PXs6AZYrw3tWNxLKu2Oe6Tp9K/XI\r\nxTMQ2wl4qZKDXHvuPsJ7cmgaWqpPyXtxA4zHHS3WrkI/6VzHAcI/y6x4szSB\r\nKgSuhI3hjh3s7TybUC1U6AfoQGx/S7e3WwlCOrK8GTClirN/2mCPRC5wuIft\r\nnkoMfA6jK8d2OPrJ63shy5cgwHOjQg/xuk46dNS7tkvGmbaa+X0PgqSKB+Hf\r\nYPPNS/ylg911DH9qa8BqYU2QpNh9jUKXSF+HbaOM+plWkCSAL7czV+R3ABEB\r\nAAHNLVdoaXRlb3V0IFVzZXIgPHNhZmV3aXRobWUudGVzdHVzZXJAZ21haWwu\r\nY29tPsLAXAQQAQgAEAUCUo4O2gkQ1/uT/N+/wjwAAN2cB/9gFRmAfvEQ2qz+\r\nWubmT2EsSSnjPMxzG4uyykFoa+TaZCWo2Xa2tQghmU103kEkQb1OEjRjpgwJ\r\nYX9Kghnl8DByM686L5AXnRyHP78qRJCLXSXl0AGicboUDp5sovaa4rswQceH\r\nvcdWgZ/mgHTRoiQeJddy9k+H6MPFiyFaVcFwegVsmpc+dCcC8yT+qh8ZIbyG\r\nRJU60PmKKN7LUusP+8DbSv39zCGJCBlVVKyA4MzdF5uM+sqTdXbKzOrT5DGd\r\nCZaox4s+w16Sq1rHzZKFWfQPfKLDB9pyA0ufCVRA3AF6BUi7G3ZqhZiHNhMP\r\nNvE45V/hS1PbZcfPVoUjE2qc1Ix1\r\n=7Wpe\r\n-----END PGP PUBLIC KEY BLOCK-----';
+
+                    pgp.decrypt(ciphertext, wrongPubkey, function(err, pt, signValid) {
+                        expect(err).to.not.exist;
+                        expect(pt).to.equal(message);
+                        expect(signValid).to.be.undefined;
                         done();
                     });
                 });

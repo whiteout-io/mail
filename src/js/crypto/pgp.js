@@ -10,7 +10,7 @@ define(function(require) {
 
     var PGP = function() {
         openpgp.config.prefer_hash_algorithm = openpgp.enums.hash.sha256;
-        openpgp.initWorker(config.workerPath + '/../lib/openpgp/openpgp.worker.min.js');
+        openpgp.initWorker(config.workerPath + '/../lib/openpgp/openpgp.worker.js');
     };
 
     /**
@@ -41,7 +41,7 @@ define(function(require) {
             }
 
             callback(null, {
-                keyId: keys.key.getKeyPacket().getKeyId().toHex().toUpperCase(),
+                keyId: keys.key.primaryKey.getKeyId().toHex().toUpperCase(),
                 privateKeyArmored: keys.privateKeyArmored,
                 publicKeyArmored: keys.publicKeyArmored
             });
@@ -53,7 +53,7 @@ define(function(require) {
      */
     PGP.prototype.getFingerprint = function(keyArmored) {
         function fingerprint(key) {
-            return key.getKeyPacket().getFingerprint().toUpperCase();
+            return key.primaryKey.getFingerprint().toUpperCase();
         }
 
         // process armored key input
@@ -78,7 +78,7 @@ define(function(require) {
         // process armored key input
         if (keyArmored) {
             key = openpgp.key.readArmored(keyArmored).keys[0];
-            return key.getKeyPacket().getKeyId().toHex().toUpperCase();
+            return key.primaryKey.getKeyId().toHex().toUpperCase();
         }
 
         // check already imported keys
@@ -86,8 +86,8 @@ define(function(require) {
             throw new Error('Cannot read key IDs... keys not set!');
         }
 
-        pubKeyId = this._publicKey.getKeyPacket().getKeyId().toHex().toUpperCase();
-        privKeyId = this._privateKey.getKeyPacket().getKeyId().toHex().toUpperCase();
+        pubKeyId = this._publicKey.primaryKey.getKeyId().toHex().toUpperCase();
+        privKeyId = this._privateKey.primaryKey.getKeyId().toHex().toUpperCase();
 
         if (!pubKeyId || !privKeyId || pubKeyId !== privKeyId) {
             throw new Error('Key IDs do not match!');
@@ -111,7 +111,7 @@ define(function(require) {
             throw new Error('Cannot read key params... keys not set!');
         }
 
-        packet = key.getKeyPacket();
+        packet = key.primaryKey;
 
         // read user names and email addresses
         userIds = [];
@@ -168,8 +168,8 @@ define(function(require) {
         }
 
         // check if keys have the same id
-        pubKeyId = this._publicKey.getKeyPacket().getKeyId().toHex();
-        privKeyId = this._privateKey.getKeyPacket().getKeyId().toHex();
+        pubKeyId = this._publicKey.primaryKey.getKeyId().toHex();
+        privKeyId = this._privateKey.primaryKey.getKeyId().toHex();
         if (!pubKeyId || !privKeyId || pubKeyId !== privKeyId) {
             resetKeys();
             callback(new Error('Key IDs dont match!'));
@@ -189,7 +189,7 @@ define(function(require) {
         }
 
         callback(null, {
-            keyId: this._publicKey.getKeyPacket().getKeyId().toHex().toUpperCase(),
+            keyId: this._publicKey.primaryKey.getKeyId().toHex().toUpperCase(),
             privateKeyArmored: this._privateKey.armor(),
             publicKeyArmored: this._publicKey.armor()
         });
@@ -281,7 +281,7 @@ define(function(require) {
      * You need to check if signatures are both present and valid in the callback!
      */
     PGP.prototype.decrypt = function(ciphertext, publicKeyArmored, callback) {
-        var publicKeys, message, signaturesValid, signaturesPresent;
+        var publicKeys, message, signaturesValid;
 
         // check keys
         if (!this._privateKey || !publicKeyArmored) {
@@ -294,7 +294,7 @@ define(function(require) {
             publicKeys = openpgp.key.readArmored(publicKeyArmored).keys;
             message = openpgp.message.readArmored(ciphertext);
         } catch (err) {
-            callback(new Error('Error decrypting PGP message!'));
+            callback(new Error('Error parsing encrypted PGP message!'));
             return;
         }
 
@@ -308,16 +308,21 @@ define(function(require) {
             }
 
             // check if signatures are valid
-            signaturesValid = true;
-            signaturesPresent = !!decrypted.signatures.length;
-            decrypted.signatures.forEach(function(sig) {
-                if (!sig.valid) {
-                    signaturesValid = false;
+            if (decrypted.signatures.length > 0) {
+                signaturesValid = true;
+                for (var i = 0; i < decrypted.signatures.length; i++) {
+                    if (decrypted.signatures[i].valid === false) {
+                        signaturesValid = false; // signature is wrong ... message was tampered with
+                        break;
+                    } else if (decrypted.signatures[i].valid === null) {
+                        signaturesValid = undefined; // signature not found for the specified public key
+                        break;
+                    }
                 }
-            });
+            }
 
             // return decrypted plaintext
-            callback(null, decrypted.text, signaturesPresent, signaturesValid);
+            callback(null, decrypted.text, signaturesValid);
         }
     };
 

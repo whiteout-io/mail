@@ -18,7 +18,7 @@
 			uuid: 'uuid/uuid',
 			forge: 'forge/forge.min',
 			punycode: 'punycode.min',
-			openpgp: 'openpgp/openpgp.min',
+			openpgp: 'openpgp/openpgp',
 			fastclick: 'fastclick/fastclick'
 		},
 		shim: {
