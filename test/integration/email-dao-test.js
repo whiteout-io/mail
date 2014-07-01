@@ -293,7 +293,7 @@ define(function(require) {
             userStorage.clear(done);
         });
 
-        it('should run beforeEach and afterEach', function(){
+        it('should run beforeEach and afterEach', function() {
             // afterEach clears userStorage
             expect(emailDao).to.exist;
         });
@@ -461,7 +461,7 @@ define(function(require) {
                             }, function(err) {
                                 expect(err).to.not.exist;
                                 expect(message.encrypted).to.be.true;
-                                expect(message.signed).to.be.false;
+                                expect(message.signed).to.be.undefined;
                                 expect(message.attachments.length).to.equal(1);
                                 expect(message.body).to.equal('test16');
                                 done();
@@ -527,7 +527,7 @@ define(function(require) {
                             }, function(err) {
                                 expect(err).to.not.exist;
                                 expect(message.encrypted).to.be.true;
-                                expect(message.signed).to.be.false;
+                                expect(message.signed).to.be.undefined;
                                 expect(message.attachments.length).to.equal(0);
                                 expect(message.body).to.equal('test13');
                                 done();
@@ -593,7 +593,7 @@ define(function(require) {
                             }, function(err) {
                                 expect(err).to.not.exist;
                                 expect(message.encrypted).to.be.true;
-                                expect(message.signed).to.be.false;
+                                expect(message.signed).to.be.undefined;
                                 expect(message.attachments.length).to.equal(1);
                                 expect(message.body).to.equal('test10');
                                 done();

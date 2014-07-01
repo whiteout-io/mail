@@ -839,13 +839,9 @@ define(function(require) {
 
             // get the receiver's public key to check the message signature
             var encryptedNode = filterBodyParts(message.bodyParts, 'encrypted')[0];
-            self._pgp.decrypt(encryptedNode.content, senderPublicKey.publicKey, function(err, decrypted, signaturesPresent, signaturesValid) {
+            self._pgp.decrypt(encryptedNode.content, senderPublicKey.publicKey, function(err, decrypted, signaturesValid) {
                 if (err || !decrypted) {
                     return showError(err.message || 'An error occurred during the decryption.');
-                }
-
-                if (signaturesPresent && !signaturesValid) {
-                    return callback(new Error('Could not verifying the authenticity of this message because PGP signature check failed! This message may have been tampered with!'));
                 }
 
                 // if the encrypted node contains pgp/inline, we must not parse it
@@ -881,7 +877,7 @@ define(function(require) {
 
                     // if the decryption worked and signatures are present, everything's fine.
                     // no error is thrown if signatures are not present
-                    message.signed = signaturesPresent;
+                    message.signed = signaturesValid;
                     message.decrypted = true;
 
                     // we're done here!

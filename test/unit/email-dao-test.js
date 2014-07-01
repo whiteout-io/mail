@@ -1239,7 +1239,7 @@ define(function(require) {
                     };
 
                     keychainStub.getReceiverPublicKey.withArgs(message.from[0].address).yieldsAsync(null, mockKeyPair.publicKey);
-                    pgpStub.decrypt.withArgs(ct, mockKeyPair.publicKey.publicKey).yieldsAsync(null, pt);
+                    pgpStub.decrypt.withArgs(ct, mockKeyPair.publicKey.publicKey).yieldsAsync(null, pt, true);
                     parseStub.withArgs({
                         bodyParts: [{
                             type: 'encrypted',
@@ -1291,7 +1291,7 @@ define(function(require) {
                     };
 
                     keychainStub.getReceiverPublicKey.withArgs(message.from[0].address).yieldsAsync(null, mockKeyPair.publicKey);
-                    pgpStub.decrypt.withArgs(ct, mockKeyPair.publicKey.publicKey).yieldsAsync(null, pt);
+                    pgpStub.decrypt.withArgs(ct, mockKeyPair.publicKey.publicKey).yieldsAsync(null, pt, true);
 
                     dao.decryptBody({
                         message: message
