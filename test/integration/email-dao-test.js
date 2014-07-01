@@ -461,7 +461,8 @@ define(function(require) {
                             }, function(err) {
                                 expect(err).to.not.exist;
                                 expect(message.encrypted).to.be.true;
-                                expect(message.signed).to.be.undefined;
+                                expect(message.signed).to.be.false;
+                                expect(message.signaturesValid).to.be.undefined;
                                 expect(message.attachments.length).to.equal(1);
                                 expect(message.body).to.equal('test16');
                                 done();
@@ -484,6 +485,7 @@ define(function(require) {
                                 expect(err).to.not.exist;
                                 expect(message.encrypted).to.be.true;
                                 expect(message.signed).to.be.true;
+                                expect(message.signaturesValid).to.be.true;
                                 expect(message.attachments.length).to.equal(1);
                                 expect(message.body).to.equal('test15');
                                 done();
@@ -506,6 +508,7 @@ define(function(require) {
                                 expect(err).to.not.exist;
                                 expect(message.encrypted).to.be.true;
                                 expect(message.signed).to.be.true;
+                                expect(message.signaturesValid).to.be.true;
                                 expect(message.attachments.length).to.equal(0);
                                 expect(message.body).to.equal('test12');
                                 done();
@@ -527,7 +530,8 @@ define(function(require) {
                             }, function(err) {
                                 expect(err).to.not.exist;
                                 expect(message.encrypted).to.be.true;
-                                expect(message.signed).to.be.undefined;
+                                expect(message.signed).to.be.false;
+                                expect(message.signaturesValid).to.be.undefined;
                                 expect(message.attachments.length).to.equal(0);
                                 expect(message.body).to.equal('test13');
                                 done();
@@ -550,6 +554,7 @@ define(function(require) {
                                 expect(err).to.not.exist;
                                 expect(message.encrypted).to.be.false;
                                 expect(message.signed).to.be.true;
+                                //TODO (check plaintext signatures): expect(message.signaturesValid).to.be.true;
                                 expect(message.attachments.length).to.equal(1);
                                 expect(message.body).to.equal('test17\n');
                                 done();
@@ -572,6 +577,7 @@ define(function(require) {
                                 expect(err).to.not.exist;
                                 expect(message.encrypted).to.be.false;
                                 expect(message.signed).to.be.true;
+                                //TODO (check plaintext signatures): expect(message.signaturesValid).to.be.true;
                                 expect(message.attachments.length).to.equal(0);
                                 expect(message.body).to.equal('test14');
                                 done();
@@ -593,7 +599,8 @@ define(function(require) {
                             }, function(err) {
                                 expect(err).to.not.exist;
                                 expect(message.encrypted).to.be.true;
-                                expect(message.signed).to.be.undefined;
+                                expect(message.signed).to.be.false;
+                                expect(message.signaturesValid).to.be.undefined;
                                 expect(message.attachments.length).to.equal(1);
                                 expect(message.body).to.equal('test10');
                                 done();
@@ -602,7 +609,7 @@ define(function(require) {
                     };
                 });
 
-                it.skip('should parse Thunderbird (attachment - PGP/MIME): Encrypted and signed', function(done) {
+                it('should parse Thunderbird (attachment - PGP/MIME): Encrypted and signed', function(done) {
                     emailDao.onIncomingMessage = function(messages) {
                         emailDao.getBody({
                             folder: currentFolder,
@@ -616,6 +623,7 @@ define(function(require) {
                                 expect(err).to.not.exist;
                                 expect(message.encrypted).to.be.true;
                                 expect(message.signed).to.be.true;
+                                expect(message.signaturesValid).to.be.true;
                                 expect(message.attachments.length).to.equal(1);
                                 expect(message.body).to.equal('test9');
                                 done();
@@ -624,7 +632,7 @@ define(function(require) {
                     };
                 });
 
-                it.skip('should parse Thunderbird (no attachment): Encrypted and signed', function(done) {
+                it('should parse Thunderbird (no attachment): Encrypted and signed', function(done) {
                     emailDao.onIncomingMessage = function(messages) {
                         emailDao.getBody({
                             folder: currentFolder,
@@ -638,6 +646,7 @@ define(function(require) {
                                 expect(err).to.not.exist;
                                 expect(message.encrypted).to.be.true;
                                 expect(message.signed).to.be.true;
+                                expect(message.signaturesValid).to.be.true;
                                 expect(message.attachments.length).to.equal(0);
                                 expect(message.body).to.equal('test4\n');
                                 done();
@@ -660,6 +669,7 @@ define(function(require) {
                                 expect(err).to.not.exist;
                                 expect(message.encrypted).to.be.true;
                                 expect(message.signed).to.be.false;
+                                expect(message.signaturesValid).to.be.undefined;
                                 expect(message.attachments.length).to.equal(0);
                                 expect(message.body).to.equal('test5\n');
                                 done();
@@ -682,6 +692,7 @@ define(function(require) {
                                 expect(err).to.not.exist;
                                 expect(message.encrypted).to.be.false;
                                 expect(message.signed).to.be.false;
+                                expect(message.signaturesValid).to.be.undefined;
                                 expect(message.attachments.length).to.equal(0);
                                 expect(message.body).to.equal('test8\n\n23.06.14 21:12, safewithme kirjutas:\n> test8');
                                 done();
@@ -704,6 +715,7 @@ define(function(require) {
                                 expect(err).to.not.exist;
                                 expect(message.encrypted).to.be.false;
                                 expect(message.signed).to.be.true;
+                                //TODO (check plaintext signatures): expect(message.signaturesValid).to.be.true;
                                 expect(message.attachments.length).to.equal(1);
                                 expect(message.body).to.equal('test11');
                                 done();
@@ -726,6 +738,7 @@ define(function(require) {
                                 expect(err).to.not.exist;
                                 expect(message.encrypted).to.be.false;
                                 expect(message.signed).to.be.true;
+                                //TODO (check plaintext signatures): expect(message.signaturesValid).to.be.true;
                                 expect(message.attachments.length).to.equal(0);
                                 expect(message.body).to.equal('test6');
                                 done();
