@@ -18,7 +18,11 @@
     "identity", {
       "socket": [
         "tcp-connect:imap.gmail.com:993",
-        "tcp-connect:smtp.gmail.com:465"
+        "tcp-connect:smtp.gmail.com:465",
+        "tcp-connect:secureimap.t-online.de:993",
+        "tcp-connect:securesmtp.t-online.de:465",
+        "tcp-connect:imap.mail.yahoo.com:993",
+        "tcp-connect:smtp.mail.yahoo.com:465"
       ]
     }
   ],

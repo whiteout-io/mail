@@ -6,19 +6,16 @@
     <li class="google enabled" popover="#google-info" wo-touch="connectToGoogle()">
       <div><img src="img/google_logo.png" alt="Google Mail"></div>
     </li>
-    <li class="whiteout disabled" popover="#whiteout-info">
+    <li class="whiteout disabled" popover="#whiteout-info" wo-touch="onError({message:'Whiteout Mailbox coming soon!', sync:true})">
       <div><img src="img/whiteout_logo.svg" alt="Whiteout Mailbox"></div>
     </li>
-    <li class="outlook disabled" popover="#outlook-info">
-      <div><img src="img/outlook_logo.jpg" alt="Outlook.com"></div>
-    </li>
-    <li class="yahoo disabled" popover="#yahoo-info">
-      <div><img src="img/yahoo_logo.png" alt="Yahoo! Mail"></div>
-    </li>
-    <li class="tonline disabled" popover="#tonline-info">
+    <li class="tonline disabled" popover="#tonline-info" wo-touch="connectToTonline()">
       <div><img src="img/tonline_logo.jpg" alt="T-Online"></div>
     </li>
-    <li class="other disabled" popover="#custom-info">
+    <li class="yahoo disabled" popover="#yahoo-info" wo-touch="connectToYahoo()">
+      <div><img src="img/yahoo_logo.png" alt="Yahoo! Mail"></div>
+    </li>
+    <li class="other disabled" popover="#custom-info" wo-touch="connectOther()">
       <h3>Custom server...</h3>
     </li>
   </ul>

@@ -8,6 +8,7 @@ requirejs([
     'js/controller/add-account',
     'js/controller/account',
     'js/controller/set-passphrase',
+    'js/controller/set-credentials',
     'js/controller/privatekey-upload',
     'js/controller/contacts',
     'js/controller/about',
@@ -33,6 +34,7 @@ requirejs([
     AddAccountCtrl,
     AccountCtrl,
     SetPassphraseCtrl,
+    SetCredentialsCtrl,
     PrivateKeyUploadCtrl,
     ContactsCtrl,
     AboutCtrl,
@@ -76,6 +78,10 @@ requirejs([
         $routeProvider.when('/add-account', {
             templateUrl: 'tpl/add-account.html',
             controller: AddAccountCtrl
+        });
+        $routeProvider.when('/set-credentials', {
+            templateUrl: 'tpl/set-credentials.html',
+            controller: SetCredentialsCtrl
         });
         $routeProvider.when('/login', {
             templateUrl: 'tpl/login.html',

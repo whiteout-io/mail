@@ -89,7 +89,7 @@ define(function(require) {
 
             it('should fail due to error in auth.getCredentials', function(done) {
                 isOnlineStub.returns(true);
-                authStub.getCredentials.withArgs({}).yields(new Error());
+                authStub.getCredentials.yields(new Error());
 
                 controller.onConnect(function(err) {
                     expect(err).to.exist;
@@ -100,10 +100,12 @@ define(function(require) {
 
             it('should work', function(done) {
                 isOnlineStub.returns(true);
-                authStub.getCredentials.withArgs({}).yields(null, {
+                authStub.getCredentials.yields(null, {
                     emailAddress: 'asdf@example.com',
                     oauthToken: 'token',
                     sslCert: 'cert'
+                    imap: {},
+                    smtp: {}
                 });
                 emailDaoStub.onConnect.yields();
 

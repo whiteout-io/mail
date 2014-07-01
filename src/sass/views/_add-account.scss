@@ -17,13 +17,22 @@
         margin: 0 auto;
         padding: 0;
         border-width: 1px;
-        border-style: solid;                
+        border-style: solid;
         border-color: $color-grey-lighter;
 
         li {
             position: relative;
             height: 68px;
             cursor: pointer;
+            &:hover,
+            &:focus {
+                opacity: 0.6;
+            }
+            &:active {
+                opacity: 1;
+                top: 1px;
+                left: 1px;
+            }
 
             &.google {
                 background-color: white;
@@ -80,7 +89,7 @@
                         width: 100%;
                     }
                 }
-            }     
+            }
 
             &.tonline {
                 background-color: white;
@@ -92,7 +101,7 @@
                     img {
                         width: 100%;
                     }
-                }           
+                }
             }
 
             &.other {
@@ -101,23 +110,6 @@
                     line-height: 68px;
                     font-size: 21px;
                     text-align: center;
-                }
-            }
-
-            &.disabled {
-                opacity: 0.2;
-            }
-
-            &.enabled {
-                &:hover,
-                &:focus {
-                    opacity: 0.6;
-                }
-
-                &:active {
-                    opacity: 1;
-                    top: 1px;
-                    left: 1px;
                 }
             }
         }

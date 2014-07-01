@@ -114,8 +114,7 @@ define(function(require) {
             return;
         }
 
-        // fetch pinned local ssl certificate
-        self._auth.getCredentials({}, function(err, credentials) {
+        self._auth.getCredentials(function(err, credentials) {
             if (err) {
                 callback(err);
                 return;
@@ -129,22 +128,25 @@ define(function(require) {
 
             auth = {
                 user: credentials.emailAddress,
-                xoauth2: credentials.oauthToken
+                xoauth2: credentials.oauthToken,
+                pass: credentials.password // password or oauthToken is undefined
             };
+
             imapOptions = {
-                secure: config.gmail.imap.secure,
-                port: config.gmail.imap.port,
-                host: config.gmail.imap.host,
+                secure: credentials.imap.secure,
+                port: credentials.imap.port,
+                host: credentials.imap.host,
                 auth: auth,
-                ca: [credentials.sslCert]
+                ca: credentials.imap.ca
             };
+            
             smtpOptions = {
-                secureConnection: config.gmail.smtp.secure,
-                port: config.gmail.smtp.port,
-                host: config.gmail.smtp.host,
+                secureConnection: credentials.smtp.secure,
+                port: credentials.smtp.port,
+                host: credentials.smtp.host,
                 auth: auth,
                 tls: {
-                    ca: [credentials.sslCert]
+                    ca: credentials.smtp.ca
                 }
             };
 
