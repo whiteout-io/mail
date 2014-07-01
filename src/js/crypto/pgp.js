@@ -134,6 +134,17 @@ define(function(require) {
     };
 
     /**
+     * Extract a public key from a private key
+     * @param  {String}   privateKeyArmored The private PGP key block
+     * @return {String}                     The publick PGP key block
+     */
+    PGP.prototype.extractPublicKey = function(privateKeyArmored) {
+        var privkey = openpgp.key.readArmored(privateKeyArmored).keys[0];
+        var pubkey = privkey.toPublic();
+        return pubkey.armor();
+    };
+
+    /**
      * Import the user's key pair
      */
     PGP.prototype.importKeys = function(options, callback) {
