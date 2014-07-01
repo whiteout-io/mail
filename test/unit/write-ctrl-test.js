@@ -13,7 +13,7 @@ define(function(require) {
     describe('Write controller unit test', function() {
         var ctrl, scope,
             origEmailDao, origOutbox, origKeychain,
-            emailDaoMock, keychainMock, outboxMock, emailAddress;
+            emailDaoMock, keychainMock, outboxMock, emailAddress, realname;
 
         beforeEach(function() {
             // the app controller is a singleton, we need to remember the
@@ -29,8 +29,10 @@ define(function(require) {
             appController._emailDao = emailDaoMock;
 
             emailAddress = 'fred@foo.com';
+            realname = 'Fred Foo';
             emailDaoMock._account = {
                 emailAddress: emailAddress,
+                realname: realname
             };
 
             keychainMock = sinon.createStubInstance(KeychainDAO);
@@ -357,7 +359,8 @@ define(function(require) {
 
                 outboxMock.put.withArgs(sinon.match(function(mail) {
                     expect(mail.from).to.deep.equal([{
-                        address: emailAddress
+                        address: emailAddress,
+                        name: realname
                     }]);
                     expect(mail.to).to.deep.equal(scope.to);
                     expect(mail.cc).to.deep.equal(scope.cc);

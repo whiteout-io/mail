@@ -1,10 +1,11 @@
 .view-login {
     position: relative;
-    min-height: 100%;
+    height: 100%;
     background-color: $color-grey-lightest;
     color: $color-grey-dark;
     text-align: center;
     padding: 20px;
+    overflow-y: auto;
 
     .logo {
         max-width: 700px;
@@ -38,7 +39,7 @@
             color: $color-blue;
         }
 
-        p {
+        p, label {
             line-height: 150%;
         }
 
@@ -49,7 +50,10 @@
         input {
             margin-right: 10px;
         }
+        label,
         input[type="text"],
+        input[type="email"],
+        input[type="number"],
         input[type="password"] {
             margin-bottom: 10px;
             width: 100%;
@@ -128,6 +132,41 @@
         input.code {
             margin-right: 0;
             width: auto;
+        }
+    }
+}
+
+.view-login-set-credentials {
+    .content {
+        max-width: 450px;
+
+        b, a {
+            text-decoration: none;
+        }
+
+        @include respond-to(desktop) {
+            input[type="text"],
+            input[type="password"],
+            input[type="file"] {
+                width: 100%;
+            }
+        }
+
+        .details {
+            div {
+                margin: 0;
+            }
+
+            label,
+            input[type="text"],
+            input[type="number"] {
+                width: auto;
+                display: inline-block;
+
+                &.username {
+                    width: 100%;
+                }
+            }
         }
     }
 }

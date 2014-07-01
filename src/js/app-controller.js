@@ -4,7 +4,8 @@
 define(function(require) {
     'use strict';
 
-    var Auth = require('js/bo/auth'),
+    var axe = require('axe'),
+        Auth = require('js/bo/auth'),
         PGP = require('js/crypto/pgp'),
         PgpMailer = require('pgpmailer'),
         OAuth = require('js/util/oauth'),
@@ -13,19 +14,18 @@ define(function(require) {
         mailreader = require('mailreader'),
         ImapClient = require('imap-client'),
         Crypto = require('js/crypto/crypto'),
-        axe = require('axe'),
         RestDAO = require('js/dao/rest-dao'),
-        EmailDAO = require('js/dao/email-dao'),
         appConfig = require('js/app-config'),
-        config = appConfig.config,
-        str = appConfig.string,
+        EmailDAO = require('js/dao/email-dao'),
         KeychainDAO = require('js/dao/keychain-dao'),
         PublicKeyDAO = require('js/dao/publickey-dao'),
         LawnchairDAO = require('js/dao/lawnchair-dao'),
         PrivateKeyDAO = require('js/dao/privatekey-dao'),
         InvitationDAO = require('js/dao/invitation-dao'),
         DeviceStorageDAO = require('js/dao/devicestorage-dao'),
-        UpdateHandler = require('js/util/update/update-handler');
+        UpdateHandler = require('js/util/update/update-handler'),
+        config = appConfig.config,
+        str = appConfig.string;
 
     var self = {};
 
@@ -33,6 +33,13 @@ define(function(require) {
      * Start the application
      */
     self.start = function(options, callback) {
+        if (self.started) {
+            return callback();
+        }
+
+        self.started = true;
+        self.onError = options.onError;
+
         // are we running in a cordova app or in a browser environment?
         if (window.cordova) {
             // wait for 'deviceready' event to make sure plugins are loaded
@@ -47,18 +54,18 @@ define(function(require) {
         function onDeviceReady() {
             axe.debug('Starting app.');
 
-            self.buildModules(options);
+            self.buildModules();
 
             // Handle offline and online gracefully
-            window.addEventListener('online', self.onConnect.bind(self, options.onError));
+            window.addEventListener('online', self.onConnect.bind(self, self.onError));
             window.addEventListener('offline', self.onDisconnect.bind(self));
 
             self._appConfigStore.init('app-config', callback);
         }
     };
 
-    self.buildModules = function(options) {
-        var lawnchairDao, restDao, pubkeyDao, privkeyDao, crypto, emailDao, keychain, pgp, userStorage, pgpbuilder, oauth, appConfigStore;
+    self.buildModules = function() {
+        var lawnchairDao, restDao, pubkeyDao, privkeyDao, crypto, emailDao, keychain, pgp, userStorage, pgpbuilder, oauth, appConfigStore, auth;
 
         // start the mailreader's worker thread
         mailreader.startWorker(config.workerPath + '/../lib/mailreader-parser-worker.js');
@@ -77,7 +84,7 @@ define(function(require) {
             var message = params.newKey ? str.updatePublicKeyMsgNewKey : str.updatePublicKeyMsgRemovedKey;
             message = message.replace('{0}', params.userId);
 
-            options.onError({
+            self.onError({
                 title: str.updatePublicKeyTitle,
                 message: message,
                 positiveBtnStr: str.updatePublicKeyPosBtn,
@@ -88,15 +95,15 @@ define(function(require) {
         };
 
         self._appConfigStore = appConfigStore = new DeviceStorageDAO(new LawnchairDAO());
-        self._auth = new Auth(appConfigStore, oauth, new RestDAO('/ca'));
+        self._auth = auth = new Auth(appConfigStore, oauth, pgp);
         self._userStorage = userStorage = new DeviceStorageDAO(lawnchairDao);
         self._invitationDao = new InvitationDAO(restDao);
         self._pgpbuilder = pgpbuilder = new PgpBuilder();
         self._emailDao = emailDao = new EmailDAO(keychain, pgp, userStorage, pgpbuilder, mailreader);
         self._outboxBo = new OutboxBO(emailDao, keychain, userStorage);
-        self._updateHandler = new UpdateHandler(appConfigStore, userStorage);
+        self._updateHandler = new UpdateHandler(appConfigStore, userStorage, auth);
 
-        emailDao.onError = options.onError;
+        emailDao.onError = self.onError;
     };
 
     self.isOnline = function() {
@@ -114,8 +121,7 @@ define(function(require) {
             return;
         }
 
-        // fetch pinned local ssl certificate
-        self._auth.getCredentials({}, function(err, credentials) {
+        self._auth.getCredentials(function(err, credentials) {
             if (err) {
                 callback(err);
                 return;
@@ -125,32 +131,18 @@ define(function(require) {
         });
 
         function initClients(credentials) {
-            var auth, imapOptions, imapClient, smtpOptions, pgpMailer;
-
-            auth = {
-                user: credentials.emailAddress,
-                xoauth2: credentials.oauthToken
-            };
-            imapOptions = {
-                secure: config.gmail.imap.secure,
-                port: config.gmail.imap.port,
-                host: config.gmail.imap.host,
-                auth: auth,
-                ca: [credentials.sslCert]
-            };
-            smtpOptions = {
-                secureConnection: config.gmail.smtp.secure,
-                port: config.gmail.smtp.port,
-                host: config.gmail.smtp.host,
-                auth: auth,
-                tls: {
-                    ca: [credentials.sslCert]
-                }
-            };
-
-            pgpMailer = new PgpMailer(smtpOptions, self._pgpbuilder);
-            imapClient = new ImapClient(imapOptions);
+            var pgpMailer = new PgpMailer(credentials.smtp, self._pgpbuilder);
+            var imapClient = new ImapClient(credentials.imap);
             imapClient.onError = onImapError;
+
+            // certificate update handling
+            imapClient.onCert = self._auth.handleCertificateUpdate.bind(self._auth, 'imap', self.onConnect, self.onError);
+            pgpMailer.onCert = self._auth.handleCertificateUpdate.bind(self._auth, 'smtp', self.onConnect, self.onError);
+
+            // after-setup configuration depending on the provider:
+            // gmail does not require you to upload to the sent items folder
+            // after successful sending, whereas most other providers do
+            self._emailDao.ignoreUploadOnSent = !!(config[self._auth.provider] && config[self._auth.provider].ignoreUploadOnSent);
 
             // connect to clients
             self._emailDao.onConnect({
@@ -160,17 +152,20 @@ define(function(require) {
         }
 
         function onImapError(error) {
-            axe.debug('IMAP error.' + (error.errMsg || error.message) + (error.stack ? ('\n' + error.stack) : ''));
-            axe.debug('IMAP reconnecting...');
-            // re-init client modules on error
-            self.onConnect(function(err) {
-                if (err) {
-                    axe.error('IMAP reconnect failed! ' + (err.errMsg || err.message) + (err.stack ? ('\n' + err.stack) : ''));
-                    return;
-                }
+            axe.debug('IMAP connection error. Attempting reconnect in ' + config.reconnectInterval + ' ms. Error: ' + (error.errMsg || error.message) + (error.stack ? ('\n' + error.stack) : ''));
 
-                axe.debug('IMAP reconnect attempt complete.');
-            });
+            setTimeout(function() {
+                axe.debug('IMAP reconnecting...');
+                // re-init client modules on error
+                self.onConnect(function(err) {
+                    if (err) {
+                        axe.error('IMAP reconnect attempt failed! ' + (err.errMsg || err.message) + (err.stack ? ('\n' + err.stack) : ''));
+                        return;
+                    }
+
+                    axe.debug('IMAP reconnect attempt complete.');
+                });
+            }, config.reconnectInterval);
         }
     };
 
@@ -221,6 +216,7 @@ define(function(require) {
 
             // account information for the email dao
             var account = {
+                realname: options.realname,
                 emailAddress: options.emailAddress,
                 asymKeySize: config.asymKeySize
             };

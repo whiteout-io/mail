@@ -2,12 +2,14 @@ define(function(require) {
     'use strict';
 
     var DeviceStorageDAO = require('js/dao/devicestorage-dao'),
+        Auth = require('js/bo/auth'),
         cfg = require('js/app-config').config,
         UpdateHandler = require('js/util/update/update-handler'),
+        config = require('js/app-config').config,
         expect = chai.expect;
 
     describe('UpdateHandler', function() {
-        var updateHandler, appConfigStorageStub, userStorageStub, origDbVersion;
+        var updateHandler, appConfigStorageStub, authStub, userStorageStub, origDbVersion;
 
         chai.Assertion.includeStack = true;
 
@@ -15,7 +17,8 @@ define(function(require) {
             origDbVersion = cfg.dbVersion;
             appConfigStorageStub = sinon.createStubInstance(DeviceStorageDAO);
             userStorageStub = sinon.createStubInstance(DeviceStorageDAO);
-            updateHandler = new UpdateHandler(appConfigStorageStub, userStorageStub);
+            authStub = sinon.createStubInstance(Auth);
+            updateHandler = new UpdateHandler(appConfigStorageStub, userStorageStub, authStub);
         });
 
         afterEach(function() {
@@ -137,7 +140,7 @@ define(function(require) {
 
                 it('should fail when persisting database version fails', function(done) {
                     userStorageStub.removeList.yieldsAsync();
-                    appConfigStorageStub.storeList.yieldsAsync({});
+                    appConfigStorageStub.storeList.yieldsAsync(new Error());
 
                     updateHandler.update(function(error) {
                         expect(error).to.exist;
@@ -149,7 +152,7 @@ define(function(require) {
                 });
 
                 it('should fail when wiping emails from database fails', function(done) {
-                    userStorageStub.removeList.yieldsAsync({});
+                    userStorageStub.removeList.yieldsAsync(new Error());
 
                     updateHandler.update(function(error) {
                         expect(error).to.exist;
@@ -190,7 +193,7 @@ define(function(require) {
 
                 it('should fail when persisting database version fails', function(done) {
                     userStorageStub.removeList.yieldsAsync();
-                    appConfigStorageStub.storeList.yieldsAsync({});
+                    appConfigStorageStub.storeList.yieldsAsync(new Error());
 
                     updateHandler.update(function(error) {
                         expect(error).to.exist;
@@ -202,7 +205,7 @@ define(function(require) {
                 });
 
                 it('should fail when wiping emails from database fails', function(done) {
-                    userStorageStub.removeList.yieldsAsync({});
+                    userStorageStub.removeList.yieldsAsync(new Error());
 
                     updateHandler.update(function(error) {
                         expect(error).to.exist;
@@ -243,7 +246,7 @@ define(function(require) {
 
                 it('should fail when persisting database version fails', function(done) {
                     userStorageStub.removeList.yieldsAsync();
-                    appConfigStorageStub.storeList.yieldsAsync({});
+                    appConfigStorageStub.storeList.yieldsAsync(new Error());
 
                     updateHandler.update(function(error) {
                         expect(error).to.exist;
@@ -255,11 +258,89 @@ define(function(require) {
                 });
 
                 it('should fail when wiping emails from database fails', function(done) {
-                    userStorageStub.removeList.yieldsAsync({});
+                    userStorageStub.removeList.yieldsAsync(new Error());
 
                     updateHandler.update(function(error) {
                         expect(error).to.exist;
                         expect(userStorageStub.removeList.calledOnce).to.be.true;
+                        expect(appConfigStorageStub.storeList.called).to.be.false;
+
+                        done();
+                    });
+                });
+            });
+            describe('v3 -> v4', function() {
+                var EMAIL_ADDR_DB_KEY = 'emailaddress';
+                var USERNAME_DB_KEY = 'username';
+                var PROVIDER_DB_KEY = 'provider';
+                var IMAP_DB_KEY = 'imap';
+                var SMTP_DB_KEY = 'smtp';
+                var REALNAME_DB_KEY = 'realname';
+                var emailaddress = 'bla@blubb.io';
+                
+                var imap = config.gmail.imap,
+                    smtp = config.gmail.smtp;
+
+                beforeEach(function() {
+                    cfg.dbVersion = 4; // app requires database version 4
+                    appConfigStorageStub.listItems.withArgs(versionDbType).yieldsAsync(null, [3]); // database version is 3
+                });
+
+                it('should add gmail as mail service provider with email address and no provider present in db', function(done) {
+                    appConfigStorageStub.listItems.withArgs(EMAIL_ADDR_DB_KEY).yieldsAsync(null, [emailaddress]);
+                    appConfigStorageStub.listItems.withArgs(PROVIDER_DB_KEY).yieldsAsync(null, []);
+                    appConfigStorageStub.storeList.withArgs([4], versionDbType).yieldsAsync();
+                    appConfigStorageStub.storeList.withArgs(['gmail'], PROVIDER_DB_KEY).yieldsAsync();
+                    appConfigStorageStub.storeList.withArgs([emailaddress], USERNAME_DB_KEY).yieldsAsync();
+                    appConfigStorageStub.storeList.withArgs([imap], IMAP_DB_KEY).yieldsAsync();
+                    appConfigStorageStub.storeList.withArgs([smtp], SMTP_DB_KEY).yieldsAsync();
+                    appConfigStorageStub.storeList.withArgs([''], REALNAME_DB_KEY).yieldsAsync();
+                    authStub._loadCredentials.yieldsAsync();
+
+                    updateHandler.update(function(error) {
+                        expect(error).to.not.exist;
+                        expect(appConfigStorageStub.storeList.callCount).to.equal(6);
+                        expect(appConfigStorageStub.listItems.calledThrice).to.be.true;
+                        expect(authStub._loadCredentials.calledOnce).to.be.true;
+
+                        done();
+                    });
+                });
+
+                it('should not add a provider when no email adress is in db', function(done) {
+                    appConfigStorageStub.listItems.withArgs(EMAIL_ADDR_DB_KEY).yieldsAsync(null, []);
+                    appConfigStorageStub.listItems.withArgs(PROVIDER_DB_KEY).yieldsAsync(null, []);
+                    appConfigStorageStub.storeList.withArgs([4], versionDbType).yieldsAsync();
+
+                    updateHandler.update(function(error) {
+                        expect(error).to.not.exist;
+                        expect(appConfigStorageStub.storeList.calledOnce).to.be.true;
+                        expect(appConfigStorageStub.listItems.calledThrice).to.be.true;
+
+                        done();
+                    });
+                });
+
+                it('should fail when appConfigStore write fails', function(done) {
+                    appConfigStorageStub.listItems.yieldsAsync(null, []);
+                    appConfigStorageStub.storeList.yieldsAsync(new Error());
+
+                    updateHandler.update(function(error) {
+                        expect(error).to.exist;
+                        expect(appConfigStorageStub.listItems.calledThrice).to.be.true;
+                        expect(appConfigStorageStub.storeList.calledOnce).to.be.true;
+
+                        done();
+                    });
+                });
+
+                it('should fail when appConfigStore read fails', function(done) {
+                    appConfigStorageStub.listItems.withArgs(EMAIL_ADDR_DB_KEY).yieldsAsync(new Error());
+                    appConfigStorageStub.storeList.yieldsAsync(new Error());
+
+                    updateHandler.update(function(error) {
+                        expect(error).to.exist;
+                        expect(appConfigStorageStub.listItems.calledTwice).to.be.true;
                         expect(appConfigStorageStub.storeList.called).to.be.false;
 
                         done();

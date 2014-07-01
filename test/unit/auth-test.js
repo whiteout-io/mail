@@ -3,226 +3,332 @@ define(function(require) {
 
     var Auth = require('js/bo/auth'),
         OAuth = require('js/util/oauth'),
-        RestDAO = require('js/dao/rest-dao'),
+        PGP = require('js/crypto/pgp'),
         DeviceStorageDAO = require('js/dao/devicestorage-dao'),
         expect = chai.expect;
 
     describe('Auth unit tests', function() {
-        var auth, appConfigStoreStub, oauthStub, caStub;
+        // Constancts
+        var EMAIL_ADDR_DB_KEY = 'emailaddress';
+        var USERNAME_DB_KEY = 'username';
+        var REALNAME_DB_KEY = 'realname';
+        var PASSWD_DB_KEY = 'password';
+        var PROVIDER_DB_KEY = 'provider';
+        var IMAP_DB_KEY = 'imap';
+        var SMTP_DB_KEY = 'smtp';
+        // SUT
+        var auth;
+
+        // Dependencies
+        var storageStub, oauthStub, pgpStub;
+
+        // test data
+        var emailAddress = 'bla@blubb.com';
+        var password = 'passwordpasswordpassword';
+        var encryptedPassword = 'pgppasswordpgppassword';
+        var oauthToken = 'tokentokentokentoken';
+        var provider = 'gmail';
+        var realname = 'Bla Blubb';
+        var username = 'bla';
+        var imap = {
+            host: 'mail.blablubb.com',
+            port: 123,
+            secure: true,
+            ca: 'PEMPEMPEMPEMPEMPEMPEMPEMPEMPEM'
+        };
+        var smtp = {
+            host: 'mail.blablubb.com',
+            port: 456,
+            secure: true,
+            ca: 'PEMPEMPEMPEMPEMPEMPEMPEMPEMPEM'
+        };
 
         beforeEach(function() {
-            appConfigStoreStub = sinon.createStubInstance(DeviceStorageDAO);
+            storageStub = sinon.createStubInstance(DeviceStorageDAO);
             oauthStub = sinon.createStubInstance(OAuth);
-            caStub = sinon.createStubInstance(RestDAO);
-            auth = new Auth(appConfigStoreStub, oauthStub, caStub);
+            pgpStub = sinon.createStubInstance(PGP);
+            auth = new Auth(storageStub, oauthStub, pgpStub);
         });
 
-        afterEach(function() {});
+        describe('#getCredentials', function() {
+            it('should load credentials and retrieve credentials from cfg', function(done) {
+                storageStub.listItems.withArgs(EMAIL_ADDR_DB_KEY, 0, null).yieldsAsync(null, [emailAddress]);
+                storageStub.listItems.withArgs(PASSWD_DB_KEY, 0, null).yieldsAsync(null, [encryptedPassword]);
+                storageStub.listItems.withArgs(PROVIDER_DB_KEY, 0, null).yieldsAsync(null, [provider]);
+                storageStub.listItems.withArgs(USERNAME_DB_KEY, 0, null).yieldsAsync(null, [username]);
+                storageStub.listItems.withArgs(REALNAME_DB_KEY, 0, null).yieldsAsync(null, [realname]);
+                storageStub.listItems.withArgs(IMAP_DB_KEY, 0, null).yieldsAsync(null, [imap]);
+                storageStub.listItems.withArgs(SMTP_DB_KEY, 0, null).yieldsAsync(null, [smtp]);
+                pgpStub.decrypt.withArgs(encryptedPassword, undefined).yields(null, password);
 
-        describe('getCredentials', function() {
-            var getCertificateStub, queryEmailAddressStub, getEmailAddressFromConfigStub;
-
-            beforeEach(function() {
-                getCertificateStub = sinon.stub(auth, 'getCertificate');
-                queryEmailAddressStub = sinon.stub(auth, 'queryEmailAddress');
-                getEmailAddressFromConfigStub = sinon.stub(auth, 'getEmailAddressFromConfig');
-            });
-
-            it('should work', function(done) {
-                getCertificateStub.yields(null, 'cert');
-                getEmailAddressFromConfigStub.yields(null, 'asdf@example.com');
-                queryEmailAddressStub.withArgs('token').yields(null, 'asdf@example.com');
-                oauthStub.getOAuthToken.withArgs('asdf@example.com').yields(null, 'token');
-
-                auth.getCredentials({}, function(err, credentials) {
+                auth.getCredentials(function(err, cred) {
                     expect(err).to.not.exist;
-                    expect(credentials.emailAddress).to.equal('asdf@example.com');
-                    expect(credentials.oauthToken).to.equal('token');
-                    expect(credentials.sslCert).to.equal('cert');
-                    done();
-                });
-            });
 
-            it('should fail due to error in getCertificate', function(done) {
-                getCertificateStub.yields(new Error());
+                    expect(auth.provider).to.equal(provider);
+                    expect(auth.emailAddress).to.equal(emailAddress);
+                    expect(auth.password).to.equal(password);
 
-                auth.getCredentials({}, function(err, credentials) {
-                    expect(err).to.exist;
-                    expect(credentials).to.not.exist;
-                    done();
-                });
-            });
+                    expect(cred.imap.host).to.equal(imap.host);
+                    expect(cred.imap.port).to.equal(imap.port);
+                    expect(cred.imap.secure).to.equal(imap.secure);
+                    expect(cred.imap.ca).to.equal(imap.ca);
+                    expect(cred.imap.auth.user).to.equal(username);
+                    expect(cred.imap.auth.pass).to.equal(password);
 
-            it('should fail due to error in getOAuthToken', function(done) {
-                getCertificateStub.yields(null, 'cert');
-                getEmailAddressFromConfigStub.yields(null, 'asdf@example.com');
-                oauthStub.getOAuthToken.yields(new Error());
+                    expect(cred.smtp.host).to.equal(smtp.host);
+                    expect(cred.smtp.port).to.equal(smtp.port);
+                    expect(cred.smtp.secure).to.equal(smtp.secure);
+                    expect(cred.smtp.ca).to.equal(smtp.ca);
+                    expect(cred.smtp.auth.user).to.equal(username);
+                    expect(cred.smtp.auth.pass).to.equal(password);
 
-                auth.getCredentials({}, function(err, credentials) {
-                    expect(err).to.exist;
-                    expect(credentials).to.not.exist;
-                    done();
-                });
-            });
+                    expect(storageStub.listItems.callCount).to.equal(7);
+                    expect(pgpStub.decrypt.calledOnce).to.be.true;
 
-            it('should fail due to error in queryEmailAddress', function(done) {
-                getCertificateStub.yields(null, 'cert');
-                getEmailAddressFromConfigStub.yields(null, 'asdf@example.com');
-                queryEmailAddressStub.withArgs('token').yields(new Error());
-                oauthStub.getOAuthToken.yields(null, 'token');
-
-                auth.getCredentials({}, function(err, credentials) {
-                    expect(err).to.exist;
-                    expect(credentials).to.not.exist;
                     done();
                 });
             });
         });
 
-        describe('getCertificate', function() {
-            it('should work', function(done) {
-                caStub.get.yields(null, 'cert');
+        describe('#setCredentials', function() {
+            it('should set the credentials', function() {
+                auth.setCredentials({
+                    provider: 'albhsvadlbvsdalbsadflb',
+                    emailAddress: emailAddress,
+                    username: username,
+                    realname: realname,
+                    password: password,
+                    imap: imap,
+                    smtp: smtp
+                });
 
-                auth.getCertificate(function(err, cert) {
+                expect(auth.provider).to.equal('albhsvadlbvsdalbsadflb');
+                expect(auth.emailAddress).to.equal(emailAddress);
+                expect(auth.username).to.equal(username);
+                expect(auth.realname).to.equal(realname);
+                expect(auth.password).to.equal(password);
+                expect(auth.smtp).to.equal(smtp);
+                expect(auth.imap).to.equal(imap);
+                expect(auth.credentialsDirty).to.be.true;
+            });
+
+        });
+
+        describe('#storeCredentials', function() {
+            it('should persist ALL the things!', function(done) {
+                auth.credentialsDirty = true;
+                auth.emailAddress = emailAddress;
+                auth.username = username;
+                auth.realname = realname;
+                auth.password = password;
+                auth.smtp = smtp;
+                auth.imap = imap;
+                auth.provider = provider;
+
+                storageStub.storeList.withArgs([encryptedPassword], PASSWD_DB_KEY).yieldsAsync();
+                storageStub.storeList.withArgs([emailAddress], EMAIL_ADDR_DB_KEY).yieldsAsync();
+                storageStub.storeList.withArgs([provider], PROVIDER_DB_KEY).yieldsAsync();
+                storageStub.storeList.withArgs([username], USERNAME_DB_KEY).yieldsAsync();
+                storageStub.storeList.withArgs([realname], REALNAME_DB_KEY).yieldsAsync();
+                storageStub.storeList.withArgs([imap], IMAP_DB_KEY).yieldsAsync();
+                storageStub.storeList.withArgs([smtp], SMTP_DB_KEY).yieldsAsync();
+                pgpStub.encrypt.withArgs(password).yields(null, encryptedPassword);
+
+                auth.storeCredentials(function(err) {
                     expect(err).to.not.exist;
-                    expect(cert).to.equal('cert');
+
+                    expect(storageStub.storeList.callCount).to.equal(7);
+                    expect(pgpStub.encrypt.calledOnce).to.be.true;
+
+                    done();
+                });
+            });
+        });
+
+        describe('#getOAuthToken', function() {
+            it('should fetch token with known email address', function(done) {
+                auth.emailAddress = emailAddress;
+                oauthStub.getOAuthToken.withArgs(emailAddress).yieldsAsync(null, oauthToken);
+
+                auth.getOAuthToken(function(err) {
+                    expect(err).to.not.exist;
+                    expect(auth.emailAddress).to.equal(emailAddress);
+                    expect(auth.oauthToken).to.equal(oauthToken);
+
+                    expect(oauthStub.getOAuthToken.calledOnce).to.be.true;
+
+                    done();
+                });
+            });
+
+            it('should fetch token with unknown email address', function(done) {
+                oauthStub.getOAuthToken.withArgs(undefined).yieldsAsync(null, oauthToken);
+                oauthStub.queryEmailAddress.withArgs(oauthToken).yieldsAsync(null, emailAddress);
+
+                auth.getOAuthToken(function(err) {
+                    expect(err).to.not.exist;
+                    expect(auth.emailAddress).to.equal(emailAddress);
+                    expect(auth.oauthToken).to.equal(oauthToken);
+
+                    expect(oauthStub.getOAuthToken.calledOnce).to.be.true;
+                    expect(oauthStub.queryEmailAddress.calledOnce).to.be.true;
+
+                    done();
+                });
+            });
+
+            it('should fail when email address fetch fails', function(done) {
+                oauthStub.getOAuthToken.yieldsAsync(null, oauthToken);
+                oauthStub.queryEmailAddress.yieldsAsync(new Error());
+
+                auth.getOAuthToken(function(err) {
+                    expect(err).to.exist;
+                    expect(auth.emailAddress).to.not.exist;
+                    expect(auth.oauthToken).to.not.exist;
+
+                    expect(oauthStub.getOAuthToken.calledOnce).to.be.true;
+                    expect(oauthStub.queryEmailAddress.calledOnce).to.be.true;
+
+                    done();
+                });
+            });
+
+            it('should fail when oauth fetch fails', function(done) {
+                oauthStub.getOAuthToken.yieldsAsync(new Error());
+
+                auth.getOAuthToken(function(err) {
+                    expect(err).to.exist;
+                    expect(auth.emailAddress).to.not.exist;
+                    expect(auth.oauthToken).to.not.exist;
+
+                    expect(oauthStub.getOAuthToken.calledOnce).to.be.true;
+                    expect(oauthStub.queryEmailAddress.called).to.be.false;
+
+                    done();
+                });
+            });
+        });
+
+        describe('#_loadCredentials', function() {
+            it('should work', function(done) {
+                storageStub.listItems.withArgs(EMAIL_ADDR_DB_KEY, 0, null).yieldsAsync(null, [emailAddress]);
+                storageStub.listItems.withArgs(PASSWD_DB_KEY, 0, null).yieldsAsync(null, [encryptedPassword]);
+                storageStub.listItems.withArgs(PROVIDER_DB_KEY, 0, null).yieldsAsync(null, [provider]);
+                storageStub.listItems.withArgs(USERNAME_DB_KEY, 0, null).yieldsAsync(null, [username]);
+                storageStub.listItems.withArgs(REALNAME_DB_KEY, 0, null).yieldsAsync(null, [realname]);
+                storageStub.listItems.withArgs(IMAP_DB_KEY, 0, null).yieldsAsync(null, [imap]);
+                storageStub.listItems.withArgs(SMTP_DB_KEY, 0, null).yieldsAsync(null, [smtp]);
+
+                auth._loadCredentials(function(err) {
+                    expect(err).to.not.exist;
+                    expect(auth.emailAddress).to.equal(emailAddress);
+                    expect(auth.password).to.equal(encryptedPassword);
+                    expect(auth.provider).to.equal(provider);
+                    expect(auth.imap).to.equal(imap);
+                    expect(auth.smtp).to.equal(smtp);
+                    expect(auth.username).to.equal(username);
+                    expect(auth.realname).to.equal(realname);
+
+                    expect(auth.passwordNeedsDecryption).to.be.true;
+
+                    expect(storageStub.listItems.callCount).to.equal(7);
+
                     done();
                 });
             });
 
             it('should fail', function(done) {
-                caStub.get.yields(null, '');
+                storageStub.listItems.yieldsAsync(new Error());
 
-                auth.getCertificate(function(err, cert) {
+                auth._loadCredentials(function(err) {
                     expect(err).to.exist;
-                    expect(cert).to.not.exist;
+                    expect(auth.emailAddress).to.not.exist;
+                    expect(auth.password).to.not.exist;
+                    expect(auth.provider).to.not.exist;
+                    expect(auth.imap).to.not.exist;
+                    expect(auth.smtp).to.not.exist;
+                    expect(auth.username).to.not.exist;
+                    expect(auth.realname).to.not.exist;
+
+                    expect(storageStub.listItems.calledOnce).to.be.true;
+
                     done();
                 });
             });
         });
 
-        describe('getEmailAddress', function() {
-            var getEmailAddressFromConfigStub;
+        describe('#handleCertificateUpdate', function() {
+            var storeCredentialsStub;
+            var dummyCert = 'cert';
+
+            function onConnectDummy() {}
 
             beforeEach(function() {
-                getEmailAddressFromConfigStub = sinon.stub(auth, 'getEmailAddressFromConfig');
+                storeCredentialsStub = sinon.stub(auth, 'storeCredentials');
             });
 
-            it('should work', function(done) {
-                getEmailAddressFromConfigStub.yields(null, 'asdf@example.com');
+            it('should work for Trust on first use', function(done) {
+                auth.imap = {};
+                storeCredentialsStub.yields();
 
-                auth.getEmailAddress(function(err, emailAddress) {
+                function callback(err) {
                     expect(err).to.not.exist;
-                    expect(emailAddress).to.equal('asdf@example.com');
+                    expect(storeCredentialsStub.callCount).to.equal(1);
                     done();
-                });
+                }
+                auth.handleCertificateUpdate('imap', onConnectDummy, callback, dummyCert);
             });
 
-            it('should fail', function(done) {
-                getEmailAddressFromConfigStub.yields(new Error());
+            it('should work for stored cert', function() {
+                auth.imap = {
+                    ca: dummyCert
+                };
+                storeCredentialsStub.yields();
 
-                auth.getEmailAddress(function(err, emailAddress) {
+                auth.handleCertificateUpdate('imap', onConnectDummy, onConnectDummy, dummyCert);
+                expect(storeCredentialsStub.callCount).to.equal(0);
+            });
+
+            it('should work for pinned cert', function(done) {
+                auth.imap = {
+                    ca: 'other',
+                    pinned: true
+                };
+                storeCredentialsStub.yields();
+
+                function callback(err) {
                     expect(err).to.exist;
-                    expect(emailAddress).to.not.exist;
+                    expect(err.message).to.exist;
+                    expect(storeCredentialsStub.callCount).to.equal(0);
                     done();
-                });
+                }
+                auth.handleCertificateUpdate('imap', onConnectDummy, callback, dummyCert);
+            });
+
+            it('should work for updated cert', function(done) {
+                auth.imap = {
+                    ca: 'other'
+                };
+                storeCredentialsStub.yields();
+
+                function callback(err) {
+                    if (err && err.callback) {
+                        expect(err).to.exist;
+                        expect(err.message).to.exist;
+                        expect(storeCredentialsStub.callCount).to.equal(0);
+                        err.callback(true);
+                    } else {
+                        expect(storeCredentialsStub.callCount).to.equal(1);
+                        done();
+                    }
+                }
+
+                function onConnect(callback) {
+                    callback();
+                }
+
+                auth.handleCertificateUpdate('imap', onConnect, callback, dummyCert);
             });
         });
-
-        describe('getEmailAddressFromConfig', function() {
-            it('should work', function(done) {
-                appConfigStoreStub.listItems.withArgs('emailaddress', 0, null).yields(null, ['asdf@example.com']);
-
-                auth.getEmailAddressFromConfig(function(err, emailAddress) {
-                    expect(err).to.not.exist;
-                    expect(emailAddress).to.equal('asdf@example.com');
-                    done();
-                });
-            });
-
-            it('should return empty result', function(done) {
-                appConfigStoreStub.listItems.withArgs('emailaddress', 0, null).yields(null, []);
-
-                auth.getEmailAddressFromConfig(function(err, emailAddress) {
-                    expect(err).to.not.exist;
-                    expect(emailAddress).to.not.exist;
-                    done();
-                });
-            });
-
-            it('should fail', function(done) {
-                appConfigStoreStub.listItems.withArgs('emailaddress', 0, null).yields(new Error());
-
-                auth.getEmailAddressFromConfig(function(err, emailAddress) {
-                    expect(err).to.exist;
-                    expect(emailAddress).to.not.exist;
-                    done();
-                });
-            });
-        });
-
-        describe('queryEmailAddress', function() {
-            var getEmailAddressFromConfigStub;
-
-            beforeEach(function() {
-                getEmailAddressFromConfigStub = sinon.stub(auth, 'getEmailAddressFromConfig');
-            });
-
-            it('should if already cached', function(done) {
-                getEmailAddressFromConfigStub.yields(null, 'asdf@example.com');
-
-                auth.queryEmailAddress('token', function(err, emailAddress) {
-                    expect(err).to.not.exist;
-                    expect(emailAddress).to.equal('asdf@example.com');
-                    done();
-                });
-            });
-
-            it('should when querying oauth api', function(done) {
-                getEmailAddressFromConfigStub.yields();
-                oauthStub.queryEmailAddress.withArgs('token').yields(null, 'asdf@example.com');
-                appConfigStoreStub.storeList.withArgs(['asdf@example.com'], 'emailaddress').yields();
-
-                auth.queryEmailAddress('token', function(err, emailAddress) {
-                    expect(err).to.not.exist;
-                    expect(emailAddress).to.equal('asdf@example.com');
-                    done();
-                });
-            });
-
-            it('should fail due to error in cache lookup', function(done) {
-                getEmailAddressFromConfigStub.yields(new Error());
-
-                auth.queryEmailAddress('token', function(err, emailAddress) {
-                    expect(err).to.exist;
-                    expect(emailAddress).to.not.exist;
-                    done();
-                });
-            });
-
-            it('should fail due to error in oauth api', function(done) {
-                getEmailAddressFromConfigStub.yields();
-                oauthStub.queryEmailAddress.withArgs('token').yields(new Error());
-
-                auth.queryEmailAddress('token', function(err, emailAddress) {
-                    expect(err).to.exist;
-                    expect(emailAddress).to.not.exist;
-                    done();
-                });
-            });
-
-            it('should fail due to error in oauth api', function(done) {
-                getEmailAddressFromConfigStub.yields();
-                oauthStub.queryEmailAddress.withArgs('token').yields(null, 'asdf@example.com');
-                appConfigStoreStub.storeList.withArgs(['asdf@example.com'], 'emailaddress').yields(new Error());
-
-                auth.queryEmailAddress('token', function(err, emailAddress) {
-                    expect(err).to.exist;
-                    expect(emailAddress).to.exist;
-                    done();
-                });
-            });
-        });
-
     });
 });

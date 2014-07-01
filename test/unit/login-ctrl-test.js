@@ -14,10 +14,10 @@ define(function(require) {
         var scope, location, ctrl,
             origEmailDao, emailDaoMock,
             origKeychain, keychainMock,
+            origAuth, authStub,
             emailAddress = 'fred@foo.com',
             startAppStub,
             checkForUpdateStub,
-            authStub,
             initStub;
 
         describe('initialization', function() {
@@ -32,6 +32,7 @@ define(function(require) {
                 // remember original module to restore later, then replace it
                 origEmailDao = appController._emailDao;
                 origKeychain = appController._keychain;
+                origAuth = appController._auth;
                 appController._emailDao = emailDaoMock = sinon.createStubInstance(EmailDAO);
                 appController._keychain = keychainMock = sinon.createStubInstance(KeychainDAO);
                 appController._auth = authStub = sinon.createStubInstance(Auth);
@@ -54,6 +55,7 @@ define(function(require) {
                 // restore the app controller module
                 appController._emailDao = origEmailDao;
                 appController._keychain = origKeychain;
+                appController._auth = origAuth;
                 appController.start.restore && appController.start.restore();
                 appController.checkForUpdate.restore && appController.checkForUpdate.restore();
                 appController.init.restore && appController.init.restore();
@@ -71,7 +73,10 @@ define(function(require) {
                 };
 
                 startAppStub.yields();
-                authStub.getEmailAddress.yields(null, emailAddress);
+                authStub.getEmailAddress.yields(null, {
+                    emailAddress: emailAddress,
+                    realname: 'asd'
+                });
                 initStub.yields(null, testKeys);
 
                 emailDaoMock.unlock.withArgs({
@@ -106,7 +111,10 @@ define(function(require) {
                 };
 
                 startAppStub.yields();
-                authStub.getEmailAddress.yields(null, emailAddress);
+                authStub.getEmailAddress.yields(null, {
+                    emailAddress: emailAddress,
+                    realname: 'asd'
+                });
                 initStub.yields(null, testKeys);
 
                 emailDaoMock.unlock.withArgs({
@@ -136,7 +144,10 @@ define(function(require) {
 
             it('should forward to privatekey download login', function(done) {
                 startAppStub.yields();
-                authStub.getEmailAddress.yields(null, emailAddress);
+                authStub.getEmailAddress.yields(null, {
+                    emailAddress: emailAddress,
+                    realname: 'asd'
+                });
                 initStub.yields(null, {
                     publicKey: 'b'
                 });
@@ -165,7 +176,10 @@ define(function(require) {
 
             it('should forward to new device login', function(done) {
                 startAppStub.yields();
-                authStub.getEmailAddress.yields(null, emailAddress);
+                authStub.getEmailAddress.yields(null, {
+                    emailAddress: emailAddress,
+                    realname: 'asd'
+                });
                 initStub.yields(null, {
                     publicKey: 'b'
                 });
@@ -194,7 +208,10 @@ define(function(require) {
 
             it('should forward to initial login', function(done) {
                 startAppStub.yields();
-                authStub.getEmailAddress.yields(null, emailAddress);
+                authStub.getEmailAddress.yields(null, {
+                    emailAddress: emailAddress,
+                    realname: 'asd'
+                });
                 initStub.yields();
 
                 angular.module('logintest', []);
