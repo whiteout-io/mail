@@ -1246,15 +1246,23 @@ define(function(require) {
             }
 
             // this array is dropped directly into the ui to create the folder list
-            var folders = [
-                wellKnownFolders.inbox,
-                wellKnownFolders.sent, {
-                    type: 'Outbox',
-                    path: config.outboxMailboxPath
-                },
-                wellKnownFolders.drafts,
-                wellKnownFolders.trash
-            ];
+            var folders = [];
+            if (wellKnownFolders.inbox) {
+                folders.push(wellKnownFolders.inbox);
+            }
+            if (wellKnownFolders.sent) {
+                folders.push(wellKnownFolders.sent);
+            }
+            folders.push({
+                type: 'Outbox',
+                path: config.outboxMailboxPath
+            });
+            if (wellKnownFolders.drafts) {
+                folders.push(wellKnownFolders.drafts);
+            }
+            if (wellKnownFolders.trash) {
+                folders.push(wellKnownFolders.trash);
+            }
 
             var foldersChanged = false; // indicates if are there any new/removed folders?
 

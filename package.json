@@ -11,9 +11,9 @@
     },
     "dependencies": {
         "crypto-lib": "https://github.com/whiteout-io/crypto-lib/tarball/v0.2.0",
-        "imap-client": "https://github.com/whiteout-io/imap-client/tarball/dev/WO-420",
+        "imap-client": "https://github.com/whiteout-io/imap-client/tarball/dev/WO-188",
         "mailreader": "https://github.com/whiteout-io/mailreader/tarball/v0.3.4",
-        "pgpmailer": "https://github.com/whiteout-io/pgpmailer/tarball/dev/WO-420",
+        "pgpmailer": "https://github.com/whiteout-io/pgpmailer/tarball/v0.3.6",
         "pgpbuilder": "https://github.com/whiteout-io/pgpbuilder/tarball/v0.3.5",
         "requirejs": "2.1.14",
         "axe": "https://github.com/whiteout-io/axe/tarball/v0.0.2"
