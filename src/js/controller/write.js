@@ -112,7 +112,6 @@ define(function(require) {
             $scope.writerTitle = str.bugReportTitle;
             $scope.subject = str.bugReportSubject;
             $scope.body = str.bugReportBody + dump;
-
         }
 
         function fillFields(re, replyAll, forward) {
