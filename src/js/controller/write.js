@@ -4,6 +4,7 @@ define(function(require) {
     var angular = require('angular'),
         _ = require('underscore'),
         appController = require('js/app-controller'),
+        axe = require('axe'),
         aes = require('js/crypto/aes-gcm'),
         util = require('js/crypto/util'),
         str = require('js/app-config').string,
@@ -40,6 +41,12 @@ define(function(require) {
 
                 $scope.verify($scope.to[0]);
             },
+            reportBug: function() {
+                $scope.state.lightbox = 'write';
+                resetFields();
+                reportBug();
+                $scope.verify($scope.to[0]);
+            },
             close: function() {
                 $scope.state.lightbox = undefined;
             }
@@ -62,6 +69,49 @@ define(function(require) {
             $scope.body = '';
             $scope.ciphertextPreview = '';
             $scope.attachments = [];
+        }
+
+        function reportBug() {
+            var dump = '';
+            var appender = {
+                log: function(level, date, component, log) {
+                    // add a tag for the log level
+                    if (level === axe.DEBUG) {
+                        dump += '[DEBUG]';
+                    } else if (level === axe.INFO) {
+                        dump += '[INFO]';
+                    } else if (level === axe.WARN) {
+                        dump += '[WARN]';
+                    } else if (level === axe.ERROR) {
+                        dump += '[ERROR]';
+                    }
+
+                    dump += '[' + date.toISOString() + ']';
+
+                    // component is optional
+                    if (component) {
+                        dump += '[' + component + ']';
+                    }
+
+                    // log may be an error or a string
+                    dump += ' ' + (log || '').toString();
+
+                    // if an error it is, a stack trace it has. print it, we should.
+                    if (log.stack) {
+                        dump += ' . Stack: ' + log.stack;
+                    }
+
+                    dump += '\n';
+                }
+            };
+            axe.dump(appender);
+
+            $scope.to = [{
+                address: str.supportAddress
+            }];
+            $scope.writerTitle = str.bugReportTitle;
+            $scope.subject = str.bugReportSubject;
+            $scope.body = str.bugReportBody + dump;
         }
 
         function fillFields(re, replyAll, forward) {

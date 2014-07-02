@@ -137,7 +137,8 @@ module.exports = function(grunt) {
                     'pgpbuilder/node_modules/mailbuild/node_modules/punycode/punycode.min.js',
                     'pgpmailer/src/*.js',
                     'pgpmailer/node_modules/smtpclient/src/*.js',
-                    'pgpmailer/node_modules/smtpclient/node_modules/stringencoding/dist/stringencoding.js'
+                    'pgpmailer/node_modules/smtpclient/node_modules/stringencoding/dist/stringencoding.js',
+                    'axe/axe.js'
                 ],
                 dest: 'src/lib/'
             },

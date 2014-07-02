@@ -1,5 +1,7 @@
-define(function() {
+define(function(require) {
     'use strict';
+
+    var axe = require('axe');
 
     var er = {};
     er.attachHandler = function(scope) {
@@ -9,11 +11,7 @@ define(function() {
                 return;
             }
 
-            if (options.stack) {
-                console.error(options.stack);
-            } else {
-                console.error(options);
-            }
+            axe.error((options.errMsg || options.message) + (options.stack ? ('\n' + options.stack) : ''));
 
             scope.state.dialog = {
                 open: true,
