@@ -103,7 +103,7 @@ define(function(require) {
                 authStub.getCredentials.yields(null, {
                     emailAddress: 'asdf@example.com',
                     oauthToken: 'token',
-                    sslCert: 'cert'
+                    sslCert: 'cert',
                     imap: {},
                     smtp: {}
                 });

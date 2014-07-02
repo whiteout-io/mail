@@ -139,7 +139,7 @@ define(function(require) {
                 auth: auth,
                 ca: credentials.imap.ca
             };
-            
+
             smtpOptions = {
                 secureConnection: credentials.smtp.secure,
                 port: credentials.smtp.port,

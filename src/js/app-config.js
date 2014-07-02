@@ -84,7 +84,7 @@ define(function(require) {
         iconPath: '/img/icon.png',
         verificationUrl: '/verify/',
         verificationUuidLength: 36,
-        dbVersion: 3,
+        dbVersion: 4,
         appVersion: appVersion,
         outboxMailboxPath: 'OUTBOX',
         outboxMailboxType: 'Outbox'

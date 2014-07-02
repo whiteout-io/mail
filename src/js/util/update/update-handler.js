@@ -4,7 +4,8 @@ define(function(require) {
     var cfg = require('js/app-config').config,
         updateV1 = require('js/util/update/update-v1'),
         updateV2 = require('js/util/update/update-v2'),
-        updateV3 = require('js/util/update/update-v3');
+        updateV3 = require('js/util/update/update-v3'),
+        updateV4 = require('js/util/update/update-v4');
 
     /**
      * Handles database migration
@@ -12,7 +13,7 @@ define(function(require) {
     var UpdateHandler = function(appConfigStorage, userStorage) {
         this._appConfigStorage = appConfigStorage;
         this._userStorage = userStorage;
-        this._updateScripts = [updateV1, updateV2, updateV3];
+        this._updateScripts = [updateV1, updateV2, updateV3, updateV4];
     };
 
     /**
