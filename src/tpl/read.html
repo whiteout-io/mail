@@ -53,6 +53,11 @@
     </div><!--/.working-->
   </div><!--/.working-wrapper-->
 
+  <div class="signature-status"
+     ng-show="state.mailList.selected.signed && !state.mailList.selected.signaturesValid">
+    <p>Invalid PGP signature. This message could have been tampered with.</p>
+  </div>
+
   <div class="display-images">
     <a ng-show="html && showImageButton" href='#' wo-touch="displayImages(); $event.preventDefault()">Display images</a>
   </div>

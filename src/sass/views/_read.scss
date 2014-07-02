@@ -117,6 +117,17 @@
         }
     }
 
+    .signature-status {
+        flex-shrink: 0;
+        padding: 0.9em;
+        text-align: center;
+
+        p {
+            color: $label-primary-back-color;
+            margin: 0;
+        }
+    }
+
     .display-images {
         flex-shrink: 0;
         padding: 0.9em;

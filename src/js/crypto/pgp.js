@@ -265,44 +265,60 @@ define(function(require) {
      * Encrypt and sign a pgp message for a list of receivers
      */
     PGP.prototype.encrypt = function(plaintext, publicKeysArmored, callback) {
-        var publicKeys = [];
+        var publicKeys;
 
         // check keys
-        if (!this._privateKey || publicKeysArmored.length < 1) {
+        if (!this._privateKey) {
             callback(new Error('Error encrypting. Keys must be set!'));
             return;
         }
 
         // parse armored public keys
         try {
-            publicKeysArmored.forEach(function(pubkeyArmored) {
-                publicKeys = publicKeys.concat(openpgp.key.readArmored(pubkeyArmored).keys);
-            });
+            if (publicKeysArmored && publicKeysArmored.length) {
+                publicKeys = [];
+                publicKeysArmored.forEach(function(pubkeyArmored) {
+                    publicKeys = publicKeys.concat(openpgp.key.readArmored(pubkeyArmored).keys);
+                });
+            }
         } catch (err) {
             callback(new Error('Error encrypting plaintext!'));
             return;
         }
 
-        // encrypt and sign the plaintext
-        openpgp.signAndEncryptMessage(publicKeys, this._privateKey, plaintext, callback);
+        if (publicKeys) {
+            // encrypt and sign the plaintext
+            openpgp.signAndEncryptMessage(publicKeys, this._privateKey, plaintext, callback);
+        } else {
+            // if no public keys are available encrypt for myself
+            openpgp.signAndEncryptMessage([this._publicKey], this._privateKey, plaintext, callback);
+        }
     };
 
     /**
-     * Decrypt and verify a pgp message for a single sender.
-     * You need to check if signatures are both present and valid in the callback!
+     * [decrypt description]
+     * @param  {String}   ciphertext       The encrypted PGP message block
+     * @param  {String}   publicKeyArmored The public key used to sign the message
+     * @param  {Function} callback(error, plaintext, signaturesValid) signaturesValid is undefined in case there are no signature, null in case there are signatures but the wrong public key or no key was used to verify, true if the signature was successfully verified, or false if the signataure verification failed.
      */
     PGP.prototype.decrypt = function(ciphertext, publicKeyArmored, callback) {
         var publicKeys, message, signaturesValid;
 
         // check keys
-        if (!this._privateKey || !publicKeyArmored) {
+        if (!this._privateKey) {
             callback(new Error('Error decrypting. Keys must be set!'));
             return;
         }
 
         // read keys and ciphertext message
         try {
-            publicKeys = openpgp.key.readArmored(publicKeyArmored).keys;
+            if (publicKeyArmored) {
+                // parse public keys if available ...
+                publicKeys = openpgp.key.readArmored(publicKeyArmored).keys;
+            } else {
+                // use own public key to know if signatures are available
+                publicKeys = [this._publicKey];
+            }
             message = openpgp.message.readArmored(ciphertext);
         } catch (err) {
             callback(new Error('Error parsing encrypted PGP message!'));
@@ -314,19 +330,19 @@ define(function(require) {
 
         function onDecrypted(err, decrypted) {
             if (err) {
-                callback(new Error('Error decrypting PGP message!'));
+                callback(new Error('Error decrypting and verifying PGP message!'));
                 return;
             }
 
             // check if signatures are valid
             if (decrypted.signatures.length > 0) {
-                signaturesValid = true;
+                signaturesValid = true; // signature is correct
                 for (var i = 0; i < decrypted.signatures.length; i++) {
                     if (decrypted.signatures[i].valid === false) {
                         signaturesValid = false; // signature is wrong ... message was tampered with
                         break;
                     } else if (decrypted.signatures[i].valid === null) {
-                        signaturesValid = undefined; // signature not found for the specified public key
+                        signaturesValid = null; // signature not found for the specified public key
                         break;
                     }
                 }

@@ -1503,7 +1503,7 @@ module.exports = {
 
   show_version: true,
   show_comment: true,
-  versionstring: "OpenPGP.js v0.6.5",
+  versionstring: "OpenPGP.js v0.7.0",
   commentstring: "http://openpgpjs.org",
 
   keyserver: "keyserver.linux.it", // "pgp.mit.edu:11371"
@@ -12439,24 +12439,25 @@ Message.prototype.verify = function(keys) {
   var literalDataList = msg.packets.filterByTag(enums.packet.literal);
   if (literalDataList.length !== 1) throw new Error('Can only verify message with one literal data packet.');
   var signatureList = msg.packets.filterByTag(enums.packet.signature);
-  keys.forEach(function(key) {
+  for (var i = 0; i < signatureList.length; i++) {
     var keyPacket = null;
-    for (var i = 0; i < signatureList.length; i++) {
-      keyPacket = key.getKeyPacket([signatureList[i].issuerKeyId]);
+    for (var j = 0; j < keys.length; j++) {
+      keyPacket = keys[j].getKeyPacket([signatureList[i].issuerKeyId]);
       if (keyPacket) {
         break;
       }
     }
+
     var verifiedSig = {};
     if (keyPacket) {
       verifiedSig.keyid = signatureList[i].issuerKeyId;
       verifiedSig.valid = signatureList[i].verify(keyPacket, literalDataList[0]);
     } else {
-      verifiedSig.keyid = key.primaryKey.keyid;
+      verifiedSig.keyid = signatureList[i].issuerKeyId;
       verifiedSig.valid = null;
     }
     result.push(verifiedSig);
-  });
+  }
   return result;
 };
 

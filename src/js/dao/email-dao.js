@@ -831,18 +831,18 @@ define(function(require) {
                 return;
             }
 
-            if (!senderPublicKey) {
-                // this should only happen if a mail from another channel is in the inbox
-                showError('Public key for sender not found!');
-                return;
-            }
-
             // get the receiver's public key to check the message signature
             var encryptedNode = filterBodyParts(message.bodyParts, 'encrypted')[0];
-            self._pgp.decrypt(encryptedNode.content, senderPublicKey.publicKey, function(err, decrypted, signaturesValid) {
+            var senderKey = senderPublicKey ? senderPublicKey.publicKey : undefined;
+            self._pgp.decrypt(encryptedNode.content, senderKey, function(err, decrypted, signaturesValid) {
                 if (err || !decrypted) {
                     return showError(err.message || 'An error occurred during the decryption.');
                 }
+
+                // if the decryption worked and signatures are present, everything's fine.
+                // no error is thrown if signatures are not present
+                message.signed = typeof signaturesValid !== 'undefined';
+                message.signaturesValid = signaturesValid;
 
                 // if the encrypted node contains pgp/inline, we must not parse it
                 // with the mailreader as it is not well-formed MIME
@@ -875,9 +875,6 @@ define(function(require) {
                     });
                     inlineExternalImages(message);
 
-                    // if the decryption worked and signatures are present, everything's fine.
-                    // no error is thrown if signatures are not present
-                    message.signed = signaturesValid;
                     message.decrypted = true;
 
                     // we're done here!
