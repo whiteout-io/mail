@@ -26,7 +26,8 @@ define(function(require) {
 
             keyId = '9FEB47936E712926';
             emailDaoMock._keychain = keychainMock = sinon.createStubInstance(KeychainDAO);
-            appController._crypto = pgpMock = sinon.createStubInstance(PGP);
+            appController._pgp = pgpMock = sinon.createStubInstance(PGP);
+            pgpMock.extractPublicKey.returns('publicKeyArmored');
 
             emailDaoMock._account = {
                 emailAddress: emailAddress,

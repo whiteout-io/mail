@@ -262,6 +262,14 @@ define(function(require) {
                 });
             });
 
+            describe('extractPublicKey', function() {
+                it('should work', function() {
+                    var pk = pgp.extractPublicKey(privkey);
+                    expect(pk).to.exist;
+                    expect(pk).to.contain('-----BEGIN PGP PUBLIC KEY BLOCK-----');
+                });
+            });
+
             describe('Encrypt and sign', function() {
                 it('should fail', function(done) {
                     var input = null;

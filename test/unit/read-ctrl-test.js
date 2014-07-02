@@ -26,8 +26,8 @@ define(function(require) {
             origInvitation = appController._invitationDao;
             appController._invitationDao = invitationMock = sinon.createStubInstance(InvitationDAO);
 
-            origCrypto = appController._crypto;
-            appController._crypto = cryptoMock = sinon.createStubInstance(PGP);
+            origCrypto = appController._pgp;
+            appController._pgp = cryptoMock = sinon.createStubInstance(PGP);
 
             origOutbox = appController._outboxBo;
             appController._outboxBo = outboxMock = sinon.createStubInstance(OutboxBO);
@@ -51,7 +51,7 @@ define(function(require) {
         afterEach(function() {
             appController._keychain = origKeychain;
             appController._invitationDao = origInvitation;
-            appController._crypto = origCrypto;
+            appController._pgp = origCrypto;
             appController._outboxBo = origOutbox;
             appController._emailDao = origEmailDao;
         });

@@ -26,6 +26,17 @@ define(function(require) {
 
                 keypair = keypair || {};
 
+                // extract public key from private key block if missing in key file
+                if (!$scope.key.publicKeyArmored || $scope.key.publicKeyArmored.indexOf('-----BEGIN PGP PUBLIC KEY BLOCK-----') < 0) {
+                    try {
+                        $scope.key.publicKeyArmored = pgp.extractPublicKey($scope.key.privateKeyArmored);
+                    } catch (e) {
+                        $scope.onError(new Error('Error parsing public key from private key!'));
+                        return;
+                    }
+                }
+
+                // parse keypair params
                 var privKeyParams, pubKeyParams;
                 try {
                     privKeyParams = pgp.getKeyParams($scope.key.privateKeyArmored);
@@ -93,14 +104,11 @@ define(function(require) {
 
                 reader.onload = function(e) {
                     var rawKeys = e.target.result,
-                        privKeyPrexix = '-----BEGIN PGP PRIVATE KEY BLOCK-----',
-                        pubKeyPrefix = '-----BEGIN PGP PUBLIC KEY BLOCK-----',
-                        index = rawKeys.indexOf(privKeyPrexix),
-                        errMsg = 'Keyfile must be formatted like so:\n' + pubKeyPrefix + '\n ... \n' + privKeyPrexix,
+                        index = rawKeys.indexOf('-----BEGIN PGP PRIVATE KEY BLOCK-----'),
                         keyParts;
 
                     if (index === -1) {
-                        scope.onError(new Error(errMsg));
+                        scope.onError(new Error('Error parsing private PGP key block!'));
                         return;
                     }
 
@@ -108,11 +116,6 @@ define(function(require) {
                         publicKeyArmored: rawKeys.substring(0, index).trim(),
                         privateKeyArmored: rawKeys.substring(index, rawKeys.length).trim()
                     };
-
-                    if (keyParts.publicKeyArmored.indexOf(pubKeyPrefix) < 0 || keyParts.privateKeyArmored.indexOf(privKeyPrexix) < 0) {
-                        scope.onError(new Error(errMsg));
-                        return;
-                    }
 
                     scope.$apply(function() {
                         scope.key = keyParts;
