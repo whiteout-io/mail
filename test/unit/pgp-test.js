@@ -14,7 +14,7 @@ define(function(require) {
             keySize = 512,
             keyId = 'F6F60E9B42CDFF4C',
             pubkey = '-----BEGIN PGP PUBLIC KEY BLOCK-----\r\n' +
-            'Version: OpenPGP.js v0.7.0\r\n' +
+            'Version: OpenPGP.js v0.7.1-dev\r\n' +
             'Comment: http://openpgpjs.org\r\n' +
             '\r\n' +
             'xk0EUlhMvAEB/2MZtCUOAYvyLFjDp3OBMGn3Ev8FwjzyPbIF0JUw+L7y2XR5\r\n' +
@@ -25,7 +25,7 @@ define(function(require) {
             '=6XMW\r\n' +
             '-----END PGP PUBLIC KEY BLOCK-----\r\n\r\n',
             privkey = '-----BEGIN PGP PRIVATE KEY BLOCK-----\r\n' +
-            'Version: OpenPGP.js v0.7.0\r\n' +
+            'Version: OpenPGP.js v0.7.1-dev\r\n' +
             'Comment: http://openpgpjs.org\r\n' +
             '\r\n' +
             'xcBeBFJYTLwBAf9jGbQlDgGL8ixYw6dzgTBp9xL/BcI88j2yBdCVMPi+8tl0\r\n' +
