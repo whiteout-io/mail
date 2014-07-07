@@ -432,7 +432,7 @@ define(function(require) {
      *     If everything is in order, returns true
      */
     function checkSignatureValidity(signatures) {
-        if (!(signatures || []).length) {
+        if (!signatures.length) {
             // signatures array is empty (the message was not signed)
             return;
         }
