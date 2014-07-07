@@ -377,7 +377,7 @@ define(function(require) {
                         done();
                     });
                 });
-                it.skip('should be null for wrong public key', function(done) {
+                it('should be null for wrong public key', function(done) {
                     pgp.verifyClearSignedMessage(clearsigned, wrongPubkey, function(err, signaturesValid) {
                         expect(err).to.not.exist;
                         expect(signaturesValid).to.be.null;
