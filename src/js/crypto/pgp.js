@@ -296,13 +296,13 @@ define(function(require) {
     };
 
     /**
-     * [decrypt description]
+     * Decrypts a ciphertext
      * @param  {String}   ciphertext       The encrypted PGP message block
      * @param  {String}   publicKeyArmored The public key used to sign the message
      * @param  {Function} callback(error, plaintext, signaturesValid) signaturesValid is undefined in case there are no signature, null in case there are signatures but the wrong public key or no key was used to verify, true if the signature was successfully verified, or false if the signataure verification failed.
      */
     PGP.prototype.decrypt = function(ciphertext, publicKeyArmored, callback) {
-        var publicKeys, message, signaturesValid;
+        var publicKeys, message;
 
         // check keys
         if (!this._privateKey) {
@@ -334,24 +334,119 @@ define(function(require) {
                 return;
             }
 
-            // check if signatures are valid
-            if (decrypted.signatures.length > 0) {
-                signaturesValid = true; // signature is correct
-                for (var i = 0; i < decrypted.signatures.length; i++) {
-                    if (decrypted.signatures[i].valid === false) {
-                        signaturesValid = false; // signature is wrong ... message was tampered with
-                        break;
-                    } else if (decrypted.signatures[i].valid === null) {
-                        signaturesValid = null; // signature not found for the specified public key
-                        break;
-                    }
-                }
-            }
-
             // return decrypted plaintext
-            callback(null, decrypted.text, signaturesValid);
+            callback(null, decrypted.text, checkSignatureValidity(decrypted.signatures));
         }
     };
+
+    /**
+     * Verifies a clearsigned message
+     * @param {String} clearSignedText The clearsigned text, usually from a signed pgp/inline message
+     * @param {String} publicKeyArmored The public key used to signed the message
+     * @param  {Function} callback(error, signaturesValid) signaturesValid is undefined in case there are no signature, null in case there are signatures but the wrong public key or no key was used to verify, true if the signature was successfully verified, or false if the signataure verification failed.
+     */
+    PGP.prototype.verifyClearSignedMessage = function(clearSignedText, publicKeyArmored, callback) {
+        var publicKeys,
+            message;
+
+        // check keys
+        if (!this._privateKey) {
+            callback(new Error('Error verifying signed PGP message. Keys must be set!'));
+            return;
+        }
+
+        // read keys and ciphertext message
+        try {
+            if (publicKeyArmored) {
+                // parse public keys if available ...
+                publicKeys = openpgp.key.readArmored(publicKeyArmored).keys;
+            } else {
+                // use own public key to know if signatures are available
+                publicKeys = [this._publicKey];
+            }
+            message = openpgp.cleartext.readArmored(clearSignedText);
+        } catch (err) {
+            callback(new Error('Error verifying signed PGP message!'));
+            return;
+        }
+
+        openpgp.verifyClearSignedMessage(publicKeys, message, function(err, result) {
+            if (err) {
+                callback(new Error('Error verifying PGP message!'));
+                return;
+            }
+
+            callback(null, checkSignatureValidity(result.signatures));
+        });
+    };
+
+    /**
+     * Verifies a message with a detached signature
+     * @param {String} message The signed text, usually from a signed pgp/mime message
+     * @param {String} pgpSignature The detached signature, usually from a signed pgp/mime message
+     * @param {String} publicKeyArmored The public key used to signed the message
+     * @param  {Function} callback(error, signaturesValid) signaturesValid is undefined in case there are no signature, null in case there are signatures but the wrong public key or no key was used to verify, true if the signature was successfully verified, or false if the signataure verification failed.
+     */
+    PGP.prototype.verifySignedMessage = function(message, pgpSignature, publicKeyArmored, callback) {
+        var publicKeys;
+
+        // check keys
+        if (!this._privateKey) {
+            callback(new Error('Error verifying signed PGP message. Keys must be set!'));
+            return;
+        }
+
+        // read keys and ciphertext message
+        try {
+            if (publicKeyArmored) {
+                // parse public keys if available ...
+                publicKeys = openpgp.key.readArmored(publicKeyArmored).keys;
+            } else {
+                // use own public key to know if signatures are available
+                publicKeys = [this._publicKey];
+            }
+        } catch (err) {
+            callback(new Error('Error verifying signed PGP message!'));
+            return;
+        }
+
+        var signatures;
+        try {
+            var msg = openpgp.message.readSignedContent(message, pgpSignature);
+            signatures = msg.verify(publicKeys);
+        } catch (err) {
+            callback(new Error('Error verifying signed PGP message!'));
+            return;
+        }
+
+        callback(null, checkSignatureValidity(signatures));
+    };
+
+    /**
+     * Checks signature validity
+     * @param {Object} decrypted OpenPGP.js Signature array
+     * @return {undefined|null|true|false}
+     *     If signatures array is empty (the message was not signed), returns undefined
+     *     If you're using the wrong public key, returns null.
+     *     If signatures are invalid, returns false.
+     *     If everything is in order, returns true
+     */
+    function checkSignatureValidity(signatures) {
+        if (!signatures.length) {
+            // signatures array is empty (the message was not signed)
+            return;
+        }
+
+        for (var i = 0; i < signatures.length; i++) {
+            if (signatures[i].valid !== true) { // null | false
+                // you're using the wrong public key or signatures are invalid
+                return signatures[i].valid;
+            }
+        }
+
+        // everything is in order
+        return true;
+    }
 
     return PGP;
 });

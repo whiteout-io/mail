@@ -92,18 +92,25 @@ CleartextMessage.prototype.verify = function(keys) {
   var literalDataPacket = new packet.Literal();
   // we assume that cleartext signature is generated based on UTF8 cleartext
   literalDataPacket.setText(this.text);
-  keys.forEach(function(key) {
-    for (var i = 0; i < signatureList.length; i++) {
-      var keyPacket = key.getKeyPacket([signatureList[i].issuerKeyId]);
+  for (var i = 0; i < signatureList.length; i++) {
+    var keyPacket = null;
+    for (var j = 0; j < keys.length; j++) {
+      keyPacket = keys[j].getKeyPacket([signatureList[i].issuerKeyId]);
       if (keyPacket) {
-        var verifiedSig = {};
-        verifiedSig.keyid = signatureList[i].issuerKeyId;
-        verifiedSig.valid = signatureList[i].verify(keyPacket, literalDataPacket);
-        result.push(verifiedSig);
         break;
       }
     }
-  });
+
+    var verifiedSig = {};
+    if (keyPacket) {
+      verifiedSig.keyid = signatureList[i].issuerKeyId;
+      verifiedSig.valid = signatureList[i].verify(keyPacket, literalDataPacket);
+    } else {
+      verifiedSig.keyid = signatureList[i].issuerKeyId;
+      verifiedSig.valid = null;
+    }
+    result.push(verifiedSig);
+  }
   return result;
 };
 
@@ -1503,7 +1510,7 @@ module.exports = {
 
   show_version: true,
   show_comment: true,
-  versionstring: "OpenPGP.js v0.7.0",
+  versionstring: "OpenPGP.js v0.7.1",
   commentstring: "http://openpgpjs.org",
 
   keyserver: "keyserver.linux.it", // "pgp.mit.edu:11371"
@@ -9976,7 +9983,7 @@ var base64 = require('./base64.js'),
  *         5 = PRIVATE KEY BLOCK
  */
 function getType(text) {
-  var reHeader = /^-----BEGIN PGP (MESSAGE, PART \d+\/\d+|MESSAGE, PART \d+|SIGNED MESSAGE|MESSAGE|PUBLIC KEY BLOCK|PRIVATE KEY BLOCK)-----$\n/m;
+  var reHeader = /^-----BEGIN PGP (MESSAGE, PART \d+\/\d+|MESSAGE, PART \d+|SIGNED MESSAGE|MESSAGE|PUBLIC KEY BLOCK|PRIVATE KEY BLOCK|SIGNATURE)-----$\n/m;
 
   var header = text.match(reHeader);
 
@@ -12499,6 +12506,22 @@ function readArmored(armoredText) {
 }
 
 /**
+ * Create a message object from signed content and a detached armored signature.
+ * @param {String} content An 8 bit ascii string containing e.g. a MIME subtree with text nodes or attachments
+ * @param {String} detachedSignature The detached ascii armored PGP signarure
+ */
+function readSignedContent(content, detachedSignature) {
+  var literalDataPacket = new packet.Literal();
+  literalDataPacket.setBytes(content, enums.read(enums.literal, enums.literal.binary));
+  var packetlist = new packet.List();
+  packetlist.push(literalDataPacket);
+  var input = armor.decode(detachedSignature).data;
+  packetlist.read(input);
+  var newMessage = new Message(packetlist);
+  return newMessage;
+}
+
+/**
  * creates new message object from text
  * @param {String} text
  * @return {module:message~Message} new message object
@@ -12531,6 +12554,7 @@ function fromBinary(bytes) {
 
 exports.Message = Message;
 exports.readArmored = readArmored;
+exports.readSignedContent = readSignedContent;
 exports.fromText = fromText;
 exports.fromBinary = fromBinary;
 

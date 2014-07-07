@@ -909,6 +909,62 @@ define(function(require) {
                     expect(message.loadingBody).to.be.true;
                 });
 
+                it('should read a signed pgp/mime from the device', function(done) {
+                    var message, signed, pt, signedMimeTree, signature;
+
+                    pt = 'bender is great!';
+                    signed = 'omg signed text';
+                    signedMimeTree = 'trallalalalala';
+                    signature = 'ugauga';
+                    message = {
+                        uid: uid,
+                        signed: true,
+                        from: [{
+                            address: 'asdasdasd'
+                        }]
+                    };
+
+                    localListStub.withArgs({
+                        folder: inboxFolder,
+                        uid: uid
+                    }).yieldsAsync(null, [{
+                        bodyParts: [{
+                            type: 'text',
+                            content: pt
+                        }, {
+                            type: 'signed',
+                            content: [{
+                                type: 'text',
+                                content: signed
+                            }],
+                            signedMessage: signedMimeTree,
+                            signature: signature
+                        }]
+                    }]);
+                    keychainStub.getReceiverPublicKey.withArgs(message.from[0].address).yieldsAsync(null, mockKeyPair.publicKey);
+                    pgpStub.verifySignedMessage.withArgs(signedMimeTree, signature, mockKeyPair.publicKey.publicKey).yieldsAsync(null, true);
+
+                    dao.getBody({
+                        message: message,
+                        folder: inboxFolder
+                    }, function(err, msg) {
+                        expect(err).to.not.exist;
+
+                        expect(msg).to.equal(message);
+                        expect(msg.body).to.equal(signed);
+                        expect(message.signed).to.be.true;
+                        expect(message.signaturesValid).to.be.true;
+                        expect(message.loadingBody).to.be.false;
+
+                        expect(localListStub.calledOnce).to.be.true;
+                        expect(pgpStub.verifySignedMessage.calledOnce).to.be.true;
+                        expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
+
+                        done();
+                    });
+                    expect(message.loadingBody).to.be.true;
+                });
+
                 it('should read a pgp/inline from the device', function(done) {
                     var message, ct, pt;
 
@@ -945,6 +1001,47 @@ define(function(require) {
                         expect(message.loadingBody).to.be.false;
 
                         expect(localListStub.calledOnce).to.be.true;
+
+                        done();
+                    });
+                    expect(message.loadingBody).to.be.true;
+                });
+
+                it('should read a signed pgp/inline from the device', function(done) {
+                    var message, pt;
+
+                    pt = '-----BEGIN PGP SIGNED MESSAGE-----\n\ntest6\n-----BEGIN PGP SIGNATURE----------END PGP SIGNATURE-----';
+                    message = {
+                        uid: uid,
+                        from: [{
+                            address: 'asdasdasd'
+                        }]
+                    };
+
+                    localListStub.yieldsAsync(null, [{
+                        bodyParts: [{
+                            type: 'text',
+                            content: pt
+                        }]
+                    }]);
+                    keychainStub.getReceiverPublicKey.withArgs(message.from[0].address).yieldsAsync(null, mockKeyPair.publicKey);
+                    pgpStub.verifyClearSignedMessage.withArgs(pt, mockKeyPair.publicKey.publicKey).yieldsAsync(null, true);
+
+                    dao.getBody({
+                        message: message,
+                        folder: inboxFolder
+                    }, function(err, msg) {
+                        expect(err).to.not.exist;
+
+                        expect(msg).to.equal(message);
+                        expect(msg.body).to.equal('test6');
+                        expect(message.signed).to.be.true;
+                        expect(message.signaturesValid).to.be.true;
+                        expect(message.loadingBody).to.be.false;
+
+                        expect(localListStub.calledOnce).to.be.true;
+                        expect(pgpStub.verifyClearSignedMessage.calledOnce).to.be.true;
+                        expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
 
                         done();
                     });
@@ -1260,10 +1357,77 @@ define(function(require) {
                         expect(error).to.not.exist;
                         expect(msg).to.equal(message);
                         expect(message.decrypted).to.be.true;
+                        expect(message.signed).to.be.true;
+                        expect(message.signaturesValid).to.be.true;
                         expect(message.body).to.equal(parsed);
                         expect(message.decryptingBody).to.be.false;
                         expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
                         expect(pgpStub.decrypt.calledOnce).to.be.true;
+                        expect(parseStub.calledOnce).to.be.true;
+
+                        done();
+                    });
+
+                    expect(message.decryptingBody).to.be.true;
+                });
+
+                it('decrypt a pgp/mime message with inner signature', function(done) {
+                    var message, ct, pt, parsed, signed, signedMimeTree, signature;
+
+                    pt = 'bender is great';
+                    ct = '-----BEGIN PGP MESSAGE-----asdasdasd-----END PGP MESSAGE-----';
+                    signedMimeTree = 'trallalalalala';
+                    signature = 'ugauga';
+                    signed = 'omg signed text';
+                    parsed = 'bender! bender! bender!';
+                    message = {
+                        from: [{
+                            address: 'asdasdasd'
+                        }],
+                        body: ct,
+                        encrypted: true,
+                        bodyParts: [{
+                            type: 'encrypted',
+                            content: ct
+                        }]
+                    };
+
+                    keychainStub.getReceiverPublicKey.withArgs(message.from[0].address).yieldsAsync(null, mockKeyPair.publicKey);
+                    pgpStub.decrypt.withArgs(ct, mockKeyPair.publicKey.publicKey).yieldsAsync(null, pt, undefined);
+                    pgpStub.verifySignedMessage.withArgs(signedMimeTree, signature, mockKeyPair.publicKey.publicKey).yieldsAsync(null, true);
+
+                    parseStub.withArgs({
+                        bodyParts: [{
+                            type: 'encrypted',
+                            content: ct,
+                            raw: pt
+                        }]
+                    }).yieldsAsync(null, [{
+                        type: 'encrypted',
+                        content: [{
+                            type: 'signed',
+                            content: [{
+                                type: 'text',
+                                content: signed
+                            }],
+                            signedMessage: signedMimeTree,
+                            signature: signature
+                        }]
+                    }]);
+
+                    dao.decryptBody({
+                        message: message
+                    }, function(error, msg) {
+                        expect(error).to.not.exist;
+                        expect(msg).to.equal(message);
+                        expect(message.decrypted).to.be.true;
+                        expect(message.body).to.equal(signed);
+                        expect(message.signed).to.be.true;
+                        expect(message.signaturesValid).to.be.true;
+                        expect(message.decryptingBody).to.be.false;
+                        expect(keychainStub.getReceiverPublicKey.calledTwice).to.be.true;
+                        expect(pgpStub.decrypt.calledOnce).to.be.true;
+                        expect(pgpStub.verifySignedMessage.calledOnce).to.be.true;
                         expect(parseStub.calledOnce).to.be.true;
 
                         done();
@@ -1302,6 +1466,8 @@ define(function(require) {
                         expect(message.decrypted).to.be.true;
                         expect(message.body).to.equal(pt);
                         expect(message.decryptingBody).to.be.false;
+                        expect(message.signed).to.be.true;
+                        expect(message.signaturesValid).to.be.true;
                         expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
                         expect(pgpStub.decrypt.calledOnce).to.be.true;
                         expect(parseStub.called).to.be.false;
@@ -1608,6 +1774,90 @@ define(function(require) {
 
 
         describe('internal API', function() {
+            describe('#_checkSignatures', function() {
+                it('should check signatures in clearsigned message', function(done) {
+                    var message = {
+                        from: [{
+                            address: 'asdasdasd'
+                        }],
+                        clearSignedMessage: 'trallalalalala'
+                    };
+
+                    keychainStub.getReceiverPublicKey.withArgs(message.from[0].address).yieldsAsync(null, mockKeyPair.publicKey);
+                    pgpStub.verifyClearSignedMessage.withArgs(message.clearSignedMessage, mockKeyPair.publicKey.publicKey).yieldsAsync(null, true);
+
+                    dao._checkSignatures(message, function(error, signaturesValid) {
+                        expect(error).to.not.exist;
+                        expect(signaturesValid).to.be.true;
+                        expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
+                        expect(pgpStub.verifyClearSignedMessage.calledOnce).to.be.true;
+                        done();
+                    });
+                });
+
+                it('should check signatures in pgp/mime signed message', function(done) {
+                    var message = {
+                        from: [{
+                            address: 'asdasdasd'
+                        }],
+                        signedMessage: 'trallalalalala',
+                        signature: 'ugauga'
+                    };
+
+                    keychainStub.getReceiverPublicKey.withArgs(message.from[0].address).yieldsAsync(null, mockKeyPair.publicKey);
+                    pgpStub.verifySignedMessage.withArgs(message.signedMessage, message.signature, mockKeyPair.publicKey.publicKey).yieldsAsync(null, true);
+
+                    dao._checkSignatures(message, function(error, signaturesValid) {
+                        expect(error).to.not.exist;
+                        expect(signaturesValid).to.be.true;
+                        expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
+                        expect(pgpStub.verifySignedMessage.calledOnce).to.be.true;
+                        done();
+                    });
+                });
+
+                it('should error while checking signatures', function(done) {
+                    var message = {
+                        from: [{
+                            address: 'asdasdasd'
+                        }],
+                        signedMessage: 'trallalalalala',
+                        signature: 'ugauga'
+                    };
+
+                    keychainStub.getReceiverPublicKey.withArgs(message.from[0].address).yieldsAsync(null, mockKeyPair.publicKey);
+                    pgpStub.verifySignedMessage.yieldsAsync(new Error());
+
+                    dao._checkSignatures(message, function(error, signaturesValid) {
+                        expect(error).to.exist;
+                        expect(signaturesValid).to.not.exist;
+                        expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
+                        expect(pgpStub.verifySignedMessage.calledOnce).to.be.true;
+                        done();
+                    });
+                });
+
+                it('should error while fetching public key', function(done) {
+                    var message = {
+                        from: [{
+                            address: 'asdasdasd'
+                        }],
+                        signedMessage: 'trallalalalala',
+                        signature: 'ugauga'
+                    };
+
+                    keychainStub.getReceiverPublicKey.yieldsAsync(new Error());
+
+                    dao._checkSignatures(message, function(error, signaturesValid) {
+                        expect(error).to.exist;
+                        expect(signaturesValid).to.not.exist;
+                        expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
+                        expect(pgpStub.verifySignedMessage.called).to.be.false;
+                        done();
+                    });
+                });
+            });
+
             describe('#_initFoldersFromDisk', function() {
                 beforeEach(function() {
                     sinon.stub(dao, 'refreshFolder');

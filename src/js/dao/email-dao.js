@@ -698,79 +698,82 @@ define(function(require) {
             if (message.encrypted) {
                 // show the encrypted message
                 message.body = filterBodyParts(message.bodyParts, 'encrypted')[0].content;
-                done();
-                return;
+                return done();
             }
 
-            // for unencrypted messages, this is the array where the body parts are located
             var root = message.bodyParts;
 
             if (message.signed) {
-                var signedPart = filterBodyParts(message.bodyParts, 'signed')[0];
-                message.signedMessage = signedPart.signedMessage;
-                message.signature = signedPart.signature;
-                // TODO check integrity
-                // in case of a signed message, you only want to show the signed content and ignore the rest
-                root = signedPart.content;
+                // PGP/MIME signed
+                var signedRoot = filterBodyParts(message.bodyParts, 'signed')[0]; // in case of a signed message, you only want to show the signed content and ignore the rest
+                message.signedMessage = signedRoot.signedMessage;
+                message.signature = signedRoot.signature;
+                root = signedRoot.content;
             }
 
-            // if the message is plain text and contains pgp/inline, we are only interested in the encrypted
-            // content, the rest (corporate mail footer, attachments, etc.) is discarded.
             var body = _.pluck(filterBodyParts(root, 'text'), 'content').join('\n');
 
             /*
-             * here's how the pgp/inline regex works:
-             * - any content before the PGP block will be discarded
-             * - "-----BEGIN PGP MESSAGE-----" must be at the beginning (and end) of a line
-             * - "-----END PGP MESSAGE-----" must be at the beginning (and end) of a line
-             * - the regex must not match a pgp block in a plain text reply or forward of a pgp/inline message.
-             *   (the encryption will break for replies/forward, because "> " corrupts the PGP block with non-radix-64 characters)
+             * if the message is plain text and contains pgp/inline, we are only interested in the encrypted
+             * content, the rest (corporate mail footer, attachments, etc.) is discarded.
+             * "-----BEGIN/END (...)-----" must be at the start/end of a line,
+             * the regex must not match a pgp block in a plain text reply or forward of a pgp/inline message,
+             * the encryption will break for replies/forward, because "> " corrupts the PGP block with non-radix-64 characters,
              */
-            var pgpInlineRegex = /^-{5}BEGIN PGP MESSAGE-{5}$[^>]*^-{5}END PGP MESSAGE-{5}$/im;
-            var pgpInlineMatch = pgpInlineRegex.exec(body);
+            var pgpInlineMatch = /^-{5}BEGIN PGP MESSAGE-{5}[\s\S]*-{5}END PGP MESSAGE-{5}$/im.exec(body);
             if (pgpInlineMatch) {
-                // show the plain text content
-                message.body = pgpInlineMatch[0];
+                message.body = pgpInlineMatch[0]; // show the plain text content
+                message.encrypted = true; // signal the ui that we're handling encrypted content
 
-                // - replace the bodyParts info with an artificial bodyPart of type "encrypted"
-                // - _isPgpInline is only used internally to avoid trying to parse non-MIME text with the mailreader
-                // - set the encrypted flag so we can signal the ui that we're handling encrypted content
-                message.encrypted = true;
+                // replace the bodyParts info with an artificial bodyPart of type "encrypted"
                 message.bodyParts = [{
                     type: 'encrypted',
                     content: pgpInlineMatch[0],
-                    _isPgpInline: true
+                    _isPgpInline: true // used internally to avoid trying to parse non-MIME text with the mailreader
                 }];
-                done();
-                return;
+                return done();
             }
-
 
             /*
-             * here's how the clear signing regex works:
-             * - any content before the PGP block will be discarded
-             * - "-----BEGIN PGP SIGNED MESSAGE-----" must be at the beginning (and end) of a line
-             * - "-----END PGP SIGNATURE-----" must be at the beginning (and end) of a line
-             * - the regex must not match a pgp block in a plain text reply or forward of a pgp/signed message.
-             *   (the encryption will break for replies/forward, because "> " corrupts the PGP block with non-radix-64 characters)
+             * any content before/after the PGP block will be discarded,
+             * "-----BEGIN/END (...)-----" must be at the start/end of a line,
+             * after \n\n the signed payload begins,
+             * the text is followed by a final \n and then the pgp signature begins
+             * untrusted attachments and html is ignored
              */
-            var clearSignedRegex = /^-{5}BEGIN PGP SIGNED MESSAGE-{5}[\s\S]*\n{2}([\S\s]*)(-{5}BEGIN PGP SIGNATURE-{5}[\S\s]*-{5}END PGP SIGNATURE-{5})$/im;
-            var clearSignedMatch = clearSignedRegex.exec(body);
+            var clearSignedMatch = /^-{5}BEGIN PGP SIGNED MESSAGE-{5}[\s\S]*\n\n([\s\S]*)\n-{5}BEGIN PGP SIGNATURE-{5}[\S\s]*-{5}END PGP SIGNATURE-{5}$/im.exec(body);
             if (clearSignedMatch) {
-                message.clearSignedMessage = clearSignedMatch[0];
+                // PGP/INLINE signed
                 message.signed = true;
-                // TODO check integrity
-
-                message.body = clearSignedMatch[1].trim();
-            } else {
-                message.body = body;
+                message.clearSignedMessage = clearSignedMatch[0];
+                body = clearSignedMatch[1];
             }
 
-            message.attachments = filterBodyParts(root, 'attachment');
-            message.html = _.pluck(filterBodyParts(root, 'html'), 'content').join('\n');
-            inlineExternalImages(message);
+            if (!message.signed) {
+                // message is not signed, so we're done here
+                return setBody();
+            }
 
-            done();
+            // check the signatures for signed messages
+            self._checkSignatures(message, function(err, signaturesValid) {
+                if (err) {
+                    return done(err);
+                }
+
+                message.signaturesValid = signaturesValid;
+                setBody();
+            });
+
+            function setBody() {
+                message.body = body;
+                if (!message.clearSignedMessage) {
+                    message.attachments = filterBodyParts(root, 'attachment');
+                    message.html = _.pluck(filterBodyParts(root, 'html'), 'content').join('\n');
+                    inlineExternalImages(message);
+                }
+
+                done();
+            }
         }
 
 
@@ -778,6 +781,27 @@ define(function(require) {
             message.loadingBody = false;
             callback(err, err ? undefined : message);
         }
+    };
+
+    EmailDAO.prototype._checkSignatures = function(message, callback) {
+        var self = this;
+
+        self._keychain.getReceiverPublicKey(message.from[0].address, function(err, senderPublicKey) {
+            if (err) {
+                return callback(err);
+            }
+
+            // get the receiver's public key to check the message signature
+            var senderKey = senderPublicKey ? senderPublicKey.publicKey : undefined;
+
+            if (message.clearSignedMessage) {
+                self._pgp.verifyClearSignedMessage(message.clearSignedMessage, senderKey, callback);
+            } else if (message.signedMessage && message.signature) {
+                self._pgp.verifySignedMessage(message.signedMessage, message.signature, senderKey, callback);
+            } else {
+                callback(null, undefined);
+            }
+        });
     };
 
     /**
@@ -859,33 +883,65 @@ define(function(require) {
                 // parse the decrypted raw content in the mailparser
                 self._mailreader.parse({
                     bodyParts: [encryptedNode]
-                }, function(err, parsedBodyParts) {
+                }, function(err, root) {
                     if (err) {
                         showError(err.errMsg || err.message);
                         return;
                     }
 
-                    // we have successfully interpreted the descrypted message,
-                    // so let's update the views on the message parts
-                    message.body = _.pluck(filterBodyParts(parsedBodyParts, 'text'), 'content').join('\n');
-                    message.html = _.pluck(filterBodyParts(parsedBodyParts, 'html'), 'content').join('\n');
-                    message.attachments = _.reject(filterBodyParts(parsedBodyParts, 'attachment'), function(attmt) {
-                        // remove the pgp-signature from the attachments
-                        return attmt.mimeType === "application/pgp-signature";
-                    });
-                    inlineExternalImages(message);
+                    if (!message.signed) {
+                        // message had no signature in the ciphertext, so there's a little extra effort to be done here
+                        // is there a signed MIME node?
+                        var signedRoot = filterBodyParts(root, 'signed')[0];
+                        if (!signedRoot) {
+                            // no signed MIME node, obviously an unsigned PGP/MIME message
+                            return setBody();
+                        }
 
-                    message.decrypted = true;
+                        // if there is something signed in here, we're only interested in the signed content
+                        message.signedMessage = signedRoot.signedMessage;
+                        message.signature = signedRoot.signature;
+                        root = signedRoot.content;
 
-                    // we're done here!
-                    done();
+                        // check the signatures for encrypted messages
+                        self._checkSignatures(message, function(err, signaturesValid) {
+                            if (err) {
+                                return done(err);
+                            }
+
+                            message.signed = typeof signaturesValid !== 'undefined';
+                            message.signaturesValid = signaturesValid;
+                            setBody();
+                        });
+                        return;
+                    }
+
+                    // message had a signature in the ciphertext, so we're done here
+                    setBody();
+
+                    function setBody() {
+                        // we have successfully interpreted the descrypted message,
+                        // so let's update the views on the message parts
+                        message.body = _.pluck(filterBodyParts(root, 'text'), 'content').join('\n');
+                        message.html = _.pluck(filterBodyParts(root, 'html'), 'content').join('\n');
+                        message.attachments = _.reject(filterBodyParts(root, 'attachment'), function(attmt) {
+                            // remove the pgp-signature from the attachments
+                            return attmt.mimeType === "application/pgp-signature";
+                        });
+                        inlineExternalImages(message);
+
+                        message.decrypted = true;
+
+                        // we're done here!
+                        done();
+                    }
                 });
             });
         });
 
         function showError(msg) {
             message.body = msg;
-            message.decrypted = true; // display error msh in body
+            message.decrypted = true; // display error msg in body
             done();
         }
 
