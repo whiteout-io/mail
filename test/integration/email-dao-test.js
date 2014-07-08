@@ -825,5 +825,67 @@ define(function(require) {
                 });
             });
         });
+
+        describe('Compose-Send-Receive-Read round trip', function() {
+            var currentFolder;
+
+            beforeEach(function(done) {
+                emailDao.openFolder({
+                    folder: {
+                        path: 'INBOX'
+                    }
+                }, function(err) {
+                    expect(err).to.not.exist;
+                    currentFolder = emailDao._account.folders.filter(function(folder) {
+                        return folder.path === 'INBOX';
+                    }).pop();
+                    expect(currentFolder).to.exist;
+                    done();
+                });
+
+                sinon.stub(smtpServer, 'onmail', function(mail) {
+                    setTimeout(function() {
+                        imapServer.appendMessage(currentFolder.path, [], false, mail.body);
+                    }, 1000);
+                });
+            });
+
+            afterEach(function() {
+                smtpServer.onmail.restore();
+            });
+
+            it('should send & receive a signed plaintext message', function(done) {
+                var expectedBody = "asdasdasdasdasdasdasdasdasdasdasdasd asdasdasdasdasdasdasdasdasdasdasdasd asdasdasdasdasdasdasdasdasdasdasdasd asdasdasdasdasdasdasdasdasdasdasdasd asdasdasdasdasdasdasdasdasdasdasdasd asdasdasdasdasdasdasdasdasdasdasdasd asdasdasdasdasdasdasdasdasdasdasdasd asdasdasdasdasdasdasdasdasdasdasdasd asdasdasdasdasdasdasdasdasdasdasdasd asdasdasdasdasdasdasdasdasdasdasdasd asdasdasdasdasdasdasdasdasdasdasdasd ";
+
+                emailDao.onIncomingMessage = function() {
+                    emailDao.onIncomingMessage = function(messages) {
+                        emailDao.getBody({
+                            folder: currentFolder,
+                            message: messages[0]
+                        }, function(err, message) {
+                            expect(err).to.not.exist;
+                            expect(message.encrypted).to.be.false;
+                            expect(message.signed).to.be.true;
+                            expect(message.signaturesValid).to.be.true;
+                            expect(message.attachments.length).to.equal(0);
+                            expect(message.body).to.equal(expectedBody);
+                            done();
+                        });
+                    };
+
+                    emailDao.sendPlaintext({
+                        smtpclient: smtpClient,
+                        email: {
+                            from: [testAccount.user],
+                            to: [testAccount.user],
+                            subject: 'plaintext test',
+                            body: expectedBody
+                        }
+                    }, function(err) {
+                        expect(err).to.not.exist;
+                    });
+                };
+            });
+        });
     });
 });
