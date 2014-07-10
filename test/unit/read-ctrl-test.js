@@ -168,7 +168,7 @@ define(function(require) {
         });
 
         describe('parseConversation', function() {
-            it('should work', function() {
+            it.skip('should work', function() {
                 var body = 'foo\n' +
                     '\n' +
                     '> bar\n' +
@@ -183,9 +183,13 @@ define(function(require) {
                 });
                 expect(nodes).to.exist;
 
-                var expected = '{"children":["foo\\n",{"children":["bar\\n\\nfoofoo",{"children":["foofoobar"]}]},"\\ncomment",{"children":[{"children":["barbar"]}]}]}';
+                var expectedJson = '{"children":["foo\\n",{"children":["bar\\n\\nfoofoo",{"children":["foofoobar"]}]},"\\ncomment",{"children":[{"children":["barbar"]}]}]}';
                 var json = JSON.stringify(nodes);
-                expect(json).to.equal(expected);
+                expect(json).to.equal(expectedJson);
+
+                var expectedHtml = '<div class="view-read-body"><div class="line"><span>foo</span><br></div><div class="line empty-line"><span></span><br></div><div class="prev-message"><div class="line"><span>bar</span><br></div><div class="line empty-line"><span></span><br></div><div class="line"><span>foofoo</span><br></div></div><div class="prev-message"><div class="prev-message"><div class="line"><span>foofoobar</span><br></div></div></div><div class="line empty-line"><span></span><br></div><div class="line"><span>comment</span><br></div><div class="prev-message"><div class="prev-message"><div class="line"><span>barbar</span><br></div></div></div></div>';
+                var html = scope.renderNodes(nodes);
+                expect(html).to.equal(expectedHtml);
             });
         });
 
