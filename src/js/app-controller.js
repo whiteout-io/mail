@@ -154,6 +154,11 @@ define(function(require) {
             imapClient = new ImapClient(imapOptions);
             imapClient.onError = onImapError;
 
+            // after-setup configuration depending on the provider:
+            // gmail does not require you to upload to the sent items folder
+            // after successful sending, whereas most other providers do
+            self._emailDao.ignoreUploadOnSent = !!(config[auth.provider] && config[auth.provider].ignoreUploadOnSent);
+
             // connect to clients
             self._emailDao.onConnect({
                 imapClient: imapClient,

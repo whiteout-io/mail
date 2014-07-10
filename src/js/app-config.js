@@ -50,7 +50,8 @@ define(function(require) {
                 port: 465,
                 host: 'smtp.gmail.com',
                 sslCert: 'Google_Internet_Authority_G2.pem'
-            }
+            },
+            ignoreUploadOnSent: true
         },
         yahoo: {
             imap: {
