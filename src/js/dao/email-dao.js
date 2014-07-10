@@ -975,7 +975,24 @@ define(function(require) {
             smtpclient: options.smtpclient, // filled solely in the integration test, undefined in normal usage
             mail: options.email,
             publicKeysArmored: options.email.publicKeysArmored
-        }, callback);
+        }, function(err, rfcText) {
+            if (err) {
+                return callback(err);
+            }
+
+            var sentFolder = _.findWhere(self._account.folders, {
+                type: 'Sent'
+            });
+
+            if (self.ignoreUploadOnSent || !sentFolder || !rfcText) {
+                return callback();
+            }
+
+            self._imapClient.uploadMessage({
+                path: sentFolder.path,
+                message: rfcText
+            }, callback);
+        });
     };
 
     /**
@@ -985,7 +1002,9 @@ define(function(require) {
      * @param {Function} callback(error) Invoked when the message was sent, or an error occurred
      */
     EmailDAO.prototype.sendPlaintext = function(options, callback) {
-        if (!this._account.online) {
+        var self = this;
+
+        if (!self._account.online) {
             callback({
                 errMsg: 'Client is currently offline!',
                 code: 42
@@ -994,10 +1013,27 @@ define(function(require) {
         }
 
         // mime encode, sign and send email via smtp
-        this._pgpMailer.send({
+        self._pgpMailer.send({
             smtpclient: options.smtpclient, // filled solely in the integration test, undefined in normal usage
             mail: options.email
-        }, callback);
+        }, function(err, rfcText) {
+            if (err) {
+                return callback(err);
+            }
+
+            var sentFolder = _.findWhere(self._account.folders, {
+                type: 'Sent'
+            });
+
+            if (self.ignoreUploadOnSent || !sentFolder || !rfcText) {
+                return callback();
+            }
+
+            self._imapClient.uploadMessage({
+                path: sentFolder.path,
+                message: rfcText
+            }, callback);
+        });
     };
 
     /**
@@ -1246,15 +1282,23 @@ define(function(require) {
             }
 
             // this array is dropped directly into the ui to create the folder list
-            var folders = [
-                wellKnownFolders.inbox,
-                wellKnownFolders.sent, {
-                    type: 'Outbox',
-                    path: config.outboxMailboxPath
-                },
-                wellKnownFolders.drafts,
-                wellKnownFolders.trash
-            ];
+            var folders = [];
+            if (wellKnownFolders.inbox) {
+                folders.push(wellKnownFolders.inbox);
+            }
+            if (wellKnownFolders.sent) {
+                folders.push(wellKnownFolders.sent);
+            }
+            folders.push({
+                type: 'Outbox',
+                path: config.outboxMailboxPath
+            });
+            if (wellKnownFolders.drafts) {
+                folders.push(wellKnownFolders.drafts);
+            }
+            if (wellKnownFolders.trash) {
+                folders.push(wellKnownFolders.trash);
+            }
 
             var foldersChanged = false; // indicates if are there any new/removed folders?
 

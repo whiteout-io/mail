@@ -137,7 +137,7 @@ define(function(require) {
 
                 it('should fail when persisting database version fails', function(done) {
                     userStorageStub.removeList.yieldsAsync();
-                    appConfigStorageStub.storeList.yieldsAsync({});
+                    appConfigStorageStub.storeList.yieldsAsync(new Error());
 
                     updateHandler.update(function(error) {
                         expect(error).to.exist;
@@ -149,7 +149,7 @@ define(function(require) {
                 });
 
                 it('should fail when wiping emails from database fails', function(done) {
-                    userStorageStub.removeList.yieldsAsync({});
+                    userStorageStub.removeList.yieldsAsync(new Error());
 
                     updateHandler.update(function(error) {
                         expect(error).to.exist;
@@ -190,7 +190,7 @@ define(function(require) {
 
                 it('should fail when persisting database version fails', function(done) {
                     userStorageStub.removeList.yieldsAsync();
-                    appConfigStorageStub.storeList.yieldsAsync({});
+                    appConfigStorageStub.storeList.yieldsAsync(new Error());
 
                     updateHandler.update(function(error) {
                         expect(error).to.exist;
@@ -202,7 +202,7 @@ define(function(require) {
                 });
 
                 it('should fail when wiping emails from database fails', function(done) {
-                    userStorageStub.removeList.yieldsAsync({});
+                    userStorageStub.removeList.yieldsAsync(new Error());
 
                     updateHandler.update(function(error) {
                         expect(error).to.exist;
@@ -243,7 +243,7 @@ define(function(require) {
 
                 it('should fail when persisting database version fails', function(done) {
                     userStorageStub.removeList.yieldsAsync();
-                    appConfigStorageStub.storeList.yieldsAsync({});
+                    appConfigStorageStub.storeList.yieldsAsync(new Error());
 
                     updateHandler.update(function(error) {
                         expect(error).to.exist;
@@ -255,11 +255,75 @@ define(function(require) {
                 });
 
                 it('should fail when wiping emails from database fails', function(done) {
-                    userStorageStub.removeList.yieldsAsync({});
+                    userStorageStub.removeList.yieldsAsync(new Error());
 
                     updateHandler.update(function(error) {
                         expect(error).to.exist;
                         expect(userStorageStub.removeList.calledOnce).to.be.true;
+                        expect(appConfigStorageStub.storeList.called).to.be.false;
+
+                        done();
+                    });
+                });
+            });
+            describe('v3 -> v4', function() {
+                var emailDbType = 'emailaddress',
+                    providerDbType = 'provider';
+
+                beforeEach(function() {
+                    cfg.dbVersion = 4; // app requires database version 4
+                    appConfigStorageStub.listItems.withArgs(versionDbType).yieldsAsync(null, [3]); // database version is 3
+                });
+
+                it('should add gmail as mail service provider with email address and no provider present in db', function(done) {
+                    appConfigStorageStub.listItems.withArgs(emailDbType).yieldsAsync(null, ['bla@blubb.io']);
+                    appConfigStorageStub.listItems.withArgs(providerDbType).yieldsAsync(null, []);
+                    appConfigStorageStub.storeList.withArgs([4], versionDbType).yieldsAsync();
+                    appConfigStorageStub.storeList.withArgs(['gmail'], providerDbType).yieldsAsync();
+
+                    updateHandler.update(function(error) {
+                        expect(error).to.not.exist;
+                        expect(appConfigStorageStub.storeList.calledTwice).to.be.true;
+                        expect(appConfigStorageStub.listItems.calledThrice).to.be.true;
+
+                        done();
+                    });
+                });
+
+                it('should not add a provider when no email adress is in db', function(done) {
+                    appConfigStorageStub.listItems.withArgs(emailDbType).yieldsAsync(null, []);
+                    appConfigStorageStub.listItems.withArgs(providerDbType).yieldsAsync(null, []);
+                    appConfigStorageStub.storeList.withArgs([4], versionDbType).yieldsAsync();
+
+                    updateHandler.update(function(error) {
+                        expect(error).to.not.exist;
+                        expect(appConfigStorageStub.storeList.calledOnce).to.be.true;
+                        expect(appConfigStorageStub.listItems.calledThrice).to.be.true;
+
+                        done();
+                    });
+                });
+
+                it('should fail when appConfigStore write fails', function(done) {
+                    appConfigStorageStub.listItems.yieldsAsync(null, []);
+                    appConfigStorageStub.storeList.yieldsAsync(new Error());
+
+                    updateHandler.update(function(error) {
+                        expect(error).to.exist;
+                        expect(appConfigStorageStub.listItems.calledThrice).to.be.true;
+                        expect(appConfigStorageStub.storeList.calledOnce).to.be.true;
+
+                        done();
+                    });
+                });
+
+                it('should fail when appConfigStore read fails', function(done) {
+                    appConfigStorageStub.listItems.withArgs(emailDbType).yieldsAsync(new Error());
+                    appConfigStorageStub.storeList.yieldsAsync(new Error());
+
+                    updateHandler.update(function(error) {
+                        expect(error).to.exist;
+                        expect(appConfigStorageStub.listItems.calledTwice).to.be.true;
                         expect(appConfigStorageStub.storeList.called).to.be.false;
 
                         done();

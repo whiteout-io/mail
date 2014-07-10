@@ -112,6 +112,7 @@ define(function(require) {
             $scope.writerTitle = str.bugReportTitle;
             $scope.subject = str.bugReportSubject;
             $scope.body = str.bugReportBody + dump;
+
         }
 
         function fillFields(re, replyAll, forward) {
@@ -131,13 +132,18 @@ define(function(require) {
                     address: replyTo
                 });
                 $scope.to.forEach($scope.verify);
-                if ((re.references || []).indexOf(re.id) < 0) {
-                    // references might not exist yet, so use the double concat
-                    $scope.references = [].concat(re.references || []).concat(re.id);
-                } else {
-                    $scope.references = re.references;
+                if (re.references) {
+
                 }
-                $scope.inReplyTo = re.id;
+
+                $scope.references = (re.references || []);
+                if (re.id && $scope.references.indexOf(re.id) < 0) {
+                    // references might not exist yet, so use the double concat
+                    $scope.references = $scope.references.concat(re.id);
+                }
+                if (re.id) {
+                    $scope.inReplyTo = re.id;
+                }
             }
             if (replyAll) {
                 re.to.concat(re.cc).forEach(function(recipient) {
@@ -164,7 +170,9 @@ define(function(require) {
                 // create a new array, otherwise removing an attachment will also
                 // remove it from the original in the mail list as a side effect
                 $scope.attachments = [].concat(re.attachments);
-                $scope.references = [re.id];
+                if (re.id) {
+                    $scope.references = [re.id];
+                }
             }
 
             // fill subject

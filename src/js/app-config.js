@@ -42,19 +42,50 @@ define(function(require) {
             imap: {
                 secure: true,
                 port: 993,
-                host: 'imap.gmail.com'
+                host: 'imap.gmail.com',
+                sslCert: 'Google_Internet_Authority_G2.pem'
             },
             smtp: {
                 secure: true,
                 port: 465,
-                host: 'smtp.gmail.com'
+                host: 'smtp.gmail.com',
+                sslCert: 'Google_Internet_Authority_G2.pem'
+            },
+            ignoreUploadOnSent: true
+        },
+        yahoo: {
+            imap: {
+                secure: true,
+                port: 993,
+                host: 'imap.mail.yahoo.com',
+                sslCert: 'Yahoo_IMAP_cert.pem'
+            },
+            smtp: {
+                secure: true,
+                port: 465,
+                host: 'smtp.mail.yahoo.com',
+                sslCert: 'Yahoo_SMTP_cert.pem'
+            }
+        },
+        tonline: {
+            imap: {
+                secure: true,
+                port: 993,
+                host: 'secureimap.t-online.de',
+                sslCert: 'T_Systems_Trust_Center.pem'
+            },
+            smtp: {
+                secure: true,
+                port: 465,
+                host: 'securesmtp.t-online.de',
+                sslCert: 'T_Systems_Trust_Center.pem'
             }
         },
         checkOutboxInterval: 5000,
         iconPath: '/img/icon.png',
         verificationUrl: '/verify/',
         verificationUuidLength: 36,
-        dbVersion: 3,
+        dbVersion: 4,
         appVersion: appVersion,
         outboxMailboxPath: 'OUTBOX',
         outboxMailboxType: 'Outbox'

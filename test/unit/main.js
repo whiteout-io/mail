@@ -81,6 +81,7 @@ function startTests() {
 			'test/unit/mail-list-ctrl-test',
 			'test/unit/write-ctrl-test',
 			'test/unit/outbox-bo-test',
+			'test/unit/set-credentials-ctrl-test',
 			'test/unit/invitation-dao-test',
 			'test/unit/update-handler-test'
 		], function() {

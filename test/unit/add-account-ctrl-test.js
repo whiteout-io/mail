@@ -12,14 +12,17 @@ define(function(require) {
         var scope, location, ctrl, authStub;
 
         describe('connectToGoogle', function() {
+            var origAuth;
             beforeEach(function() {
                 // remember original module to restore later, then replace it
+                appController._auth;
                 appController._auth = authStub = sinon.createStubInstance(Auth);
             });
 
             afterEach(function() {
                 // restore the app controller module
                 location && location.path && location.path.restore && location.path.restore();
+                appController._auth = origAuth;
             });
 
             it('should fail on fetchOAuthToken error', function(done) {
@@ -36,10 +39,10 @@ define(function(require) {
 
                 scope.onError = function(err) {
                     expect(err).to.equal(42);
-                    expect(authStub.getCredentials.calledOnce).to.be.true;
+                    expect(authStub.setCredentials.calledOnce).to.be.true;
                     done();
                 };
-                authStub.getCredentials.yields(42);
+                authStub.setCredentials.yields(42);
 
                 scope.connectToGoogle();
             });
@@ -54,7 +57,7 @@ define(function(require) {
 
                     sinon.stub(location, 'path', function(path) {
                         expect(path).to.equal('/login');
-                        expect(authStub.getCredentials.calledOnce).to.be.true;
+                        expect(authStub.setCredentials.calledOnce).to.be.true;
 
                         location.path.restore();
                         scope.$apply.restore();
@@ -69,7 +72,7 @@ define(function(require) {
                     });
                 });
 
-                authStub.getCredentials.yields();
+                authStub.setCredentials.yields();
 
                 scope.connectToGoogle();
             });

@@ -1,51 +1,219 @@
-define(function() {
+define(function(require) {
     'use strict';
 
-    var emailItemKey = 'emailaddress';
+    var config = require('js/app-config').config;
 
+    var EMAIL_ADDR_DB_KEY = 'emailaddress';
+    var PASSWD_DB_KEY = 'password';
+    var PROVIDER_DB_KEY = 'provider';
+
+    /**
+     * The Auth BO handles the rough edges and gaps between user/password authentication
+     * and OAuth via Chrome Identity API.
+     * Typical usage:
+     * var auth = new Auth(...);
+     * auth.setCredentials(...); // during the account setup
+     * auth.getEmailAddress(...); // called from the login controller to determine if there is already a user present on the device
+     * auth.getCredentials(...); // called to gather all the information to connect to IMAP/SMTP, e.g. pinned intermediate certificates,
+     *                              username, password / oauth token, IMAP/SMTP server host names, ...
+     */
     var Auth = function(appConfigStore, oauth, ca) {
         this._appConfigStore = appConfigStore;
         this._oauth = oauth;
         this._ca = ca;
     };
 
-    Auth.prototype.getCredentials = function(options, callback) {
+    /**
+     * Retrieves credentials and IMAP/SMTP settings:
+     * 1) Fetches the credentials from disk, then...
+     * 2 a) ... in an oauth setting, retrieves a fresh oauth token from the Chrome Identity API.
+     * 2 b) ... in a user/passwd setting, does not need to do additional work.
+     * 3) Loads the intermediate certs from the configuration.
+     *
+     * @param {Function} callback(err, credentials)
+     */
+    Auth.prototype.getCredentials = function(callback) {
         var self = this;
 
-        // fetch pinned local ssl certificate
-        self.getCertificate(function(err, certificate) {
-            if (err) {
-                callback(err);
+        if (!self.provider || !self.emailAddress) {
+            // we're not yet initialized, so let's load our stuff from disk
+            self._loadCredentials(function(err) {
+                if (err) {
+                    return callback(err);
+                }
+
+                chooseLogin();
+            });
+            return;
+        }
+
+        chooseLogin();
+
+        function chooseLogin() {
+            if (self.provider === 'gmail' && !self.password) {
+                // oauth login for gmail
+                self._getOAuthToken(function(err) {
+                    if (err) {
+                        return callback(err);
+                    }
+
+                    setPinnedCerts();
+                });
                 return;
             }
 
-            // try reading email address from local storage
-            self.getEmailAddressFromConfig(function(err, emailAddress) {
+            // override settings with gmail certs
+            if ((self.emailAddress.match(/@gmail.|@googlemail./))) {
+                self.provider = 'gmail';
+            }
+
+            setPinnedCerts();
+        }
+
+        // recover the intermediate certs from the configuration
+        function setPinnedCerts() {
+            var serverConfig = config[self.provider];
+
+            if (!serverConfig) {
+                // custom domain
+                return callback(new Error('Custom mail providers are not yet supported!'));
+            }
+
+            self._getCertificate(serverConfig.imap.sslCert, function(err, imapCertificate) {
                 if (err) {
-                    callback(err);
-                    return;
+                    return callback(err);
                 }
 
-                // get a fresh oauth token
-                self._oauth.getOAuthToken(emailAddress, function(err, token) {
+                self._getCertificate(serverConfig.smtp.sslCert, function(err, smtpCertificate) {
                     if (err) {
-                        callback(err);
-                        return;
+                        return callback(err);
                     }
 
-                    // get email address for the token
-                    self.queryEmailAddress(token, function(err, emailAddress) {
-                        if (err) {
-                            callback(err);
-                            return;
-                        }
+                    var credentials = {
+                        emailAddress: self.emailAddress,
+                        oauthToken: self.oauthToken,
+                        password: self.password,
+                        imap: serverConfig.imap,
+                        smtp: serverConfig.smtp
+                    };
 
-                        callback(null, {
-                            emailAddress: emailAddress,
-                            oauthToken: token,
-                            sslCert: certificate
-                        });
-                    });
+                    // set pinned cert
+                    credentials.imap.ca = [imapCertificate];
+                    credentials.smtp.ca = [smtpCertificate];
+
+                    callback(null, credentials);
+                });
+            });
+        }
+    };
+
+    /**
+     * Set the credentials:
+     * In a GMail OAuth use case, this would only be options.provider, then this method
+     * will go and fetch the email address from the Chrome Identity API.
+     * In a user/password use case, this would only be options.provider, options.emailAddress,
+     * and options.password.
+     *
+     * @param {String} options.provider The service provider, e.g. 'gmail', 'yahoo', 'tonline'. Matches the entry in the app-config.
+     * @param {String} options.emailAddress The email address, only in user/passwd setting
+     * @param {String} options.password The password, only in user/passwd setting
+     * @param {Function} callback(err, email) Invoked with the email address, or information in case of an error
+     */
+    Auth.prototype.setCredentials = function(options, callback) {
+        var self = this;
+
+        // persist the provider
+        self._appConfigStore.storeList([options.provider], PROVIDER_DB_KEY, function(err) {
+            if (err) {
+                return callback(err);
+            }
+
+            self.provider = options.provider;
+
+            if (!(options.emailAddress && options.password)) {
+                self._getOAuthToken(function(err) {
+                    callback(err, err ? undefined : self.emailAddress);
+                });
+                return;
+            }
+
+            self._appConfigStore.storeList([options.emailAddress], EMAIL_ADDR_DB_KEY, function(err) {
+                if (err) {
+                    return callback(err);
+                }
+
+                self._appConfigStore.storeList([options.password], PASSWD_DB_KEY, function(err) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    self.emailAddress = options.emailAddress;
+                    self.password = options.password;
+                    callback(null, self.emailAddress);
+                });
+            });
+        });
+    };
+
+    /**
+     * Returns the email address. Loads it from disk, if necessary
+     */
+    Auth.prototype.getEmailAddress = function(callback) {
+        var self = this;
+
+        if (self.emailAddress) {
+            return callback(null, self.emailAddress);
+        }
+
+        self._loadCredentials(function(err) {
+            if (err) {
+                return callback(err);
+            }
+
+            callback(null, self.emailAddress);
+        });
+    };
+
+    /**
+     * READ FIRST b/c usage of the oauth api is weird.
+     * the chrome identity api will let you query an oauth token for an email account without knowing
+     * the corresponding email address. also, android has multiple accounts whereas desktop chrome only
+     * has one user logged in.
+     * 1) try to read the email address from the configuration (see above)
+     * 2) fetch the oauth token. if we already HAVE an email address at this point, we can spare
+     *    popping up the account picker on android! if not, the account picker will pop up. this
+     *    is android only, since the desktop chrome will query the user that is logged into chrome
+     * 3) fetch the email address for the oauth token from the chrome identity api
+     */
+    Auth.prototype._getOAuthToken = function(callback) {
+        var self = this;
+
+        // get a fresh oauth token
+        self._oauth.getOAuthToken(self.emailAddress, function(err, oauthToken) {
+            if (err) {
+                return callback(err);
+            }
+
+            // shortcut if the email address is already known
+            if (self.emailAddress) {
+                self.oauthToken = oauthToken;
+                return callback();
+            }
+
+            // query the email address
+            self._oauth.queryEmailAddress(oauthToken, function(err, emailAddress) {
+                if (err) {
+                    return callback(err);
+                }
+
+                // cache the email address on the device
+                self._appConfigStore.storeList([emailAddress], EMAIL_ADDR_DB_KEY, function(err) {
+                    if (err) {
+                        return callback(err);
+                    }
+
+                    self.oauthToken = oauthToken;
+                    self.emailAddress = emailAddress;
+                    callback();
                 });
             });
         });
@@ -54,9 +222,9 @@ define(function() {
     /**
      * Get the pinned ssl certificate for the corresponding mail server.
      */
-    Auth.prototype.getCertificate = function(callback) {
+    Auth.prototype._getCertificate = function(filename, callback) {
         this._ca.get({
-            uri: '/Google_Internet_Authority_G2.pem',
+            uri: '/' + filename,
             type: 'text'
         }, function(err, cert) {
             if (err || !cert) {
@@ -71,74 +239,37 @@ define(function() {
     };
 
     /**
-     * Gracefully try to fetch the user's email address from local storage.
-     * If not yet stored, handle online/offline cases on first use.
+     * Loads email address, password, and provider from disk and sets them on `this`
      */
-    Auth.prototype.getEmailAddress = function(callback) {
-        // try to fetch email address from local storage
-        this.getEmailAddressFromConfig(function(err, cachedEmailAddress) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            callback(null, cachedEmailAddress);
-        });
-    };
-
-    /**
-     * Get the user's email address from local storage
-     */
-    Auth.prototype.getEmailAddressFromConfig = function(callback) {
-        this._appConfigStore.listItems(emailItemKey, 0, null, function(err, cachedItems) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            // no email address is cached yet
-            if (!cachedItems || cachedItems.length < 1) {
-                callback();
-                return;
-            }
-
-            callback(null, cachedItems[0]);
-        });
-    };
-
-    /**
-     * Lookup the user's email address. Check local cache if available
-     * otherwise query google's token info api to learn the user's email address
-     */
-    Auth.prototype.queryEmailAddress = function(token, callback) {
+    Auth.prototype._loadCredentials = function(callback) {
         var self = this;
 
-        self.getEmailAddressFromConfig(function(err, cachedEmailAddress) {
+        loadFromDB(EMAIL_ADDR_DB_KEY, function(err, emailAddress) {
             if (err) {
-                callback(err);
-                return;
+                return callback(err);
             }
 
-            // do roundtrip to google api if no email address is cached yet
-            if (!cachedEmailAddress) {
-                queryOAuthApi();
-                return;
-            }
-
-            callback(null, cachedEmailAddress);
-        });
-
-        function queryOAuthApi() {
-            self._oauth.queryEmailAddress(token, function(err, emailAddress) {
+            loadFromDB(PASSWD_DB_KEY, function(err, password) {
                 if (err) {
-                    callback(err);
-                    return;
+                    return callback(err);
                 }
 
-                // cache the email address on the device
-                self._appConfigStore.storeList([emailAddress], emailItemKey, function(err) {
-                    callback(err, emailAddress);
+                loadFromDB(PROVIDER_DB_KEY, function(err, provider) {
+                    if (err) {
+                        return callback(err);
+                    }
+
+                    self.emailAddress = emailAddress;
+                    self.password = password;
+                    self.provider = provider;
+                    callback();
                 });
+            });
+        });
+
+        function loadFromDB(key, callback) {
+            self._appConfigStore.listItems(key, 0, null, function(err, cachedItems) {
+                callback(err, (!err && cachedItems && cachedItems[0]));
             });
         }
     };
