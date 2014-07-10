@@ -3,6 +3,7 @@ define(function(require) {
 
     var appController = require('js/app-controller'),
         dl = require('js/util/download'),
+        config = require('js/app-config').config,
         pgp, keychain, userId;
 
     //
@@ -31,6 +32,7 @@ define(function(require) {
         var fpr = keyParams.fingerprint;
         $scope.fingerprint = fpr.slice(0, 4) + ' ' + fpr.slice(4, 8) + ' ' + fpr.slice(8, 12) + ' ' + fpr.slice(12, 16) + ' ' + fpr.slice(16, 20) + ' ' + fpr.slice(20, 24) + ' ' + fpr.slice(24, 28) + ' ' + fpr.slice(28, 32) + ' ' + fpr.slice(32, 36) + ' ' + fpr.slice(36);
         $scope.keysize = keyParams.bitSize;
+        $scope.publicKeyUrl = config.cloudUrl + '/' + userId;
 
         //
         // scope functions
