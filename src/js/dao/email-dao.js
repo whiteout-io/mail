@@ -817,7 +817,7 @@ define(function(require) {
      * @param {Function} callback(error, attachment) Invoked when the attachment body part was retrieved and parsed, or an error occurred
      */
     EmailDAO.prototype.getAttachment = function(options, callback) {
-        var self=  this;
+        var self = this;
 
         self.busy();
         self._getBodyParts({
@@ -1004,7 +1004,7 @@ define(function(require) {
             });
             return;
         }
-
+        self.busy();
         // mime encode, sign and send email via smtp
         self._pgpMailer.send({
             smtpclient: options.smtpclient, // filled solely in the integration test, undefined in normal usage
@@ -1022,7 +1022,14 @@ define(function(require) {
      * @param {Function} callback(error, message) Invoked when the message was encrypted, or an error occurred
      */
     EmailDAO.prototype.encrypt = function(options, callback) {
-        this._pgpbuilder.encrypt(options, callback);
+        var self = this;
+
+        self.busy();
+        self._pgpbuilder.encrypt(options, function(err) {
+            self.done();
+            callback(err);
+        });
+
     };
 
 
