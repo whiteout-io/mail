@@ -436,7 +436,6 @@ define(function(require) {
                         expect(notified).to.be.true;
                         expect(localStoreStub.calledOnce).to.be.true;
                         expect(imapListStub.calledOnce).to.be.true;
-                        expect(account.busy).to.be.false;
 
                         done();
                     });
