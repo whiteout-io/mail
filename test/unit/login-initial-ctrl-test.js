@@ -3,6 +3,7 @@ define(function(require) {
 
     var expect = chai.expect,
         angular = require('angular'),
+        Auth = require('js/bo/auth'),
         mocks = require('angularMocks'),
         LoginInitialCtrl = require('js/controller/login-initial'),
         PGP = require('js/crypto/pgp'),
@@ -11,6 +12,7 @@ define(function(require) {
 
     describe('Login (initial user) Controller unit test', function() {
         var scope, ctrl, location, origEmailDao, emailDaoMock,
+            origAuth, authMock,
             emailAddress = 'fred@foo.com',
             passphrase = 'asd',
             keyId, expectedKeyId,
@@ -19,9 +21,10 @@ define(function(require) {
         beforeEach(function() {
             // remember original module to restore later
             origEmailDao = appController._emailDao;
+            origAuth = appController._auth;
 
-            emailDaoMock = sinon.createStubInstance(EmailDAO);
-            appController._emailDao = emailDaoMock;
+            appController._emailDao = emailDaoMock = sinon.createStubInstance(EmailDAO);
+            appController._auth = authMock = sinon.createStubInstance(Auth);
 
             keyId = '9FEB47936E712926';
             expectedKeyId = '6E712926';
@@ -49,6 +52,7 @@ define(function(require) {
         afterEach(function() {
             // restore the module
             appController._emailDao = origEmailDao;
+            appController._auth = origAuth;
         });
 
         describe('initial state', function() {
@@ -143,6 +147,7 @@ define(function(require) {
                 emailDaoMock.unlock.withArgs({
                     passphrase: passphrase
                 }).yields();
+                authMock.storeCredentials.yields();
 
                 scope.$apply = function() {
                     expect(location.$$path).to.equal('/desktop');

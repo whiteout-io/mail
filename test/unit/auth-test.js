@@ -4,6 +4,7 @@ define(function(require) {
     var Auth = require('js/bo/auth'),
         OAuth = require('js/util/oauth'),
         RestDAO = require('js/dao/rest-dao'),
+        PGP = require('js/crypto/pgp'),
         DeviceStorageDAO = require('js/dao/devicestorage-dao'),
         config = require('js/app-config').config,
         expect = chai.expect;
@@ -18,11 +19,12 @@ define(function(require) {
         var auth;
 
         // Dependencies
-        var storageStub, oauthStub, caStub;
+        var storageStub, oauthStub, caStub, pgpStub;
 
         // test data
         var emailAddress = 'bla@blubb.com';
         var password = 'passwordpasswordpassword';
+        var encryptedPassword = 'pgppasswordpgppassword';
         var oauthToken = 'tokentokentokentoken';
         var provider = 'gmail';
         var imapCert = 'imapimapimapimapimap';
@@ -32,10 +34,9 @@ define(function(require) {
             storageStub = sinon.createStubInstance(DeviceStorageDAO);
             oauthStub = sinon.createStubInstance(OAuth);
             caStub = sinon.createStubInstance(RestDAO);
-            auth = new Auth(storageStub, oauthStub, caStub);
+            pgpStub = sinon.createStubInstance(PGP);
+            auth = new Auth(storageStub, oauthStub, caStub, pgpStub);
         });
-
-        afterEach(function() {});
 
         describe('#getCredentials', function() {
             beforeEach(function() {
@@ -51,16 +52,17 @@ define(function(require) {
 
             it('should load credentials and retrieve credentials from cfg', function(done) {
                 storageStub.listItems.withArgs(EMAIL_ADDR_DB_KEY, 0, null).yieldsAsync(null, [emailAddress]);
-                storageStub.listItems.withArgs(PASSWD_DB_KEY, 0, null).yieldsAsync(null, [password]);
+                storageStub.listItems.withArgs(PASSWD_DB_KEY, 0, null).yieldsAsync(null, [encryptedPassword]);
                 storageStub.listItems.withArgs(PROVIDER_DB_KEY, 0, null).yieldsAsync(null, [provider]);
+                pgpStub.decrypt.withArgs(encryptedPassword, undefined).yields(null, password);
 
                 auth.getCredentials(function(err, credentials) {
                     expect(err).to.not.exist;
-                    
+
                     expect(auth.provider).to.equal(provider);
                     expect(auth.emailAddress).to.equal(emailAddress);
                     expect(auth.password).to.equal(password);
-                    
+
                     expect(credentials.emailAddress).to.equal(emailAddress);
                     expect(credentials.password).to.equal(password);
                     expect(credentials.imap).to.equal(config[provider].imap);
@@ -69,6 +71,7 @@ define(function(require) {
                     expect(credentials.smtp.ca).to.deep.equal([smtpCert]);
 
                     expect(storageStub.listItems.calledThrice).to.be.true;
+                    expect(pgpStub.decrypt.calledOnce).to.be.true;
 
                     done();
                 });
@@ -120,49 +123,65 @@ define(function(require) {
         });
 
         describe('#setCredentials', function() {
-            it('should persist provider, username, password', function(done) {
+            it('should fetch email address from identity api and store the credentials', function(done) {
+                oauthStub.getOAuthToken.withArgs(undefined).yieldsAsync(null, oauthToken);
+                oauthStub.queryEmailAddress.withArgs(oauthToken).yieldsAsync(null, emailAddress);
                 storageStub.storeList.withArgs([emailAddress], EMAIL_ADDR_DB_KEY).yieldsAsync();
-                storageStub.storeList.withArgs([password], PASSWD_DB_KEY).yieldsAsync();
                 storageStub.storeList.withArgs([provider], PROVIDER_DB_KEY).yieldsAsync();
 
                 auth.setCredentials({
-                    provider: provider,
-                    emailAddress: emailAddress,
-                    password: password
-                }, function(err, mail) {
+                    provider: provider
+                }, function(err) {
                     expect(err).to.not.exist;
-                    expect(mail).to.equal(emailAddress);
-                    expect(auth.provider).to.equal(provider);
+
+                    expect(auth.credentialsDirty).to.be.false;
                     expect(auth.emailAddress).to.equal(emailAddress);
-                    expect(auth.oauthToken).to.not.exist;
-                    expect(auth.password).to.equal(password);
-
-
-                    expect(storageStub.storeList.calledThrice).to.be.true;
+                    expect(auth.provider).to.equal(provider);
+                    expect(storageStub.storeList.calledTwice).to.be.true;
 
                     done();
                 });
             });
 
-            it('should persist provider and query email by oauth', function(done) {
-                storageStub.storeList.withArgs([provider], PROVIDER_DB_KEY).yieldsAsync();
-                storageStub.storeList.withArgs([emailAddress], EMAIL_ADDR_DB_KEY).yields();
-                oauthStub.getOAuthToken.withArgs(undefined).yieldsAsync(null, oauthToken);
-                oauthStub.queryEmailAddress.withArgs(oauthToken).yieldsAsync(null, emailAddress);
+            it('should set the credentials', function(done) {
+                var otherProvider = 'providaaaa';
 
                 auth.setCredentials({
-                    provider: provider
-                }, function(err, mail) {
+                    provider: otherProvider,
+                    emailAddress: emailAddress,
+                    password: password
+                }, function(err) {
                     expect(err).to.not.exist;
-                    expect(mail).to.equal(emailAddress);
-                    expect(auth.provider).to.equal(provider);
-                    expect(auth.emailAddress).to.equal(emailAddress);
-                    expect(auth.oauthToken).to.equal(oauthToken);
-                    expect(auth.password).to.not.exist;
 
-                    expect(storageStub.storeList.calledTwice).to.be.true;
-                    expect(oauthStub.getOAuthToken.calledOnce).to.be.true;
-                    expect(oauthStub.queryEmailAddress.calledOnce).to.be.true;
+                    expect(auth.credentialsDirty).to.be.true;
+                    expect(auth.emailAddress).to.equal(emailAddress);
+                    expect(auth.password).to.equal(password);
+                    expect(auth.provider).to.equal(otherProvider);
+                    expect(storageStub.storeList.called).to.be.false;
+
+                    done();
+                });
+            });
+
+        });
+
+        describe('#storeCredentials', function() {
+            it('should persist provider, username, password', function(done) {
+                auth.credentialsDirty = true;
+                auth.emailAddress = emailAddress;
+                auth.password = password;
+                auth.provider = provider;
+
+                storageStub.storeList.withArgs([emailAddress], EMAIL_ADDR_DB_KEY).yieldsAsync();
+                storageStub.storeList.withArgs([encryptedPassword], PASSWD_DB_KEY).yieldsAsync();
+                storageStub.storeList.withArgs([provider], PROVIDER_DB_KEY).yieldsAsync();
+                pgpStub.encrypt.withArgs(password).yields(null, encryptedPassword);
+
+                auth.storeCredentials(function(err) {
+                    expect(err).to.not.exist;
+
+                    expect(storageStub.storeList.calledThrice).to.be.true;
+                    expect(pgpStub.encrypt.calledOnce).to.be.true;
 
                     done();
                 });
@@ -170,7 +189,7 @@ define(function(require) {
         });
 
         describe('#_getOAuthToken', function() {
-            it('should work fetch token with known email address', function(done) {
+            it('should fetch token with known email address', function(done) {
                 auth.emailAddress = emailAddress;
                 oauthStub.getOAuthToken.withArgs(emailAddress).yieldsAsync(null, oauthToken);
 
@@ -188,7 +207,6 @@ define(function(require) {
             it('should fetch token with unknown email address', function(done) {
                 oauthStub.getOAuthToken.withArgs(undefined).yieldsAsync(null, oauthToken);
                 oauthStub.queryEmailAddress.withArgs(oauthToken).yieldsAsync(null, emailAddress);
-                storageStub.storeList.withArgs([emailAddress], EMAIL_ADDR_DB_KEY).yields();
 
                 auth._getOAuthToken(function(err) {
                     expect(err).to.not.exist;
@@ -197,25 +215,6 @@ define(function(require) {
 
                     expect(oauthStub.getOAuthToken.calledOnce).to.be.true;
                     expect(oauthStub.queryEmailAddress.calledOnce).to.be.true;
-                    expect(storageStub.storeList.calledOnce).to.be.true;
-
-                    done();
-                });
-            });
-
-            it('should fail when email address fetch fails', function(done) {
-                oauthStub.getOAuthToken.yieldsAsync(null, oauthToken);
-                oauthStub.queryEmailAddress.yieldsAsync(null, emailAddress);
-                storageStub.storeList.yields(new Error());
-
-                auth._getOAuthToken(function(err) {
-                    expect(err).to.exist;
-                    expect(auth.emailAddress).to.not.exist;
-                    expect(auth.oauthToken).to.not.exist;
-
-                    expect(oauthStub.getOAuthToken.calledOnce).to.be.true;
-                    expect(oauthStub.queryEmailAddress.calledOnce).to.be.true;
-                    expect(storageStub.storeList.calledOnce).to.be.true;
 
                     done();
                 });
@@ -232,7 +231,6 @@ define(function(require) {
 
                     expect(oauthStub.getOAuthToken.calledOnce).to.be.true;
                     expect(oauthStub.queryEmailAddress.calledOnce).to.be.true;
-                    expect(storageStub.storeList.called).to.be.false;
 
                     done();
                 });
@@ -248,7 +246,6 @@ define(function(require) {
 
                     expect(oauthStub.getOAuthToken.calledOnce).to.be.true;
                     expect(oauthStub.queryEmailAddress.called).to.be.false;
-                    expect(storageStub.storeList.called).to.be.false;
 
                     done();
                 });
@@ -289,14 +286,15 @@ define(function(require) {
         describe('#_loadCredentials', function() {
             it('should work', function(done) {
                 storageStub.listItems.withArgs(EMAIL_ADDR_DB_KEY, 0, null).yieldsAsync(null, [emailAddress]);
-                storageStub.listItems.withArgs(PASSWD_DB_KEY, 0, null).yieldsAsync(null, [password]);
+                storageStub.listItems.withArgs(PASSWD_DB_KEY, 0, null).yieldsAsync(null, [encryptedPassword]);
                 storageStub.listItems.withArgs(PROVIDER_DB_KEY, 0, null).yieldsAsync(null, [provider]);
 
                 auth._loadCredentials(function(err) {
                     expect(err).to.not.exist;
                     expect(auth.emailAddress).to.equal(emailAddress);
-                    expect(auth.password).to.equal(password);
+                    expect(auth.password).to.equal(encryptedPassword);
                     expect(auth.provider).to.equal(provider);
+                    expect(auth.passwordNeedsDecryption).to.be.true;
 
                     expect(storageStub.listItems.calledThrice).to.be.true;
 

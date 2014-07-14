@@ -33,6 +33,12 @@ define(function(require) {
      * Start the application
      */
     self.start = function(options, callback) {
+        if (self.started) {
+            return callback();
+        }
+
+        self.started = true;
+
         // are we running in a cordova app or in a browser environment?
         if (window.cordova) {
             // wait for 'deviceready' event to make sure plugins are loaded
@@ -88,7 +94,7 @@ define(function(require) {
         };
 
         self._appConfigStore = appConfigStore = new DeviceStorageDAO(new LawnchairDAO());
-        self._auth = new Auth(appConfigStore, oauth, new RestDAO('/ca'));
+        self._auth = new Auth(appConfigStore, oauth, new RestDAO('/ca'), pgp);
         self._userStorage = userStorage = new DeviceStorageDAO(lawnchairDao);
         self._invitationDao = new InvitationDAO(restDao);
         self._pgpbuilder = pgpbuilder = new PgpBuilder();

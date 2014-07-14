@@ -17,10 +17,11 @@ define(function(require) {
      * auth.getCredentials(...); // called to gather all the information to connect to IMAP/SMTP, e.g. pinned intermediate certificates,
      *                              username, password / oauth token, IMAP/SMTP server host names, ...
      */
-    var Auth = function(appConfigStore, oauth, ca) {
+    var Auth = function(appConfigStore, oauth, ca, pgp) {
         this._appConfigStore = appConfigStore;
         this._oauth = oauth;
         this._ca = ca;
+        this._pgp = pgp;
     };
 
     /**
@@ -67,6 +68,21 @@ define(function(require) {
                 self.provider = 'gmail';
             }
 
+            if (self.passwordNeedsDecryption) {
+                // decrypt password
+                self._pgp.decrypt(self.password, undefined, function(err, cleartext) {
+                    if (err) {
+                        return callback(err);
+                    }
+
+                    self.passwordNeedsDecryption = false;
+                    self.password = cleartext;
+
+                    setPinnedCerts();
+                });
+                return;
+            }
+
             setPinnedCerts();
         }
 
@@ -109,10 +125,9 @@ define(function(require) {
 
     /**
      * Set the credentials:
-     * In a GMail OAuth use case, this would only be options.provider, then this method
-     * will go and fetch the email address from the Chrome Identity API.
-     * In a user/password use case, this would only be options.provider, options.emailAddress,
-     * and options.password.
+     * In a GMail OAuth use case, this would only be options.provider, then this method will go and fetch the email
+     * address from the Chrome Identity API. In a user/password use case, this would only be options.provider,
+     * options.emailAddress, and options.password.
      *
      * @param {String} options.provider The service provider, e.g. 'gmail', 'yahoo', 'tonline'. Matches the entry in the app-config.
      * @param {String} options.emailAddress The email address, only in user/passwd setting
@@ -122,33 +137,62 @@ define(function(require) {
     Auth.prototype.setCredentials = function(options, callback) {
         var self = this;
 
-        // persist the provider
-        self._appConfigStore.storeList([options.provider], PROVIDER_DB_KEY, function(err) {
-            if (err) {
-                return callback(err);
-            }
+        self.credentialsDirty = true;
+        self.emailAddress = options.emailAddress;
+        self.password = options.password;
+        self.provider = options.provider;
 
-            self.provider = options.provider;
-
-            if (!(options.emailAddress && options.password)) {
-                self._getOAuthToken(function(err) {
-                    callback(err, err ? undefined : self.emailAddress);
-                });
-                return;
-            }
-
-            self._appConfigStore.storeList([options.emailAddress], EMAIL_ADDR_DB_KEY, function(err) {
+        if (self.provider === 'gmail') {
+            // in case of gmail oauth login, we don't need to encrypt the password and can store the data right away
+            self._getOAuthToken(function(err) {
                 if (err) {
                     return callback(err);
                 }
 
-                self._appConfigStore.storeList([options.password], PASSWD_DB_KEY, function(err) {
+                self.storeCredentials(callback);
+            });
+            return;
+        }
+
+        callback();
+    };
+
+    Auth.prototype.storeCredentials = function(callback) {
+        var self = this;
+
+        if (!self.credentialsDirty) {
+            return callback();
+        }
+
+        // persist the provider
+        self._appConfigStore.storeList([self.provider], PROVIDER_DB_KEY, function(err) {
+            if (err) {
+                return callback(err);
+            }
+
+            self._appConfigStore.storeList([self.emailAddress], EMAIL_ADDR_DB_KEY, function(err) {
+                if (err) {
+                    return callback(err);
+                }
+
+                if (!self.password) {
+                    self.credentialsDirty = false;
+                    return callback();
+                }
+
+                self._pgp.encrypt(self.password, undefined, function(err, ciphertext) {
                     if (err) {
                         return callback(err);
                     }
-                    self.emailAddress = options.emailAddress;
-                    self.password = options.password;
-                    callback(null, self.emailAddress);
+
+                    self._appConfigStore.storeList([ciphertext], PASSWD_DB_KEY, function(err) {
+                        if (err) {
+                            return callback(err);
+                        }
+
+                        self.credentialsDirty = false;
+                        callback();
+                    });
                 });
             });
         });
@@ -205,16 +249,9 @@ define(function(require) {
                     return callback(err);
                 }
 
-                // cache the email address on the device
-                self._appConfigStore.storeList([emailAddress], EMAIL_ADDR_DB_KEY, function(err) {
-                    if (err) {
-                        return callback(err);
-                    }
-
-                    self.oauthToken = oauthToken;
-                    self.emailAddress = emailAddress;
-                    callback();
-                });
+                self.oauthToken = oauthToken;
+                self.emailAddress = emailAddress;
+                callback();
             });
         });
     };
@@ -261,6 +298,7 @@ define(function(require) {
 
                     self.emailAddress = emailAddress;
                     self.password = password;
+                    self.passwordNeedsDecryption = !!password;
                     self.provider = provider;
                     callback();
                 });
