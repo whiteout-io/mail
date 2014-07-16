@@ -7,6 +7,7 @@
 		paths: {
 			js: '../js',
 			test: '../../test',
+			jquery: 'jquery.min',
 			underscore: 'underscore/underscore-min',
 			lawnchair: 'lawnchair/lawnchair-git',
 			lawnchairSQL: 'lawnchair/lawnchair-adapter-webkit-sqlite-git',
@@ -14,6 +15,7 @@
 			angular: 'angular/angular.min',
 			angularRoute: 'angular/angular-route.min',
 			angularAnimate: 'angular/angular-animate.min',
+			ngInfiniteScroll: 'ng-infinite-scroll.min',
 			uuid: 'uuid/uuid',
 			forge: 'forge/forge.min',
 			punycode: 'punycode.min',
@@ -24,8 +26,12 @@
 			forge: {
 				exports: 'forge'
 			},
+			jquery: {
+				exports: '$'
+			},
 			angular: {
-				exports: 'angular'
+				exports: 'angular',
+				deps: ['jquery']
 			},
 			angularRoute: {
 				exports: 'angular',
@@ -34,6 +40,10 @@
 			angularAnimate: {
 				exports: 'angular',
 				deps: ['angular']
+			},
+			ngInfiniteScroll: {
+				exports: 'angular',
+				deps: ['jquery', 'angular']
 			},
 			lawnchair: {
 				exports: 'Lawnchair'

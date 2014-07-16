@@ -24,7 +24,8 @@ requirejs([
     'js/util/error',
     'fastclick',
     'angularRoute',
-    'angularAnimate'
+    'angularAnimate',
+    'ngInfiniteScroll'
 ], function(
     angular,
     DialogCtrl,
@@ -63,7 +64,8 @@ requirejs([
         'read',
         'contacts',
         'login-new-device',
-        'popover'
+        'popover',
+        'infinite-scroll'
     ]);
 
     // set router paths

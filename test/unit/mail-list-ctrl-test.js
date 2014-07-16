@@ -104,6 +104,148 @@ define(function(require) {
             appController._emailDao = origEmailDao;
         });
 
+        describe('displayMore', function() {
+            beforeEach(function() {
+                scope.state.nav = {
+                    currentFolder: {
+                        messages: ['a', 'b']
+                    }
+                };
+            });
+            it('should not do anything when display length equals messages length', function() {
+                scope.displayMessages = ['a', 'b'];
+
+                scope.displayMore();
+                expect(scope.displayMessages.length).to.equal(scope.state.nav.currentFolder.messages.length);
+            });
+            it('should append next message interval', function() {
+                scope.displayMessages = ['a'];
+
+                scope.displayMore();
+                expect(scope.displayMessages.length).to.equal(scope.state.nav.currentFolder.messages.length);
+            });
+        });
+
+        describe('displaySearchResults', function() {
+            var clock;
+
+            beforeEach(function() {
+                scope.state.nav = {
+                    currentFolder: {
+                        messages: ['a', 'b']
+                    }
+                };
+                scope.watchMessages();
+                scope.watchOnline();
+                clock = sinon.useFakeTimers();
+            });
+            afterEach(function() {
+                clock.restore();
+            });
+
+            it('should show initial message on empty', function() {
+                scope.displaySearchResults();
+                expect(scope.searching).to.be.false;
+                expect(scope.lastUpdateLbl).to.equal('Online');
+                expect(scope.displayMessages.length).to.equal(2);
+            });
+            it('should show initial message on empty', function() {
+                var searchStub = sinon.stub(scope, 'search');
+                searchStub.returns(['a']);
+
+
+                scope.displaySearchResults('query');
+                expect(scope.searching).to.be.true;
+                expect(scope.lastUpdateLbl).to.equal('Searching ...');
+                clock.tick(500);
+
+                expect(scope.displayMessages).to.deep.equal(['a']);
+                expect(scope.searching).to.be.false;
+                expect(scope.lastUpdateLbl).to.equal('Matches in this folder');
+
+            });
+        });
+
+        describe('search', function() {
+            var message1 = {
+                    to: [{
+                        name: 'name1',
+                        address: 'address1'
+                    }],
+                    subject: 'subject1',
+                    body: 'body1',
+                    html: 'html1'
+                },
+                message2 = {
+                    to: [{
+                        name: 'name2',
+                        address: 'address2'
+                    }],
+                    subject: 'subject2',
+                    body: 'body2',
+                    html: 'html2'
+                },
+                message3 = {
+                    to: [{
+                        name: 'name3',
+                        address: 'address3'
+                    }],
+                    subject: 'subject3',
+                    body: 'body1',
+                    html: 'html1',
+                    encrypted: true
+                },
+                message4 = {
+                    to: [{
+                        name: 'name4',
+                        address: 'address4'
+                    }],
+                    subject: 'subject4',
+                    body: 'body1',
+                    html: 'html1',
+                    encrypted: true,
+                    decrypted: true
+                },
+                testMessages = [message1, message2, message3, message4];
+
+            it('return same messages array on empty query string', function() {
+                var result = scope.search(testMessages, '');
+                expect(result).to.equal(testMessages);
+            });
+
+            it('return message1 on matching subject', function() {
+                var result = scope.search(testMessages, 'subject1');
+                expect(result.length).to.equal(1);
+                expect(result[0]).to.equal(message1);
+            });
+
+            it('return message1 on matching name', function() {
+                var result = scope.search(testMessages, 'name1');
+                expect(result.length).to.equal(1);
+                expect(result[0]).to.equal(message1);
+            });
+
+            it('return message1 on matching address', function() {
+                var result = scope.search(testMessages, 'address1');
+                expect(result.length).to.equal(1);
+                expect(result[0]).to.equal(message1);
+            });
+
+            it('return plaintext and decrypted messages on matching body', function() {
+                var result = scope.search(testMessages, 'body1');
+                expect(result.length).to.equal(2);
+                expect(result[0]).to.equal(message1);
+                expect(result[1]).to.equal(message4);
+            });
+
+            it('return plaintext and decrypted messages on matching html', function() {
+                var result = scope.search(testMessages, 'html1');
+                expect(result.length).to.equal(2);
+                expect(result[0]).to.equal(message1);
+                expect(result[1]).to.equal(message4);
+            });
+        });
+
         describe('scope variables', function() {
             it('should be set correctly', function() {
                 expect(scope.select).to.exist;

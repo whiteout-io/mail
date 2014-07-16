@@ -142,7 +142,9 @@ module.exports = function(grunt) {
                     'pgpmailer/node_modules/smtpclient/src/*.js',
                     'pgpmailer/node_modules/smtpclient/node_modules/stringencoding/dist/stringencoding.js',
                     'axe/axe.js',
-                    'dompurify/purify.js'
+                    'dompurify/purify.js',
+                    'jquery/dist/jquery.min.js',
+                    'ng-infinite-scroll/build/ng-infinite-scroll.min.js'
                 ],
                 dest: 'src/lib/'
             },
