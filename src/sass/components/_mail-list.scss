@@ -159,16 +159,6 @@
                 }
             }
         }
-
-        @include respond-to(desktop) {
-            margin-top: 0;
-            margin-bottom: 7px;
-            &:before {
-                display: none;
-            }
-            &:last-child {
-                margin-bottom: 0;
-            }
-        }
     }
+
 }

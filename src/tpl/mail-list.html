@@ -9,21 +9,24 @@
   </div>
 
   <div class="search" data-icon="&#xe017;">
-    <input class="input-text" type="text" ng-model="searchText" placeholder="Filter..." focus-me="state.mailList.searching">
+    <input class="input-text" type="text" ng-model="searchText"
+      ng-change="displaySearchResults(searchText)"
+      placeholder="Search" focus-me="state.mailList.searching">
   </div>
 
-  <div class="list-wrapper" list-scroll="filteredMessages">
-    <ul class="mail-list">
+  <div class="list-wrapper" list-scroll="displayMessages">
+    <ul class="mail-list" infinite-scroll="displayMore()"
+      infinite-scroll-distance="1" infinite-scroll-parent="true">
       <li ng-class="{'mail-list-active': email === state.mailList.selected}"
         wo-touch="select(email)"
-        ng-repeat="email in (filteredMessages = (state.nav.currentFolder.messages | filter:searchText | orderBy:'uid':true | limitTo:100))">
+        ng-repeat="email in displayMessages">
         <h3>{{email.from[0].name || email.from[0].address}}</h3>
         <div class="encrypted" data-icon="{{email.encrypted && email.decrypted ? '&#xe012;' : email.encrypted ? '&#xe009;' : ''}}"></div>
         <div class="head">
           <p class="subject">{{email.subject || 'No subject'}}</p>
           <time>{{email.sentDate | date:'mediumDate'}}</time>
         </div>
-        <p class="body">{{email.body}}</p>
+        <p class="body">{{email.body ? email.body.substr(0, 200) : ''}}</p>
         <ul class="flags">
           <li ng-show="email.unread"></li>
           <li data-icon="&#xe002;" ng-show="!email.unread && email.answered"></li>
@@ -33,7 +36,7 @@
     </ul><!--/.mail-list-->
   </div>
 
-  <footer ng-class="{syncing: account.loggingIn || account.busy}">
+  <footer ng-class="{syncing: account.loggingIn || account.busy || searching}">
     <span class="spinner"></span>
     <span class="text" ng-switch="account.online">
       <span ng-switch-when="false">

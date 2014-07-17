@@ -85,6 +85,9 @@
         flex-grow: 1;
         padding: 0 ($padding-horizontal - $scrollbar-width) 0 $padding-horizontal;
         overflow-y: scroll;
+        // allow scrolling on iOS
+        -webkit-overflow-scrolling: touch;
+        // put layer on GPU
         transform: translatez(0);
     }
 
@@ -127,15 +130,4 @@
         }
     }
 
-    @include respond-to(desktop) {
-        background: $color-grey-lighterer;
-        background-image: linear-gradient(to right ,$color-grey-lighterer 98%, darken($color-grey-lighterer, 1%) 100%);
-
-        footer {
-            background: darken($color-grey-lighterer, 1%);
-            &:before {
-                display: none;
-            }
-        }
-    }
 }
