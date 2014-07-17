@@ -369,7 +369,7 @@ define(function(require) {
     function createDummyMails() {
         var uid = 0;
 
-        var Email = function(unread, attachments, answered, html) {
+        var Email = function(unread, attachments, answered) {
             this.uid = uid++;
             this.from = [{
                 name: 'Whiteout Support',
@@ -471,7 +471,6 @@ define(function(require) {
             }
             this.unread = unread;
             this.answered = answered;
-            this.html = html;
             this.sentDate = new Date('Thu Sep 19 2013 20:41:23 GMT+0200 (CEST)');
             this.subject = 'Getting started'; // Subject line
             this.body = 'And a good day to you too sir. \n' +
@@ -485,12 +484,12 @@ define(function(require) {
                 '>> from 0.7.0.1\n' +
                 '>>\n' +
                 '>> God speed!'; // plaintext body
-            this.html = '<!DOCTYPE html><html><head></head><body><h1>Hello there</h1></body></html>';
+            //this.html = '<!DOCTYPE html><html><head></head><body><h1>Hello there</h1></body></html>';
             this.encrypted = true;
             this.decrypted = true;
         };
 
-        var dummys = [new Email(true, true), new Email(true, false, true, true), new Email(false, true, true), new Email(false, true), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false)];
+        var dummys = [new Email(true, true), new Email(true, false, true), new Email(false, true, true), new Email(false, true), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false), new Email(false)];
 
         return dummys;
     }

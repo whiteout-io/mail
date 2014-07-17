@@ -16,7 +16,8 @@
         "pgpmailer": "https://github.com/whiteout-io/pgpmailer/tarball/v0.3.6",
         "pgpbuilder": "https://github.com/whiteout-io/pgpbuilder/tarball/v0.3.5",
         "requirejs": "2.1.14",
-        "axe": "https://github.com/whiteout-io/axe/tarball/v0.0.2"
+        "axe": "https://github.com/whiteout-io/axe/tarball/v0.0.2",
+        "dompurify": "~0.4.2"
     },
     "devDependencies": {
         "angularjs": "https://github.com/angular/angular.js/tarball/v1.2.8",

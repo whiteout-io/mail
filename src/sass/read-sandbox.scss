@@ -1,0 +1,66 @@
+// Utilities
+@import "mixins";
+@import "functions";
+@import "grid";
+
+// Bootstrap
+@import "variables";
+@import "fonts";
+
+// Components
+@import "components/scrollbars";
+
+body {
+    margin: 0;
+}
+
+.view-read-body {
+    font-family: $font-family-base;
+    font-size: $font-size-base;
+    line-height: $line-height-base;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    user-select: text;
+    color: $color-grey-dark;
+
+    .line {
+        line-height: 1.5em;
+        cursor: text;
+        word-wrap: break-word;
+
+        a {
+            color: $color-blue;
+        }
+
+        &.empty-line {
+            line-height: 1em;
+        }
+    }
+
+    .prev-message {
+        $prev-message-base-color: desaturate($color-blue, 50%);
+        $prev-message-hue-rotate: 40deg;
+
+        border-left: 2px solid $prev-message-base-color;
+        color: $prev-message-base-color;
+        padding-left: 0.5em;
+
+        & > .prev-message {
+            border-left-color: adjust-hue($prev-message-base-color, 1 * $prev-message-hue-rotate);
+            color: adjust-hue($prev-message-base-color, 1 * $prev-message-hue-rotate);
+            & > .prev-message {
+                border-left-color: adjust-hue($prev-message-base-color, 2 * $prev-message-hue-rotate);
+                color: adjust-hue($prev-message-base-color, 2 * $prev-message-hue-rotate);
+                & > .prev-message {
+                    border-left-color: adjust-hue($prev-message-base-color, 3 * $prev-message-hue-rotate);
+                    color: adjust-hue($prev-message-base-color, 3 * $prev-message-hue-rotate);
+                    .prev-message {
+                        border-left-color: adjust-hue($prev-message-base-color, 4 * $prev-message-hue-rotate);
+                        color: adjust-hue($prev-message-base-color, 4 * $prev-message-hue-rotate);
+                    }
+                }
+            }
+        }
+    }
+}

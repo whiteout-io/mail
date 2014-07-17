@@ -73,6 +73,7 @@ module.exports = function(grunt) {
         sass: {
             dist: {
                 files: {
+                    'src/css/read-sandbox.css': 'src/sass/read-sandbox.scss',
                     'src/css/all.css': 'src/sass/all.scss'
                 }
             }
@@ -83,6 +84,7 @@ module.exports = function(grunt) {
             },
             dist: {
                 files: {
+                    'src/css/read-sandbox.css': 'src/css/read-sandbox.css',
                     'src/css/all.css': 'src/css/all.css'
                 }
             }
@@ -93,6 +95,7 @@ module.exports = function(grunt) {
             },
             dist: {
                 files: {
+                    'dist/css/read-sandbox.min.css': 'src/css/read-sandbox.css',
                     'dist/css/all.min.css': 'src/css/all.css'
                 }
             }
@@ -138,7 +141,8 @@ module.exports = function(grunt) {
                     'pgpmailer/src/*.js',
                     'pgpmailer/node_modules/smtpclient/src/*.js',
                     'pgpmailer/node_modules/smtpclient/node_modules/stringencoding/dist/stringencoding.js',
-                    'axe/axe.js'
+                    'axe/axe.js',
+                    'dompurify/purify.js'
                 ],
                 dest: 'src/lib/'
             },

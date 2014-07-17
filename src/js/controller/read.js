@@ -11,7 +11,7 @@ define(function(require) {
     // Controller
     //
 
-    var ReadCtrl = function($scope, $timeout) {
+    var ReadCtrl = function($scope) {
 
         emailDao = appController._emailDao;
         invitationDao = appController._invitationDao;
@@ -27,10 +27,6 @@ define(function(require) {
             toggle: function(to) {
                 this.open = to;
             }
-        };
-
-        $scope.lineEmpty = function(line) {
-            return line.replace(/>/g, '').trim().length === 0;
         };
 
         $scope.getKeyId = function(address) {
@@ -66,26 +62,6 @@ define(function(require) {
             mail.to.forEach(checkPublicKey);
             // display recipient security status
             Array.isArray(mail.cc) && mail.cc.forEach(checkPublicKey);
-
-            $scope.node = undefined;
-        });
-        $scope.$watch('state.mailList.selected.body', function(body) {
-            $scope.node = undefined; // reset model
-            if (!body) {
-                return;
-            }
-
-            var selected = $scope.state.mailList.selected;
-            if (selected.encrypted && !selected.decrypted) {
-                return;
-            }
-
-            $timeout(function() {
-                // parse text nodes for rendering
-                $scope.node = $scope.parseConversation({
-                    body: body
-                });
-            });
         });
 
         function checkPublicKey(user) {
@@ -175,115 +151,6 @@ define(function(require) {
                 outbox.put(invitationMail, $scope.onError);
             });
         };
-
-        $scope.parseConversation = function(email) {
-            var nodes;
-
-            if (!email || !email.body) {
-                return;
-            }
-
-            function parseLines(body) {
-                var lines = [];
-                body.split('\n').forEach(parseLine);
-
-                function parseLine(line) {
-                    var regex = /^>*/;
-                    var result = regex.exec(line);
-
-                    lines.push({
-                        text: line.replace(regex, '').trim(),
-                        level: (result && result.length > 0) ? result[0].length : 0
-                    });
-                }
-
-                return lines;
-            }
-
-            function buildTextNodes(lines) {
-                var i, j, root, currentLevel, currentNode, levelDelta;
-
-                root = new Node();
-                currentLevel = 0;
-                currentNode = root;
-
-                // iterate over text lines
-                for (i = 0; i < lines.length; i++) {
-                    levelDelta = lines[i].level - currentLevel;
-
-                    if (levelDelta === 0) {
-                        // we are at the desired node ... no traversal required
-                    } else if (levelDelta > 0) {
-                        // traverse to child node(s)
-                        for (j = 0; j < levelDelta; j++) {
-                            var newChild = new Node(currentNode);
-                            // create new child node
-                            currentNode.children.push(newChild);
-                            // go to last child node
-                            currentNode = newChild;
-                            // increase current level by one
-                            currentLevel++;
-                        }
-                    } else {
-                        // traverse to parent(s)
-                        for (j = levelDelta; j < 0; j++) {
-                            currentNode = currentNode.parent;
-                            currentLevel--;
-                        }
-                    }
-
-                    // add text to the current node
-                    currentNode.addLine(lines[i].text);
-                }
-
-                return root;
-            }
-
-            function Node(parent) {
-                this.parent = parent;
-                this.children = [];
-            }
-            Node.prototype.addLine = function(lineText) {
-                var c, l;
-
-                c = this.children;
-                l = c.length;
-
-                // append text node to children if last child is not a text node
-                if (l < 1 || typeof c[l - 1] !== 'string') {
-                    c[l] = '';
-                    l = c.length;
-                }
-
-                // append line to last child (add newline between lines)
-                c[l - 1] += lineText + '\n';
-            };
-
-            function removeParentReference(node) {
-                if (!node.children) {
-                    // this is a text leaf ... terminate recursion
-                    return;
-                }
-
-                // remove parent node to prevent infinite loop in JSON stringify
-                delete node.parent;
-
-                for (var i = 0; i < node.children.length; i++) {
-                    if (typeof node.children[i] === 'string') {
-                        // remove trailing newline in string
-                        node.children[i] = node.children[i].replace(/\n$/, '');
-                    } else {
-                        // I used recursion ...
-                        removeParentReference(node.children[i]);
-                    }
-                }
-            }
-
-            nodes = buildTextNodes(parseLines(email.body.replace(/ >/g, '>')));
-            removeParentReference(nodes);
-
-            return nodes;
-        };
     };
 
     //
@@ -335,13 +202,31 @@ define(function(require) {
         };
     });
 
-    ngModule.directive('frameLoad', function($sce, $timeout) {
-        return function(scope, elm, attrs) {
-            scope.$watch(attrs.frameLoad, function(value) {
-                var html = value;
-                scope.html = undefined;
-                var iframe = elm[0];
+    ngModule.directive('frameLoad', function() {
+        return function(scope, elm) {
+            var iframe = elm[0];
 
+            iframe.onload = function() {
+                // set listeners
+                scope.$watch('state.mailList.selected.body', displayText);
+                scope.$watch('state.mailList.selected.html', displayHtml);
+                // display initial message body
+                scope.$apply();
+            };
+
+            function displayText(body) {
+                var mail = scope.state.mailList.selected;
+                if (!body || mail.html || (mail.encrypted && !mail.decrypted)) {
+                    return;
+                }
+
+                // send text body for rendering in iframe
+                iframe.contentWindow.postMessage({
+                    text: body
+                }, '*');
+            }
+
+            function displayHtml(html) {
                 if (!html) {
                     return;
                 }
@@ -350,14 +235,10 @@ define(function(require) {
                 var hasImages = /<img[^>]+\bsrc=['"][^'">]+['"]/ig.test(html);
                 scope.showImageButton = hasImages;
 
-                // inital loading
-                $timeout(function() {
-                    scope.html = true;
-                    iframe.contentWindow.postMessage({
-                        html: html,
-                        removeImages: hasImages // avoids doing unnecessary work on the html
-                    }, '*');
-                });
+                iframe.contentWindow.postMessage({
+                    html: html,
+                    removeImages: hasImages // avoids doing unnecessary work on the html
+                }, '*');
 
                 // no need to add a scope function to reload the html if there are no images
                 if (!hasImages) {
@@ -372,16 +253,7 @@ define(function(require) {
                         removeImages: false
                     }, '*');
                 };
-            });
-        };
-    });
-
-    ngModule.filter('createAnchors', function($sce) {
-        return function(str) {
-            // replace all urls with anchors
-            return $sce.trustAsHtml(str.replace(/(https?:\/\/[^\s]+)/g, function(url) {
-                return '<a href="' + url + '" target="_blank">' + url + '</a>';
-            }));
+            }
         };
     });
 

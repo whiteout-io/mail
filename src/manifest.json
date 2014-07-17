@@ -36,7 +36,7 @@
     }
   },
   "sandbox": {
-    "pages": ["sandbox.html"],
+    "pages": ["tpl/read-sandbox.html"],
     "content_security_policy": "sandbox allow-popups allow-scripts; default-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'; img-src *"
   }
 }

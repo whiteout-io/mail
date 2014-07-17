@@ -23,7 +23,6 @@ requirejs([
     'js/crypto/util',
     'js/util/error',
     'fastclick',
-    'angularSanitize',
     'angularRoute',
     'angularAnimate'
 ], function(
@@ -56,7 +55,6 @@ requirejs([
 
     // init main angular module including dependencies
     var app = angular.module('mail', [
-        'ngSanitize',
         'ngRoute',
         'ngAnimate',
         'navigation',
@@ -66,10 +64,7 @@ requirejs([
         'contacts',
         'login-new-device',
         'popover'
-    ], function($rootScopeProvider) {
-        // increase digest iteration limit for large recursive ng-includes in reader
-        $rootScopeProvider.digestTtl(100);
-    });
+    ]);
 
     // set router paths
     app.config(function($routeProvider) {

@@ -7,7 +7,7 @@
       <button wo-touch="state.writer.write()" class="btn-icon" title="New mail">&#xe006;</button>
     </div><!--/.controls-->
 
-    <p class="subject" wo-touch="state.read.toggle(false)" data-icon="&#xe016;">{{(state.mailList.selected.subject) ? state.mailList.selected.subject : 'No subject'}}</p>
+    <p class="subject" wo-touch="state.read.toggle(false)" data-icon="&#xe016;">{{state.mailList.selected.subject ? state.mailList.selected.subject : 'No subject'}}</p>
     <p class="date">{{state.mailList.selected.sentDate | date:'EEEE, MMM d, yyyy h:mm a'}}</p>
     <div class="mail-addresses">
       <p>
@@ -46,7 +46,7 @@
 
   <!-- Show working spinner -->
   <div class="working-wrapper"
-    ng-if="!html && state.mailList.selected !== undefined && (state.mailList.selected.body === undefined || (state.mailList.selected.encrypted && !state.mailList.selected.decrypted))">
+    ng-if="state.mailList.selected && state.mailList.selected.html === undefined && (state.mailList.selected.body === undefined || (state.mailList.selected.encrypted && !state.mailList.selected.decrypted))">
     <div class="working">
       <span class="spinner"></span>
       <strong ng-bind="(state.mailList.selected.decryptingBody) ? 'Decrypting...' : 'Loading...' "></strong>
@@ -54,28 +54,21 @@
   </div><!--/.working-wrapper-->
 
   <div class="signature-status"
-     ng-show="state.mailList.selected.signed && !state.mailList.selected.signaturesValid">
+     ng-show="state.mailList.selected.body && state.mailList.selected.signed && !state.mailList.selected.signaturesValid">
     <p>Invalid PGP signature. This message could have been tampered with.</p>
   </div>
 
   <div class="display-images">
-    <a ng-show="html && showImageButton" href='#' wo-touch="displayImages(); $event.preventDefault()">Display images</a>
+    <a ng-show="state.mailList.selected.html && showImageButton" href='#' wo-touch="displayImages(); $event.preventDefault()">Display images</a>
   </div>
 
   <!-- Render html body in sandboxed iframe -->
-  <iframe ng-show="html" sandbox="allow-popups allow-scripts" src="sandbox.html"
-    frame-load="state.mailList.selected.html">
-  </iframe>
-
-  <!-- Render text body as colored conversation in recursive text nodes -->
-  <div class="body"
-    ng-if="!html && (state.mailList.selected === undefined || (!state.mailList.selected.encrypted && state.mailList.selected.body !== undefined) || (state.mailList.selected.encrypted === true && state.mailList.selected.decrypted === true))">
-    <div ng-include="'tpl/text-node.html'"
-      ng-if="node !== undefined"
-      ng-repeat="child in node.children track by $index"
-      onload="node = child">
-    </div>
-  </div><!--/.body-->
+  <div class="frame-wrapper"
+    ng-show="state.mailList.selected && (!state.mailList.selected.encrypted && state.mailList.selected.body) || (state.mailList.selected.encrypted && state.mailList.selected.decrypted)">
+    <iframe sandbox="allow-popups allow-scripts" src="tpl/read-sandbox.html"
+      frame-load>
+    </iframe>
+  </div><!--/.frame-wrapper-->
 
   <!-- popovers -->
   <div id="fingerprint-info" class="popover right" ng-controller="PopoverCtrl">

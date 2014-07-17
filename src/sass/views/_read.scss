@@ -139,57 +139,17 @@
         }
     }
 
-    iframe {
+    .frame-wrapper {
         flex-grow: 1;
-        width: 100%;
-        height: 100%;
-        border: none;
-    }
+        display: flex;
+        flex-direction: column;
+        // allow scrolling on iOS
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
 
-    .body {
-        flex-grow: 1;
-        line-height: 1.5em;
-        overflow-y: scroll;
-        user-select: text;
-        transform: translatez(0);
-
-        .line {
-            cursor: text;
-            word-wrap: break-word;
-
-            a {
-                color: $color-blue;
-            }
-
-            &.empty-line {
-                line-height: 1em;
-            }
-        }
-
-        .prev-message {
-            $prev-message-base-color: desaturate($color-blue, 50%);
-            $prev-message-hue-rotate: 40deg;
-
-            border-left: 2px solid $prev-message-base-color;
-            color: $prev-message-base-color;
-            padding-left: 0.5em;
-
-            & > .prev-message {
-                border-left-color: adjust-hue($prev-message-base-color, 1 * $prev-message-hue-rotate);
-                color: adjust-hue($prev-message-base-color, 1 * $prev-message-hue-rotate);
-                & > .prev-message {
-                    border-left-color: adjust-hue($prev-message-base-color, 2 * $prev-message-hue-rotate);
-                    color: adjust-hue($prev-message-base-color, 2 * $prev-message-hue-rotate);
-                    & > .prev-message {
-                        border-left-color: adjust-hue($prev-message-base-color, 3 * $prev-message-hue-rotate);
-                        color: adjust-hue($prev-message-base-color, 3 * $prev-message-hue-rotate);
-                        .prev-message {
-                            border-left-color: adjust-hue($prev-message-base-color, 4 * $prev-message-hue-rotate);
-                            color: adjust-hue($prev-message-base-color, 4 * $prev-message-hue-rotate);
-                        }
-                    }
-                }
-            }
+        iframe {
+            flex-grow: 1;
+            border: none;
         }
     }
 
