@@ -47,7 +47,7 @@ define(function(require) {
             keypair;
 
         self._account = options.account;
-        self._account.busy = false; // triggers the spinner
+        self._account.busy = 0; // triggers the spinner
         self._account.online = false;
         self._account.loggingIn = false;
 
@@ -243,6 +243,7 @@ define(function(require) {
         var self = this,
             folder = options.folder;
 
+        self.busy();
         folder.messages = folder.messages || [];
         self._localListMessages({
             folder: folder
@@ -283,7 +284,7 @@ define(function(require) {
         });
 
         function done(err) {
-            self._account.busy = false; // stop the spinner
+            self.done(); // stop the spinner
             updateUnreadCount(folder); // update the unread count
             callback(err);
         }
@@ -302,7 +303,7 @@ define(function(require) {
         var self = this,
             folder = options.folder;
 
-        self._account.busy = true;
+        self.busy();
 
         if (!self._account.online) {
             done({
@@ -382,7 +383,7 @@ define(function(require) {
         });
 
         function done(err) {
-            self._account.busy = false; // stop the spinner
+            self.done(); // stop the spinner
             callback(err);
         }
 
@@ -450,7 +451,7 @@ define(function(require) {
             folder = options.folder,
             message = options.message;
 
-        self._account.busy = true;
+        self.busy();
 
         folder.messages.splice(folder.messages.indexOf(message), 1);
 
@@ -495,7 +496,7 @@ define(function(require) {
         }
 
         function done(err) {
-            self._account.busy = false; // stop the spinner
+            self.done(); // stop the spinner
             if (err) {
                 folder.messages.unshift(message); // re-add the message to the folder in case of an error
             }
@@ -518,11 +519,11 @@ define(function(require) {
             folder = options.folder,
             message = options.message;
 
-        self._account.busy = true; // start the spinner
+        self.busy(); // start the spinner
 
         // no-op if the message if not present anymore (for whatever reason)
         if (folder.messages.indexOf(message) < 0) {
-            self._account.busy = false; // stop the spinner
+            self.done(); // stop the spinner
             return;
         }
 
@@ -589,7 +590,7 @@ define(function(require) {
         }
 
         function done(err) {
-            self._account.busy = false; // stop the spinner //
+            self.done(); // stop the spinner
             updateUnreadCount(folder); // update the unread count
             callback(err);
         }
@@ -612,6 +613,8 @@ define(function(require) {
         }
 
         message.loadingBody = true;
+
+        self.busy();
 
         /*
          * read this before inspecting the method!
@@ -778,6 +781,7 @@ define(function(require) {
 
 
         function done(err) {
+            self.done();
             message.loadingBody = false;
             callback(err, err ? undefined : message);
         }
@@ -813,7 +817,10 @@ define(function(require) {
      * @param {Function} callback(error, attachment) Invoked when the attachment body part was retrieved and parsed, or an error occurred
      */
     EmailDAO.prototype.getAttachment = function(options, callback) {
-        this._getBodyParts({
+        var self = this;
+
+        self.busy();
+        self._getBodyParts({
             folder: options.folder,
             uid: options.uid,
             bodyParts: [options.attachment]
@@ -822,7 +829,7 @@ define(function(require) {
                 callback(err);
                 return;
             }
-
+            self.done();
             // add the content to the original object
             options.attachment.content = parsedBodyParts[0].content;
             callback(err, err ? undefined : options.attachment);
@@ -848,11 +855,11 @@ define(function(require) {
 
         message.decryptingBody = true;
 
+        self.busy();
         // get the sender's public key for signature checking
         self._keychain.getReceiverPublicKey(message.from[0].address, function(err, senderPublicKey) {
             if (err) {
-                done(err);
-                return;
+                return done(err);
             }
 
             // get the receiver's public key to check the message signature
@@ -873,8 +880,7 @@ define(function(require) {
                 if (encryptedNode._isPgpInline) {
                     message.body = decrypted;
                     message.decrypted = true;
-                    done();
-                    return;
+                    return done();
                 }
 
                 // the mailparser works on the .raw property
@@ -885,8 +891,7 @@ define(function(require) {
                     bodyParts: [encryptedNode]
                 }, function(err, root) {
                     if (err) {
-                        showError(err.errMsg || err.message);
-                        return;
+                        return showError(err.errMsg || err.message);
                     }
 
                     if (!message.signed) {
@@ -946,6 +951,7 @@ define(function(require) {
         }
 
         function done(err) {
+            self.done();
             message.decryptingBody = false;
             callback(err, err ? undefined : message);
         }
@@ -968,6 +974,7 @@ define(function(require) {
             return;
         }
 
+        self.busy();
         // mime encode, sign, encrypt and send email via smtp
         self._pgpMailer.send({
             encrypt: true,
@@ -975,7 +982,10 @@ define(function(require) {
             smtpclient: options.smtpclient, // filled solely in the integration test, undefined in normal usage
             mail: options.email,
             publicKeysArmored: options.email.publicKeysArmored
-        }, callback);
+        }, function(err) {
+            self.done();
+            callback(err);
+        });
     };
 
     /**
@@ -985,19 +995,24 @@ define(function(require) {
      * @param {Function} callback(error) Invoked when the message was sent, or an error occurred
      */
     EmailDAO.prototype.sendPlaintext = function(options, callback) {
-        if (!this._account.online) {
+        var self = this;
+
+        if (!self._account.online) {
             callback({
                 errMsg: 'Client is currently offline!',
                 code: 42
             });
             return;
         }
-
+        self.busy();
         // mime encode, sign and send email via smtp
-        this._pgpMailer.send({
+        self._pgpMailer.send({
             smtpclient: options.smtpclient, // filled solely in the integration test, undefined in normal usage
             mail: options.email
-        }, callback);
+        }, function(err) {
+            self.done();
+            callback(err);
+        });
     };
 
     /**
@@ -1007,7 +1022,14 @@ define(function(require) {
      * @param {Function} callback(error, message) Invoked when the message was encrypted, or an error occurred
      */
     EmailDAO.prototype.encrypt = function(options, callback) {
-        this._pgpbuilder.encrypt(options, callback);
+        var self = this;
+
+        self.busy();
+        self._pgpbuilder.encrypt(options, function(err) {
+            self.done();
+            callback(err);
+        });
+
     };
 
 
@@ -1208,7 +1230,7 @@ define(function(require) {
         var self = this,
             folderDbType = 'folders';
 
-        self._account.busy = true; // start the spinner
+        self.busy(); // start the spinner
 
         // fetch list from local cache
         self._devicestorage.listItems(folderDbType, 0, null, function(err, stored) {
@@ -1221,7 +1243,7 @@ define(function(require) {
         });
 
         function done(err) {
-            self._account.busy = false; // stop the spinner
+            self.done(); // stop the spinner
             callback(err);
         }
     };
@@ -1237,7 +1259,7 @@ define(function(require) {
         var self = this,
             folderDbType = 'folders';
 
-        self._account.busy = true; // start the spinner
+        self.busy(); // start the spinner
 
         // fetch list from imap server
         self._imapClient.listWellKnownFolders(function(err, wellKnownFolders) {
@@ -1297,7 +1319,7 @@ define(function(require) {
         });
 
         function done(err) {
-            self._account.busy = false; // stop the spinner
+            self.done(); // stop the spinner
             callback(err);
         }
     };
@@ -1334,6 +1356,17 @@ define(function(require) {
             });
         });
     };
+
+    EmailDAO.prototype.busy = function() {
+        this._account.busy++;
+    };
+
+    EmailDAO.prototype.done = function() {
+        if (this._account.busy > 0) {
+            this._account.busy--;
+        }
+    };
+
 
 
     //
@@ -1516,6 +1549,7 @@ define(function(require) {
     // Helper Functions
     //
     //
+
 
     /**
      * Updates a folder's unread count:
