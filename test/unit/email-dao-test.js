@@ -1547,7 +1547,7 @@ define(function(require) {
                 it('should send encrypted', function(done) {
                     pgpMailerStub.send.withArgs({
                         encrypt: true,
-                        cleartextMessage: str.message + str.signature,
+                        cleartextMessage: str.message,
                         mail: dummyMail,
                         smtpclient: undefined,
                         publicKeysArmored: publicKeys
