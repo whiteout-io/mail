@@ -1511,7 +1511,7 @@ module.exports = {
   show_version: true,
   show_comment: true,
   versionstring: "OpenPGP.js v0.7.1",
-  commentstring: "http://openpgpjs.org",
+  commentstring: "Whiteout Mail - https://whiteout.io",
 
   keyserver: "keyserver.linux.it", // "pgp.mit.edu:11371"
   node_store: './openpgp.store',

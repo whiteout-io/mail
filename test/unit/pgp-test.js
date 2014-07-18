@@ -15,7 +15,7 @@ define(function(require) {
             keyId = 'F6F60E9B42CDFF4C',
             pubkey = '-----BEGIN PGP PUBLIC KEY BLOCK-----\r\n' +
             'Version: OpenPGP.js v0.7.1\r\n' +
-            'Comment: http://openpgpjs.org\r\n' +
+            'Comment: Whiteout Mail - https://whiteout.io\r\n' +
             '\r\n' +
             'xk0EUlhMvAEB/2MZtCUOAYvyLFjDp3OBMGn3Ev8FwjzyPbIF0JUw+L7y2XR5\r\n' +
             'RVGvbK88unV3cU/1tOYdNsXI6pSp/Ztjyv7vbBUAEQEAAc0pV2hpdGVvdXQg\r\n' +
@@ -26,7 +26,7 @@ define(function(require) {
             '-----END PGP PUBLIC KEY BLOCK-----\r\n\r\n',
             privkey = '-----BEGIN PGP PRIVATE KEY BLOCK-----\r\n' +
             'Version: OpenPGP.js v0.7.1\r\n' +
-            'Comment: http://openpgpjs.org\r\n' +
+            'Comment: Whiteout Mail - https://whiteout.io\r\n' +
             '\r\n' +
             'xcBeBFJYTLwBAf9jGbQlDgGL8ixYw6dzgTBp9xL/BcI88j2yBdCVMPi+8tl0\r\n' +
             'eUVRr2yvPLp1d3FP9bTmHTbFyOqUqf2bY8r+72wVABEBAAH+AwMIhNB4ivtv\r\n' +
