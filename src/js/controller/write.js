@@ -341,11 +341,15 @@ define(function(require) {
             iv = util.random(128);
 
         $scope.updatePreview = function() {
-            var body = $scope.body.trim();
+            if (!$scope.sendBtnSecure || !$scope.body.trim()) {
+                $scope.ciphertextPreview = undefined;
+                return;
+            }
 
             // Although this does encrypt live using AES, this is just for show. The plaintext is encrypted seperately before sending the email.
-            $scope.ciphertextPreview = (body) ? aes.encrypt(body, key, iv) : '';
+            $scope.ciphertextPreview = aes.encrypt($scope.body, key, iv);
         };
+        $scope.$watch('sendBtnSecure', $scope.updatePreview);
 
         $scope.sendToOutbox = function() {
             var email;
@@ -544,7 +548,7 @@ define(function(require) {
 
     ngModule.directive('field', function() {
         return {
-            //scope: true,   // optionally create a child scope
+            scope: true,
             link: function(scope, element, attrs) {
                 element.on('click', function(e) {
                     if (e.target.nodeName === 'INPUT') {
@@ -568,7 +572,7 @@ define(function(require) {
 
     ngModule.directive('addressInput', function() {
         return {
-            //scope: true,   // optionally create a child scope
+            scope: true,
             link: function(scope, element, attrs) {
                 // get prefix for id
                 var fieldName = attrs.addressInput;

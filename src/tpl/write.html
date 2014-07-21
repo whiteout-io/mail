@@ -3,67 +3,58 @@
     <h2>{{writerTitle}}</h2>
     <button class="close" wo-touch="state.writer.close()" data-action="lightbox-close">&#xe007;</button>
   </header>
-  <div class="content">
+  <div class="content view-write">
 
-    <div class="view-write">
-      <div class="mail-addresses">
-        <div class="mail-addresses-more">
-          <button wo-touch="showCC = true;" ng-hide="showCC">Cc</button>
-          <button wo-touch="showBCC = true;" ng-hide="showBCC">Bcc</button>
-        </div>
-        <p field="to">
-          <label>To:</label>
-          <span ng-repeat="recipient in to track by $index">
-            <input id="to{{$index}}" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" class="label" ng-class="{'label-blank': !recipient.address || recipient.secure === undefined, 'label-primary': recipient.secure === false}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(to, $index)" address-input="to" tabindex="1" ng-mouseover="getKeyId(recipient)" focus-me="$index === 0 && state.lightbox === 'write' && writerTitle !== 'Reply'">
-          </span>
-        </p>
-        <p field="cc" ng-show="showCC === true">
-          <label>Cc:</label>
-          <span ng-repeat="recipient in cc track by $index">
-            <input id="cc{{$index}}" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" class="label" ng-class="{'label-blank': !recipient.address || recipient.secure === undefined, 'label-primary': recipient.secure === false}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(cc, $index)" address-input="cc" tabindex="1" ng-mouseover="getKeyId(recipient)">
-          </span>
-        </p>
-        <p field="bcc" ng-show="showBCC === true">
-          <label>Bcc:</label>
-          <span ng-repeat="recipient in bcc track by $index">
-            <input id="bcc{{$index}}" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" class="label" ng-class="{'label-blank': !recipient.address || recipient.secure === undefined, 'label-primary': recipient.secure === false}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(bcc, $index)" address-input="bcc" tabindex="1" ng-mouseover="getKeyId(recipient)">
-          </span>
-        </p>
-      </div><!--/.mail-addresses-->
-
-      <div class="subject-box">
-        <input class="input-text" ng-model="subject" spellcheck="true" tabindex="2" placeholder="Subject" ng-change="updatePreview()">
-        <input id="attachment-input" type="file" multiple attachment-input>
-        <button class="btn btn-attachment" data-icon="&#xe003;" ng-class="{'btn-primary': sendBtnSecure === false}" attachment-btn></button>
-      </div><!--/.subject-box-->
-
-      <div class="attachments-box" ng-show="attachments.length > 0">
-        <span ng-repeat="attachment in attachments" class="attachment">
-          <span data-icon="&#xe003;"></span>
-          {{attachment.filename}}
-          <span class="close" data-icon="&#xe000;" wo-touch="remove(attachment)"></span>
-        </span><!--/.attachment-->
-      </div><!--/.attachments-box-->
-
-      <div class="body" focus-child>
-        <p ng-model="body" contentEditable="true" spellcheck="false" ng-change="updatePreview()" tabindex="3" focus-me="state.lightbox === 'write' && writerTitle === 'Reply'"></p>
-
-        <div class="encrypt-preview" ng-show="ciphertextPreview && sendBtnSecure">
-          <p>-----BEGIN ENCRYPTED PREVIEW-----<br>{{ciphertextPreview}}<br>-----END ENCRYPTED PREVIEW-----</p>
-        </div><!--/.encrypt-preview-->
-      </div><!--/.body-->
-
-      <div class="send-control">
-        <button wo-touch="sendToOutbox()" class="btn" ng-class="{'btn-primary': sendBtnSecure === false}" ng-disabled="!okToSend" tabindex="4">{{sendBtnText || 'Send'}}</button>
+    <div class="mail-addresses">
+      <div class="mail-addresses-more">
+        <button wo-touch="showCC = true;" ng-hide="showCC">Cc</button>
+        <button wo-touch="showBCC = true;" ng-hide="showBCC">Bcc</button>
       </div>
-    </div><!--/.write-view-->
+      <p field="to">
+        <label>To:</label>
+        <span ng-repeat="recipient in to track by $index">
+          <input type="email" id="to{{$index}}" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" class="label" ng-class="{'label-blank': !recipient.address || recipient.secure === undefined, 'label-primary': recipient.secure === false}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(to, $index)" address-input="to" tabindex="1" ng-mouseover="getKeyId(recipient)" focus-me="$index === 0 && state.lightbox === 'write' && writerTitle !== 'Reply'">
+        </span>
+      </p>
+      <p field="cc" ng-show="showCC === true">
+        <label>Cc:</label>
+        <span ng-repeat="recipient in cc track by $index">
+          <input type="email" id="cc{{$index}}" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" class="label" ng-class="{'label-blank': !recipient.address || recipient.secure === undefined, 'label-primary': recipient.secure === false}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(cc, $index)" address-input="cc" tabindex="1" ng-mouseover="getKeyId(recipient)">
+        </span>
+      </p>
+      <p field="bcc" ng-show="showBCC === true">
+        <label>Bcc:</label>
+        <span ng-repeat="recipient in bcc track by $index">
+          <input type="email" id="bcc{{$index}}" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" class="label" ng-class="{'label-blank': !recipient.address || recipient.secure === undefined, 'label-primary': recipient.secure === false}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(bcc, $index)" address-input="bcc" tabindex="1" ng-mouseover="getKeyId(recipient)">
+        </span>
+      </p>
+    </div><!--/.mail-addresses-->
+
+    <div class="subject-box">
+      <input class="input-text" ng-model="subject" spellcheck="true" tabindex="2" placeholder="Subject" ng-change="updatePreview()">
+      <input id="attachment-input" type="file" multiple attachment-input>
+      <button class="btn btn-attachment" data-icon="&#xe003;" ng-class="{'btn-primary': sendBtnSecure === false}" attachment-btn></button>
+    </div><!--/.subject-box-->
+
+    <div class="attachments-box" ng-show="attachments.length > 0">
+      <span ng-repeat="attachment in attachments" class="attachment">
+        <span data-icon="&#xe003;"></span>
+        {{attachment.filename}}
+        <span class="close" data-icon="&#xe000;" wo-touch="remove(attachment)"></span>
+      </span><!--/.attachment-->
+    </div><!--/.attachments-box-->
+
+    <div class="body" focus-child>
+      <p ng-model="body" contentEditable="true" ng-change="updatePreview()" tabindex="3" focus-me="state.lightbox === 'write' && writerTitle === 'Reply'"></p>
+
+      <div class="encrypt-preview" ng-show="ciphertextPreview && sendBtnSecure">
+        <p>-----BEGIN ENCRYPTED PREVIEW-----<br>{{ciphertextPreview}}<br>-----END ENCRYPTED PREVIEW-----</p>
+      </div><!--/.encrypt-preview-->
+    </div><!--/.body-->
+
+    <div class="send-control">
+      <button wo-touch="sendToOutbox()" class="btn" ng-class="{'btn-primary': sendBtnSecure === false}" ng-disabled="!okToSend" tabindex="4">{{sendBtnText || 'Send'}}</button>
+    </div>
 
   </div><!--/.content-->
-
-  <!-- popovers -->
-  <div id="fingerprint-writer" class="popover right" ng-controller="PopoverCtrl">
-    <div class="arrow"></div>
-    <div class="popover-title"><b>PGP key ID</b></div>
-    <div class="popover-content">{{keyId}}</div>
-  </div><!--/.popover-->
 </div><!--/.lightbox-body-->

@@ -1,12 +1,12 @@
 .view-write {
-    display: flex;
-    flex-direction: column;
+    height: 100%;
     margin: 0px;
     padding: 0px;
     color: $color-grey-dark;
     overflow-y: hidden;
+    display: flex;
+    flex-direction: column;
 
-    height: 100%;
     @include respond-to(desktop) {
         // this number depends on max-height set on .lightbox
         height: 590px; // magic number
@@ -132,8 +132,12 @@
     .body {
         flex-grow: 1;
         line-height: 1.5em;
-        overflow-y: scroll;
         user-select: text;
+        overflow-y: scroll;
+        // allow scrolling on iOS
+        -webkit-overflow-scrolling: touch;
+        // put layer on GPU
+        transform: translatez(0);
 
         *[contentEditable] {
             outline: 0px;
