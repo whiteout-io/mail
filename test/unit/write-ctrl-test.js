@@ -90,7 +90,7 @@ define(function(require) {
                 }]);
                 expect(scope.subject).to.equal('');
                 expect(scope.body).to.equal('');
-                expect(scope.ciphertextPreview).to.equal('');
+                expect(scope.ciphertextPreview).to.equal(undefined);
                 expect(verifyMock.calledOnce).to.be.true;
 
                 scope.verify.restore();
@@ -111,6 +111,8 @@ define(function(require) {
                         body: body,
                         references: ['ghi', 'def']
                     };
+
+                scope.sendBtnSecure = true;
 
                 scope.state.writer.write(re);
 
@@ -147,6 +149,8 @@ define(function(require) {
                         attachments: [{}]
                     };
 
+                scope.sendBtnSecure = false;
+
                 scope.state.writer.write(re, null, true);
 
                 expect(scope.writerTitle).to.equal('Forward');
@@ -155,7 +159,7 @@ define(function(require) {
                 }]);
                 expect(scope.subject).to.equal('Fwd: ' + subject);
                 expect(scope.body).to.contain(body);
-                expect(scope.ciphertextPreview).to.not.be.empty;
+                expect(scope.ciphertextPreview).to.be.undefined;
                 expect(verifyMock.called).to.be.true;
                 expect(scope.attachments).to.not.equal(re.attachments); // not the same reference
                 expect(scope.attachments).to.deep.equal(re.attachments); // but the same content
