@@ -573,13 +573,13 @@ define(function(require) {
     ngModule.directive('addressInput', function() {
         return {
             scope: true,
-            link: function(scope, element, attrs) {
+            link: function(scope, elm, attrs) {
                 // get prefix for id
                 var fieldName = attrs.addressInput;
                 var field = scope[fieldName];
                 var index = parseInt(attrs.id.replace(fieldName, ''), 10);
 
-                element.on('blur', function() {
+                elm.on('blur', function() {
                     if (!checkForEmptyInput(field)) {
                         // create new field input
                         addInput(field, scope);
@@ -588,15 +588,16 @@ define(function(require) {
                     cleanupEmptyInputs(field, scope);
                 });
 
-                element.on('keydown', function(e) {
+                elm.on('keydown', function(e) {
                     var code = e.keyCode;
+                    var address = elm[0].value;
 
                     if (code === 32 || code === 188 || code === 186) {
                         // catch space, comma, semicolon
                         e.preventDefault();
 
                         // add next field only if current input is not empty
-                        if (field[index].address) {
+                        if (address) {
                             // create new field input
                             addInput(field, scope);
 
@@ -604,7 +605,7 @@ define(function(require) {
                             focusInput(fieldName, index + 1);
                         }
 
-                    } else if ((code === 8 || code === 46) && !field[index].address && field.length > 1) {
+                    } else if ((code === 8 || code === 46) && !address && field.length > 1) {
                         // backspace, delete on empty input
                         // remove input
                         e.preventDefault();
