@@ -10,6 +10,10 @@
 // Components
 @import "components/scrollbars";
 
+html {
+    overflow: scroll;
+}
+
 body {
     margin: 0;
 }
