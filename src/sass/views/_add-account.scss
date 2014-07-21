@@ -2,6 +2,7 @@
     height: 100%;
     background-color: $color-grey-lightest;
     color: $color-grey-dark;
+    overflow-y: auto;
 
     h1 {
         padding: 60px 0 50px 0;
@@ -9,15 +10,19 @@
         margin: 0;
         font-size: 32px;
         line-height: 64px;
+
+        @include respond-to(mobile) {
+            padding: 30px 0 20px 0;
+        }
     }
 
     ul {
         list-style-type: none;
         width: 320px;
-        margin: 0 auto;
+        margin: 0 auto 30px auto;
         padding: 0;
         border-width: 1px;
-        border-style: solid;                
+        border-style: solid;
         border-color: $color-grey-lighter;
 
         li {
@@ -80,7 +85,7 @@
                         width: 100%;
                     }
                 }
-            }     
+            }
 
             &.tonline {
                 background-color: white;
@@ -92,7 +97,7 @@
                     img {
                         width: 100%;
                     }
-                }           
+                }
             }
 
             &.other {

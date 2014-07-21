@@ -29,6 +29,11 @@
     &.left {
       margin-left: -10px;
     }
+    &.desktop-only {
+        @include respond-to(mobile) {
+            display: none;
+        }
+    }
     .popover-title {
         margin: 0;
         padding: 8px 14px;
