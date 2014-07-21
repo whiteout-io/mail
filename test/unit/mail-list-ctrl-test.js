@@ -458,7 +458,7 @@ define(function(require) {
                 scope.remove(mail);
 
                 expect(emailDaoMock.deleteMessage.calledOnce).to.be.true;
-                expect(scope.state.mailList.selected).to.not.exist;
+                expect(scope.state.mailList.selected).to.exist;
             });
         });
     });

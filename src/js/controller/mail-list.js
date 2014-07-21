@@ -5,12 +5,12 @@ define(function(require) {
         _ = require('underscore'),
         appController = require('js/app-controller'),
         notification = require('js/util/notification'),
-        emailDao, outboxBo, keychainDao, searchTimeout;
+        emailDao, outboxBo, keychainDao, searchTimeout, firstSelect;
 
     var INIT_DISPLAY_LEN = 20,
         SCROLL_DISPLAY_LEN = 10;
 
-    var MailListCtrl = function($scope, $timeout) {
+    var MailListCtrl = function($scope) {
         //
         // Init
         //
@@ -56,7 +56,12 @@ define(function(require) {
             }
 
             $scope.state.mailList.selected = email;
-            $scope.state.read.toggle(true);
+
+            if (!firstSelect) {
+                // only toggle to read view on 2nd select in mobile mode
+                $scope.state.read.toggle(true);
+            }
+            firstSelect = false;
 
             keychainDao.refreshKeyForUserId(email.from[0].address, onKeyRefreshed);
 
@@ -183,9 +188,8 @@ define(function(require) {
 
             // Shows the next message based on the uid of the currently selected element
             if (currentFolder().messages.indexOf(currentMessage()) === -1) {
-                $timeout(function() {
-                    $scope.select($scope.displayMessages[0]);
-                });
+                firstSelect = true; // reset first selection
+                $scope.select($scope.displayMessages[0]);
             }
         });
 
@@ -388,6 +392,7 @@ define(function(require) {
                 return;
             }
 
+            firstSelect = false;
             $scope.select(_.findWhere(currentFolder().messages, {
                 uid: uid
             }));
