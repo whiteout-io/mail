@@ -13,11 +13,11 @@
 
     <div class="step" ng-show="step === 2">
       <p><b>Key sync.</b> Please enter the keychain code you wrote down during sync setup.</p>
-      <input type="text" class="input-text code" size="4" maxlength="4" ng-model="code0" focus-me="step === 2"> -
-      <input type="text" class="input-text code" size="4" maxlength="4" ng-model="code1"> -
-      <input type="text" class="input-text code" size="4" maxlength="4" ng-model="code2"> -
-      <input type="text" class="input-text code" size="4" maxlength="4" ng-model="code3"> -
-      <input type="text" class="input-text code" size="4" maxlength="4" ng-model="code4"> -
+      <input type="text" class="input-text code" size="4" maxlength="4" ng-model="code0" focus-me="step === 2" focus-next ng-paste="handlePaste($event)"> -
+      <input type="text" class="input-text code" size="4" maxlength="4" ng-model="code1" focus-next> -
+      <input type="text" class="input-text code" size="4" maxlength="4" ng-model="code2" focus-next> -
+      <input type="text" class="input-text code" size="4" maxlength="4" ng-model="code3" focus-next> -
+      <input type="text" class="input-text code" size="4" maxlength="4" ng-model="code4" focus-next> -
       <input type="text" class="input-text code" size="4" maxlength="4" ng-model="code5">
       <!--<a href="https://whiteout.io/revocation.html" title="Click here to reset your account." target="_blank">Lost your keychain code?</a>-->
     </div>

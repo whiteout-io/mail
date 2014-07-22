@@ -17,11 +17,11 @@
 
       <div class="step" ng-show="step === 2">
         <p>Please confirm the keychain code you have written down.</p>
-        <input type="text" class="input-text" size="4" maxlength="4" ng-model="code0" focus-me="step === 2"> -
-        <input type="text" class="input-text" size="4" maxlength="4" ng-model="code1"> -
-        <input type="text" class="input-text" size="4" maxlength="4" ng-model="code2"> -
-        <input type="text" class="input-text" size="4" maxlength="4" ng-model="code3"> -
-        <input type="text" class="input-text" size="4" maxlength="4" ng-model="code4"> -
+        <input type="text" class="input-text" size="4" maxlength="4" ng-model="code0" focus-me="step === 2" focus-next ng-paste="handlePaste($event)"> -
+        <input type="text" class="input-text" size="4" maxlength="4" ng-model="code1" focus-next> -
+        <input type="text" class="input-text" size="4" maxlength="4" ng-model="code2" focus-next> -
+        <input type="text" class="input-text" size="4" maxlength="4" ng-model="code3" focus-next> -
+        <input type="text" class="input-text" size="4" maxlength="4" ng-model="code4" focus-next> -
         <input type="text" class="input-text" size="4" maxlength="4" ng-model="code5">
       </div>
 

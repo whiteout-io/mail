@@ -64,6 +64,7 @@ requirejs([
         'read',
         'contacts',
         'login-new-device',
+        'privatekey-upload',
         'popover',
         'infinite-scroll'
     ]);

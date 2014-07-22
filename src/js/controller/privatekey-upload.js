@@ -1,7 +1,8 @@
 define(function(require) {
     'use strict';
 
-    var appController = require('js/app-controller'),
+    var angular = require('angular'),
+        appController = require('js/app-controller'),
         keychain, pgp;
 
     var PrivateKeyUploadCtrl = function($scope) {
@@ -35,6 +36,26 @@ define(function(require) {
                     $scope.displayUploadUi();
                 });
             }
+        };
+
+        $scope.handlePaste = function(event) {
+            var evt = event;
+            if (evt.originalEvent) {
+                evt = evt.originalEvent;
+            }
+
+            var value = evt.clipboardData.getData('text/plain');
+            if (!value) {
+                return;
+            }
+
+            value = value.replace(/-/g, '');
+            $scope.code0 = value.slice(0, 4);
+            $scope.code1 = value.slice(4, 8);
+            $scope.code2 = value.slice(8, 12);
+            $scope.code3 = value.slice(12, 16);
+            $scope.code4 = value.slice(16, 20);
+            $scope.code5 = value.slice(20, 24);
         };
 
         $scope.checkServerForKey = function(callback) {
@@ -165,6 +186,28 @@ define(function(require) {
         };
 
     };
+
+    //
+    // Directives
+    //
+
+    var ngModule = angular.module('privatekey-upload', []);
+    ngModule.directive('focusNext', function() {
+        return {
+            link: function(scope, element, attr) {
+                var maxLen = element[0].maxLength;
+
+                scope.$watch(attr.ngModel, function(val) {
+                    if (val.length === maxLen) {
+                        var nextinput = element.next('input');
+                        if (nextinput.length) {
+                            nextinput[0].focus();
+                        }
+                    }
+                });
+            }
+        };
+    });
 
     return PrivateKeyUploadCtrl;
 });
