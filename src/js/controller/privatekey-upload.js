@@ -63,6 +63,9 @@ define(function(require) {
             // generate new code for the user
             $scope.code = $scope.generateCode();
             $scope.displayedCode = $scope.code.slice(0, 4) + '-' + $scope.code.slice(4, 8) + '-' + $scope.code.slice(8, 12) + '-' + $scope.code.slice(12, 16) + '-' + $scope.code.slice(16, 20) + '-' + $scope.code.slice(20, 24);
+
+            // clear input fields of any previous artifacts
+            $scope.code0 = $scope.code1 = $scope.code2 = $scope.code3 = $scope.code4 = $scope.code5 = '';
         };
 
         $scope.generateCode = function() {
