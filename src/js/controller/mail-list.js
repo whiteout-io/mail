@@ -417,12 +417,11 @@ define(function(require) {
             elm.on('touchstart', function() {
                 elm.addClass('active');
             });
-            elm.on('touchleave touchcancel touchmove', function() {
+            elm.on('touchleave touchcancel touchmove touchend', function() {
                 elm.removeClass('active');
             });
 
-            elm.on('touchend click', function(event) {
-                event.preventDefault();
+            elm.on('click', function(event) {
                 elm.removeClass('active');
                 scope.$apply(function() {
                     handler(scope, {

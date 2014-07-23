@@ -18,7 +18,7 @@
     <ul class="mail-list" infinite-scroll="displayMore()"
       infinite-scroll-distance="1" infinite-scroll-parent="true">
       <li ng-class="{'mail-list-active': email === state.mailList.selected}"
-        ng-click="select(email)"
+        wo-touch="select(email)"
         ng-repeat="email in displayMessages">
         <h3>{{email.from[0].name || email.from[0].address}}</h3>
         <div class="encrypted" data-icon="{{email.encrypted && email.decrypted ? '&#xe012;' : email.encrypted ? '&#xe009;' : ''}}"></div>
