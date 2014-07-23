@@ -201,7 +201,7 @@ define(function(require) {
                 var maxLen = element[0].maxLength;
 
                 scope.$watch(attr.ngModel, function(val) {
-                    if (val.length === maxLen) {
+                    if (val && val.length === maxLen) {
                         var nextinput = element.next('input');
                         if (nextinput.length) {
                             nextinput[0].focus();
