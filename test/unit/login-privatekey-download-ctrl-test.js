@@ -108,6 +108,26 @@ define(function(require) {
             });
         });
 
+        describe('handlePaste', function() {
+            it('should work', function() {
+                scope.handlePaste({
+                    clipboardData: {
+                        getData: function(val) {
+                            expect(val).to.equal('text/plain');
+                            return '1qaz-2wsx-3edc-4rfv-5tgb-6yhn';
+                        }
+                    }
+                });
+
+                expect(scope.code0).to.equal('1qaz');
+                expect(scope.code1).to.equal('2wsx');
+                expect(scope.code2).to.equal('3edc');
+                expect(scope.code3).to.equal('4rfv');
+                expect(scope.code4).to.equal('5tgb');
+                expect(scope.code5).to.equal('6yhn');
+            });
+        });
+
         describe('decryptAndStorePrivateKeyLocally', function() {
             beforeEach(function() {
                 scope.code0 = '0';
