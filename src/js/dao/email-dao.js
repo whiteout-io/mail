@@ -987,6 +987,7 @@ define(function(require) {
                 return callback(err);
             }
 
+            // upload the sent message to the sent folder if necessary
             var sentFolder = _.findWhere(self._account.folders, {
                 type: 'Sent'
             });
@@ -1031,6 +1032,7 @@ define(function(require) {
                 return callback(err);
             }
 
+            // upload the sent message to the sent folder if necessary
             var sentFolder = _.findWhere(self._account.folders, {
                 type: 'Sent'
             });
