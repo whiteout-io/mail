@@ -6,19 +6,16 @@
     <li class="google enabled" popover="#google-info" wo-touch="connectToGoogle()">
       <div><img src="img/google_logo.png" alt="Google Mail"></div>
     </li>
-    <li class="whiteout disabled" popover="#whiteout-info">
+    <li class="whiteout disabled" popover="#whiteout-info" wo-touch="onError({message:'Whiteout Mailbox coming soon!', sync:true})">
       <div><img src="img/whiteout_logo.svg" alt="Whiteout Mailbox"></div>
     </li>
-    <li class="outlook disabled" popover="#outlook-info">
-      <div><img src="img/outlook_logo.jpg" alt="Outlook.com"></div>
-    </li>
-    <li class="yahoo disabled" popover="#yahoo-info">
-      <div><img src="img/yahoo_logo.png" alt="Yahoo! Mail"></div>
-    </li>
-    <li class="tonline disabled" popover="#tonline-info">
+    <li class="tonline" popover="#tonline-info" wo-touch="connectToTonline()">
       <div><img src="img/tonline_logo.jpg" alt="T-Online"></div>
     </li>
-    <li class="other disabled" popover="#custom-info">
+    <li class="yahoo" popover="#yahoo-info" wo-touch="connectToYahoo()">
+      <div><img src="img/yahoo_logo.png" alt="Yahoo! Mail"></div>
+    </li>
+    <li class="other" popover="#custom-info" wo-touch="connectOther()">
       <h3>Custom server...</h3>
     </li>
   </ul>
@@ -32,7 +29,7 @@
   <div class="popover-content">
     <p>Connect Whiteout Mail to your Gmail or Google Apps account.</p>
     <p>Encrypted and cleartext messages are stored on Google's servers.</p>
-    <p>No data is sent to our servers.</p>
+    <p>Your emails and password remain on your device and are never sent to our servers.</p>
   </div>
 </div><!--/.popover-->
 
@@ -40,48 +37,38 @@
   <div class="arrow"></div>
   <div class="popover-title"><b>Whiteout Mailbox (coming soon)</b></div>
   <div class="popover-content">
-    <p>Connect Whiteout Mail to your secure Whiteout Mailbox.</p>
-    <p>All incoming messages are encrypted at rest and can only be read on your device.</p>
-    <p>Whiteout Mailbox is an email service hosted in Europe.</p>
-  </div>
-</div><!--/.popover-->
-
-<div id="outlook-info" class="popover right desktop-only" ng-controller="PopoverCtrl">
-  <div class="arrow"></div>
-  <div class="popover-title"><b>Outlook.com Account (coming soon)</b></div>
-  <div class="popover-content">
-    <p>Connect Whiteout Mail to your Outlook.com account.</p>
-    <p>Encrypted and cleartext messages are stored on Microsoft's servers.</p>
-    <p>No data is sent to our servers.</p>
+    <p>Connect Whiteout Mail to your fully encrypted Whiteout Mailbox (hosted in Europe).</p>
+    <p>Incoming cleartext messages are encrypted with your public PGP key before being stored in your inbox.</p>
+    <p>This way your email is protected against hackers and can only be read on your device.</p>
   </div>
 </div><!--/.popover-->
 
 <div id="yahoo-info" class="popover right desktop-only" ng-controller="PopoverCtrl">
   <div class="arrow"></div>
-  <div class="popover-title"><b>Yahoo Mail (coming soon)</b></div>
+  <div class="popover-title"><b>Yahoo Mail</b></div>
   <div class="popover-content">
     <p>Connect Whiteout Mail to your Yahoo Mail account.</p>
     <p>Encrypted and cleartext messages are stored on Yahoo's servers.</p>
-    <p>No data is sent to our servers.</p>
+    <p>Your emails and password remain on your device and are never sent to our servers.</p>
   </div>
 </div><!--/.popover-->
 
 <div id="tonline-info" class="popover right desktop-only" ng-controller="PopoverCtrl">
   <div class="arrow"></div>
-  <div class="popover-title"><b>T-Online Account (coming soon)</b></div>
+  <div class="popover-title"><b>T-Online Account</b></div>
   <div class="popover-content">
     <p>Connect Whiteout Mail to your T-Online account.</p>
     <p>Encrypted and cleartext messages are stored on T-Online's servers.</p>
-    <p>No data is sent to our servers.</p>
+    <p>Your emails and password remain on your device and are never sent to our servers.</p>
   </div>
 </div><!--/.popover-->
 
 <div id="custom-info" class="popover right desktop-only" ng-controller="PopoverCtrl">
   <div class="arrow"></div>
-  <div class="popover-title"><b>Custom server (coming soon)</b></div>
+  <div class="popover-title"><b>Custom server</b></div>
   <div class="popover-content">
     <p>Connect Whiteout Mail to your own email server.</p>
     <p>Encrypted and cleartext messages are stored on your server.</p>
-    <p>No data is sent to our servers.</p>
+    <p>Your emails and password remain on your device and are never sent to our servers.</p>
   </div>
 </div><!--/.popover-->

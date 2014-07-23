@@ -93,7 +93,13 @@ define(function(require) {
                     }
 
                     // passphrase is corrent ... go to main app
-                    $scope.goTo('/desktop');
+                    appController._auth.storeCredentials(function(err) {
+                        if (err) {
+                            return $scope.onError(err);
+                        }
+
+                        $scope.goTo('/desktop');
+                    });
                 });
             });
         };

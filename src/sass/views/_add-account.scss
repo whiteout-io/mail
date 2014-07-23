@@ -29,10 +29,25 @@
             position: relative;
             height: 68px;
             cursor: pointer;
+            &:hover,
+            &:focus {
+                opacity: 0.6;
+            }
+            &:active {
+                opacity: 1;
+                top: 1px;
+                left: 1px;
+            }
+
+            &:nth-child(odd) {
+                background-color: white;
+            }
+            
+            &:nth-child(even) {
+                background-color: $color-grey-lightest;
+            }
 
             &.google {
-                background-color: white;
-
                 div {
                     width: 164px;
                     height: 58px;
@@ -47,8 +62,6 @@
             }
 
             &.whiteout {
-                background-color: $color-grey-lightest;
-
                 div {
                     width: 210px;
                     margin: 0 auto;
@@ -60,23 +73,7 @@
                 }
             }
 
-            &.outlook {
-                background-color: white;
-
-                div {
-                    width: 256px;
-                    margin: 0 auto;
-                    padding: 13px 0;
-
-                    img {
-                        width: 100%;
-                    }
-                }
-            }
-
             &.yahoo {
-                background-color: $color-grey-lightest;
-
                 div {
                     width: 181px;
                     margin: 0 auto;
@@ -88,8 +85,6 @@
             }
 
             &.tonline {
-                background-color: white;
-
                 div {
                     width: 271px;
                     margin: 0 auto;
@@ -106,23 +101,6 @@
                     line-height: 68px;
                     font-size: 21px;
                     text-align: center;
-                }
-            }
-
-            &.disabled {
-                opacity: 0.2;
-            }
-
-            &.enabled {
-                &:hover,
-                &:focus {
-                    opacity: 0.6;
-                }
-
-                &:active {
-                    opacity: 1;
-                    top: 1px;
-                    left: 1px;
                 }
             }
         }

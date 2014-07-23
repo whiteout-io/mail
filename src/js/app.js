@@ -16,6 +16,7 @@ requirejs([
     'js/controller/login-new-device',
     'js/controller/login-existing',
     'js/controller/login-privatekey-download',
+    'js/controller/login-set-credentials',
     'js/controller/mail-list',
     'js/controller/read',
     'js/controller/write',
@@ -41,6 +42,7 @@ requirejs([
     LoginNewDeviceCtrl,
     LoginExistingCtrl,
     LoginPrivateKeyDownloadCtrl,
+    LoginSetCredentialsCtrl,
     MailListCtrl,
     ReadCtrl,
     WriteCtrl,
@@ -78,6 +80,10 @@ requirejs([
         $routeProvider.when('/login', {
             templateUrl: 'tpl/login.html',
             controller: LoginCtrl
+        });
+        $routeProvider.when('/login-set-credentials', {
+            templateUrl: 'tpl/login-set-credentials.html',
+            controller: LoginSetCredentialsCtrl
         });
         $routeProvider.when('/login-existing', {
             templateUrl: 'tpl/login-existing.html',

@@ -69,7 +69,7 @@ define(function(require) {
                 messages: []
             };
 
-            folders = [inboxFolder, outboxFolder, trashFolder];
+            folders = [inboxFolder, outboxFolder, trashFolder, sentFolder];
 
             account = {
                 emailAddress: emailAddress,
@@ -1544,14 +1544,21 @@ define(function(require) {
                         publicKeysArmored: publicKeys
                     };
 
-                it('should send encrypted', function(done) {
+                it('should send encrypted and upload to sent', function(done) {
+                    var msg = 'wow. such message. much rfc2822.';
+
+                    imapClientStub.uploadMessage.withArgs({
+                        path: sentFolder.path,
+                        message: msg
+                    }).yields();
+
                     pgpMailerStub.send.withArgs({
                         encrypt: true,
                         cleartextMessage: str.message,
                         mail: dummyMail,
                         smtpclient: undefined,
                         publicKeysArmored: publicKeys
-                    }).yieldsAsync();
+                    }).yieldsAsync(null, msg);
 
                     dao.sendEncrypted({
                         email: dummyMail
@@ -1559,6 +1566,32 @@ define(function(require) {
                         expect(err).to.not.exist;
 
                         expect(pgpMailerStub.send.calledOnce).to.be.true;
+                        expect(imapClientStub.uploadMessage.calledOnce).to.be.true;
+
+                        done();
+                    });
+                });
+
+                it('should send encrypted and not upload to sent', function(done) {
+                    var msg = 'wow. such message. much rfc2822.';
+
+                    dao.ignoreUploadOnSent = true;
+
+                    pgpMailerStub.send.withArgs({
+                        encrypt: true,
+                        cleartextMessage: str.message,
+                        mail: dummyMail,
+                        smtpclient: undefined,
+                        publicKeysArmored: publicKeys
+                    }).yieldsAsync(null, msg);
+
+                    dao.sendEncrypted({
+                        email: dummyMail
+                    }, function(err) {
+                        expect(err).to.not.exist;
+
+                        expect(pgpMailerStub.send.calledOnce).to.be.true;
+                        expect(imapClientStub.uploadMessage.called).to.be.false;
 
                         done();
                     });
@@ -1573,6 +1606,7 @@ define(function(require) {
                         expect(err).to.exist;
 
                         expect(pgpMailerStub.send.calledOnce).to.be.true;
+                        expect(imapClientStub.uploadMessage.called).to.be.false;
 
                         done();
                     });
@@ -1584,6 +1618,7 @@ define(function(require) {
                     dao.sendEncrypted({}, function(err) {
                         expect(err).to.exist;
                         expect(pgpMailerStub.send.called).to.be.false;
+                        expect(imapClientStub.uploadMessage.called).to.be.false;
                         done();
                     });
                 });
@@ -1593,17 +1628,45 @@ define(function(require) {
             describe('#sendPlaintext', function() {
                 var dummyMail = {};
 
-                it('should send in the plain', function(done) {
+                it('should send in the plain and upload to sent', function(done) {
+                    var msg = 'wow. such message. much rfc2822.';
+
                     pgpMailerStub.send.withArgs({
                         smtpclient: undefined,
                         mail: dummyMail
-                    }).yieldsAsync();
+                    }).yieldsAsync(null, msg);
+
+                    imapClientStub.uploadMessage.withArgs({
+                        path: sentFolder.path,
+                        message: msg
+                    }).yields();
 
                     dao.sendPlaintext({
                         email: dummyMail
                     }, function(err) {
                         expect(err).to.not.exist;
                         expect(pgpMailerStub.send.calledOnce).to.be.true;
+                        expect(imapClientStub.uploadMessage.calledOnce).to.be.true;
+                        done();
+                    });
+                });
+
+                it('should send in the plain and not upload to sent', function(done) {
+                    var msg = 'wow. such message. much rfc2822.';
+
+                    dao.ignoreUploadOnSent = true;
+
+                    pgpMailerStub.send.withArgs({
+                        smtpclient: undefined,
+                        mail: dummyMail
+                    }).yieldsAsync(null, msg);
+
+                    dao.sendPlaintext({
+                        email: dummyMail
+                    }, function(err) {
+                        expect(err).to.not.exist;
+                        expect(pgpMailerStub.send.calledOnce).to.be.true;
+                        expect(imapClientStub.uploadMessage.called).to.be.false;
                         done();
                     });
                 });
@@ -1616,6 +1679,7 @@ define(function(require) {
                     }, function(err) {
                         expect(err).to.exist;
                         expect(pgpMailerStub.send.calledOnce).to.be.true;
+                        expect(imapClientStub.uploadMessage.called).to.be.false;
                         done();
                     });
                 });
@@ -1626,6 +1690,7 @@ define(function(require) {
                     dao.sendPlaintext({}, function(err) {
                         expect(err).to.exist;
                         expect(pgpMailerStub.send.called).to.be.false;
+                        expect(imapClientStub.uploadMessage.called).to.be.false;
                         done();
                     });
                 });

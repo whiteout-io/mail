@@ -86,8 +86,14 @@ define(function(require) {
                 return;
             }
 
-            $location.path('/desktop');
-            $scope.$apply();
+            appController._auth.storeCredentials(function(err) {
+                if (err) {
+                    return $scope.onError(err);
+                }
+
+                $location.path('/desktop');
+                $scope.$apply();
+            });
         }
     };
 

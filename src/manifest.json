@@ -17,8 +17,7 @@
     "https://www.googleapis.com/",
     "identity", {
       "socket": [
-        "tcp-connect:imap.gmail.com:993",
-        "tcp-connect:smtp.gmail.com:465"
+        "tcp-connect:*"
       ]
     }
   ],

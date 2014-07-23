@@ -7,7 +7,7 @@ define(function() {
      * In database version 3, we introduced new flags to the messages, also
      * the outbox uses artificial uids
      */
-    function updateV2(options, callback) {
+    function update(options, callback) {
         var emailDbType = 'email_',
             versionDbType = 'dbVersion',
             postUpdateDbVersion = 3;
@@ -24,5 +24,5 @@ define(function() {
         });
     }
 
-    return updateV2;
+    return update;
 });

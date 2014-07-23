@@ -4,6 +4,7 @@ define(function(require) {
     var expect = chai.expect,
         angular = require('angular'),
         mocks = require('angularMocks'),
+        Auth = require('js/bo/auth'),
         LoginPrivateKeyDownloadCtrl = require('js/controller/login-privatekey-download'),
         EmailDAO = require('js/dao/email-dao'),
         appController = require('js/app-controller'),
@@ -12,6 +13,7 @@ define(function(require) {
     describe('Login Private Key Download Controller unit test', function() {
         var scope, location, ctrl,
             origEmailDao, emailDaoMock,
+            origAuth, authMock,
             origKeychain, keychainMock,
             emailAddress = 'fred@foo.com';
 
@@ -19,8 +21,11 @@ define(function(require) {
             // remember original module to restore later, then replace it
             origEmailDao = appController._emailDao;
             origKeychain = appController._keychain;
+            origAuth = appController._auth;
+
             appController._emailDao = emailDaoMock = sinon.createStubInstance(EmailDAO);
             appController._keychain = keychainMock = sinon.createStubInstance(KeychainDAO);
+            appController._auth = authMock = sinon.createStubInstance(Auth);
 
             emailDaoMock._account = {
                 emailAddress: emailAddress
@@ -43,6 +48,7 @@ define(function(require) {
             // restore the app controller module
             appController._emailDao = origEmailDao;
             appController._keychain = origKeychain;
+            appController._auth = origAuth;
         });
 
         describe('initialization', function() {
@@ -196,6 +202,7 @@ define(function(require) {
                     encryptedKey: 'keyArmored'
                 });
                 emailDaoMock.unlock.yields();
+                authMock.storeCredentials.yields();
 
                 scope.goTo = function(location) {
                     expect(location).to.equal('/desktop');

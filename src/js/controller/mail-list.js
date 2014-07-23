@@ -197,6 +197,11 @@ define(function(require) {
          * display more items (for infinite scrolling)
          */
         $scope.displayMore = function() {
+            if (!currentFolder() || !$scope.displayMessages) {
+                // folders not yet initialized
+                return;
+            }
+
             var len = currentFolder().messages.length,
                 dLen = $scope.displayMessages.length;
 

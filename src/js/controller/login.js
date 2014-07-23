@@ -21,21 +21,22 @@ define(function(require) {
 
         function initializeUser() {
             // get OAuth token from chrome
-            appController._auth.getEmailAddress(function(err, emailAddress) {
+            appController._auth.getEmailAddress(function(err, info) {
                 if (err) {
                     $scope.onError(err);
                     return;
                 }
 
                 // check if account needs to be selected
-                if (!emailAddress) {
+                if (!info.emailAddress) {
                     goTo('/add-account');
                     return;
                 }
 
                 // initiate controller by creating email dao
                 appController.init({
-                    emailAddress: emailAddress
+                    emailAddress: info.emailAddress,
+                    realname: info.realname
                 }, function(err, availableKeys) {
                     if (err) {
                         $scope.onError(err);

@@ -12,6 +12,8 @@
     -webkit-appearance: none;
 }
 
+:invalid,
+.ng-invalid,
 .input-text-error {
     border-color: red;
 }

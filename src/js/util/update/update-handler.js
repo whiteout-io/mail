@@ -4,15 +4,17 @@ define(function(require) {
     var cfg = require('js/app-config').config,
         updateV1 = require('js/util/update/update-v1'),
         updateV2 = require('js/util/update/update-v2'),
-        updateV3 = require('js/util/update/update-v3');
+        updateV3 = require('js/util/update/update-v3'),
+        updateV4 = require('js/util/update/update-v4');
 
     /**
      * Handles database migration
      */
-    var UpdateHandler = function(appConfigStorage, userStorage) {
+    var UpdateHandler = function(appConfigStorage, userStorage, auth) {
         this._appConfigStorage = appConfigStorage;
         this._userStorage = userStorage;
-        this._updateScripts = [updateV1, updateV2, updateV3];
+        this._updateScripts = [updateV1, updateV2, updateV3, updateV4];
+        this._auth = auth;
     };
 
     /**
@@ -48,7 +50,7 @@ define(function(require) {
      */
     UpdateHandler.prototype._applyUpdate = function(options, callback) {
         var self = this,
-            storage,
+            scriptOptions,
             queue = [];
 
         if (options.currentVersion >= options.targetVersion) {
@@ -57,9 +59,10 @@ define(function(require) {
             return;
         }
 
-        storage = {
+        scriptOptions = {
             appConfigStorage: self._appConfigStorage,
-            userStorage: self._userStorage
+            userStorage: self._userStorage,
+            auth: self._auth
         };
 
         // add all the necessary database updates to the queue
@@ -82,7 +85,7 @@ define(function(require) {
 
             // process next update
             var script = queue.shift();
-            script(storage, executeNextUpdate);
+            script(scriptOptions, executeNextUpdate);
         }
 
         executeNextUpdate();

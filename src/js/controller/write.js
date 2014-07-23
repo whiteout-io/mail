@@ -8,7 +8,7 @@ define(function(require) {
         aes = require('js/crypto/aes-gcm'),
         util = require('js/crypto/util'),
         str = require('js/app-config').string,
-        pgp, emailDao, outbox, keychainDao;
+        pgp, emailDao, outbox, keychainDao, auth;
 
     //
     // Controller
@@ -16,7 +16,8 @@ define(function(require) {
 
     var WriteCtrl = function($scope, $filter) {
         pgp = appController._pgp;
-        emailDao = appController._emailDao,
+        auth = appController._auth;
+        emailDao = appController._emailDao;
         outbox = appController._outboxBo;
         keychainDao = appController._keychain;
 
@@ -112,6 +113,7 @@ define(function(require) {
             $scope.writerTitle = str.bugReportTitle;
             $scope.subject = str.bugReportSubject;
             $scope.body = str.bugReportBody + dump;
+
         }
 
         function fillFields(re, replyAll, forward) {
@@ -131,13 +133,15 @@ define(function(require) {
                     address: replyTo
                 });
                 $scope.to.forEach($scope.verify);
-                if ((re.references || []).indexOf(re.id) < 0) {
+
+                $scope.references = (re.references || []);
+                if (re.id && $scope.references.indexOf(re.id) < 0) {
                     // references might not exist yet, so use the double concat
-                    $scope.references = [].concat(re.references || []).concat(re.id);
-                } else {
-                    $scope.references = re.references;
+                    $scope.references = $scope.references.concat(re.id);
                 }
-                $scope.inReplyTo = re.id;
+                if (re.id) {
+                    $scope.inReplyTo = re.id;
+                }
             }
             if (replyAll) {
                 re.to.concat(re.cc).forEach(function(recipient) {
@@ -164,7 +168,9 @@ define(function(require) {
                 // create a new array, otherwise removing an attachment will also
                 // remove it from the original in the mail list as a side effect
                 $scope.attachments = [].concat(re.attachments);
-                $scope.references = [re.id];
+                if (re.id) {
+                    $scope.references = [re.id];
+                }
             }
 
             // fill subject
@@ -201,8 +207,7 @@ define(function(require) {
                 body = '\n\n' + sentDate + ' ' + from + ' wrote:\n> ';
             }
 
-            // only display non html mails in reply part
-            if (!re.html) {
+            if (re.body) {
                 body += re.body.trim().split('\n').join('\n> ').replace(/ >/g, '>');
                 $scope.body = body;
             }
@@ -357,6 +362,7 @@ define(function(require) {
             // build email model for smtp-client
             email = {
                 from: [{
+                    name: emailDao._account.realname,
                     address: emailDao._account.emailAddress
                 }],
                 to: $scope.to.filter(filterEmptyAddresses),
