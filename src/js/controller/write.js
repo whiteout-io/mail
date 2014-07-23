@@ -133,9 +133,6 @@ define(function(require) {
                     address: replyTo
                 });
                 $scope.to.forEach($scope.verify);
-                if (re.references) {
-
-                }
 
                 $scope.references = (re.references || []);
                 if (re.id && $scope.references.indexOf(re.id) < 0) {
