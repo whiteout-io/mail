@@ -993,6 +993,7 @@ define(function(require) {
             });
 
             if (self.ignoreUploadOnSent || !sentFolder || !rfcText) {
+                self.done();
                 return callback();
             }
 
@@ -1038,6 +1039,7 @@ define(function(require) {
             });
 
             if (self.ignoreUploadOnSent || !sentFolder || !rfcText) {
+                self.done();
                 return callback();
             }
 
