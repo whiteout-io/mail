@@ -10,7 +10,7 @@
         "start": "grunt && grunt dev"
     },
     "dependencies": {
-        "crypto-lib": "https://github.com/whiteout-io/crypto-lib/tarball/v0.2.0",
+        "crypto-lib": "~0.2.1",
         "imap-client": "~0.3.7",
         "mailreader": "~0.3.5",
         "pgpmailer": "~0.3.10",
