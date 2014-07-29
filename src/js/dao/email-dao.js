@@ -1024,6 +1024,10 @@ define(function(require) {
             return;
         }
         self.busy();
+
+        // add suffix to plaintext mail
+        options.email.body += str.signature + config.cloudUrl + '/' + self._account.emailAddress;
+
         // mime encode, sign and send email via smtp
         self._pgpMailer.send({
             smtpclient: options.smtpclient, // filled solely in the integration test, undefined in normal usage

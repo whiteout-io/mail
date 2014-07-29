@@ -9,7 +9,9 @@ define(function(require) {
         appController = require('js/app-controller'),
         mailreader = require('mailreader'),
         openpgp = require('openpgp'),
-        PgpMailer = require('pgpmailer');
+        PgpMailer = require('pgpmailer'),
+        config = require('js/app-config').config,
+        str = require('js/app-config').string;
 
     describe('Email DAO integration tests', function() {
         this.timeout(100000);
@@ -868,7 +870,7 @@ define(function(require) {
                             expect(message.signed).to.be.true;
                             expect(message.signaturesValid).to.be.true;
                             expect(message.attachments.length).to.equal(0);
-                            expect(message.body).to.equal(expectedBody);
+                            expect(message.body).to.equal(expectedBody + str.signature + config.cloudUrl + '/' + testAccount.user);
                             done();
                         });
                     };

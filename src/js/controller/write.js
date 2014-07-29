@@ -369,7 +369,7 @@ define(function(require) {
                 cc: $scope.cc.filter(filterEmptyAddresses),
                 bcc: $scope.bcc.filter(filterEmptyAddresses),
                 subject: $scope.subject.trim() ? $scope.subject.trim() : str.fallbackSubject, // Subject line, or the fallback subject, if nothing valid was entered
-                body: $scope.body.trim() + (!$scope.sendBtnSecure ? str.signature : ''), // use parsed plaintext body
+                body: $scope.body.trim(), // use parsed plaintext body
                 attachments: $scope.attachments,
                 sentDate: new Date(),
                 headers: {}
