@@ -1510,7 +1510,7 @@ module.exports = {
 
   show_version: true,
   show_comment: true,
-  versionstring: "OpenPGP.js v0.7.1",
+  versionstring: "OpenPGP.js v0.7.2",
   commentstring: "Whiteout Mail - https://whiteout.io",
 
   keyserver: "keyserver.linux.it", // "pgp.mit.edu:11371"
@@ -11767,6 +11767,10 @@ function generate(options) {
   if (options.keyType !== enums.publicKey.rsa_encrypt_sign) {
     throw new Error('Only RSA Encrypt or Sign supported');
   }
+  // Key without passphrase is unlocked by definition
+  if (!options.passphrase) {
+    options.unlocked = true;
+  }
 
   var packetlist = new packet.List();
 
@@ -14657,6 +14661,9 @@ SecretKey.prototype.generate = function (bits) {
  * Clear private MPIs, return to initial state
  */
 SecretKey.prototype.clearPrivateMPIs = function () {
+  if (!this.encrypted) {
+    throw new Error('If secret key is not encrypted, clearing private MPIs is irreversible.');
+  }
   this.mpi = this.mpi.slice(0, crypto.getPublicMpiCount(this.algorithm));
   this.isDecrypted = false;
 };

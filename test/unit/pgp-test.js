@@ -14,7 +14,7 @@ define(function(require) {
             keySize = 512,
             keyId = 'F6F60E9B42CDFF4C',
             pubkey = '-----BEGIN PGP PUBLIC KEY BLOCK-----\r\n' +
-            'Version: OpenPGP.js v0.7.1\r\n' +
+            'Version: OpenPGP.js v0.7.2\r\n' +
             'Comment: Whiteout Mail - https://whiteout.io\r\n' +
             '\r\n' +
             'xk0EUlhMvAEB/2MZtCUOAYvyLFjDp3OBMGn3Ev8FwjzyPbIF0JUw+L7y2XR5\r\n' +
@@ -25,7 +25,7 @@ define(function(require) {
             '=6XMW\r\n' +
             '-----END PGP PUBLIC KEY BLOCK-----\r\n\r\n',
             privkey = '-----BEGIN PGP PRIVATE KEY BLOCK-----\r\n' +
-            'Version: OpenPGP.js v0.7.1\r\n' +
+            'Version: OpenPGP.js v0.7.2\r\n' +
             'Comment: Whiteout Mail - https://whiteout.io\r\n' +
             '\r\n' +
             'xcBeBFJYTLwBAf9jGbQlDgGL8ixYw6dzgTBp9xL/BcI88j2yBdCVMPi+8tl0\r\n' +
@@ -80,7 +80,27 @@ define(function(require) {
                     expect(keys.keyId).to.exist;
                     expect(keys.privateKeyArmored).to.exist;
                     expect(keys.publicKeyArmored).to.exist;
-                    done();
+
+                    // test encrypt/decrypt
+                    pgp.importKeys({
+                        passphrase: passphrase,
+                        privateKeyArmored: keys.privateKeyArmored,
+                        publicKeyArmored: keys.publicKeyArmored
+                    }, function(err) {
+                        expect(err).to.not.exist;
+
+                        pgp.encrypt('secret', [keys.publicKeyArmored], function(err, ct) {
+                            expect(err).to.not.exist;
+                            expect(ct).to.exist;
+
+                            pgp.decrypt(ct, keys.publicKeyArmored, function(err, pt, signValid) {
+                                expect(err).to.not.exist;
+                                expect(pt).to.equal('secret');
+                                expect(signValid).to.be.true;
+                                done();
+                            });
+                        });
+                    });
                 });
             });
             it('should work without passphrase', function(done) {
@@ -93,7 +113,27 @@ define(function(require) {
                     expect(keys.keyId).to.exist;
                     expect(keys.privateKeyArmored).to.exist;
                     expect(keys.publicKeyArmored).to.exist;
-                    done();
+
+                    // test encrypt/decrypt
+                    pgp.importKeys({
+                        passphrase: undefined,
+                        privateKeyArmored: keys.privateKeyArmored,
+                        publicKeyArmored: keys.publicKeyArmored
+                    }, function(err) {
+                        expect(err).to.not.exist;
+
+                        pgp.encrypt('secret', [keys.publicKeyArmored], function(err, ct) {
+                            expect(err).to.not.exist;
+                            expect(ct).to.exist;
+
+                            pgp.decrypt(ct, keys.publicKeyArmored, function(err, pt, signValid) {
+                                expect(err).to.not.exist;
+                                expect(pt).to.equal('secret');
+                                expect(signValid).to.be.true;
+                                done();
+                            });
+                        });
+                    });
                 });
             });
         });
