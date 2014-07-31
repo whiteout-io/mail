@@ -6,6 +6,38 @@ define(function(require) {
         config = require('js/app-config').config,
         str = require('js/app-config').string;
 
+
+    //
+    //
+    // Constants
+    //
+    //
+
+    var FOLDER_DB_TYPE = 'folders';
+
+    var SYNC_TYPE_NEW = 'new';
+    var SYNC_TYPE_DELETED = 'deleted';
+    var SYNC_TYPE_MSGS = 'messages';
+
+    var FOLDER_TYPE_INBOX = 'Inbox';
+    var FOLDER_TYPE_SENT = 'Sent';
+    var FOLDER_TYPE_DRAFTS = 'Drafts';
+    var FOLDER_TYPE_TRASH = 'Trash';
+
+    var MSG_ATTR_UID = 'uid';
+    var MSG_PART_ATTR_CONTENT = 'content';
+    var MSG_PART_TYPE_ATTACHMENT = 'attachment';
+    var MSG_PART_TYPE_ENCRYPTED = 'encrypted';
+    var MSG_PART_TYPE_SIGNED = 'signed';
+    var MSG_PART_TYPE_TEXT = 'text';
+    var MSG_PART_TYPE_HTML = 'html';
+
+    //
+    //
+    // Email Dao
+    //
+    //
+
     /**
      * High-level data access object that orchestrates everything around the handling of encrypted mails:
      * PGP de-/encryption, receiving via IMAP, sending via SMTP, MIME parsing, local db persistence
@@ -253,8 +285,8 @@ define(function(require) {
                 return;
             }
 
-            var storedUids = _.pluck(storedMessages, 'uid'),
-                memoryUids = _.pluck(folder.messages, 'uid'),
+            var storedUids = _.pluck(storedMessages, MSG_ATTR_UID),
+                memoryUids = _.pluck(folder.messages, MSG_ATTR_UID),
                 newUids = _.difference(storedUids, memoryUids), // uids of messages that are not yet in memory
                 removedUids = _.difference(memoryUids, storedUids); // uids of messages that are no longer stored on the disk
 
@@ -370,7 +402,7 @@ define(function(require) {
                     // this enables us to already show the attachment clip in the message list ui
                     messages.forEach(function(message) {
                         message.attachments = message.bodyParts.filter(function(bodyPart) {
-                            return bodyPart.type === 'attachment';
+                            return bodyPart.type === MSG_PART_TYPE_ATTACHMENT;
                         });
                     });
 
@@ -401,7 +433,7 @@ define(function(require) {
                     return;
                 }
 
-                var body = _.pluck(filterBodyParts(parsedBodyParts, 'text'), 'content').join('\n'),
+                var body = _.pluck(filterBodyParts(parsedBodyParts, MSG_PART_TYPE_TEXT), MSG_PART_ATTR_CONTENT).join('\n'),
                     verificationUrlPrefix = config.cloudUrl + config.verificationUrl,
                     uuid = body.split(verificationUrlPrefix).pop().substr(0, config.verificationUuidLength),
                     uuidRegex = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/;
@@ -645,10 +677,10 @@ define(function(require) {
                 // we need to fetch the content for non-attachment body parts (encrypted, signed, text, html, resources referenced from the html)
                 // but we spare the effort and fetch attachment content later upon explicit user request.
                 var contentParts = localMessage.bodyParts.filter(function(bodyPart) {
-                    return bodyPart.type !== "attachment" || (bodyPart.type === "attachment" && bodyPart.id);
+                    return bodyPart.type !== MSG_PART_TYPE_ATTACHMENT || (bodyPart.type === MSG_PART_TYPE_ATTACHMENT && bodyPart.id);
                 });
                 var attachmentParts = localMessage.bodyParts.filter(function(bodyPart) {
-                    return bodyPart.type === "attachment" && !bodyPart.id;
+                    return bodyPart.type === MSG_PART_TYPE_ATTACHMENT && !bodyPart.id;
                 });
 
                 // do we need to fetch content from the imap server?
@@ -700,7 +732,7 @@ define(function(require) {
         function extractContent() {
             if (message.encrypted) {
                 // show the encrypted message
-                message.body = filterBodyParts(message.bodyParts, 'encrypted')[0].content;
+                message.body = filterBodyParts(message.bodyParts, MSG_PART_TYPE_ENCRYPTED)[0].content;
                 return done();
             }
 
@@ -708,13 +740,13 @@ define(function(require) {
 
             if (message.signed) {
                 // PGP/MIME signed
-                var signedRoot = filterBodyParts(message.bodyParts, 'signed')[0]; // in case of a signed message, you only want to show the signed content and ignore the rest
+                var signedRoot = filterBodyParts(message.bodyParts, MSG_PART_TYPE_SIGNED)[0]; // in case of a signed message, you only want to show the signed content and ignore the rest
                 message.signedMessage = signedRoot.signedMessage;
                 message.signature = signedRoot.signature;
                 root = signedRoot.content;
             }
 
-            var body = _.pluck(filterBodyParts(root, 'text'), 'content').join('\n');
+            var body = _.pluck(filterBodyParts(root, MSG_PART_TYPE_TEXT), MSG_PART_ATTR_CONTENT).join('\n');
 
             /*
              * if the message is plain text and contains pgp/inline, we are only interested in the encrypted
@@ -730,7 +762,7 @@ define(function(require) {
 
                 // replace the bodyParts info with an artificial bodyPart of type "encrypted"
                 message.bodyParts = [{
-                    type: 'encrypted',
+                    type: MSG_PART_TYPE_ENCRYPTED,
                     content: pgpInlineMatch[0],
                     _isPgpInline: true // used internally to avoid trying to parse non-MIME text with the mailreader
                 }];
@@ -770,8 +802,8 @@ define(function(require) {
             function setBody() {
                 message.body = body;
                 if (!message.clearSignedMessage) {
-                    message.attachments = filterBodyParts(root, 'attachment');
-                    message.html = _.pluck(filterBodyParts(root, 'html'), 'content').join('\n');
+                    message.attachments = filterBodyParts(root, MSG_PART_TYPE_ATTACHMENT);
+                    message.html = _.pluck(filterBodyParts(root, MSG_PART_TYPE_HTML), MSG_PART_ATTR_CONTENT).join('\n');
                     inlineExternalImages(message);
                 }
 
@@ -863,7 +895,7 @@ define(function(require) {
             }
 
             // get the receiver's public key to check the message signature
-            var encryptedNode = filterBodyParts(message.bodyParts, 'encrypted')[0];
+            var encryptedNode = filterBodyParts(message.bodyParts, MSG_PART_TYPE_ENCRYPTED)[0];
             var senderKey = senderPublicKey ? senderPublicKey.publicKey : undefined;
             self._pgp.decrypt(encryptedNode.content, senderKey, function(err, decrypted, signaturesValid) {
                 if (err || !decrypted) {
@@ -897,7 +929,7 @@ define(function(require) {
                     if (!message.signed) {
                         // message had no signature in the ciphertext, so there's a little extra effort to be done here
                         // is there a signed MIME node?
-                        var signedRoot = filterBodyParts(root, 'signed')[0];
+                        var signedRoot = filterBodyParts(root, MSG_PART_TYPE_SIGNED)[0];
                         if (!signedRoot) {
                             // no signed MIME node, obviously an unsigned PGP/MIME message
                             return setBody();
@@ -927,9 +959,9 @@ define(function(require) {
                     function setBody() {
                         // we have successfully interpreted the descrypted message,
                         // so let's update the views on the message parts
-                        message.body = _.pluck(filterBodyParts(root, 'text'), 'content').join('\n');
-                        message.html = _.pluck(filterBodyParts(root, 'html'), 'content').join('\n');
-                        message.attachments = _.reject(filterBodyParts(root, 'attachment'), function(attmt) {
+                        message.body = _.pluck(filterBodyParts(root, MSG_PART_TYPE_TEXT), MSG_PART_ATTR_CONTENT).join('\n');
+                        message.html = _.pluck(filterBodyParts(root, MSG_PART_TYPE_HTML), MSG_PART_ATTR_CONTENT).join('\n');
+                        message.attachments = _.reject(filterBodyParts(root, MSG_PART_TYPE_ATTACHMENT), function(attmt) {
                             // remove the pgp-signature from the attachments
                             return attmt.mimeType === "application/pgp-signature";
                         });
@@ -989,7 +1021,7 @@ define(function(require) {
 
             // upload the sent message to the sent folder if necessary
             var sentFolder = _.findWhere(self._account.folders, {
-                type: 'Sent'
+                type: FOLDER_TYPE_SENT
             });
 
             if (self.ignoreUploadOnSent || !sentFolder || !rfcText) {
@@ -1039,7 +1071,7 @@ define(function(require) {
 
             // upload the sent message to the sent folder if necessary
             var sentFolder = _.findWhere(self._account.folders, {
-                type: 'Sent'
+                type: FOLDER_TYPE_SENT
             });
 
             if (self.ignoreUploadOnSent || !sentFolder || !rfcText) {
@@ -1130,7 +1162,7 @@ define(function(require) {
 
                     var uids, highestModseq, lastUid;
 
-                    uids = _.pluck(folder.messages, 'uid').sort(function(a, b) {
+                    uids = _.pluck(folder.messages, MSG_ATTR_UID).sort(function(a, b) {
                         return a - b;
                     });
                     lastUid = uids[uids.length - 1];
@@ -1153,7 +1185,7 @@ define(function(require) {
 
                 // set up the imap client to listen for changes in the inbox
                 var inbox = _.findWhere(self._account.folders, {
-                    type: 'Inbox'
+                    type: FOLDER_TYPE_INBOX
                 });
 
                 if (!inbox) {
@@ -1199,14 +1231,14 @@ define(function(require) {
             return;
         }
 
-        if (options.type === 'new') {
+        if (options.type === SYNC_TYPE_NEW) {
             // new messages available on imap, fetch from imap and store to disk and memory
             self.fetchMessages({
                 folder: folder,
                 firstUid: Math.min.apply(null, options.list),
                 lastUid: Math.max.apply(null, options.list)
             }, self.onError.bind(self));
-        } else if (options.type === 'deleted') {
+        } else if (options.type === SYNC_TYPE_DELETED) {
             // messages have been deleted, remove from local storage and memory
             options.list.forEach(function(uid) {
                 var message = _.findWhere(folder.messages, {
@@ -1223,7 +1255,7 @@ define(function(require) {
                     localOnly: true
                 }, self.onError.bind(self));
             });
-        } else if (options.type === 'messages') {
+        } else if (options.type === SYNC_TYPE_MSGS) {
             // NB! several possible reasons why this could be called.
             // if a message in the array has uid value and flag array, it had a possible flag update
             options.list.forEach(function(changedMsg) {
@@ -1268,13 +1300,12 @@ define(function(require) {
      * @param {Function} callback Invoked when the folders are up to date
      */
     EmailDAO.prototype._initFoldersFromDisk = function(callback) {
-        var self = this,
-            folderDbType = 'folders';
+        var self = this;
 
         self.busy(); // start the spinner
 
         // fetch list from local cache
-        self._devicestorage.listItems(folderDbType, 0, null, function(err, stored) {
+        self._devicestorage.listItems(FOLDER_DB_TYPE, 0, null, function(err, stored) {
             if (err) {
                 return done(err);
             }
@@ -1297,8 +1328,7 @@ define(function(require) {
      * @param {Function} callback Invoked when the folders are up to date
      */
     EmailDAO.prototype._initFoldersFromImap = function(callback) {
-        var self = this,
-            folderDbType = 'folders';
+        var self = this;
 
         self.busy(); // start the spinner
 
@@ -1308,57 +1338,73 @@ define(function(require) {
                 return done(err);
             }
 
-            // this array is dropped directly into the ui to create the folder list
-            var folders = [];
-            if (wellKnownFolders.inbox) {
-                folders.push(wellKnownFolders.inbox);
-            }
-            if (wellKnownFolders.sent) {
-                folders.push(wellKnownFolders.sent);
-            }
-            folders.push({
-                type: 'Outbox',
+            // initialize the folders to something meaningful if that hasn't already happened
+            self._account.folders = self._account.folders || [];
+
+            // smuggle the outbox into the well known folders, which is obv not present on imap...
+            wellKnownFolders[config.outboxMailboxType] = [{
+                name: config.outboxMailboxName,
+                type: config.outboxMailboxType,
                 path: config.outboxMailboxPath
-            });
-            if (wellKnownFolders.drafts) {
-                folders.push(wellKnownFolders.drafts);
-            }
-            if (wellKnownFolders.trash) {
-                folders.push(wellKnownFolders.trash);
-            }
+            }];
 
-            var foldersChanged = false; // indicates if are there any new/removed folders?
+            // indicates if we need to persist anything to disk
+            var foldersChanged = false;
 
-            // check for added folders
-            folders.forEach(function(folder) {
-                if (!_.findWhere(self._account.folders, {
-                    path: folder.path
-                })) {
-                    // add the missing folder
-                    self._account.folders.push(folder);
+            // the folders listed in the navigation pane
+            [FOLDER_TYPE_INBOX, FOLDER_TYPE_SENT, config.outboxMailboxType, FOLDER_TYPE_DRAFTS, FOLDER_TYPE_TRASH].forEach(function(mbxType) {
+                var localFolderWithType, imapFolderWithPath;
+
+                // check if there is a folder of this type locally available
+                localFolderWithType = _.findWhere(self._account.folders, {
+                    type: mbxType
+                });
+
+                if (localFolderWithType) {
+                    // we have a local folder available, so let's check if this folder still exists on imap
+
+                    imapFolderWithPath = _.findWhere(wellKnownFolders[mbxType], {
+                        path: localFolderWithType.path
+                    });
+
+                    if (imapFolderWithPath) {
+                        // folder present on imap, no need to update.
+                        return;
+                    }
+
+                    // folder not present on imap, so remove the folder and see if there are any updates for this folder type
+                    self._account.folders.splice(self._account.folders.indexOf(localFolderWithType), 1);
                     foldersChanged = true;
                 }
-            });
 
-            // check for deleted folders
-            self._account.folders.forEach(function(folder) {
-                if (!_.findWhere(folders, {
-                    path: folder.path
-                })) {
-                    // remove the obsolete folder
-                    self._account.folders.splice(self._account.folders.indexOf(folder), 1);
-                    foldersChanged = true;
+                if (!wellKnownFolders[mbxType] || !wellKnownFolders[mbxType].length) {
+                    // no imap folders of the respective mailbox type, so nothing to do here
+                    return;
                 }
+
+                /**
+                 * we have no local folder of the type, so do something intelligent,
+                 * i.e. take the first folder of the respective type
+                 */
+                self._account.folders.push(wellKnownFolders[mbxType][0]);
+                foldersChanged = true;
             });
 
-            // if folder have changed, we need to persist them to disk.
+            // if folders have not changed, can fill them with messages directly
             if (!foldersChanged) {
                 return self._initMessagesFromDisk(done);
             }
 
             // persist encrypted list in device storage
-            // NB! persis the array we received from IMAP! do *not* persist self._account.folders with all the messages...
-            self._devicestorage.storeList([folders], folderDbType, function(err) {
+            // note: the folders in the ui also include the messages array, so let's create a clean array here
+            var folders = self._account.folders.map(function(folder) {
+                return {
+                    name: folder.name,
+                    path: folder.path,
+                    type: folder.type
+                };
+            });
+            self._devicestorage.storeList([folders], FOLDER_DB_TYPE, function(err) {
                 if (err) {
                     return done(err);
                 }
@@ -1463,7 +1509,7 @@ define(function(require) {
         }
 
         var trash = _.findWhere(this._account.folders, {
-            type: 'Trash'
+            type: FOLDER_TYPE_TRASH
         });
 
         // there's no known trash folder to move the mail to or we're in the trash folder, so we can purge the message
