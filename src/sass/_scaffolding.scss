@@ -37,6 +37,10 @@ textarea {
     -moz-osx-font-smoothing: grayscale;
 }
 
+fieldset {
+  border: 1px solid $color-grey-lighter;
+}
+
 // Basic layout
 .main-app-view {
     height: 100%;

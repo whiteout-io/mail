@@ -9,9 +9,14 @@
       <p><b>PGP key.</b> You can either import an existing PGP key or generate a new one. Your private key remains on your device and is not sent to our servers.</p>
 
       <form>
-        <div class="terms">
+        <div class="option terms">
           <input type="checkbox" ng-model="state.agree" id="cb-agree">
           <label for="cb-agree">I agree to the Whiteout Networks <a href="https://whiteout.io/terms.html" target="_blank">Terms of Service</a> and have read the <a href="https://whiteout.io/privacy-service.html" target="_blank">Privacy Policy</a>.</label>
+        </div>
+
+        <div class="option newsletter">
+          <input type="checkbox" ng-model="state.newsletter" id="cb-newsletter">
+          <label for="cb-newsletter">Stay up to date on Whiteout Networks products and important announcements.</label>
         </div>
 
         <div>

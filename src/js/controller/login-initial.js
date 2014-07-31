@@ -19,6 +19,9 @@ define(function(require) {
         // scope functions
         //
 
+        /**
+         * Continue to key import screen
+         */
         $scope.importKey = function() {
             if (!$scope.state.agree) {
                 $scope.onError({
@@ -27,9 +30,15 @@ define(function(require) {
                 return;
             }
 
+            // sing up to newsletter
+            $scope.signUpToNewsletter();
+            // go to key import
             $location.path('/login-new-device');
         };
 
+        /**
+         * Continue to set passphrase screen for keygen
+         */
         $scope.setPassphrase = function() {
             if (!$scope.state.agree) {
                 $scope.onError({
@@ -38,7 +47,44 @@ define(function(require) {
                 return;
             }
 
+            // sing up to newsletter
+            $scope.signUpToNewsletter();
+            // go to set passphrase screen
             $scope.setState(states.SET_PASSPHRASE);
+        };
+
+        /**
+         * [signUpToNewsletter description]
+         * @param  {Function} callback (optional)
+         */
+        $scope.signUpToNewsletter = function(callback) {
+            if (!$scope.state.newsletter) {
+                return;
+            }
+
+            var address = emailDao._account.emailAddress;
+            var uri = 'https://whiteout.us8.list-manage.com/subscribe/post?u=52ea5a9e1be9e1d194f184158&id=6538e8f09f';
+
+            var formData = new FormData();
+            formData.append('EMAIL', address);
+            formData.append('b_52ea5a9e1be9e1d194f184158_6538e8f09f', '');
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('post', uri, true);
+
+            xhr.onload = function() {
+                if (callback) {
+                    callback(null, xhr);
+                }
+            };
+
+            xhr.onerror = function(err) {
+                if (callback) {
+                    callback(err);
+                }
+            };
+
+            xhr.send(formData);
         };
 
         /*
