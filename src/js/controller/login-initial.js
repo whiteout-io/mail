@@ -95,12 +95,7 @@ define(function(require) {
         };
 
         $scope.confirmPassphrase = function() {
-            var passphrase = $scope.state.passphrase,
-                confirmation = $scope.state.confirmation;
-
-            if (passphrase !== confirmation) {
-                return;
-            }
+            var passphrase = $scope.state.passphrase;
 
             $scope.setState(states.PROCESSING);
 
