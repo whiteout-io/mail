@@ -6,13 +6,20 @@
   <div class="content">
 
     <div class="step" ng-show="step === 1">
-      <p><b>Key sync.</b> We have sent you an email containing a recovery token. Please copy and paste the identifier below.</p>
+      <p><b>Key sync.</b> We have sent you an email containing a recovery token. Please copy and paste the token below to download your key.</p>
+      <p>You can also just import the key file manually e.g. if you're on a device with USB access.</p>
 
       <input type="text" class="input-text" size="42" ng-model="recoveryToken" placeholder="Recovery token" focus-me="step === 1">
+
+      <div>
+        <a class="btn btn-alt" href="#login-new-device">Import key file</a>
+        <button class="btn" wo-touch="goForward()">Confirm token</button>
+      </div>
     </div>
 
     <div class="step" ng-show="step === 2">
       <p><b>Key sync.</b> Please enter the keychain code you wrote down during sync setup.</p>
+
       <input type="text" class="input-text code" size="4" maxlength="4" ng-model="code0" focus-me="step === 2" focus-next ng-paste="handlePaste($event)"> -
       <input type="text" class="input-text code" size="4" maxlength="4" ng-model="code1" focus-next> -
       <input type="text" class="input-text code" size="4" maxlength="4" ng-model="code2" focus-next> -
@@ -20,10 +27,10 @@
       <input type="text" class="input-text code" size="4" maxlength="4" ng-model="code4" focus-next> -
       <input type="text" class="input-text code" size="4" maxlength="4" ng-model="code5">
       <!--<a href="https://whiteout.io/revocation.html" title="Click here to reset your account." target="_blank">Lost your keychain code?</a>-->
-    </div>
 
-    <div>
-      <button class="btn" wo-touch="goForward()">Continue</button>
+      <div>
+        <button class="btn" wo-touch="goForward()">Complete sync</button>
+      </div>
     </div>
 
   </div><!--/content-->

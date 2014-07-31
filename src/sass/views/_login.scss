@@ -9,20 +9,15 @@
 
     .logo {
         max-width: 700px;
-        margin: 75px auto;
+        margin: 45px auto;
         img {
             display: block;
-            max-width: 100%;
+            max-width: 50%;
             width: 320px;
-            margin-left: auto;
-            margin-right: auto;
         }
 
         @include respond-to(desktop) {
-            margin-top: 135px;
-            img {
-                margin-left: 0;
-            }
+            margin: 135px auto 75px;
         }
     }
 
@@ -37,6 +32,16 @@
         text-align: left;
         b, a {
             color: $color-blue;
+        }
+
+        button, a.btn {
+            color: $btn-color;
+            margin-right: 10px;
+            margin-bottom: 10px;
+
+            @include respond-to(mobile) {
+                width: 100%;
+            }
         }
 
         p, label {
@@ -90,13 +95,6 @@
             color: green;
         }
 
-        .opt-in-terms {
-            .checkbox-wrapper {
-                margin-top: 0;
-                float: left;
-            }
-        }
-
         .popover-info {
             display: none; // hide on mobile
         }
@@ -119,9 +117,6 @@
 
 .view-login-initial {
     .content {
-        button {
-            margin-right: 10px;
-        }
     }
 }
 

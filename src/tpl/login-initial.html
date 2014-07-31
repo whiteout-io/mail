@@ -6,7 +6,8 @@
   <div class="content" ng-switch on="state.ui">
 
     <div ng-switch-when="1">
-      <p><b>Generate PGP key.</b> You can set a passphrase to protect your key on disk. This must be entered everytime you start the app. For no passphrase just press continue.</p><p>Alternatively you can also <a href="#" wo-touch="$event.preventDefault(); importKey()">import an existing PGP key</a>.</p>
+      <p><b>PGP key.</b> You can either import an existing PGP key or generate a new one.</p>
+      <p>If you want to generate a new key, you can set a passphrase to protect your key on disk.</p>
       <form>
         <div>
           <label class="input-error-message" ng-class="{'passphrase-label-ok': passphraseRating >= 2}">{{passphraseMsg}}</label><br>
@@ -15,13 +16,14 @@
           <span class="popover-info" data-icon-append="&#xe010;" popover="#passphrase-info"></span>
         </div>
 
-        <div class="opt-in-terms">
-          <div class="checkbox-wrapper"><input type="checkbox" ng-model="state.agree"></div>
-          <div>I agree to the Whiteout Networks <a href="https://whiteout.io/terms.html" target="_blank">Terms of Service</a> and have read the <a href="https://whiteout.io/privacy-service.html" target="_blank">Privacy Policy</a>.</div>
+        <div>
+          <input type="checkbox" ng-model="state.agree" name="checkbox" id="checkbox_id">
+          <label for="checkbox_id">I agree to the Whiteout Networks <a href="https://whiteout.io/terms.html" target="_blank">Terms of Service</a> and have read the <a href="https://whiteout.io/privacy-service.html" target="_blank">Privacy Policy</a>.</label>
         </div>
 
         <div>
-          <button type="submit" wo-touch="confirmPassphrase()" class="btn" ng-disabled="(state.confirmation || state.passphrase) && state.confirmation !== state.passphrase" tabindex="3">Continue</button>
+          <button wo-touch="importKey()" class="btn btn-alt">Import existing key</button>
+          <button type="submit" wo-touch="confirmPassphrase()" class="btn" ng-disabled="(state.confirmation || state.passphrase) && state.confirmation !== state.passphrase" tabindex="3">Generate new key</button>
         </div>
       </form>
     </div>
