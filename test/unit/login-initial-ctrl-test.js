@@ -123,12 +123,8 @@ define(function(require) {
             });
         });
 
-        describe('confirm passphrase', function() {
-            var setStateStub;
-
+        describe('setPassphrase', function() {
             it('should not continue if terms are not accepted', function(done) {
-                scope.state.passphrase = passphrase;
-                scope.state.confirmation = passphrase;
                 scope.state.agree = undefined;
 
                 scope.onError = function(err) {
@@ -136,13 +132,28 @@ define(function(require) {
                     done();
                 };
 
-                scope.confirmPassphrase();
+                scope.setPassphrase();
             });
+
+            it('should continue', function(done) {
+                scope.state.agree = true;
+
+                var setStateStub = sinon.stub(scope, 'setState', function(state) {
+                    expect(setStateStub.calledOnce).to.be.true;
+                    expect(state).to.equal(2);
+                    done();
+                });
+
+                scope.setPassphrase();
+            });
+        });
+
+        describe('confirm passphrase', function() {
+            var setStateStub;
 
             it('should unlock crypto', function(done) {
                 scope.state.passphrase = passphrase;
                 scope.state.confirmation = passphrase;
-                scope.state.agree = true;
 
                 emailDaoMock.unlock.withArgs({
                     passphrase: passphrase
@@ -168,7 +179,6 @@ define(function(require) {
             it('should not work when keypair generation fails', function(done) {
                 scope.state.passphrase = passphrase;
                 scope.state.confirmation = passphrase;
-                scope.state.agree = true;
 
                 emailDaoMock.unlock.withArgs({
                     passphrase: passphrase
@@ -176,9 +186,9 @@ define(function(require) {
 
                 setStateStub = sinon.stub(scope, 'setState', function(state) {
                     if (setStateStub.calledOnce) {
-                        expect(state).to.equal(2);
+                        expect(state).to.equal(3);
                     } else if (setStateStub.calledTwice) {
-                        expect(state).to.equal(1);
+                        expect(state).to.equal(2);
                         expect(emailDaoMock.unlock.calledOnce).to.be.true;
                         scope.setState.restore();
                     }

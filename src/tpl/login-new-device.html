@@ -4,40 +4,22 @@
   </div><!--/logo-->
 
   <div class="content">
-    <p><b>Import keyfile.</b> To access your emails on this device, please import your existing key file.</p>
+    <p><b>Import PGP key.</b> Please import an existing key from the file system.</p>
+
+    <fieldset>
+      <legend>On a mobile device?</legend>
+      <p>If you cannot import your key via a USB stick, you can setup <i>Key sync</i> on a desktop PC to securely transfer your PGP key over the Whiteout cloud. <a href="https://blog.whiteout.io/2014/07/07/secure-pgp-key-sync-a-proposal/" target="_blank">Learn more</a>.</p>
+    </fieldset>
 
     <form>
       <div>
         <input type="file" accept=".asc" file-reader tabindex="1">
-        <span class="popover-info" data-icon-append="&#xe010;" popover="#keyfile-info"></span>
       </div>
       <div>
         <input class="input-text" type="password" ng-model="passphrase" ng-class="{'input-text-error':incorrect}" placeholder="Passphrase" tabindex="2" focus-me="true">
-        <span class="popover-info" data-icon-append="&#xe010;" popover="#passphrase-info"></span>
       </div>
       <a href="https://whiteout.io/revocation.html" title="Click here to reset your account." target="_blank">Lost your keyfile or passphrase?</a>
       <div><button type="submit" wo-touch="confirmPassphrase()" class="btn" ng-disabled="!key" tabindex="3">Import</button>
     </form>
   </div>
 </div>
-
-<!-- popovers -->
-<div id="keyfile-info" class="popover right" ng-controller="PopoverCtrl">
-  <div class="arrow"></div>
-  <div class="popover-title"><b>What is this?</b></div>
-  <div class="popover-content">
-    <p>The keyfile contains your PGP keys.</p>
-    <p>It can be exported on your first computer under "Account".</p>
-    <p>You can import it from a USB flash drive. Never send the keyfile to yourself via email.</p>
-  </div>
-</div><!--/.popover-->
-
-<div id="passphrase-info" class="popover right" ng-controller="PopoverCtrl">
-  <div class="arrow"></div>
-  <div class="popover-title"><b>What is this?</b></div>
-  <div class="popover-content">
-    <p>A passphrase is like a password that protects your PGP key.</p>
-    <p>There is no way to access your messages without your passphrase.</p>
-    <p>If you have forgotten your passphrase, please request an account reset using the provided link. You will not be able to read previous messages after a reset.</p>
-  </div>
-</div><!--/.popover-->

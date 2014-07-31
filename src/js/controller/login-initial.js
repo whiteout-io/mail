@@ -9,7 +9,8 @@ define(function(require) {
 
         states = {
             IDLE: 1,
-            PROCESSING: 2,
+            SET_PASSPHRASE: 2,
+            PROCESSING: 3,
             DONE: 4
         };
         $scope.state.ui = states.IDLE; // initial state
@@ -27,6 +28,17 @@ define(function(require) {
             }
 
             $location.path('/login-new-device');
+        };
+
+        $scope.setPassphrase = function() {
+            if (!$scope.state.agree) {
+                $scope.onError({
+                    message: termsMsg
+                });
+                return;
+            }
+
+            $scope.setState(states.SET_PASSPHRASE);
         };
 
         /*
@@ -90,20 +102,14 @@ define(function(require) {
                 return;
             }
 
-            if (!$scope.state.agree) {
-                $scope.onError({
-                    message: termsMsg
-                });
-                return;
-            }
-
             $scope.setState(states.PROCESSING);
+
             setTimeout(function() {
                 emailDao.unlock({
                     passphrase: (passphrase) ? passphrase : undefined
                 }, function(err) {
                     if (err) {
-                        $scope.setState(states.IDLE);
+                        $scope.setState(states.SET_PASSPHRASE);
                         $scope.onError(err);
                         return;
                     }

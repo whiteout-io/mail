@@ -17,8 +17,12 @@
         }
 
         @include respond-to(desktop) {
-            margin: 135px auto 75px;
+            margin: 115px auto 75px;
         }
+    }
+
+    .working {
+        text-align: center;
     }
 
     .spinner {
@@ -38,10 +42,7 @@
             color: $btn-color;
             margin-right: 10px;
             margin-bottom: 10px;
-
-            @include respond-to(mobile) {
-                width: 100%;
-            }
+            width: 100%;
         }
 
         p, label {
@@ -50,6 +51,18 @@
 
         div {
             margin: 20px 0;
+        }
+
+        fieldset {
+            margin: 30px 0 40px;
+
+            legend {
+                color: $color-blue;
+            }
+
+            p {
+                margin: 0;
+            }
         }
 
         input {
@@ -98,17 +111,6 @@
         .popover-info {
             display: none; // hide on mobile
         }
-
-        @include respond-to(desktop) {
-            input[type="text"],
-            input[type="password"],
-            input[type="file"] {
-                width: auto;
-            }
-            .popover-info {
-                display: inline-block;
-            }
-        }
     }
 }
 
@@ -122,19 +124,25 @@
 
 .view-login-privatekey-download {
     .content {
-        max-width: 500px;
 
-        input.code {
-            margin-right: 0;
-            width: auto;
+        fieldset {
+            margin-top: 20px;
+        }
+
+        .code {
+            max-width: 240px;
+            margin: 0 auto;
+
+            input {
+                margin-right: 0;
+                width: auto;
+            }
         }
     }
 }
 
 .view-login-set-credentials {
     .content {
-        max-width: 450px;
-
         b, a {
             text-decoration: none;
         }
