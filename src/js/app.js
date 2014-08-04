@@ -23,6 +23,7 @@ requirejs([
     'js/controller/navigation',
     'js/crypto/util',
     'js/util/error',
+    'js/util/backbutton-handler',
     'fastclick',
     'angularRoute',
     'angularAnimate',
@@ -49,6 +50,7 @@ requirejs([
     NavigationCtrl,
     util,
     errorUtil,
+    backButtonUtil,
     FastClick
 ) {
     'use strict';
@@ -113,8 +115,13 @@ requirejs([
     app.run(function($rootScope) {
         // global state... inherited to all child scopes
         $rootScope.state = {};
+
         // attach global error handler
         errorUtil.attachHandler($rootScope);
+
+        // attach the back button handler to the root scope
+        backButtonUtil.attachHandler($rootScope);
+
         // attach fastclick
         FastClick.attach(document.body);
     });

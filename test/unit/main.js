@@ -22,6 +22,24 @@ if (!Function.prototype.bind) {
 	};
 }
 
+// a warm round of applause for phantomjs for missing events
+(function() {
+	function CustomEvent(event, params) {
+		params = params || {
+			bubbles: false,
+			cancelable: false,
+			detail: undefined
+		};
+		var evt = document.createEvent('CustomEvent');
+		evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
+		return evt;
+	}
+
+	CustomEvent.prototype = window.Event.prototype;
+
+	window.CustomEvent = CustomEvent;
+})();
+
 require(['../../src/require-config'], function() {
 	require.config({
 		baseUrl: '../../src/lib',
@@ -59,6 +77,7 @@ function startTests() {
 			'test/unit/app-controller-test',
 			'test/unit/pgp-test',
 			'test/unit/crypto-test',
+			'test/unit/backbutton-handler-test',
 			'test/unit/rest-dao-test',
 			'test/unit/publickey-dao-test',
 			'test/unit/privatekey-dao-test',

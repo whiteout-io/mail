@@ -5,6 +5,7 @@ define(function(require) {
         appController = require('js/app-controller'),
         config = require('js/app-config').config,
         notification = require('js/util/notification'),
+        backBtnHandler = require('js/util/backbutton-handler'),
         _ = require('underscore'),
         emailDao, outboxBo;
 
@@ -54,6 +55,8 @@ define(function(require) {
         // Start
         //
 
+        // handle back button
+        backBtnHandler.start();
         // init folders
         initializeFolders();
 
