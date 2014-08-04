@@ -119,8 +119,21 @@
 
 .view-login-initial {
     .content {
-        .terms {
-            margin-bottom: 40px;
+        form {
+            .option {
+                width: 90%;
+                font-size: $font-size-small;
+                margin: 0 auto;
+            }
+
+            .terms {
+                margin-top: 30px;
+                margin-bottom: 15px;
+            }
+
+            .newsletter {
+                margin-bottom: 40px;
+            }
         }
     }
 }

@@ -62,12 +62,69 @@ define(function(require) {
             });
         });
 
+        describe('signUpToNewsletter', function() {
+            var xhrMock, requests;
+
+            beforeEach(function() {
+                xhrMock = sinon.useFakeXMLHttpRequest();
+                requests = [];
+
+                xhrMock.onCreate = function(xhr) {
+                    requests.push(xhr);
+                };
+            });
+
+            afterEach(function() {
+                xhrMock.restore();
+            });
+
+            it('should not signup', function() {
+                scope.state.newsletter = false;
+
+                scope.signUpToNewsletter();
+                expect(requests.length).to.equal(0);
+            });
+
+            it('should fail', function(done) {
+                scope.state.newsletter = true;
+
+                scope.signUpToNewsletter(function(err, xhr) {
+                    expect(err).to.exist;
+                    expect(xhr).to.not.exist;
+                    done();
+                });
+
+                expect(requests.length).to.equal(1);
+                requests[0].onerror('err');
+            });
+
+            it('should work without callback', function() {
+                scope.state.newsletter = true;
+
+                scope.signUpToNewsletter();
+
+                expect(requests.length).to.equal(1);
+                requests[0].respond(200, {
+                    "Content-Type": "text/plain"
+                }, 'foobar!');
+            });
+        });
+
         describe('go to import key', function() {
+            var signUpToNewsletterStub;
+            beforeEach(function() {
+                signUpToNewsletterStub = sinon.stub(scope, 'signUpToNewsletter');
+            });
+            afterEach(function() {
+                signUpToNewsletterStub.restore();
+            });
+
             it('should not continue if terms are not accepted', function(done) {
                 scope.state.agree = undefined;
 
                 scope.onError = function(err) {
                     expect(err.message).to.contain('Terms');
+                    expect(signUpToNewsletterStub.called).to.be.false;
                     done();
                 };
 
@@ -77,6 +134,7 @@ define(function(require) {
             it('should work', function() {
                 scope.state.agree = true;
                 scope.importKey();
+                expect(signUpToNewsletterStub.calledOnce).to.be.true;
                 expect(location.$$path).to.equal('/login-new-device');
             });
         });
@@ -124,11 +182,20 @@ define(function(require) {
         });
 
         describe('setPassphrase', function() {
+            var signUpToNewsletterStub;
+            beforeEach(function() {
+                signUpToNewsletterStub = sinon.stub(scope, 'signUpToNewsletter');
+            });
+            afterEach(function() {
+                signUpToNewsletterStub.restore();
+            });
+
             it('should not continue if terms are not accepted', function(done) {
                 scope.state.agree = undefined;
 
                 scope.onError = function(err) {
                     expect(err.message).to.contain('Terms');
+                    expect(signUpToNewsletterStub.called).to.be.false;
                     done();
                 };
 
@@ -140,6 +207,7 @@ define(function(require) {
 
                 var setStateStub = sinon.stub(scope, 'setState', function(state) {
                     expect(setStateStub.calledOnce).to.be.true;
+                    expect(signUpToNewsletterStub.calledOnce).to.be.true;
                     expect(state).to.equal(2);
                     done();
                 });
