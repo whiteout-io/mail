@@ -24,7 +24,6 @@ define(function(require) {
         InvitationDAO = require('js/dao/invitation-dao'),
         DeviceStorageDAO = require('js/dao/devicestorage-dao'),
         UpdateHandler = require('js/util/update/update-handler'),
-        backBtnHandler = require('js/util/backbutton-handler'),
         config = appConfig.config,
         str = appConfig.string;
 
@@ -55,7 +54,6 @@ define(function(require) {
         function onDeviceReady() {
             axe.debug('Starting app.');
 
-            backBtnHandler.start();
             self.buildModules();
 
             // Handle offline and online gracefully

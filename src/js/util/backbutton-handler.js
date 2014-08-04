@@ -34,25 +34,30 @@ define(function(require) {
 
         if (backBtnHandler.scope.state.lightbox) {
             // closes the lightbox (error msgs, writer, ...)
-            backBtnHandler.scope.state.lightbox = undefined;
+            backBtnHandler.scope.$apply(function() {
+                backBtnHandler.scope.state.lightbox = undefined;
+            });
             axe.debug(DEBUG_TAG, 'lightbox closed');
-            backBtnHandler.scope.$apply();
+
         } else if (backBtnHandler.scope.state.read && backBtnHandler.scope.state.read.open) {
             // closes the reader
-            backBtnHandler.scope.state.read.toggle(false);
+            backBtnHandler.scope.$apply(function() {
+                backBtnHandler.scope.state.read.toggle(false);
+            });
             axe.debug(DEBUG_TAG, 'reader closed');
-            backBtnHandler.scope.$apply();
+
         } else if (backBtnHandler.scope.state.nav && backBtnHandler.scope.state.nav.open) {
             // closes the navigation
-            backBtnHandler.scope.state.nav.toggle(false);
+            backBtnHandler.scope.$apply(function() {
+                backBtnHandler.scope.state.nav.toggle(false);
+            });
             axe.debug(DEBUG_TAG, 'navigation closed');
-            backBtnHandler.scope.$apply();
+
         } else {
             // exits the app
             navigator.app.exitApp();
         }
     }
-
 
     return backBtnHandler;
 });
