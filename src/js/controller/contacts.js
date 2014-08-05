@@ -61,7 +61,8 @@ define(function(require) {
             // verifiy public key string
             if (publicKeyArmored.indexOf('-----BEGIN PGP PUBLIC KEY BLOCK-----') < 0) {
                 $scope.onError({
-                    errMsg: 'Invalid public key!'
+                    showBugReporter: false,
+                    message: 'Invalid public key!'
                 });
                 return;
             }

@@ -7,6 +7,7 @@
   <div class="content">
     <p>{{state.dialog.message}}</p>
     <div class="control">
+      <button wo-touch="confirm(true); state.writer.reportBug()" class="btn btn-alt" ng-show="state.writer && state.dialog.showBugReporter">Report this bug</button><!-- only show if we can actually report a bug, i.e. the writer is attached to the scope -->
       <button wo-touch="confirm(false)" class="btn btn-alt" ng-show="state.dialog.showNegativeBtn">{{state.dialog.negativeBtnStr}}</button>
       <button wo-touch="confirm(true)" class="btn">{{state.dialog.positiveBtnStr}}</button>
     </div>

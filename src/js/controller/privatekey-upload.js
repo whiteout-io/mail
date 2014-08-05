@@ -27,7 +27,8 @@ define(function(require) {
                         // show message
                         $scope.onError({
                             title: 'Info',
-                            message: 'Your PGP key has already been synced.'
+                            message: 'Your PGP key has already been synced.',
+                            showBugReporter: false
                         });
                         return;
                     }
@@ -181,7 +182,8 @@ define(function(require) {
                         // show success message
                         $scope.onError({
                             title: 'Success',
-                            message: 'Whiteout Keychain setup successful!'
+                            message: 'Whiteout Keychain setup successful!',
+                            showBugReporter: false
                         });
                     });
                 });

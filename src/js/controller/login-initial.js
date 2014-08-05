@@ -25,6 +25,7 @@ define(function(require) {
         $scope.importKey = function() {
             if (!$scope.state.agree) {
                 $scope.onError({
+                    showBugReporter: false,
                     message: termsMsg
                 });
                 return;
@@ -42,6 +43,7 @@ define(function(require) {
         $scope.setPassphrase = function() {
             if (!$scope.state.agree) {
                 $scope.onError({
+                    showBugReporter: false,
                     message: termsMsg
                 });
                 return;
