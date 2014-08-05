@@ -17,6 +17,7 @@ define(function(require) {
                 open: true,
                 title: options.title || 'Error',
                 message: options.errMsg || options.message,
+                showFaqLink: options.showFaqLink || false,
                 positiveBtnStr: options.positiveBtnStr || 'Ok',
                 negativeBtnStr: options.negativeBtnStr || 'Cancel',
                 showNegativeBtn: options.showNegativeBtn || false,

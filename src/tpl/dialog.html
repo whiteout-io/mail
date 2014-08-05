@@ -5,7 +5,7 @@
   </header>
 
   <div class="content">
-    <p>{{state.dialog.message}}</p>
+    <p>{{state.dialog.message}} <a ng-show="state.dialog.showFaqLink" href="https://github.com/whiteout-io/mail-html5/wiki/FAQ" target="_blank">Learn more.</a></p>
     <div class="control">
       <button wo-touch="confirm(false)" class="btn btn-alt" ng-show="state.dialog.showNegativeBtn">{{state.dialog.negativeBtnStr}}</button>
       <button wo-touch="confirm(true)" class="btn">{{state.dialog.positiveBtnStr}}</button>
