@@ -1346,7 +1346,7 @@ define(function(require) {
                     path: folder.path
                 })) {
                     // remove the obsolete folder
-                    self._account.folders.splice(self._account.folder.indexOf(folder), 1);
+                    self._account.folders.splice(self._account.folders.indexOf(folder), 1);
                     foldersChanged = true;
                 }
             });
