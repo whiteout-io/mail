@@ -21,6 +21,7 @@ define(function(require) {
                 positiveBtnStr: options.positiveBtnStr || 'Ok',
                 negativeBtnStr: options.negativeBtnStr || 'Cancel',
                 showNegativeBtn: options.showNegativeBtn || false,
+                showBugReporter: (typeof options.showBugReporter !== 'undefined' ? options.showBugReporter : true),
                 callback: options.callback
             };
             // don't call apply for synchronous calls

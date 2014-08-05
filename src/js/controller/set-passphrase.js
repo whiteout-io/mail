@@ -74,7 +74,8 @@ define(function(require) {
             $scope.$apply();
             $scope.onError({
                 title: 'Success',
-                message: 'Passphrase change complete.'
+                message: 'Passphrase change complete.',
+                showBugReporter: false
             });
         }
     };
