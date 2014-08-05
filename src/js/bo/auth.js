@@ -256,8 +256,18 @@ define(function(require) {
     Auth.prototype.getOAuthToken = function(callback) {
         var self = this;
 
-        // get a fresh oauth token
-        self._oauth.getOAuthToken(self.emailAddress, function(err, oauthToken) {
+        if (self.oauthToken) {
+            // removed cached token and get a new one
+            self._oauth.refreshToken({
+                emailAddress: self.emailAddress,
+                oldToken: self.oauthToken
+            }, onToken);
+        } else {
+            // get a fresh oauth token
+            self._oauth.getOAuthToken(self.emailAddress, onToken);
+        }
+
+        function onToken(err, oauthToken) {
             if (err) {
                 return callback(err);
             }
@@ -278,7 +288,7 @@ define(function(require) {
                 self.emailAddress = emailAddress;
                 callback();
             });
-        });
+        }
     };
 
     /**

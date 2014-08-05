@@ -133,7 +133,8 @@ define(function(require) {
         function initClients(credentials) {
             var pgpMailer = new PgpMailer(credentials.smtp, self._pgpbuilder);
             var imapClient = new ImapClient(credentials.imap);
-            imapClient.onError = onImapError;
+            imapClient.onError = onConnectionError;
+            pgpMailer.onError = onConnectionError;
 
             // certificate update handling
             imapClient.onCert = self._auth.handleCertificateUpdate.bind(self._auth, 'imap', self.onConnect, self.onError);
@@ -151,19 +152,19 @@ define(function(require) {
             }, callback);
         }
 
-        function onImapError(error) {
-            axe.debug('IMAP connection error. Attempting reconnect in ' + config.reconnectInterval + ' ms. Error: ' + (error.errMsg || error.message) + (error.stack ? ('\n' + error.stack) : ''));
+        function onConnectionError(error) {
+            axe.debug('Connection error. Attempting reconnect in ' + config.reconnectInterval + ' ms. Error: ' + (error.errMsg || error.message) + (error.stack ? ('\n' + error.stack) : ''));
 
             setTimeout(function() {
-                axe.debug('IMAP reconnecting...');
+                axe.debug('Reconnecting...');
                 // re-init client modules on error
                 self.onConnect(function(err) {
                     if (err) {
-                        axe.error('IMAP reconnect attempt failed! ' + (err.errMsg || err.message) + (err.stack ? ('\n' + err.stack) : ''));
+                        axe.error('Reconnect attempt failed! ' + (err.errMsg || err.message) + (err.stack ? ('\n' + err.stack) : ''));
                         return;
                     }
 
-                    axe.debug('IMAP reconnect attempt complete.');
+                    axe.debug('Reconnect attempt complete.');
                 });
             }, config.reconnectInterval);
         }

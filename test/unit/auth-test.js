@@ -146,6 +146,26 @@ define(function(require) {
         });
 
         describe('#getOAuthToken', function() {
+            it('should refresh token with known email address', function(done) {
+                auth.emailAddress = emailAddress;
+                auth.oauthToken = 'oldToken';
+
+                oauthStub.refreshToken.withArgs({
+                    emailAddress: emailAddress,
+                    oldToken: 'oldToken'
+                }).yieldsAsync(null, oauthToken);
+
+                auth.getOAuthToken(function(err) {
+                    expect(err).to.not.exist;
+                    expect(auth.emailAddress).to.equal(emailAddress);
+                    expect(auth.oauthToken).to.equal(oauthToken);
+
+                    expect(oauthStub.refreshToken.calledOnce).to.be.true;
+
+                    done();
+                });
+            });
+
             it('should fetch token with known email address', function(done) {
                 auth.emailAddress = emailAddress;
                 oauthStub.getOAuthToken.withArgs(emailAddress).yieldsAsync(null, oauthToken);

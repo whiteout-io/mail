@@ -6,7 +6,7 @@ define(function(require) {
         expect = chai.expect;
 
     describe('OAuth unit tests', function() {
-        var oauth, googleApiStub, identityStub, getPlatformInfoStub,
+        var oauth, googleApiStub, identityStub, getPlatformInfoStub, removeCachedStub,
             testEmail = 'test@example.com';
 
         beforeEach(function() {
@@ -21,6 +21,11 @@ define(function(require) {
             }
             identityStub = sinon.stub(window.chrome.identity, 'getAuthToken');
 
+            if (typeof window.chrome.identity.removeCachedAuthToken !== 'function') {
+                window.chrome.identity.removeCachedAuthToken = function() {};
+            }
+            removeCachedStub = sinon.stub(window.chrome.identity, 'removeCachedAuthToken');
+
             window.chrome.runtime = window.chrome.runtime || {};
             if (typeof window.chrome.runtime.getPlatformInfo !== 'function') {
                 window.chrome.runtime.getPlatformInfo = function() {};
@@ -31,11 +36,67 @@ define(function(require) {
         afterEach(function() {
             identityStub.restore();
             getPlatformInfoStub.restore();
+            removeCachedStub.restore();
         });
 
         describe('isSupported', function() {
             it('should work', function() {
                 expect(oauth.isSupported()).to.be.true;
+            });
+        });
+
+        describe('refreshToken', function() {
+            var getOAuthTokenStub;
+
+            beforeEach(function() {
+                getOAuthTokenStub = sinon.stub(oauth, 'getOAuthToken');
+            });
+            afterEach(function() {
+                getOAuthTokenStub.restore();
+            });
+
+            it('should work', function() {
+                removeCachedStub.withArgs({
+                    token: 'oldToken'
+                }).yields();
+
+                getOAuthTokenStub.withArgs(testEmail).yields();
+
+                oauth.refreshToken({
+                    oldToken: 'oldToken',
+                    emailAddress: testEmail
+                }, function(err) {
+                    expect(err).to.not.exist;
+                    expect(removeCachedStub.calledOnce).to.be.true;
+                    expect(getOAuthTokenStub.calledOnce).to.be.true;
+                });
+            });
+
+            it('should work without email', function() {
+                removeCachedStub.withArgs({
+                    token: 'oldToken'
+                }).yields();
+
+                getOAuthTokenStub.withArgs(undefined).yields();
+
+                oauth.refreshToken({
+                    oldToken: 'oldToken',
+                }, function(err) {
+                    expect(err).to.not.exist;
+                    expect(removeCachedStub.calledOnce).to.be.true;
+                    expect(getOAuthTokenStub.calledOnce).to.be.true;
+                    expect(getOAuthTokenStub.calledWith(undefined)).to.be.true;
+                });
+            });
+
+            it('should fail without all options', function() {
+                oauth.refreshToken({
+                    emailAddress: testEmail
+                }, function(err) {
+                    expect(err).to.exist;
+                    expect(removeCachedStub.called).to.be.false;
+                    expect(getOAuthTokenStub.called).to.be.false;
+                });
             });
         });
 
