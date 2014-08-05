@@ -216,7 +216,7 @@ define(function(require) {
 
             function displayText(body) {
                 var mail = scope.state.mailList.selected;
-                if (mail.html || (mail.encrypted && !mail.decrypted)) {
+                if ((mail && mail.html) || (mail && mail.encrypted && !mail.decrypted)) {
                     return;
                 }
 
