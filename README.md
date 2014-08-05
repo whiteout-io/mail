@@ -1,4 +1,4 @@
-![Logo](https://whiteout.io/img/whiteout_logo.svg)
+![App Icon](https://raw.githubusercontent.com/whiteout-io/mail-html5/master/src/img/icon.png)
 
 Whiteout Mail [![Build Status](https://travis-ci.org/whiteout-io/mail-html5.svg?branch=master)](https://travis-ci.org/whiteout-io/mail-html5)
 ==========
