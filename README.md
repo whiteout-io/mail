@@ -1,4 +1,6 @@
-mail-html5 [![Build Status](https://travis-ci.org/whiteout-io/mail-html5.svg?branch=master)](https://travis-ci.org/whiteout-io/mail-html5)
+![Logo](https://whiteout.io/img/whiteout_logo.svg)
+
+Whiteout Mail [![Build Status](https://travis-ci.org/whiteout-io/mail-html5.svg?branch=master)](https://travis-ci.org/whiteout-io/mail-html5)
 ==========
 
 Whiteout Mail is an easy to use email client with integrated OpenPGP encryption written in pure JavaScript. Download the official version under [whiteout.io](http://whiteout.io).
