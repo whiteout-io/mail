@@ -396,6 +396,7 @@ define(function(require) {
             positiveBtnStr: str.updateCertificatePosBtn,
             negativeBtnStr: str.updateCertificateNegBtn,
             showNegativeBtn: true,
+            showBugReporter: false,
             callback: function(granted) {
                 if (!granted) {
                     return;
