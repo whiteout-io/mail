@@ -277,7 +277,7 @@ define(function(require) {
                 var SMTP_DB_KEY = 'smtp';
                 var REALNAME_DB_KEY = 'realname';
                 var emailaddress = 'bla@blubb.io';
-                
+
                 var imap = config.gmail.imap,
                     smtp = config.gmail.smtp;
 
@@ -341,6 +341,128 @@ define(function(require) {
                     updateHandler.update(function(error) {
                         expect(error).to.exist;
                         expect(appConfigStorageStub.listItems.calledTwice).to.be.true;
+                        expect(appConfigStorageStub.storeList.called).to.be.false;
+
+                        done();
+                    });
+                });
+            });
+
+            describe('v4 -> v5', function() {
+                var FOLDER_TYPE_INBOX = 'Inbox';
+                var FOLDER_TYPE_SENT = 'Sent';
+                var FOLDER_TYPE_DRAFTS = 'Drafts';
+                var FOLDER_TYPE_TRASH = 'Trash';
+
+                var FOLDER_DB_TYPE = 'folders';
+                var VERSION_DB_TYPE = 'dbVersion';
+
+                var POST_UPDATE_DB_VERSION = 5;
+
+                beforeEach(function() {
+                    cfg.dbVersion = 5; // app requires database version 4
+                    appConfigStorageStub.listItems.withArgs(VERSION_DB_TYPE).yieldsAsync(null, [4]); // database version is 4
+                });
+
+                afterEach(function() {
+                    // database version is only queried for version checking prior to the update script
+                    // so no need to check this in case-specific tests
+                    expect(appConfigStorageStub.listItems.calledOnce).to.be.true;
+                });
+
+                it('should work', function(done) {
+                    userStorageStub.listItems.withArgs(FOLDER_DB_TYPE).yieldsAsync(null, [
+                        [{
+                            name: 'inbox1',
+                            type: FOLDER_TYPE_INBOX
+                        }, {
+                            name: 'inbox2',
+                            type: FOLDER_TYPE_INBOX
+                        }, {
+                            name: 'sent1',
+                            type: FOLDER_TYPE_SENT
+                        }, {
+                            name: 'sent2',
+                            type: FOLDER_TYPE_SENT
+                        }, {
+                            name: 'drafts1',
+                            type: FOLDER_TYPE_DRAFTS
+                        }, {
+                            name: 'drafts2',
+                            type: FOLDER_TYPE_DRAFTS
+                        }, {
+                            name: 'trash1',
+                            type: FOLDER_TYPE_TRASH
+                        }, {
+                            name: 'trash2',
+                            type: FOLDER_TYPE_TRASH
+                        }]
+                    ]);
+
+                    userStorageStub.storeList.withArgs([
+                        [{
+                            name: 'inbox1',
+                            type: FOLDER_TYPE_INBOX
+                        }, {
+                            name: 'sent1',
+                            type: FOLDER_TYPE_SENT
+                        }, {
+                            name: 'drafts1',
+                            type: FOLDER_TYPE_DRAFTS
+                        }, {
+                            name: 'trash1',
+                            type: FOLDER_TYPE_TRASH
+                        }]
+                    ], FOLDER_DB_TYPE).yieldsAsync();
+
+                    appConfigStorageStub.storeList.withArgs([POST_UPDATE_DB_VERSION], VERSION_DB_TYPE).yieldsAsync();
+
+                    updateHandler.update(function(error) {
+                        expect(error).to.not.exist;
+                        expect(userStorageStub.listItems.calledOnce).to.be.true;
+                        expect(userStorageStub.storeList.calledOnce).to.be.true;
+                        expect(appConfigStorageStub.storeList.calledOnce).to.be.true;
+
+                        done();
+                    });
+                });
+
+                it('should fail when persisting database version fails', function(done) {
+                    userStorageStub.listItems.yieldsAsync(null, []);
+                    userStorageStub.storeList.yieldsAsync();
+                    appConfigStorageStub.storeList.yieldsAsync(new Error());
+
+                    updateHandler.update(function(error) {
+                        expect(error).to.exist;
+                        expect(userStorageStub.listItems.calledOnce).to.be.true;
+                        expect(userStorageStub.storeList.calledOnce).to.be.true;
+                        expect(appConfigStorageStub.storeList.calledOnce).to.be.true;
+
+                        done();
+                    });
+                });
+
+                it('should fail when persisting folders fails', function(done) {
+                    userStorageStub.listItems.yieldsAsync(null, []);
+                    userStorageStub.storeList.yieldsAsync(new Error());
+
+                    updateHandler.update(function(error) {
+                        expect(error).to.exist;
+                        expect(userStorageStub.listItems.calledOnce).to.be.true;
+                        expect(userStorageStub.storeList.calledOnce).to.be.true;
+                        expect(appConfigStorageStub.storeList.called).to.be.false;
+
+                        done();
+                    });
+                });
+
+                it('should fail when listing folders fails', function(done) {
+                    userStorageStub.listItems.yieldsAsync(new Error());
+
+                    updateHandler.update(function(error) {
+                        expect(error).to.exist;
+                        expect(userStorageStub.listItems.calledOnce).to.be.true;
+                        expect(userStorageStub.storeList.called).to.be.false;
                         expect(appConfigStorageStub.storeList.called).to.be.false;
 
                         done();

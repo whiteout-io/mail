@@ -533,92 +533,25 @@ define(function(require) {
             this.cc = [{
                 address: 'john.doe@gmail.com'
             }]; // list of receivers
-            if (attachments) {
-                // body structure with three attachments
-                this.bodystructure = {
-                    "1": {
-                        "part": "1",
-                        "type": "text/plain",
-                        "parameters": {
-                            "charset": "us-ascii"
-                        },
-                        "encoding": "7bit",
-                        "size": 9,
-                        "lines": 2
-                    },
-                    "2": {
-                        "part": "2",
-                        "type": "application/octet-stream",
-                        "parameters": {
-                            "name": "a.md"
-                        },
-                        "encoding": "7bit",
-                        "size": 123,
-                        "disposition": [{
-                            "type": "attachment",
-                            "filename": "a.md"
-                        }]
-                    },
-                    "3": {
-                        "part": "3",
-                        "type": "application/octet-stream",
-                        "parameters": {
-                            "name": "b.md"
-                        },
-                        "encoding": "7bit",
-                        "size": 456,
-                        "disposition": [{
-                            "type": "attachment",
-                            "filename": "b.md"
-                        }]
-                    },
-                    "4": {
-                        "part": "4",
-                        "type": "application/octet-stream",
-                        "parameters": {
-                            "name": "c.md"
-                        },
-                        "encoding": "7bit",
-                        "size": 789,
-                        "disposition": [{
-                            "type": "attachment",
-                            "filename": "c.md"
-                        }]
-                    },
-                    "type": "multipart/mixed"
-                };
-                this.attachments = [{
-                    "filename": "a.md",
-                    "filesize": 123,
-                    "mimeType": "text/x-markdown",
-                    "part": "2",
-                    "content": null
-                }, {
-                    "filename": "b.md",
-                    "filesize": 456,
-                    "mimeType": "text/x-markdown",
-                    "part": "3",
-                    "content": null
-                }, {
-                    "filename": "c.md",
-                    "filesize": 789,
-                    "mimeType": "text/x-markdown",
-                    "part": "4",
-                    "content": null
-                }];
-            } else {
-                this.bodystructure = {
-                    "part": "1",
-                    "type": "text/plain",
-                    "parameters": {
-                        "charset": "us-ascii"
-                    },
-                    "encoding": "7bit",
-                    "size": 9,
-                    "lines": 2
-                };
-                this.attachments = [];
-            }
+            this.attachments = attachments ? [{
+                "filename": "a.md",
+                "filesize": 123,
+                "mimeType": "text/x-markdown",
+                "part": "2",
+                "content": null
+            }, {
+                "filename": "b.md",
+                "filesize": 456,
+                "mimeType": "text/x-markdown",
+                "part": "3",
+                "content": null
+            }, {
+                "filename": "c.md",
+                "filesize": 789,
+                "mimeType": "text/x-markdown",
+                "part": "4",
+                "content": null
+            }] : [];
             this.unread = unread;
             this.answered = answered;
             this.sentDate = new Date('Thu Sep 19 2013 20:41:23 GMT+0200 (CEST)');
@@ -639,13 +572,14 @@ define(function(require) {
             this.decrypted = true;
         };
 
-        var dummys = [new Email(true, true), new Email(true, false, true), new Email(false, true, true), new Email(false, true)];
-
-        for (var i = 0; i < 100; i++) {
-            dummys.push(new Email(false));
+        var dummies = [],
+            i = 100;
+        while (i--) {
+            // every second/third/fourth dummy mail with unread/attachments/answered
+            dummies.push(new Email((i % 2 === 0), (i % 3 === 0), (i % 5 === 0)));
         }
 
-        return dummys;
+        return dummies;
     }
 
     return MailListCtrl;

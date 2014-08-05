@@ -40,30 +40,35 @@ define(function(require) {
             asymKeySize = 2048;
 
             inboxFolder = {
+                name: 'Inbox',
                 type: 'Inbox',
                 path: 'INBOX',
                 messages: []
             };
 
             sentFolder = {
+                name: 'Sent',
                 type: 'Sent',
                 path: 'SENT',
                 messages: []
             };
 
             draftsFolder = {
+                name: 'Drafts',
                 type: 'Drafts',
                 path: 'DRAFTS',
                 messages: []
             };
 
             outboxFolder = {
+                name: 'Outbox',
                 type: 'Outbox',
                 path: 'OUTBOX',
                 messages: []
             };
 
             trashFolder = {
+                name: 'Trash',
                 type: 'Trash',
                 path: 'TRASH',
                 messages: []
@@ -1969,18 +1974,76 @@ define(function(require) {
                 it('should initialize from imap if online', function(done) {
                     account.folders = [];
                     imapClientStub.listWellKnownFolders.yieldsAsync(null, {
-                        inbox: inboxFolder,
-                        sent: sentFolder,
-                        drafts: draftsFolder,
-                        trash: trashFolder
+                        Inbox: [inboxFolder],
+                        Sent: [sentFolder],
+                        Drafts: [draftsFolder],
+                        Trash: [trashFolder]
                     });
                     devicestorageStub.storeList.withArgs(sinon.match(function(arg) {
-                        expect(arg[0][0]).to.deep.equal(inboxFolder);
-                        expect(arg[0][1]).to.deep.equal(sentFolder);
+                        expect(arg[0][0].name).to.deep.equal(inboxFolder.name);
+                        expect(arg[0][0].path).to.deep.equal(inboxFolder.path);
+                        expect(arg[0][0].type).to.deep.equal(inboxFolder.type);
+                        expect(arg[0][1].name).to.deep.equal(sentFolder.name);
+                        expect(arg[0][1].path).to.deep.equal(sentFolder.path);
+                        expect(arg[0][1].type).to.deep.equal(sentFolder.type);
+                        expect(arg[0][2].name).to.deep.equal(outboxFolder.name);
                         expect(arg[0][2].path).to.deep.equal(outboxFolder.path);
                         expect(arg[0][2].type).to.deep.equal(outboxFolder.type);
-                        expect(arg[0][3]).to.deep.equal(draftsFolder);
-                        expect(arg[0][4]).to.deep.equal(trashFolder);
+                        expect(arg[0][3].name).to.deep.equal(draftsFolder.name);
+                        expect(arg[0][3].path).to.deep.equal(draftsFolder.path);
+                        expect(arg[0][3].type).to.deep.equal(draftsFolder.type);
+                        expect(arg[0][4].name).to.deep.equal(trashFolder.name);
+                        expect(arg[0][4].path).to.deep.equal(trashFolder.path);
+                        expect(arg[0][4].type).to.deep.equal(trashFolder.type);
+                        return true;
+                    }), 'folders').yieldsAsync();
+
+                    dao.refreshFolder.yieldsAsync();
+
+                    dao._initFoldersFromImap(function(err) {
+                        expect(err).to.not.exist;
+                        expect(imapClientStub.listWellKnownFolders.calledOnce).to.be.true;
+                        expect(devicestorageStub.storeList.calledOnce).to.be.true;
+                        done();
+                    });
+                });
+
+                it('should update folders from imap', function(done) {
+                    account.folders = [inboxFolder, outboxFolder, trashFolder, {
+                        name: 'foo',
+                        type: 'Sent',
+                        path: 'bar',
+                    }];
+
+                    imapClientStub.listWellKnownFolders.yieldsAsync(null, {
+                        Inbox: [inboxFolder],
+                        Sent: [sentFolder],
+                        Drafts: [draftsFolder],
+                        Trash: [trashFolder]
+                    });
+                    devicestorageStub.storeList.withArgs(sinon.match(function(arg) {
+                        expect(arg[0]).to.deep.equal([{
+                            name: inboxFolder.name,
+                            path: inboxFolder.path,
+                            type: inboxFolder.type
+                        }, {
+                            name: outboxFolder.name,
+                            path: outboxFolder.path,
+                            type: outboxFolder.type
+                        }, {
+                            name: trashFolder.name,
+                            path: trashFolder.path,
+                            type: trashFolder.type
+                        }, {
+                            name: sentFolder.name,
+                            path: sentFolder.path,
+                            type: sentFolder.type
+                        }, {
+                            name: draftsFolder.name,
+                            path: draftsFolder.path,
+                            type: draftsFolder.type
+                        }]);
+
                         return true;
                     }), 'folders').yieldsAsync();
 
