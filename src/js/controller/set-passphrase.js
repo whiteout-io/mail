@@ -48,6 +48,7 @@ define(function(require) {
 
         function onPassphraseChanged(err, newPrivateKeyArmored) {
             if (err) {
+                err.showBugReporter = false;
                 $scope.onError(err);
                 return;
             }
