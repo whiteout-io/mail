@@ -79,7 +79,8 @@ define(function(require) {
 
                 scope.loadVisibleBodies = function() {};
                 ctrl = $controller(MailListCtrl, {
-                    $scope: scope
+                    $scope: scope,
+                    $routeParams: {}
                 });
             });
         });

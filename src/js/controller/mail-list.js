@@ -10,7 +10,7 @@ define(function(require) {
     var INIT_DISPLAY_LEN = 20,
         SCROLL_DISPLAY_LEN = 10;
 
-    var MailListCtrl = function($scope) {
+    var MailListCtrl = function($scope, $routeParams) {
         //
         // Init
         //
@@ -166,7 +166,7 @@ define(function(require) {
             $scope.searchText = undefined;
 
             // in development, display dummy mail objects
-            if (!window.chrome || !chrome.identity) {
+            if ($routeParams.dev) {
                 updateStatus('Last update: ', new Date());
                 currentFolder().messages = createDummyMails();
                 return;

@@ -25,7 +25,7 @@ We take the privacy of your data very seriously. Here are some of the technical 
 
 * [Content Security Policy (CSP)](http://www.html5rocks.com/en/tutorials/security/content-security-policy/) is enforced to prevent against injection attacks.
 
-* HTML mails are sanitized with [DOMPurify](https://github.com/cure53/DOMPurify) and are rendered in a sandboxed iframe. 
+* HTML mails are sanitized with [DOMPurify](https://github.com/cure53/DOMPurify) and are rendered in a sandboxed iframe.
 
 * Displaying mail images is optional and opt-in by default.
 
@@ -48,7 +48,7 @@ For development you can start a connect dev server:
 
     grunt dev
 
-Then visit [http://localhost:8580/dist/#/desktop](http://localhost:8580/dist/#/desktop) for front-end code or [http://localhost:8580/test/unit/](http://localhost:8580/test/unit/) to test JavaScript changes. You can also start a watch task so you don't have rebuild everytime you make a change:
+Then visit [http://localhost:8580/dist/#/desktop?dev=true](http://localhost:8580/dist/#/desktop?dev=true) for front-end code or [http://localhost:8580/test/unit/](http://localhost:8580/test/unit/) to test JavaScript changes. You can also start a watch task so you don't have rebuild everytime you make a change:
 
     grunt watch
 

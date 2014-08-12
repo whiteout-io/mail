@@ -1,25 +1,35 @@
 {
-    "name": "mail-html5",
-    "version": "0.0.0",
+    "name": "whiteout-mail",
+    "version": "0.0.1",
+    "description": "Mail App with integrated OpenPGP encryption.",
+    "author": "Whiteout Networks",
+    "homepage": "https://whiteout.io",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/whiteout-io/mail-html5.git"
+    },
+    "keywords": ["email", "mail", "client", "app", "openpgp", "pgp", "gpg", "imap", "smtp"],
     "engines": {
-        "node": ">=0.8"
+        "node": ">=0.10"
     },
     "scripts": {
-        "postinstall": "grunt dist-npm",
+        "postinstall": "grunt",
         "test": "grunt && grunt test",
-        "start": "grunt && grunt dev"
+        "start": "node server.js"
     },
     "dependencies": {
-        "crypto-lib": "~0.2.1",
-        "imap-client": "~0.4.0",
-        "mailreader": "~0.3.5",
-        "pgpmailer": "~0.3.11",
-        "pgpbuilder": "~0.3.7",
-        "requirejs": "2.1.14",
         "axe-logger": "~0.0.2",
+        "compression": "^1.0.11",
+        "crypto-lib": "~0.2.1",
         "dompurify": "~0.4.2",
+        "express": "^4.8.3",
+        "imap-client": "~0.4.0",
         "jquery": "~2.1.1",
-        "ng-infinite-scroll": "~1.1.2"
+        "mailreader": "~0.3.5",
+        "ng-infinite-scroll": "~1.1.2",
+        "pgpbuilder": "~0.3.7",
+        "pgpmailer": "~0.3.11",
+        "requirejs": "~2.1.14"
     },
     "devDependencies": {
         "angularjs": "https://github.com/angular/angular.js/tarball/v1.2.8",

@@ -13,7 +13,7 @@ define(function(require) {
     // Controller
     //
 
-    var NavigationCtrl = function($scope) {
+    var NavigationCtrl = function($scope, $routeParams) {
         emailDao = appController._emailDao;
         outboxBo = appController._outboxBo;
 
@@ -84,7 +84,7 @@ define(function(require) {
 
         function initializeFolders() {
             // create dummy folder in dev environment only
-            if (!window.chrome || !chrome.identity) {
+            if ($routeParams.dev) {
                 createDummyFolders();
                 return;
             }

@@ -19,27 +19,6 @@ module.exports = function(grunt) {
                     port: 8581,
                     base: '.'
                 }
-            },
-            prod: {
-                options: {
-                    port: process.env.PORT || 8585,
-                    base: './dist/',
-                    keepalive: true,
-                    middleware: function(connect, options) {
-                        // Return array of whatever middlewares you want
-                        return [
-
-                            function(req, res, next) {
-                                res.setHeader('Content-Security-Policy', "default-src 'self'; object-src 'none'; connect-src 'self' https://keys.whiteout.io; img-src 'self' data:;");
-
-                                return next();
-                            },
-
-                            // Serve static files.
-                            connect.static(options.base)
-                        ];
-                    }
-                }
             }
         },
 

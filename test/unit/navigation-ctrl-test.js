@@ -10,13 +10,9 @@ define(function(require) {
         appController = require('js/app-controller');
 
     describe('Navigation Controller unit test', function() {
-        var scope, ctrl, origEmailDao, emailDaoMock, outboxBoMock, hasIdentity, outboxFolder, onConnectStub;
+        var scope, ctrl, origEmailDao, emailDaoMock, outboxBoMock, outboxFolder, onConnectStub;
 
         beforeEach(function(done) {
-            hasIdentity = !! window.chrome.identity;
-            if (!hasIdentity) {
-                window.chrome.identity = {};
-            }
             // remember original module to restore later
             origEmailDao = appController._emailDao;
             emailDaoMock = sinon.createStubInstance(EmailDAO);
@@ -45,7 +41,8 @@ define(function(require) {
                 scope = $rootScope.$new();
                 scope.state = {};
                 ctrl = $controller(NavigationCtrl, {
-                    $scope: scope
+                    $scope: scope,
+                    $routeParams: {}
                 });
                 done();
             });
@@ -54,9 +51,6 @@ define(function(require) {
         afterEach(function() {
             // restore the module
             appController._emailDao = origEmailDao;
-            if (hasIdentity) {
-                delete window.chrome.identity;
-            }
             onConnectStub.restore();
         });
 
