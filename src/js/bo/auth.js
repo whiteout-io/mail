@@ -394,7 +394,8 @@ define(function(require) {
             // do not update the pinned certificates!
             callback({
                 title: str.outdatedCertificateTitle,
-                message: str.outdatedCertificateMessage.replace('{0}', self[component].host)
+                message: str.outdatedCertificateMessage.replace('{0}', self[component].host),
+                faqLink: str.certificateFaqLink,
             });
             return;
         }
@@ -406,6 +407,7 @@ define(function(require) {
             positiveBtnStr: str.updateCertificatePosBtn,
             negativeBtnStr: str.updateCertificateNegBtn,
             showNegativeBtn: true,
+            faqLink: str.certificateFaqLink,
             callback: function(granted) {
                 if (!granted) {
                     return;
