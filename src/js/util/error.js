@@ -21,7 +21,7 @@ define(function(require) {
                 positiveBtnStr: options.positiveBtnStr || 'Ok',
                 negativeBtnStr: options.negativeBtnStr || 'Cancel',
                 showNegativeBtn: options.showNegativeBtn || false,
-                showBugReporter: (typeof options.showBugReporter !== 'undefined' ? options.showBugReporter : true),
+                showBugReporter: (typeof options.showBugReporter !== 'undefined' ? options.showBugReporter : !options.title), // if title is set, presume it's not an error by default
                 callback: options.callback
             };
             // don't call apply for synchronous calls

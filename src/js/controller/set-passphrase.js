@@ -48,6 +48,7 @@ define(function(require) {
 
         function onPassphraseChanged(err, newPrivateKeyArmored) {
             if (err) {
+                err.showBugReporter = false;
                 $scope.onError(err);
                 return;
             }
@@ -74,8 +75,7 @@ define(function(require) {
             $scope.$apply();
             $scope.onError({
                 title: 'Success',
-                message: 'Passphrase change complete.',
-                showBugReporter: false
+                message: 'Passphrase change complete.'
             });
         }
     };

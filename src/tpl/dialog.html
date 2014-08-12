@@ -7,9 +7,10 @@
   <div class="content">
     <p>{{state.dialog.message}} <a ng-show="state.dialog.faqLink" href="{{state.dialog.faqLink}}" target="_blank">Learn more</a></p>
     <div class="control">
-      <button wo-touch="confirm(true); state.writer.reportBug()" class="btn btn-alt" ng-show="state.writer && state.dialog.showBugReporter">Report this bug</button><!-- only show if we can actually report a bug, i.e. the writer is attached to the scope -->
       <button wo-touch="confirm(false)" class="btn btn-alt" ng-show="state.dialog.showNegativeBtn">{{state.dialog.negativeBtnStr}}</button>
-      <button wo-touch="confirm(true)" class="btn">{{state.dialog.positiveBtnStr}}</button>
+      <!-- only show bug report button if we can actually report a bug, i.e. the writer is attached to the scope -->
+      <button wo-touch="confirm(true)" class="btn" ng-show="!state.writer || !state.dialog.showBugReporter">{{state.dialog.positiveBtnStr}}</button>
+      <button wo-touch="confirm(true); state.writer.reportBug()" class="btn" ng-show="state.writer && state.dialog.showBugReporter">Report bug</button>
     </div>
   </div><!-- /.content -->
 </div><!-- /.lightbox-body -->

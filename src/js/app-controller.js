@@ -89,7 +89,6 @@ define(function(require) {
                 message: message,
                 positiveBtnStr: str.updatePublicKeyPosBtn,
                 negativeBtnStr: str.updatePublicKeyNegBtn,
-                showBugReporter: false,
                 showNegativeBtn: true,
                 callback: callback
             });

@@ -32,10 +32,7 @@ define(function(require) {
 
         $scope.verifyRecoveryToken = function(callback) {
             if (!$scope.recoveryToken) {
-                $scope.onError({
-                    message: 'Please set the recovery token!',
-                    showBugReporter: false
-                });
+                $scope.onError(new Error('Please set the recovery token!'));
                 return;
             }
 
@@ -68,10 +65,7 @@ define(function(require) {
             var inputCode = '' + $scope.code0 + $scope.code1 + $scope.code2 + $scope.code3 + $scope.code4 + $scope.code5;
 
             if (!inputCode) {
-                $scope.onError({
-                    message: 'Please enter the keychain code!',
-                    showBugReporter: false
-                });
+                $scope.onError(new Error('Please enter the keychain code!'));
                 return;
             }
 

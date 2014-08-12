@@ -65,7 +65,6 @@ define(function(require) {
             $scope.state.account.toggle(false);
             $scope.$apply();
             $scope.onError({
-                showBugReporter: false,
                 title: 'Success',
                 message: 'Exported keypair to file.'
             });
