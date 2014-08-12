@@ -23,7 +23,7 @@ We take the privacy of your data very seriously. Here are some of the technical 
 
 * The app is deployed as a [Chrome Packaged App](https://developer.chrome.com/apps/about_apps.html) with [auditable static versions](https://github.com/whiteout-io/mail-html5/releases) in order to prevent [problems with host-based security](http://tonyarcieri.com/whats-wrong-with-webcrypto).
 
-* [Content Security Policy (CSP)](http://www.html5rocks.com/en/tutorials/security/content-security-policy/) is enforced to prevent against injection attacks.
+* [Content Security Policy (CSP)](http://www.html5rocks.com/en/tutorials/security/content-security-policy/) is enforced to prevent injection attacks.
 
 * HTML mails are sanitized with [DOMPurify](https://github.com/cure53/DOMPurify) and are rendered in a sandboxed iframe. 
 
