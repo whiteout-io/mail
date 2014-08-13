@@ -50,10 +50,20 @@ Then visit [http://localhost:8580/dist/#/desktop?dev=true](http://localhost:8580
 
     grunt watch
 
-## Releasing
+## Releasing Chrome App
 
     grunt release-test --release=0.0.0.x
     grunt release-stable --release=0.x.0
+
+## Deploying Web App
+
+First build and generate the `dist/` directory:
+
+    grunt
+
+Then deploy that directoy by adding it to a local git branch. Push that branch to your node.js server and then start the server:
+
+    npm start
 
 ## License
 

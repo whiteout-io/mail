@@ -3,7 +3,12 @@ define(function(require) {
 
     var appController = require('js/app-controller');
 
-    var LoginPrivateKeyDownloadCtrl = function($scope, $location) {
+    var LoginPrivateKeyDownloadCtrl = function($scope, $location, $routeParams) {
+        if (!appController._emailDao && !$routeParams.dev) {
+            $location.path('/'); // init app
+            return;
+        }
+
         var keychain = appController._keychain,
             emailDao = appController._emailDao,
             userId = emailDao._account.emailAddress;

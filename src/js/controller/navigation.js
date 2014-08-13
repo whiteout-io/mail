@@ -13,7 +13,12 @@ define(function(require) {
     // Controller
     //
 
-    var NavigationCtrl = function($scope, $routeParams) {
+    var NavigationCtrl = function($scope, $routeParams, $location) {
+        if (!appController._emailDao && !$routeParams.dev) {
+            $location.path('/'); // init app
+            return;
+        }
+
         emailDao = appController._emailDao;
         outboxBo = appController._outboxBo;
 

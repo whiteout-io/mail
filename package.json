@@ -23,7 +23,6 @@
         "node": ">=0.10"
     },
     "scripts": {
-        "postinstall": "grunt",
         "test": "grunt && grunt test",
         "start": "node server.js"
     },
@@ -39,26 +38,31 @@
         "ng-infinite-scroll": "~1.1.2",
         "pgpbuilder": "~0.4.0",
         "pgpmailer": "~0.4.0",
-        "requirejs": "~2.1.14"
+        "requirejs": "~2.1.14",
+        "config": "^1.0.2",
+        "morgan": "^1.2.3",
+        "npmlog": "^0.1.1",
+        "socket.io": "^1.0.6"
     },
     "devDependencies": {
         "angularjs": "https://github.com/whiteout-io/angular.js/tarball/npm-version",
         "browsercrow": "https://github.com/whiteout-io/browsercrow/tarball/master",
         "browsersmtp": "https://github.com/whiteout-io/browsersmtp/tarball/master",
-        "grunt": "~0.4.1",
-        "mocha": "~1.13.0",
         "chai": "~1.7.2",
-        "sinon": "~1.7.3",
+        "grunt": "~0.4.1",
+        "grunt-contrib-clean": "~0.5.0",
+        "grunt-contrib-copy": "~0.4.1",
+        "grunt-manifest": "^0.4.0",
+        "grunt-autoprefixer": "~0.7.2",
+        "grunt-contrib-compress": "~0.5.2",
         "grunt-contrib-connect": "~0.5.0",
         "grunt-contrib-jshint": "~0.6.4",
-        "grunt-mocha": "~0.4.1",
-        "grunt-contrib-clean": "~0.5.0",
-        "grunt-csso": "~0.6.1",
         "grunt-contrib-sass": "~0.7.3",
-        "grunt-autoprefixer": "~0.7.2",
         "grunt-contrib-watch": "~0.5.3",
-        "grunt-contrib-copy": "~0.4.1",
-        "grunt-contrib-compress": "~0.5.2",
-        "grunt-node-webkit-builder": "~0.1.17"
+        "grunt-csso": "~0.6.1",
+        "grunt-mocha": "~0.4.1",
+        "grunt-node-webkit-builder": "~0.1.17",
+        "mocha": "~1.13.0",
+        "sinon": "~1.7.3"
     }
 }

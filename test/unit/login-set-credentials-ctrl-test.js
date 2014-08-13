@@ -33,7 +33,8 @@ define(function(require) {
 
                 scope.state = {};
                 setCredentialsCtrl = $controller(SetCredentialsCtrl, {
-                    $scope: scope
+                    $scope: scope,
+                    $routeParams: {}
                 });
             });
         });

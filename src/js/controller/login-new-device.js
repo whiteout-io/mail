@@ -4,7 +4,12 @@ define(function(require) {
     var angular = require('angular'),
         appController = require('js/app-controller');
 
-    var LoginExistingCtrl = function($scope, $location) {
+    var LoginExistingCtrl = function($scope, $location, $routeParams) {
+        if (!appController._emailDao && !$routeParams.dev) {
+            $location.path('/'); // init app
+            return;
+        }
+
         var emailDao = appController._emailDao,
             pgp = appController._pgp;
 

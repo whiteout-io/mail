@@ -3,7 +3,12 @@ define(function(require) {
 
     var appCtrl = require('js/app-controller');
 
-    var AddAccountCtrl = function($scope, $location) {
+    var AddAccountCtrl = function($scope, $location, $routeParams) {
+        if (!appCtrl._auth && !$routeParams.dev) {
+            $location.path('/'); // init app
+            return;
+        }
+
         $scope.connectToGoogle = function() {
             // test for oauth support
             if (appCtrl._auth._oauth.isSupported()) {

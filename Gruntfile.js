@@ -213,6 +213,20 @@ module.exports = function(grunt) {
             }
         },
 
+        manifest: {
+            generate: {
+                options: {
+                    basePath: 'dist/',
+                    timestamp: true,
+                    hash: true,
+                    cache: ['socket.io/socket.io.js'],
+                    master: ['index.html']
+                },
+                src: ['**/*.*'],
+                dest: 'dist/appcache.manifest'
+            }
+        },
+
         nodewebkit: {
             options: {
                 version: '0.9.2', // node-webkit version
@@ -238,12 +252,13 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-contrib-compress');
     grunt.loadNpmTasks('grunt-node-webkit-builder');
+    grunt.loadNpmTasks('grunt-manifest');
 
     // Build tasks
     grunt.registerTask('dist-npm', ['copy:npm', 'copy:npmDev', 'copy:cryptoLib']);
     grunt.registerTask('dist-css', ['sass', 'autoprefixer', 'csso']);
     grunt.registerTask('dist-copy', ['copy']);
-    grunt.registerTask('dist', ['clean', 'dist-npm', 'dist-css', 'dist-copy']);
+    grunt.registerTask('dist', ['clean', 'dist-npm', 'dist-css', 'dist-copy', 'manifest']);
 
     // Test/Dev tasks
     grunt.registerTask('dev', ['connect:dev']);

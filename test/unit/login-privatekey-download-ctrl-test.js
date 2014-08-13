@@ -38,7 +38,8 @@ define(function(require) {
                 scope.state = {};
                 ctrl = $controller(LoginPrivateKeyDownloadCtrl, {
                     $location: location,
-                    $scope: scope
+                    $scope: scope,
+                    $routeParams: {}
                 });
                 done();
             });
@@ -251,7 +252,8 @@ define(function(require) {
                     scope.state = {};
                     ctrl = $controller(LoginPrivateKeyDownloadCtrl, {
                         $location: location,
-                        $scope: scope
+                        $scope: scope,
+                        $routeParams: {}
                     });
                 });
 
