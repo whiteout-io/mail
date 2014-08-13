@@ -89,7 +89,7 @@ define(function(require) {
             }
         },
         checkOutboxInterval: 5000,
-        iconPath: '/img/icon.png',
+        iconPath: '/img/icon-128-chrome.png',
         verificationUrl: '/verify/',
         verificationUuidLength: 36,
         dbVersion: 5,

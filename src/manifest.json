@@ -5,7 +5,10 @@
   "manifest_version": 2,
   "offline_enabled": true,
   "icons": {
-    "128": "img/icon.png"
+    "120": "img/icon-120-ios.png",
+    "152": "img/icon-152-ios.png",
+    "128": "img/icon-128-chrome.png",
+    "196": "img/icon-196.png"
   },
   "permissions": [
     "unlimitedStorage", {
