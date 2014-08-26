@@ -106,7 +106,6 @@ define(function(require) {
         fallbackSubject: '(no subject)',
         invitationSubject: 'Invitation to a private conversation',
         invitationMessage: 'Hi,\n\nI use Whiteout Mail to send and receive encrypted email. I would like to exchange encrypted messages with you as well.\n\nPlease install the Whiteout Mail application. This application makes it easy to read and write messages securely with PGP encryption applied.\n\nGo to the Whiteout Networks homepage to learn more and to download the application: https://whiteout.io\n\n',
-        message: 'Hi,\n\nthis is a private conversation. To read my encrypted message below, open it in Whiteout Mail: https://whiteout.io/#product\n\n\n',
         signature: '\n\n\n--\nSent from Whiteout Mail - https://whiteout.io\n\nMy PGP key: ',
         webSite: 'http://whiteout.io',
         verificationSubject: '[whiteout] New public key uploaded',
