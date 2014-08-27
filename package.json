@@ -27,8 +27,8 @@
         "jquery": "~2.1.1",
         "mailreader": "~0.3.5",
         "ng-infinite-scroll": "~1.1.2",
-        "pgpbuilder": "~0.3.7",
-        "pgpmailer": "~0.3.11",
+        "pgpbuilder": "~0.4.0",
+        "pgpmailer": "~0.4.0",
         "requirejs": "~2.1.14"
     },
     "devDependencies": {
