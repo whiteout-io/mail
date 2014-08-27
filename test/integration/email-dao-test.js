@@ -806,8 +806,10 @@ define(function(require) {
                 sinon.stub(smtpServer, 'onmail', function(mail) {
                     expect(mail.from).to.equal(testAccount.user);
                     expect(mail.to).to.deep.equal([testAccount.user]);
-                    expect(/^Content-Type: multipart\/mixed/.test(mail.body)).to.be.true;
-                    expect(mail.body).to.contain('this is a private conversation');
+
+                    expect(/^Content-Type: multipart\/mixed/.test(mail.body)).to.be.false;
+                    expect(/^Content-Type: multipart\/encrypted/.test(mail.body)).to.be.true;
+                    expect(mail.body).to.contain('LS0tLS1CRUdJTiBQR1AgTUVTU0FHRS0tLS0tDQpWZXJzaW9uOiBPcGVuUEdQLmpzIHYwLjcuMg0K'); // one line of the ciphertext
                 });
 
                 emailDao.sendEncrypted({

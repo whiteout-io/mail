@@ -9,9 +9,7 @@ define(function(require) {
         PGP = require('js/crypto/pgp'),
         DeviceStorageDAO = require('js/dao/devicestorage-dao'),
         mailreader = require('mailreader'),
-        appcfg = require('js/app-config'),
-        str = appcfg.string,
-        cfg = appcfg.config,
+        cfg = require('js/app-config').config,
         expect = chai.expect;
 
 
@@ -1559,7 +1557,6 @@ define(function(require) {
 
                     pgpMailerStub.send.withArgs({
                         encrypt: true,
-                        cleartextMessage: str.message,
                         mail: dummyMail,
                         smtpclient: undefined,
                         publicKeysArmored: publicKeys
@@ -1584,7 +1581,6 @@ define(function(require) {
 
                     pgpMailerStub.send.withArgs({
                         encrypt: true,
-                        cleartextMessage: str.message,
                         mail: dummyMail,
                         smtpclient: undefined,
                         publicKeysArmored: publicKeys
