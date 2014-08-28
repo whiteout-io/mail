@@ -111,23 +111,54 @@ define(function() {
     };
 
     /**
-     * Request download for the encrypted private PGP key.
+     * Query if an encrypted private PGP key exists on the server without initializing the recovery procedure.
      * @param  {String}   options.userId    The user's email address
      * @param  {String}   options.keyId     The private PGP key id
      * @param  {Function} callback(error, found)
-     * @return {Boolean} weather the key was found on the server or not.
+     * @return {Boolean} whether the key was found on the server or not.
      */
-    PrivateKeyDAO.prototype.requestDownload = function(options, callback) {
-        var uri;
-
+    PrivateKeyDAO.prototype.hasPrivateKey = function(options, callback) {
         if (!options.userId || !options.keyId) {
             callback(new Error('Incomplete arguments!'));
             return;
         }
 
-        uri = '/privatekey/user/' + options.userId + '/key/' + options.keyId;
         this._restDao.get({
-            uri: uri
+            uri: '/privatekey/user/' + options.userId + '/key/' + options.keyId,
+            payload: {
+                ignoreRecovery: true
+            }
+        }, function(err) {
+            // 404: there is no encrypted private key on the server
+            if (err && err.code !== 200) {
+                callback(null, false);
+                return;
+            }
+
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            callback(null, true);
+        });
+    };
+
+    /**
+     * Request download for the encrypted private PGP key.
+     * @param  {String}   options.userId    The user's email address
+     * @param  {String}   options.keyId     The private PGP key id
+     * @param  {Function} callback(error, found)
+     * @return {Boolean} whether the key was found on the server or not.
+     */
+    PrivateKeyDAO.prototype.requestDownload = function(options, callback) {
+        if (!options.userId || !options.keyId) {
+            callback(new Error('Incomplete arguments!'));
+            return;
+        }
+
+        this._restDao.get({
+            uri: '/privatekey/user/' + options.userId + '/key/' + options.keyId
         }, function(err) {
             // 404: there is no encrypted private key on the server
             if (err && err.code !== 200) {

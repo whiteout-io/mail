@@ -60,9 +60,9 @@ define(function(require) {
 
         $scope.checkServerForKey = function(callback) {
             var keyParams = pgp.getKeyParams();
-            keychain.requestPrivateKeyDownload({
+            keychain.hasPrivateKey({
                 userId: keyParams.userId,
-                keyId: keyParams._id,
+                keyId: keyParams._id
             }, function(err, privateKeySynced) {
                 if (err) {
                     $scope.onError(err);
