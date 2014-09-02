@@ -825,6 +825,9 @@ define(function(require) {
             return;
         }
 
+        // don't check the user's own public key for deletion in refreshKeyForUserId
+        keypair.publicKey.imported = true;
+
         // store public key locally
         self.saveLocalPublicKey(keypair.publicKey, function(err) {
             if (err) {
