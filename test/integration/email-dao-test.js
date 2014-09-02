@@ -809,7 +809,7 @@ define(function(require) {
 
                     expect(/^Content-Type: multipart\/mixed/.test(mail.body)).to.be.false;
                     expect(/^Content-Type: multipart\/encrypted/.test(mail.body)).to.be.true;
-                    expect(mail.body).to.contain('LS0tLS1CRUdJTiBQR1AgTUVTU0FHRS0tLS0tDQpWZXJzaW9uOiBPcGVuUEdQLmpzIHYwLjcuMg0K'); // one line of the ciphertext
+                    expect(mail.body).to.contain('-----BEGIN PGP MESSAGE-----');
                 });
 
                 emailDao.sendEncrypted({
