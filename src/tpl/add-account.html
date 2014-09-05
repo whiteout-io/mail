@@ -15,6 +15,9 @@
     <li class="yahoo" popover="#yahoo-info" wo-touch="connectToYahoo()">
       <div><img src="img/yahoo_logo.png" alt="Yahoo! Mail"></div>
     </li>
+    <li class="outlook" popover="#outlook-info" wo-touch="connectToOutlook()">
+      <div><img src="img/outlook_logo.jpg" alt="Outlook.com"></div>
+    </li>
     <li class="other" popover="#custom-info" wo-touch="connectOther()">
       <h3>Custom server...</h3>
     </li>
@@ -59,6 +62,16 @@
   <div class="popover-content">
     <p>Connect Whiteout Mail to your T-Online account.</p>
     <p>Encrypted and cleartext messages are stored on T-Online's servers.</p>
+    <p>Your emails and password remain on your device and are never sent to our servers.</p>
+  </div>
+</div><!--/.popover-->
+
+<div id="outlook-info" class="popover right desktop-only" ng-controller="PopoverCtrl">
+  <div class="arrow"></div>
+  <div class="popover-title"><b>Outlook.com Account</b></div>
+  <div class="popover-content">
+    <p>Connect Whiteout Mail to your Outlook.com account.</p>
+    <p>Encrypted and cleartext messages are stored on Microsoft's servers.</p>
     <p>Your emails and password remain on your device and are never sent to our servers.</p>
   </div>
 </div><!--/.popover-->

@@ -38,6 +38,12 @@ define(function(require) {
             });
         };
 
+        $scope.connectToOutlook = function() {
+            $location.path('/login-set-credentials').search({
+                provider: 'outlook'
+            });
+        };
+
         $scope.connectOther = function() {
             $location.path('/login-set-credentials').search({
                 provider: 'custom'

@@ -95,6 +95,18 @@
                 }
             }
 
+            &.outlook {
+                div {
+                    width: 256px;
+                    margin: 0 auto;
+                    padding: 13px 0;
+
+                    img {
+                        width: 100%;
+                    }
+                }
+            }
+
             &.other {
                 h3 {
                     margin: 0;
