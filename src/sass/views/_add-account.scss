@@ -107,6 +107,19 @@
                 }
             }
 
+            &.gmx {
+                div {
+                    width: 115px;
+                    margin: 0 auto;
+                    padding: 13px 0;
+
+                    img {
+                        width: 115px;
+                        height: 37px;
+                    }
+                }
+            }
+
             &.other {
                 h3 {
                     margin: 0;

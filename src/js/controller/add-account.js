@@ -44,6 +44,12 @@ define(function(require) {
             });
         };
 
+        $scope.connectToGmx = function() {
+            $location.path('/login-set-credentials').search({
+                provider: 'gmx'
+            });
+        };
+
         $scope.connectOther = function() {
             $location.path('/login-set-credentials').search({
                 provider: 'custom'
