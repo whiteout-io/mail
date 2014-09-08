@@ -206,6 +206,102 @@ define(function(require) {
             });
         });
 
+        describe('connectToOutlook', function() {
+            it('should forward to login', function() {
+                angular.module('addaccounttest', []);
+                mocks.module('addaccounttest');
+                mocks.inject(function($controller, $rootScope, $location) {
+                    location = $location;
+                    scope = $rootScope.$new();
+                    scope.state = {};
+
+                    sinon.stub(location, 'path').returns(location);
+                    sinon.stub(location, 'search').returns(location);
+                    sinon.stub(scope, '$apply', function() {});
+
+                    ctrl = $controller(AddAccountCtrl, {
+                        $location: location,
+                        $scope: scope
+                    });
+                });
+
+                scope.connectToOutlook();
+
+                expect(location.path.calledWith('/login-set-credentials')).to.be.true;
+                expect(location.search.calledWith({
+                    provider: 'outlook'
+                })).to.be.true;
+
+                location.path.restore();
+                location.search.restore();
+                scope.$apply.restore();
+            });
+        });
+
+        describe('connectToGmx', function() {
+            it('should forward to login', function() {
+                angular.module('addaccounttest', []);
+                mocks.module('addaccounttest');
+                mocks.inject(function($controller, $rootScope, $location) {
+                    location = $location;
+                    scope = $rootScope.$new();
+                    scope.state = {};
+
+                    sinon.stub(location, 'path').returns(location);
+                    sinon.stub(location, 'search').returns(location);
+                    sinon.stub(scope, '$apply', function() {});
+
+                    ctrl = $controller(AddAccountCtrl, {
+                        $location: location,
+                        $scope: scope
+                    });
+                });
+
+                scope.connectToGmx();
+
+                expect(location.path.calledWith('/login-set-credentials')).to.be.true;
+                expect(location.search.calledWith({
+                    provider: 'gmx'
+                })).to.be.true;
+
+                location.path.restore();
+                location.search.restore();
+                scope.$apply.restore();
+            });
+        });
+
+        describe('connectToWebde', function() {
+            it('should forward to login', function() {
+                angular.module('addaccounttest', []);
+                mocks.module('addaccounttest');
+                mocks.inject(function($controller, $rootScope, $location) {
+                    location = $location;
+                    scope = $rootScope.$new();
+                    scope.state = {};
+
+                    sinon.stub(location, 'path').returns(location);
+                    sinon.stub(location, 'search').returns(location);
+                    sinon.stub(scope, '$apply', function() {});
+
+                    ctrl = $controller(AddAccountCtrl, {
+                        $location: location,
+                        $scope: scope
+                    });
+                });
+
+                scope.connectToWebde();
+
+                expect(location.path.calledWith('/login-set-credentials')).to.be.true;
+                expect(location.search.calledWith({
+                    provider: 'webde'
+                })).to.be.true;
+
+                location.path.restore();
+                location.search.restore();
+                scope.$apply.restore();
+            });
+        });
+
         describe('connectOther', function() {
             it('should forward to login', function() {
                 angular.module('addaccounttest', []);

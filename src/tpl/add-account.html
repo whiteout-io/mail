@@ -3,23 +3,26 @@
   <h1>Select email account</h1>
 
   <ul>
-    <li class="google enabled" popover="#google-info" wo-touch="connectToGoogle()">
-      <div><img src="img/google_logo.png" alt="Google Mail"></div>
-    </li>
     <li class="whiteout disabled" popover="#whiteout-info" wo-touch="onError({message:'Whiteout Mailbox coming soon!', sync:true})">
       <div><img src="img/whiteout_logo.svg" alt="Whiteout Mailbox"></div>
     </li>
-    <li class="tonline" popover="#tonline-info" wo-touch="connectToTonline()">
-      <div><img src="img/tonline_logo.jpg" alt="T-Online"></div>
-    </li>
-    <li class="yahoo" popover="#yahoo-info" wo-touch="connectToYahoo()">
-      <div><img src="img/yahoo_logo.png" alt="Yahoo! Mail"></div>
+    <li class="google" popover="#google-info" wo-touch="connectToGoogle()">
+      <div><img src="img/google_logo.png" alt="Google Mail"></div>
     </li>
     <li class="outlook" popover="#outlook-info" wo-touch="connectToOutlook()">
       <div><img src="img/outlook_logo.jpg" alt="Outlook.com"></div>
     </li>
+    <li class="yahoo" popover="#yahoo-info" wo-touch="connectToYahoo()">
+      <div><img src="img/yahoo_logo.png" alt="Yahoo! Mail"></div>
+    </li>
     <li class="gmx" popover="#gmx-info" wo-touch="connectToGmx()">
       <div><img src="img/gmx_logo.jpg" alt="GMX.net"></div>
+    </li>
+    <li class="webde" popover="#webde-info" wo-touch="connectToWebde()">
+      <div><img src="img/webde_logo.jpg" alt="Web.de"></div>
+    </li>
+    <li class="tonline" popover="#tonline-info" wo-touch="connectToTonline()">
+      <div><img src="img/tonline_logo.jpg" alt="T-Online"></div>
     </li>
     <li class="other" popover="#custom-info" wo-touch="connectOther()">
       <h3>Custom server...</h3>
@@ -85,6 +88,16 @@
   <div class="popover-content">
     <p>Connect Whiteout Mail to your GMX.net account.</p>
     <p>Encrypted and cleartext messages are stored on GMX's servers.</p>
+    <p>Your emails and password remain on your device and are never sent to our servers.</p>
+  </div>
+</div><!--/.popover-->
+
+<div id="webde-info" class="popover right desktop-only" ng-controller="PopoverCtrl">
+  <div class="arrow"></div>
+  <div class="popover-title"><b>Web.de Account</b></div>
+  <div class="popover-content">
+    <p>Connect Whiteout Mail to your Web.de account.</p>
+    <p>Encrypted and cleartext messages are stored on Web.de's servers.</p>
     <p>Your emails and password remain on your device and are never sent to our servers.</p>
   </div>
 </div><!--/.popover-->

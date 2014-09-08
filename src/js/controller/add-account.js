@@ -50,6 +50,12 @@ define(function(require) {
             });
         };
 
+        $scope.connectToWebde = function() {
+            $location.path('/login-set-credentials').search({
+                provider: 'webde'
+            });
+        };
+
         $scope.connectOther = function() {
             $location.path('/login-set-credentials').search({
                 provider: 'custom'
