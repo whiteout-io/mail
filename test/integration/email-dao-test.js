@@ -6,6 +6,8 @@ define(function(require) {
         BrowserCrow = require('browsercrow'),
         BrowserSMTP = require('browsersmtp'),
         SmtpClient = require('smtpclient'),
+        LawnchairDAO = require('js/dao/lawnchair-dao'),
+        DeviceStorageDAO = require('js/dao/devicestorage-dao'),
         appController = require('js/app-controller'),
         mailreader = require('mailreader'),
         openpgp = require('openpgp'),
@@ -18,7 +20,7 @@ define(function(require) {
         chai.Assertion.includeStack = true;
 
         var emailDao, imapClient, imapMessages, imapFolders, imapServer, smtpServer, smtpClient, userStorage,
-            mockKeyPair;
+            mockKeyPair, inbox;
 
         var testAccount = {
             user: 'safewithme.testuser@gmail.com',
@@ -26,7 +28,7 @@ define(function(require) {
             xoauth2: 'testtoken'
         };
 
-        beforeEach(function(done) {
+        before(function(done) {
 
             imapMessages = [{
                 raw: 'Message-id: <a>\r\nSubject: hello 1\r\n\r\nWorld 1!',
@@ -118,6 +120,8 @@ define(function(require) {
                 description: "Mailvelope (no attachment - PGP/INLINE): encrypted and signed",
                 raw: "MIME-Version: 1.0\r\nReceived: by 10.195.18.8 with HTTP; Fri, 4 Jul 2014 06:58:43 -0700 (PDT)\r\nDate: Fri, 4 Jul 2014 15:58:43 +0200\r\nDelivered-To: safewithme.testuser@gmail.com\r\nMessage-ID: <CAAGARGwr94CXUuC_brPCMu58KtTgOJwr9V1jHafjKkPx3Xn0dg@mail.gmail.com>\r\nSubject: \r\nFrom: safewithme testuser <safewithme.testuser@gmail.com>\r\nTo: safewithme testuser <safewithme.testuser@gmail.com>\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n-----BEGIN PGP MESSAGE-----\r\nVersion: Mailvelope v0.9.0\r\nComment: Email security by Mailvelope - https://www.mailvelope.com\r\n\r\nwcBMA9f7k/zfv8I8AQf9F/Gm4HqJ/RlU2w+qIbJ4Va2PFR04OITlZIuUAWms\r\nPhPo4cGFbgxQnBzD7goswvNLXfEo4Q6/wxqT/wuwLGQdQJDoEduQxO5p77c1\r\n+dw/sa+pcr4jdwjebjV45NODVGDxgSF+YIwwKN3XXF6VqcisLLYBONYTHIU8\r\nKdTYR+R8SXSpMGISLUyyeY3Jaw5Et8cEoo0a1z8Fx04Ycv2Gw9Io0NVEqxYR\r\n86HUCLsOSARZC1aJ6hf9wheB528o0wuM6ESJ1LWnMWudyrkMjAiW6AiH89G8\r\npykTuYvc/GH3q7eEKNtY5khuZwi2Z7VJFrTeaEt4cb6HxlUlECudYw79uAHu\r\nt9JGATfaNeUpZV2xLEPBhsW5VrY4nDpbWVLp9stAKNFEiH6Ai/rgNwJ2A9Xr\r\nnWAji8YlIOOdO1iNVaYEQWEW1s5Hw5rYB83LKg==\r\n=ungD\r\n-----END PGP MESSAGE-----\r\n",
                 uid: 816
+            }, {
+                raw: 'Message-id: <ae3>Subject: hello 6\r\n\r\nWorld 6!'
             }];
 
             imapFolders = {
@@ -258,37 +262,51 @@ define(function(require) {
                 }, cb);
             });
 
-            appController.start({
-                onError: function() {}
-            }, function(err) {
+            var cleanup = new DeviceStorageDAO(new LawnchairDAO());
+            cleanup.init(testAccount.user, function(err) {
                 expect(err).to.not.exist;
-
-                userStorage = appController._userStorage;
-
-                appController.init({
-                    emailAddress: testAccount.user
-                }, function(err) {
+                cleanup.clear(function(err) {
                     expect(err).to.not.exist;
-
-                    emailDao = appController._emailDao;
-                    emailDao.onIncomingMessage = function() {};
-
-                    emailDao.unlock({
-                        passphrase: testAccount.pass,
-                        keypair: mockKeyPair
+                    appController.start({
+                        onError: function() {}
                     }, function(err) {
                         expect(err).to.not.exist;
 
-                        appController.onConnect(function(err) {
+                        userStorage = appController._userStorage;
+
+                        appController.init({
+                            emailAddress: testAccount.user
+                        }, function(err) {
                             expect(err).to.not.exist;
-                            done();
+
+                            emailDao = appController._emailDao;
+
+                            emailDao.onIncomingMessage = function(messages) {
+                                expect(messages.length).to.equal(imapMessages.length);
+                                inbox = emailDao._account.folders.filter(function(folder) {
+                                    return folder.path === 'INBOX';
+                                }).pop();
+                                expect(inbox).to.exist;
+                                done();
+                            };
+
+                            emailDao.unlock({
+                                passphrase: testAccount.pass,
+                                keypair: mockKeyPair
+                            }, function(err) {
+                                expect(err).to.not.exist;
+
+                                appController.onConnect(function(err) {
+                                    expect(err).to.not.exist;
+                                });
+                            });
                         });
                     });
                 });
             });
         });
 
-        afterEach(function(done) {
+        after(function(done) {
             openpgp.initWorker.restore();
             mailreader.startWorker.restore();
             appController.onConnect.restore();
@@ -299,65 +317,44 @@ define(function(require) {
             userStorage.clear(done);
         });
 
-        it('should run beforeEach and afterEach', function() {
-            // afterEach clears userStorage
-            expect(emailDao).to.exist;
-        });
-
-        describe('IMAP Tests', function() {
-            var currentFolder;
-
+        describe('IMAP Integration Tests', function() {
             beforeEach(function(done) {
-                emailDao.openFolder({
-                    folder: {
-                        path: 'INBOX'
-                    }
-                }, function(err) {
-                    expect(err).to.not.exist;
-                    currentFolder = emailDao._account.folders.filter(function(folder) {
-                        return folder.path === 'INBOX';
-                    }).pop();
-                    expect(currentFolder).to.exist;
-                    done();
-                });
+                if (emailDao._imapClient._client.selectedMailbox !== inbox.path) {
+                    emailDao.openFolder({
+                        folder: inbox
+                    }, function(err) {
+                        expect(err).to.not.exist;
+                        done();
+                    });
+                    return;
+                }
+
+                done();
             });
 
-            afterEach(function() {
-                emailDao.onIncomingMessage = function() {};
-            });
-
-            it('should receive new messages on startup', function(done) {
-                emailDao.onIncomingMessage = function(messages) {
-                    expect(messages.length).to.equal(imapMessages.length);
-                    done();
-                };
-            });
-
-            it('should receive new messages', function(done) {
-                emailDao.onIncomingMessage = function(messages) {
-                    expect(messages.length).to.equal(imapMessages.length);
+            describe('basic functionality', function() {
+                it('should receive new messages', function(done) {
                     emailDao.onIncomingMessage = function(messages) {
                         expect(messages.length).to.equal(1);
                         expect(messages[0].answered).to.be.false;
+
                         emailDao.onIncomingMessage = function(messages) {
                             expect(messages.length).to.equal(1);
                             expect(messages[0].answered).to.be.true;
                             done();
                         };
-                    };
-                    setTimeout(function() {
-                        imapServer.appendMessage('INBOX', ['$My$Flag'], false, 'Message-id: <n1>\r\nSubject: new message\r\n\r\nhello world!');
+
                         setTimeout(function() {
                             imapServer.appendMessage('INBOX', ['$My$Flag', '\\Answered'], false, 'Message-id: <n2>\r\nSubject: new message\r\n\r\nhello world!');
-                        }, 1000);
-                    }, 1000);
-                };
-            });
+                        }, 100);
+                    };
 
-            it('should delete a message', function(done) {
-                emailDao.onIncomingMessage = function() {
+                    imapServer.appendMessage('INBOX', ['$My$Flag'], false, 'Message-id: <n1>\r\nSubject: new message\r\n\r\nhello world!');
+                });
+
+                it('should delete a message', function(done) {
                     emailDao.deleteMessage({
-                        folder: currentFolder,
+                        folder: inbox,
                         message: {
                             uid: 600
                         }
@@ -377,408 +374,369 @@ define(function(require) {
                             };
                         });
                     });
-                };
-            });
+                });
 
-            it('should get body', function(done) {
-
-                emailDao.onIncomingMessage = function(messages) {
+                it('should get body', function(done) {
                     emailDao.getBody({
-                        folder: currentFolder,
-                        message: messages[4]
+                        folder: inbox,
+                        message: inbox.messages[5]
                     }, function(err, message) {
                         expect(err).to.not.exist;
                         expect(message.body).to.equal('World 5!');
                         done();
                     });
-                };
-            });
-            it('should insert images into html mail', function(done) {
-                emailDao.onIncomingMessage = function(messages) {
+                });
+
+                [7, 8].forEach(function(emailnr) {
+                    it('should get and decrypt body #' + emailnr, function(done) {
+                        emailDao.getBody({
+                            folder: inbox,
+                            message: inbox.messages[emailnr]
+                        }, function(err, message) {
+                            expect(err).to.not.exist;
+                            emailDao.decryptBody({
+                                message: message,
+                                folder: inbox
+                            }, function(err) {
+                                expect(err).to.not.exist;
+                                expect(message.body).to.equal('asdf');
+                                expect(message.encrypted).to.be.true;
+                                expect(message.decrypted).to.be.true;
+                                expect(message.attachments.length).to.equal(1);
+                                done();
+                            });
+                        });
+                    });
+                });
+
+                it('should insert images into html mail', function(done) {
                     emailDao.getBody({
-                        folder: currentFolder,
-                        message: messages[8]
+                        folder: inbox,
+                        message: inbox.messages[9]
                     }, function(err, message) {
                         expect(err).to.not.exist;
                         expect(message.html).to.equal('<html><head><meta http-equiv="Content-Type" content="text/html charset=us-ascii"></head><body style="word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;">asd<img apple-inline="yes" id="53B73BDD-69A0-4E8E-BA7B-3D2EF399C0D3" height="1" width="1" apple-width="yes" apple-height="yes" src="data:application/octet-stream;base64,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"></body></html>');
                         done();
                     });
-                };
-            });
-
-            [{
-                nr: 6,
-                hasAttachments: true
-            }, {
-                nr: 7,
-                hasAttachments: true
-            }].forEach(function(email) {
-                it('should get and decrypt body #' + email.nr, function(done) {
-                    emailDao.onIncomingMessage = function(messages) {
-                        emailDao.getBody({
-                            folder: currentFolder,
-                            message: messages[email.nr]
-                        }, function(err, message) {
-                            expect(err).to.not.exist;
-                            emailDao.decryptBody({
-                                message: message,
-                                folder: currentFolder
-                            }, function(err) {
-                                expect(err).to.not.exist;
-                                expect(message.body).to.equal('asdf');
-                                if (email.hasAttachments) {
-                                    expect(message.attachments.length).to.equal(1);
-                                }
-                                done();
-                            });
-                        });
-                    };
                 });
-            });
 
-            it('should set flags', function(done) {
-                emailDao.onIncomingMessage = function(messages) {
-                    var message = messages[0];
+                it('should set flags', function(done) {
+                    var message = inbox.messages[0];
                     message.unread = false;
                     message.answered = true;
 
                     emailDao.setFlags({
-                        folder: currentFolder,
+                        folder: inbox,
                         message: message
                     }, function(err) {
                         expect(err).to.not.exist;
                         done();
                     });
-                };
+                });
             });
 
-            describe('Real life data mail parsing', function() {
-
+            describe('Real-world data mail parsing', function() {
                 it('should parse Apple Mail (attachment - PGP/MIME): Encrypted', function(done) {
-                    emailDao.onIncomingMessage = function(messages) {
-                        emailDao.getBody({
-                            folder: currentFolder,
-                            message: messages[9]
-                        }, function(err, message) {
+                    emailDao.getBody({
+                        folder: inbox,
+                        message: inbox.messages[10]
+                    }, function(err, message) {
+                        expect(err).to.not.exist;
+                        emailDao.decryptBody({
+                            message: message,
+                            folder: inbox
+                        }, function(err) {
                             expect(err).to.not.exist;
-                            emailDao.decryptBody({
-                                message: message,
-                                folder: currentFolder
-                            }, function(err) {
-                                expect(err).to.not.exist;
-                                expect(message.encrypted).to.be.true;
-                                expect(message.signed).to.be.false;
-                                expect(message.signaturesValid).to.be.undefined;
-                                expect(message.attachments.length).to.equal(1);
-                                expect(message.body).to.equal('test16');
-                                done();
-                            });
+                            expect(message.encrypted).to.be.true;
+                            expect(message.signed).to.be.false;
+                            expect(message.signaturesValid).to.be.undefined;
+                            expect(message.attachments.length).to.equal(1);
+                            expect(message.body).to.equal('test16');
+                            done();
                         });
-                    };
+                    });
                 });
 
                 it('should parse Apple Mail (attachment - PGP/MIME): Encrypted and signed', function(done) {
-                    emailDao.onIncomingMessage = function(messages) {
-                        emailDao.getBody({
-                            folder: currentFolder,
-                            message: messages[10]
-                        }, function(err, message) {
+                    emailDao.getBody({
+                        folder: inbox,
+                        message: inbox.messages[11]
+                    }, function(err, message) {
+                        expect(err).to.not.exist;
+                        emailDao.decryptBody({
+                            message: message,
+                            folder: inbox
+                        }, function(err) {
                             expect(err).to.not.exist;
-                            emailDao.decryptBody({
-                                message: message,
-                                folder: currentFolder
-                            }, function(err) {
-                                expect(err).to.not.exist;
-                                expect(message.encrypted).to.be.true;
-                                expect(message.signed).to.be.true;
-                                expect(message.signaturesValid).to.be.true;
-                                expect(message.attachments.length).to.equal(1);
-                                expect(message.body).to.equal('test15');
-                                done();
-                            });
+                            expect(message.encrypted).to.be.true;
+                            expect(message.signed).to.be.true;
+                            expect(message.signaturesValid).to.be.true;
+                            expect(message.attachments.length).to.equal(1);
+                            expect(message.body).to.equal('test15');
+                            done();
                         });
-                    };
+                    });
                 });
 
                 it('should parse Apple Mail (no attachment): Encrypted and signed', function(done) {
-                    emailDao.onIncomingMessage = function(messages) {
-                        emailDao.getBody({
-                            folder: currentFolder,
-                            message: messages[11]
-                        }, function(err, message) {
+                    emailDao.getBody({
+                        folder: inbox,
+                        message: inbox.messages[12]
+                    }, function(err, message) {
+                        expect(err).to.not.exist;
+                        emailDao.decryptBody({
+                            message: message,
+                            folder: inbox
+                        }, function(err) {
                             expect(err).to.not.exist;
-                            emailDao.decryptBody({
-                                message: message,
-                                folder: currentFolder
-                            }, function(err) {
-                                expect(err).to.not.exist;
-                                expect(message.encrypted).to.be.true;
-                                expect(message.signed).to.be.true;
-                                expect(message.signaturesValid).to.be.true;
-                                expect(message.attachments.length).to.equal(0);
-                                expect(message.body).to.equal('test12');
-                                done();
-                            });
+                            expect(message.encrypted).to.be.true;
+                            expect(message.signed).to.be.true;
+                            expect(message.signaturesValid).to.be.true;
+                            expect(message.attachments.length).to.equal(0);
+                            expect(message.body).to.equal('test12');
+                            done();
                         });
-                    };
+                    });
                 });
 
                 it('should parse Apple Mail (no attachment): Encrypted', function(done) {
-                    emailDao.onIncomingMessage = function(messages) {
-                        emailDao.getBody({
-                            folder: currentFolder,
-                            message: messages[12]
-                        }, function(err, message) {
+                    emailDao.getBody({
+                        folder: inbox,
+                        message: inbox.messages[13]
+                    }, function(err, message) {
+                        expect(err).to.not.exist;
+                        emailDao.decryptBody({
+                            message: message,
+                            folder: inbox
+                        }, function(err) {
                             expect(err).to.not.exist;
-                            emailDao.decryptBody({
-                                message: message,
-                                folder: currentFolder
-                            }, function(err) {
-                                expect(err).to.not.exist;
-                                expect(message.encrypted).to.be.true;
-                                expect(message.signed).to.be.false;
-                                expect(message.signaturesValid).to.be.undefined;
-                                expect(message.attachments.length).to.equal(0);
-                                expect(message.body).to.equal('test13');
-                                done();
-                            });
+                            expect(message.encrypted).to.be.true;
+                            expect(message.signed).to.be.false;
+                            expect(message.signaturesValid).to.be.undefined;
+                            expect(message.attachments.length).to.equal(0);
+                            expect(message.body).to.equal('test13');
+                            done();
                         });
-                    };
+                    });
                 });
 
                 it('should parse Apple Mail (attachment - PGP/MIME): Signed', function(done) {
-                    emailDao.onIncomingMessage = function(messages) {
-                        emailDao.getBody({
-                            folder: currentFolder,
-                            message: messages[13]
-                        }, function(err, message) {
+                    emailDao.getBody({
+                        folder: inbox,
+                        message: inbox.messages[14]
+                    }, function(err, message) {
+                        expect(err).to.not.exist;
+                        emailDao.decryptBody({
+                            message: message,
+                            folder: inbox
+                        }, function(err) {
                             expect(err).to.not.exist;
-                            emailDao.decryptBody({
-                                message: message,
-                                folder: currentFolder
-                            }, function(err) {
-                                expect(err).to.not.exist;
-                                expect(message.encrypted).to.be.false;
-                                expect(message.signed).to.be.true;
-                                expect(message.signaturesValid).to.be.true;
-                                expect(message.attachments.length).to.equal(1);
-                                expect(message.body).to.equal('test17\n');
-                                done();
-                            });
+                            expect(message.encrypted).to.be.false;
+                            expect(message.signed).to.be.true;
+                            expect(message.signaturesValid).to.be.true;
+                            expect(message.attachments.length).to.equal(1);
+                            expect(message.body).to.equal('test17\n');
+                            done();
                         });
-                    };
+                    });
                 });
 
                 it('should parse Apple Mail (no attachment): Signed', function(done) {
-                    emailDao.onIncomingMessage = function(messages) {
-                        emailDao.getBody({
-                            folder: currentFolder,
-                            message: messages[14]
-                        }, function(err, message) {
+                    emailDao.getBody({
+                        folder: inbox,
+                        message: inbox.messages[15]
+                    }, function(err, message) {
+                        expect(err).to.not.exist;
+                        emailDao.decryptBody({
+                            message: message,
+                            folder: inbox
+                        }, function(err) {
                             expect(err).to.not.exist;
-                            emailDao.decryptBody({
-                                message: message,
-                                folder: currentFolder
-                            }, function(err) {
-                                expect(err).to.not.exist;
-                                expect(message.encrypted).to.be.false;
-                                expect(message.signed).to.be.true;
-                                expect(message.signaturesValid).to.be.true;
-                                expect(message.attachments.length).to.equal(0);
-                                expect(message.body).to.equal('test14');
-                                done();
-                            });
+                            expect(message.encrypted).to.be.false;
+                            expect(message.signed).to.be.true;
+                            expect(message.signaturesValid).to.be.true;
+                            expect(message.attachments.length).to.equal(0);
+                            expect(message.body).to.equal('test14');
+                            done();
                         });
-                    };
+                    });
                 });
 
                 it('should parse Thunderbird (attachment - PGP/MIME): Encrypted', function(done) {
-                    emailDao.onIncomingMessage = function(messages) {
-                        emailDao.getBody({
-                            folder: currentFolder,
-                            message: messages[15]
-                        }, function(err, message) {
+                    emailDao.getBody({
+                        folder: inbox,
+                        message: inbox.messages[16]
+                    }, function(err, message) {
+                        expect(err).to.not.exist;
+                        emailDao.decryptBody({
+                            message: message,
+                            folder: inbox
+                        }, function(err) {
                             expect(err).to.not.exist;
-                            emailDao.decryptBody({
-                                message: message,
-                                folder: currentFolder
-                            }, function(err) {
-                                expect(err).to.not.exist;
-                                expect(message.encrypted).to.be.true;
-                                expect(message.signed).to.be.false;
-                                expect(message.signaturesValid).to.be.undefined;
-                                expect(message.attachments.length).to.equal(1);
-                                expect(message.body).to.equal('test10');
-                                done();
-                            });
+                            expect(message.encrypted).to.be.true;
+                            expect(message.signed).to.be.false;
+                            expect(message.signaturesValid).to.be.undefined;
+                            expect(message.attachments.length).to.equal(1);
+                            expect(message.body).to.equal('test10');
+                            done();
                         });
-                    };
+                    });
                 });
 
                 it('should parse Thunderbird (attachment - PGP/MIME): Encrypted and signed', function(done) {
-                    emailDao.onIncomingMessage = function(messages) {
-                        emailDao.getBody({
-                            folder: currentFolder,
-                            message: messages[16]
-                        }, function(err, message) {
+                    emailDao.getBody({
+                        folder: inbox,
+                        message: inbox.messages[17]
+                    }, function(err, message) {
+                        expect(err).to.not.exist;
+                        emailDao.decryptBody({
+                            message: message,
+                            folder: inbox
+                        }, function(err) {
                             expect(err).to.not.exist;
-                            emailDao.decryptBody({
-                                message: message,
-                                folder: currentFolder
-                            }, function(err) {
-                                expect(err).to.not.exist;
-                                expect(message.encrypted).to.be.true;
-                                expect(message.signed).to.be.true;
-                                expect(message.signaturesValid).to.be.true;
-                                expect(message.attachments.length).to.equal(1);
-                                expect(message.body).to.equal('test9');
-                                done();
-                            });
+                            expect(message.encrypted).to.be.true;
+                            expect(message.signed).to.be.true;
+                            expect(message.signaturesValid).to.be.true;
+                            expect(message.attachments.length).to.equal(1);
+                            expect(message.body).to.equal('test9');
+                            done();
                         });
-                    };
+                    });
                 });
 
                 it('should parse Thunderbird (no attachment): Encrypted and signed', function(done) {
-                    emailDao.onIncomingMessage = function(messages) {
-                        emailDao.getBody({
-                            folder: currentFolder,
-                            message: messages[17]
-                        }, function(err, message) {
+                    emailDao.getBody({
+                        folder: inbox,
+                        message: inbox.messages[18]
+                    }, function(err, message) {
+                        expect(err).to.not.exist;
+                        emailDao.decryptBody({
+                            message: message,
+                            folder: inbox
+                        }, function(err) {
                             expect(err).to.not.exist;
-                            emailDao.decryptBody({
-                                message: message,
-                                folder: currentFolder
-                            }, function(err) {
-                                expect(err).to.not.exist;
-                                expect(message.encrypted).to.be.true;
-                                expect(message.signed).to.be.true;
-                                expect(message.signaturesValid).to.be.true;
-                                expect(message.attachments.length).to.equal(0);
-                                expect(message.body).to.equal('test4\n');
-                                done();
-                            });
+                            expect(message.encrypted).to.be.true;
+                            expect(message.signed).to.be.true;
+                            expect(message.signaturesValid).to.be.true;
+                            expect(message.attachments.length).to.equal(0);
+                            expect(message.body).to.equal('test4\n');
+                            done();
                         });
-                    };
+                    });
                 });
 
                 it('should parse Thunderbird (no attachment): Encrypted', function(done) {
-                    emailDao.onIncomingMessage = function(messages) {
-                        emailDao.getBody({
-                            folder: currentFolder,
-                            message: messages[18]
-                        }, function(err, message) {
+                    emailDao.getBody({
+                        folder: inbox,
+                        message: inbox.messages[19]
+                    }, function(err, message) {
+                        expect(err).to.not.exist;
+                        emailDao.decryptBody({
+                            message: message,
+                            folder: inbox
+                        }, function(err) {
                             expect(err).to.not.exist;
-                            emailDao.decryptBody({
-                                message: message,
-                                folder: currentFolder
-                            }, function(err) {
-                                expect(err).to.not.exist;
-                                expect(message.encrypted).to.be.true;
-                                expect(message.signed).to.be.false;
-                                expect(message.signaturesValid).to.be.undefined;
-                                expect(message.attachments.length).to.equal(0);
-                                expect(message.body).to.equal('test5\n');
-                                done();
-                            });
+                            expect(message.encrypted).to.be.true;
+                            expect(message.signed).to.be.false;
+                            expect(message.signaturesValid).to.be.undefined;
+                            expect(message.attachments.length).to.equal(0);
+                            expect(message.body).to.equal('test5\n');
+                            done();
                         });
-                    };
+                    });
                 });
 
                 it('should parse Thunderbird (no attachment): plaintext reply to an encrypted message', function(done) {
-                    emailDao.onIncomingMessage = function(messages) {
-                        emailDao.getBody({
-                            folder: currentFolder,
-                            message: messages[19]
-                        }, function(err, message) {
+                    emailDao.getBody({
+                        folder: inbox,
+                        message: inbox.messages[20]
+                    }, function(err, message) {
+                        expect(err).to.not.exist;
+                        emailDao.decryptBody({
+                            message: message,
+                            folder: inbox
+                        }, function(err) {
                             expect(err).to.not.exist;
-                            emailDao.decryptBody({
-                                message: message,
-                                folder: currentFolder
-                            }, function(err) {
-                                expect(err).to.not.exist;
-                                expect(message.encrypted).to.be.false;
-                                expect(message.signed).to.be.false;
-                                expect(message.signaturesValid).to.be.undefined;
-                                expect(message.attachments.length).to.equal(0);
-                                expect(message.body).to.equal('test8\n\n23.06.14 21:12, safewithme kirjutas:\n> test8');
-                                done();
-                            });
+                            expect(message.encrypted).to.be.false;
+                            expect(message.signed).to.be.false;
+                            expect(message.signaturesValid).to.be.undefined;
+                            expect(message.attachments.length).to.equal(0);
+                            expect(message.body).to.equal('test8\n\n23.06.14 21:12, safewithme kirjutas:\n> test8');
+                            done();
                         });
-                    };
+                    });
                 });
 
                 it('should parse Thunderbird (attachment - PGP/MIME): Signed', function(done) {
-                    emailDao.onIncomingMessage = function(messages) {
-                        emailDao.getBody({
-                            folder: currentFolder,
-                            message: messages[20]
-                        }, function(err, message) {
+                    emailDao.getBody({
+                        folder: inbox,
+                        message: inbox.messages[21]
+                    }, function(err, message) {
+                        expect(err).to.not.exist;
+                        emailDao.decryptBody({
+                            message: message,
+                            folder: inbox
+                        }, function(err) {
                             expect(err).to.not.exist;
-                            emailDao.decryptBody({
-                                message: message,
-                                folder: currentFolder
-                            }, function(err) {
-                                expect(err).to.not.exist;
-                                expect(message.encrypted).to.be.false;
-                                expect(message.signed).to.be.true;
-                                expect(message.signaturesValid).to.be.true;
-                                expect(message.attachments.length).to.equal(1);
-                                expect(message.body).to.equal('test11');
-                                done();
-                            });
+                            expect(message.encrypted).to.be.false;
+                            expect(message.signed).to.be.true;
+                            expect(message.signaturesValid).to.be.true;
+                            expect(message.attachments.length).to.equal(1);
+                            expect(message.body).to.equal('test11');
+                            done();
                         });
-                    };
+                    });
                 });
 
                 it('should parse Thunderbird (no attachment): Signed w/ PGP/INLINE', function(done) {
-                    emailDao.onIncomingMessage = function(messages) {
-                        emailDao.getBody({
-                            folder: currentFolder,
-                            message: messages[21]
-                        }, function(err, message) {
+                    emailDao.getBody({
+                        folder: inbox,
+                        message: inbox.messages[22]
+                    }, function(err, message) {
+                        expect(err).to.not.exist;
+                        emailDao.decryptBody({
+                            message: message,
+                            folder: inbox
+                        }, function(err) {
                             expect(err).to.not.exist;
-                            emailDao.decryptBody({
-                                message: message,
-                                folder: currentFolder
-                            }, function(err) {
-                                expect(err).to.not.exist;
-                                expect(message.encrypted).to.be.false;
-                                expect(message.signed).to.be.true;
-                                expect(message.signaturesValid).to.be.true;
-                                expect(message.attachments.length).to.equal(0);
-                                expect(message.body).to.equal('test6');
-                                done();
-                            });
+                            expect(message.encrypted).to.be.false;
+                            expect(message.signed).to.be.true;
+                            expect(message.signaturesValid).to.be.true;
+                            expect(message.attachments.length).to.equal(0);
+                            expect(message.body).to.equal('test6');
+                            done();
                         });
-                    };
+                    });
                 });
 
                 it('should parse Mailvelope: encrypted (unsigned) w/PGP/INLINE', function(done) {
-                    emailDao.onIncomingMessage = function(messages) {
-                        emailDao.getBody({
-                            folder: currentFolder,
-                            message: messages[22]
-                        }, function(err, message) {
+                    emailDao.getBody({
+                        folder: inbox,
+                        message: inbox.messages[23]
+                    }, function(err, message) {
+                        expect(err).to.not.exist;
+                        emailDao.decryptBody({
+                            message: message,
+                            folder: inbox
+                        }, function(err) {
                             expect(err).to.not.exist;
-                            emailDao.decryptBody({
-                                message: message,
-                                folder: currentFolder
-                            }, function(err) {
-                                expect(err).to.not.exist;
-                                expect(message.encrypted).to.be.true;
-                                expect(message.signed).to.be.false;
-                                expect(message.signaturesValid).to.be.undefined;
-                                expect(message.attachments.length).to.equal(0);
-                                expect(message.body).to.equal('this is a test');
-                                done();
-                            });
+                            expect(message.encrypted).to.be.true;
+                            expect(message.signed).to.be.false;
+                            expect(message.signaturesValid).to.be.undefined;
+                            expect(message.attachments.length).to.equal(0);
+                            expect(message.body).to.equal('this is a test');
+                            done();
                         });
-                    };
+                    });
                 });
             });
         });
 
         describe('SMTP Tests', function() {
+            afterEach(function() {
+                smtpServer.onmail.restore();
+            });
+
             it('should send a plaintext message', function(done) {
                 sinon.stub(smtpServer, 'onmail', function(mail) {
                     expect(mail.from).to.equal(testAccount.user);
@@ -797,7 +755,6 @@ define(function(require) {
                 }, function(err) {
                     expect(err).to.not.exist;
                     expect(smtpServer.onmail.callCount).to.equal(1);
-                    smtpServer.onmail.restore();
                     done();
                 });
             });
@@ -824,71 +781,53 @@ define(function(require) {
                 }, function(err) {
                     expect(err).to.not.exist;
                     expect(smtpServer.onmail.callCount).to.equal(1);
-                    smtpServer.onmail.restore();
                     done();
                 });
             });
         });
 
         describe('Compose-Send-Receive-Read round trip', function() {
-            var currentFolder;
-
-            beforeEach(function(done) {
-                emailDao.openFolder({
-                    folder: {
-                        path: 'INBOX'
-                    }
-                }, function(err) {
-                    expect(err).to.not.exist;
-                    currentFolder = emailDao._account.folders.filter(function(folder) {
-                        return folder.path === 'INBOX';
-                    }).pop();
-                    expect(currentFolder).to.exist;
-                    done();
-                });
-
+            before(function() {
                 sinon.stub(smtpServer, 'onmail', function(mail) {
                     setTimeout(function() {
-                        imapServer.appendMessage(currentFolder.path, [], false, mail.body);
+                        imapServer.appendMessage(inbox.path, [], false, mail.body);
                     }, 1000);
                 });
             });
 
-            afterEach(function() {
+            after(function() {
                 smtpServer.onmail.restore();
             });
 
             it('should send & receive a signed plaintext message', function(done) {
-                var expectedBody = "asdasdasdasdasdasdasdasdasdasdasdasd asdasdasdasdasdasdasdasdasdasdasdasd asdasdasdasdasdasdasdasdasdasdasdasd asdasdasdasdasdasdasdasdasdasdasdasd asdasdasdasdasdasdasdasdasdasdasdasd asdasdasdasdasdasdasdasdasdasdasdasd asdasdasdasdasdasdasdasdasdasdasdasd asdasdasdasdasdasdasdasdasdasdasdasd asdasdasdasdasdasdasdasdasdasdasdasd asdasdasdasdasdasdasdasdasdasdasdasd asdasdasdasdasdasdasdasdasdasdasdasd ";
+                var expectedBody = "asdasdasdasdasdasdasdasdasdasdasdasd asdasdasdasdasdasdasdasdasdasdasdasd";
 
-                emailDao.onIncomingMessage = function() {
-                    emailDao.onIncomingMessage = function(messages) {
-                        emailDao.getBody({
-                            folder: currentFolder,
-                            message: messages[0]
-                        }, function(err, message) {
-                            expect(err).to.not.exist;
-                            expect(message.encrypted).to.be.false;
-                            expect(message.signed).to.be.true;
-                            expect(message.signaturesValid).to.be.true;
-                            expect(message.attachments.length).to.equal(0);
-                            expect(message.body).to.equal(expectedBody + str.signature + config.cloudUrl + '/' + testAccount.user);
-                            done();
-                        });
-                    };
-
-                    emailDao.sendPlaintext({
-                        smtpclient: smtpClient,
-                        email: {
-                            from: [testAccount.user],
-                            to: [testAccount.user],
-                            subject: 'plaintext test',
-                            body: expectedBody
-                        }
-                    }, function(err) {
+                emailDao.onIncomingMessage = function(messages) {
+                    emailDao.getBody({
+                        folder: inbox,
+                        message: messages[0]
+                    }, function(err, message) {
                         expect(err).to.not.exist;
+                        expect(message.encrypted).to.be.false;
+                        expect(message.signed).to.be.true;
+                        expect(message.signaturesValid).to.be.true;
+                        expect(message.attachments.length).to.equal(0);
+                        expect(message.body).to.equal(expectedBody + str.signature + config.cloudUrl + '/' + testAccount.user);
+                        done();
                     });
                 };
+
+                emailDao.sendPlaintext({
+                    smtpclient: smtpClient,
+                    email: {
+                        from: [testAccount.user],
+                        to: [testAccount.user],
+                        subject: 'plaintext test',
+                        body: expectedBody
+                    }
+                }, function(err) {
+                    expect(err).to.not.exist;
+                });
             });
         });
     });
