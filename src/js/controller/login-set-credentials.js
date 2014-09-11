@@ -1,6 +1,10 @@
 define(function(require) {
     'use strict';
 
+    var ENCRYPTION_METHOD_NONE = 0;
+    var ENCRYPTION_METHOD_STARTTLS = 1;
+    var ENCRYPTION_METHOD_TLS = 2;
+
     var appCtrl = require('js/app-controller'),
         config = require('js/app-config').config,
         ImapClient = require('imap-client'),
@@ -24,17 +28,34 @@ define(function(require) {
             // use non-editable smtp and imap presets for provider
             $scope.smtpHost = config[provider].smtp.host;
             $scope.smtpPort = config[provider].smtp.port;
-            $scope.smtpSecure = config[provider].smtp.secure;
             $scope.smtpCert = config[provider].smtp.ca;
             $scope.smtpPinned = config[provider].smtp.pinned;
+
+            if (config[provider].smtp.secure && !config[provider].smtp.ignoreTLS) {
+                $scope.smtpEncryption = ENCRYPTION_METHOD_TLS;
+            } else if (!config[provider].smtp.secure && !config[provider].smtp.ignoreTLS) {
+                $scope.smtpEncryption = ENCRYPTION_METHOD_STARTTLS;
+            } else {
+                $scope.smtpEncryption = ENCRYPTION_METHOD_NONE;
+            }
+
             $scope.imapHost = config[provider].imap.host;
             $scope.imapPort = config[provider].imap.port;
-            $scope.imapSecure = config[provider].imap.secure;
             $scope.imapCert = config[provider].imap.ca;
             $scope.imapPinned = config[provider].imap.pinned;
+
+            if (config[provider].imap.secure && !config[provider].imap.ignoreTLS) {
+                $scope.imapEncryption = ENCRYPTION_METHOD_TLS;
+            } else if (!config[provider].imap.secure && !config[provider].imap.ignoreTLS) {
+                $scope.imapEncryption = ENCRYPTION_METHOD_STARTTLS;
+            } else {
+                $scope.imapEncryption = ENCRYPTION_METHOD_NONE;
+            }
         }
 
         $scope.test = function(imapClient, smtpClient) {
+            var imapEncryption = parseInt($scope.imapEncryption, 10);
+            var smtpEncryption = parseInt($scope.smtpEncryption, 10);
             $scope.credentialsIncomplete = false;
             $scope.connectionError = false;
             $scope.smtpOk = undefined;
@@ -48,7 +69,8 @@ define(function(require) {
             var imap = imapClient || new ImapClient({
                 host: $scope.imapHost.toLowerCase(),
                 port: $scope.imapPort,
-                secure: $scope.imapSecure,
+                secure: imapEncryption === ENCRYPTION_METHOD_TLS,
+                ignoreTLS: imapEncryption === ENCRYPTION_METHOD_NONE,
                 ca: $scope.imapCert,
                 auth: {
                     user: $scope.username || $scope.emailAddress,
@@ -70,7 +92,8 @@ define(function(require) {
             };
 
             var smtp = smtpClient || new SmtpClient($scope.smtpHost.toLowerCase(), $scope.smtpPort, {
-                useSecureTransport: $scope.smtpSecure,
+                useSecureTransport: smtpEncryption === ENCRYPTION_METHOD_TLS,
+                ignoreTLS: smtpEncryption === ENCRYPTION_METHOD_NONE,
                 ca: $scope.smtpCert,
                 auth: {
                     user: $scope.username || $scope.emailAddress,
@@ -124,6 +147,9 @@ define(function(require) {
         }
 
         function login() {
+            var imapEncryption = parseInt($scope.imapEncryption, 10);
+            var smtpEncryption = parseInt($scope.smtpEncryption, 10);
+
             auth.setCredentials({
                 provider: provider,
                 emailAddress: $scope.emailAddress,
@@ -133,14 +159,16 @@ define(function(require) {
                 imap: {
                     host: $scope.imapHost.toLowerCase(),
                     port: $scope.imapPort,
-                    secure: $scope.imapSecure,
+                    secure: imapEncryption === ENCRYPTION_METHOD_TLS,
+                    ignoreTLS: imapEncryption === ENCRYPTION_METHOD_NONE,
                     ca: $scope.imapCert,
                     pinned: !!$scope.imapPinned
                 },
                 smtp: {
                     host: $scope.smtpHost.toLowerCase(),
                     port: $scope.smtpPort,
-                    secure: $scope.smtpSecure,
+                    secure: smtpEncryption === ENCRYPTION_METHOD_TLS,
+                    ignoreTLS: smtpEncryption === ENCRYPTION_METHOD_NONE,
                     ca: $scope.smtpCert,
                     pinned: !!$scope.smtpPinned
                 }

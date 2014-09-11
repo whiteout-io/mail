@@ -46,17 +46,16 @@ define(function(require) {
             it('should work', function(done) {
                 var imapCert = 'imapcertimapcertimapcertimapcertimapcertimapcert',
                     smtpCert = 'smtpcertsmtpcertsmtpcertsmtpcertsmtpcertsmtpcert';
-                var emailAddress, password, smtpHost, smtpPort, smtpSecure, imapHost, imapPort, imapSecure, realname;
 
-                scope.emailAddress = emailAddress = 'emailemailemailemail';
-                scope.password = password = 'passwdpasswdpasswdpasswd';
-                scope.smtpHost = smtpHost = 'hosthosthost';
-                scope.smtpPort = smtpPort = 1337;
-                scope.smtpSecure = smtpSecure = true;
-                scope.imapHost = imapHost = 'hosthosthost';
-                scope.imapPort = imapPort = 1337;
-                scope.imapSecure = imapSecure = true;
-                scope.realname = realname = 'peter pan';
+                scope.emailAddress = 'emailemailemailemail';
+                scope.password = 'passwdpasswdpasswdpasswd';
+                scope.smtpHost = 'hosthosthost';
+                scope.smtpPort = 1337;
+                scope.smtpEncryption = '1'; // STARTTLS
+                scope.imapHost = 'hosthosthost';
+                scope.imapPort = 1337;
+                scope.imapEncryption = '2'; // TLS
+                scope.realname = 'peter pan';
 
                 imap.login.yields();
 
@@ -73,14 +72,16 @@ define(function(require) {
                         imap: {
                             host: scope.imapHost.toLowerCase(),
                             port: scope.imapPort,
-                            secure: scope.imapSecure,
+                            secure: true,
+                            ignoreTLS: false,
                             ca: scope.imapCert,
                             pinned: false
                         },
                         smtp: {
                             host: scope.smtpHost.toLowerCase(),
                             port: scope.smtpPort,
-                            secure: scope.smtpSecure,
+                            secure: false,
+                            ignoreTLS: false,
                             ca: scope.smtpCert,
                             pinned: false
                         }

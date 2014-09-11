@@ -1,8 +1,6 @@
 .input-text {
     background-color: white;
-    border-width: 1px;
-    border-style: solid;
-    border-color: $color-grey-lighter;
+    border: 1px solid $color-grey-lighter;
     color: $color-grey;
     font-size: $font-size-base;
     padding: 8px 10px;
@@ -24,3 +22,4 @@
     color: red;
     font-size: em(13);
 }
+

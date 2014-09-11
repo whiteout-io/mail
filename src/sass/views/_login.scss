@@ -163,27 +163,40 @@
             text-decoration: none;
         }
 
-        @include respond-to(desktop) {
-            input[type="text"],
-            input[type="password"],
-            input[type="file"] {
-                width: 100%;
-            }
-        }
-
         .details {
-            div {
-                margin: 0;
-            }
+            fieldset {
+                margin: 0 0 10px 0;
 
-            label,
-            input[type="text"],
-            input[type="number"] {
-                width: auto;
-                display: inline-block;
-
-                &.username {
+                select {
                     width: 100%;
+                }
+
+                div {
+                    width: 100%;
+                    margin: 0;
+                    display: flex;
+
+                    input[type="text"] {
+                        flex: 2;
+                    }
+    
+                    input[type="number"] {
+                        flex: 1;
+                        margin-right: 0;
+                    }
+                }
+
+                label {
+                    position:relative
+                }
+                label:after {
+                    content: '<>';
+                    color: $color-grey-dark;
+                    transform:rotate(90deg);
+                    right: 8px;
+                    top: -3px;
+                    position:absolute;
+                    pointer-events:none;
                 }
             }
         }
