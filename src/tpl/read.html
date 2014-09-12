@@ -54,7 +54,7 @@
   </div><!--/.working-wrapper-->
 
   <div class="signature-status"
-     ng-show="state.mailList.selected.body && state.mailList.selected.signed && !state.mailList.selected.signaturesValid">
+     ng-show="(state.mailList.selected.body || state.mailList.selected.html) && state.mailList.selected.signed && !state.mailList.selected.signaturesValid">
     <p>Invalid PGP signature. This message could have been tampered with.</p>
   </div>
 
@@ -64,7 +64,7 @@
 
   <!-- Render html body in sandboxed iframe -->
   <div class="frame-wrapper"
-    ng-show="state.mailList.selected && (!state.mailList.selected.encrypted && state.mailList.selected.body) || (state.mailList.selected.encrypted && state.mailList.selected.decrypted)">
+    ng-show="state.mailList.selected && (!state.mailList.selected.encrypted && (state.mailList.selected.body || state.mailList.selected.html)) || (state.mailList.selected.encrypted && state.mailList.selected.decrypted)">
     <iframe sandbox="allow-popups allow-scripts" src="tpl/read-sandbox.html"
       frame-load>
     </iframe>
