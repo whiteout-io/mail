@@ -1010,9 +1010,10 @@ define(function(require) {
                 });
 
                 it('should read a signed pgp/inline from the device', function(done) {
-                    var message, pt;
+                    var message, pt, expected;
 
-                    pt = '-----BEGIN PGP SIGNED MESSAGE-----\n\ntest6\n-----BEGIN PGP SIGNATURE----------END PGP SIGNATURE-----';
+                    expected = 'Lorem ipsum Aliquip tempor veniam proident.\n\nafguab;igab;igubalw\n\nLorem ipsum Dolor sed irure sint in non.\n\n\n';
+                    pt = '-----BEGIN PGP SIGNED MESSAGE-----\nHash: WTFHASH\n\n' + expected + '\n-----BEGIN PGP SIGNATURE----------END PGP SIGNATURE-----';
                     message = {
                         uid: uid,
                         from: [{
@@ -1036,7 +1037,7 @@ define(function(require) {
                         expect(err).to.not.exist;
 
                         expect(msg).to.equal(message);
-                        expect(msg.body).to.equal('test6');
+                        expect(msg.body).to.equal(expected);
                         expect(message.signed).to.be.true;
                         expect(message.signaturesValid).to.be.true;
                         expect(message.loadingBody).to.be.false;

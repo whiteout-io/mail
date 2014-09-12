@@ -772,11 +772,11 @@ define(function(require) {
             /*
              * any content before/after the PGP block will be discarded,
              * "-----BEGIN/END (...)-----" must be at the start/end of a line,
-             * after \n\n the signed payload begins,
+             * after the hash (and possibly other) arbitrary headers, the signed payload begins,
              * the text is followed by a final \n and then the pgp signature begins
              * untrusted attachments and html is ignored
              */
-            var clearSignedMatch = /^-{5}BEGIN PGP SIGNED MESSAGE-{5}[\s\S]*\n\n([\s\S]*)\n-{5}BEGIN PGP SIGNATURE-{5}[\S\s]*-{5}END PGP SIGNATURE-{5}$/im.exec(body);
+            var clearSignedMatch = /^-{5}BEGIN PGP SIGNED MESSAGE-{5}\nHash:[ ][^\n]+\n(?:[A-Za-z]+:[ ][^\n]+\n)*\n([\s\S]*)\n-{5}BEGIN PGP SIGNATURE-{5}[\S\s]*-{5}END PGP SIGNATURE-{5}$/im.exec(body);
             if (clearSignedMatch) {
                 // PGP/INLINE signed
                 message.signed = true;
