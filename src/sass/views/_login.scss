@@ -104,10 +104,6 @@
             }
         }
 
-        .passphrase-label-ok {
-            color: green;
-        }
-
         .popover-info {
             display: none; // hide on mobile
         }
@@ -179,7 +175,7 @@
                     input[type="text"] {
                         flex: 2;
                     }
-    
+
                     input[type="number"] {
                         flex: 1;
                         margin-right: 0;

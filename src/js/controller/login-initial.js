@@ -9,9 +9,8 @@ define(function(require) {
 
         states = {
             IDLE: 1,
-            SET_PASSPHRASE: 2,
-            PROCESSING: 3,
-            DONE: 4
+            PROCESSING: 2,
+            DONE: 3
         };
         $scope.state.ui = states.IDLE; // initial state
 
@@ -37,9 +36,9 @@ define(function(require) {
         };
 
         /**
-         * Continue to set passphrase screen for keygen
+         * Continue to keygen
          */
-        $scope.setPassphrase = function() {
+        $scope.generateKey = function() {
             if (!$scope.state.agree) {
                 $scope.onError({
                     message: termsMsg
@@ -49,8 +48,29 @@ define(function(require) {
 
             // sing up to newsletter
             $scope.signUpToNewsletter();
-            // go to set passphrase screen
-            $scope.setState(states.SET_PASSPHRASE);
+            // go to set keygen screen
+            $scope.setState(states.PROCESSING);
+
+            setTimeout(function() {
+                emailDao.unlock({
+                    passphrase: undefined // generate key without passphrase
+                }, function(err) {
+                    if (err) {
+                        $scope.setState(states.IDLE);
+                        $scope.onError(err);
+                        return;
+                    }
+
+                    appController._auth.storeCredentials(function(err) {
+                        if (err) {
+                            return $scope.onError(err);
+                        }
+
+                        $location.path('/desktop');
+                        $scope.$apply();
+                    });
+                });
+            }, 500);
         };
 
         /**
@@ -85,86 +105,6 @@ define(function(require) {
             };
 
             xhr.send(formData);
-        };
-
-        /*
-         * Taken from jQuery validate.password plug-in 1.0
-         * http://bassistance.de/jquery-plugins/jquery-plugin-validate.password/
-         *
-         * Copyright (c) 2009 Jörn Zaefferer
-         *
-         * Licensed under the MIT
-         *   http://www.opensource.org/licenses/mit-license.php
-         */
-        $scope.checkPassphraseQuality = function() {
-            var passphrase = $scope.state.passphrase;
-            $scope.passphraseRating = 0;
-
-            var LOWER = /[a-z]/,
-                UPPER = /[A-Z]/,
-                DIGIT = /[0-9]/,
-                DIGITS = /[0-9].*[0-9]/,
-                SPECIAL = /[^a-zA-Z0-9]/,
-                SAME = /^(.)\1+$/;
-
-            function uncapitalize(str) {
-                return str.substring(0, 1).toLowerCase() + str.substring(1);
-            }
-
-            if (!passphrase) {
-                // no rating for empty passphrase
-                $scope.passphraseMsg = '';
-                return;
-            }
-
-            if (passphrase.length < 8 || SAME.test(passphrase)) {
-                $scope.passphraseMsg = 'Very weak';
-                return;
-            }
-
-            var lower = LOWER.test(passphrase),
-                upper = UPPER.test(uncapitalize(passphrase)),
-                digit = DIGIT.test(passphrase),
-                digits = DIGITS.test(passphrase),
-                special = SPECIAL.test(passphrase);
-
-            if (lower && upper && digit || lower && digits || upper && digits || special) {
-                $scope.passphraseMsg = 'Strong';
-                $scope.passphraseRating = 3;
-            } else if (lower && upper || lower && digit || upper && digit) {
-                $scope.passphraseMsg = 'Good';
-                $scope.passphraseRating = 2;
-            } else {
-                $scope.passphraseMsg = 'Weak';
-                $scope.passphraseRating = 1;
-            }
-        };
-
-        $scope.confirmPassphrase = function() {
-            var passphrase = $scope.state.passphrase;
-
-            $scope.setState(states.PROCESSING);
-
-            setTimeout(function() {
-                emailDao.unlock({
-                    passphrase: (passphrase) ? passphrase : undefined
-                }, function(err) {
-                    if (err) {
-                        $scope.setState(states.SET_PASSPHRASE);
-                        $scope.onError(err);
-                        return;
-                    }
-
-                    appController._auth.storeCredentials(function(err) {
-                        if (err) {
-                            return $scope.onError(err);
-                        }
-
-                        $location.path('/desktop');
-                        $scope.$apply();
-                    });
-                });
-            }, 500);
         };
 
         $scope.setState = function(state) {

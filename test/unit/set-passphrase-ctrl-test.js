@@ -79,5 +79,48 @@ define(function(require) {
                 scope.setPassphrase();
             });
         });
+
+        describe('check passphrase quality', function() {
+            it('should be too short', function() {
+                scope.newPassphrase = '&§DG36';
+                scope.checkPassphraseQuality();
+
+                expect(scope.passphraseMsg).to.equal('Very weak');
+                expect(scope.passphraseRating).to.equal(0);
+            });
+
+            it('should be very weak', function() {
+                scope.newPassphrase = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+                scope.checkPassphraseQuality();
+
+                expect(scope.passphraseMsg).to.equal('Very weak');
+                expect(scope.passphraseRating).to.equal(0);
+            });
+
+            it('should be weak', function() {
+                scope.newPassphrase = 'asdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf';
+                scope.checkPassphraseQuality();
+
+                expect(scope.passphraseMsg).to.equal('Weak');
+                expect(scope.passphraseRating).to.equal(1);
+            });
+
+            it('should be good', function() {
+                scope.newPassphrase = 'asdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf5';
+                scope.checkPassphraseQuality();
+
+                expect(scope.passphraseMsg).to.equal('Good');
+                expect(scope.passphraseRating).to.equal(2);
+            });
+
+            it('should be strong', function() {
+                scope.newPassphrase = '&§DG36abcd';
+                scope.checkPassphraseQuality();
+
+                expect(scope.passphraseMsg).to.equal('Strong');
+                expect(scope.passphraseRating).to.equal(3);
+            });
+        });
+
     });
 });

@@ -10,3 +10,4 @@ test/integration/src/
 src/lib/*.js
 src/js/crypto/aes-gcm.js
 src/js/crypto/util.js
+.elasticbeanstalk/

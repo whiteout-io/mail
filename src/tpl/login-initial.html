@@ -21,28 +21,12 @@
 
         <div>
           <button wo-touch="importKey()" class="btn btn-alt">Import existing key</button>
-          <button type="submit" wo-touch="setPassphrase()" class="btn"tabindex="3">Generate new key</button>
+          <button type="submit" wo-touch="generateKey()" class="btn"tabindex="3">Generate new key</button>
         </div>
       </form>
     </div>
 
     <div ng-show="state.ui === 2">
-      <p><b>Set passphrase.</b> You can set a passphrase to protect your key on disk. This must be entered everytime you start the app. For no passphrase just press continue.</p>
-
-      <form>
-        <div>
-          <label class="input-error-message" ng-class="{'passphrase-label-ok': passphraseRating >= 2}">{{passphraseMsg}}</label><br>
-          <input class="input-text" type="password" ng-model="state.passphrase" ng-change="checkPassphraseQuality()" placeholder="Enter passphrase" tabindex="1" focus-me="true">
-          <input class="input-text" type="password" ng-model="state.confirmation" ng-class="{'input-text-error': (state.confirmation || state.passphrase) && state.confirmation !== state.passphrase}" placeholder="Confirm passphrase" tabindex="2">
-        </div>
-
-        <div>
-          <button type="submit" wo-touch="confirmPassphrase()" class="btn" ng-disabled="(state.confirmation || state.passphrase) && state.confirmation !== state.passphrase" tabindex="3">Continue</button>
-        </div>
-      </form>
-    </div>
-
-    <div ng-show="state.ui === 3">
       <p><b>Generating key.</b> Please stand by. This can take a while...</p>
       <div class="working">
         <span class="spinner"></span>
