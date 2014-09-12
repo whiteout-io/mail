@@ -179,10 +179,7 @@ define(function(require) {
                 var keyId = '12345';
 
                 restDaoStub.get.withArgs({
-                    uri: '/privatekey/user/' + emailAddress + '/key/' + keyId,
-                    payload: {
-                        ignoreRecovery: true
-                    }
+                    uri: '/privatekey/user/' + emailAddress + '/key/' + keyId + '?ignoreRecovery=true'
                 }).yields();
 
                 privkeyDao.hasPrivateKey({

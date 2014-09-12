@@ -124,10 +124,7 @@ define(function() {
         }
 
         this._restDao.get({
-            uri: '/privatekey/user/' + options.userId + '/key/' + options.keyId,
-            payload: {
-                ignoreRecovery: true
-            }
+            uri: '/privatekey/user/' + options.userId + '/key/' + options.keyId + '?ignoreRecovery=true',
         }, function(err) {
             // 404: there is no encrypted private key on the server
             if (err && err.code !== 200) {
