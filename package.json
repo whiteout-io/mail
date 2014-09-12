@@ -32,7 +32,7 @@
         "requirejs": "~2.1.14"
     },
     "devDependencies": {
-        "angularjs": "https://github.com/angular/angular.js/tarball/v1.2.8",
+        "angularjs": "https://github.com/whiteout-io/angular.js/tarball/npm-version",
         "browsercrow": "https://github.com/whiteout-io/browsercrow/tarball/master",
         "browsersmtp": "https://github.com/whiteout-io/browsersmtp/tarball/master",
         "grunt": "~0.4.1",
