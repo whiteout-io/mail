@@ -1,6 +1,6 @@
 {
     "packageId": "io.whiteout.WhiteoutMail",
-    "versionCode": 6,
+    "versionCode": 7,
     "CFBundleVersion": "1.1.1",
 
     "ios": {
