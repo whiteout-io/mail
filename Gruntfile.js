@@ -123,7 +123,8 @@ module.exports = function(grunt) {
                     'axe-logger/axe.js',
                     'dompurify/purify.js',
                     'jquery/dist/jquery.min.js',
-                    'ng-infinite-scroll/build/ng-infinite-scroll.min.js'
+                    'ng-infinite-scroll/build/ng-infinite-scroll.min.js',
+                    'ng-tags-input/build/ng-tags-input.min.js'
                 ],
                 dest: 'src/lib/'
             },
