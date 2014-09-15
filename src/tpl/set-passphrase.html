@@ -6,16 +6,21 @@
 
   <div class="content">
     <div class="dialog view-set-passphrase">
+      <p>You can set a passphrase to protect your key on disk. This must be entered everytime you start the app.</p>
 
       <table>
         <tbody>
           <tr>
             <td><label>Current passphrase</label></td>
-            <td><input class="input-text" type="password" ng-model="oldPassphrase" ng-change="checkPassphraseQuality()" tabindex="1" focus-me="true"></td>
+            <td><input class="input-text" type="password" ng-model="oldPassphrase" tabindex="1" focus-me="true"></td>
           </tr>
           <tr>
-            <td><label>New passphrase</label></td>
-            <td><input class="input-text" type="password" ng-model="newPassphrase" ng-change="checkPassphraseQuality()" tabindex="2"></td>
+            <td></td>
+            <td><label class="input-error-message" ng-class="{'passphrase-label-ok': passphraseRating >= 2}">{{passphraseMsg}}</label></td>
+          </tr>
+          <tr>
+            <td class="no-padding"><label>New passphrase</label></td>
+            <td class="no-padding"><input class="input-text" type="password" ng-model="newPassphrase" ng-change="checkPassphraseQuality()" tabindex="2"></td>
           </tr>
           <tr>
             <td><label>Confirm passphrase</label></td>

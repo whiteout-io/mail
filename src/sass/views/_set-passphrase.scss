@@ -1,5 +1,14 @@
 .view-set-passphrase {
 
+    p {
+        margin: 40px auto 0;
+        width: 90%;
+    }
+
+    .passphrase-label-ok {
+        color: green;
+    }
+
     .inputs {
         margin: 40px 60px 30px;
 
@@ -9,16 +18,20 @@
     }
 
     table {
-        margin: 50px auto 60px auto;
-        
+        margin: 40px auto 60px auto;
+
         td {
-            padding-top: 15px;
+            padding-top: 16px;
 
             &:first-child {
                 text-align: right;
-                padding-right: 15px;
+                padding-right: 16px;
                 font-weight: bold;
             }
+        }
+
+        td.no-padding {
+            padding-top: 0;
         }
     }
 
