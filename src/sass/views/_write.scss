@@ -54,6 +54,10 @@
                     color: $color-blue;
                     text-decoration: underline;
                 }
+
+                &.ng-animate {
+                    transition: none;
+                }
             }
         }
     }

@@ -1,64 +1,64 @@
 {
-  "name": "whiteout-mail",
-  "version": "0.0.1",
-  "description": "Mail App with integrated OpenPGP encryption.",
-  "author": "Whiteout Networks",
-  "homepage": "https://whiteout.io",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/whiteout-io/mail-html5.git"
-  },
-  "keywords": [
-    "email",
-    "mail",
-    "client",
-    "app",
-    "openpgp",
-    "pgp",
-    "gpg",
-    "imap",
-    "smtp"
-  ],
-  "engines": {
-    "node": ">=0.10"
-  },
-  "scripts": {
-    "postinstall": "grunt",
-    "test": "grunt && grunt test",
-    "start": "node server.js"
-  },
-  "dependencies": {
-    "axe-logger": "~0.0.2",
-    "compression": "^1.0.11",
-    "crypto-lib": "~0.2.1",
-    "dompurify": "~0.4.2",
-    "express": "^4.8.3",
-    "imap-client": "~0.4.0",
-    "jquery": "~2.1.1",
-    "mailreader": "~0.3.5",
-    "ng-infinite-scroll": "~1.1.2",
-    "pgpbuilder": "~0.4.0",
-    "pgpmailer": "~0.4.0",
-    "requirejs": "~2.1.14"
-  },
-  "devDependencies": {
-    "angularjs": "https://github.com/whiteout-io/angular.js/tarball/npm-version",
-    "browsercrow": "https://github.com/whiteout-io/browsercrow/tarball/master",
-    "browsersmtp": "https://github.com/whiteout-io/browsersmtp/tarball/master",
-    "grunt": "~0.4.1",
-    "mocha": "~1.13.0",
-    "chai": "~1.7.2",
-    "sinon": "~1.7.3",
-    "grunt-contrib-connect": "~0.5.0",
-    "grunt-contrib-jshint": "~0.6.4",
-    "grunt-mocha": "~0.4.1",
-    "grunt-contrib-clean": "~0.5.0",
-    "grunt-csso": "~0.6.1",
-    "grunt-contrib-sass": "~0.7.3",
-    "grunt-autoprefixer": "~0.7.2",
-    "grunt-contrib-watch": "~0.5.3",
-    "grunt-contrib-copy": "~0.4.1",
-    "grunt-contrib-compress": "~0.5.2",
-    "grunt-node-webkit-builder": "~0.1.17"
-  }
+    "name": "whiteout-mail",
+    "version": "0.0.1",
+    "description": "Mail App with integrated OpenPGP encryption.",
+    "author": "Whiteout Networks",
+    "homepage": "https://whiteout.io",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/whiteout-io/mail-html5.git"
+    },
+    "keywords": [
+        "email",
+        "mail",
+        "client",
+        "app",
+        "openpgp",
+        "pgp",
+        "gpg",
+        "imap",
+        "smtp"
+    ],
+    "engines": {
+        "node": ">=0.10"
+    },
+    "scripts": {
+        "postinstall": "grunt",
+        "test": "grunt && grunt test",
+        "start": "node server.js"
+    },
+    "dependencies": {
+        "axe-logger": "~0.0.2",
+        "compression": "^1.0.11",
+        "crypto-lib": "~0.2.1",
+        "dompurify": "~0.4.2",
+        "express": "^4.8.3",
+        "imap-client": "~0.4.0",
+        "jquery": "~2.1.1",
+        "mailreader": "~0.3.5",
+        "ng-infinite-scroll": "~1.1.2",
+        "pgpbuilder": "~0.4.0",
+        "pgpmailer": "~0.4.0",
+        "requirejs": "~2.1.14"
+    },
+    "devDependencies": {
+        "angularjs": "https://github.com/whiteout-io/angular.js/tarball/npm-version",
+        "browsercrow": "https://github.com/whiteout-io/browsercrow/tarball/master",
+        "browsersmtp": "https://github.com/whiteout-io/browsersmtp/tarball/master",
+        "grunt": "~0.4.1",
+        "mocha": "~1.13.0",
+        "chai": "~1.7.2",
+        "sinon": "~1.7.3",
+        "grunt-contrib-connect": "~0.5.0",
+        "grunt-contrib-jshint": "~0.6.4",
+        "grunt-mocha": "~0.4.1",
+        "grunt-contrib-clean": "~0.5.0",
+        "grunt-csso": "~0.6.1",
+        "grunt-contrib-sass": "~0.7.3",
+        "grunt-autoprefixer": "~0.7.2",
+        "grunt-contrib-watch": "~0.5.3",
+        "grunt-contrib-copy": "~0.4.1",
+        "grunt-contrib-compress": "~0.5.2",
+        "grunt-node-webkit-builder": "~0.1.17"
+    }
 }

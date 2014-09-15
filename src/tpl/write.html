@@ -14,7 +14,7 @@
          focus-input-on-click>
         <label>To:</label>
         <tags-input class="tags-input" ng-model="to" type="email" tabindex="1" add-on-space="true" add-on-enter="true" enable-editing-last-tag="true"
-          tag-style="tagStyle" display-property="address" on-tag-added="verify($tag)"
+          tag-style="tagStyle" display-property="address" on-tag-added="verify($tag)" on-tag-removed="checkSendStatus()"
           allowed-tags-pattern='^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$'
           placeholder="add recipient">
           <auto-complete source="lookupAddressBook($query)" min-length="1"></auto-complete>
@@ -25,7 +25,7 @@
          focus-input-on-click>
         <label>Cc:</label>
         <tags-input class="tags-input" ng-model="cc" type="email" tabindex="1" add-on-space="true" add-on-enter="true" enable-editing-last-tag="true"
-          tag-style="tagStyle" display-property="address" on-tag-added="verify($tag)"
+          tag-style="tagStyle" display-property="address" on-tag-added="verify($tag)" on-tag-removed="checkSendStatus()"
           allowed-tags-pattern='^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$'
           placeholder="add cc">
           <auto-complete source="lookupAddressBook($query)" min-length="1"></auto-complete>
@@ -36,7 +36,7 @@
          focus-input-on-click>
         <label>Bcc:</label>
         <tags-input class="tags-input" ng-model="bcc" type="email" tabindex="1" add-on-space="true" add-on-enter="true" enable-editing-last-tag="true"
-          tag-style="tagStyle" display-property="address" on-tag-added="verify($tag)"
+          tag-style="tagStyle" display-property="address" on-tag-added="verify($tag)" on-tag-removed="checkSendStatus()"
           allowed-tags-pattern='^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$'
           placeholder="add bcc">
           <auto-complete source="lookupAddressBook($query)" min-length="1"></auto-complete>
