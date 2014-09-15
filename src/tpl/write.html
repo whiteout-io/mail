@@ -17,7 +17,7 @@
           tag-style="tagStyle" display-property="address" on-tag-added="verify($tag)"
           allowed-tags-pattern='^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$'
           placeholder="add recipient">
-          <auto-complete source="lookupAddressBook($query)"></auto-complete>
+          <auto-complete source="lookupAddressBook($query)" min-length="1"></auto-complete>
         </tags-input>
       </p>
       <p ng-show="showCC === true"
@@ -28,7 +28,7 @@
           tag-style="tagStyle" display-property="address" on-tag-added="verify($tag)"
           allowed-tags-pattern='^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$'
           placeholder="add cc">
-          <auto-complete source="lookupAddressBook($query)"></auto-complete>
+          <auto-complete source="lookupAddressBook($query)" min-length="1"></auto-complete>
         </tags-input>
       </p>
       <p ng-show="showBCC === true"
@@ -39,7 +39,7 @@
           tag-style="tagStyle" display-property="address" on-tag-added="verify($tag)"
           allowed-tags-pattern='^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$'
           placeholder="add bcc">
-          <auto-complete source="lookupAddressBook($query)"></auto-complete>
+          <auto-complete source="lookupAddressBook($query)" min-length="1"></auto-complete>
         </tags-input>
       </p>
     </div><!--/.mail-addresses-->

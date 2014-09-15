@@ -63,6 +63,7 @@ define(function(require) {
             $scope.body = '';
             $scope.ciphertextPreview = '';
             $scope.attachments = [];
+            $scope.addressBookCache = undefined;
         }
 
         function reportBug() {
@@ -214,7 +215,7 @@ define(function(require) {
          * Verify email address and fetch its public key
          */
         $scope.verify = function(recipient) {
-            if(!recipient) {
+            if (!recipient) {
                 return;
             }
 
@@ -231,7 +232,7 @@ define(function(require) {
             }
 
             // keychainDao is undefined in local dev environment
-            if(keychainDao) {
+            if (keychainDao) {
                 // check if to address is contained in known public keys
                 // when we write an email, we always need to work with the latest keys available
                 keychainDao.refreshKeyForUserId(recipient.address, function(err, key) {
@@ -403,22 +404,42 @@ define(function(require) {
 
         $scope.tagStyle = function(recipient) {
             var classes = ['label'];
-            if(recipient.secure === false) {
+            if (recipient.secure === false) {
                 classes.push('label-primary');
             }
             return classes;
         };
 
-        $scope.lookupAddressBook = function(/*query*/) {
+        $scope.lookupAddressBook = function(query) {
             var deferred = $q.defer();
 
-            deferred.resolve([
-                { address: 'john@doe.com' },
-                { address: 'jane@doe.com' },
-                { address: 'john.doe@example.com' },
-                { address: 'jane.doe@example.com' },
-                { address: 'max.mustermann@example.com' },
-            ]);
+            if (!$scope.addressBookCache) {
+                // populate address book cache
+                keychainDao.listLocalPublicKeys(function(err, keys) {
+                    if (err) {
+                        $scope.onError(err);
+                        return;
+                    }
+
+                    $scope.addressBookCache = keys.map(function(key) {
+                        return {
+                            address: key.userId
+                        };
+                    });
+                    filter();
+                });
+
+            } else {
+                filter();
+            }
+
+            // query address book cache
+            function filter() {
+                var addresses = $scope.addressBookCache.filter(function(i) {
+                    return i.address.indexOf(query) !== -1;
+                });
+                deferred.resolve(addresses);
+            }
 
             return deferred.promise;
         };
@@ -500,7 +521,7 @@ define(function(require) {
             link: function(scope, element, attrs) {
                 var model = $parse(attrs.focusInput);
                 scope.$watch(model, function(value) {
-                    if(value === true) {
+                    if (value === true) {
                         $timeout(function() {
                             element.find('input').first().focus();
                         }, 100);
