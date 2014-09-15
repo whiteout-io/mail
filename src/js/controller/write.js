@@ -401,7 +401,7 @@ define(function(require) {
         // Tag input & Autocomplete
         //
 
-        $scope.tagStyle = function(recipient, recipientList, index) {
+        $scope.tagStyle = function(recipient) {
             var classes = ['label'];
             if(recipient.secure === false) {
                 classes.push('label-primary');
@@ -409,7 +409,7 @@ define(function(require) {
             return classes;
         };
 
-        $scope.lookupAddressBook = function(query) {
+        $scope.lookupAddressBook = function(/*query*/) {
             var deferred = $q.defer();
 
             deferred.resolve([
