@@ -21,32 +21,39 @@
         flex-shrink: 0;
         margin-top: 10px;
 
-        .tags-input {
-            display: inline-block;
-            vertical-align: middle;
-            min-width: 15em;
+        p {
+            position: relative;
+            padding-left: 3em;
         }
-    }
+        label {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3em;
+        }
 
-    .mail-addresses-more {
-        float: right;
-        margin: 0.4em 0;
+        .mail-addresses-more {
+            position: relative;
+            float: right;
+            margin: 0.4em 0;
+            z-index: 1;
 
-        button {
-            display: inline-block;
-            background: none;
-            padding: 0 0.5em;
-            margin: 0;
-            text-decoration: none;
-            color: $color-black;
-            transition: color 0.3s;
-            border: 0;
-            outline: 0;
+            button {
+                display: inline-block;
+                background: none;
+                padding: 0 0.5em;
+                margin: 0;
+                text-decoration: none;
+                color: $color-black;
+                transition: color 0.3s;
+                border: 0;
+                outline: 0;
 
-            &:hover,
-            &:focus {
-                color: $color-blue;
-                text-decoration: underline;
+                &:hover,
+                &:focus {
+                    color: $color-blue;
+                    text-decoration: underline;
+                }
             }
         }
     }
