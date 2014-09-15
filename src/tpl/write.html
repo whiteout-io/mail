@@ -10,23 +10,37 @@
         <button wo-touch="showCC = true;" ng-hide="showCC">Cc</button>
         <button wo-touch="showBCC = true;" ng-hide="showBCC">Bcc</button>
       </div>
-      <p field="to">
+      <p focus-input="state.lightbox === 'write' && writerTitle !== 'Reply'"
+         focus-input-on-click>
         <label>To:</label>
-        <span ng-repeat="recipient in to track by $index">
-          <input type="email" id="to{{$index}}" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" class="label" ng-class="{'label-blank': !recipient.address || recipient.secure === undefined, 'label-primary': recipient.secure === false}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(to, $index)" address-input="to" tabindex="1" ng-mouseover="getKeyId(recipient)" focus-me="$index === 0 && state.lightbox === 'write' && writerTitle !== 'Reply'">
-        </span>
+        <tags-input class="tags-input" ng-model="to" type="email" tabindex="1" add-on-space="true" add-on-enter="true" enable-editing-last-tag="true"
+          tag-style="tagStyle" display-property="address" on-tag-added="verify($tag)"
+          allowed-tags-pattern='^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$'
+          placeholder="add recipient">
+          <auto-complete source="lookupAddressBook($query)"></auto-complete>
+        </tags-input>
       </p>
-      <p field="cc" ng-show="showCC === true">
+      <p ng-show="showCC === true"
+         focus-input="state.lightbox === 'write' && writerTitle !== 'Reply'"
+         focus-input-on-click>
         <label>Cc:</label>
-        <span ng-repeat="recipient in cc track by $index">
-          <input type="email" id="cc{{$index}}" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" class="label" ng-class="{'label-blank': !recipient.address || recipient.secure === undefined, 'label-primary': recipient.secure === false}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(cc, $index)" address-input="cc" tabindex="1" ng-mouseover="getKeyId(recipient)">
-        </span>
+        <tags-input class="tags-input" ng-model="cc" type="email" tabindex="1" add-on-space="true" add-on-enter="true" enable-editing-last-tag="true"
+          tag-style="tagStyle" display-property="address" on-tag-added="verify($tag)"
+          allowed-tags-pattern='^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$'
+          placeholder="add cc">
+          <auto-complete source="lookupAddressBook($query)"></auto-complete>
+        </tags-input>
       </p>
-      <p field="bcc" ng-show="showBCC === true">
+      <p ng-show="showBCC === true"
+         focus-input="state.lightbox === 'write' && writerTitle !== 'Reply'"
+         focus-input-on-click>
         <label>Bcc:</label>
-        <span ng-repeat="recipient in bcc track by $index">
-          <input type="email" id="bcc{{$index}}" value="{{recipient.address}}" ng-model="recipient.address" ng-trim="false" class="label" ng-class="{'label-blank': !recipient.address || recipient.secure === undefined, 'label-primary': recipient.secure === false}" auto-size="recipient.address" spellcheck="false" ng-change="onAddressUpdate(bcc, $index)" address-input="bcc" tabindex="1" ng-mouseover="getKeyId(recipient)">
-        </span>
+        <tags-input class="tags-input" ng-model="bcc" type="email" tabindex="1" add-on-space="true" add-on-enter="true" enable-editing-last-tag="true"
+          tag-style="tagStyle" display-property="address" on-tag-added="verify($tag)"
+          allowed-tags-pattern='^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$'
+          placeholder="add bcc">
+          <auto-complete source="lookupAddressBook($query)"></auto-complete>
+        </tags-input>
       </p>
     </div><!--/.mail-addresses-->
 

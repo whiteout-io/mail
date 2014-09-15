@@ -1,0 +1,81 @@
+// Styling for ngTagsInput
+.tags-input {
+
+    .host {
+        position: relative;
+        &:active {
+            outline: none;
+        }
+    }
+
+    .tags {
+        overflow: hidden;
+        word-wrap: break-word;
+        cursor: text;
+    }
+    .tag-list {
+        margin: 0;
+        padding: 0;
+        list-style-type: none;
+        float: left;
+    }
+    .tag-item {
+        .remove-button {
+            font-weight: bold;
+            font-size: 1.2em;
+            vertical-align: middle;
+            line-height: 0.5em;
+            cursor: pointer;
+        }
+    }
+    .tags .input {
+        border: 0;
+        outline: none;
+        margin: 2px;
+        padding: 0;
+        padding-left: 5px;
+        float: left;
+        min-width: 10em;
+
+        &.invalid-tag {
+            color: $color-red;
+        }
+        &::-ms-clear {
+            display: none;
+        }
+    }
+
+    .autocomplete {
+        margin-top: 5px;
+        position: absolute;
+        z-index: 999;
+        width: 100%;
+        background-color: white;
+        border: 1px solid $color-grey-lighter;
+        box-shadow: 2px 2px 5px rgba($color-black, 0.2);
+
+        .suggestion-list {
+            margin: 0;
+            padding: 0;
+            list-style-type: none;
+        }
+        .suggestion-item {
+            padding: 5px 10px;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: $color-black;
+            background-color: $color-white;
+
+            em {
+                font-weight: bold;
+                font-style: normal;
+            }
+            &.selected {
+                color: white;
+                background-color: $color-blue;
+            }
+        }
+    }
+}

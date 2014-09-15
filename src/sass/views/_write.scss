@@ -20,6 +20,12 @@
     .mail-addresses {
         flex-shrink: 0;
         margin-top: 10px;
+
+        .tags-input {
+            display: inline-block;
+            vertical-align: middle;
+            min-width: 15em;
+        }
     }
 
     .mail-addresses-more {

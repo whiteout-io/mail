@@ -14,9 +14,10 @@ $line-height-base:                  20 / 16;
 // Colors
 // -------------------------------------------
 
-$color-blue:                        #00c6ff;
 $color-black:                       #000;
 $color-white:                       #fff;
+$color-blue:                        #00c6ff;
+$color-red:                         #ff878d;
 $color-grey:                        #666;
 $color-grey-input:                  #949494;
 $color-grey-dark:                   #333;
@@ -73,7 +74,7 @@ $label-font-size:                   $font-size-small;
 $label-padding-horizontal:          0.8em;
 $label-padding-vertical:            0.3em;
 
-$label-primary-back-color:          #ff878d;
+$label-primary-back-color:          $color-red;
 $label-primary-color:               #fff;
 
 $label-light-back-color:            #fff;

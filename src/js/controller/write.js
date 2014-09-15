@@ -14,13 +14,12 @@ define(function(require) {
     // Controller
     //
 
-    var WriteCtrl = function($scope, $filter) {
+    var WriteCtrl = function($scope, $filter, $q) {
         pgp = appController._pgp;
         auth = appController._auth;
         emailDao = appController._emailDao;
         outbox = appController._outboxBo;
         keychainDao = appController._keychain;
-
 
         // set default value so that the popover height is correct on init
         $scope.keyId = 'XXXXXXXX';
@@ -55,17 +54,11 @@ define(function(require) {
 
         function resetFields() {
             $scope.writerTitle = 'New email';
-            $scope.to = [{
-                address: ''
-            }];
+            $scope.to = [];
             $scope.showCC = false;
-            $scope.cc = [{
-                address: ''
-            }];
+            $scope.cc = [];
             $scope.showBCC = false;
-            $scope.bcc = [{
-                address: ''
-            }];
+            $scope.bcc = [];
             $scope.subject = '';
             $scope.body = '';
             $scope.ciphertextPreview = '';
@@ -218,17 +211,13 @@ define(function(require) {
         //
 
         /**
-         * This event is fired when editing the email address headers. It checks is space is pressed and if so, creates a new address field.
-         */
-        $scope.onAddressUpdate = function(field, index) {
-            var recipient = field[index];
-            $scope.verify(recipient);
-        };
-
-        /**
-         * Verify and email address and fetch its public key
+         * Verify email address and fetch its public key
          */
         $scope.verify = function(recipient) {
+            if(!recipient) {
+                return;
+            }
+
             // set display to insecure while fetching keys
             recipient.key = undefined;
             recipient.secure = false;
@@ -241,42 +230,32 @@ define(function(require) {
                 return;
             }
 
-            // check if to address is contained in known public keys
-            // when we write an email, we always need to work with the latest keys available
-            keychainDao.refreshKeyForUserId(recipient.address, function(err, key) {
-                if (err) {
-                    $scope.onError(err);
-                    return;
-                }
-
-                if (key) {
-                    // compare again since model could have changed during the roundtrip
-                    var matchingUserId = _.findWhere(key.userIds, {
-                        emailAddress: recipient.address
-                    });
-                    // compare either primary userId or (if available) multiple IDs
-                    if (key.userId === recipient.address || matchingUserId) {
-                        recipient.key = key;
-                        recipient.secure = true;
+            // keychainDao is undefined in local dev environment
+            if(keychainDao) {
+                // check if to address is contained in known public keys
+                // when we write an email, we always need to work with the latest keys available
+                keychainDao.refreshKeyForUserId(recipient.address, function(err, key) {
+                    if (err) {
+                        $scope.onError(err);
+                        return;
                     }
-                }
 
-                $scope.checkSendStatus();
-                $scope.$digest();
-            });
-        };
+                    if (key) {
+                        // compare again since model could have changed during the roundtrip
+                        var matchingUserId = _.findWhere(key.userIds, {
+                            emailAddress: recipient.address
+                        });
+                        // compare either primary userId or (if available) multiple IDs
+                        if (key.userId === recipient.address || matchingUserId) {
+                            recipient.key = key;
+                            recipient.secure = true;
+                        }
+                    }
 
-        $scope.getKeyId = function(recipient) {
-            $scope.keyId = 'Key not found for that user.';
-
-            if (!recipient.key) {
-                return;
+                    $scope.checkSendStatus();
+                    $scope.$digest();
+                });
             }
-
-            var fpr = pgp.getFingerprint(recipient.key.publicKey);
-            var formatted = fpr.slice(32);
-
-            $scope.keyId = formatted;
         };
 
         /**
@@ -419,6 +398,32 @@ define(function(require) {
         };
 
         //
+        // Tag input & Autocomplete
+        //
+
+        $scope.tagStyle = function(recipient, recipientList, index) {
+            var classes = ['label'];
+            if(recipient.secure === false) {
+                classes.push('label-primary');
+            }
+            return classes;
+        };
+
+        $scope.lookupAddressBook = function(query) {
+            var deferred = $q.defer();
+
+            deferred.resolve([
+                { address: 'john@doe.com' },
+                { address: 'jane@doe.com' },
+                { address: 'john.doe@example.com' },
+                { address: 'jane.doe@example.com' },
+                { address: 'max.mustermann@example.com' },
+            ]);
+
+            return deferred.promise;
+        };
+
+        //
         // Helpers
         //
 
@@ -489,138 +494,28 @@ define(function(require) {
         };
     });
 
-    ngModule.directive('autoSize', function($parse) {
+    ngModule.directive('focusInput', function($timeout, $parse) {
         return {
-            require: 'ngModel',
-            link: function(scope, elm, attrs) {
-                // resize text input depending on value length
-                var model = $parse(attrs.autoSize);
-                scope.$watch(model, function(value) {
-                    var width;
-
-                    if (!value || value.length < 12) {
-                        width = (14 * 8) + 'px';
-                    } else {
-                        width = ((value.length + 2) * 8) + 'px';
-                    }
-
-                    elm.css('width', width);
-                });
-            }
-        };
-    });
-
-    function addInput(field, scope) {
-        scope.$apply(function() {
-            field.push({
-                address: ''
-            });
-        });
-    }
-
-    function removeInput(field, index, scope) {
-        scope.$apply(function() {
-            field.splice(index, 1);
-        });
-    }
-
-    function checkForEmptyInput(field) {
-        var emptyFieldExists = false;
-        field.forEach(function(recipient) {
-            if (!recipient.address) {
-                emptyFieldExists = true;
-            }
-        });
-        return emptyFieldExists;
-    }
-
-    function cleanupEmptyInputs(field, scope) {
-        scope.$apply(function() {
-            for (var i = field.length - 2; i >= 0; i--) {
-                if (!field[i].address) {
-                    field.splice(i, 1);
-                }
-            }
-        });
-    }
-
-    function focusInput(fieldName, index) {
-        var fieldId = fieldName + (index);
-        var fieldEl = document.getElementById(fieldId);
-        if (fieldEl) {
-            fieldEl.focus();
-        }
-    }
-
-    ngModule.directive('field', function() {
-        return {
-            scope: true,
+            //scope: true,   // optionally create a child scope
             link: function(scope, element, attrs) {
-                element.on('click', function(e) {
-                    if (e.target.nodeName === 'INPUT') {
-                        return;
+                var model = $parse(attrs.focusInput);
+                scope.$watch(model, function(value) {
+                    if(value === true) {
+                        $timeout(function() {
+                            element.find('input').first().focus();
+                        }, 100);
                     }
-
-                    var fieldName = attrs.field;
-                    var field = scope[fieldName];
-
-                    if (!checkForEmptyInput(field)) {
-                        // create new field input if no empy one exists
-                        addInput(field, scope);
-                    }
-
-                    // focus on last input when clicking on field
-                    focusInput(fieldName, field.length - 1);
                 });
             }
         };
     });
 
-    ngModule.directive('addressInput', function() {
+    ngModule.directive('focusInputOnClick', function() {
         return {
-            scope: true,
-            link: function(scope, elm, attrs) {
-                // get prefix for id
-                var fieldName = attrs.addressInput;
-                var field = scope[fieldName];
-                var index = parseInt(attrs.id.replace(fieldName, ''), 10);
-
-                elm.on('blur', function() {
-                    if (!checkForEmptyInput(field)) {
-                        // create new field input
-                        addInput(field, scope);
-                    }
-
-                    cleanupEmptyInputs(field, scope);
-                });
-
-                elm.on('keydown', function(e) {
-                    var code = e.keyCode;
-                    var address = elm[0].value;
-
-                    if (code === 32 || code === 188 || code === 186) {
-                        // catch space, comma, semicolon
-                        e.preventDefault();
-
-                        // add next field only if current input is not empty
-                        if (address) {
-                            // create new field input
-                            addInput(field, scope);
-
-                            // find next input and focus
-                            focusInput(fieldName, index + 1);
-                        }
-
-                    } else if ((code === 8 || code === 46) && !address && field.length > 1) {
-                        // backspace, delete on empty input
-                        // remove input
-                        e.preventDefault();
-
-                        removeInput(field, index, scope);
-
-                        // focus on previous id
-                        focusInput(fieldName, index - 1);
-                    }
+            //scope: true,   // optionally create a child scope
+            link: function(scope, element) {
+                element.on('click', function() {
+                    element.find('input').first().focus();
                 });
             }
         };
