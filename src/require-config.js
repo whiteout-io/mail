@@ -16,7 +16,7 @@
 			angularRoute: 'angular/angular-route.min',
 			angularAnimate: 'angular/angular-animate.min',
 			ngInfiniteScroll: 'ng-infinite-scroll.min',
-			ngTagsInput: 'ng-tags-input.min',
+			ngTagsInput: 'ngtagsinput/ng-tags-input.min',
 			uuid: 'uuid/uuid',
 			forge: 'forge/forge.min',
 			punycode: 'punycode.min',

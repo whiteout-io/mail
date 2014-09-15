@@ -39,8 +39,7 @@
     "ng-infinite-scroll": "~1.1.2",
     "pgpbuilder": "~0.4.0",
     "pgpmailer": "~0.4.0",
-    "requirejs": "~2.1.14",
-    "ng-tags-input": "~2.1.1-1"
+    "requirejs": "~2.1.14"
   },
   "devDependencies": {
     "angularjs": "https://github.com/whiteout-io/angular.js/tarball/npm-version",
