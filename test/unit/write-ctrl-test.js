@@ -363,5 +363,43 @@ define(function(require) {
                 expect(scope.replyTo.answered).to.be.true;
             });
         });
+
+        describe('lookupAddressBook', function() {
+            it('should work', function(done) {
+                keychainMock.listLocalPublicKeys.yields(null, [{
+                    userId: 'test@asdf.com',
+                    publicKey: 'KEY'
+                }]);
+
+                var result = scope.lookupAddressBook('test');
+
+                result.then(function(response) {
+                    expect(response).to.deep.equal([{
+                        address: 'test@asdf.com'
+                    }]);
+                    done();
+                });
+                scope.$digest();
+            });
+
+            it('should work with cache', function(done) {
+                scope.addressBookCache = [{
+                    address: 'test@asdf.com'
+                }, {
+                    address: 'tes@asdf.com'
+                }];
+
+                var result = scope.lookupAddressBook('test');
+
+                result.then(function(response) {
+                    expect(response).to.deep.equal([{
+                        address: 'test@asdf.com'
+                    }]);
+                    done();
+                });
+                scope.$digest();
+            });
+        });
+
     });
 });
