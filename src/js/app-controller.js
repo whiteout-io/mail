@@ -17,6 +17,7 @@ define(function(require) {
         RestDAO = require('js/dao/rest-dao'),
         appConfig = require('js/app-config'),
         EmailDAO = require('js/dao/email-dao'),
+        AdminDao = require('js/dao/admin-dao'),
         KeychainDAO = require('js/dao/keychain-dao'),
         PublicKeyDAO = require('js/dao/publickey-dao'),
         LawnchairDAO = require('js/dao/lawnchair-dao'),
@@ -102,6 +103,7 @@ define(function(require) {
         self._emailDao = emailDao = new EmailDAO(keychain, pgp, userStorage, pgpbuilder, mailreader);
         self._outboxBo = new OutboxBO(emailDao, keychain, userStorage);
         self._updateHandler = new UpdateHandler(appConfigStore, userStorage, auth);
+        self._adminDao = new AdminDao(new RestDAO(config.adminUrl));
 
         emailDao.onError = self.onError;
     };

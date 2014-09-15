@@ -1,33 +1,86 @@
-<div class="view-add-account">
+<div class="view-login view-add-account">
 
-  <h1>Select email account</h1>
+  <div ng-show="step === 1">
+    <div class="logo">
+      <img src="img/whiteout_logo.svg" alt="whiteout.io">
+    </div><!--/logo-->
 
-  <ul>
-    <li class="whiteout disabled" popover="#whiteout-info" wo-touch="onError({message:'Whiteout Mailbox coming soon!', sync:true})">
-      <div><img src="img/whiteout_logo.svg" alt="Whiteout Mailbox"></div>
-    </li>
-    <li class="google" popover="#google-info" wo-touch="connectToGoogle()">
-      <div><img src="img/google_logo.png" alt="Google Mail"></div>
-    </li>
-    <li class="outlook" popover="#outlook-info" wo-touch="connectToOutlook()">
-      <div><img src="img/outlook_logo.jpg" alt="Outlook.com"></div>
-    </li>
-    <li class="yahoo" popover="#yahoo-info" wo-touch="connectToYahoo()">
-      <div><img src="img/yahoo_logo.png" alt="Yahoo! Mail"></div>
-    </li>
-    <li class="gmx" popover="#gmx-info" wo-touch="connectToGmx()">
-      <div><img src="img/gmx_logo.jpg" alt="GMX.net"></div>
-    </li>
-    <li class="webde" popover="#webde-info" wo-touch="connectToWebde()">
-      <div><img src="img/webde_logo.jpg" alt="Web.de"></div>
-    </li>
-    <li class="tonline" popover="#tonline-info" wo-touch="connectToTonline()">
-      <div><img src="img/tonline_logo.jpg" alt="T-Online"></div>
-    </li>
-    <li class="other" popover="#custom-info" wo-touch="connectOther()">
-      <h3>Custom server...</h3>
-    </li>
-  </ul>
+    <div class="content choose">
+      <div class="choice">
+        <p><b>Create Whiteout account.</b> Create a new fully encrypted Whiteout Mailbox.</p>
+        <button class="btn" wo-touch="goTo(2)">Create new account</button>
+      </div>
+      <hr>
+      <div class="choice">
+        <p><b>Login to IMAP account.</b> Connect Whiteout Mail to any existing email account via IMAP.</p>
+        <button class="btn btn-alt" wo-touch="goTo(3)">Login to existing</button>
+      </div>
+    </div>
+  </div>
+
+  <div ng-show="step === 2">
+    <div class="logo">
+      <img src="img/whiteout_logo.svg" alt="whiteout.io">
+    </div><!--/logo-->
+
+    <div class="content create-account">
+      <p><b>Create Whiteout account.</b> Please fill out the following form. You will need a <i>beta access code</i> during the private beta period.</p>
+      <form name="form">
+        <label class="input-error-message" ng-show="errMsg">{{errMsg}}</label>
+        <label class="input-error-message" ng-show="form.$invalid">Please fill out all required fields!</label>
+        <div class="flex">
+          <input class="input-text wmail" ng-model="user" required type="text" pattern='^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))' placeholder="User name">
+          <span class="domain">@wmail.io</span>
+        </div>
+        <input class="input-text" type="text" ng-model="realname" placeholder="Full name (optional)"></input>
+        <div class="flex">
+          <input class="input-text" ng-model="pass" required type="password" placeholder="Password" pattern=".{3,30}">
+          <input class="input-text right" ng-model="confirmPass" required type="password" placeholder="Confirm password" ng-class="{'input-text-error': (pass || confirmPass) && pass !== confirmPass}">
+        </div>
+        <input class="input-text"  type="tel" ng-model="phone" required placeholder="Mobile phone number (e.g. +49 170 1234567)"/>
+        <input class="input-text" type="text" class="input-text" ng-model="betaCode" required placeholder="Beta access code">
+
+        <div class="working" ng-show="busy">
+          <span class="spinner"></span>
+        </div>
+
+        <div>
+          <button class="btn" type="submit" ng-click="createWhiteoutAccount()">Create</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="providers" ng-show="step === 3">
+    <h1>Select account</h1>
+
+    <ul>
+      <li class="whiteout" popover="#whiteout-info" wo-touch="connectTo('wmail')">
+        <div><img src="img/whiteout_logo.svg" alt="Whiteout Mailbox"></div>
+      </li>
+      <li class="google" popover="#google-info" wo-touch="connectToGoogle()">
+        <div><img src="img/google_logo.png" alt="Google Mail"></div>
+      </li>
+      <li class="outlook" popover="#outlook-info" wo-touch="connectTo('outlook')">
+        <div><img src="img/outlook_logo.jpg" alt="Outlook.com"></div>
+      </li>
+      <li class="yahoo" popover="#yahoo-info" wo-touch="connectTo('yahoo')">
+        <div><img src="img/yahoo_logo.png" alt="Yahoo! Mail"></div>
+      </li>
+      <li class="gmx" popover="#gmx-info" wo-touch="connectTo('gmx')">
+        <div><img src="img/gmx_logo.jpg" alt="GMX.net"></div>
+      </li>
+      <li class="webde" popover="#webde-info" wo-touch="connectTo('webde')">
+        <div><img src="img/webde_logo.jpg" alt="Web.de"></div>
+      </li>
+      <li class="tonline" popover="#tonline-info" wo-touch="connectTo('tonline')">
+        <div><img src="img/tonline_logo.jpg" alt="T-Online"></div>
+      </li>
+      <li class="other" popover="#custom-info" wo-touch="connectTo('custom')">
+        <h3>Custom server...</h3>
+      </li>
+    </ul>
+  </div>
 
 </div>
 
@@ -44,7 +97,7 @@
 
 <div id="whiteout-info" class="popover right desktop-only" ng-controller="PopoverCtrl">
   <div class="arrow"></div>
-  <div class="popover-title"><b>Whiteout Mailbox (coming soon)</b></div>
+  <div class="popover-title"><b>Whiteout Mailbox</b></div>
   <div class="popover-content">
     <p>Connect Whiteout Mail to your fully encrypted Whiteout Mailbox (hosted in Europe).</p>
     <p>Incoming cleartext messages are encrypted with your public PGP key before being stored in your inbox.</p>

@@ -32,12 +32,26 @@ define(function(require) {
     app.config = {
         cloudUrl: cloudUrl || 'https://keys.whiteout.io',
         privkeyServerUrl: keychainUrl || 'https://keychain.whiteout.io',
+        adminUrl: 'https://admin-node.whiteout.io',
+        wmailDomain: 'wmail.io',
         serverPrivateKeyId: 'EE342F0DDBB0F3BE',
         symKeySize: 256,
         symIvSize: 96,
         asymKeySize: 2048,
         workerPath: 'js',
         reconnectInterval: 10000,
+        wmail: {
+            imap: {
+                host: 'imap.wmail.io',
+                port: 993,
+                secure: true
+            },
+            smtp: {
+                host: 'smtp.wmail.io',
+                port: 465,
+                secure: true
+            }
+        },
         gmail: {
             clientId: clientId || '440907777130.apps.googleusercontent.com',
             imap: {
