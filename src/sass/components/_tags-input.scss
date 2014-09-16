@@ -23,13 +23,13 @@
         cursor: default;
 
         .remove-button {
+            position: relative;
             font-weight: bold;
             font-size: 1.2em;
             vertical-align: middle;
             line-height: 0.5em;
             cursor: pointer;
-            position: relative;
-            left: 4px;
+            left: 3px;
         }
     }
     .tags .input {
