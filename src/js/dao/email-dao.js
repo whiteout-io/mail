@@ -408,7 +408,11 @@ define(function(require) {
 
                     [].unshift.apply(folder.messages, messages); // add the new messages to the folder
                     updateUnreadCount(folder); // update the unread count
-                    self.onIncomingMessage(messages); // notify about new messages
+
+                    // notify about new messages only for the inbox
+                    if (folder.type === FOLDER_TYPE_INBOX) {
+                        self.onIncomingMessage(messages);
+                    }
                     done();
                 });
             }

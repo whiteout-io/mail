@@ -444,6 +444,27 @@ define(function(require) {
                     });
                 });
 
+                it('should not notify for other folders', function(done) {
+                    opts.folder = sentFolder;
+                    
+                    imapListStub.withArgs(opts).yieldsAsync(null, [message]);
+
+                    localStoreStub.withArgs({
+                        folder: sentFolder,
+                        emails: [message]
+                    }).yieldsAsync();
+
+                    dao.fetchMessages(opts, function(err) {
+                        expect(err).to.not.exist;
+                        expect(sentFolder.messages).to.contain(message);
+                        expect(notified).to.be.false;
+                        expect(localStoreStub.calledOnce).to.be.true;
+                        expect(imapListStub.calledOnce).to.be.true;
+
+                        done();
+                    });
+                });
+
                 it('should verify verification mails', function(done) {
                     message.subject = verificationSubject;
 

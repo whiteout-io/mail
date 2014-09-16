@@ -106,9 +106,9 @@ define(function(require) {
 
         function sentNotification(email) {
             notification.create({
-                id: 'o' + email.id,
                 title: 'Message sent',
-                message: email.subject
+                message: email.subject,
+                timeout: 2000
             }, function() {});
         }
 

@@ -19,6 +19,7 @@
 
 	"predef": [
 			"console",
+			"Notification",
 			"importScripts",
 			"process",
 			"Event",
