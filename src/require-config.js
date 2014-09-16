@@ -16,6 +16,7 @@
 			angularRoute: 'angular/angular-route.min',
 			angularAnimate: 'angular/angular-animate.min',
 			ngInfiniteScroll: 'ng-infinite-scroll.min',
+			ngTagsInput: 'ngtagsinput/ng-tags-input.min',
 			uuid: 'uuid/uuid',
 			forge: 'forge/forge.min',
 			punycode: 'punycode.min',
@@ -44,6 +45,10 @@
 			ngInfiniteScroll: {
 				exports: 'angular',
 				deps: ['jquery', 'angular']
+			},
+			ngTagsInput: {
+				exports: 'angular',
+				deps: ['angular']
 			},
 			lawnchair: {
 				exports: 'Lawnchair'

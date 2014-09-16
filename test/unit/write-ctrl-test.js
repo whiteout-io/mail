@@ -63,10 +63,11 @@ define(function(require) {
                 expect(scope.state.writer.write).to.exist;
                 expect(scope.state.writer.close).to.exist;
                 expect(scope.verify).to.exist;
-                expect(scope.onAddressUpdate).to.exist;
                 expect(scope.checkSendStatus).to.exist;
                 expect(scope.updatePreview).to.exist;
                 expect(scope.sendToOutbox).to.exist;
+                expect(scope.tagStyle).to.exist;
+                expect(scope.lookupAddressBook).to.exist;
             });
         });
 
@@ -87,9 +88,7 @@ define(function(require) {
                 scope.state.writer.write();
 
                 expect(scope.writerTitle).to.equal('New email');
-                expect(scope.to).to.deep.equal([{
-                    address: ''
-                }]);
+                expect(scope.to).to.deep.equal([]);
                 expect(scope.subject).to.equal('');
                 expect(scope.body).to.equal('');
                 expect(scope.ciphertextPreview).to.equal(undefined);
@@ -121,8 +120,6 @@ define(function(require) {
                 expect(scope.writerTitle).to.equal('Reply');
                 expect(scope.to).to.deep.equal([{
                     address: address,
-                }, {
-                    address: ''
                 }]);
                 expect(scope.subject).to.equal('Re: ' + subject);
                 expect(scope.body).to.contain(body);
@@ -156,9 +153,7 @@ define(function(require) {
                 scope.state.writer.write(re, null, true);
 
                 expect(scope.writerTitle).to.equal('Forward');
-                expect(scope.to).to.deep.equal([{
-                    address: ''
-                }]);
+                expect(scope.to).to.deep.equal([]);
                 expect(scope.subject).to.equal('Fwd: ' + subject);
                 expect(scope.body).to.contain(body);
                 expect(scope.ciphertextPreview).to.be.undefined;
@@ -171,29 +166,6 @@ define(function(require) {
 
         });
 
-        describe('onAddressUpdate', function() {
-            var verifyMock;
-
-            beforeEach(function() {
-                verifyMock = sinon.stub(scope, 'verify');
-            });
-
-            afterEach(function() {
-                scope.verify.restore();
-            });
-
-            it('should do nothing for normal address', function() {
-                var to = [{
-                    address: 'asdf@asdf.de'
-                }];
-                scope.onAddressUpdate(to, 0);
-
-                expect(to.length).to.equal(1);
-                expect(to[0].address).to.equal('asdf@asdf.de');
-                expect(verifyMock.calledOnce).to.be.true;
-            });
-        });
-
         describe('verify', function() {
             var checkSendStatusMock;
 
@@ -203,6 +175,10 @@ define(function(require) {
 
             afterEach(function() {
                 scope.checkSendStatus.restore();
+            });
+
+            it('should do nothing if recipient is not provided', function() {
+                scope.verify(undefined);
             });
 
             it('should not work for invalid email addresses', function() {
@@ -387,5 +363,43 @@ define(function(require) {
                 expect(scope.replyTo.answered).to.be.true;
             });
         });
+
+        describe('lookupAddressBook', function() {
+            it('should work', function(done) {
+                keychainMock.listLocalPublicKeys.yields(null, [{
+                    userId: 'test@asdf.com',
+                    publicKey: 'KEY'
+                }]);
+
+                var result = scope.lookupAddressBook('test');
+
+                result.then(function(response) {
+                    expect(response).to.deep.equal([{
+                        address: 'test@asdf.com'
+                    }]);
+                    done();
+                });
+                scope.$digest();
+            });
+
+            it('should work with cache', function(done) {
+                scope.addressBookCache = [{
+                    address: 'test@asdf.com'
+                }, {
+                    address: 'tes@asdf.com'
+                }];
+
+                var result = scope.lookupAddressBook('test');
+
+                result.then(function(response) {
+                    expect(response).to.deep.equal([{
+                        address: 'test@asdf.com'
+                    }]);
+                    done();
+                });
+                scope.$digest();
+            });
+        });
+
     });
 });

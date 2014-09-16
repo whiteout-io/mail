@@ -27,7 +27,8 @@ requirejs([
     'fastclick',
     'angularRoute',
     'angularAnimate',
-    'ngInfiniteScroll'
+    'ngInfiniteScroll',
+    'ngTagsInput'
 ], function(
     angular,
     DialogCtrl,
@@ -70,7 +71,8 @@ requirejs([
         'login-new-device',
         'privatekey-upload',
         'popover',
-        'infinite-scroll'
+        'infinite-scroll',
+        'ngTagsInput'
     ]);
 
     // set router paths

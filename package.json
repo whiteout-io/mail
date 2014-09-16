@@ -8,7 +8,17 @@
         "type": "git",
         "url": "https://github.com/whiteout-io/mail-html5.git"
     },
-    "keywords": ["email", "mail", "client", "app", "openpgp", "pgp", "gpg", "imap", "smtp"],
+    "keywords": [
+        "email",
+        "mail",
+        "client",
+        "app",
+        "openpgp",
+        "pgp",
+        "gpg",
+        "imap",
+        "smtp"
+    ],
     "engines": {
         "node": ">=0.10"
     },
