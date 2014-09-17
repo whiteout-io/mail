@@ -1202,11 +1202,24 @@ define(function(require) {
         describe('requestPrivateKeyDownload', function() {
             it('should work', function(done) {
                 var options = {
-                    userId: testUser
+                    userId: testUser,
+                    keyId: 'someId'
                 };
 
                 privkeyDaoStub.requestDownload.withArgs(options).yields();
                 keychainDao.requestPrivateKeyDownload(options, done);
+            });
+        });
+
+        describe('hasPrivateKey', function() {
+            it('should work', function(done) {
+                var options = {
+                    userId: testUser,
+                    keyId: 'someId'
+                };
+
+                privkeyDaoStub.hasPrivateKey.withArgs(options).yields();
+                keychainDao.hasPrivateKey(options, done);
             });
         });
 

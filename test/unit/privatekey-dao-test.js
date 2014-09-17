@@ -150,19 +150,44 @@ define(function(require) {
             });
 
             it('should work', function(done) {
-                var key = {
-                    _id: '12345'
-                };
+                var keyId = '12345';
 
                 restDaoStub.get.withArgs({
-                    uri: '/privatekey/user/' + emailAddress + '/key/' + key._id
+                    uri: '/privatekey/user/' + emailAddress + '/key/' + keyId
                 }).yields();
 
                 privkeyDao.requestDownload({
                     userId: emailAddress,
-                    keyId: key._id
-                }, function(err) {
+                    keyId: keyId
+                }, function(err, found) {
                     expect(err).to.not.exist;
+                    expect(found).to.be.true;
+                    done();
+                });
+            });
+        });
+
+        describe('hasPrivateKey', function() {
+            it('should fail due to invalid args', function(done) {
+                privkeyDao.hasPrivateKey({}, function(err) {
+                    expect(err).to.exist;
+                    done();
+                });
+            });
+
+            it('should work', function(done) {
+                var keyId = '12345';
+
+                restDaoStub.get.withArgs({
+                    uri: '/privatekey/user/' + emailAddress + '/key/' + keyId + '?ignoreRecovery=true'
+                }).yields();
+
+                privkeyDao.hasPrivateKey({
+                    userId: emailAddress,
+                    keyId: keyId
+                }, function(err, found) {
+                    expect(err).to.not.exist;
+                    expect(found).to.be.true;
                     done();
                 });
             });
