@@ -15,7 +15,7 @@ define(function(require) {
 
     describe('Mail List controller unit test', function() {
         var scope, ctrl, origEmailDao, emailDaoMock, keychainMock, deviceStorageMock,
-            emailAddress, notificationClickedHandler, emails,
+            emailAddress, emails,
             hasChrome, hasSocket, hasRuntime, hasIdentity;
 
         beforeEach(function() {
@@ -36,10 +36,6 @@ define(function(require) {
             if (!hasIdentity) {
                 window.chrome.identity = {};
             }
-
-            sinon.stub(notification, 'setOnClickedListener', function(func) {
-                notificationClickedHandler = func;
-            });
 
             emails = [{
                 unread: true
@@ -86,8 +82,6 @@ define(function(require) {
         });
 
         afterEach(function() {
-            notification.setOnClickedListener.restore();
-
             if (!hasSocket) {
                 delete window.chrome.socket;
             }
@@ -260,6 +254,10 @@ define(function(require) {
                 scope._stopWatchTask();
             });
 
+            afterEach(function() {
+                notification.create.restore();
+            });
+
             it('should succeed for single mail', function(done) {
                 var mail = {
                     uid: 123,
@@ -271,13 +269,20 @@ define(function(require) {
                 };
 
                 sinon.stub(notification, 'create', function(opts) {
-                    expect(opts.id).to.equal('' + mail.uid);
                     expect(opts.title).to.equal(mail.from[0].address);
                     expect(opts.message).to.equal(mail.subject);
 
-                    notification.create.restore();
+                    opts.onClick();
+                    expect(scope.state.mailList.selected).to.equal(mail);
                     done();
                 });
+
+                scope.state.nav = {
+                    currentFolder: {
+                        type: 'asd',
+                        messages: [mail]
+                    }
+                };
 
                 emailDaoMock.onIncomingMessage([mail]);
             });
@@ -307,49 +312,22 @@ define(function(require) {
                 }];
 
                 sinon.stub(notification, 'create', function(opts) {
-                    expect(opts.id).to.equal('' + mails[0].uid);
                     expect(opts.title).to.equal('2 new messages');
                     expect(opts.message).to.equal(mails[0].subject + '\n' + mails[1].subject);
 
-                    notification.create.restore();
+                    opts.onClick();
+                    expect(scope.state.mailList.selected).to.equal(mails[0]);
                     done();
                 });
 
+                scope.state.nav = {
+                    currentFolder: {
+                        type: 'asd',
+                        messages: mails
+                    }
+                };
+
                 emailDaoMock.onIncomingMessage(mails);
-            });
-
-            it('should focus mail when clicked', function() {
-                var mail = {
-                    uid: 123,
-                    from: [{
-                        address: 'asd'
-                    }],
-                    subject: 'asdasd',
-                    unread: true
-                };
-
-                scope.state.nav = {
-                    currentFolder: {
-                        type: 'asd',
-                        messages: [mail]
-                    }
-                };
-
-                notificationClickedHandler('123');
-                expect(scope.state.mailList.selected).to.equal(mail);
-            });
-
-            it('should not change focus mail when popup id is NaN', function() {
-                scope.state.nav = {
-                    currentFolder: {
-                        type: 'asd',
-                        messages: []
-                    }
-                };
-                var focus = scope.state.mailList.selected = {};
-
-                notificationClickedHandler('');
-                expect(scope.state.mailList.selected).to.equal(focus);
             });
         });
 
@@ -368,6 +346,9 @@ define(function(require) {
 
         describe('select', function() {
             it('should decrypt, focus mark an unread mail as read', function() {
+                scope.pendingNotifications = ['asd'];
+                sinon.stub(notification, 'close');
+
                 var mail = {
                     from: [{
                         address: 'asd'
@@ -377,7 +358,7 @@ define(function(require) {
                 scope.state = {
                     nav: {
                         currentFolder: {
-                            type: 'asd'
+                            type: 'Inbox'
                         }
                     },
                     mailList: {},
@@ -393,6 +374,10 @@ define(function(require) {
                 expect(emailDaoMock.decryptBody.calledOnce).to.be.true;
                 expect(keychainMock.refreshKeyForUserId.calledOnce).to.be.true;
                 expect(scope.state.mailList.selected).to.equal(mail);
+                expect(notification.close.calledWith('asd')).to.be.true;
+                expect(notification.close.calledOnce).to.be.true;
+
+                notification.close.restore();
             });
 
             it('should decrypt and focus a read mail', function() {

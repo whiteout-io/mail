@@ -8,7 +8,8 @@ define(function(require) {
         emailDao, outboxBo, keychainDao, searchTimeout, firstSelect;
 
     var INIT_DISPLAY_LEN = 20,
-        SCROLL_DISPLAY_LEN = 10;
+        SCROLL_DISPLAY_LEN = 10,
+        FOLDER_TYPE_INBOX = 'Inbox';
 
     var MailListCtrl = function($scope, $routeParams) {
         //
@@ -18,6 +19,11 @@ define(function(require) {
         emailDao = appController._emailDao;
         outboxBo = appController._outboxBo;
         keychainDao = appController._keychain;
+
+        /**
+         * Gathers unread notifications to be cancelled later
+         */
+        $scope.pendingNotifications = [];
 
         //
         // scope functions
@@ -78,6 +84,13 @@ define(function(require) {
                 // otherweise forget about it.
                 if (!email.unread) {
                     return;
+                }
+
+                // let's close pending notifications for unread messages in the inbox
+                if (currentFolder().type === FOLDER_TYPE_INBOX) {
+                    while ($scope.pendingNotifications.length) {
+                        notification.close($scope.pendingNotifications.shift());
+                    }
                 }
 
                 $scope.toggleUnread(email);
@@ -364,7 +377,7 @@ define(function(require) {
         //
 
         (emailDao || {}).onIncomingMessage = function(msgs) {
-            var popupId, popupTitle, popupMessage, unreadMsgs;
+            var note, title, message, unreadMsgs;
 
             unreadMsgs = msgs.filter(function(msg) {
                 return msg.unread;
@@ -374,34 +387,35 @@ define(function(require) {
                 return;
             }
 
-            popupId = '' + unreadMsgs[0].uid;
-            if (unreadMsgs.length > 1) {
-                popupTitle = unreadMsgs.length + ' new messages';
-                popupMessage = _.pluck(unreadMsgs, 'subject').join('\n');
+            if (unreadMsgs.length === 1) {
+                title = unreadMsgs[0].from[0].name || unreadMsgs[0].from[0].address;
+                message = unreadMsgs[0].subject;
             } else {
-                popupTitle = unreadMsgs[0].from[0].name || unreadMsgs[0].from[0].address;
-                popupMessage = unreadMsgs[0].subject;
+                title = unreadMsgs.length + ' new messages';
+                message = _.pluck(unreadMsgs, 'subject').join('\n');
             }
 
-            notification.create({
-                id: popupId,
-                title: popupTitle,
-                message: popupMessage
+            note = notification.create({
+                title: title,
+                message: message,
+                onClick: function() {
+                    // force toggle into read mode when notification is clicked
+                    firstSelect = false;
+
+                    // remove from pending notificatiosn
+                    var index = $scope.pendingNotifications.indexOf(note);
+                    if (index !== -1) {
+                        $scope.pendingNotifications.splice(index, 1);
+                    }
+
+                    // mark message as read
+                    $scope.select(_.findWhere(currentFolder().messages, {
+                        uid: unreadMsgs[0].uid
+                    }));
+                }
             });
+            $scope.pendingNotifications.push(note);
         };
-
-        notification.setOnClickedListener(function(uidString) {
-            var uid = parseInt(uidString, 10);
-
-            if (isNaN(uid)) {
-                return;
-            }
-
-            firstSelect = false;
-            $scope.select(_.findWhere(currentFolder().messages, {
-                uid: uid
-            }));
-        });
     };
 
     //

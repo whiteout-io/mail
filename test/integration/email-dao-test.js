@@ -367,11 +367,7 @@ define(function(require) {
                         }, function(err, folder) {
                             expect(err).to.not.exist;
                             expect(folder.exists).to.equal(1);
-                            emailDao.onIncomingMessage = function(messages) {
-                                expect(messages.length).to.equal(1);
-                                expect(messages[0].id).to.equal('b');
-                                done();
-                            };
+                            done();
                         });
                     });
                 });
