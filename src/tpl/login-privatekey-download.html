@@ -8,7 +8,7 @@
     <div class="step" ng-show="step === 1">
       <p><b>Key sync.</b> We have sent you an email containing a recovery token. Please copy and paste the token below to download your key.</p>
 
-      <input type="text" class="input-text" size="42" ng-model="recoveryToken" placeholder="Recovery token" focus-me="step === 1">
+      <input type="text" class="input-text" size="42" ng-model="recoveryToken" placeholder="Recovery token" focus-me="step === 1" pattern="^([a-z0-9]{6})$">
 
       <fieldset>
         <legend>Got USB?</legend>
