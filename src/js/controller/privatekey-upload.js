@@ -3,6 +3,7 @@ define(function(require) {
 
     var angular = require('angular'),
         appController = require('js/app-controller'),
+        util = require('js/crypto/util'),
         keychain, pgp;
 
     var PrivateKeyUploadCtrl = function($scope) {
@@ -82,24 +83,11 @@ define(function(require) {
             // go to step 1
             $scope.step = 1;
             // generate new code for the user
-            $scope.code = $scope.generateCode();
+            $scope.code = util.randomString(24).toUpperCase();
             $scope.displayedCode = $scope.code.slice(0, 4) + '-' + $scope.code.slice(4, 8) + '-' + $scope.code.slice(8, 12) + '-' + $scope.code.slice(12, 16) + '-' + $scope.code.slice(16, 20) + '-' + $scope.code.slice(20, 24);
 
             // clear input fields of any previous artifacts
             $scope.code0 = $scope.code1 = $scope.code2 = $scope.code3 = $scope.code4 = $scope.code5 = '';
-        };
-
-        $scope.generateCode = function() {
-            function randomString(length, chars) {
-                var result = '';
-                var randomValues = new Uint8Array(length); // get random length number of bytes
-                window.crypto.getRandomValues(randomValues);
-                for (var i = 0; i < length; i++) {
-                    result += chars[Math.round(randomValues[i] / 255 * (chars.length - 1))];
-                }
-                return result;
-            }
-            return randomString(24, '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ');
         };
 
         $scope.verifyCode = function() {

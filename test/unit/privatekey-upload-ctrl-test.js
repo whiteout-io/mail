@@ -109,15 +109,12 @@ define(function(require) {
 
         describe('displayUploadUi', function() {
             it('should work', function() {
-                var generateCodeStub = sinon.stub(scope, 'generateCode');
-                generateCodeStub.returns('asdf');
-
                 // add some artifacts from a previous key input
                 scope.code0 = scope.code1 = scope.code2 = scope.code3 = scope.code4 = scope.code5 = 'asdasd';
 
                 scope.displayUploadUi();
                 expect(scope.step).to.equal(1);
-                expect(scope.code).to.equal('asdf');
+                expect(scope.code.length).to.equal(24);
 
                 // artifacts should be cleared
                 expect(scope.code0).to.be.empty;
@@ -126,14 +123,6 @@ define(function(require) {
                 expect(scope.code3).to.be.empty;
                 expect(scope.code4).to.be.empty;
                 expect(scope.code5).to.be.empty;
-
-                generateCodeStub.restore();
-            });
-        });
-
-        describe('generateCode', function() {
-            it('should work', function() {
-                expect(scope.generateCode().length).to.equal(24);
             });
         });
 
