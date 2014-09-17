@@ -6,7 +6,7 @@ module.exports = {
         host: "0.0.0.0"
     },
     log: {
-        level: "silly",
+        level: "error",
         http: ':remote-addr [:date] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer"'
     }
 };
