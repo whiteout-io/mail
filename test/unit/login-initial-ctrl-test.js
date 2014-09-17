@@ -43,7 +43,8 @@ define(function(require) {
                     ui: {}
                 };
                 ctrl = $controller(LoginInitialCtrl, {
-                    $scope: scope
+                    $scope: scope,
+                    $routeParams: {}
                 });
             });
         });

@@ -3,7 +3,12 @@ define(function(require) {
 
     var appController = require('js/app-controller');
 
-    var LoginInitialCtrl = function($scope, $location) {
+    var LoginInitialCtrl = function($scope, $location, $routeParams) {
+        if (!appController._emailDao && !$routeParams.dev) {
+            $location.path('/'); // init app
+            return;
+        }
+
         var emailDao = appController._emailDao,
             states, termsMsg = 'You must accept the Terms of Service to continue.';
 

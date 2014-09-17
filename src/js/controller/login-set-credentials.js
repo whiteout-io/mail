@@ -10,7 +10,12 @@ define(function(require) {
         ImapClient = require('imap-client'),
         SmtpClient = require('smtpclient');
 
-    var SetCredentialsCtrl = function($scope, $location) {
+    var SetCredentialsCtrl = function($scope, $location, $routeParams) {
+        if (!appCtrl._emailDao && !$routeParams.dev) {
+            $location.path('/'); // init app
+            return;
+        }
+
         var auth = appCtrl._auth;
 
         var provider;

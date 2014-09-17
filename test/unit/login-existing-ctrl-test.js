@@ -39,7 +39,8 @@ define(function(require) {
                 scope = $rootScope.$new();
                 scope.state = {};
                 ctrl = $controller(LoginExistingCtrl, {
-                    $scope: scope
+                    $scope: scope,
+                    $routeParams: {}
                 });
             });
         });

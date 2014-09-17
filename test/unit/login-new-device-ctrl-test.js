@@ -41,7 +41,8 @@ define(function(require) {
                     ui: {}
                 };
                 ctrl = $controller(LoginNewDeviceCtrl, {
-                    $scope: scope
+                    $scope: scope,
+                    $routeParams: {}
                 });
             });
         });
