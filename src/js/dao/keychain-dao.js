@@ -642,6 +642,16 @@ define(function(require) {
     };
 
     /**
+     * Query if an encrypted private PGP key exists on the server without initializing the recovery procedure
+     * @param  {String}   options.userId    The user's email address
+     * @param  {String}   options.keyId     The private PGP key id
+     * @param  {Function} callback(error)
+     */
+    KeychainDAO.prototype.hasPrivateKey = function(options, callback) {
+        this._privateKeyDao.hasPrivateKey(options, callback);
+    };
+
+    /**
      * Download the encrypted private PGP key from the server using the recovery token.
      * @param  {String}   options.userId The user's email address
      * @param  {String}   options.keyId The user's email address

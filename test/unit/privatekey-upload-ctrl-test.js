@@ -50,16 +50,16 @@ define(function(require) {
         describe('checkServerForKey', function() {
             var keyParams = {
                 userId: emailAddress,
-                _id: 'keyId'
+                _id: 'keyId',
             };
 
             it('should fail', function(done) {
                 pgpStub.getKeyParams.returns(keyParams);
-                keychainMock.requestPrivateKeyDownload.yields(42);
+                keychainMock.hasPrivateKey.yields(42);
 
                 scope.onError = function(err) {
                     expect(err).to.exist;
-                    expect(keychainMock.requestPrivateKeyDownload.calledOnce).to.be.true;
+                    expect(keychainMock.hasPrivateKey.calledOnce).to.be.true;
                     done();
                 };
 
@@ -68,7 +68,10 @@ define(function(require) {
 
             it('should return true', function(done) {
                 pgpStub.getKeyParams.returns(keyParams);
-                keychainMock.requestPrivateKeyDownload.yields(null, true);
+                keychainMock.hasPrivateKey.withArgs({
+                    userId: keyParams.userId,
+                    keyId: keyParams._id
+                }).yields(null, true);
 
                 scope.checkServerForKey(function(privateKeySynced) {
                     expect(privateKeySynced).to.be.true;
@@ -78,7 +81,10 @@ define(function(require) {
 
             it('should return undefined', function(done) {
                 pgpStub.getKeyParams.returns(keyParams);
-                keychainMock.requestPrivateKeyDownload.yields(null, false);
+                keychainMock.hasPrivateKey.withArgs({
+                    userId: keyParams.userId,
+                    keyId: keyParams._id
+                }).yields(null, false);
 
                 scope.checkServerForKey(function(privateKeySynced) {
                     expect(privateKeySynced).to.be.undefined;
