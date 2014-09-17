@@ -38,7 +38,10 @@ define(function(require) {
             body: options.message,
             icon: cfg.iconPath
         });
-        notification.onclick = options.onClick;
+        notification.onclick = function() {
+            window.focus();
+            options.onClick();
+        };
 
         if (options.timeout > 0) {
             setTimeout(function() {

@@ -82,19 +82,19 @@ module.exports = function(grunt) {
         watch: {
             css: {
                 files: ['src/sass/**/*.scss'],
-                tasks: ['dist-css']
+                tasks: ['dist-css', 'manifest']
             },
             js: {
                 files: ['src/js/**/*.js'],
-                tasks: ['copy:js', 'copy:integration']
+                tasks: ['copy:js', 'copy:integration', 'manifest']
             },
             lib: {
                 files: ['src/lib/**/*.js'],
-                tasks: ['copy:lib']
+                tasks: ['copy:lib', 'manifest']
             },
             app: {
                 files: ['src/*.js', 'src/**/*.html', 'src/**/*.json', 'src/img/**/*', 'src/font/**/*'],
-                tasks: ['copy:app', 'copy:ca', 'copy:tpl', 'copy:img', 'copy:font', 'manifest-dev']
+                tasks: ['copy:app', 'copy:ca', 'copy:tpl', 'copy:img', 'copy:font', 'manifest-dev', 'manifest']
             }
         },
         copy: {
