@@ -83,7 +83,7 @@ define(function(require) {
             // go to step 1
             $scope.step = 1;
             // generate new code for the user
-            $scope.code = util.randomString(24).toUpperCase();
+            $scope.code = util.randomString(24);
             $scope.displayedCode = $scope.code.slice(0, 4) + '-' + $scope.code.slice(4, 8) + '-' + $scope.code.slice(8, 12) + '-' + $scope.code.slice(12, 16) + '-' + $scope.code.slice(16, 20) + '-' + $scope.code.slice(20, 24);
 
             // clear input fields of any previous artifacts
