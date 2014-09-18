@@ -53,7 +53,7 @@ define(function(require) {
                 keychain.downloadPrivateKey({
                     userId: userId,
                     keyId: keypair.publicKey._id,
-                    recoveryToken: $scope.recoveryToken.toLowerCase()
+                    recoveryToken: $scope.recoveryToken.toUpperCase()
                 }, function(err, encryptedPrivateKey) {
                     if (err) {
                         $scope.onError(err);
