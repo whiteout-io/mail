@@ -25,6 +25,7 @@ define(function(require) {
                 scope = $rootScope.$new();
                 scope.state = {};
                 scope.form = {};
+                scope.formValidate = {};
 
                 sinon.stub(location, 'path').returns(location);
                 sinon.stub(location, 'search').returns(location);
@@ -58,6 +59,7 @@ define(function(require) {
 
             it('should fail to error creating user', function(done) {
                 scope.form.$invalid = false;
+                scope.betaCode = 'asfd';
                 adminStub.createUser.yieldsAsync(new Error('asdf'));
 
                 scope.$apply = function() {
@@ -73,17 +75,59 @@ define(function(require) {
 
             it('should work', function(done) {
                 scope.form.$invalid = false;
+                scope.betaCode = 'asfd';
                 adminStub.createUser.yieldsAsync();
 
-                scope.login = function() {
-                    expect(scope.busy).to.be.true;
+                scope.$apply = function() {
+                    expect(scope.busy).to.be.false;
                     expect(scope.errMsg).to.be.undefined;
+                    expect(scope.step).to.equal(3);
                     expect(adminStub.createUser.calledOnce).to.be.true;
                     done();
                 };
 
                 scope.createWhiteoutAccount();
                 expect(scope.busy).to.be.true;
+            });
+        });
+
+        describe('validateUser', function() {
+            it('should return early for invalid form', function() {
+                scope.formValidate.$invalid = true;
+                scope.validateUser();
+                expect(adminStub.validateUser.called).to.be.false;
+            });
+
+            it('should fail to error creating user', function(done) {
+                scope.formValidate.$invalid = false;
+                scope.token = 'asfd';
+                adminStub.validateUser.yieldsAsync(new Error('asdf'));
+
+                scope.$apply = function() {
+                    expect(scope.busyValidate).to.be.false;
+                    expect(scope.errMsgValidate).to.equal('asdf');
+                    expect(adminStub.validateUser.calledOnce).to.be.true;
+                    done();
+                };
+
+                scope.validateUser();
+                expect(scope.busyValidate).to.be.true;
+            });
+
+            it('should work', function(done) {
+                scope.formValidate.$invalid = false;
+                scope.token = 'asfd';
+                adminStub.validateUser.yieldsAsync();
+
+                scope.login = function() {
+                    expect(scope.busyValidate).to.be.true;
+                    expect(scope.errMsgValidate).to.be.undefined;
+                    expect(adminStub.validateUser.calledOnce).to.be.true;
+                    done();
+                };
+
+                scope.validateUser();
+                expect(scope.busyValidate).to.be.true;
             });
         });
 

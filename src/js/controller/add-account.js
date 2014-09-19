@@ -29,12 +29,38 @@ define(function(require) {
             appCtrl._adminDao.createUser({
                 emailAddress: $scope.emailAddress,
                 password: $scope.pass,
-                //phone: $scope.phone,
-                //betaCode: $scope.betaCode
+                phone: $scope.phone,
+                betaCode: $scope.betaCode.toUpperCase()
+            }, function(err) {
+                $scope.busy = false;
+
+                if (err) {
+                    $scope.errMsg = err.errMsg || err.message;
+                    $scope.$apply();
+                    return;
+                }
+
+                $scope.goTo(3);
+                $scope.$apply();
+            });
+        };
+
+        $scope.validateUser = function() {
+            if ($scope.formValidate.$invalid) {
+                return;
+            }
+
+            $scope.busyValidate = true;
+            $scope.errMsgValidate = undefined; // reset error msg
+
+            // verify user to REST api
+            appCtrl._adminDao.validateUser({
+                emailAddress: $scope.emailAddress,
+                token: $scope.token.toUpperCase()
             }, function(err) {
                 if (err) {
-                    $scope.busy = false;
-                    $scope.errMsg = err.errMsg || err.message;
+                    $scope.busyValidate = false;
+                    $scope.errMsgValidate = err.errMsg || err.message;
                     $scope.$apply();
                     return;
                 }

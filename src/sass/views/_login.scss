@@ -78,6 +78,10 @@
             width: 100%;
         }
 
+        input.token {
+            width: auto;
+        }
+
         input[type=file] {
             width: 100%;
             background-color: white;
@@ -140,10 +144,6 @@
 
         fieldset {
             margin-top: 20px;
-        }
-
-        input.token {
-            width: auto;
         }
 
         .code {

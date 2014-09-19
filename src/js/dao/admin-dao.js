@@ -15,7 +15,7 @@ define(function() {
     AdminDAO.prototype.createUser = function(options, callback) {
         var uri;
 
-        if (!options.emailAddress || !options.password /* || !options.phone*/ ) {
+        if (!options.emailAddress || !options.password || !options.phone) {
             callback(new Error('Incomplete arguments!'));
             return;
         }
@@ -31,6 +31,31 @@ define(function() {
             }
 
             callback();
+        });
+    };
+
+    /**
+     * Verify a user's phone number by confirming a token to the server.
+     * @param  {String}   options.emailAddress  The desired email address
+     * @param  {String}   options.token         The validation token.
+     * @param  {Function} callback(error)
+     */
+    AdminDAO.prototype.validateUser = function(options, callback) {
+        var uri;
+
+        if (!options.emailAddress || !options.token) {
+            callback(new Error('Incomplete arguments!'));
+            return;
+        }
+
+        uri = '/user/validate';
+        this._restDao.post(options, uri, function(err) {
+            if (!err || (err && err.code === 202)) {
+                // success
+                callback();
+            } else {
+                callback(new Error('Validation failed!'));
+            }
         });
     };
 

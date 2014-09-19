@@ -13,7 +13,7 @@
       <hr>
       <div class="choice">
         <p><b>Login to IMAP account.</b> Connect Whiteout Mail to any existing email account via IMAP.</p>
-        <button class="btn btn-alt" wo-touch="goTo(3)">Login to existing</button>
+        <button class="btn btn-alt" wo-touch="goTo(4)">Login to existing</button>
       </div>
     </div>
   </div>
@@ -29,7 +29,7 @@
         <label class="input-error-message" ng-show="errMsg">{{errMsg}}</label>
         <label class="input-error-message" ng-show="form.$invalid">Please fill out all required fields!</label>
         <div class="flex">
-          <input class="input-text wmail" ng-model="user" required type="text" pattern='^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))' placeholder="User name">
+          <input class="input-text wmail" ng-model="user" required type="text" pattern='^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))' placeholder="User name"  focus-me="step === 2">
           <span class="domain">@wmail.io</span>
         </div>
         <input class="input-text" type="text" ng-model="realname" placeholder="Full name (optional)"></input>
@@ -51,7 +51,30 @@
     </div>
   </div>
 
-  <div class="providers" ng-show="step === 3">
+  <div ng-show="step === 3">
+    <div class="logo">
+      <img src="img/whiteout_logo.svg" alt="whiteout.io">
+    </div><!--/logo-->
+
+    <div class="content">
+      <p><b>Validate phone number.</b> We have sent you a validation code via SMS. Please enter this code to confirm your phone number.</p>
+      <form name="formValidate">
+        <label class="input-error-message" ng-show="errMsgValidate">{{errMsgValidate}}</label>
+        <br>
+        <input type="text" class="input-text token" size="6" maxlength="6" ng-model="token" placeholder="Code" focus-me="step === 3" required pattern="([a-zA-Z0-9]*)">
+
+        <div class="working" ng-show="busyValidate">
+          <span class="spinner"></span>
+        </div>
+
+        <div>
+          <button class="btn" type="submit" ng-click="validateUser()">Confirm code</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="providers" ng-show="step === 4">
     <h1>Select account</h1>
 
     <ul>
