@@ -14,22 +14,6 @@
     src: local('PT Sans Bold'), local('PTSans-Bold'), url('../font/pt-sans-bold.woff') format('woff');
 }
 
-// Mensch fonts
-// -------------------------
-
-@font-face {
-    font-family: 'Mensch';
-    font-style: normal;
-    font-weight: normal;
-    src: local('Mensch'), local('Mensch-Regular'), url('../font/mensch.ttf') format('truetype');
-}
-@font-face {
-    font-family: 'Mensch Thin';
-    font-style: normal;
-    font-weight: normal;
-    src: local('Mensch Thin'), local('Mensch-Thin'), url('../font/mensch-thin.ttf') format('truetype');
-}
-
 // Icon fonts
 // -------------------------
 

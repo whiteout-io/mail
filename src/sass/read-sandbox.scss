@@ -11,7 +11,8 @@
 @import "components/scrollbars";
 
 html {
-    overflow: scroll;
+    // use overflow auto and not scroll otherwise IE shows scrollbars always
+    overflow: auto;
 }
 
 body {
