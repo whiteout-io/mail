@@ -69,12 +69,17 @@
             margin-right: 10px;
         }
         label,
+        input[type="tel"],
         input[type="text"],
         input[type="email"],
         input[type="number"],
         input[type="password"] {
             margin-bottom: 10px;
             width: 100%;
+        }
+
+        input.token {
+            width: auto;
         }
 
         input[type=file] {
@@ -139,10 +144,6 @@
 
         fieldset {
             margin-top: 20px;
-        }
-
-        input.token {
-            width: auto;
         }
 
         .code {

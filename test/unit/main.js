@@ -79,6 +79,7 @@ function startTests() {
 			'test/unit/crypto-test',
 			'test/unit/backbutton-handler-test',
 			'test/unit/rest-dao-test',
+			'test/unit/admin-dao-test',
 			'test/unit/publickey-dao-test',
 			'test/unit/privatekey-dao-test',
 			'test/unit/lawnchair-dao-test',

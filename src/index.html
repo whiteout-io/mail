@@ -6,10 +6,6 @@
 
     <!-- Theses CSP rules are used as a fallback in runtimes such as Cordova -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' chrome-extension: file: gap:; object-src 'none'; script-src 'self' 'unsafe-eval' chrome-extension: file: gap:; connect-src *; style-src 'self' 'unsafe-inline' chrome-extension: file: gap:; img-src 'self' chrome-extension: file: gap: data:">
-    <!-- Test CSP with script-src 'unsafe-inline' and warn user -->
-    <script type="text/javascript">
-      alert('Warning! Your browser does not support Content-Security-Policy (CSP). If possible please switch to a different browser.');
-    </script>
 
     <!-- iOS homescreen link -->
     <meta name="apple-mobile-web-app-capable" content="yes">
