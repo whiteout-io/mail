@@ -12,31 +12,26 @@
     left: 0;
     z-index: 99;
     height: 100%;
+    will-change: transform;
     @include respond-to(desktop) {
-        transition: transform $time-nav-animation;
+        transition: transform $time-nav-animation ease-out;
     }
-}
 
-.nav-menu-open .nav-pusher::after {
-    width: 100%;
-    height: 100%;
-    opacity: 1;
-    @include respond-to(desktop) {
-        transition: opacity $time-nav-animation;
-    }
-}
-
-.nav-pusher::after {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 0;
-    height: 0;
-    background: rgba(0,0,0,0.2);
-    content: '';
-    opacity: 0;
-    @include respond-to(desktop) {
-        transition: opacity $time-nav-animation, width 0.1s $time-nav-animation, height 0.1s $time-nav-animation;
+    &:after {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 0;
+        height: 0;
+        background: rgba(0,0,0,0.2);
+        width: 100%;
+        height: 100%;
+        content: '';
+        opacity: 0;
+        transform: scale(0, 0);
+        @include respond-to(desktop) {
+            transition: opacity $time-nav-animation, transform 0.1s $time-nav-animation;
+        }
     }
 }
 
@@ -44,41 +39,36 @@
     position: absolute;
     top: 0;
     left: 0;
-    z-index: 100;
-    visibility: hidden;
     width: $nav-width;
     max-width: $nav-max-width;
     height: 100%;
     background: $color-blue;
-    background-image: linear-gradient(to right ,$color-blue 98%, darken($color-blue, 1%) 100%);
-    @include respond-to(desktop) {
-        transition: all $time-nav-animation;
-    }
+    background-image: linear-gradient(to right, $color-blue 98%, darken($color-blue, 1%) 100%);
     border-right: 1px solid $color-grey-light;
-}
-
-.nav-effect.nav-menu-open .nav-pusher {
-    transform: translate3d($nav-max-width, 0, 0);
-}
-@media(max-width: 450px) {
-    .nav-effect.nav-menu-open .nav-pusher {
-        transform: translate3d($nav-width, 0, 0);
-    }
-}
-
-.nav-effect.nav-menu {
-    z-index: 1;
     transform: translate3d(-50%, 0, 0);
-}
+    will-change: transform;
 
-.nav-effect.nav-menu-open .nav-effect.nav-menu {
-    visibility: visible;
     @include respond-to(desktop) {
-        transition: transform $time-nav-animation;
+        transition: transform $time-nav-animation ease-out;
     }
-    transform: translate3d(0, 0, 0);
 }
 
-.nav-effects.nav-menu::after {
-    display: none;
+.nav-menu-open {
+    .nav-menu {
+        transform: translateX(0);
+    }
+    .nav-pusher {
+        transform: translateX($nav-max-width);
+        @media(max-width: 450px) {
+            transform: translateX($nav-width);
+        }
+
+        &:after {
+            transform: scale(1, 1);
+            opacity: 1;
+            @include respond-to(desktop) {
+                transition: opacity $time-nav-animation;
+            }
+        }
+    }
 }
