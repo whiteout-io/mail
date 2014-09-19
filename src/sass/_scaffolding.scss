@@ -35,6 +35,8 @@ textarea {
     line-height: inherit;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    // disable box shadow on firefox
+    background-image: none;
 }
 
 fieldset {

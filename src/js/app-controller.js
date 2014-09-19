@@ -173,24 +173,7 @@ define(function(require) {
     };
 
     self.checkForUpdate = function() {
-        if (!window.chrome || !chrome.runtime || !chrome.runtime.onUpdateAvailable) {
-            return;
-        }
-
-        // check for update and restart
-        chrome.runtime.onUpdateAvailable.addListener(function(details) {
-            axe.debug("Updating to version " + details.version);
-            chrome.runtime.reload();
-        });
-        chrome.runtime.requestUpdateCheck(function(status) {
-            if (status === "update_found") {
-                axe.debug("Update pending...");
-            } else if (status === "no_update") {
-                axe.debug("No update found.");
-            } else if (status === "throttled") {
-                axe.debug("Checking updates too frequently.");
-            }
-        });
+        self._updateHandler.checkForUpdate(self.onError);
     };
 
     /**

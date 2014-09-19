@@ -71,7 +71,6 @@ app.disable('x-powered-by');
 //
 
 var port = process.env.PORT || 8585,
-    oneDay = 86400000,
     development = process.argv[2] === '--dev';
 
 // set HTTP headers
@@ -81,7 +80,14 @@ app.use(function(req, res, next) {
     // CSP
     var iframe = development ? "http://" + req.hostname + ":" + port : "https://" + req.hostname; // allow iframe to load assets
     res.set('Content-Security-Policy', "default-src 'self' " + iframe + "; object-src 'none'; connect-src *; style-src 'self' 'unsafe-inline' " + iframe + "; img-src 'self' data:");
-    return next();
+    // set Cache-control Header (for AppCache)
+    res.set('Cache-control', 'public, max-age=0');
+    next();
+});
+
+app.use('/appcache.manifest', function(req, res, next) {
+    res.set('Cache-control', 'no-cache');
+    next();
 });
 
 // redirect all http traffic to https
@@ -97,9 +103,7 @@ app.use(function(req, res, next) {
 app.use(compression());
 
 // server static files
-app.use(express.static(__dirname + '/dist', {
-    maxAge: oneDay
-}));
+app.use(express.static(__dirname + '/dist'));
 
 //
 // Socket.io proxy

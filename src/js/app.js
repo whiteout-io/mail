@@ -1,3 +1,19 @@
+'use strict';
+
+// Check if a new ApaCache is available on page load.
+if (typeof window.applicationCache !== 'undefined') {
+    window.onload = function() {
+        window.applicationCache.onupdateready = function() {
+            if (window.applicationCache.status === window.applicationCache.UPDATEREADY) {
+                // Browser downloaded a new app cache
+                if (window.confirm('A new version of Whiteout Mail is available. Restart the app to update?')) {
+                    window.location.reload();
+                }
+            }
+        };
+    };
+}
+
 // hey Angular, we're bootstrapping manually!
 window.name = 'NG_DEFER_BOOTSTRAP!';
 
@@ -54,8 +70,6 @@ requirejs([
     backButtonUtil,
     FastClick
 ) {
-    'use strict';
-
     // reset window.name
     window.name = util.UUID();
 
