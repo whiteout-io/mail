@@ -9,25 +9,17 @@
         h1, a {
             color: #fff;
             text-decoration: none;
-            text-shadow: 0 -1px 1px $color-grey-medium;
         }
 
         header {
             padding: 0 $nav-padding;
             height: 84px;
             h1 {
-                font-family: 'Mensch';
-                font-weight: normal;
-                height: 100px;
-                width: 300px;
-                margin: 0px;
-                padding: 0px;
-                padding-top: 10px;
-                color: #fff;
-
-                span {
-                    font-family: 'Mensch Thin';
-                }
+                @include hide-text();
+                background: url(../img/whiteout_logo_light.svg) left top no-repeat;
+                background-size: contain;
+                height: 30px;
+                margin: 10px 0 0;
             }
         }
 
@@ -63,7 +55,6 @@
                     span.label {
                         line-height: 1.3em;
                         vertical-align: middle;
-                        text-shadow: none;
                     }
                     &.active, &:hover, &:focus {
                         background-color: mix($color-blue, $color-white, 70%);
