@@ -220,6 +220,7 @@ module.exports = function(grunt) {
                     timestamp: true,
                     hash: true,
                     cache: ['socket.io/socket.io.js'],
+                    exclude: ['appcache.manifest'],
                     master: ['index.html']
                 },
                 src: ['**/*.*'],
