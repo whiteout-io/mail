@@ -24,6 +24,7 @@ define(function(require) {
         PrivateKeyDAO = require('js/dao/privatekey-dao'),
         InvitationDAO = require('js/dao/invitation-dao'),
         DeviceStorageDAO = require('js/dao/devicestorage-dao'),
+        ConnectionDoctor = require('js/util/connection-doctor'),
         UpdateHandler = require('js/util/update/update-handler'),
         config = appConfig.config,
         str = appConfig.string;
@@ -104,6 +105,7 @@ define(function(require) {
         self._outboxBo = new OutboxBO(emailDao, keychain, userStorage);
         self._updateHandler = new UpdateHandler(appConfigStore, userStorage, auth);
         self._adminDao = new AdminDao(new RestDAO(config.adminUrl));
+        self._doctor = new ConnectionDoctor();
 
         emailDao.onError = self.onError;
     };
