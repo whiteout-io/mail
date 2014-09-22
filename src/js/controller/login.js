@@ -93,8 +93,9 @@ define(function(require) {
         }
 
         function goTo(location) {
-            $location.path(location);
-            $scope.$apply();
+            $scope.$apply(function() {
+                $location.path(location);
+            });
         }
     };
 
