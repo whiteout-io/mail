@@ -7,7 +7,7 @@
 
         if (e.data.html) {
             // display html mail body
-            html = e.data.html;
+            html = '<div class="scale-body">' + e.data.html + '</div>';;
         } else if (e.data.text) {
             // diplay text mail body by with colored conversation nodes
             html = renderNodes(parseConversation(e.data.text));
@@ -26,6 +26,8 @@
         }
 
         document.body.innerHTML = html;
+
+        scaleToFit();
     };
 
     /**
@@ -185,6 +187,30 @@
         }
 
         return '<div class="view-read-body">' + body + '</div>';
+    }
+
+    /**
+     * Transform scale content to fit iframe width
+     */
+    function scaleToFit() {
+        var view = document.getElementsByClassName('scale-body').item(0);
+        if(!view) {
+            return;
+        }
+
+        var parentWidth = view.parentNode.offsetWidth;
+        var w = view.offsetWidth;
+        var scale = '';
+
+        if(w > parentWidth) {
+            scale = parentWidth / w;
+            scale = 'scale(' + scale + ',' + scale + ')';
+        }
+
+        view.style['-webkit-transform-origin'] = '0 0';
+        view.style.transformOrigin = '0 0';
+        view.style['-webkit-transform'] = scale;
+        view.style.transform = scale;
     }
 
 })();
