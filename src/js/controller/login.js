@@ -4,8 +4,6 @@ define(function(require) {
     var appController = require('js/app-controller');
 
     var LoginCtrl = function($scope, $location) {
-        // check for app update
-        appController.checkForUpdate();
 
         // start main application controller
         appController.start({
@@ -15,6 +13,9 @@ define(function(require) {
                 $scope.onError(err);
                 return;
             }
+
+            // check for app update
+            appController.checkForUpdate();
 
             initializeUser();
         });
@@ -92,8 +93,9 @@ define(function(require) {
         }
 
         function goTo(location) {
-            $location.path(location);
-            $scope.$apply();
+            $scope.$apply(function() {
+                $location.path(location);
+            });
         }
     };
 

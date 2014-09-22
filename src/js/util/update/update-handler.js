@@ -1,7 +1,8 @@
 define(function(require) {
     'use strict';
 
-    var cfg = require('js/app-config').config,
+    var axe = require('axe'),
+        cfg = require('js/app-config').config,
         updateV1 = require('js/util/update/update-v1'),
         updateV2 = require('js/util/update/update-v2'),
         updateV3 = require('js/util/update/update-v3'),
@@ -90,6 +91,41 @@ define(function(require) {
         }
 
         executeNextUpdate();
+    };
+
+    /**
+     * Check application version and update correspondingly
+     */
+    UpdateHandler.prototype.checkForUpdate = function(dialog) {
+        // Chrome Packaged App
+        if (typeof window.chrome !== 'undefined' && chrome.runtime && chrome.runtime.onUpdateAvailable) {
+            // check for Chrome app update and restart
+            chrome.runtime.onUpdateAvailable.addListener(function(details) {
+                axe.debug('New Chrome App update... requesting reload.');
+                // Chrome downloaded a new app version
+                dialog({
+                    title: 'Update available',
+                    message: 'A new version ' + details.version + ' of the app is available. Restart the app to update?',
+                    positiveBtnStr: 'Restart',
+                    negativeBtnStr: 'Not now',
+                    showNegativeBtn: true,
+                    callback: function(agree) {
+                        if (agree) {
+                            chrome.runtime.reload();
+                        }
+                    }
+                });
+            });
+            chrome.runtime.requestUpdateCheck(function(status) {
+                if (status === "update_found") {
+                    axe.debug("Update pending...");
+                } else if (status === "no_update") {
+                    axe.debug("No update found.");
+                } else if (status === "throttled") {
+                    axe.debug("Checking updates too frequently.");
+                }
+            });
+        }
     };
 
     return UpdateHandler;

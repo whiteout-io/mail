@@ -1,0 +1,26 @@
+{
+    "name": "Whiteout Mail",
+    "description": "Simple and elegant email client with integrated end-to-end encryption. Keeping your emails safe has never been so easy.",
+    "version": "0.17.1.0",
+    "launch_path": "/index.html",
+    "icons": {
+        "128": "/img/icon-128.png"
+    },
+    "developer": {
+        "name": "Whiteout Networks GmbH",
+        "url": "https://whiteout.io"
+    },
+    "default_locale": "en",
+    "type": "privileged",
+    "permissions": {
+        "tcp-socket": {
+            "description": "Required to connect to mail servers via IMAP/SMTP"
+        },
+        "desktop-notification": {
+            "description": "Required to show notifications on incoming mails."
+        },
+        "storage": {
+            "description": "Required to store messages for offline use."
+        }
+    }
+}

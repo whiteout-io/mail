@@ -64,7 +64,6 @@ define(function(require) {
                 expect(scope.state.writer.close).to.exist;
                 expect(scope.verify).to.exist;
                 expect(scope.checkSendStatus).to.exist;
-                expect(scope.updatePreview).to.exist;
                 expect(scope.sendToOutbox).to.exist;
                 expect(scope.tagStyle).to.exist;
                 expect(scope.lookupAddressBook).to.exist;
@@ -91,7 +90,6 @@ define(function(require) {
                 expect(scope.to).to.deep.equal([]);
                 expect(scope.subject).to.equal('');
                 expect(scope.body).to.equal('');
-                expect(scope.ciphertextPreview).to.equal(undefined);
                 expect(verifyMock.calledOnce).to.be.true;
 
                 scope.verify.restore();
@@ -124,7 +122,6 @@ define(function(require) {
                 expect(scope.subject).to.equal('Re: ' + subject);
                 expect(scope.body).to.contain(body);
                 expect(scope.references).to.deep.equal(['ghi', 'def', 'abc']);
-                expect(scope.ciphertextPreview).to.not.be.empty;
                 expect(verifyMock.called).to.be.true;
 
                 scope.verify.restore();
@@ -156,7 +153,6 @@ define(function(require) {
                 expect(scope.to).to.deep.equal([]);
                 expect(scope.subject).to.equal('Fwd: ' + subject);
                 expect(scope.body).to.contain(body);
-                expect(scope.ciphertextPreview).to.be.undefined;
                 expect(verifyMock.called).to.be.true;
                 expect(scope.attachments).to.not.equal(re.attachments); // not the same reference
                 expect(scope.attachments).to.deep.equal(re.attachments); // but the same content

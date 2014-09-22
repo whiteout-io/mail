@@ -60,6 +60,7 @@ define(function(require) {
             it('should fail to error creating user', function(done) {
                 scope.form.$invalid = false;
                 scope.betaCode = 'asfd';
+                scope.phone = '12345';
                 adminStub.createUser.yieldsAsync(new Error('asdf'));
 
                 scope.$apply = function() {
@@ -76,6 +77,7 @@ define(function(require) {
             it('should work', function(done) {
                 scope.form.$invalid = false;
                 scope.betaCode = 'asfd';
+                scope.phone = '12345';
                 adminStub.createUser.yieldsAsync();
 
                 scope.$apply = function() {
