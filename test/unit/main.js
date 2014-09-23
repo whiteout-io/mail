@@ -103,7 +103,8 @@ function startTests() {
 			'test/unit/write-ctrl-test',
 			'test/unit/outbox-bo-test',
 			'test/unit/invitation-dao-test',
-			'test/unit/update-handler-test'
+			'test/unit/update-handler-test',
+			'test/unit/connection-doctor-test'
 		], function() {
 			//Tests loaded, run tests
 			mocha.run();

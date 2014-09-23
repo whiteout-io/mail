@@ -6,21 +6,22 @@ define(function(require) {
     var ENCRYPTION_METHOD_TLS = 2;
 
     var appCtrl = require('js/app-controller'),
-        config = require('js/app-config').config,
-        ImapClient = require('imap-client'),
-        SmtpClient = require('smtpclient');
+        config = require('js/app-config').config;
 
     var SetCredentialsCtrl = function($scope, $location, $routeParams) {
-        if (!appCtrl._emailDao && !$routeParams.dev) {
+        if (!appCtrl._auth && !$routeParams.dev) {
             $location.path('/'); // init app
             return;
         }
 
         var auth = appCtrl._auth;
+        var doctor = appCtrl._doctor;
 
-        var provider;
+        //
+        // Presets and Settings
+        //
 
-        provider = $location.search().provider;
+        var provider = $location.search().provider;
         $scope.hasProviderPreset = !!config[provider];
         $scope.useOAuth = !!auth.oauthToken;
         $scope.showDetails = (provider === 'custom');
@@ -30,12 +31,15 @@ define(function(require) {
         }
 
         if ($scope.hasProviderPreset) {
-            // use non-editable smtp and imap presets for provider
+            // use non-editable presets
+            
+            // SMTP config
             $scope.smtpHost = config[provider].smtp.host;
             $scope.smtpPort = config[provider].smtp.port;
             $scope.smtpCert = config[provider].smtp.ca;
             $scope.smtpPinned = config[provider].smtp.pinned;
 
+            // transport encryption method
             if (config[provider].smtp.secure && !config[provider].smtp.ignoreTLS) {
                 $scope.smtpEncryption = ENCRYPTION_METHOD_TLS;
             } else if (!config[provider].smtp.secure && !config[provider].smtp.ignoreTLS) {
@@ -44,11 +48,13 @@ define(function(require) {
                 $scope.smtpEncryption = ENCRYPTION_METHOD_NONE;
             }
 
+            // IMAP config
             $scope.imapHost = config[provider].imap.host;
             $scope.imapPort = config[provider].imap.port;
             $scope.imapCert = config[provider].imap.ca;
             $scope.imapPinned = config[provider].imap.pinned;
 
+            // transport encryption method
             if (config[provider].imap.secure && !config[provider].imap.ignoreTLS) {
                 $scope.imapEncryption = ENCRYPTION_METHOD_TLS;
             } else if (!config[provider].imap.secure && !config[provider].imap.ignoreTLS) {
@@ -58,109 +64,19 @@ define(function(require) {
             }
         }
 
-        $scope.test = function(imapClient, smtpClient) {
-            var imapEncryption = parseInt($scope.imapEncryption, 10);
-            var smtpEncryption = parseInt($scope.smtpEncryption, 10);
-            $scope.credentialsIncomplete = false;
-            $scope.connectionError = false;
-            $scope.smtpOk = undefined;
-            $scope.imapOk = undefined;
-
-            if (!(($scope.username || $scope.emailAddress) && ($scope.password || $scope.useOAuth))) {
-                $scope.credentialsIncomplete = true;
-                return;
-            }
-
-            var imap = imapClient || new ImapClient({
-                host: $scope.imapHost.toLowerCase(),
-                port: $scope.imapPort,
-                secure: imapEncryption === ENCRYPTION_METHOD_TLS,
-                ignoreTLS: imapEncryption === ENCRYPTION_METHOD_NONE,
-                ca: $scope.imapCert,
-                auth: {
-                    user: $scope.username || $scope.emailAddress,
-                    pass: $scope.password,
-                    xoauth2: auth.oauthToken
-                }
-            });
-
-            imap.onCert = function(pemEncodedCert) {
-                if (!$scope.imapPinned) {
-                    $scope.imapCert = pemEncodedCert;
-                }
-            };
-
-            imap.onError = function(err) {
-                $scope.imapOk = !err;
-                $scope.connectionError = err;
-                done();
-            };
-
-            var smtp = smtpClient || new SmtpClient($scope.smtpHost.toLowerCase(), $scope.smtpPort, {
-                useSecureTransport: smtpEncryption === ENCRYPTION_METHOD_TLS,
-                ignoreTLS: smtpEncryption === ENCRYPTION_METHOD_NONE,
-                ca: $scope.smtpCert,
-                auth: {
-                    user: $scope.username || $scope.emailAddress,
-                    pass: $scope.password,
-                    xoauth2: auth.oauthToken
-                }
-            });
-
-            smtp.oncert = function(pemEncodedCert) {
-                if (!$scope.smtpPinned) {
-                    $scope.smtpCert = pemEncodedCert;
-                }
-            };
-
-            smtp.onerror = function(err) {
-                $scope.smtpOk = !err;
-                $scope.connectionError = $scope.connectionError || err;
-                done();
-            };
-
-            smtp.onidle = function() {
-                smtp.onerror = function() {}; // don't care about errors after discarding connection
-                $scope.smtpOk = true;
-                smtp.quit();
-                done();
-            };
-
-            $scope.busy = 2;
-
-            // fire away
-            imap.login(function(err) {
-                $scope.connectionError = $scope.connectionError || err;
-                $scope.imapOk = !err;
-                imap.logout(function() {}); // don't care about errors after discarding connection
-                done();
-            });
-
-            smtp.connect();
-        };
-
-        function done() {
-            if ($scope.busy > 0) {
-                $scope.busy--;
-            }
-
-            if ($scope.smtpOk && $scope.imapOk) {
-                login();
-            }
-
-            $scope.$apply();
-        }
-
-        function login() {
+        $scope.test = function() {
+            // parse the <select> dropdown lists
             var imapEncryption = parseInt($scope.imapEncryption, 10);
             var smtpEncryption = parseInt($scope.smtpEncryption, 10);
 
-            auth.setCredentials({
+            // build credentials object
+            var credentials = {
                 provider: provider,
                 emailAddress: $scope.emailAddress,
                 username: $scope.username || $scope.emailAddress,
                 realname: $scope.realname,
                 password: $scope.password,
+                xoauth2: auth.oauthToken,
                 imap: {
                     host: $scope.imapHost.toLowerCase(),
                     port: $scope.imapPort,
@@ -177,13 +93,27 @@ define(function(require) {
                     ca: $scope.smtpCert,
                     pinned: !!$scope.smtpPinned
                 }
-            });
-            redirect();
-        }
+            };
 
-        function redirect() {
-            $location.path('/login');
-        }
+            // use the credentials in the connection doctor
+            doctor.configure(credentials);
+
+            // run connection doctor test suite
+            $scope.busy = true;
+            doctor.check(function(err) {
+                if (err) {
+                    // display the error in the settings UI
+                    $scope.connectionError = err;
+                } else {
+                    // persists the credentials and forwards to /login
+                    auth.setCredentials(credentials);
+                    $location.path('/login');
+                }
+
+                $scope.busy = false;
+                $scope.$apply();
+            });
+        };
     };
 
     return SetCredentialsCtrl;

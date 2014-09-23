@@ -4,24 +4,29 @@ define(function(require) {
     var expect = chai.expect,
         angular = require('angular'),
         mocks = require('angularMocks'),
-        ImapClient = require('imap-client'),
-        SmtpClient = require('smtpclient'),
+        Auth = require('js/bo/auth'),
+        ConnectionDoctor = require('js/util/connection-doctor'),
         SetCredentialsCtrl = require('js/controller/login-set-credentials'),
         appController = require('js/app-controller');
 
     describe('Login (Set Credentials) Controller unit test', function() {
-        var scope, location, setCredentialsCtrl;
-        var imap, smtp;
-        var origAuth;
-        var provider = 'providerproviderprovider';
+        // Angular parameters
+        var scope, location, provider;
+
+        // Stubs
+        var auth, origAuth, doctor, origDoctor;
+
+        // SUT
+        var setCredentialsCtrl;
 
         beforeEach(function() {
+            // remeber pre-test state to restore later
             origAuth = appController._auth;
-            appController._auth = {};
+            origDoctor = appController._doctor;
+            auth = appController._auth = sinon.createStubInstance(Auth);
+            doctor = appController._doctor = sinon.createStubInstance(ConnectionDoctor);
 
-            imap = sinon.createStubInstance(ImapClient);
-            smtp = sinon.createStubInstance(SmtpClient);
-
+            // setup the controller
             angular.module('setcredentialstest', []);
             mocks.module('setcredentialstest');
             mocks.inject(function($rootScope, $controller, $location) {
@@ -40,14 +45,13 @@ define(function(require) {
         });
 
         afterEach(function() {
+            // restore pre-test state
             appController._auth = origAuth;
+            appController._doctor = origDoctor;
         });
 
         describe('set credentials', function() {
-            it('should work', function(done) {
-                var imapCert = 'imapcertimapcertimapcertimapcertimapcertimapcert',
-                    smtpCert = 'smtpcertsmtpcertsmtpcertsmtpcertsmtpcertsmtpcert';
-
+            it('should work', function() {
                 scope.emailAddress = 'emailemailemailemail';
                 scope.password = 'passwdpasswdpasswdpasswd';
                 scope.smtpHost = 'hosthosthost';
@@ -58,44 +62,39 @@ define(function(require) {
                 scope.imapEncryption = '2'; // TLS
                 scope.realname = 'peter pan';
 
-                imap.login.yields();
-
-                appController._auth.setCredentials = function(args) {
-                    expect(smtp.connect.calledOnce).to.be.true;
-                    expect(imap.login.calledOnce).to.be.true;
-
-                    expect(args).to.deep.equal({
-                        provider: provider,
-                        emailAddress: scope.emailAddress,
-                        username: scope.username || scope.emailAddress,
-                        realname: scope.realname,
-                        password: scope.password,
-                        imap: {
-                            host: scope.imapHost.toLowerCase(),
-                            port: scope.imapPort,
-                            secure: true,
-                            ignoreTLS: false,
-                            ca: scope.imapCert,
-                            pinned: false
-                        },
-                        smtp: {
-                            host: scope.smtpHost.toLowerCase(),
-                            port: scope.smtpPort,
-                            secure: false,
-                            ignoreTLS: false,
-                            ca: scope.smtpCert,
-                            pinned: false
-                        }
-                    });
-                    done();
+                var expectedCredentials = {
+                    provider: provider,
+                    emailAddress: scope.emailAddress,
+                    username: scope.username || scope.emailAddress,
+                    realname: scope.realname,
+                    password: scope.password,
+                    xoauth2: undefined,
+                    imap: {
+                        host: scope.imapHost.toLowerCase(),
+                        port: scope.imapPort,
+                        secure: true,
+                        ignoreTLS: false,
+                        ca: undefined,
+                        pinned: false
+                    },
+                    smtp: {
+                        host: scope.smtpHost.toLowerCase(),
+                        port: scope.smtpPort,
+                        secure: false,
+                        ignoreTLS: false,
+                        ca: undefined,
+                        pinned: false
+                    }
                 };
 
-                scope.test(imap, smtp);
+                doctor.check.yields(); // synchronous yields!
 
-                imap.onCert(imapCert);
-                smtp.oncert(smtpCert);
+                scope.test();
 
-                smtp.onidle();
+                expect(doctor.check.calledOnce).to.be.true;
+                expect(doctor.configure.calledOnce).to.be.true;
+                expect(doctor.configure.calledWith(expectedCredentials)).to.be.true;
+                expect(auth.setCredentials.calledOnce).to.be.true;
             });
         });
     });
