@@ -65,7 +65,7 @@
     .subject-box {
         flex-shrink: 0;
         position: relative;
-        margin: 20px 0;
+        margin: 20px 0 7px;
 
         input[type=file] {
             visibility: hidden;
@@ -147,6 +147,7 @@
     }
 
     textarea {
+        margin-top: 13px;
         flex-grow: 1;
         width: 100%;
         border: none;
