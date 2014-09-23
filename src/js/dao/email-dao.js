@@ -853,22 +853,25 @@ define(function(require) {
      * @param {Function} callback(error, attachment) Invoked when the attachment body part was retrieved and parsed, or an error occurred
      */
     EmailDAO.prototype.getAttachment = function(options, callback) {
-        var self = this;
+        var self = this,
+            attachment = options.attachment;
 
         self.busy();
+        attachment.busy = true;
         self._getBodyParts({
             folder: options.folder,
             uid: options.uid,
-            bodyParts: [options.attachment]
+            bodyParts: [attachment]
         }, function(err, parsedBodyParts) {
+            attachment.busy = false;
             if (err) {
                 callback(err);
                 return;
             }
             self.done();
             // add the content to the original object
-            options.attachment.content = parsedBodyParts[0].content;
-            callback(err, err ? undefined : options.attachment);
+            attachment.content = parsedBodyParts[0].content;
+            callback(err, err ? undefined : attachment);
         });
     };
 

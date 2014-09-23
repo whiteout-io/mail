@@ -1,41 +1,79 @@
-define(function() {
+define(function(require) {
     'use strict';
+
+    var util = require('js/crypto/util');
 
     var dl = {};
 
     dl.createDownload = function(options, callback) {
         var contentType = options.contentType || 'application/octet-stream';
+        var filename = options.filename || 'file';
+        var content = options.content;
+        var a = document.createElement('a');
+        var supportsBlob;
 
-        chrome.fileSystem.chooseEntry({
-            type: 'saveFile',
-            suggestedName: options.filename
-        }, onEntry);
+        try {
+            supportsBlob = !!new Blob();
+        } catch (e) {}
 
-        function onEntry(file) {
-            if (!file) {
-                callback();
-                return;
-            }
-            file.createWriter(onWriter, onError);
-        }
-
-        function onWriter(writer) {
-            writer.onerror = onError;
-            writer.onwriteend = onEnd;
-            writer.write(new Blob([options.content], {
+        if (window.chrome && window.chrome.fileSystem) {
+            // chrome app
+            chrome.fileSystem.chooseEntry({
+                type: 'saveFile',
+                suggestedName: filename
+            }, function(file) {
+                if (!file) {
+                    callback();
+                    return;
+                }
+                file.createWriter(function(writer) {
+                    writer.onerror = callback;
+                    writer.onwriteend = function() {
+                        callback();
+                    };
+                    writer.write(new Blob([content], {
+                        type: contentType
+                    }));
+                }, callback);
+            });
+            return;
+        } else if (typeof a.download !== "undefined" && supportsBlob) {
+            // ff 30+, chrome 27+ (android: 37+)
+            document.body.appendChild(a);
+            a.style = "display: none";
+            a.href = window.URL.createObjectURL(new Blob([content], {
                 type: contentType
             }));
-        }
-
-        function onError(e) {
-            callback({
-                errMsg: 'Error exporting keypair to file!',
-                err: e
-            });
-        }
-
-        function onEnd() {
-            callback();
+            a.download = filename;
+            a.click();
+            setTimeout(function() {
+                window.URL.revokeObjectURL(a.href);
+                document.body.removeChild(a);
+            }, 10); // arbitrary, just get it off the main thread
+        } else if (window.navigator.msSaveBlob) {
+            // ie 10+
+            window.navigator.msSaveBlob(new Blob([content], {
+                type: contentType
+            }), filename);
+        } else if (supportsBlob) {
+            // safari actually makes no sense:
+            // - you can't open a new window
+            // - the file system api is dead
+            // - download attribute doesn't work
+            // - behaves randomly (opens a new tab or doesn't, downloads stuff or doesn't, ...)
+            var url = window.URL.createObjectURL(new Blob([content], {
+                type: contentType
+            }));
+            var newTab = window.open(url, "_blank");
+            if (!newTab) {
+                window.location.href = url;
+            }
+        } else {
+            // anything else, where anything at all is better than nothing
+            if (typeof content !== "string" && content.buffer) {
+                content = util.arrBuf2BinStr(content.buffer);
+            }
+            window.open('data:' + contentType + ';base64,' + btoa(content), "_blank");
         }
     };
 

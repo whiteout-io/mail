@@ -37,7 +37,8 @@
       <span class="attachment"
         ng-repeat="attachment in state.mailList.selected.attachments"
         wo-touch="download(attachment)">
-        <span data-icon="&#xe003;"></span>
+        <span ng-if="attachment.busy" class="spinner"></span>
+        <span ng-hide="attachment.busy" data-icon="&#xe003;"></span>
         {{attachment.filename}}
       </span><!--/.attachment-->
     </div><!--/.attachments-->

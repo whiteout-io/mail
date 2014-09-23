@@ -85,33 +85,21 @@ define(function(require) {
         $scope.download = function(attachment) {
             // download file to disk if content is available
             if (attachment.content) {
-                saveToDisk(attachment);
-                return;
-            }
-
-            var folder = $scope.state.nav.currentFolder;
-            var email = $scope.state.mailList.selected;
-
-            emailDao.getAttachment({
-                folder: folder,
-                uid: email.uid,
-                attachment: attachment
-            }, function(err) {
-                if (err) {
-                    $scope.onError(err);
-                    return;
-                }
-
-                saveToDisk(attachment);
-            });
-
-            function saveToDisk(attachment) {
                 download.createDownload({
                     content: attachment.content,
                     filename: attachment.filename,
                     contentType: attachment.mimeType
                 }, $scope.onError);
+                return;
             }
+
+            var folder = $scope.state.nav.currentFolder;
+            var email = $scope.state.mailList.selected;
+            emailDao.getAttachment({
+                folder: folder,
+                uid: email.uid,
+                attachment: attachment
+            }, $scope.onError);
         };
 
         $scope.invite = function(user) {
