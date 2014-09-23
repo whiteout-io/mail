@@ -65,7 +65,7 @@
     .subject-box {
         flex-shrink: 0;
         position: relative;
-        margin: 20px 0 7px 0;
+        margin: 20px 0;
 
         input[type=file] {
             visibility: hidden;
@@ -146,33 +146,18 @@
         }
     }
 
-    .body {
+    textarea {
         flex-grow: 1;
+        width: 100%;
+        border: none;
+        outline: none;
+        color: $color-grey-dark;
         line-height: 1.5em;
-        user-select: text;
-        overflow-y: scroll;
+        overflow-y: auto;
         // allow scrolling on iOS
         -webkit-overflow-scrolling: touch;
         // put layer on GPU
         transform: translatez(0);
-
-        *[contentEditable] {
-            outline: 0px;
-            cursor: text;
-        }
-
-        .encrypt-preview {
-            font-size: 0.9em;
-            margin-top: 3em;
-            font-family: monospace;
-            color: $color-grey-light;
-            word-wrap: break-word;
-            transition: opacity 0.5s;
-        }
-
-        .invisible {
-            opacity: 0;
-        }
     }
 
     .send-control {

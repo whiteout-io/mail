@@ -58,13 +58,7 @@
       </span><!--/.attachment-->
     </div><!--/.attachments-box-->
 
-    <div class="body" focus-child>
-      <p ng-model="body" contentEditable="true" ng-change="updatePreview()" tabindex="3" focus-me="state.lightbox === 'write' && writerTitle === 'Reply'"></p>
-
-      <div class="encrypt-preview" ng-show="ciphertextPreview && sendBtnSecure">
-        <p>-----BEGIN ENCRYPTED PREVIEW-----<br>{{ciphertextPreview}}<br>-----END ENCRYPTED PREVIEW-----</p>
-      </div><!--/.encrypt-preview-->
-    </div><!--/.body-->
+    <textarea ng-model="body" spellcheck="true" focus-me="state.lightbox === 'write' && writerTitle === 'Reply'" tabindex="3"></textarea>
 
     <div class="send-control">
       <button wo-touch="sendToOutbox()" class="btn" ng-class="{'btn-primary': sendBtnSecure === false}" ng-disabled="!okToSend" tabindex="4">{{sendBtnText || 'Send'}}</button>

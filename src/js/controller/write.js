@@ -5,7 +5,6 @@ define(function(require) {
         _ = require('underscore'),
         appController = require('js/app-controller'),
         axe = require('axe'),
-        aes = require('js/crypto/aes-gcm'),
         util = require('js/crypto/util'),
         str = require('js/app-config').string,
         pgp, emailDao, outbox, keychainDao, auth;
@@ -37,7 +36,6 @@ define(function(require) {
 
                 // fill fields depending on replyTo
                 fillFields(replyTo, replyAll, forward);
-                $scope.updatePreview();
 
                 $scope.verify($scope.to[0]);
             },
@@ -61,7 +59,6 @@ define(function(require) {
             $scope.bcc = [];
             $scope.subject = '';
             $scope.body = '';
-            $scope.ciphertextPreview = '';
             $scope.attachments = [];
             $scope.addressBookCache = undefined;
         }
@@ -321,21 +318,6 @@ define(function(require) {
         // Editing email body
         //
 
-        // generate key,iv for encryption preview
-        var key = util.random(128),
-            iv = util.random(128);
-
-        $scope.updatePreview = function() {
-            if (!$scope.sendBtnSecure || !$scope.body.trim()) {
-                $scope.ciphertextPreview = undefined;
-                return;
-            }
-
-            // Although this does encrypt live using AES, this is just for show. The plaintext is encrypted seperately before sending the email.
-            $scope.ciphertextPreview = aes.encrypt($scope.body, key, iv);
-        };
-        $scope.$watch('sendBtnSecure', $scope.updatePreview);
-
         $scope.sendToOutbox = function() {
             var email;
 
@@ -466,27 +448,6 @@ define(function(require) {
     //
 
     var ngModule = angular.module('write', []);
-    ngModule.directive('contenteditable', function() {
-        return {
-            require: 'ngModel',
-            link: function(scope, elm, attrs, ctrl) {
-                // view -> model
-                elm.on('keyup keydown', function() {
-                    // set model
-                    ctrl.$setViewValue(elm[0].innerText);
-                    scope.$digest();
-                });
-
-                // model -> view
-                ctrl.$render = function() {
-                    elm[0].innerText = ctrl.$viewValue;
-                };
-
-                // load init value from DOM
-                ctrl.$setViewValue(elm[0].innerText);
-            }
-        };
-    });
 
     ngModule.directive('focusMe', function($timeout, $parse) {
         return {
@@ -496,20 +457,14 @@ define(function(require) {
                 scope.$watch(model, function(value) {
                     if (value === true) {
                         $timeout(function() {
-                            element[0].focus();
+                            var el = element[0];
+                            el.focus();
+                            if (typeof el.selectionStart !== 'undefined' && typeof el.selectionEnd !== 'undefined') {
+                                el.selectionStart = 0;
+                                el.selectionEnd = 0;
+                            }
                         }, 100);
                     }
-                });
-            }
-        };
-    });
-
-    ngModule.directive('focusChild', function() {
-        return {
-            //scope: true,   // optionally create a child scope
-            link: function(scope, element) {
-                element.on('click', function() {
-                    element[0].children[0].focus();
                 });
             }
         };

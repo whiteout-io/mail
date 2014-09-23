@@ -93,7 +93,7 @@ module.exports = function(grunt) {
                 tasks: ['copy:lib', 'manifest']
             },
             app: {
-                files: ['src/*.js', 'src/**/*.html', 'src/**/*.json', 'src/img/**/*', 'src/font/**/*'],
+                files: ['src/*.js', 'src/**/*.html', 'src/**/*.json', 'src/manifest.*', 'src/img/**/*', 'src/font/**/*'],
                 tasks: ['copy:app', 'copy:ca', 'copy:tpl', 'copy:img', 'copy:font', 'manifest-dev', 'manifest']
             }
         },
@@ -179,7 +179,7 @@ module.exports = function(grunt) {
             app: {
                 expand: true,
                 cwd: 'src/',
-                src: ['*.html', '*.js', '*.json'],
+                src: ['*.html', '*.js', '*.json', 'manifest.*'],
                 dest: 'dist/'
             },
             integration: {
@@ -220,7 +220,7 @@ module.exports = function(grunt) {
                     timestamp: true,
                     hash: true,
                     cache: ['socket.io/socket.io.js'],
-                    exclude: ['appcache.manifest'],
+                    exclude: ['appcache.manifest', 'manifest.webapp'],
                     master: ['index.html']
                 },
                 src: ['**/*.*'],

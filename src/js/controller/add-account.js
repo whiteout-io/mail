@@ -29,7 +29,7 @@ define(function(require) {
             appCtrl._adminDao.createUser({
                 emailAddress: $scope.emailAddress,
                 password: $scope.pass,
-                phone: $scope.phone,
+                phone: $scope.phone.replace(/\s+/g, ''), // remove spaces from the phone number
                 betaCode: $scope.betaCode.toUpperCase()
             }, function(err) {
                 $scope.busy = false;
