@@ -19,6 +19,11 @@ body {
     margin: 0;
 }
 
+.scale-body {
+    // necessary to compute overflowing content width in JS
+    float: left;
+}
+
 .view-read-body {
     font-family: $font-family-base;
     font-size: $font-size-base;

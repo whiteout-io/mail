@@ -66,6 +66,11 @@ define(function(require) {
 
         function checkPublicKey(user) {
             user.secure = undefined;
+
+            if(!keychain) {
+                return;
+            }
+
             keychain.getReceiverPublicKey(user.address, function(err, pubkey) {
                 if (err) {
                     $scope.onError(err);
@@ -190,9 +195,20 @@ define(function(require) {
         };
     });
 
-    ngModule.directive('frameLoad', function() {
+    ngModule.directive('frameLoad', function($timeout, $window) {
         return function(scope, elm) {
             var iframe = elm[0];
+
+            scope.$watch('state.read.open', function(open) {
+                if(open) {
+                    // trigger rendering of iframe
+                    // otherwise scale to fit would not compute correct dimensions on mobile
+                    displayText(scope.state.mailList.selected ? scope.state.mailList.selected.body : undefined);
+                    displayHtml(scope.state.mailList.selected ? scope.state.mailList.selected.html : undefined);
+                }
+            });
+
+            $window.addEventListener('resize', scaleToFit);
 
             iframe.onload = function() {
                 // set listeners
@@ -212,6 +228,8 @@ define(function(require) {
                 iframe.contentWindow.postMessage({
                     text: body
                 }, '*');
+
+                $timeout(scaleToFit, 0);
             }
 
             function displayHtml(html) {
@@ -228,19 +246,38 @@ define(function(require) {
                     removeImages: hasImages // avoids doing unnecessary work on the html
                 }, '*');
 
-                // no need to add a scope function to reload the html if there are no images
-                if (!hasImages) {
-                    return;
+                // only add a scope function to reload the html if there are images
+                if (hasImages) {
+                    // reload WITH images
+                    scope.displayImages = function() {
+                        scope.showImageButton = false;
+                        iframe.contentWindow.postMessage({
+                            html: html,
+                            removeImages: false
+                        }, '*');
+                    };
                 }
 
-                // reload WITH images
-                scope.displayImages = function() {
-                    scope.showImageButton = false;
-                    iframe.contentWindow.postMessage({
-                        html: html,
-                        removeImages: false
-                    }, '*');
-                };
+                $timeout(scaleToFit, 0);
+            }
+
+            // transform scale iframe (necessary on iOS) to fit container width
+            function scaleToFit() {
+                var parentWidth = elm.parent().width();
+                var w = elm.width();
+                var scale = '';
+
+                if(w > parentWidth) {
+                    scale = parentWidth / w;
+                    scale = 'scale(' + scale + ',' + scale + ')';
+                }
+
+                elm.css({
+                    '-webkit-transform-origin': '0 0',
+                    'transform-origin': '0 0',
+                    '-webkit-transform': scale,
+                    'transform': scale
+                });
             }
         };
     });
