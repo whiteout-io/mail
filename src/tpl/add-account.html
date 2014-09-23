@@ -13,7 +13,7 @@
       <hr>
       <div class="choice">
         <p><b>Login to IMAP account.</b> Connect Whiteout Mail to any existing email account via IMAP.</p>
-        <button class="btn btn-alt" wo-touch="goTo(4)">Login to existing</button>
+        <button class="btn btn--secondary" wo-touch="goTo(4)">Login to existing</button>
       </div>
     </div>
   </div>
@@ -35,7 +35,7 @@
         <input class="input-text" type="text" ng-model="realname" placeholder="Full name (optional)"></input>
         <div class="flex">
           <input class="input-text" ng-model="pass" required type="password" placeholder="Password" pattern=".{3,30}">
-          <input class="input-text right" ng-model="confirmPass" required type="password" placeholder="Confirm password" ng-class="{'input-text-error': (pass || confirmPass) && pass !== confirmPass}">
+          <input class="input-text right" ng-model="confirmPass" required type="password" placeholder="Confirm password" ng-class="{'input-text--error': (pass || confirmPass) && pass !== confirmPass}">
         </div>
         <input class="input-text"  type="tel" ng-model="phone" required placeholder="Mobile phone number (e.g. +49 170 1234567)"/>
         <input class="input-text" type="text" class="input-text" ng-model="betaCode" required placeholder="Beta access code">
@@ -78,28 +78,28 @@
     <h1>Select account</h1>
 
     <ul>
-      <li class="whiteout" popover="#whiteout-info" wo-touch="connectTo('wmail')">
+      <li class="whiteout" wo-tooltip="#whiteout-info" wo-touch="connectTo('wmail')">
         <div><img src="img/whiteout_logo.svg" alt="Whiteout Mailbox"></div>
       </li>
-      <li class="google" popover="#google-info" wo-touch="connectToGoogle()">
+      <li class="google" wo-tooltip="#google-info" wo-touch="connectToGoogle()">
         <div><img src="img/google_logo.png" alt="Google Mail"></div>
       </li>
-      <li class="outlook" popover="#outlook-info" wo-touch="connectTo('outlook')">
+      <li class="outlook" wo-tooltip="#outlook-info" wo-touch="connectTo('outlook')">
         <div><img src="img/outlook_logo.jpg" alt="Outlook.com"></div>
       </li>
-      <li class="yahoo" popover="#yahoo-info" wo-touch="connectTo('yahoo')">
+      <li class="yahoo" wo-tooltip="#yahoo-info" wo-touch="connectTo('yahoo')">
         <div><img src="img/yahoo_logo.png" alt="Yahoo! Mail"></div>
       </li>
-      <li class="gmx" popover="#gmx-info" wo-touch="connectTo('gmx')">
+      <li class="gmx" wo-tooltip="#gmx-info" wo-touch="connectTo('gmx')">
         <div><img src="img/gmx_logo.jpg" alt="GMX.net"></div>
       </li>
-      <li class="webde" popover="#webde-info" wo-touch="connectTo('webde')">
+      <li class="webde" wo-tooltip="#webde-info" wo-touch="connectTo('webde')">
         <div><img src="img/webde_logo.jpg" alt="Web.de"></div>
       </li>
-      <li class="tonline" popover="#tonline-info" wo-touch="connectTo('tonline')">
+      <li class="tonline" wo-tooltip="#tonline-info" wo-touch="connectTo('tonline')">
         <div><img src="img/tonline_logo.jpg" alt="T-Online"></div>
       </li>
-      <li class="other" popover="#custom-info" wo-touch="connectTo('custom')">
+      <li class="other" wo-tooltip="#custom-info" wo-touch="connectTo('custom')">
         <h3>Custom server...</h3>
       </li>
     </ul>
@@ -107,83 +107,83 @@
 
 </div>
 
-<!-- popovers -->
-<div id="google-info" class="popover right desktop-only" ng-controller="PopoverCtrl">
-  <div class="arrow"></div>
-  <div class="popover-title"><b>Google Account</b></div>
-  <div class="popover-content">
+<!-- tooltips -->
+<div id="google-info" class="tooltip u-hidden-sm">
+  <div class="tooltip__arrow"></div>
+  <div class="tooltip__title">Google Account</div>
+  <div class="tooltip__content">
     <p>Connect Whiteout Mail to your Gmail or Google Apps account.</p>
     <p>Encrypted and cleartext messages are stored on Google's servers.</p>
     <p>Your emails and password remain on your device and are never sent to our servers.</p>
   </div>
-</div><!--/.popover-->
+</div><!--/.tooltip-->
 
-<div id="whiteout-info" class="popover right desktop-only" ng-controller="PopoverCtrl">
-  <div class="arrow"></div>
-  <div class="popover-title"><b>Whiteout Mailbox</b></div>
-  <div class="popover-content">
+<div id="whiteout-info" class="tooltip u-hidden-sm">
+  <div class="tooltip__arrow"></div>
+  <div class="tooltip__title">Whiteout Mailbox</div>
+  <div class="tooltip__content">
     <p>Connect Whiteout Mail to your fully encrypted Whiteout Mailbox (hosted in Europe).</p>
     <p>Incoming cleartext messages are encrypted with your public PGP key before being stored in your inbox.</p>
     <p>This way your email is protected against hackers and can only be read on your device.</p>
   </div>
-</div><!--/.popover-->
+</div><!--/.tooltip-->
 
-<div id="yahoo-info" class="popover right desktop-only" ng-controller="PopoverCtrl">
-  <div class="arrow"></div>
-  <div class="popover-title"><b>Yahoo Mail</b></div>
-  <div class="popover-content">
+<div id="yahoo-info" class="tooltip u-hidden-sm">
+  <div class="tooltip__arrow"></div>
+  <div class="tooltip__title">Yahoo Mail</div>
+  <div class="tooltip__content">
     <p>Connect Whiteout Mail to your Yahoo Mail account.</p>
     <p>Encrypted and cleartext messages are stored on Yahoo's servers.</p>
     <p>Your emails and password remain on your device and are never sent to our servers.</p>
   </div>
-</div><!--/.popover-->
+</div><!--/.tooltip-->
 
-<div id="tonline-info" class="popover right desktop-only" ng-controller="PopoverCtrl">
-  <div class="arrow"></div>
-  <div class="popover-title"><b>T-Online Account</b></div>
-  <div class="popover-content">
+<div id="tonline-info" class="tooltip u-hidden-sm">
+  <div class="tooltip__arrow"></div>
+  <div class="tooltip__title">T-Online Account</div>
+  <div class="tooltip__content">
     <p>Connect Whiteout Mail to your T-Online account.</p>
     <p>Encrypted and cleartext messages are stored on T-Online's servers.</p>
     <p>Your emails and password remain on your device and are never sent to our servers.</p>
   </div>
-</div><!--/.popover-->
+</div><!--/.tooltip-->
 
-<div id="outlook-info" class="popover right desktop-only" ng-controller="PopoverCtrl">
-  <div class="arrow"></div>
-  <div class="popover-title"><b>Outlook.com Account</b></div>
-  <div class="popover-content">
+<div id="outlook-info" class="tooltip u-hidden-sm">
+  <div class="tooltip__arrow"></div>
+  <div class="tooltip__title">Outlook.com Account</div>
+  <div class="tooltip__content">
     <p>Connect Whiteout Mail to your Outlook.com account.</p>
     <p>Encrypted and cleartext messages are stored on Microsoft's servers.</p>
     <p>Your emails and password remain on your device and are never sent to our servers.</p>
   </div>
-</div><!--/.popover-->
+</div><!--/.tooltip-->
 
-<div id="gmx-info" class="popover right desktop-only" ng-controller="PopoverCtrl">
-  <div class="arrow"></div>
-  <div class="popover-title"><b>GMX.net Account</b></div>
-  <div class="popover-content">
+<div id="gmx-info" class="tooltip u-hidden-sm">
+  <div class="tooltip__arrow"></div>
+  <div class="tooltip__title">GMX.net Account</div>
+  <div class="tooltip__content">
     <p>Connect Whiteout Mail to your GMX.net account.</p>
     <p>Encrypted and cleartext messages are stored on GMX's servers.</p>
     <p>Your emails and password remain on your device and are never sent to our servers.</p>
   </div>
-</div><!--/.popover-->
+</div><!--/.tooltip-->
 
-<div id="webde-info" class="popover right desktop-only" ng-controller="PopoverCtrl">
-  <div class="arrow"></div>
-  <div class="popover-title"><b>Web.de Account</b></div>
-  <div class="popover-content">
+<div id="webde-info" class="tooltip u-hidden-sm">
+  <div class="tooltip__arrow"></div>
+  <div class="tooltip__title">Web.de Account</div>
+  <div class="tooltip__content">
     <p>Connect Whiteout Mail to your Web.de account.</p>
     <p>Encrypted and cleartext messages are stored on Web.de's servers.</p>
     <p>Your emails and password remain on your device and are never sent to our servers.</p>
   </div>
-</div><!--/.popover-->
+</div><!--/.tooltip-->
 
-<div id="custom-info" class="popover right desktop-only" ng-controller="PopoverCtrl">
-  <div class="arrow"></div>
-  <div class="popover-title"><b>Custom server</b></div>
-  <div class="popover-content">
+<div id="custom-info" class="tooltip u-hidden-sm">
+  <div class="tooltip__arrow"></div>
+  <div class="tooltip__title">Custom server</div>
+  <div class="tooltip__content">
     <p>Connect Whiteout Mail to your own email server.</p>
     <p>Encrypted and cleartext messages are stored on your server.</p>
     <p>Your emails and password remain on your device and are never sent to our servers.</p>
   </div>
-</div><!--/.popover-->
+</div><!--/.tooltip-->

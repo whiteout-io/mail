@@ -15,7 +15,6 @@ if (typeof window.applicationCache !== 'undefined') {
 }
 
 var DialogCtrl = require('./controller/dialog'),
-    PopoverCtrl = require('./controller/popover'),
     AddAccountCtrl = require('./controller/add-account'),
     AccountCtrl = require('./controller/account'),
     SetPassphraseCtrl = require('./controller/set-passphrase'),
@@ -34,6 +33,7 @@ var DialogCtrl = require('./controller/dialog'),
     NavigationCtrl = require('./controller/navigation'),
     errorUtil = require('./util/error'),
     backButtonUtil = require('./util/backbutton-handler');
+require('./directives/common');
 
 // init main angular module including dependencies
 var app = angular.module('mail', [
@@ -46,9 +46,9 @@ var app = angular.module('mail', [
     'contacts',
     'login-new-device',
     'privatekey-upload',
-    'popover',
     'infinite-scroll',
-    'ngTagsInput'
+    'ngTagsInput',
+    'woDirectives'
 ]);
 
 // set router paths
@@ -114,4 +114,3 @@ app.controller('PrivateKeyUploadCtrl', PrivateKeyUploadCtrl);
 app.controller('ContactsCtrl', ContactsCtrl);
 app.controller('AboutCtrl', AboutCtrl);
 app.controller('DialogCtrl', DialogCtrl);
-app.controller('PopoverCtrl', PopoverCtrl);

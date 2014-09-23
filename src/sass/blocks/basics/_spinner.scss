@@ -1,0 +1,22 @@
+.spinner {
+    vertical-align: middle;
+    display: inline-block;
+    margin-right: 0.2em;
+    height: 1em;
+    width: 1em;
+    animation: spinner-rotation .6s linear infinite;
+    border-left: 0.17em solid rgba($color-black, 0.2);
+    border-right: 0.17em solid rgba($color-black, 0.2);
+    border-bottom: 0.17em solid rgba($color-black, 0.2);
+    border-top: 0.17em solid rgba($color-black, 0.7);
+    border-radius: 100%;
+}
+
+@keyframes spinner-rotation {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(359deg);
+    }
+}

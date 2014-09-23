@@ -384,7 +384,7 @@ var WriteCtrl = function($scope, $filter, $q) {
     $scope.tagStyle = function(recipient) {
         var classes = ['label'];
         if (recipient.secure === false) {
-            classes.push('label-primary');
+            classes.push('label--invalid');
         }
         return classes;
     };

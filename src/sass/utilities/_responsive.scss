@@ -1,0 +1,36 @@
+// Responsive visibility classes
+
+.u-visible-sm {
+    @include respond-to(md) {
+        display: none;
+    }
+}
+.u-visible-md {
+    @include respond-to(sm-only) {
+        display: none;
+    }
+    @include respond-to(lg) {
+        display: none;
+    }
+}
+.u-visible-lg {
+    @include respond-to(not-lg) {
+        display: none;
+    }
+}
+
+.u-hidden-sm {
+    @include respond-to(sm-only) {
+        display: none;
+    }
+}
+.u-hidden-md {
+    @include respond-to(md-only) {
+        display: none;
+    }
+}
+.u-hidden-lg {
+    @include respond-to(lg) {
+        display: none;
+    }
+}

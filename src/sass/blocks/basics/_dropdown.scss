@@ -1,0 +1,61 @@
+.dropdown {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+    display: block;
+    z-index: 9000;
+    max-width: 300px;
+    text-align: left;
+    font-size: $font-size-base;
+    background: $color-bg;
+    color: $color-main;
+    border: 1px solid $color-main;
+    margin: 2px 0 0;
+    padding: 0;
+    list-style: none;
+    will-change: opacity, transform;
+    transition: opacity 0.3s, top 0.3s step-end, left 0.3s step-end, transform 0.3s step-end;
+    opacity: 0;
+    transform: translateY(10px);
+
+    li {
+        &:after {
+            display: block;
+            content: '';
+            height: 0;
+            margin: 0 10px;
+            border-bottom: 1px solid $color-border-light;
+        }
+        &:last-child:after {
+            display: none;
+        }
+    }
+    button {
+        display: block;
+        background: none;
+        width: 100%;
+        border: 0;
+        outline: 0;
+        padding: 0.5em 15px 0.5em 15px;
+        color: $color-main;
+        text-align: left;
+
+        & > svg {
+            display: inline-block;
+            width: 2em;
+            height: 1em;
+            vertical-align: middle;
+            fill: $color-main;
+        }
+        &:hover,
+        &:focus {
+            background-color: darken($color-bg, 2%);
+        }
+    }
+
+    &--show {
+        transition: opacity 0.3s, transform 0.2s ease-out;
+        opacity: 1;
+        transform: none;
+    }
+}

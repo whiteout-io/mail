@@ -1,0 +1,199 @@
+// Main Navigation Menu
+
+.nav {
+    $nav-padding-h: 10px;
+    $footer-height: 30px;
+
+    min-height: 100%;
+    position: relative;
+    padding: 10px $nav-padding-h;
+    background: $color-main;
+    color: $color-main-text;
+
+    h1 {
+        @include scut-image-replace();
+        background: url(../img/whiteout_logo_light.svg) left top no-repeat;
+        background-size: contain;
+        height: 26px;
+        margin-bottom: 40px;
+    }
+    &__write {
+        display: none;
+    }
+    &__folders {
+        padding: 0;
+        margin: 0 0 15px;
+        list-style: none;
+
+        & + .nav__folders {
+            border-top: 1px solid $color-main-text;
+            margin-top: 15px;
+            padding-top: 15px;
+        }
+    }
+    &__folder {
+        position: relative;
+        font-size: $font-size-bigger;
+        margin-bottom: 10px;
+        padding-right: 40px;
+        &:last-child {
+            margin-bottom: 0;
+        }
+        a {
+            @include scut-truncate;
+            display: block;
+            color: $color-white;
+            text-decoration: none;
+            & > svg {
+                fill: $color-white;
+                width: 20px;
+                height: 1em;
+                vertical-align: baseline;
+                margin-right: 5px;
+            }
+        }
+        .btn-icon-very-light {
+            display: none;
+        }
+
+        &--open {
+            font-weight: bold;
+        }
+    }
+    &__counter {
+        display: block;
+        position: absolute;
+        right: 0;
+        top: 0.2em;
+        width: 2.2em;
+        height: 1.5em;
+        line-height: 1.5em;
+        border-radius: 0.5 * 1.5em;
+        text-align: center;
+        background: $color-main-text;
+        color: $color-main;
+        font-size: $font-size-base;
+        font-weight: bold;
+    }
+    &__secondary {
+        margin: 30px 0 15px;
+        border-top: 1px solid $color-main-text;
+        padding: 15px 0 0;
+        list-style: none;
+
+        & > li {
+            font-size: $font-size-big;
+            margin-bottom: 10px;
+            &:last-child {
+                margin-bottom: 0;
+            }
+            a {
+                display: block;
+                color: $color-white;
+                text-decoration: none;
+                & > svg {
+                    fill: $color-white;
+                    width: 20px;
+                    height: 1em;
+                    vertical-align: baseline;
+                    margin-right: 5px;
+                }
+            }
+
+            &--open {
+                font-weight: bold;
+            }
+        }
+    }
+    & > footer {
+        display: none;
+    }
+
+    @include respond-to(lg) {
+        padding-top: 27px; // magic number to valign logo with action bar
+        padding-bottom: $footer-height;
+        background: $color-bg;
+        color: $color-text;
+
+        h1 {
+            height: 26px;
+            margin-bottom: 27px;
+            background-position: center center;
+            background-image: url(../img/whiteout_logo.svg);
+        }
+        &__write {
+            display: block;
+            margin-bottom: 20px;
+            .btn {
+                width: 100%;
+            }
+        }
+        &__folders + .nav__folders {
+            border-top-color: $color-border-light;
+        }
+        &__folder {
+            font-size: $font-size-base;
+            padding-left: 5px;
+            padding-right: 20px;
+            margin-bottom: 12px;
+            a {
+                color: $color-main;
+                & > svg {
+                    fill: $color-main;
+                }
+            }
+            .btn-icon-very-light {
+                display: block;
+                position: absolute;
+                right: 0;
+                top: 0.25em;
+            }
+        }
+        &__counter {
+            display: inline;
+            position: static;
+            font-weight: inherit;
+            font-size: inherit;
+            &:before {
+                content: '(';
+            }
+            &:after {
+                content: ')';
+            }
+        }
+        &__secondary {
+            border-top-color: $color-border-light;
+            & > li {
+                font-size: $font-size-small;
+                padding-left: 5px;
+                padding-right: 5px;
+                a {
+                    color: $color-text-light;
+                    & > svg {
+                        fill: $color-text-light;
+                    }
+                }
+            }
+        }
+        & > footer {
+            display: block;
+            position: absolute;
+            bottom: 0;
+            left: $nav-padding-h;
+            right: $nav-padding-h;
+            height: $footer-height;
+            border-top: 1px solid $color-border-light;
+            font-size: $font-size-smaller;
+            line-height: $footer-height - 4px;
+            color: $color-text-light;
+            svg {
+                display: inline-block;
+                height: 1.5em;
+                width: 1.5em;
+                padding-right: 0.5em;
+                fill: $color-text-light;
+                vertical-align: middle;
+            }
+        }
+    }
+}

@@ -1,5 +1,5 @@
 .view-about {
-    @include respond-to(desktop) {
+    @include respond-to(md) {
         max-width: 550px;
     }
 

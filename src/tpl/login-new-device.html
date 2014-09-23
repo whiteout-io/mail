@@ -16,7 +16,7 @@
         <input type="file" accept=".asc" file-reader tabindex="1">
       </div>
       <div>
-        <input class="input-text" type="password" ng-model="passphrase" ng-class="{'input-text-error':incorrect}" placeholder="Passphrase" tabindex="2">
+        <input class="input-text" type="password" ng-model="passphrase" ng-class="{'input-text--error':incorrect}" placeholder="Passphrase" tabindex="2">
       </div>
       <a href="https://whiteout.io/revocation.html" title="Click here to reset your account." target="_blank">Lost your keyfile or passphrase?</a>
       <div><button type="submit" wo-touch="confirmPassphrase()" class="btn" ng-disabled="!key" tabindex="3">Import</button>

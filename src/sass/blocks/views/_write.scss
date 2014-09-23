@@ -1,0 +1,74 @@
+.write {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+
+    @include respond-to(md) {
+        // this number depends on max-height set on .lightbox
+        height: 590px; // magic number
+    }
+
+    // Header components
+
+    &__header {
+        flex-shrink: 0;
+        margin-bottom: 1em;
+
+        .mail-addresses {
+            margin-bottom: 0.5em;
+        }
+
+        & > .attachments {
+            margin-top: 0.5em;
+        }
+    }
+    &__subject {
+        position: relative;
+        margin-top: 1.3em;
+
+        input[type=file] {
+            position: absolute;
+            visibility: hidden;
+            width: 0;
+            height: 0;
+        }
+        .input-text {
+            width: 100%;
+            height: 40px;
+            padding-right: 10px + 5px + 30px;
+        }
+        .btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            padding: 0;
+            line-height: 30px;
+            width: 30px;
+            height: 30px;
+            font-size: 1em;
+            outline: 0;
+            min-width: 0;
+        }
+    }
+
+    // Content components
+
+    &__body {
+        flex-grow: 1;
+        width: 100%;
+        border: none;
+        outline: none;
+        color: $color-grey-dark;
+        line-height: 1.5em;
+        overflow-y: auto;
+        // allow scrolling on iOS
+        -webkit-overflow-scrolling: touch;
+        // put layer on GPU
+        transform: translatez(0);
+    }
+    &__submit {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+    }
+}

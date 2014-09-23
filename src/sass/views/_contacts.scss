@@ -8,7 +8,7 @@
         .key-controls-search {
             flex-grow: 1;
             input[type=text] {
-                line-height: 23px;
+                line-height: 28px;
                 width: 100%;
             }
         }
@@ -27,7 +27,7 @@
                 width: 100%;
             }
 
-            @include respond-to(desktop) {
+            @include respond-to(md) {
                 width: 10em;
             }
         }
@@ -52,17 +52,23 @@
             }
 
             button.remove {
-                font-family: $font-family-icons;
                 font-size: 0.75em;
-                color: $color-grey-input;
                 border: none;
                 background: none;
                 outline: none;
+                padding: 0;
+                vertical-align: middle;
+
+                svg {
+                    height: 0.8em;
+                    width: 0.8em;
+                    fill: $color-grey-input;
+                }
             }
         }
 
-        // pull popover upwards to keep popup inside lightbox
-        .popover {
+        // pull tooltip upwards to keep popup inside lightbox
+        .tooltip {
             margin-top: -20px;
         }
     }

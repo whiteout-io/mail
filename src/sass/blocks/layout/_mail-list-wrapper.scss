@@ -1,0 +1,47 @@
+// Mail list wrapper
+//
+// Two-column layout in tablet mode (medium screens).
+
+.mail-list-wrapper {
+    $aside-width:           344px;
+
+    position: relative;
+    height: 100%;
+
+    &__aside {
+        display: none;
+        height: 100%;
+        overflow: hidden;
+
+        @include respond-to(md-only) {
+            display: block;
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: $aside-width;
+            border-right: 1px solid $color-border-light;
+        }
+    }
+    &__container {
+        height: 100%;
+
+        @include respond-to(md-only) {
+            position: absolute;
+            left: $aside-width;
+            top: 0;
+            right: 0;
+        }
+    }
+
+    // Modifier to open sidebar
+    &--show-aside {
+        @include respond-to(not-md) {
+            .mail-list-wrapper__aside {
+                display: block;
+            }
+            .mail-list-wrapper__container {
+                display: none;
+            }
+        }
+    }
+}

@@ -1,0 +1,69 @@
+.attachments {
+    $height:            40px; // same height as subject in write view
+    $padding:           5px;
+    $li-height:         $height - 2 * $padding - 2 * 1px;
+
+    list-style: none;
+    border: 1px solid $color-border-light;
+    margin: 0;
+    padding: $padding $padding 0 $padding;
+    text-align: left;
+
+    & > li {
+        display: inline-block;
+        height: $li-height;
+        max-width: 100%;
+        line-height: $li-height - 1px;
+        border-radius: 0.5 * ($li-height);
+        vertical-align: middle;
+        margin-right: $padding;
+        margin-bottom: $padding;
+        padding: 0 10px;
+        border: 1px solid $color-border-light;
+        cursor: pointer;
+        @include scut-truncate;
+
+        &:first-child {
+            margin-left: 0;
+        }
+        & > svg {
+            display: inline-block;
+            height: 0.8em;
+            width: 0.8em;
+            fill: $color-text-light;
+            vertical-align: baseline;
+        }
+
+        &:hover,
+        &:focus {
+            background-color: darken($color-bg, 5%);
+        }
+    }
+
+    &__delete {
+        display: inline-block;
+        border: none;
+        background: none;
+        outline: none;
+        margin-left: 0.3em;
+        margin-top: -0.2em; // correct vertical position
+        padding: 0;
+        vertical-align: middle;
+        height: 1em;
+        line-height: 1em;
+
+        & > svg {
+            width: 1em;
+            height: 1em;
+            fill: $color-text-light;
+            vertical-align: baseline;
+        }
+
+        &:hover,
+        &:focus {
+            svg {
+                fill: darken($color-text-light, 5%);
+            }
+        }
+    }
+}

@@ -431,28 +431,6 @@ var MailListCtrl = function($scope, $routeParams) {
 
 var ngModule = angular.module('mail-list', []);
 
-ngModule.directive('woTouch', function($parse) {
-    return function(scope, elm, attrs) {
-        var handler = $parse(attrs.woTouch);
-
-        elm.on('touchstart', function() {
-            elm.addClass('active');
-        });
-        elm.on('touchleave touchcancel touchmove touchend', function() {
-            elm.removeClass('active');
-        });
-
-        elm.on('click', function(event) {
-            elm.removeClass('active');
-            scope.$apply(function() {
-                handler(scope, {
-                    $event: event
-                });
-            });
-        });
-    };
-});
-
 ngModule.directive('listScroll', function() {
     return {
         link: function(scope, elm, attrs) {

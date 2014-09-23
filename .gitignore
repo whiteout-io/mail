@@ -5,8 +5,10 @@ test/lib/
 .sass-cache
 src/css/
 dist/
+compile/
 release/
 test/integration/src/
+src/img/icons/all.svg
 .elasticbeanstalk/
 test/*/index.js
 **/*.browserified.js

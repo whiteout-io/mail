@@ -1,0 +1,62 @@
+.tooltip {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+    display: block;
+    z-index: 9000;
+    max-width: 276px; // choosen arbitrarily
+    padding: 1px;
+    text-align: left;
+    font-size: $font-size-small;
+    background-color: $color-bg;
+    color: $color-text;
+    border: 1px solid $color-border-light;
+    margin-left: 10px;
+    will-change: opacity, transform;
+    transition: opacity 0.3s, top 0.3s step-end, left 0.3s step-end, transform 0.3s step-end;
+    opacity: 0;
+    transform: translateX(10px);
+
+    &__title {
+        margin: 0;
+        padding: 9px 14px;
+        font-weight: bold;
+        background-color: darken($color-grey-lightest, 5%);
+        border-bottom: 1px solid $color-bg;
+    }
+    &__content {
+        padding: 9px 14px;
+        background-color: $color-grey-lightest;
+    }
+    &__arrow,
+    &__arrow:after {
+        position: absolute;
+        display: block;
+        width: 0;
+        height: 0;
+        border-color: transparent;
+        border-style: solid;
+    }
+    &__arrow {
+        border-width: 11px;
+        top: 50%;
+        left: -11px;
+        margin-top: -11px;
+        border-left-width: 0;
+        border-right-color: $color-border-light;
+    }
+    &__arrow:after {
+        border-width: 10px;
+        content: " ";
+        left: 1px;
+        bottom: -10px;
+        border-left-width: 0;
+        border-right-color: $color-grey-lightest;
+    }
+
+    &--show {
+        transition: opacity 0.3s, transform 0.2s ease-out;
+        opacity: 1;
+        transform: none;
+    }
+}

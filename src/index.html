@@ -33,6 +33,11 @@
 
   <body key-shortcuts>
 
+    <!-- inline icons have to come first, hide immediately with inline styles -->
+    <div style="width: 0; height: 0; visibility: hidden;">
+        <!-- @import img/icons/all.svg -->
+    </div>
+
     <div ng-view class="main-app-view"></div>
 
     <!-- error dialog lightbox -->

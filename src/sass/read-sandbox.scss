@@ -1,14 +1,13 @@
-// Utilities
-@import "mixins";
-@import "functions";
-@import "grid";
-
 // Bootstrap
-@import "variables";
-@import "fonts";
+@import "base/config";
+@import "base/fonts";
 
-// Components
-@import "components/scrollbars";
+// Mixins
+
+@import "mixins/responsive";
+@import "mixins/scrollbar";
+
+@include scrollbar();
 
 html {
     // use overflow auto and not scroll otherwise IE shows scrollbars always
