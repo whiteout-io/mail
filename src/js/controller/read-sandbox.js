@@ -7,7 +7,7 @@
 
         if (e.data.html) {
             // display html mail body
-            html = '<div class="scale-body">' + e.data.html + '</div>';;
+            html = '<div class="scale-body">' + e.data.html + '</div>';
         } else if (e.data.text) {
             // diplay text mail body by with colored conversation nodes
             html = renderNodes(parseConversation(e.data.text));
