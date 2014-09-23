@@ -207,7 +207,7 @@ define(function(require) {
         };
     });
 
-    ngModule.directive('frameLoad', function($timeout) {
+    ngModule.directive('frameLoad', function($timeout, $window) {
         return function(scope, elm) {
             var iframe = elm[0];
 
@@ -219,6 +219,8 @@ define(function(require) {
                     displayHtml(scope.state.mailList.selected ? scope.state.mailList.selected.html : undefined);
                 }
             });
+
+            $window.addEventListener('resize', scaleToFit);
 
             iframe.onload = function() {
                 // set listeners

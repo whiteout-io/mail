@@ -30,6 +30,8 @@
         scaleToFit();
     };
 
+    window.addEventListener('resize', scaleToFit);
+
     /**
      * Parse email body and generate conversation nodes
      * @param  {Object} email The email object
