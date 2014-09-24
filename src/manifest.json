@@ -11,9 +11,7 @@
     "196": "img/icon-196.png"
   },
   "permissions": [
-    "unlimitedStorage", {
-      "fileSystem": ["write"]
-    },
+    "unlimitedStorage",
     "notifications",
     "https://keys-test.whiteout.io/",
     "https://keychain-test.whiteout.io/",

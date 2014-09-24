@@ -5,7 +5,7 @@ define(function(require) {
 
     var dl = {};
 
-    dl.createDownload = function(options, callback) {
+    dl.createDownload = function(options) {
         var contentType = options.contentType || 'application/octet-stream';
         var filename = options.filename || 'file';
         var content = options.content;
@@ -16,28 +16,7 @@ define(function(require) {
             supportsBlob = !!new Blob();
         } catch (e) {}
 
-        if (window.chrome && window.chrome.fileSystem) {
-            // chrome app
-            chrome.fileSystem.chooseEntry({
-                type: 'saveFile',
-                suggestedName: filename
-            }, function(file) {
-                if (!file) {
-                    callback();
-                    return;
-                }
-                file.createWriter(function(writer) {
-                    writer.onerror = callback;
-                    writer.onwriteend = function() {
-                        callback();
-                    };
-                    writer.write(new Blob([content], {
-                        type: contentType
-                    }));
-                }, callback);
-            });
-            return;
-        } else if (typeof a.download !== "undefined" && supportsBlob) {
+        if (typeof a.download !== "undefined" && supportsBlob) {
             // ff 30+, chrome 27+ (android: 37+)
             document.body.appendChild(a);
             a.style = "display: none";

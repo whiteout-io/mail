@@ -67,7 +67,7 @@ define(function(require) {
         function checkPublicKey(user) {
             user.secure = undefined;
 
-            if(!keychain) {
+            if (!keychain) {
                 return;
             }
 
@@ -94,7 +94,7 @@ define(function(require) {
                     content: attachment.content,
                     filename: attachment.filename,
                     contentType: attachment.mimeType
-                }, $scope.onError);
+                });
                 return;
             }
 
@@ -200,7 +200,7 @@ define(function(require) {
             var iframe = elm[0];
 
             scope.$watch('state.read.open', function(open) {
-                if(open) {
+                if (open) {
                     // trigger rendering of iframe
                     // otherwise scale to fit would not compute correct dimensions on mobile
                     displayText(scope.state.mailList.selected ? scope.state.mailList.selected.body : undefined);
@@ -267,7 +267,7 @@ define(function(require) {
                 var w = elm.width();
                 var scale = '';
 
-                if(w > parentWidth) {
+                if (w > parentWidth) {
                     scale = parentWidth / w;
                     scale = 'scale(' + scale + ',' + scale + ')';
                 }

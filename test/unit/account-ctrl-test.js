@@ -63,7 +63,7 @@ define(function(require) {
             });
         });
         describe('export to key file', function() {
-            it('should work', function(done) {
+            it('should work', function() {
                 var createDownloadMock = sinon.stub(dl, 'createDownload');
                 keychainMock.getUserKeyPair.withArgs(emailAddress).yields(null, {
                     publicKey: {
@@ -75,18 +75,15 @@ define(function(require) {
                     }
                 });
                 createDownloadMock.withArgs(sinon.match(function(arg) {
-                    return arg.content === 'ab' && arg.filename === 'whiteout_mail_' + emailAddress + '_' + expectedKeyId + '.asc' && arg.contentType === 'text/plain';
-                })).yields();
-                scope.onError = function(err) {
-                    expect(err.title).to.equal('Success');
-                    expect(scope.state.lightbox).to.equal(undefined);
-                    expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
-                    expect(dl.createDownload.calledOnce).to.be.true;
-                    dl.createDownload.restore();
-                    done();
-                };
+                    return arg.content === 'a\r\nb' && arg.filename === 'whiteout_mail_' + emailAddress + '_' + expectedKeyId + '.asc' && arg.contentType === 'text/plain';
+                })).returns();
 
                 scope.exportKeyFile();
+
+                expect(scope.state.lightbox).to.equal(undefined);
+                expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
+                expect(dl.createDownload.calledOnce).to.be.true;
+                dl.createDownload.restore();
             });
 
             it('should not work when key export failed', function(done) {
@@ -94,29 +91,6 @@ define(function(require) {
                 scope.onError = function(err) {
                     expect(err.message).to.equal('Boom!');
                     expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
-                    done();
-                };
-
-                scope.exportKeyFile();
-            });
-
-            it('should not work when create download failed', function(done) {
-                var createDownloadMock = sinon.stub(dl, 'createDownload');
-                keychainMock.getUserKeyPair.withArgs(emailAddress).yields(null, {
-                    publicKey: {
-                        _id: dummyKeyId,
-                        publicKey: 'a'
-                    },
-                    privateKey: {
-                        encryptedKey: 'b'
-                    }
-                });
-                createDownloadMock.withArgs().yields(new Error('asdasd'));
-                scope.onError = function(err) {
-                    expect(err.message).to.equal('asdasd');
-                    expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
-                    expect(dl.createDownload.calledOnce).to.be.true;
-                    dl.createDownload.restore();
                     done();
                 };
 

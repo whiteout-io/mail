@@ -49,26 +49,12 @@ define(function(require) {
                 var file = 'whiteout_mail_' + userId + '_' + keyId.substring(8, keyId.length);
 
                 dl.createDownload({
-                    content: keys.publicKey.publicKey + keys.privateKey.encryptedKey,
+                    content: keys.publicKey.publicKey + '\r\n' + keys.privateKey.encryptedKey,
                     filename: file + '.asc',
                     contentType: 'text/plain'
-                }, onExport);
+                });
             });
         };
-
-        function onExport(err) {
-            if (err) {
-                $scope.onError(err);
-                return;
-            }
-
-            $scope.state.account.toggle(false);
-            $scope.$apply();
-            $scope.onError({
-                title: 'Success',
-                message: 'Exported keypair to file.'
-            });
-        }
     };
 
     return AccountCtrl;
