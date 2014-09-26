@@ -32,7 +32,7 @@ define(function(require) {
     var self = {};
 
     /**
-     * Start the application
+     * Start the application.
      */
     self.start = function(options, callback) {
         if (self.started) {
@@ -66,6 +66,9 @@ define(function(require) {
         }
     };
 
+    /**
+     * Initialize the dependency tree.
+     */
     self.buildModules = function() {
         var lawnchairDao, restDao, pubkeyDao, privkeyDao, crypto, emailDao, keychain, pgp, userStorage, pgpbuilder, oauth, appConfigStore, auth;
 
@@ -110,14 +113,101 @@ define(function(require) {
         emailDao.onError = self.onError;
     };
 
+    /**
+     * Calls runtime hooks to check if an app update is available.
+     */
+    self.checkForUpdate = function() {
+        self._updateHandler.checkForUpdate(self.onError);
+    };
+
+    /**
+     * Instanciate the mail email data access object and its dependencies. Login to imap on init.
+     */
+    self.init = function(options, callback) {
+        // init user's local database
+        self._userStorage.init(options.emailAddress, function(err) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            // Migrate the databases if necessary
+            self._updateHandler.update(onUpdate);
+        });
+
+        function onUpdate(err) {
+            if (err) {
+                callback({
+                    errMsg: 'Update failed, please reinstall the app.',
+                    err: err
+                });
+                return;
+            }
+
+            // account information for the email dao
+            var account = {
+                realname: options.realname,
+                emailAddress: options.emailAddress,
+                asymKeySize: config.asymKeySize
+            };
+
+            // init email dao
+            self._emailDao.init({
+                account: account
+            }, function(err, keypair) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                callback(null, keypair);
+            });
+        }
+    };
+
+    /**
+     * Check if the user agent is online.
+     */
     self.isOnline = function() {
         return navigator.onLine;
     };
 
+    /**
+     * Event handler that is called when the user agent goes offline.
+     */
     self.onDisconnect = function() {
         self._emailDao.onDisconnect();
     };
 
+    /**
+     * Log the current user out by clear the app config store and deleting instances of imap-client and pgp-mailer.
+     */
+    self.logout = function() {
+        var self = this;
+
+        // clear app config store
+        self._auth.logout(function(err) {
+            if (err) {
+                self.onError(err);
+                return;
+            }
+
+            // delete instance of imap-client and pgp-mailer
+            self._emailDao.onDisconnect(function(err) {
+                if (err) {
+                    self.onError(err);
+                    return;
+                }
+
+                // navigate to login
+                window.location.href = '/';
+            });
+        });
+    };
+
+    /**
+     * Event that is called when the user agent goes online. This create new instances of the imap-client and pgp-mailer and connects to the mail server.
+     */
     self.onConnect = function(callback) {
         if (!self.isOnline() || !self._emailDao || !self._emailDao._account) {
             // prevent connection infinite loop
@@ -171,55 +261,6 @@ define(function(require) {
                     axe.debug('Reconnect attempt complete.');
                 });
             }, config.reconnectInterval);
-        }
-    };
-
-    self.checkForUpdate = function() {
-        self._updateHandler.checkForUpdate(self.onError);
-    };
-
-    /**
-     * Instanciate the mail email data access object and its dependencies. Login to imap on init.
-     */
-    self.init = function(options, callback) {
-        // init user's local database
-        self._userStorage.init(options.emailAddress, function(err) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            // Migrate the databases if necessary
-            self._updateHandler.update(onUpdate);
-        });
-
-        function onUpdate(err) {
-            if (err) {
-                callback({
-                    errMsg: 'Update failed, please reinstall the app.',
-                    err: err
-                });
-                return;
-            }
-
-            // account information for the email dao
-            var account = {
-                realname: options.realname,
-                emailAddress: options.emailAddress,
-                asymKeySize: config.asymKeySize
-            };
-
-            // init email dao
-            self._emailDao.init({
-                account: account
-            }, function(err, keypair) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-
-                callback(null, keypair);
-            });
         }
     };
 

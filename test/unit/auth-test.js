@@ -350,5 +350,29 @@ define(function(require) {
                 auth.handleCertificateUpdate('imap', onConnect, callback, dummyCert);
             });
         });
+
+        describe('#logout', function() {
+            it('should fail to to error in calling db clear', function(done) {
+                storageStub.clear.yields(new Error());
+
+                auth.logout(function(err) {
+                    expect(err).to.exist;
+                    done();
+                });
+            });
+
+            it('should work', function(done) {
+                storageStub.clear.yields();
+
+                auth.logout(function(err) {
+                    expect(err).to.not.exist;
+                    expect(auth.password).to.be.undefined;
+                    expect(auth.initialized).to.be.undefined;
+                    expect(auth.credentialsDirty).to.be.undefined;
+                    expect(auth.passwordNeedsDecryption).to.be.undefined;
+                    done();
+                });
+            });
+        });
     });
 });

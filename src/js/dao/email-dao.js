@@ -1206,13 +1206,24 @@ define(function(require) {
     };
 
     /**
-     * This handler should be invoked when navigator.onLine === false. It will discard
-     * the imap client and pgp mailer
+     * This handler should be invoked when navigator.onLine === false.
+     * It will discard the imap client and pgp mailer
      */
-    EmailDAO.prototype.onDisconnect = function() {
-        this._account.online = false;
-        this._imapClient = undefined;
-        this._pgpMailer = undefined;
+    EmailDAO.prototype.onDisconnect = function(callback) {
+        var self = this;
+
+        // logout of imap-client
+        self._imapClient.logout(function() {
+            // ignore error, because it's not problem if logout fails
+            if (callback) {
+                callback();
+            }
+        });
+
+        // discard clients
+        self._account.online = false;
+        self._imapClient = undefined;
+        self._pgpMailer = undefined;
     };
 
     /**

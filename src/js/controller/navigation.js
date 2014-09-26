@@ -56,6 +56,19 @@ define(function(require) {
             }, $scope.onError);
         };
 
+        $scope.logout = function() {
+            $scope.onError({
+                title: 'Logout',
+                message: 'Are you sure you want to logout?',
+                callback: function(confirm) {
+                    if (confirm) {
+                        appController.logout();
+                    }
+                },
+                sync: true
+            });
+        };
+
         //
         // Start
         //
