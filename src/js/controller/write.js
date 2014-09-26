@@ -459,7 +459,8 @@ define(function(require) {
                         $timeout(function() {
                             var el = element[0];
                             el.focus();
-                            if (typeof el.selectionStart !== 'undefined' && typeof el.selectionEnd !== 'undefined') {
+                            // set cursor to start of textarea
+                            if (el.type === 'textarea') {
                                 el.selectionStart = 0;
                                 el.selectionEnd = 0;
                             }
