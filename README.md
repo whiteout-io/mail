@@ -3,7 +3,7 @@
 Whiteout Mail [![Build Status](https://travis-ci.org/whiteout-io/mail-html5.svg?branch=master)](https://travis-ci.org/whiteout-io/mail-html5)
 ==========
 
-Whiteout Mail is an easy to use email client with integrated OpenPGP encryption written in pure JavaScript. Download the official version under [whiteout.io](http://whiteout.io).
+Whiteout Mail is an easy to use email client with integrated OpenPGP encryption written in pure JavaScript. Download the official version under [whiteout.io](https://whiteout.io).
 
 ### Features
 
@@ -19,7 +19,7 @@ We take the privacy of your data very seriously. Here are some of the technical 
 
 * Like most native email clients whiteout mail uses raw [TCP sockets](http://developer.chrome.com/apps/socket.html) to communicate directly with your mail server via IMAP/SMTP.
 
-* The app is deployed as a [Chrome Packaged App](https://developer.chrome.com/apps/about_apps.html) with [auditable static versions](https://github.com/whiteout-io/mail-html5/releases) in order to prevent [problems with host-based security](http://tonyarcieri.com/whats-wrong-with-webcrypto).
+* The app is deployed as a [Chrome Packaged App](https://developer.chrome.com/apps/about_apps.html) with [auditable static versions](https://github.com/whiteout-io/mail-html5/releases) in order to prevent [problems with host-based security](https://blog.whiteout.io/2014/04/13/heartbleed-and-javascript-crypto/).
 
 * [Content Security Policy (CSP)](http://www.html5rocks.com/en/tutorials/security/content-security-policy/) is enforced to prevent injection attacks.
 
@@ -55,15 +55,19 @@ Then visit [http://localhost:8580/dist/#/desktop?dev=true](http://localhost:8580
     grunt release-test --release=0.0.0.x
     grunt release-stable --release=0.x.0
 
-## Deploying Web App
+## Deploying Web App & Selfhosting
+
+The App can be used both as a Chrome Packaged App or just by hosting it on you own trusted web server.
 
 First build and generate the `dist/` directory:
 
     grunt
 
-Then deploy that directoy by adding it to a local git branch. Push that branch to your node.js server and then start the server:
+Then start the server and navigate to [http://localhost:8585](http://localhost:8585) (or whatever port is set using the `PORT` environment variable):
 
     npm start
+
+**A note on security:** The app should not be used without SSL so it's best to set up a reverse proxy or Loadbalancer with your SSL certificates. If you are not sure how to do this it might be easier to use our managed web hosting or packaged apps under [https://whiteout.io/#product](https://whiteout.io/#product).
 
 ## License
 
