@@ -70,6 +70,7 @@
 
             .attachment {
                 height: 32px;
+                max-width: 98%;
                 border-radius: 16px;
                 vertical-align: middle;
                 margin: 5px 0 5px 5px;
@@ -78,6 +79,7 @@
                 border-style: solid;
                 border-color: $color-grey-lighter;
                 display: inline-block;
+                @include text-overflow;
 
                 span {
                     font-size: 14px;
