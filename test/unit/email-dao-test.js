@@ -446,7 +446,7 @@ define(function(require) {
 
                 it('should not notify for other folders', function(done) {
                     opts.folder = sentFolder;
-                    
+
                     imapListStub.withArgs(opts).yieldsAsync(null, [message]);
 
                     localStoreStub.withArgs({
@@ -1774,8 +1774,10 @@ define(function(require) {
             });
 
             describe('#onDisconnect', function() {
-                it('should discard imapClient and pgpMailer', function() {
-                    dao.onDisconnect();
+                it('should discard imapClient and pgpMailer', function(done) {
+                    imapClientStub.logout.yieldsAsync();
+
+                    dao.onDisconnect(done);
 
                     expect(dao._account.online).to.be.false;
                     expect(dao._imapClient).to.not.exist;

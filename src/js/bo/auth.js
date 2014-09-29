@@ -426,5 +426,28 @@ define(function(require) {
         });
     };
 
+    /**
+     * Logout of the app by clearing the app config store and in memory credentials
+     */
+    Auth.prototype.logout = function(callback) {
+        var self = this;
+
+        // clear app config db
+        self._appConfigStore.clear(function(err) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            // clear in memory cache
+            self.setCredentials({});
+            self.initialized = undefined;
+            self.credentialsDirty = undefined;
+            self.passwordNeedsDecryption = undefined;
+
+            callback();
+        });
+    };
+
     return Auth;
 });

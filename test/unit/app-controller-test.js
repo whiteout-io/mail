@@ -64,6 +64,22 @@ define(function(require) {
             });
         });
 
+        describe('logout', function() {
+            it('should work', function(done) {
+                authStub.logout.yields();
+                emailDaoStub.onDisconnect.yields(new Error());
+
+                controller.onError = function(err) {
+                    expect(err).to.exist;
+                    expect(authStub.logout.calledOnce).to.be.true;
+                    expect(emailDaoStub.onDisconnect.calledOnce).to.be.true;
+                    done();
+                };
+
+                controller.logout();
+            });
+        });
+
         describe('onConnect', function() {
             beforeEach(function() {
                 controller._emailDao._account = {};
