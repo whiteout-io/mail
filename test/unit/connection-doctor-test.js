@@ -23,6 +23,7 @@ define(function(require) {
                     this.onclose();
                 }
             };
+
             imapStub = sinon.createStubInstance(ImapClient);
             smtpStub = sinon.createStubInstance(SmtpClient);
 
@@ -92,6 +93,29 @@ define(function(require) {
                 });
 
                 socketStub.oncert();
+                socketStub.onopen();
+            });
+
+            it('should catch Mozilla TCPSocket exception', function(done) {
+                // Mozilla forbids extensions to the TCPSocket object
+                Object.defineProperty(socketStub, 'oncert', {
+                    set: function() {
+                        throw 'Mozilla specific behavior';
+                    }
+                });
+
+                doctor._checkReachable(credentials.imap, function(error) {
+                    expect(error).to.not.exist;
+                    expect(TCPSocket.open.calledOnce).to.be.true;
+                    expect(TCPSocket.open.calledWith(credentials.imap.host, credentials.imap.port, {
+                        binaryType: 'arraybuffer',
+                        useSecureTransport: credentials.imap.secure,
+                        ca: credentials.imap.ca
+                    })).to.be.true;
+
+                    done();
+                });
+
                 socketStub.onopen();
             });
 

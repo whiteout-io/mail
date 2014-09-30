@@ -162,12 +162,18 @@ define(function(require) {
 
         socket.ondata = function() {}; // we don't actually care about the data
 
-        socket.oncert = function() {
-            if (options.ca) {
-                // the certificate we already have is outdated
-                error = createError(TLS_WRONG_CERT, strings.connDocTlsWrongCert.replace('{0}', host));
-            }
-        };
+        // [WO-625] Mozilla forbids extensions to the TCPSocket object, 
+        // throws an exception when assigned unexpected callback functions.
+        // The exception can be safely ignored since we need the callback
+        // for the other shims
+        try {
+            socket.oncert = function() {
+                if (options.ca) {
+                    // the certificate we already have is outdated
+                    error = createError(TLS_WRONG_CERT, strings.connDocTlsWrongCert.replace('{0}', host));
+                }
+            };
+        } catch (e) {}
 
         socket.onerror = function(e) {
             if (!error) {
