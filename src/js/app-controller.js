@@ -221,6 +221,7 @@ define(function(require) {
                 return;
             }
 
+            credentials.imap.maxUpdateSize = config.imapUpdateBatchSize;
             initClients(credentials);
         });
 

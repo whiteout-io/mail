@@ -179,6 +179,7 @@ define(function(require) {
         outboxMailboxName: 'Outbox',
         outboxMailboxType: 'Outbox',
         connDocTimeout: 5000,
+        imapUpdateBatchSize: 100
     };
 
     /**

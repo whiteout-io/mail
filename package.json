@@ -32,7 +32,7 @@
         "crypto-lib": "~0.2.1",
         "dompurify": "~0.4.2",
         "express": "^4.8.3",
-        "imap-client": "~0.4.0",
+        "imap-client": "https://github.com/whiteout-io/imap-client/tarball/dev/WO-588",
         "jquery": "~2.1.1",
         "mailreader": "~0.3.5",
         "ng-infinite-scroll": "~1.1.2",
