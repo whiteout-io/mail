@@ -225,6 +225,9 @@ define(function(require) {
         });
 
         function initClients(credentials) {
+            // add the maximum update batch size for imap folders to the imap configuration
+            credentials.imap.maxUpdateSize = config.imapUpdateBatchSize;
+
             var pgpMailer = new PgpMailer(credentials.smtp, self._pgpbuilder);
             var imapClient = new ImapClient(credentials.imap);
             imapClient.onError = onConnectionError;
