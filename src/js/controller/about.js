@@ -1,31 +1,29 @@
-define(function(require) {
-    'use strict';
+'use strict';
 
-    var cfg = require('js/app-config').config;
+var cfg = require('../app-config').config;
 
-    //
-    // Controller
-    //
+//
+// Controller
+//
 
-    var AboutCtrl = function($scope) {
+var AboutCtrl = function($scope) {
 
-        $scope.state.about = {
-            toggle: function(to) {
-                $scope.state.lightbox = (to) ? 'about' : undefined;
-            }
-        };
-
-        //
-        // scope variables
-        //
-
-        $scope.version = cfg.appVersion;
-        $scope.date = new Date();
-
-        //
-        // scope functions
-        //
+    $scope.state.about = {
+        toggle: function(to) {
+            $scope.state.lightbox = (to) ? 'about' : undefined;
+        }
     };
 
-    return AboutCtrl;
-});
+    //
+    // scope variables
+    //
+
+    $scope.version = cfg.appVersion;
+    $scope.date = new Date();
+
+    //
+    // scope functions
+    //
+};
+
+exports = AboutCtrl;

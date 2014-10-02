@@ -1,38 +1,23 @@
-(function() {
-    'use strict';
+'use strict';
 
-    // import web worker dependencies
-    importScripts('../../lib/require.js');
+var pbkdf2 = require('./pbkdf2');
 
-    /**
-     * In the web worker thread context, 'this' and 'self' can be used as a global
-     * variable namespace similar to the 'window' object in the main thread
-     */
-    self.onmessage = function(e) {
-        // fetch dependencies via require.js
-        require(['../../require-config'], function() {
-            require.config({
-                baseUrl: '../../lib'
-            });
+/**
+ * In the web worker thread context, 'this' and 'self' can be used as a global
+ * variable namespace similar to the 'window' object in the main thread
+ */
+self.onmessage = function(e) {
+    var i = e.data,
+        key = null;
 
-            require(['js/crypto/pbkdf2'], function(pbkdf2) {
+    if (i.password && i.salt && i.keySize) {
+        // start deriving key
+        key = pbkdf2.getKey(i.password, i.salt, i.keySize);
 
-                var i = e.data,
-                    key = null;
+    } else {
+        throw 'Not all arguments for web worker crypto are defined!';
+    }
 
-                if (i.password && i.salt && i.keySize) {
-                    // start deriving key
-                    key = pbkdf2.getKey(i.password, i.salt, i.keySize);
-
-                } else {
-                    throw 'Not all arguments for web worker crypto are defined!';
-                }
-
-                // pass output back to main thread
-                self.postMessage(key);
-
-            });
-        });
-    };
-
-}());
+    // pass output back to main thread
+    self.postMessage(key);
+};

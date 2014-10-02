@@ -6,6 +6,7 @@ module.exports = function(grunt) {
 
     // Project configuration.
     grunt.initConfig({
+
         connect: {
             dev: {
                 options: {
@@ -47,8 +48,9 @@ module.exports = function(grunt) {
         },
 
         clean: {
-            dist: ['dist', 'src/lib/*.js', 'test/lib', 'test/integration/src']
+            dist: ['dist', 'test/lib', 'test/integration/src']
         },
+
         sass: {
             dist: {
                 files: {
@@ -57,6 +59,7 @@ module.exports = function(grunt) {
                 }
             }
         },
+
         autoprefixer: {
             options: {
                 browsers: ['last 2 versions']
@@ -68,9 +71,10 @@ module.exports = function(grunt) {
                 }
             }
         },
+
         csso: {
             options: {
-                banner: '/*! Copyright © 2013, Whiteout Networks GmbH. All rights reserved.*/\n'
+                banner: '/*! Copyright © <%= grunt.template.today("yyyy") %>, Whiteout Networks GmbH.*/\n'
             },
             dist: {
                 files: {
@@ -79,6 +83,7 @@ module.exports = function(grunt) {
                 }
             }
         },
+
         watch: {
             css: {
                 files: ['src/sass/**/*.scss'],
@@ -86,7 +91,7 @@ module.exports = function(grunt) {
             },
             js: {
                 files: ['src/js/**/*.js'],
-                tasks: ['copy:js', 'copy:integration', 'manifest']
+                tasks: ['dist-js', 'copy:integration', 'manifest']
             },
             lib: {
                 files: ['src/lib/**/*.js'],
@@ -97,60 +102,58 @@ module.exports = function(grunt) {
                 tasks: ['copy:app', 'copy:ca', 'copy:tpl', 'copy:img', 'copy:font', 'manifest-dev', 'manifest']
             }
         },
-        copy: {
-            npm: {
-                expand: true,
-                flatten: true,
-                cwd: 'node_modules/',
-                src: [
-                    'requirejs/require.js',
-                    'imap-client/src/*.js',
-                    'imap-client/node_modules/browserbox/src/*.js',
-                    'imap-client/node_modules/browserbox/node_modules/wo-imap-handler/src/*.js',
-                    'imap-client/node_modules/browserbox/node_modules/mimefuncs/src/*.js',
-                    'imap-client/node_modules/browserbox/node_modules/tcp-socket/src/*.js',
-                    'imap-client/node_modules/browserbox/node_modules/wo-utf7/src/*.js',
-                    'mailreader/src/*.js',
-                    'mailreader/node_modules/mimeparser/src/*.js',
-                    'mailreader/node_modules/mimeparser/node_modules/wo-addressparser/src/*.js',
-                    'pgpbuilder/src/*.js',
-                    'pgpbuilder/node_modules/mailbuild/src/*.js',
-                    'pgpbuilder/node_modules/mailbuild/node_modules/mimetypes/src/*.js',
-                    'pgpbuilder/node_modules/mailbuild/node_modules/punycode/punycode.min.js',
-                    'pgpmailer/src/*.js',
-                    'pgpmailer/node_modules/wo-smtpclient/src/*.js',
-                    'pgpmailer/node_modules/wo-smtpclient/node_modules/wo-stringencoding/dist/stringencoding.js',
-                    'axe-logger/axe.js',
-                    'dompurify/purify.js',
-                    'jquery/dist/jquery.min.js',
-                    'ng-infinite-scroll/build/ng-infinite-scroll.min.js'
-                ],
-                dest: 'src/lib/'
+
+        browserify: {
+            all: {
+                files: {
+                    'dist/js/app.min.js': ['src/js/app.js']
+                },
+                options: {
+                    external: ['node-forge', 'net', 'tls'] // common.js apis not required at build time
+                }
             },
+            /* TODO:
+            tls-worker: {},
+            mailreader-worker: {},
+            pbkdf2-worker: {},
+            unitTest: {},
+            unitTest: {},
+            integrationTest: {}
+            */
+        },
+
+        uglify: {
+            all: {
+                files: {
+                    'dist/js/app.min.js': [
+                        'src/lib/underscore/underscore-min.js',
+                        'node_modules/jquery/dist/jquery.min.js',
+                        'src/lib/angular/angular.min.js',
+                        'src/lib/angular/angular-route.min.js',
+                        'src/lib/angular/angular-animate.min.js',
+                        'src/lib/ngtagsinput/ng-tags-input.min.js',
+                        'src/lib/fastclick/fastclick.js',
+                        'node_modules/ng-infinite-scroll/build/ng-infinite-scroll.min.js',
+                        'src/lib/lawnchair/lawnchair-git.js',
+                        'src/lib/lawnchair/lawnchair-adapter-webkit-sqlite-git.js',
+                        'src/lib/lawnchair/lawnchair-adapter-indexed-db-git.js',
+                        'node_modules/dompurify/purify.js',
+                        'dist/js/app.min.js'
+                    ]
+                }
+            },
+            options: {
+                banner: '/*! Copyright © <%= grunt.template.today("yyyy") %>, Whiteout Networks GmbH.*/\n'
+            }
+        },
+
+        copy: {
             npmDev: {
                 expand: true,
                 flatten: true,
                 cwd: 'node_modules/',
                 src: ['requirejs/require.js', 'mocha/mocha.css', 'mocha/mocha.js', 'chai/chai.js', 'sinon/pkg/sinon.js', 'angularjs/src/ngMock/angular-mocks.js', 'browsercrow/src/*.js', 'browsersmtp/src/*.js'],
                 dest: 'test/lib/'
-            },
-            cryptoLib: {
-                expand: true,
-                cwd: 'node_modules/crypto-lib/src/',
-                src: ['*.js'],
-                dest: 'src/js/crypto/'
-            },
-            lib: {
-                expand: true,
-                cwd: 'src/lib/',
-                src: ['**'],
-                dest: 'dist/lib/'
-            },
-            js: {
-                expand: true,
-                cwd: 'src/js/',
-                src: ['**'],
-                dest: 'dist/js/'
             },
             font: {
                 expand: true,
@@ -169,12 +172,6 @@ module.exports = function(grunt) {
                 cwd: 'src/tpl/',
                 src: ['*'],
                 dest: 'dist/tpl/'
-            },
-            ca: {
-                expand: true,
-                cwd: 'src/ca/',
-                src: ['*'],
-                dest: 'dist/ca/'
             },
             app: {
                 expand: true,
@@ -200,16 +197,6 @@ module.exports = function(grunt) {
                 cwd: 'dist/',
                 src: ['**/*'],
                 dest: 'release/'
-            },
-            nodeWebkit: {
-                options: {
-                    mode: 'zip',
-                    archive: 'release/whiteout-mail_' + zipName + '.nw'
-                },
-                expand: true,
-                cwd: 'dist/',
-                src: ['**/*'],
-                dest: '/'
             }
         },
 
@@ -226,22 +213,13 @@ module.exports = function(grunt) {
                 src: ['**/*.*'],
                 dest: 'dist/appcache.manifest'
             }
-        },
+        }
 
-        nodewebkit: {
-            options: {
-                version: '0.9.2', // node-webkit version
-                build_dir: './release/node-webkit/', // Where the build version of my node-webkit app is saved
-                mac: true, // We want to build it for mac
-                win: false, // We want to build it for win
-                linux32: false, // We don't need linux32
-                linux64: false, // We don't need linux64
-            },
-            src: ['./dist/**/*'] // Your node-webkit app
-        },
     });
 
     // Load the plugin(s)
+    grunt.loadNpmTasks('grunt-browserify');
+    grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-connect');
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-mocha');
@@ -252,14 +230,14 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-contrib-compress');
-    grunt.loadNpmTasks('grunt-node-webkit-builder');
     grunt.loadNpmTasks('grunt-manifest');
 
     // Build tasks
-    grunt.registerTask('dist-npm', ['copy:npm', 'copy:npmDev', 'copy:cryptoLib']);
+    grunt.registerTask('dist-npm', ['copy:npmDev']);
     grunt.registerTask('dist-css', ['sass', 'autoprefixer', 'csso']);
+    grunt.registerTask('dist-js', ['browserify', 'uglify']);
     grunt.registerTask('dist-copy', ['copy']);
-    grunt.registerTask('dist', ['clean', 'dist-npm', 'dist-css', 'dist-copy', 'manifest']);
+    grunt.registerTask('dist', ['clean', 'dist-npm', 'dist-css', 'dist-js', 'dist-copy', 'manifest']);
 
     // Test/Dev tasks
     grunt.registerTask('dev', ['connect:dev']);

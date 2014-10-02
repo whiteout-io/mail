@@ -23,15 +23,7 @@
 			"importScripts",
 			"process",
 			"Event",
-			"QUnit",
-			"test",
-			"asyncTest",
-			"ok",
-			"equal",
-			"deepEqual",
-			"start",
 			"chrome",
-			"requirejs",
 			"define",
 			"self",
 			"describe",
@@ -42,7 +34,13 @@
             "before",
             "beforeEach",
             "after",
-            "afterEach"
+            "afterEach",
+            "FastClick",
+            "angular",
+            "forge",
+            "Lawnchair",
+            "_",
+            "openpgp"
 	],
 
 	"globals": {
