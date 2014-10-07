@@ -8,3 +8,5 @@ dist/
 release/
 test/integration/src/
 .elasticbeanstalk/
+test/unit/index.js
+test/unit/index.js.map

@@ -1,6 +1,8 @@
 module.exports = function(grunt) {
     'use strict';
 
+    require('time-grunt')(grunt);
+
     var version = grunt.option('release'),
         zipName = (version) ? version : 'DEV';
 
@@ -24,7 +26,7 @@ module.exports = function(grunt) {
         },
 
         jshint: {
-            all: ['Gruntfile.js', 'src/*.js', 'src/js/**/*.js', 'test/unit/*.js', 'test/integration/*.js'],
+            all: ['Gruntfile.js', 'src/*.js', 'src/js/**/*.js', 'test/unit/*-test.js', 'test/integration/*.js'],
             options: {
                 jshintrc: '.jshintrc'
             }
@@ -109,16 +111,22 @@ module.exports = function(grunt) {
                     'dist/js/app.min.js': ['src/js/app.js']
                 },
                 options: {
-                    external: ['node-forge', 'net', 'tls'] // common.js apis not required at build time
+                    external: []
                 }
             },
-            /* TODO:
-            tls-worker: {},
-            mailreader-worker: {},
-            pbkdf2-worker: {},
-            unitTest: {},
-            unitTest: {},
-            integrationTest: {}
+            unitTest: {
+                files: {
+                    'test/unit/index.js': ['test/unit/*-test.js']
+                },
+                options: {
+                    external: []
+                }
+            },
+            /* 
+              TODO:
+              mailreader-worker: {},
+              pbkdf2-worker: {},
+              integrationTest: {}
             */
         },
 
@@ -126,6 +134,7 @@ module.exports = function(grunt) {
             all: {
                 files: {
                     'dist/js/app.min.js': [
+                        'src/lib/openpgp/openpgp.js',
                         'src/lib/underscore/underscore-min.js',
                         'node_modules/jquery/dist/jquery.min.js',
                         'src/lib/angular/angular.min.js',
@@ -142,6 +151,28 @@ module.exports = function(grunt) {
                     ]
                 }
             },
+            unitTest: {
+                files: {
+                    'test/unit/index.js': [
+                        'src/lib/underscore/underscore-min.js',
+                        'node_modules/jquery/dist/jquery.min.js',
+                        'src/lib/openpgp/openpgp.js',
+                        'src/lib/angular/angular.min.js',
+                        'node_modules/angular-mocks/angular-mocks.js',
+                        'src/lib/angular/angular-route.min.js',
+                        'src/lib/angular/angular-animate.min.js',
+                        'src/lib/ngtagsinput/ng-tags-input.min.js',
+                        'src/lib/fastclick/fastclick.js',
+                        'node_modules/ng-infinite-scroll/build/ng-infinite-scroll.min.js',
+                        'src/lib/lawnchair/lawnchair-git.js',
+                        'src/lib/lawnchair/lawnchair-adapter-webkit-sqlite-git.js',
+                        'src/lib/lawnchair/lawnchair-adapter-indexed-db-git.js',
+                        'node_modules/dompurify/purify.js',
+                        'test/lib/angular-mocks.js',
+                        'test/unit/index.js'
+                    ]
+                }
+            },
             options: {
                 banner: '/*! Copyright © <%= grunt.template.today("yyyy") %>, Whiteout Networks GmbH.*/\n'
             }
@@ -152,7 +183,7 @@ module.exports = function(grunt) {
                 expand: true,
                 flatten: true,
                 cwd: 'node_modules/',
-                src: ['requirejs/require.js', 'mocha/mocha.css', 'mocha/mocha.js', 'chai/chai.js', 'sinon/pkg/sinon.js', 'angularjs/src/ngMock/angular-mocks.js', 'browsercrow/src/*.js', 'browsersmtp/src/*.js'],
+                src: ['mocha/mocha.css', 'mocha/mocha.js', 'chai/chai.js', 'sinon/pkg/sinon.js', 'browsercrow/src/*.js', 'browsersmtp/src/*.js'],
                 dest: 'test/lib/'
             },
             font: {
