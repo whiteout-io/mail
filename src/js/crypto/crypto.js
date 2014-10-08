@@ -10,7 +10,7 @@ var aes = require('crypto-lib').aes,
     config = require('../app-config').config,
     axe = require('axe-logger');
 
-var PBKDF2_WORKER = '/crypto/pbkdf2-worker.js';
+var PBKDF2_WORKER = config.workerPath + '/pbkdf2-worker.js';
 
 var Crypto = function() {};
 

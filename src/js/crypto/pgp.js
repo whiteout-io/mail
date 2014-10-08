@@ -9,7 +9,7 @@ var util = openpgp.util,
 
 var PGP = function() {
     openpgp.config.prefer_hash_algorithm = openpgp.enums.hash.sha256;
-    openpgp.initWorker(config.workerPath + '/../lib/openpgp/openpgp.worker.js');
+    openpgp.initWorker(config.workerPath + '/openpgp.worker.js');
 };
 
 /**
