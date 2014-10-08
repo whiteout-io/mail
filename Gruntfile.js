@@ -108,7 +108,7 @@ module.exports = function(grunt) {
         browserify: {
             app: {
                 files: {
-                    'dist/js/app.min.js': ['src/js/app.js']
+                    'dist/js/app.browserified.js': ['src/js/app.js']
                 },
                 options: {
                     external: ['openpgp', 'node-forge', 'net', 'tls', 'crypto'] // node.js apis not required at build time
@@ -116,7 +116,7 @@ module.exports = function(grunt) {
             },
             pbkdf2Worker: {
                 files: {
-                    'dist/js/pbkdf2-worker.min.js': ['src/js/crypto/pbkdf2-worker.js']
+                    'dist/js/pbkdf2-worker.browserified.js': ['src/js/crypto/pbkdf2-worker.js']
                 }
             },
             unitTest: {
@@ -150,13 +150,31 @@ module.exports = function(grunt) {
                         'src/lib/lawnchair/lawnchair-adapter-webkit-sqlite-git.js',
                         'src/lib/lawnchair/lawnchair-adapter-indexed-db-git.js',
                         'node_modules/dompurify/purify.js',
-                        'dist/js/app.min.js'
+                        'dist/js/app.browserified.js'
                     ]
+                },
+                options: {
+                    mangle: false,
+                    sourceMap: true,
+                    sourceMapName: 'dist/js/app.min.js.map'
                 }
+            },
+            readSandbox: {
+                files: {
+                    'dist/js/read-sandbox.min.js': [
+                        'node_modules/dompurify/purify.js',
+                        'src/js/controller/read-sandbox.js'
+                    ]
+                },
+                options: {
+                    sourceMap: true,
+                    sourceMapName: 'dist/js/read-sandbox.min.js.map'
+                }
+
             },
             pbkdf2Worker: {
                 files: {
-                    'dist/js/pbkdf2-worker.min.js': ['dist/js/pbkdf2-worker.min.js']
+                    'dist/js/pbkdf2-worker.min.js': ['dist/js/pbkdf2-worker.browserified.js']
                 }
             },
             unitTest: {
@@ -256,7 +274,15 @@ module.exports = function(grunt) {
                     timestamp: true,
                     hash: true,
                     cache: ['socket.io/socket.io.js'],
-                    exclude: ['appcache.manifest', 'manifest.webapp'],
+                    exclude: [
+                        'appcache.manifest',
+                        'manifest.webapp',
+                        'js/app.min.js.map',
+                        'js/app.browserified.js',
+                        'js/crypto/pbkdf2-worker.browserified.js',
+                        'js/pbkdf2-worker.browserified.js',
+                        'js/read-sandbox.min.js.map'
+                    ],
                     master: ['index.html']
                 },
                 src: ['**/*.*'],
