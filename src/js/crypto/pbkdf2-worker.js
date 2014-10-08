@@ -1,5 +1,7 @@
 'use strict';
 
+importScripts('forge.min.js');
+
 var pbkdf2 = require('./pbkdf2');
 
 /**

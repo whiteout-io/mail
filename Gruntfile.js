@@ -106,12 +106,17 @@ module.exports = function(grunt) {
         },
 
         browserify: {
-            all: {
+            app: {
                 files: {
                     'dist/js/app.min.js': ['src/js/app.js']
                 },
                 options: {
-                    external: []
+                    external: ['openpgp', 'node-forge', 'net', 'tls', 'crypto'] // node.js apis not required at build time
+                }
+            },
+            pbkdf2Worker: {
+                files: {
+                    'dist/js/pbkdf2-worker.min.js': ['src/js/crypto/pbkdf2-worker.js']
                 }
             },
             unitTest: {
@@ -122,33 +127,36 @@ module.exports = function(grunt) {
                     external: []
                 }
             },
-            /* 
+            /*
               TODO:
               mailreader-worker: {},
-              pbkdf2-worker: {},
               integrationTest: {}
             */
         },
 
         uglify: {
-            all: {
+            app: {
                 files: {
                     'dist/js/app.min.js': [
-                        'src/lib/openpgp/openpgp.js',
                         'src/lib/underscore/underscore-min.js',
                         'node_modules/jquery/dist/jquery.min.js',
                         'src/lib/angular/angular.min.js',
                         'src/lib/angular/angular-route.min.js',
                         'src/lib/angular/angular-animate.min.js',
                         'src/lib/ngtagsinput/ng-tags-input.min.js',
-                        'src/lib/fastclick/fastclick.js',
                         'node_modules/ng-infinite-scroll/build/ng-infinite-scroll.min.js',
+                        'src/lib/fastclick/fastclick.js',
                         'src/lib/lawnchair/lawnchair-git.js',
                         'src/lib/lawnchair/lawnchair-adapter-webkit-sqlite-git.js',
                         'src/lib/lawnchair/lawnchair-adapter-indexed-db-git.js',
                         'node_modules/dompurify/purify.js',
                         'dist/js/app.min.js'
                     ]
+                }
+            },
+            pbkdf2Worker: {
+                files: {
+                    'dist/js/pbkdf2-worker.min.js': ['dist/js/pbkdf2-worker.min.js']
                 }
             },
             unitTest: {
@@ -171,6 +179,9 @@ module.exports = function(grunt) {
                         'test/lib/angular-mocks.js',
                         'test/unit/index.js'
                     ]
+                },
+                options: {
+                    compress: false
                 }
             },
             options: {
@@ -185,6 +196,13 @@ module.exports = function(grunt) {
                 cwd: 'node_modules/',
                 src: ['mocha/mocha.css', 'mocha/mocha.js', 'chai/chai.js', 'sinon/pkg/sinon.js', 'browsercrow/src/*.js', 'browsersmtp/src/*.js'],
                 dest: 'test/lib/'
+            },
+            lib: {
+                expand: true,
+                flatten: true,
+                cwd: 'src/lib/',
+                src: ['openpgp/openpgp.js', 'openpgp/openpgp.worker.js', 'forge/forge.min.js'],
+                dest: 'dist/js/'
             },
             font: {
                 expand: true,
