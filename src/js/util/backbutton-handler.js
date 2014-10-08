@@ -52,4 +52,4 @@ function handleBackButton(event) {
     }
 }
 
-exports = backBtnHandler;
+module.exports = backBtnHandler;

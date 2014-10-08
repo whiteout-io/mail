@@ -55,4 +55,4 @@ dl.createDownload = function(options) {
     }
 };
 
-exports = dl;
+module.exports = dl;

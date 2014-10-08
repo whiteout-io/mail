@@ -193,4 +193,4 @@ PrivateKeyDAO.prototype.download = function(options, callback) {
     }, callback);
 };
 
-exports = PrivateKeyDAO;
+module.exports = PrivateKeyDAO;

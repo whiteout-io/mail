@@ -56,4 +56,4 @@ var AccountCtrl = function($scope) {
     };
 };
 
-exports = AccountCtrl;
+module.exports = AccountCtrl;

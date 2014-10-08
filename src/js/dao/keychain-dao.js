@@ -933,4 +933,4 @@ KeychainDAO.prototype.saveLocalPrivateKey = function(privkey, callback) {
     this._localDbDao.persist(prkLookupKey, privkey, callback);
 };
 
-exports = KeychainDAO;
+module.exports = KeychainDAO;

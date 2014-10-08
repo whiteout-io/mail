@@ -115,4 +115,4 @@ var SetCredentialsCtrl = function($scope, $location, $routeParams) {
     };
 };
 
-exports = SetCredentialsCtrl;
+module.exports = SetCredentialsCtrl;

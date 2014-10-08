@@ -213,4 +213,4 @@ LawnchairDAO.prototype.clear = function(callback) {
     this._db.nuke(callback);
 };
 
-exports = LawnchairDAO;
+module.exports = LawnchairDAO;

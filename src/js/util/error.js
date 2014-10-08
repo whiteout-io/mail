@@ -30,4 +30,4 @@ er.attachHandler = function(scope) {
     };
 };
 
-exports = er;
+module.exports = er;

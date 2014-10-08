@@ -127,4 +127,4 @@ UpdateHandler.prototype.checkForUpdate = function(dialog) {
     }
 };
 
-exports = UpdateHandler;
+module.exports = UpdateHandler;

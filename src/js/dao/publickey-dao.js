@@ -100,4 +100,4 @@ PublicKeyDAO.prototype.remove = function(keyId, callback) {
     this._restDao.remove(uri, callback);
 };
 
-exports = PublicKeyDAO;
+module.exports = PublicKeyDAO;

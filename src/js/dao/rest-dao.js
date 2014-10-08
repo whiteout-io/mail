@@ -118,4 +118,4 @@ RestDAO.prototype._processRequest = function(options, callback) {
     xhr.send(options.payload ? JSON.stringify(options.payload) : undefined);
 };
 
-exports = RestDAO;
+module.exports = RestDAO;

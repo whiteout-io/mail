@@ -203,4 +203,4 @@ ngModule.directive('keyShortcuts', function($timeout) {
     };
 });
 
-exports = NavigationCtrl;
+module.exports = NavigationCtrl;

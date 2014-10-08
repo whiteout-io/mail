@@ -21,4 +21,4 @@ self.getKey = function(password, salt, keySize) {
     return forge.util.encode64(key);
 };
 
-exports = self;
+module.exports = self;

@@ -448,4 +448,4 @@ Auth.prototype.logout = function(callback) {
     });
 };
 
-exports = Auth;
+module.exports = Auth;

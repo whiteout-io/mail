@@ -133,4 +133,4 @@ var SetPassphraseCtrl = function($scope) {
     }
 };
 
-exports = SetPassphraseCtrl;
+module.exports = SetPassphraseCtrl;

@@ -96,4 +96,4 @@ OAuth.prototype.queryEmailAddress = function(token, callback) {
     });
 };
 
-exports = OAuth;
+module.exports = OAuth;

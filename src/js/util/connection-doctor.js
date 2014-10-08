@@ -290,4 +290,4 @@ function createError(code, message, underlyingError) {
     return error;
 }
 
-exports = ConnectionDoctor;
+module.exports = ConnectionDoctor;

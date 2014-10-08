@@ -24,4 +24,4 @@ function updateV1(options, callback) {
     });
 }
 
-exports = updateV1;
+module.exports = updateV1;

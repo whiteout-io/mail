@@ -55,4 +55,4 @@ self.close = function(notification) {
     notification.close();
 };
 
-exports = self;
+module.exports = self;

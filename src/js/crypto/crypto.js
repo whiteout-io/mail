@@ -119,4 +119,4 @@ function startWorker(options) {
     options.callback(null, result);
 }
 
-exports = Crypto;
+module.exports = Crypto;

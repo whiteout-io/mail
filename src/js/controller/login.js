@@ -98,4 +98,4 @@ var LoginCtrl = function($scope, $location) {
     }
 };
 
-exports = LoginCtrl;
+module.exports = LoginCtrl;

@@ -26,4 +26,4 @@ var AboutCtrl = function($scope) {
     //
 };
 
-exports = AboutCtrl;
+module.exports = AboutCtrl;

@@ -57,4 +57,4 @@ InvitationDAO.prototype.invite = function(options, callback) {
     }
 };
 
-exports = InvitationDAO;
+module.exports = InvitationDAO;

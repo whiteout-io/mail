@@ -100,4 +100,4 @@ function update(options, callback) {
     }
 }
 
-exports = update;
+module.exports = update;

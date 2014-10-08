@@ -136,4 +136,4 @@ ngModule.directive('keyfileBtn', function() {
     };
 });
 
-exports = ContactsCtrl;
+module.exports = ContactsCtrl;

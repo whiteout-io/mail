@@ -11,4 +11,4 @@ var DialogCtrl = function($scope) {
     };
 };
 
-exports = DialogCtrl;
+module.exports = DialogCtrl;

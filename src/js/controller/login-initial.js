@@ -116,4 +116,4 @@ var LoginInitialCtrl = function($scope, $location, $routeParams) {
     };
 };
 
-exports = LoginInitialCtrl;
+module.exports = LoginInitialCtrl;

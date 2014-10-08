@@ -90,4 +90,4 @@ function createKey(i, type) {
     return key;
 }
 
-exports = DeviceStorageDAO;
+module.exports = DeviceStorageDAO;

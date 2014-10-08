@@ -135,4 +135,4 @@ ngModule.directive('fileReader', function() {
     };
 });
 
-exports = LoginExistingCtrl;
+module.exports = LoginExistingCtrl;

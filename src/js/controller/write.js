@@ -527,4 +527,4 @@ ngModule.directive('attachmentBtn', function() {
     };
 });
 
-exports = WriteCtrl;
+module.exports = WriteCtrl;

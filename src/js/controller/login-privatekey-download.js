@@ -129,4 +129,4 @@ var LoginPrivateKeyDownloadCtrl = function($scope, $location, $routeParams) {
     };
 };
 
-exports = LoginPrivateKeyDownloadCtrl;
+module.exports = LoginPrivateKeyDownloadCtrl;

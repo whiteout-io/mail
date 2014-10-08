@@ -593,4 +593,4 @@ function createDummyMails() {
     return dummies;
 }
 
-exports = MailListCtrl;
+module.exports = MailListCtrl;

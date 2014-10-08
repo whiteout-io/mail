@@ -58,4 +58,4 @@ AdminDAO.prototype.validateUser = function(options, callback) {
     });
 };
 
-exports = AdminDAO;
+module.exports = AdminDAO;

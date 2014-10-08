@@ -265,4 +265,4 @@ self.onConnect = function(callback) {
     }
 };
 
-exports = self;
+module.exports = self;

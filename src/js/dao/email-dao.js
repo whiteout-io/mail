@@ -1724,4 +1724,4 @@ function inlineExternalImages(message) {
     });
 }
 
-exports = EmailDAO;
+module.exports = EmailDAO;

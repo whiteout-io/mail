@@ -40,4 +40,4 @@ ngModule.directive('popover', function() {
     };
 });
 
-exports = PopoverCtrl;
+module.exports = PopoverCtrl;

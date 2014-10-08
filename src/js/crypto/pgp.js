@@ -447,4 +447,4 @@ function checkSignatureValidity(signatures) {
     return true;
 }
 
-exports = PGP;
+module.exports = PGP;

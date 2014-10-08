@@ -115,4 +115,4 @@ var AddAccountCtrl = function($scope, $location, $routeParams) {
     };
 };
 
-exports = AddAccountCtrl;
+module.exports = AddAccountCtrl;

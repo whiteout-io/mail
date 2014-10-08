@@ -198,4 +198,4 @@ ngModule.directive('focusNext', function() {
     };
 });
 
-exports = PrivateKeyUploadCtrl;
+module.exports = PrivateKeyUploadCtrl;

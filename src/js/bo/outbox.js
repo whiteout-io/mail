@@ -226,4 +226,4 @@ OutboxBO.prototype._processOutbox = function(callback) {
     }
 };
 
-exports = OutboxBO;
+module.exports = OutboxBO;

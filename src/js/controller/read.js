@@ -280,4 +280,4 @@ ngModule.directive('frameLoad', function($timeout, $window) {
     };
 });
 
-exports = ReadCtrl;
+module.exports = ReadCtrl;
