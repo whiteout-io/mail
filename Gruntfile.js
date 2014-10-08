@@ -149,7 +149,6 @@ module.exports = function(grunt) {
                         'src/lib/lawnchair/lawnchair-git.js',
                         'src/lib/lawnchair/lawnchair-adapter-webkit-sqlite-git.js',
                         'src/lib/lawnchair/lawnchair-adapter-indexed-db-git.js',
-                        'node_modules/dompurify/purify.js',
                         'dist/js/app.browserified.js'
                     ]
                 },
