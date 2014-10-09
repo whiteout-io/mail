@@ -124,7 +124,7 @@ module.exports = function(grunt) {
                     'test/unit/index.js': ['test/unit/*-test.js']
                 },
                 options: {
-                    external: []
+                    external: ['openpgp', 'node-forge', 'net', 'tls', 'crypto']
                 }
             },
             /*
@@ -181,6 +181,7 @@ module.exports = function(grunt) {
                     'test/unit/index.js': [
                         'src/lib/underscore/underscore-min.js',
                         'node_modules/jquery/dist/jquery.min.js',
+                        'src/lib/forge/forge.min.js',
                         'src/lib/openpgp/openpgp.js',
                         'src/lib/angular/angular.min.js',
                         'node_modules/angular-mocks/angular-mocks.js',
