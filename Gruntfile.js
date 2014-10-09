@@ -105,7 +105,10 @@ module.exports = function(grunt) {
                     'dist/js/app.browserified.js': ['src/js/app.js']
                 },
                 options: {
-                    external: ['openpgp', 'node-forge', 'net', 'tls', 'crypto'] // node.js apis not required at build time
+                    external: ['openpgp', 'node-forge', 'net', 'tls', 'crypto'], // node.js apis not required at build time
+                    browserifyOptions: {
+                        debug: true
+                    }
                 }
             },
             pbkdf2Worker: {
@@ -174,6 +177,15 @@ module.exports = function(grunt) {
             */
         },
 
+        exorcise: {
+            bundle: {
+                options: {},
+                files: {
+                    'dist/js/app.browserified.js.map': ['dist/js/app.browserified.js'],
+                }
+            }
+        },
+
         uglify: {
             app: {
                 files: {
@@ -195,6 +207,8 @@ module.exports = function(grunt) {
                 options: {
                     mangle: false,
                     sourceMap: true,
+                    sourceMapIn: 'dist/js/app.browserified.js.map',
+                    sourceMapIncludeSources: true,
                     sourceMapName: 'dist/js/app.min.js.map'
                 }
             },
@@ -343,6 +357,7 @@ module.exports = function(grunt) {
                         'manifest.webapp',
                         'js/app.min.js.map',
                         'js/app.browserified.js',
+                        'js/app.browserified.js.map',
                         'js/crypto/pbkdf2-worker.browserified.js',
                         'js/pbkdf2-worker.browserified.js',
                         'js/read-sandbox.min.js.map'
@@ -370,10 +385,11 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-compress');
     grunt.loadNpmTasks('grunt-manifest');
     grunt.loadNpmTasks('grunt-mocha-phantomjs');
+    grunt.loadNpmTasks('grunt-exorcise');
 
     // Build tasks
     grunt.registerTask('dist-css', ['sass', 'autoprefixer', 'csso']);
-    grunt.registerTask('dist-js', ['browserify', 'uglify']);
+    grunt.registerTask('dist-js', ['browserify', 'exorcise', 'uglify']);
     grunt.registerTask('dist-copy', ['copy']);
     grunt.registerTask('dist', ['clean', 'dist-css', 'dist-js', 'dist-copy', 'manifest']);
 
