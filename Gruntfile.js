@@ -121,7 +121,42 @@ module.exports = function(grunt) {
             },
             unitTest: {
                 files: {
-                    'test/unit/index.js': ['test/unit/*-test.js']
+                    'test/unit/index.js': [
+                        'test/unit/oauth-test.js',
+                        'test/unit/auth-test.js',
+                        'test/unit/email-dao-test.js',
+                        'test/unit/app-controller-test.js',
+                        'test/unit/pgp-test.js',
+                        'test/unit/crypto-test.js',
+                        'test/unit/backbutton-handler-test.js',
+                        'test/unit/rest-dao-test.js',
+                        'test/unit/admin-dao-test.js',
+                        'test/unit/publickey-dao-test.js',
+                        'test/unit/privatekey-dao-test.js',
+                        'test/unit/lawnchair-dao-test.js',
+                        'test/unit/keychain-dao-test.js',
+                        'test/unit/devicestorage-dao-test.js',
+                        'test/unit/dialog-ctrl-test.js',
+                        'test/unit/add-account-ctrl-test.js',
+                        'test/unit/account-ctrl-test.js',
+                        'test/unit/set-passphrase-ctrl-test.js',
+                        'test/unit/contacts-ctrl-test.js',
+                        'test/unit/login-existing-ctrl-test.js',
+                        'test/unit/login-initial-ctrl-test.js',
+                        'test/unit/login-new-device-ctrl-test.js',
+                        'test/unit/login-privatekey-download-ctrl-test.js',
+                        'test/unit/login-set-credentials-ctrl-test.js',
+                        'test/unit/privatekey-upload-ctrl-test.js',
+                        'test/unit/login-ctrl-test.js',
+                        'test/unit/read-ctrl-test.js',
+                        'test/unit/navigation-ctrl-test.js',
+                        'test/unit/mail-list-ctrl-test.js',
+                        'test/unit/write-ctrl-test.js',
+                        'test/unit/outbox-bo-test.js',
+                        'test/unit/invitation-dao-test.js',
+                        'test/unit/update-handler-test.js',
+                        'test/unit/connection-doctor-test.js'
+                    ]
                 },
                 options: {
                     external: ['openpgp', 'node-forge', 'net', 'tls', 'crypto']
