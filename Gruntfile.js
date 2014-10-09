@@ -32,19 +32,13 @@ module.exports = function(grunt) {
             }
         },
 
-        mocha: {
+        mocha_phantomjs: {
             all: {
                 options: {
                     urls: [
                         'http://localhost:<%= connect.test.options.port %>/test/unit/index.html',
                         'http://localhost:<%= connect.test.options.port %>/test/integration/index.html'
-                    ],
-                    run: false,
-                    reporter: 'Spec',
-                    log: false,
-
-                    // phanotmjs is soooo slow
-                    timeout: 100000
+                    ]
                 }
             }
         },
@@ -367,7 +361,6 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-connect');
     grunt.loadNpmTasks('grunt-contrib-jshint');
-    grunt.loadNpmTasks('grunt-mocha');
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-csso');
     grunt.loadNpmTasks('grunt-contrib-sass');
@@ -376,6 +369,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-contrib-compress');
     grunt.loadNpmTasks('grunt-manifest');
+    grunt.loadNpmTasks('grunt-mocha-phantomjs');
 
     // Build tasks
     grunt.registerTask('dist-css', ['sass', 'autoprefixer', 'csso']);
@@ -385,7 +379,7 @@ module.exports = function(grunt) {
 
     // Test/Dev tasks
     grunt.registerTask('dev', ['connect:dev']);
-    grunt.registerTask('test', ['jshint', 'connect:test', 'mocha']);
+    grunt.registerTask('test', ['jshint', 'connect:test', 'mocha_phantomjs']);
     grunt.registerTask('prod', ['connect:prod']);
 
     //

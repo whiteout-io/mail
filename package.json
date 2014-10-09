@@ -63,8 +63,8 @@
         "grunt-contrib-watch": "~0.5.3",
         "grunt-csso": "~0.6.1",
         "grunt-manifest": "^0.4.0",
-        "grunt-mocha": "~0.4.1",
-        "mocha": "~1.13.0",
+        "grunt-mocha-phantomjs": "^0.6.0",
+        "mocha": "^1.21.4",
         "sinon": "~1.7.3",
         "time-grunt": "^1.0.0"
     }
