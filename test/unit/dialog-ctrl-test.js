@@ -1,6 +1,6 @@
 'use strict';
 
-var mocks = angular.mocks,
+var mocks = angular.mock,
     DialogCtrl = require('../../src/js/controller/dialog');
 
 describe('Dialog Controller unit test', function() {

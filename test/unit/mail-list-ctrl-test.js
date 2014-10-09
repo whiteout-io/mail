@@ -1,6 +1,6 @@
 'use strict';
 
-var mocks = angular.mocks,
+var mocks = angular.mock,
     MailListCtrl = require('../../src/js/controller/mail-list'),
     EmailDAO = require('../../src/js/dao/email-dao'),
     DeviceStorageDAO = require('../../src/js/dao/devicestorage-dao'),

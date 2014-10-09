@@ -1,6 +1,6 @@
 'use strict';
 
-var mocks = angular.mocks,
+var mocks = angular.mock,
     Auth = require('../../src/js/bo/auth'),
     ConnectionDoctor = require('../../src/js/util/connection-doctor'),
     SetCredentialsCtrl = require('../../src/js/controller/login-set-credentials'),

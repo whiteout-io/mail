@@ -1,6 +1,6 @@
 'use strict';
 
-var mocks = angular.mocks,
+var mocks = angular.mock,
     AccountCtrl = require('../../src/js/controller/account'),
     PGP = require('../../src/js/crypto/pgp'),
     dl = require('../../src/js/util/download'),

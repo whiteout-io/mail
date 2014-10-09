@@ -1,7 +1,7 @@
 'use strict';
 
 var Auth = require('../../src/js/bo/auth'),
-    mocks = angular.mocks,
+    mocks = angular.mock,
     LoginExistingCtrl = require('../../src/js/controller/login-existing'),
     EmailDAO = require('../../src/js/dao/email-dao'),
     KeychainDAO = require('../../src/js/dao/keychain-dao'),

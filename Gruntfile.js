@@ -222,7 +222,7 @@ module.exports = function(grunt) {
                         'src/lib/angular/angular-animate.min.js',
                         'src/lib/ngtagsinput/ng-tags-input.min.js',
                         'node_modules/ng-infinite-scroll/build/ng-infinite-scroll.min.js',
-                        'node_modules/angular-mocks/angular-mocks.js',
+                        'node_modules/angularjs/src/ngMock/angular-mocks.js',
                         'src/lib/fastclick/fastclick.js',
                         'src/lib/lawnchair/lawnchair-git.js',
                         'src/lib/lawnchair/lawnchair-adapter-webkit-sqlite-git.js',

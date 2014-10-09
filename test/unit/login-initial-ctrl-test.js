@@ -1,7 +1,7 @@
 'use strict';
 
 var Auth = require('../../src/js/bo/auth'),
-    mocks = angular.mocks,
+    mocks = angular.mock,
     LoginInitialCtrl = require('../../src/js/controller/login-initial'),
     PGP = require('../../src/js/crypto/pgp'),
     EmailDAO = require('../../src/js/dao/email-dao'),

@@ -1,6 +1,6 @@
 'use strict';
 
-var mocks = angular.mocks,
+var mocks = angular.mock,
     PrivateKeyUploadCtrl = require('../../src/js/controller/privatekey-upload'),
     appController = require('../../src/js/app-controller'),
     KeychainDAO = require('../../src/js/dao/keychain-dao'),

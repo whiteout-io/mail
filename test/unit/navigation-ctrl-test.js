@@ -1,6 +1,6 @@
 'use strict';
 
-var mocks = angular.mocks,
+var mocks = angular.mock,
     NavigationCtrl = require('../../src/js/controller/navigation'),
     EmailDAO = require('../../src/js/dao/email-dao'),
     OutboxBO = require('../../src/js/bo/outbox'),
