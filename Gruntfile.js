@@ -121,7 +121,7 @@ module.exports = function(grunt) {
             },
             unitTest: {
                 files: {
-                    'test/unit/index.js': [
+                    'test/unit/index.browserified.js': [
                         'test/unit/oauth-test.js',
                         'test/unit/auth-test.js',
                         'test/unit/email-dao-test.js',
@@ -155,7 +155,8 @@ module.exports = function(grunt) {
                         'test/unit/outbox-bo-test.js',
                         'test/unit/invitation-dao-test.js',
                         'test/unit/update-handler-test.js',
-                        'test/unit/connection-doctor-test.js'
+                        'test/unit/connection-doctor-test.js',
+                        'test/unit/main.js'
                     ]
                 },
                 options: {
@@ -216,25 +217,25 @@ module.exports = function(grunt) {
                     'test/unit/index.js': [
                         'src/lib/underscore/underscore-min.js',
                         'node_modules/jquery/dist/jquery.min.js',
-                        'src/lib/forge/forge.min.js',
-                        'src/lib/openpgp/openpgp.js',
                         'src/lib/angular/angular.min.js',
-                        'node_modules/angular-mocks/angular-mocks.js',
                         'src/lib/angular/angular-route.min.js',
                         'src/lib/angular/angular-animate.min.js',
                         'src/lib/ngtagsinput/ng-tags-input.min.js',
-                        'src/lib/fastclick/fastclick.js',
                         'node_modules/ng-infinite-scroll/build/ng-infinite-scroll.min.js',
+                        'node_modules/angular-mocks/angular-mocks.js',
+                        'src/lib/fastclick/fastclick.js',
                         'src/lib/lawnchair/lawnchair-git.js',
                         'src/lib/lawnchair/lawnchair-adapter-webkit-sqlite-git.js',
                         'src/lib/lawnchair/lawnchair-adapter-indexed-db-git.js',
-                        'node_modules/dompurify/purify.js',
                         'test/lib/angular-mocks.js',
-                        'test/unit/index.js'
+                        'test/unit/index.browserified.js'
                     ]
                 },
                 options: {
-                    compress: false
+                    mangle: false,
+                    compress: false,
+                    sourceMap: true,
+                    sourceMapName: 'test/unit/index.js.map'
                 }
             },
             options: {
@@ -246,8 +247,19 @@ module.exports = function(grunt) {
             npmDev: {
                 expand: true,
                 flatten: true,
-                cwd: 'node_modules/',
-                src: ['mocha/mocha.css', 'mocha/mocha.js', 'chai/chai.js', 'sinon/pkg/sinon.js', 'browsercrow/src/*.js', 'browsersmtp/src/*.js'],
+                cwd: './',
+                src: [
+                    'node_modules/mocha/mocha.css',
+                    'node_modules/mocha/mocha.js',
+                    'node_modules/chai/chai.js',
+                    'node_modules/sinon/pkg/sinon.js',
+                    'node_modules/browsercrow/src/*.js',
+                    'node_modules/browsersmtp/src/*.js',
+                    'src/lib/openpgp/openpgp.js',
+                    'src/lib/openpgp/openpgp.worker.js',
+                    'src/lib/forge/forge.min.js',
+                    'dist/js/pbkdf2-worker.min.js'
+                ],
                 dest: 'test/lib/'
             },
             lib: {
@@ -343,11 +355,10 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-manifest');
 
     // Build tasks
-    grunt.registerTask('dist-npm', ['copy:npmDev']);
     grunt.registerTask('dist-css', ['sass', 'autoprefixer', 'csso']);
     grunt.registerTask('dist-js', ['browserify', 'uglify']);
     grunt.registerTask('dist-copy', ['copy']);
-    grunt.registerTask('dist', ['clean', 'dist-npm', 'dist-css', 'dist-js', 'dist-copy', 'manifest']);
+    grunt.registerTask('dist', ['clean', 'dist-css', 'dist-js', 'dist-copy', 'manifest']);
 
     // Test/Dev tasks
     grunt.registerTask('dev', ['connect:dev']);

@@ -10,8 +10,6 @@ var aes = require('crypto-lib').aes,
     config = require('../app-config').config,
     axe = require('axe-logger');
 
-var PBKDF2_WORKER = config.workerPath + '/pbkdf2-worker.js';
-
 var Crypto = function() {};
 
 /**
@@ -61,7 +59,7 @@ Crypto.prototype.decrypt = function(ciphertext, key, iv, callback) {
  */
 Crypto.prototype.deriveKey = function(password, salt, keySize, callback) {
     startWorker({
-        script: PBKDF2_WORKER,
+        script: config.workerPath + '/pbkdf2-worker.min.js',
         args: {
             password: password,
             salt: salt,
@@ -82,7 +80,7 @@ function startWorker(options) {
     // check for WebWorker support
     if (window.Worker) {
         // init webworker thread
-        var worker = new Worker(config.workerPath + options.script);
+        var worker = new Worker(options.script);
         worker.onmessage = function(e) {
             if (e.data.err) {
                 options.callback(e.data.err);

@@ -9,3 +9,5 @@ release/
 test/integration/src/
 .elasticbeanstalk/
 test/unit/index.js
+**/*.browserified.js
+**/*.js.map

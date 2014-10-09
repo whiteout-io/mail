@@ -73,7 +73,7 @@ ctrl.buildModules = function() {
     var lawnchairDao, restDao, pubkeyDao, privkeyDao, crypto, emailDao, keychain, pgp, userStorage, pgpbuilder, oauth, appConfigStore, auth;
 
     // start the mailreader's worker thread
-    mailreader.startWorker(config.workerPath + '/../lib/mailreader-parser-worker.js');
+    mailreader.startWorker(config.workerPath + '/mailreader-parser-worker.js');
 
     // init objects and inject dependencies
     restDao = new RestDAO();
