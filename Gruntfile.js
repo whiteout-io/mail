@@ -26,7 +26,7 @@ module.exports = function(grunt) {
         },
 
         jshint: {
-            all: ['Gruntfile.js', 'src/*.js', 'src/js/**/*.js', 'test/unit/*-test.js', 'test/integration/*.js'],
+            all: ['Gruntfile.js', 'src/*.js', 'src/js/**/*.js', 'test/unit/*-test.js', 'test/integration/*-test.js'],
             options: {
                 jshintrc: '.jshintrc'
             }
@@ -156,17 +156,27 @@ module.exports = function(grunt) {
                         'test/unit/invitation-dao-test.js',
                         'test/unit/update-handler-test.js',
                         'test/unit/connection-doctor-test.js',
-                        'test/unit/main.js'
+                        'test/main.js'
                     ]
                 },
                 options: {
                     external: ['openpgp', 'node-forge', 'net', 'tls', 'crypto']
                 }
             },
+            integrationTest: {
+                files: {
+                    'test/integration/index.browserified.js': [
+                        'test/integration/email-dao-test.js',
+                        'test/main.js'
+                    ]
+                },
+                options: {
+                    external: ['openpgp', 'node-forge', 'net', 'tls', 'crypto']
+                }
+            }
             /*
               TODO:
               mailreader-worker: {},
-              integrationTest: {}
             */
         },
 
@@ -220,14 +230,10 @@ module.exports = function(grunt) {
                         'src/lib/angular/angular.min.js',
                         'src/lib/angular/angular-route.min.js',
                         'src/lib/angular/angular-animate.min.js',
-                        'src/lib/ngtagsinput/ng-tags-input.min.js',
-                        'node_modules/ng-infinite-scroll/build/ng-infinite-scroll.min.js',
                         'node_modules/angularjs/src/ngMock/angular-mocks.js',
-                        'src/lib/fastclick/fastclick.js',
                         'src/lib/lawnchair/lawnchair-git.js',
                         'src/lib/lawnchair/lawnchair-adapter-webkit-sqlite-git.js',
                         'src/lib/lawnchair/lawnchair-adapter-indexed-db-git.js',
-                        'test/lib/angular-mocks.js',
                         'test/unit/index.browserified.js'
                     ]
                 },
@@ -236,6 +242,23 @@ module.exports = function(grunt) {
                     compress: false,
                     sourceMap: true,
                     sourceMapName: 'test/unit/index.js.map'
+                }
+            },
+            integrationTest: {
+                files: {
+                    'test/integration/index.js': [
+                        'src/lib/underscore/underscore-min.js',
+                        'src/lib/lawnchair/lawnchair-git.js',
+                        'src/lib/lawnchair/lawnchair-adapter-webkit-sqlite-git.js',
+                        'src/lib/lawnchair/lawnchair-adapter-indexed-db-git.js',
+                        'test/integration/index.browserified.js'
+                    ]
+                },
+                options: {
+                    mangle: false,
+                    compress: false,
+                    sourceMap: true,
+                    sourceMapName: 'test/integration/index.js.map'
                 }
             },
             options: {
