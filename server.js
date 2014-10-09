@@ -70,7 +70,7 @@ app.disable('x-powered-by');
 // web server config
 //
 
-var port = process.env.PORT || 8585,
+var port = config.server.port,
     development = process.argv[2] === '--dev';
 
 // set HTTP headers
