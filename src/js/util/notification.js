@@ -2,10 +2,10 @@
 
 var cfg = require('../app-config').config;
 
-var self = {};
+var notif = {};
 
 if (window.Notification) {
-    self.hasPermission = Notification.permission === "granted";
+    notif.hasPermission = Notification.permission === "granted";
 }
 
 /**
@@ -17,18 +17,18 @@ if (window.Notification) {
  * @param {Function} options.onClick (optional) callback when the notification is clicked
  * @returns {Notification} A notification instance
  */
-self.create = function(options) {
+notif.create = function(options) {
     options.onClick = options.onClick || function() {};
 
     if (!window.Notification) {
         return;
     }
 
-    if (!self.hasPermission) {
+    if (!notif.hasPermission) {
         // don't wait until callback returns
         Notification.requestPermission(function(permission) {
             if (permission === "granted") {
-                self.hasPermission = true;
+                notif.hasPermission = true;
             }
         });
     }
@@ -51,8 +51,8 @@ self.create = function(options) {
     return notification;
 };
 
-self.close = function(notification) {
+notif.close = function(notification) {
     notification.close();
 };
 
-module.exports = self;
+module.exports = notif;

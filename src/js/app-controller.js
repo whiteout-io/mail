@@ -29,18 +29,18 @@ var axe = require('axe-logger'),
     config = appConfig.config,
     str = appConfig.string;
 
-var self = {};
+var ctrl = {};
 
 /**
  * Start the application.
  */
-self.start = function(options, callback) {
-    if (self.started) {
+ctrl.start = function(options, callback) {
+    if (ctrl.started) {
         return callback();
     }
 
-    self.started = true;
-    self.onError = options.onError;
+    ctrl.started = true;
+    ctrl.onError = options.onError;
 
     // are we running in a cordova app or in a browser environment?
     if (window.cordova) {
@@ -56,20 +56,20 @@ self.start = function(options, callback) {
     function onDeviceReady() {
         axe.debug('Starting app.');
 
-        self.buildModules();
+        ctrl.buildModules();
 
         // Handle offline and online gracefully
-        window.addEventListener('online', self.onConnect.bind(self, self.onError));
-        window.addEventListener('offline', self.onDisconnect.bind(self));
+        window.addEventListener('online', ctrl.onConnect.bind(ctrl, ctrl.onError));
+        window.addEventListener('offline', ctrl.onDisconnect.bind(ctrl));
 
-        self._appConfigStore.init('app-config', callback);
+        ctrl._appConfigStore.init('app-config', callback);
     }
 };
 
 /**
  * Initialize the dependency tree.
  */
-self.buildModules = function() {
+ctrl.buildModules = function() {
     var lawnchairDao, restDao, pubkeyDao, privkeyDao, crypto, emailDao, keychain, pgp, userStorage, pgpbuilder, oauth, appConfigStore, auth;
 
     // start the mailreader's worker thread
@@ -83,13 +83,13 @@ self.buildModules = function() {
     oauth = new OAuth(new RestDAO('https://www.googleapis.com'));
 
     crypto = new Crypto();
-    self._pgp = pgp = new PGP();
-    self._keychain = keychain = new KeychainDAO(lawnchairDao, pubkeyDao, privkeyDao, crypto, pgp);
+    ctrl._pgp = pgp = new PGP();
+    ctrl._keychain = keychain = new KeychainDAO(lawnchairDao, pubkeyDao, privkeyDao, crypto, pgp);
     keychain.requestPermissionForKeyUpdate = function(params, callback) {
         var message = params.newKey ? str.updatePublicKeyMsgNewKey : str.updatePublicKeyMsgRemovedKey;
         message = message.replace('{0}', params.userId);
 
-        self.onError({
+        ctrl.onError({
             title: str.updatePublicKeyTitle,
             message: message,
             positiveBtnStr: str.updatePublicKeyPosBtn,
@@ -99,40 +99,40 @@ self.buildModules = function() {
         });
     };
 
-    self._appConfigStore = appConfigStore = new DeviceStorageDAO(new LawnchairDAO());
-    self._auth = auth = new Auth(appConfigStore, oauth, pgp);
-    self._userStorage = userStorage = new DeviceStorageDAO(lawnchairDao);
-    self._invitationDao = new InvitationDAO(restDao);
-    self._pgpbuilder = pgpbuilder = new PgpBuilder();
-    self._emailDao = emailDao = new EmailDAO(keychain, pgp, userStorage, pgpbuilder, mailreader);
-    self._outboxBo = new OutboxBO(emailDao, keychain, userStorage);
-    self._updateHandler = new UpdateHandler(appConfigStore, userStorage, auth);
-    self._adminDao = new AdminDao(new RestDAO(config.adminUrl));
-    self._doctor = new ConnectionDoctor();
+    ctrl._appConfigStore = appConfigStore = new DeviceStorageDAO(new LawnchairDAO());
+    ctrl._auth = auth = new Auth(appConfigStore, oauth, pgp);
+    ctrl._userStorage = userStorage = new DeviceStorageDAO(lawnchairDao);
+    ctrl._invitationDao = new InvitationDAO(restDao);
+    ctrl._pgpbuilder = pgpbuilder = new PgpBuilder();
+    ctrl._emailDao = emailDao = new EmailDAO(keychain, pgp, userStorage, pgpbuilder, mailreader);
+    ctrl._outboxBo = new OutboxBO(emailDao, keychain, userStorage);
+    ctrl._updateHandler = new UpdateHandler(appConfigStore, userStorage, auth);
+    ctrl._adminDao = new AdminDao(new RestDAO(config.adminUrl));
+    ctrl._doctor = new ConnectionDoctor();
 
-    emailDao.onError = self.onError;
+    emailDao.onError = ctrl.onError;
 };
 
 /**
  * Calls runtime hooks to check if an app update is available.
  */
-self.checkForUpdate = function() {
-    self._updateHandler.checkForUpdate(self.onError);
+ctrl.checkForUpdate = function() {
+    ctrl._updateHandler.checkForUpdate(ctrl.onError);
 };
 
 /**
  * Instanciate the mail email data access object and its dependencies. Login to imap on init.
  */
-self.init = function(options, callback) {
+ctrl.init = function(options, callback) {
     // init user's local database
-    self._userStorage.init(options.emailAddress, function(err) {
+    ctrl._userStorage.init(options.emailAddress, function(err) {
         if (err) {
             callback(err);
             return;
         }
 
         // Migrate the databases if necessary
-        self._updateHandler.update(onUpdate);
+        ctrl._updateHandler.update(onUpdate);
     });
 
     function onUpdate(err) {
@@ -152,7 +152,7 @@ self.init = function(options, callback) {
         };
 
         // init email dao
-        self._emailDao.init({
+        ctrl._emailDao.init({
             account: account
         }, function(err, keypair) {
             if (err) {
@@ -168,32 +168,32 @@ self.init = function(options, callback) {
 /**
  * Check if the user agent is online.
  */
-self.isOnline = function() {
+ctrl.isOnline = function() {
     return navigator.onLine;
 };
 
 /**
  * Event handler that is called when the user agent goes offline.
  */
-self.onDisconnect = function() {
-    self._emailDao.onDisconnect();
+ctrl.onDisconnect = function() {
+    ctrl._emailDao.onDisconnect();
 };
 
 /**
  * Log the current user out by clear the app config store and deleting instances of imap-client and pgp-mailer.
  */
-self.logout = function() {
+ctrl.logout = function() {
     // clear app config store
-    self._auth.logout(function(err) {
+    ctrl._auth.logout(function(err) {
         if (err) {
-            self.onError(err);
+            ctrl.onError(err);
             return;
         }
 
         // delete instance of imap-client and pgp-mailer
-        self._emailDao.onDisconnect(function(err) {
+        ctrl._emailDao.onDisconnect(function(err) {
             if (err) {
-                self.onError(err);
+                ctrl.onError(err);
                 return;
             }
 
@@ -206,14 +206,14 @@ self.logout = function() {
 /**
  * Event that is called when the user agent goes online. This create new instances of the imap-client and pgp-mailer and connects to the mail server.
  */
-self.onConnect = function(callback) {
-    if (!self.isOnline() || !self._emailDao || !self._emailDao._account) {
+ctrl.onConnect = function(callback) {
+    if (!ctrl.isOnline() || !ctrl._emailDao || !ctrl._emailDao._account) {
         // prevent connection infinite loop
         callback();
         return;
     }
 
-    self._auth.getCredentials(function(err, credentials) {
+    ctrl._auth.getCredentials(function(err, credentials) {
         if (err) {
             callback(err);
             return;
@@ -226,22 +226,22 @@ self.onConnect = function(callback) {
         // add the maximum update batch size for imap folders to the imap configuration
         credentials.imap.maxUpdateSize = config.imapUpdateBatchSize;
 
-        var pgpMailer = new PgpMailer(credentials.smtp, self._pgpbuilder);
+        var pgpMailer = new PgpMailer(credentials.smtp, ctrl._pgpbuilder);
         var imapClient = new ImapClient(credentials.imap);
         imapClient.onError = onConnectionError;
         pgpMailer.onError = onConnectionError;
 
         // certificate update handling
-        imapClient.onCert = self._auth.handleCertificateUpdate.bind(self._auth, 'imap', self.onConnect, self.onError);
-        pgpMailer.onCert = self._auth.handleCertificateUpdate.bind(self._auth, 'smtp', self.onConnect, self.onError);
+        imapClient.onCert = ctrl._auth.handleCertificateUpdate.bind(ctrl._auth, 'imap', ctrl.onConnect, ctrl.onError);
+        pgpMailer.onCert = ctrl._auth.handleCertificateUpdate.bind(ctrl._auth, 'smtp', ctrl.onConnect, ctrl.onError);
 
         // after-setup configuration depending on the provider:
         // gmail does not require you to upload to the sent items folder
         // after successful sending, whereas most other providers do
-        self._emailDao.ignoreUploadOnSent = !!(config[self._auth.provider] && config[self._auth.provider].ignoreUploadOnSent);
+        ctrl._emailDao.ignoreUploadOnSent = !!(config[ctrl._auth.provider] && config[ctrl._auth.provider].ignoreUploadOnSent);
 
         // connect to clients
-        self._emailDao.onConnect({
+        ctrl._emailDao.onConnect({
             imapClient: imapClient,
             pgpMailer: pgpMailer
         }, callback);
@@ -253,7 +253,7 @@ self.onConnect = function(callback) {
         setTimeout(function() {
             axe.debug('Reconnecting...');
             // re-init client modules on error
-            self.onConnect(function(err) {
+            ctrl.onConnect(function(err) {
                 if (err) {
                     axe.error('Reconnect attempt failed! ' + (err.errMsg || err.message) + (err.stack ? ('\n' + err.stack) : ''));
                     return;
@@ -265,4 +265,4 @@ self.onConnect = function(callback) {
     }
 };
 
-module.exports = self;
+module.exports = ctrl;
