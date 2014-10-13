@@ -43,7 +43,7 @@
         "pgpbuilder": "~0.4.0",
         "pgpmailer": "~0.4.0",
         "socket.io": "^1.0.6",
-        "tcp-socket": "^0.3.11",
+        "tcp-socket": "https://github.com/whiteout-io/tcp-socket/tarball/dev/WO-567",
         "wo-smtpclient": "^0.3.8"
     },
     "devDependencies": {
