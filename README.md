@@ -13,13 +13,15 @@ You can read about product features and our future roadmap in our [FAQ](https://
 
 We take the privacy of your data very seriously. Here are some of the technical details:
 
-* Messages are [encrypted end-to-end ](http://en.wikipedia.org/wiki/End-to-end_encryption) using the [OpenPGP](http://en.wikipedia.org/wiki/Pretty_Good_Privacy) standard. This means that only you and the recipient can read your mail. Your messages and private PGP key are stored encrypted on your computer.
+* Messages are [encrypted end-to-end ](http://en.wikipedia.org/wiki/End-to-end_encryption) using the [OpenPGP](http://en.wikipedia.org/wiki/Pretty_Good_Privacy) standard. This means that only you and the recipient can read your mail. Your messages and private PGP key are stored only on your computer (in IndexedDB).
 
 * Users have the option to use [encrypted private key sync](https://blog.whiteout.io/2014/07/07/secure-pgp-key-sync-a-proposal/) if they want to use Whiteout on multiple devices.
 
-* Like most native email clients whiteout mail uses raw [TCP sockets](http://developer.chrome.com/apps/socket.html) to communicate directly with your mail server via IMAP/SMTP.
+* Like most native email clients, whiteout mail uses raw [TCP sockets](http://developer.chrome.com/apps/socket.html) to communicate directly with your mail server via IMAP/SMTP. TLS is used to protect your password and message data in transit.
 
-* The app is deployed as a [Chrome Packaged App](https://developer.chrome.com/apps/about_apps.html) with [auditable static versions](https://github.com/whiteout-io/mail-html5/releases) in order to prevent [problems with host-based security](https://blog.whiteout.io/2014/04/13/heartbleed-and-javascript-crypto/).
+* The app is deployed as a signed [Chrome Packaged App](https://developer.chrome.com/apps/about_apps.html) with [auditable static versions](https://github.com/whiteout-io/mail-html5/releases) in order to prevent [problems with host-based security](https://blog.whiteout.io/2014/04/13/heartbleed-and-javascript-crypto/).
+
+* The app can also be used from any modern web browser in environments where installing an app is not possible (e.g. a locked down corporate desktop). The IMAP/SMTP TLS sessions are still terminated in the user's browser using JS crypto ([Forge](https://github.com/digitalbazaar/forge)), but the encrypted TLS payload is proxied via [socket.io](http://socket.io/), due to the lack of raw sockets in the browser. **Please keep in mind that this mode of operation is not as secure as using the signed packaged app, since users must trust the webserver to deliver the correct code. This mode will still protect user against passive attacks like wiretapping (since PGP and TLS are still applied in the user's browser), but not against active attacks from the webserver. So it's best to decide which threat model applies to you.** 
 
 * [Content Security Policy (CSP)](http://www.html5rocks.com/en/tutorials/security/content-security-policy/) is enforced to prevent injection attacks.
 
