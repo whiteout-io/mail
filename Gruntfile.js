@@ -116,6 +116,18 @@ module.exports = function(grunt) {
                     'dist/js/pbkdf2-worker.browserified.js': ['src/js/crypto/pbkdf2-worker.js']
                 }
             },
+            mailreaderWorker: {
+                files: {
+                    'dist/js/mailreader-parser-worker.browserified.js': ['node_modules/mailreader/src/mailreader-parser-worker-browserify.js']
+                },
+                options: {
+                    external: ['buffer'], // node.js apis not required at build time
+                    browserifyOptions: {
+                        debug: true
+                    }
+                }
+
+            },
             unitTest: {
                 files: {
                     'test/unit/index.browserified.js': [
@@ -171,10 +183,6 @@ module.exports = function(grunt) {
                     external: ['openpgp', 'node-forge', 'net', 'tls', 'crypto']
                 }
             }
-            /*
-              TODO:
-              mailreader-worker: {},
-            */
         },
 
         exorcise: {
@@ -223,11 +231,19 @@ module.exports = function(grunt) {
                     sourceMap: true,
                     sourceMapName: 'dist/js/read-sandbox.min.js.map'
                 }
-
             },
             pbkdf2Worker: {
                 files: {
                     'dist/js/pbkdf2-worker.min.js': ['dist/js/pbkdf2-worker.browserified.js']
+                }
+            },
+            mailreaderWorker: {
+                files: {
+                    'dist/js/mailreader-parser-worker.min.js': ['dist/js/mailreader-parser-worker.browserified.js']
+                },
+                options: {
+                    sourceMap: true,
+                    sourceMapName: 'dist/js/mailreader-parser-worker.min.js.map'
                 }
             },
             unitTest: {
@@ -323,12 +339,6 @@ module.exports = function(grunt) {
                 cwd: 'src/',
                 src: ['*.html', '*.js', '*.json', 'manifest.*'],
                 dest: 'dist/'
-            },
-            integration: {
-                expand: true,
-                cwd: 'src/',
-                src: ['**'],
-                dest: 'test/integration/src/'
             }
         },
 
