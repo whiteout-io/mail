@@ -226,6 +226,9 @@ ctrl.onConnect = function(callback) {
         // add the maximum update batch size for imap folders to the imap configuration
         credentials.imap.maxUpdateSize = config.imapUpdateBatchSize;
 
+        // tls socket worker path for multithreaded tls in non-native tls environments
+        credentials.imap.tlsWorkerPath = credentials.smtp.tlsWorkerPath = config.workerPath + '/tcp-socket-tls-worker.js';
+
         var pgpMailer = new PgpMailer(credentials.smtp, ctrl._pgpbuilder);
         var imapClient = new ImapClient(credentials.imap);
         imapClient.onError = onConnectionError;

@@ -316,6 +316,13 @@ module.exports = function(grunt) {
                 src: ['openpgp/openpgp.js', 'openpgp/openpgp.worker.js', 'forge/forge.min.js'],
                 dest: 'dist/js/'
             },
+            tls: {
+                expand: true,
+                flatten: true,
+                cwd: 'node_modules/tcp-socket/src/',
+                src: ['tcp-socket-tls-worker.js', 'tcp-socket-tls.js'],
+                dest: 'dist/js/'
+            },
             font: {
                 expand: true,
                 cwd: 'src/font/',
