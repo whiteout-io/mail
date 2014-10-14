@@ -52,6 +52,7 @@ ConnectionDoctor.prototype.configure = function(credentials) {
         secure: this.credentials.imap.secure,
         ignoreTLS: this.credentials.imap.ignoreTLS,
         ca: this.credentials.imap.ca,
+        tlsWorkerPath: cfg.workerPath + '/tcp-socket-tls-worker.js',
         auth: {
             user: this.credentials.username,
             pass: this.credentials.password,
@@ -63,6 +64,7 @@ ConnectionDoctor.prototype.configure = function(credentials) {
         useSecureTransport: this.credentials.smtp.secure,
         ignoreTLS: this.credentials.smtp.ignoreTLS,
         ca: this.credentials.smtp.ca,
+        tlsWorkerPath: cfg.workerPath + '/tcp-socket-tls-worker.js',
         auth: {
             user: this.credentials.username,
             pass: this.credentials.password,
@@ -156,7 +158,8 @@ ConnectionDoctor.prototype._checkReachable = function(options, callback) {
     socket = TCPSocket.open(options.host, options.port, {
         binaryType: 'arraybuffer',
         useSecureTransport: options.secure,
-        ca: options.ca
+        ca: options.ca,
+        tlsWorkerPath: cfg.workerPath + '/tcp-socket-tls-worker.js'
     });
 
     socket.ondata = function() {}; // we don't actually care about the data
