@@ -175,11 +175,7 @@ module.exports = function(grunt) {
                         'test/main.js'
                     ]
                 },
-                options: {
-                    exclude: browserifyOpt.exclude,
-                    ignore: ['buffer'],
-                    browserifyOptions: browserifyOpt.browserifyOptions
-                }
+                options: browserifyOpt
             }
         },
 
