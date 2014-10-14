@@ -6,6 +6,14 @@ module.exports = function(grunt) {
     var version = grunt.option('release'),
         zipName = (version) ? version : 'DEV';
 
+    var browserifyOpt = {
+        exclude: ['openpgp', 'node-forge', 'net', 'tls', 'crypto'], // node apis not required at build time
+        ignore: ['buffer'], // node apis to be stubbed for runtime
+        browserifyOptions: {
+            debug: true
+        }
+    };
+
     // Project configuration.
     grunt.initConfig({
 
@@ -104,29 +112,19 @@ module.exports = function(grunt) {
                 files: {
                     'dist/js/app.browserified.js': ['src/js/app.js']
                 },
-                options: {
-                    external: ['openpgp', 'node-forge', 'net', 'tls', 'crypto'], // node.js apis not required at build time
-                    browserifyOptions: {
-                        debug: true
-                    }
-                }
+                options: browserifyOpt
             },
             pbkdf2Worker: {
                 files: {
                     'dist/js/pbkdf2-worker.browserified.js': ['src/js/crypto/pbkdf2-worker.js']
-                }
+                },
+                options: browserifyOpt
             },
             mailreaderWorker: {
                 files: {
                     'dist/js/mailreader-parser-worker.browserified.js': ['node_modules/mailreader/src/mailreader-parser-worker-browserify.js']
                 },
-                options: {
-                    external: ['buffer'], // node.js apis not required at build time
-                    browserifyOptions: {
-                        debug: true
-                    }
-                }
-
+                options: browserifyOpt
             },
             unitTest: {
                 files: {
@@ -168,9 +166,7 @@ module.exports = function(grunt) {
                         'test/main.js'
                     ]
                 },
-                options: {
-                    external: ['openpgp', 'node-forge', 'net', 'tls', 'crypto']
-                }
+                options: browserifyOpt
             },
             integrationTest: {
                 files: {
@@ -180,16 +176,27 @@ module.exports = function(grunt) {
                     ]
                 },
                 options: {
-                    external: ['openpgp', 'node-forge', 'net', 'tls', 'crypto']
+                    exclude: browserifyOpt.exclude,
+                    //ignore: ['buffer'], // comment in after browsercrow and browsersmtp use current npm deps
+                    browserifyOptions: browserifyOpt.browserifyOptions
                 }
             }
         },
 
         exorcise: {
-            bundle: {
-                options: {},
+            app: {
                 files: {
                     'dist/js/app.browserified.js.map': ['dist/js/app.browserified.js'],
+                }
+            },
+            unitTest: {
+                files: {
+                    'test/unit/index.browserified.js.map': ['test/unit/index.browserified.js'],
+                }
+            },
+            integrationTest: {
+                files: {
+                    'test/integration/index.browserified.js.map': ['test/integration/index.browserified.js'],
                 }
             }
         },
@@ -263,8 +270,9 @@ module.exports = function(grunt) {
                 },
                 options: {
                     mangle: false,
-                    compress: false,
                     sourceMap: true,
+                    sourceMapIn: 'test/unit/index.browserified.js.map',
+                    sourceMapIncludeSources: true,
                     sourceMapName: 'test/unit/index.js.map'
                 }
             },
@@ -280,8 +288,9 @@ module.exports = function(grunt) {
                 },
                 options: {
                     mangle: false,
-                    compress: false,
                     sourceMap: true,
+                    sourceMapIn: 'test/integration/index.browserified.js.map',
+                    sourceMapIncludeSources: true,
                     sourceMapName: 'test/integration/index.js.map'
                 }
             },
