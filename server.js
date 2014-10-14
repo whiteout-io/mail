@@ -5,6 +5,7 @@ process.chdir(__dirname);
 var cluster = require('cluster');
 var config = require('config');
 var log = require('npmlog');
+var os = require('os');
 
 log.level = config.log.level;
 
@@ -175,6 +176,10 @@ io.on('connection', function(socket) {
     socket.on('disconnect', function() {
         log.info('io', 'Closed connection [%s]', socket.conn.id);
         socket.removeAllListeners();
+    });
+
+    socket.on('hostname', function(fn) {
+        fn(os.hostname());
     });
 });
 
