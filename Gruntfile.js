@@ -177,7 +177,7 @@ module.exports = function(grunt) {
                 },
                 options: {
                     exclude: browserifyOpt.exclude,
-                    //ignore: ['buffer'], // comment in after browsercrow and browsersmtp use current npm deps
+                    ignore: ['buffer'],
                     browserifyOptions: browserifyOpt.browserifyOptions
                 }
             }
