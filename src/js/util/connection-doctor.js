@@ -30,6 +30,8 @@ var NO_INBOX = ConnectionDoctor.NO_INBOX = 47;
 var GENERIC_ERROR = ConnectionDoctor.GENERIC_ERROR = 48;
 
 
+var WORKER_PATH = cfg.workerPath + '/tcp-socket-tls-worker.min.js';
+
 //
 // Public API
 //
@@ -52,7 +54,7 @@ ConnectionDoctor.prototype.configure = function(credentials) {
         secure: this.credentials.imap.secure,
         ignoreTLS: this.credentials.imap.ignoreTLS,
         ca: this.credentials.imap.ca,
-        tlsWorkerPath: cfg.workerPath + '/tcp-socket-tls-worker.js',
+        tlsWorkerPath: WORKER_PATH,
         auth: {
             user: this.credentials.username,
             pass: this.credentials.password,
@@ -64,7 +66,7 @@ ConnectionDoctor.prototype.configure = function(credentials) {
         useSecureTransport: this.credentials.smtp.secure,
         ignoreTLS: this.credentials.smtp.ignoreTLS,
         ca: this.credentials.smtp.ca,
-        tlsWorkerPath: cfg.workerPath + '/tcp-socket-tls-worker.js',
+        tlsWorkerPath: WORKER_PATH,
         auth: {
             user: this.credentials.username,
             pass: this.credentials.password,
@@ -159,7 +161,7 @@ ConnectionDoctor.prototype._checkReachable = function(options, callback) {
         binaryType: 'arraybuffer',
         useSecureTransport: options.secure,
         ca: options.ca,
-        tlsWorkerPath: cfg.workerPath + '/tcp-socket-tls-worker.js'
+        tlsWorkerPath: WORKER_PATH
     });
 
     socket.ondata = function() {}; // we don't actually care about the data

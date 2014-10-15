@@ -8,7 +8,7 @@ var TCPSocket = require('tcp-socket'),
 
 describe('Connection Doctor', function() {
     var doctor;
-    var socketStub, imapStub, smtpStub, credentials;
+    var socketStub, imapStub, smtpStub, credentials, workerPath;
 
     beforeEach(function() {
         //
@@ -22,6 +22,7 @@ describe('Connection Doctor', function() {
             }
         };
 
+        workerPath = 'js/tcp-socket-tls-worker.min.js';
         imapStub = sinon.createStubInstance(ImapClient);
         smtpStub = sinon.createStubInstance(SmtpClient);
 
@@ -84,7 +85,8 @@ describe('Connection Doctor', function() {
                 expect(TCPSocket.open.calledWith(credentials.imap.host, credentials.imap.port, {
                     binaryType: 'arraybuffer',
                     useSecureTransport: credentials.imap.secure,
-                    ca: credentials.imap.ca
+                    ca: credentials.imap.ca,
+                    tlsWorkerPath: workerPath
                 })).to.be.true;
 
                 done();
@@ -108,7 +110,8 @@ describe('Connection Doctor', function() {
                 expect(TCPSocket.open.calledWith(credentials.imap.host, credentials.imap.port, {
                     binaryType: 'arraybuffer',
                     useSecureTransport: credentials.imap.secure,
-                    ca: credentials.imap.ca
+                    ca: credentials.imap.ca,
+                    tlsWorkerPath: workerPath
                 })).to.be.true;
 
                 done();
@@ -125,7 +128,8 @@ describe('Connection Doctor', function() {
                 expect(TCPSocket.open.calledWith(credentials.imap.host, credentials.imap.port, {
                     binaryType: 'arraybuffer',
                     useSecureTransport: credentials.imap.secure,
-                    ca: credentials.imap.ca
+                    ca: credentials.imap.ca,
+                    tlsWorkerPath: workerPath
                 })).to.be.true;
 
                 done();
