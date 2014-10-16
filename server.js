@@ -109,7 +109,8 @@ app.use(express.static(__dirname + '/dist'));
 // Socket.io proxy
 //
 
-io.origins(config.server.inboundOrigins.join(' '));
+// TODO:test origin constraint
+//io.origins(config.server.inboundOrigins.join(' '));
 
 io.on('connection', function(socket) {
 
