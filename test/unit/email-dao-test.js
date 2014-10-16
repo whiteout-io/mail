@@ -25,7 +25,7 @@ describe('Email DAO unit tests', function() {
     var emailAddress, passphrase, asymKeySize, account;
 
     // test data
-    var folders, inboxFolder, sentFolder, draftsFolder, outboxFolder, trashFolder, mockKeyPair;
+    var folders, inboxFolder, sentFolder, draftsFolder, outboxFolder, trashFolder, otherFolder, mockKeyPair;
 
     beforeEach(function() {
         //
@@ -70,7 +70,14 @@ describe('Email DAO unit tests', function() {
             messages: []
         };
 
-        folders = [inboxFolder, outboxFolder, trashFolder, sentFolder];
+        otherFolder = {
+            name: 'Other',
+            type: 'Other',
+            path: 'OTHER',
+            messages: []
+        };
+
+        folders = [inboxFolder, outboxFolder, trashFolder, sentFolder, otherFolder];
 
         account = {
             emailAddress: emailAddress,
@@ -1995,7 +2002,8 @@ describe('Email DAO unit tests', function() {
                     Inbox: [inboxFolder],
                     Sent: [sentFolder],
                     Drafts: [draftsFolder],
-                    Trash: [trashFolder]
+                    Trash: [trashFolder],
+                    Other: [otherFolder]
                 });
                 devicestorageStub.storeList.withArgs(sinon.match(function(arg) {
                     expect(arg[0][0].name).to.deep.equal(inboxFolder.name);
@@ -2004,15 +2012,18 @@ describe('Email DAO unit tests', function() {
                     expect(arg[0][1].name).to.deep.equal(sentFolder.name);
                     expect(arg[0][1].path).to.deep.equal(sentFolder.path);
                     expect(arg[0][1].type).to.deep.equal(sentFolder.type);
-                    expect(arg[0][2].name).to.deep.equal(outboxFolder.name);
-                    expect(arg[0][2].path).to.deep.equal(outboxFolder.path);
-                    expect(arg[0][2].type).to.deep.equal(outboxFolder.type);
-                    expect(arg[0][3].name).to.deep.equal(draftsFolder.name);
-                    expect(arg[0][3].path).to.deep.equal(draftsFolder.path);
-                    expect(arg[0][3].type).to.deep.equal(draftsFolder.type);
-                    expect(arg[0][4].name).to.deep.equal(trashFolder.name);
-                    expect(arg[0][4].path).to.deep.equal(trashFolder.path);
-                    expect(arg[0][4].type).to.deep.equal(trashFolder.type);
+                    expect(arg[0][2].name).to.deep.equal(draftsFolder.name);
+                    expect(arg[0][2].path).to.deep.equal(draftsFolder.path);
+                    expect(arg[0][2].type).to.deep.equal(draftsFolder.type);
+                    expect(arg[0][3].name).to.deep.equal(trashFolder.name);
+                    expect(arg[0][3].path).to.deep.equal(trashFolder.path);
+                    expect(arg[0][3].type).to.deep.equal(trashFolder.type);
+                    expect(arg[0][4].name).to.deep.equal(otherFolder.name);
+                    expect(arg[0][4].path).to.deep.equal(otherFolder.path);
+                    expect(arg[0][4].type).to.deep.equal(otherFolder.type);
+                    expect(arg[0][5].name).to.deep.equal(outboxFolder.name);
+                    expect(arg[0][5].path).to.deep.equal(outboxFolder.path);
+                    expect(arg[0][5].type).to.deep.equal(outboxFolder.type);
                     return true;
                 }), 'folders').yieldsAsync();
 
@@ -2037,29 +2048,40 @@ describe('Email DAO unit tests', function() {
                     Inbox: [inboxFolder],
                     Sent: [sentFolder],
                     Drafts: [draftsFolder],
-                    Trash: [trashFolder]
+                    Trash: [trashFolder],
+                    Other: [otherFolder]
                 });
                 devicestorageStub.storeList.withArgs(sinon.match(function(arg) {
                     expect(arg[0]).to.deep.equal([{
                         name: inboxFolder.name,
                         path: inboxFolder.path,
-                        type: inboxFolder.type
+                        type: inboxFolder.type,
+                        wellknown: true
                     }, {
                         name: outboxFolder.name,
                         path: outboxFolder.path,
-                        type: outboxFolder.type
+                        type: outboxFolder.type,
+                        wellknown: true
                     }, {
                         name: trashFolder.name,
                         path: trashFolder.path,
-                        type: trashFolder.type
+                        type: trashFolder.type,
+                        wellknown: true
                     }, {
                         name: sentFolder.name,
                         path: sentFolder.path,
-                        type: sentFolder.type
+                        type: sentFolder.type,
+                        wellknown: true
                     }, {
                         name: draftsFolder.name,
                         path: draftsFolder.path,
-                        type: draftsFolder.type
+                        type: draftsFolder.type,
+                        wellknown: true
+                    }, {
+                        name: otherFolder.name,
+                        path: otherFolder.path,
+                        type: otherFolder.type,
+                        wellknown: false
                     }]);
 
                     return true;
