@@ -38,6 +38,9 @@
 
         & > li {
             flex-grow: 1;
+            .btn-icon-light {
+                width: 100%;
+            }
         }
 
         @include respond-to(md) {

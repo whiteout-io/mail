@@ -23,7 +23,10 @@
           </button>
         </li>
         <li>
-          <button class="btn-icon-light" title="Move mail">
+          <button class="btn-icon-light u-visible-sm" title="Move mail" wo-dropdown="#read-dropdown-folder" wo-dropdown-position="center up">
+            <svg><use xlink:href="#icon-folder" /><title>Move mail</title></svg>
+          </button>
+          <button class="btn-icon-light u-hidden-sm" title="Move mail" wo-dropdown="#read-dropdown-folder" wo-dropdown-position="center">
             <svg><use xlink:href="#icon-folder" /><title>Move mail</title></svg>
           </button>
         </li>
@@ -33,7 +36,10 @@
           </button>
         </li>
         <li>
-          <button class="btn-icon-light" title="Reply to" wo-dropdown="#reply-selection" wo-dropdown-position="center">
+          <button class="btn-icon-light u-visible-sm" title="Reply to" wo-dropdown="#read-reply-selection" wo-dropdown-position="center up">
+            <svg><use xlink:href="#icon-reply_light" /><title>Reply to</title></svg>
+          </button>
+          <button class="btn-icon-light u-hidden-sm" title="Reply to" wo-dropdown="#read-reply-selection" wo-dropdown-position="center">
             <svg><use xlink:href="#icon-reply_light" /><title>Reply to</title></svg>
           </button>
         </li>
@@ -142,10 +148,14 @@
   </div>
 
   <!-- dropdowns -->
-  <ul id="reply-selection" class="dropdown">
+  <ul id="read-reply-selection" class="dropdown">
     <li><button wo-touch="state.writer.write(state.mailList.selected)"><svg><use xlink:href="#icon-reply_light" /></svg> Reply</button></li>
     <li><button wo-touch="state.writer.write(state.mailList.selected, true)"><svg><use xlink:href="#icon-reply_all_light" /></svg> Reply All</button></li>
     <li><button wo-touch="state.writer.write(state.mailList.selected, null, true)"><svg><use xlink:href="#icon-forward_light" /></svg> Forward</button></li>
+  </ul>
+  <ul id="read-dropdown-folder" class="dropdown">
+    <li><button><svg><use xlink:href="#icon-folder" /></svg> Lorem</button></li>
+    <li><button><svg><use xlink:href="#icon-folder" /></svg> Ipsum</button></li>
   </ul>
 
 </div>
