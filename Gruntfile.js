@@ -390,7 +390,11 @@ module.exports = function(grunt) {
                         'js/app.browserified.js.map',
                         'js/crypto/pbkdf2-worker.browserified.js',
                         'js/pbkdf2-worker.browserified.js',
-                        'js/read-sandbox.min.js.map'
+                        'js/read-sandbox.min.js.map',
+                        'js/mailreader-parser-worker.browserified.js',
+                        'js/mailreader-parser-worker.min.js.map',
+                        'js/tcp-socket-tls-worker.browserified.js',
+                        'js/tcp-socket-tls-worker.min.js.map'
                     ],
                     master: ['index.html']
                 },
