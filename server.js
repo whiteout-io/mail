@@ -71,15 +71,14 @@ app.disable('x-powered-by');
 // web server config
 //
 
-var port = config.server.port,
-    development = process.argv[2] === '--dev';
+var development = (process.argv[2] === '--dev');
 
 // set HTTP headers
 app.use(function(req, res, next) {
     // HSTS
     res.set('Strict-Transport-Security', 'max-age=16070400; includeSubDomains');
     // CSP
-    var iframe = development ? "http://" + req.hostname + ":" + port : "https://" + req.hostname; // allow iframe to load assets
+    var iframe = development ? "http://" + req.hostname + ":" + config.server.port : "https://" + req.hostname; // allow iframe to load assets
     res.set('Content-Security-Policy', "default-src 'self' " + iframe + "; object-src 'none'; connect-src *; style-src 'self' 'unsafe-inline' " + iframe + "; img-src *");
     // set Cache-control Header (for AppCache)
     res.set('Cache-control', 'public, max-age=0');
@@ -110,6 +109,9 @@ app.use(express.static(__dirname + '/dist'));
 // Socket.io proxy
 //
 
+// TODO:test origin constraint
+//io.origins(config.server.inboundOrigins.join(' '));
+
 io.on('connection', function(socket) {
 
     log.info('io', 'New connection [%s]', socket.conn.id);
@@ -119,6 +121,12 @@ io.on('connection', function(socket) {
     socket.on('open', function(data, fn) {
         var socketId = ++idCounter;
         var tcp;
+
+        if (config.server.outboundPorts.indexOf(data.port) < 0) {
+            log.warn('io', 'Open request to %s:%s was rejected, closing [%s:%s]', data.host, data.port, socket.conn.id, socketId);
+            socket.disconnect();
+            return;
+        }
 
         log.verbose('io', 'Open request to %s:%s [%s:%s]', data.host, data.port, socket.conn.id, socketId);
 
@@ -187,8 +195,8 @@ io.on('connection', function(socket) {
 // start server
 //
 
-server.listen(port);
+server.listen(config.server.port);
 if (development) {
     console.log(' > starting in development mode');
 }
-console.log(' > listening on http://localhost:' + port + '\n');
+console.log(' > listening on http://localhost:' + config.server.port + '\n');

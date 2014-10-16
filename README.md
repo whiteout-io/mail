@@ -71,6 +71,24 @@ Then start the server and navigate to [http://localhost:8585](http://localhost:8
 
 **A note on security:** The app should not be used without SSL so it's best to set up a reverse proxy or Loadbalancer with your SSL certificates. If you are not sure how to do this it might be easier to use our managed web hosting or packaged apps under [https://whiteout.io/#product](https://whiteout.io/#product).
 
+You can limit incoming and outgoing connections to the socket.io proxy by setting the following environment variables:
+
+    # the web socket proxy listens to this port
+    # if unset, defaults to 8889
+    PORT=12345 
+
+    # the socket.io proxy accepts connections from these origins to tunnel them to tcp, 
+    # separate with commas
+    # if unset, defaults to 'localhost:' + port
+    INBOUND_ORIGINS='foo:1234,bar:569'
+
+    # the socket.io proxy opens tcp connections with these ports to tunnel them to socket.io
+    # separate with commas
+    # if unset, defaults to '143,465,587,993' (25 is forbidden by default)
+    OUTBOUND_PORTS='123,456,789'
+
+To start the server in development mode (no forced HTTPS, iframe loads http content), run `node server.js --dev`
+
 ## License
 
     Copyright © 2014, Whiteout Networks GmbH. All rights reserved.
