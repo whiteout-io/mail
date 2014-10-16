@@ -1,105 +1,101 @@
-define(function(require) {
-    'use strict';
+'use strict';
 
-    var LawnchairDAO = require('js/dao/lawnchair-dao'),
-        DeviceStorageDAO = require('js/dao/devicestorage-dao'),
-        expect = chai.expect;
+var LawnchairDAO = require('../../src/js/dao/lawnchair-dao'),
+    DeviceStorageDAO = require('../../src/js/dao/devicestorage-dao');
 
-    var testUser = 'test@example.com';
+var testUser = 'test@example.com';
 
-    describe('Device Storage DAO unit tests', function() {
+describe('Device Storage DAO unit tests', function() {
 
-        var storageDao, lawnchairDaoStub;
+    var storageDao, lawnchairDaoStub;
 
-        beforeEach(function() {
-            lawnchairDaoStub = sinon.createStubInstance(LawnchairDAO);
-            storageDao = new DeviceStorageDAO(lawnchairDaoStub);
-        });
+    beforeEach(function() {
+        lawnchairDaoStub = sinon.createStubInstance(LawnchairDAO);
+        storageDao = new DeviceStorageDAO(lawnchairDaoStub);
+    });
 
-        afterEach(function() {});
+    afterEach(function() {});
 
-        describe('init', function() {
-            it('should work', function(done) {
-                lawnchairDaoStub.init.yields();
+    describe('init', function() {
+        it('should work', function(done) {
+            lawnchairDaoStub.init.yields();
 
-                storageDao.init(testUser, function(err) {
-                    expect(err).to.not.exist;
-                    expect(lawnchairDaoStub.init.calledOnce).to.be.true;
-                    done();
-                });
+            storageDao.init(testUser, function(err) {
+                expect(err).to.not.exist;
+                expect(lawnchairDaoStub.init.calledOnce).to.be.true;
+                done();
             });
         });
+    });
 
-        describe('store list', function() {
-            it('should fail', function(done) {
-                var list = [{}];
+    describe('store list', function() {
+        it('should fail', function(done) {
+            var list = [{}];
 
-                storageDao.storeList(list, '', function(err) {
-                    expect(err).to.exist;
-                    done();
-                });
-            });
-
-            it('should work with empty list', function(done) {
-                var list = [];
-
-                storageDao.storeList(list, 'email', function(err) {
-                    expect(err).to.not.exist;
-                    done();
-                });
-            });
-
-            it('should work', function(done) {
-                lawnchairDaoStub.batch.yields();
-
-                var list = [{
-                    foo: 'bar'
-                }];
-
-                storageDao.storeList(list, 'email', function(err) {
-                    expect(err).to.not.exist;
-                    expect(lawnchairDaoStub.batch.calledOnce).to.be.true;
-                    done();
-                });
+            storageDao.storeList(list, '', function(err) {
+                expect(err).to.exist;
+                done();
             });
         });
 
-        describe('remove list', function() {
-            it('should work', function(done) {
-                lawnchairDaoStub.removeList.yields();
+        it('should work with empty list', function(done) {
+            var list = [];
 
-                storageDao.removeList('email', function(err) {
-                    expect(err).to.not.exist;
-                    expect(lawnchairDaoStub.removeList.calledOnce).to.be.true;
-                    done();
-                });
+            storageDao.storeList(list, 'email', function(err) {
+                expect(err).to.not.exist;
+                done();
             });
         });
 
-        describe('list items', function() {
-            it('should work', function(done) {
-                lawnchairDaoStub.list.yields();
+        it('should work', function(done) {
+            lawnchairDaoStub.batch.yields();
 
-                storageDao.listItems('email', 0, null, function(err) {
-                    expect(err).to.not.exist;
-                    expect(lawnchairDaoStub.list.calledOnce).to.be.true;
-                    done();
-                });
+            var list = [{
+                foo: 'bar'
+            }];
+
+            storageDao.storeList(list, 'email', function(err) {
+                expect(err).to.not.exist;
+                expect(lawnchairDaoStub.batch.calledOnce).to.be.true;
+                done();
             });
         });
+    });
 
-        describe('clear', function() {
-            it('should work', function(done) {
-                lawnchairDaoStub.clear.yields();
+    describe('remove list', function() {
+        it('should work', function(done) {
+            lawnchairDaoStub.removeList.yields();
 
-                storageDao.clear(function(err) {
-                    expect(err).to.not.exist;
-                    expect(lawnchairDaoStub.clear.calledOnce).to.be.true;
-                    done();
-                });
+            storageDao.removeList('email', function(err) {
+                expect(err).to.not.exist;
+                expect(lawnchairDaoStub.removeList.calledOnce).to.be.true;
+                done();
             });
         });
+    });
 
+    describe('list items', function() {
+        it('should work', function(done) {
+            lawnchairDaoStub.list.yields();
+
+            storageDao.listItems('email', 0, null, function(err) {
+                expect(err).to.not.exist;
+                expect(lawnchairDaoStub.list.calledOnce).to.be.true;
+                done();
+            });
+        });
+    });
+
+    describe('clear', function() {
+        it('should work', function(done) {
+            lawnchairDaoStub.clear.yields();
+
+            storageDao.clear(function(err) {
+                expect(err).to.not.exist;
+                expect(lawnchairDaoStub.clear.calledOnce).to.be.true;
+                done();
+            });
+        });
     });
 
 });

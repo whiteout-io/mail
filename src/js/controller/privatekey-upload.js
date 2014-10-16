@@ -1,204 +1,201 @@
-define(function(require) {
-    'use strict';
+'use strict';
 
-    var angular = require('angular'),
-        appController = require('js/app-controller'),
-        util = require('js/crypto/util'),
-        keychain, pgp;
+var appController = require('../app-controller'),
+    util = require('crypto-lib').util,
+    keychain, pgp;
 
-    var PrivateKeyUploadCtrl = function($scope) {
-        keychain = appController._keychain;
-        pgp = keychain._pgp;
+var PrivateKeyUploadCtrl = function($scope) {
+    keychain = appController._keychain;
+    pgp = keychain._pgp;
 
-        $scope.state.privateKeyUpload = {
-            toggle: function(to) {
-                // open lightbox
-                $scope.state.lightbox = (to) ? 'privatekey-upload' : undefined;
-                if (!to) {
-                    return;
-                }
-
-                // show syncing status
-                $scope.step = 4;
-                // check if key is already synced
-                $scope.checkServerForKey(function(privateKeySynced) {
-                    if (privateKeySynced) {
-                        // close lightbox
-                        $scope.state.lightbox = undefined;
-                        // show message
-                        $scope.onError({
-                            title: 'Info',
-                            message: 'Your PGP key has already been synced.'
-                        });
-                        return;
-                    }
-
-                    // show sync ui if key is not synced
-                    $scope.displayUploadUi();
-                });
-            }
-        };
-
-        $scope.handlePaste = function(event) {
-            var evt = event;
-            if (evt.originalEvent) {
-                evt = evt.originalEvent;
-            }
-
-            var value = evt.clipboardData.getData('text/plain');
-            if (!value) {
+    $scope.state.privateKeyUpload = {
+        toggle: function(to) {
+            // open lightbox
+            $scope.state.lightbox = (to) ? 'privatekey-upload' : undefined;
+            if (!to) {
                 return;
             }
 
-            value = value.replace(/-/g, '');
-            $scope.code0 = value.slice(0, 4);
-            $scope.code1 = value.slice(4, 8);
-            $scope.code2 = value.slice(8, 12);
-            $scope.code3 = value.slice(12, 16);
-            $scope.code4 = value.slice(16, 20);
-            $scope.code5 = value.slice(20, 24);
-        };
-
-        $scope.checkServerForKey = function(callback) {
-            var keyParams = pgp.getKeyParams();
-            keychain.hasPrivateKey({
-                userId: keyParams.userId,
-                keyId: keyParams._id
-            }, function(err, privateKeySynced) {
-                if (err) {
-                    $scope.onError(err);
-                    return;
-                }
-
+            // show syncing status
+            $scope.step = 4;
+            // check if key is already synced
+            $scope.checkServerForKey(function(privateKeySynced) {
                 if (privateKeySynced) {
-                    callback(privateKeySynced);
+                    // close lightbox
+                    $scope.state.lightbox = undefined;
+                    // show message
+                    $scope.onError({
+                        title: 'Info',
+                        message: 'Your PGP key has already been synced.'
+                    });
                     return;
                 }
 
-                callback();
+                // show sync ui if key is not synced
+                $scope.displayUploadUi();
             });
-        };
+        }
+    };
 
-        $scope.displayUploadUi = function() {
-            // go to step 1
-            $scope.step = 1;
-            // generate new code for the user
-            $scope.code = util.randomString(24);
-            $scope.displayedCode = $scope.code.slice(0, 4) + '-' + $scope.code.slice(4, 8) + '-' + $scope.code.slice(8, 12) + '-' + $scope.code.slice(12, 16) + '-' + $scope.code.slice(16, 20) + '-' + $scope.code.slice(20, 24);
+    $scope.handlePaste = function(event) {
+        var evt = event;
+        if (evt.originalEvent) {
+            evt = evt.originalEvent;
+        }
 
-            // clear input fields of any previous artifacts
-            $scope.code0 = $scope.code1 = $scope.code2 = $scope.code3 = $scope.code4 = $scope.code5 = '';
-        };
+        var value = evt.clipboardData.getData('text/plain');
+        if (!value) {
+            return;
+        }
 
-        $scope.verifyCode = function() {
-            var inputCode = '' + $scope.code0 + $scope.code1 + $scope.code2 + $scope.code3 + $scope.code4 + $scope.code5;
+        value = value.replace(/-/g, '');
+        $scope.code0 = value.slice(0, 4);
+        $scope.code1 = value.slice(4, 8);
+        $scope.code2 = value.slice(8, 12);
+        $scope.code3 = value.slice(12, 16);
+        $scope.code4 = value.slice(16, 20);
+        $scope.code5 = value.slice(20, 24);
+    };
 
-            if (inputCode.toUpperCase() !== $scope.code) {
-                var err = new Error('The code does not match. Please go back and check the generated code.');
-                err.sync = true;
+    $scope.checkServerForKey = function(callback) {
+        var keyParams = pgp.getKeyParams();
+        keychain.hasPrivateKey({
+            userId: keyParams.userId,
+            keyId: keyParams._id
+        }, function(err, privateKeySynced) {
+            if (err) {
                 $scope.onError(err);
-                return false;
+                return;
             }
 
-            return true;
-        };
+            if (privateKeySynced) {
+                callback(privateKeySynced);
+                return;
+            }
 
-        $scope.setDeviceName = function(callback) {
-            keychain.setDeviceName($scope.deviceName, callback);
-        };
+            callback();
+        });
+    };
 
-        $scope.encryptAndUploadKey = function(callback) {
-            var userId = appController._emailDao._account.emailAddress;
-            var code = $scope.code;
+    $scope.displayUploadUi = function() {
+        // go to step 1
+        $scope.step = 1;
+        // generate new code for the user
+        $scope.code = util.randomString(24);
+        $scope.displayedCode = $scope.code.slice(0, 4) + '-' + $scope.code.slice(4, 8) + '-' + $scope.code.slice(8, 12) + '-' + $scope.code.slice(12, 16) + '-' + $scope.code.slice(16, 20) + '-' + $scope.code.slice(20, 24);
 
-            // register device to keychain service
-            keychain.registerDevice({
-                userId: userId
-            }, function(err) {
+        // clear input fields of any previous artifacts
+        $scope.code0 = $scope.code1 = $scope.code2 = $scope.code3 = $scope.code4 = $scope.code5 = '';
+    };
+
+    $scope.verifyCode = function() {
+        var inputCode = '' + $scope.code0 + $scope.code1 + $scope.code2 + $scope.code3 + $scope.code4 + $scope.code5;
+
+        if (inputCode.toUpperCase() !== $scope.code) {
+            var err = new Error('The code does not match. Please go back and check the generated code.');
+            err.sync = true;
+            $scope.onError(err);
+            return false;
+        }
+
+        return true;
+    };
+
+    $scope.setDeviceName = function(callback) {
+        keychain.setDeviceName($scope.deviceName, callback);
+    };
+
+    $scope.encryptAndUploadKey = function(callback) {
+        var userId = appController._emailDao._account.emailAddress;
+        var code = $scope.code;
+
+        // register device to keychain service
+        keychain.registerDevice({
+            userId: userId
+        }, function(err) {
+            if (err) {
+                $scope.onError(err);
+                return;
+            }
+
+            // encrypt private PGP key using code and upload
+            keychain.uploadPrivateKey({
+                userId: userId,
+                code: code
+            }, callback);
+        });
+    };
+
+    $scope.goBack = function() {
+        if ($scope.step > 1) {
+            $scope.step--;
+        }
+    };
+
+    $scope.goForward = function() {
+        if ($scope.step < 2) {
+            $scope.step++;
+            return;
+        }
+
+        if ($scope.step === 2 && $scope.verifyCode()) {
+            $scope.step++;
+            return;
+        }
+
+        if ($scope.step === 3) {
+            // set device name to local storage
+            $scope.setDeviceName(function(err) {
                 if (err) {
                     $scope.onError(err);
                     return;
                 }
 
-                // encrypt private PGP key using code and upload
-                keychain.uploadPrivateKey({
-                    userId: userId,
-                    code: code
-                }, callback);
-            });
-        };
-
-        $scope.goBack = function() {
-            if ($scope.step > 1) {
-                $scope.step--;
-            }
-        };
-
-        $scope.goForward = function() {
-            if ($scope.step < 2) {
+                // show spinner
                 $scope.step++;
-                return;
-            }
+                $scope.$apply();
 
-            if ($scope.step === 2 && $scope.verifyCode()) {
-                $scope.step++;
-                return;
-            }
-
-            if ($scope.step === 3) {
-                // set device name to local storage
-                $scope.setDeviceName(function(err) {
+                // init key sync
+                $scope.encryptAndUploadKey(function(err) {
                     if (err) {
                         $scope.onError(err);
                         return;
                     }
 
-                    // show spinner
-                    $scope.step++;
-                    $scope.$apply();
-
-                    // init key sync
-                    $scope.encryptAndUploadKey(function(err) {
-                        if (err) {
-                            $scope.onError(err);
-                            return;
-                        }
-
-                        // close sync dialog
-                        $scope.state.privateKeyUpload.toggle(false);
-                        // show success message
-                        $scope.onError({
-                            title: 'Success',
-                            message: 'Whiteout Keychain setup successful!'
-                        });
+                    // close sync dialog
+                    $scope.state.privateKeyUpload.toggle(false);
+                    // show success message
+                    $scope.onError({
+                        title: 'Success',
+                        message: 'Whiteout Keychain setup successful!'
                     });
                 });
-            }
-        };
-
+            });
+        }
     };
 
-    //
-    // Directives
-    //
+};
 
-    var ngModule = angular.module('privatekey-upload', []);
-    ngModule.directive('focusNext', function() {
-        return {
-            link: function(scope, element, attr) {
-                var maxLen = element[0].maxLength;
+//
+// Directives
+//
 
-                scope.$watch(attr.ngModel, function(val) {
-                    if (val && val.length === maxLen) {
-                        var nextinput = element.next('input');
-                        if (nextinput.length) {
-                            nextinput[0].focus();
-                        }
+var ngModule = angular.module('privatekey-upload', []);
+ngModule.directive('focusNext', function() {
+    return {
+        link: function(scope, element, attr) {
+            var maxLen = element[0].maxLength;
+
+            scope.$watch(attr.ngModel, function(val) {
+                if (val && val.length === maxLen) {
+                    var nextinput = element.next('input');
+                    if (nextinput.length) {
+                        nextinput[0].focus();
                     }
-                });
-            }
-        };
-    });
-
-    return PrivateKeyUploadCtrl;
+                }
+            });
+        }
+    };
 });
+
+module.exports = PrivateKeyUploadCtrl;

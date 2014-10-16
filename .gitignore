@@ -7,7 +7,7 @@ src/css/
 dist/
 release/
 test/integration/src/
-src/lib/*.js
-src/js/crypto/aes-gcm.js
-src/js/crypto/util.js
 .elasticbeanstalk/
+test/*/index.js
+**/*.browserified.js
+**/*.js.map

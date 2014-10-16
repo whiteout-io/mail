@@ -8,12 +8,29 @@
   </head>
   <body>
     <div id="mocha"></div>
-    
-    <script src="../lib/chai.js"></script>
-    <script src="../lib/sinon.js"></script>
-    <script src="../lib/mocha.js"></script>
 
-    <script data-main="main.js" src="../../src/lib/require.js"></script>
-    
+    <script src="../lib/chai.js"></script>
+    <script src="../lib/mocha.js"></script>
+    <script src="../lib/sinon.js"></script>
+
+    <script>
+      window.expect = chai.expect;
+      mocha.setup('bdd');
+    </script>
+
+    <script src="../lib/openpgp.js"></script>
+    <script src="../lib/forge.min.js"></script>
+    <script src="index.js"></script>
+
+    <script>
+      mocha.checkLeaks();
+      mocha.globals(['chrome']);
+
+      if (window.mochaPhantomJS) {
+        mochaPhantomJS.run();
+      } else {
+        mocha.run();
+      }
+    </script>
   </body>
 </html>

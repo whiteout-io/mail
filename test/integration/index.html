@@ -2,7 +2,7 @@
 <html style="overflow-y: auto">
   <head>
     <meta charset="utf-8">
-    <title>JavaScript Unit Tests</title>
+    <title>JavaScript Integration Tests</title>
     <link rel="stylesheet" href="../lib/mocha.css" />
 
   </head>
@@ -10,10 +10,24 @@
     <div id="mocha"></div>
 
     <script src="../lib/chai.js"></script>
-    <script src="../lib/sinon.js"></script>
     <script src="../lib/mocha.js"></script>
+    <script src="../lib/sinon.js"></script>
 
-    <script data-main="main.js" src="../lib/require.js"></script>
-    
+    <script>
+      window.expect = chai.expect;
+      mocha.setup('bdd');
+    </script>
+
+    <script src="../lib/openpgp.js"></script>
+    <script src="../lib/forge.min.js"></script>
+    <script src="index.js"></script>
+
+    <script>
+      if (window.mochaPhantomJS) {
+        mochaPhantomJS.run();
+      } else {
+        mocha.run();
+      }
+    </script>
   </body>
 </html>
