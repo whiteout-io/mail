@@ -269,6 +269,10 @@ describe('Email DAO integration tests', function() {
                 }, function(err) {
                     expect(err).to.not.exist;
 
+                    // stub rest request to key server
+                    sinon.stub(appController._emailDao._keychain._publicKeyDao, 'get').yields(null, mockKeyPair.publicKey);
+                    sinon.stub(appController._emailDao._keychain._publicKeyDao, 'getByUserId').yields(null, mockKeyPair.publicKey);
+
                     userStorage = appController._userStorage;
 
                     appController.init({
