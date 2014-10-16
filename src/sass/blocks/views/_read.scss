@@ -156,9 +156,13 @@
 
     &--no-attachments {
         .read__header {
-            padding-bottom: 0.5em;
             margin-bottom: 0.5em;
-            border-bottom: 1px solid $color-border-light;
+            &:after {
+                display: block;
+                content: "";
+                margin-top: 0.5em;
+                border-bottom: 1px solid $color-border-light;
+            }
         }
     }
     @include respond-to(sm-only) {
