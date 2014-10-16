@@ -1,56 +1,102 @@
 <div class="read" ng-controller="ReadCtrl"
-  ng-class="{'read--no-attachments': !state.mailList.selected.attachments || state.mailList.selected.attachments.length === 0}">
+  ng-class="{
+    'read--no-attachments': !state.mailList.selected.attachments || state.mailList.selected.attachments.length === 0,
+    'read--stripped': !notStripped
+  }">
 
+  <div class="read__folder-toolbar">
+    <div class="toolbar">
+      <a class="toolbar__label" href="javascript:;" wo-touch="state.read.toggle(false)">
+        <svg><use xlink:href="#icon-back" /><title>Back</title></svg> Folder name
+      </a>
+    </div>
+  </div>
+  <div class="read__action-toolbar">
+    <div class="toolbar">
+      <ul class="toolbar__actions">
+        <li>
+          <button class="btn-icon-light" ng-hide="true" title="Remove from favorites">
+            <svg><use xlink:href="#icon-star_filled" /><title>Favorited</title></svg>
+          </button>
+          <button class="btn-icon-light" title="Add to favorites">
+            <svg><use xlink:href="#icon-star" /><title>Favorite</title></svg>
+          </button>
+        </li>
+        <li>
+          <button class="btn-icon-light" title="Move mail">
+            <svg><use xlink:href="#icon-folder" /><title>Move mail</title></svg>
+          </button>
+        </li>
+        <li>
+          <button wo-touch="state.mailList.remove(state.mailList.selected)" class="btn-icon-light" title="Delete mail">
+            <svg><use xlink:href="#icon-trash" /><title>Delete mail</title></svg>
+          </button>
+        </li>
+        <li>
+          <button class="btn-icon-light" title="Reply to" wo-dropdown="#reply-selection" wo-dropdown-position="center">
+            <svg><use xlink:href="#icon-reply_light" /><title>Reply to</title></svg>
+          </button>
+        </li>
+        <li>
+          <button wo-touch="state.writer.write()" class="btn-icon-light" title="New mail">
+            <svg><use xlink:href="#icon-write" /><title>New mail</title></svg>
+          </button>
+        </li>
+      </ul>
+    </div>
+  </div>
   <header class="read__header">
     <div class="read__controls">
-      <button wo-touch="state.mailList.remove(state.mailList.selected)" class="btn-icon" title="Delete mail">
-        <svg><use xlink:href="#icon-delete" /><title>Delete mail</title></svg>
-      </button>
-      <button class="btn-icon" title="Reply to" wo-dropdown="#reply-selection" wo-dropdown-position="center">
-        <svg><use xlink:href="#icon-reply" /><title>Reply to</title></svg>
-      </button>
-      <button wo-touch="state.writer.write()" class="btn-icon" title="New mail">
-        <svg><use xlink:href="#icon-write" /><title>New mail</title></svg>
-      </button>
-    </div>
-    <div class="read__controls-lg">
       <button class="btn-icon-light" wo-touch="state.writer.write(state.mailList.selected)" title="Reply"><svg><use xlink:href="#icon-reply_light" /></svg></button>
       <button class="btn-icon-light" wo-touch="state.writer.write(state.mailList.selected, true)" title="Reply All"><svg><use xlink:href="#icon-reply_all_light" /></svg></button>
       <button class="btn-icon-light" wo-touch="state.writer.write(state.mailList.selected, null, true)" title="Forward"><svg><use xlink:href="#icon-forward_light" /></svg></button>
     </div>
 
-    <h2 class="read__subject" wo-touch="state.read.toggle(false)">
+    <h2 class="read__subject" wo-touch="notStripped = !notStripped">
+      <button ng-hide="notStripped" class="btn-icon-very-light">
+        <svg><use xlink:href="#icon-dropdown" /><title>More</title></svg>
+      </button>
+      <button ng-show="notStripped" class="btn-icon-very-light">
+        <svg><use xlink:href="#icon-dropup" /><title>Less</title></svg>
+      </button>
+
+      {{state.mailList.selected.subject ? state.mailList.selected.subject : 'No subject'}}
+    </h2>
+    <h2 class="read__subject-md" wo-touch="state.read.toggle(false)">
       <svg><use xlink:href="#icon-back" /><title>Back</title></svg>
       {{state.mailList.selected.subject ? state.mailList.selected.subject : 'No subject'}}
     </h2>
     <time class="read__time">{{state.mailList.selected.sentDate | date:'EEEE, MMM d, yyyy h:mm a'}}</time>
 
-    <div class="mail-addresses">
-      <label>From:</label>
-      <span ng-repeat="u in state.mailList.selected.from">
-        <span class="label" ng-class="{'label--invalid': u.secure === false, 'label--invalid-clickable': u.secure === false}" ng-mouseover="getKeyId(u.address)" wo-touch="invite(u)" wo-tooltip="#fingerprint-info">
-          {{u.name || u.address}}
-          <svg ng-show="u.secure === false"><use xlink:href="#icon-add_contact" /></svg>
+    <div class="read__addresses">
+      <div class="mail-addresses">
+        <label>From:</label>
+        <span ng-repeat="u in state.mailList.selected.from">
+          <span class="label" ng-class="{'label--invalid': u.secure === false, 'label--invalid-clickable': u.secure === false}" ng-mouseover="getKeyId(u.address)" wo-touch="invite(u)" wo-tooltip="#fingerprint-info">
+            {{u.name || u.address}}
+            <svg ng-show="u.secure === false"><use xlink:href="#icon-add_contact" /></svg>
+          </span>
+          <span class="mail-addresses__stripped"></span>
         </span>
-      </span>
-    </div>
-    <div class="mail-addresses">
-      <label>To:</label>
-      <span ng-repeat="u in state.mailList.selected.to">
-        <span class="label" ng-class="{'label--invalid': u.secure === false, 'label--invalid-clickable': u.secure === false}" ng-mouseover="getKeyId(u.address)" wo-touch="invite(u)" wo-tooltip="#fingerprint-info">
-          {{u.name || u.address}}
-          <svg ng-show="u.secure === false"><use xlink:href="#icon-add_contact" /></svg>
+      </div>
+      <div class="mail-addresses">
+        <label>To:</label>
+        <span ng-repeat="u in state.mailList.selected.to">
+          <span class="label" ng-class="{'label--invalid': u.secure === false, 'label--invalid-clickable': u.secure === false}" ng-mouseover="getKeyId(u.address)" wo-touch="invite(u)" wo-tooltip="#fingerprint-info">
+            {{u.name || u.address}}
+            <svg ng-show="u.secure === false"><use xlink:href="#icon-add_contact" /></svg>
+          </span>
         </span>
-      </span>
-    </div>
-    <div class="mail-addresses" ng-show="state.mailList.selected.cc && state.mailList.selected.cc.length > 0">
-      <label>Cc:</label>
-      <span ng-repeat="u in state.mailList.selected.cc">
-        <span class="label" ng-class="{'label--invalid': u.secure === false, 'label--invalid-clickable': u.secure === false}" ng-mouseover="getKeyId(u.address)" wo-touch="invite(u)" wo-tooltip="#fingerprint-info">
-          {{u.name || u.address}}
-          <svg ng-show="u.secure === false"><use xlink:href="#icon-add_contact" /></svg>
+      </div>
+      <div class="mail-addresses" ng-show="state.mailList.selected.cc && state.mailList.selected.cc.length > 0">
+        <label>Cc:</label>
+        <span ng-repeat="u in state.mailList.selected.cc">
+          <span class="label" ng-class="{'label--invalid': u.secure === false, 'label--invalid-clickable': u.secure === false}" ng-mouseover="getKeyId(u.address)" wo-touch="invite(u)" wo-tooltip="#fingerprint-info">
+            {{u.name || u.address}}
+            <svg ng-show="u.secure === false"><use xlink:href="#icon-add_contact" /></svg>
+          </span>
         </span>
-      </span>
+      </div>
     </div>
 
     <ul class="attachments" ng-show="state.mailList.selected.attachments !== undefined && state.mailList.selected.attachments.length > 0">

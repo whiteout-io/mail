@@ -1,7 +1,7 @@
 // Container for mail list entries
 .mail-list {
     $padding-horizontal: 15px;
-    $padding-vertical: 10px;
+    $padding-vertical: 15px;
     $footer-height: 30px;
 
     // do not share any common styles between large and other screens
@@ -18,7 +18,7 @@
         & > header {
             position: relative;
             flex-shrink: 0;
-            padding: $padding-horizontal ($padding-vertical + 5px);
+            padding: $padding-vertical $padding-horizontal;
             cursor: pointer;
 
             .btn-navicon {
@@ -33,11 +33,15 @@
                 font-size: $font-size-bigger;
                 font-weight: normal;
             }
-            .btn-icon {
+            .btn-icon-light {
                 position: absolute;
                 top: $padding-vertical;
                 right: $padding-horizontal;
-                margin-top: -0.05em; // for perfect vertical alignment with headline
+                padding-left: 1em;
+                & > svg {
+                    width: 2em;
+                    height: 2em;
+                }
             }
 
             &.wo-touch-active {
@@ -78,18 +82,8 @@
             width: 100%;
             font-size: $font-size-smaller;
             color: $color-text;
-            line-height: $footer-height - 4px;
-
-            &:before {
-                content: '';
-                display: block;
-                position: absolute;
-                top: 0;
-                left: $padding-horizontal;
-                right: $padding-horizontal;
-                height: 0;
-                border-top: 1px solid $color-grey-medium;
-            }
+            line-height: $footer-height;
+            border-top: 1px solid $color-border-light;
 
             svg {
                 display: inline-block;
@@ -107,7 +101,7 @@
             h2 {
                 padding-right: 0;
             }
-            .btn-icon {
+            .btn-icon-light {
                 display: none;
             }
         }
@@ -248,8 +242,8 @@
             & > svg {
                 display: inline-block;
                 vertical-align: middle;
-                width: 1em;
-                height: 1em;
+                width: 1.2em;
+                height: 1.2em;
                 fill: $color-main;
             }
         }

@@ -1,12 +1,33 @@
 .read {
+    $padding-horizontal: 15px;
+    $padding-vertical: 10px;
+
     display: flex;
     flex-direction: column;
-    padding: 10px;
     height: 100%;
     width: 100%;
 
-    @include respond-to(lg) {
-        padding: 20px 20px 10px;
+    // Toolbars
+
+    &__folder-toolbar {
+        flex-shrink: 0;
+        border-bottom: 1px solid $color-border-light;
+        @include respond-to(md) {
+            display: none;
+        }
+    }
+    &__action-toolbar {
+        flex-shrink: 0;
+        order: 100; // stick to bottom on mobile
+        border-top: 1px solid $color-border-light;
+        @include respond-to(md) {
+            order: initial;
+            border-top: none;
+            border-bottom: 1px solid $color-border-light;
+        }
+        @include respond-to(lg) {
+            display: none;
+        }
     }
 
     // Header components
@@ -14,52 +35,67 @@
     &__header {
         flex-shrink: 0;
         margin-bottom: 1em;
+        padding: $padding-vertical $padding-horizontal 0;
 
         & > .attachments {
             margin-top: 1em;
         }
     }
-    &__controls,
-    &__controls-lg {
+    // only visible in stripped version of read view
+    .mail-addresses__stripped {
+        display: none;
+    }
+    &__controls {
+        display: none;
         float: right;
         margin-left: 1em;
-        .btn-icon {
-            margin-left: 0.5em;
-        }
         .btn-icon-light {
             margin-left: 1em;
         }
-    }
-    &__controls {
-        @include respond-to(lg) {
-            display: none;
-        }
-    }
-    &__controls-lg {
-        display: none;
         @include respond-to(lg) {
             display: block;
         }
     }
     &__subject {
-        font-size: $font-size-bigger;
+        font-weight: bold;
+        color: $color-text;
         margin: 0 0 0.2em;
-        @include respond-to(not-md) {
-            cursor: pointer;
+        &.wo-touch-active {
+            background: $color-touch-active;
         }
+        .btn-icon-very-light {
+            float: right;
+            margin-left: 1em;
+        }
+
+        @include respond-to(md) {
+            display: none;
+        }
+    }
+    &__subject-md {
+        display: none;
+        font-size: $font-size-bigger;
+        font-weight: normal;
+        margin: 0 0 0.2em;
         & > svg {
-            display: inline-block;
+            display: none;
             fill: $color-main;
             vertical-align: baseline;
             height: 0.8em;
             width: 0.8em;
-
-            @include respond-to(md-only) {
-                display: none;
-            }
         }
-        &.wo-touch-active {
-            background: $color-touch-active;
+
+        @include respond-to(md) {
+            display: block;
+        }
+        @include respond-to(lg) {
+            cursor: pointer;
+            & > svg {
+                display: inline-block;
+            }
+            &.wo-touch-active {
+                background: $color-touch-active;
+            }
         }
     }
     &__time {
@@ -73,17 +109,21 @@
 
     &__signature-status {
         flex-shrink: 0;
+        margin-top: 0;
         margin-bottom: 0.5em;
         text-align: center;
         color: $color-error;
+        padding: 0 $padding-horizontal;
     }
     &__display-images {
         flex-shrink: 0;
         margin-bottom: 0.5em;
         text-align: center;
+        padding: 0 $padding-horizontal;
     }
     &__working {
         flex-grow: 1;
+        padding: 0 $padding-horizontal;
         & > div {
             @include scut-vcenter-tt;
             width: 100%;
@@ -103,53 +143,12 @@
         // allow scrolling on iOS
         overflow: auto;
         -webkit-overflow-scrolling: touch;
+        padding: 0 $padding-horizontal $padding-vertical;
 
         iframe {
             flex-grow: 1;
             border: none;
             width: 100%;
-        }
-    }
-
-    // Popovers
-
-    // TODO: refactor to BEM
-    .reply-selection {
-        .popover-content {
-            padding: 0;
-        }
-        ul {
-            list-style: none;
-            margin: 0;
-        }
-        li {
-            border-bottom: 1px solid $color-border-light;
-            &:last-child {
-                border-bottom: 0;
-            }
-        }
-        button {
-            display: block;
-            background: none;
-            width: 100%;
-            border: 0;
-            outline: 0;
-            padding: 0.5em 1em 0.5em 0.3em;
-            color: $color-main;
-            transition: background-color 0.3s;
-            text-align: left;
-
-            & > svg {
-                display: inline-block;
-                width: 2em;
-                height: 1em;
-                vertical-align: middle;
-                fill: $color-main;
-            }
-            &:hover,
-            &:focus {
-                background-color: darken($color-white, 2%);
-            }
         }
     }
 
@@ -160,6 +159,19 @@
             padding-bottom: 0.5em;
             margin-bottom: 0.5em;
             border-bottom: 1px solid $color-border-light;
+        }
+    }
+    @include respond-to(sm-only) {
+        &--stripped {
+            .read__addresses > * {
+                display: none;
+                &:first-child {
+                    display: block;
+                }
+            }
+            .mail-addresses__stripped {
+                display: inline;
+            }
         }
     }
 }
