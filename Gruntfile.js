@@ -404,11 +404,11 @@ module.exports = function(grunt) {
         watch: {
             css: {
                 files: ['src/sass/**/*.scss'],
-                tasks: ['dist-css', 'manifest']
+                tasks: ['dist-css']
             },
             js: {
                 files: ['src/js/**/*.js'],
-                tasks: ['copy:js', 'copy:integration', 'manifest']
+                tasks: ['copy:js', 'copy:integration']
             },
             icons: {
                 files: ['src/index.html', 'src/img/icons/*.svg', '!src/img/icons/all.svg'],
@@ -416,11 +416,11 @@ module.exports = function(grunt) {
             },
             lib: {
                 files: ['src/lib/**/*.js'],
-                tasks: ['copy:lib', 'manifest']
+                tasks: ['copy:lib']
             },
             app: {
                 files: ['src/*.js', 'src/**/*.html', 'src/**/*.json', 'src/manifest.*', 'src/img/**/*', 'src/font/**/*'],
-                tasks: ['copy:app', 'copy:ca', 'copy:tpl', 'copy:img', 'copy:font', 'manifest-dev', 'manifest']
+                tasks: ['copy:app', 'copy:ca', 'copy:tpl', 'copy:img', 'copy:font', 'manifest-dev']
             }
         },
 
