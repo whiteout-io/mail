@@ -75,9 +75,9 @@ You can limit incoming and outgoing connections to the socket.io proxy by settin
 
     # the web socket proxy listens to this port
     # if unset, defaults to 8889
-    PORT=12345 
+    PORT=12345
 
-    # the socket.io proxy accepts connections from these origins to tunnel them to tcp, 
+    # the socket.io proxy accepts connections from these origins to tunnel them to tcp,
     # separate with commas
     # if unset, defaults to 'localhost:' + port
     INBOUND_ORIGINS='foo:1234,bar:569'
@@ -91,12 +91,27 @@ To start the server in development mode (no forced HTTPS, iframe loads http cont
 
 ## License
 
-    Copyright © 2014, Whiteout Networks GmbH. All rights reserved.
+    The MIT License (MIT)
 
-    The code is open for inspection and peer review by the security community.
-    The code is currently not licensed under an open source license. If you're
-    interested in contributing or getting a license, please get in touch with
-    us (info@whiteout.io).
+    Copyright (c) 2014 Whiteout Networks GmbH.
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in
+    all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+    THE SOFTWARE.
 
 ### Third party libraries
 
