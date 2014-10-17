@@ -4,9 +4,14 @@ var appController = require('../app-controller'),
     notification = require('../util/notification'),
     emailDao, outboxBo, keychainDao, searchTimeout, firstSelect;
 
+//
+// Constants
+//
+
 var INIT_DISPLAY_LEN = 20,
     SCROLL_DISPLAY_LEN = 10,
-    FOLDER_TYPE_INBOX = 'Inbox';
+    FOLDER_TYPE_INBOX = 'Inbox',
+    NOTIFICATION_INBOX_TIMEOUT = 5000;
 
 var MailListCtrl = function($scope, $routeParams) {
     //
@@ -409,7 +414,8 @@ var MailListCtrl = function($scope, $routeParams) {
                 $scope.select(_.findWhere(currentFolder().messages, {
                     uid: unreadMsgs[0].uid
                 }));
-            }
+            },
+            timeout: NOTIFICATION_INBOX_TIMEOUT
         });
         $scope.pendingNotifications.push(note);
     };

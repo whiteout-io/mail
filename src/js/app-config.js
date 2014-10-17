@@ -213,5 +213,7 @@ exports.string = {
     connDocHostTimeout: 'We could not establish a connection to {0} within {1} ms. Please check the server settings and encryption mode!',
     connDocAuthRejected: 'Your credentials for {0} were rejected. Please check your username and password!',
     connDocNoInbox: 'We could not detect an IMAP inbox folder on {0}.  Please have a look at the FAQ for information on how to fix this error.',
-    connDocGenericError: 'There was an error connecting to {0}: {1}'
+    connDocGenericError: 'There was an error connecting to {0}: {1}',
+    logoutTitle: 'Logout',
+    logoutMessage: 'Are you sure you want to logout?'
 };
