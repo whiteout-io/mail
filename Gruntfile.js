@@ -331,8 +331,8 @@ module.exports = function(grunt) {
                     'node_modules/sinon/pkg/sinon.js',
                     'node_modules/browsercrow/src/*.js',
                     'node_modules/browsersmtp/src/*.js',
-                    'src/lib/openpgp/openpgp.js',
-                    'src/lib/openpgp/openpgp.worker.js',
+                    'src/lib/openpgp/openpgp.min.js',
+                    'src/lib/openpgp/openpgp.worker.min.js',
                     'src/lib/forge/forge.min.js',
                     'dist/js/pbkdf2-worker.min.js'
                 ],
@@ -342,7 +342,7 @@ module.exports = function(grunt) {
                 expand: true,
                 flatten: true,
                 cwd: 'src/lib/',
-                src: ['openpgp/openpgp.js', 'openpgp/openpgp.worker.js', 'forge/forge.min.js'],
+                src: ['openpgp/openpgp.min.js', 'openpgp/openpgp.worker.min.js', 'forge/forge.min.js'],
                 dest: 'dist/js/'
             },
             font: {
