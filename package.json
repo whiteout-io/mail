@@ -24,29 +24,28 @@
     },
     "scripts": {
         "test": "grunt && grunt test",
-        "start": "node server.js",
-        "postinstall": "dir=$(pwd) && cd node_modules/mailreader/ && npm install --production && cd $dir"
+        "start": "node server.js"
     },
     "dependencies": {
-        "axe-logger": "~0.0.2",
         "compression": "^1.0.11",
         "config": "^1.0.2",
+        "express": "^4.8.3",
+        "morgan": "^1.2.3",
+        "npmlog": "^0.1.1",
+        "socket.io": "^1.0.6"
+    },
+    "devDependencies": {
+        "axe-logger": "~0.0.2",
         "crypto-lib": "~0.2.1",
         "dompurify": "~0.4.2",
-        "express": "^4.8.3",
         "imap-client": "~0.4.3",
         "jquery": "~2.1.1",
         "mailreader": "~0.4.0",
-        "morgan": "^1.2.3",
         "ng-infinite-scroll": "~1.1.2",
-        "npmlog": "^0.1.1",
         "pgpbuilder": "~0.4.0",
         "pgpmailer": "~0.4.0",
-        "socket.io": "^1.0.6",
         "tcp-socket": "~0.3.13",
-        "wo-smtpclient": "^0.3.8"
-    },
-    "devDependencies": {
+        "wo-smtpclient": "^0.3.8",
         "angularjs": "https://github.com/whiteout-io/angular.js/tarball/npm-version",
         "browsercrow": "https://github.com/whiteout-io/browsercrow/tarball/master",
         "browsersmtp": "https://github.com/whiteout-io/browsersmtp/tarball/master",
@@ -62,6 +61,7 @@
         "grunt-contrib-sass": "~0.7.3",
         "grunt-contrib-uglify": "^0.6.0",
         "grunt-contrib-watch": "~0.5.3",
+        "grunt-shell": "~1.1.1",
         "grunt-csso": "~0.6.1",
         "grunt-exorcise": "^0.2.0",
         "grunt-manifest": "^0.4.0",

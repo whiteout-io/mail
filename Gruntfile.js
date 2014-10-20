@@ -17,6 +17,15 @@ module.exports = function(grunt) {
     // Project configuration.
     grunt.initConfig({
 
+        shell: {
+            options: {
+                stderr: false
+            },
+            target: {
+                command: 'dir=$(pwd) && cd node_modules/mailreader/ && npm install --production && cd $dir'
+            }
+        },
+
         connect: {
             dev: {
                 options: {
@@ -420,12 +429,13 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-manifest');
     grunt.loadNpmTasks('grunt-mocha-phantomjs');
     grunt.loadNpmTasks('grunt-exorcise');
+    grunt.loadNpmTasks('grunt-shell');
 
     // Build tasks
     grunt.registerTask('dist-css', ['sass', 'autoprefixer', 'csso']);
     grunt.registerTask('dist-js', ['browserify', 'exorcise', 'uglify']);
     grunt.registerTask('dist-copy', ['copy']);
-    grunt.registerTask('dist', ['clean', 'dist-css', 'dist-js', 'dist-copy', 'manifest']);
+    grunt.registerTask('dist', ['clean', 'shell', 'dist-css', 'dist-js', 'dist-copy', 'manifest']);
 
     // Test/Dev tasks
     grunt.registerTask('dev', ['connect:dev']);
