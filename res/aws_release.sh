@@ -4,6 +4,10 @@
 cd `dirname $0`
 cd ..
 
+# switch branch
+git checkout aws-dist
+git merge master --no-edit
+
 # build and test
 rm -rf node_modules/
 npm cache clear
@@ -23,3 +27,6 @@ git commit -m "Update aws-dist"
 
 # push to aws
 git aws.push
+
+# switch back to master branch
+git checkout master
