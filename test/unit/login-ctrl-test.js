@@ -74,6 +74,7 @@ describe('Login Controller unit test', function() {
                 emailAddress: emailAddress,
                 realname: 'asd'
             });
+            authStub.storeCredentials.yields();
             initStub.yields(null, testKeys);
 
             emailDaoMock.unlock.withArgs({
@@ -90,6 +91,7 @@ describe('Login Controller unit test', function() {
                     expect(startAppStub.calledOnce).to.be.true;
                     expect(checkForUpdateStub.calledOnce).to.be.true;
                     expect(authStub.getEmailAddress.calledOnce).to.be.true;
+                    expect(authStub.storeCredentials.calledOnce).to.be.true;
                     done();
                 });
                 scope = $rootScope.$new();
