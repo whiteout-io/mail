@@ -1,10 +1,19 @@
 'use strict';
 
 var appController = require('../app-controller'),
-    config = require('../app-config').config,
     notification = require('../util/notification'),
     backBtnHandler = require('../util/backbutton-handler'),
+    appCfg = require('../app-config'),
+    config = appCfg.config,
+    str = appCfg.string,
     emailDao, outboxBo;
+
+//
+// Constants
+//
+
+var NOTIFICATION_SENT_TIMEOUT = 2000;
+
 
 //
 // Controller
@@ -55,8 +64,8 @@ var NavigationCtrl = function($scope, $routeParams, $location) {
 
     $scope.logout = function() {
         $scope.onError({
-            title: 'Logout',
-            message: 'Are you sure you want to logout?',
+            title: str.logoutTitle,
+            message: str.logoutMessage,
             callback: function(confirm) {
                 if (confirm) {
                     appController.logout();
@@ -118,7 +127,7 @@ var NavigationCtrl = function($scope, $routeParams, $location) {
         notification.create({
             title: 'Message sent',
             message: email.subject,
-            timeout: 2000
+            timeout: NOTIFICATION_SENT_TIMEOUT
         }, function() {});
     }
 
