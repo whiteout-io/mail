@@ -86,7 +86,13 @@ var LoginCtrl = function($scope, $location) {
                     return;
                 }
 
-                goTo('/desktop');
+                appController._auth.storeCredentials(function(err) {
+                    if (err) {
+                        return $scope.onError(err);
+                    }
+
+                    goTo('/desktop');
+                });
             });
         }
     }
