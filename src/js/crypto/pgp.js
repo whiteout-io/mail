@@ -9,7 +9,7 @@ var util = openpgp.util,
 
 var PGP = function() {
     openpgp.config.prefer_hash_algorithm = openpgp.enums.hash.sha256;
-    openpgp.initWorker(config.workerPath + '/openpgp.worker.js');
+    openpgp.initWorker(config.workerPath + '/openpgp.worker.min.js');
 };
 
 /**
@@ -31,20 +31,13 @@ PGP.prototype.generateKeys = function(options, callback) {
         numBits: options.keySize,
         userId: userId,
         passphrase: passphrase
-    }, onGenerated);
-
-    function onGenerated(err, keys) {
-        if (err) {
-            callback(new Error('Keygeneration failed!'));
-            return;
-        }
-
+    }).then(function(keys) {
         callback(null, {
             keyId: keys.key.primaryKey.getKeyId().toHex().toUpperCase(),
             privateKeyArmored: keys.privateKeyArmored,
             publicKeyArmored: keys.publicKeyArmored
         });
-    }
+    }).catch(callback);
 };
 
 /**
@@ -287,10 +280,10 @@ PGP.prototype.encrypt = function(plaintext, publicKeysArmored, callback) {
 
     if (publicKeys) {
         // encrypt and sign the plaintext
-        openpgp.signAndEncryptMessage(publicKeys, this._privateKey, plaintext, callback);
+        openpgp.signAndEncryptMessage(publicKeys, this._privateKey, plaintext).then(callback.bind(null, null)).catch(callback);
     } else {
         // if no public keys are available encrypt for myself
-        openpgp.signAndEncryptMessage([this._publicKey], this._privateKey, plaintext, callback);
+        openpgp.signAndEncryptMessage([this._publicKey], this._privateKey, plaintext).then(callback.bind(null, null)).catch(callback);
     }
 };
 
@@ -325,17 +318,10 @@ PGP.prototype.decrypt = function(ciphertext, publicKeyArmored, callback) {
     }
 
     // decrypt and verify pgp message
-    openpgp.decryptAndVerifyMessage(this._privateKey, publicKeys, message, onDecrypted);
-
-    function onDecrypted(err, decrypted) {
-        if (err) {
-            callback(new Error('Error decrypting and verifying PGP message!'));
-            return;
-        }
-
+    openpgp.decryptAndVerifyMessage(this._privateKey, publicKeys, message).then(function(decrypted) {
         // return decrypted plaintext
         callback(null, decrypted.text, checkSignatureValidity(decrypted.signatures));
-    }
+    }).catch(callback);
 };
 
 /**
@@ -369,14 +355,9 @@ PGP.prototype.verifyClearSignedMessage = function(clearSignedText, publicKeyArmo
         return;
     }
 
-    openpgp.verifyClearSignedMessage(publicKeys, message, function(err, result) {
-        if (err) {
-            callback(new Error('Error verifying PGP message!'));
-            return;
-        }
-
+    openpgp.verifyClearSignedMessage(publicKeys, message).then(function(result) {
         callback(null, checkSignatureValidity(result.signatures));
-    });
+    }).catch(callback);
 };
 
 /**
