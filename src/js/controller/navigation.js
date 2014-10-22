@@ -120,7 +120,6 @@ var NavigationCtrl = function($scope, $routeParams, $location) {
         outboxBo.onSent = sentNotification;
         // start checking outbox periodically
         outboxBo.startChecking($scope.onOutboxUpdate);
-
     }
 
     function sentNotification(email) {

@@ -347,6 +347,10 @@ var MailListCtrl = function($scope, $routeParams) {
     //
 
     function openCurrentFolder() {
+        if (!currentFolder()) {
+            return;
+        }
+
         emailDao.openFolder({
             folder: currentFolder()
         }, function(error) {
