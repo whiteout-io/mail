@@ -18,6 +18,7 @@
 	"unused": true,
 
 	"predef": [
+            "$",
             "self",
             "importScripts",
 			"console",
