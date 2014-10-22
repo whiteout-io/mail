@@ -1565,11 +1565,10 @@ describe('Email DAO unit tests', function() {
             var publicKeys = ["PUBLIC KEY"],
                 dummyMail = {
                     publicKeysArmored: publicKeys
-                };
+                },
+                msg = 'wow. such message. much rfc2822.';
 
             it('should send encrypted and upload to sent', function(done) {
-                var msg = 'wow. such message. much rfc2822.';
-
                 imapClientStub.uploadMessage.withArgs({
                     path: sentFolder.path,
                     message: msg
@@ -1595,8 +1594,6 @@ describe('Email DAO unit tests', function() {
             });
 
             it('should send encrypted and not upload to sent', function(done) {
-                var msg = 'wow. such message. much rfc2822.';
-
                 dao.ignoreUploadOnSent = true;
 
                 pgpMailerStub.send.withArgs({
@@ -1613,6 +1610,22 @@ describe('Email DAO unit tests', function() {
 
                     expect(pgpMailerStub.send.calledOnce).to.be.true;
                     expect(imapClientStub.uploadMessage.called).to.be.false;
+
+                    done();
+                });
+            });
+
+            it('should send encrypted and ignore error on upload', function(done) {
+                imapClientStub.uploadMessage.yields(new Error());
+                pgpMailerStub.send.yieldsAsync(null, msg);
+
+                dao.sendEncrypted({
+                    email: dummyMail
+                }, function(err) {
+                    expect(err).to.not.exist;
+
+                    expect(pgpMailerStub.send.calledOnce).to.be.true;
+                    expect(imapClientStub.uploadMessage.calledOnce).to.be.true;
 
                     done();
                 });
@@ -1648,10 +1661,9 @@ describe('Email DAO unit tests', function() {
 
         describe('#sendPlaintext', function() {
             var dummyMail = {};
+            var msg = 'wow. such message. much rfc2822.';
 
             it('should send in the plain and upload to sent', function(done) {
-                var msg = 'wow. such message. much rfc2822.';
-
                 pgpMailerStub.send.withArgs({
                     smtpclient: undefined,
                     mail: dummyMail
@@ -1673,8 +1685,6 @@ describe('Email DAO unit tests', function() {
             });
 
             it('should send in the plain and not upload to sent', function(done) {
-                var msg = 'wow. such message. much rfc2822.';
-
                 dao.ignoreUploadOnSent = true;
 
                 pgpMailerStub.send.withArgs({
@@ -1688,6 +1698,22 @@ describe('Email DAO unit tests', function() {
                     expect(err).to.not.exist;
                     expect(pgpMailerStub.send.calledOnce).to.be.true;
                     expect(imapClientStub.uploadMessage.called).to.be.false;
+                    done();
+                });
+            });
+
+            it('should send  and ignore error on upload', function(done) {
+                imapClientStub.uploadMessage.yields(new Error());
+                pgpMailerStub.send.yieldsAsync(null, msg);
+
+                dao.sendEncrypted({
+                    email: dummyMail
+                }, function(err) {
+                    expect(err).to.not.exist;
+
+                    expect(pgpMailerStub.send.calledOnce).to.be.true;
+                    expect(imapClientStub.uploadMessage.calledOnce).to.be.true;
+
                     done();
                 });
             });
@@ -2189,6 +2215,27 @@ describe('Email DAO unit tests', function() {
             });
         });
 
+        describe('#_imapUploadMessage', function() {
+            it('should upload a message', function(done) {
+                var msg = 'wow. such message. much rfc2822.';
+
+                imapClientStub.uploadMessage.withArgs({
+                    path: draftsFolder.path,
+                    message: msg
+                }).yields();
+
+                dao._imapUploadMessage({
+                    folder: draftsFolder,
+                    message: msg
+                }, function(err) {
+                    expect(err).to.not.exist;
+                    expect(imapClientStub.uploadMessage.calledOnce).to.be.true;
+
+                    done();
+                });
+            });
+        });
+
         describe('#_getBodyParts', function() {
             it('should get bodyParts', function(done) {
                 imapClientStub.getBodyParts.withArgs({
@@ -2296,6 +2343,26 @@ describe('Email DAO unit tests', function() {
                 });
             });
 
+        });
+
+        describe('#_uploadToSent', function() {
+            it('should upload', function(done) {
+                var msg = 'wow. such message. much rfc2822.';
+
+                imapClientStub.uploadMessage.withArgs({
+                    path: sentFolder.path,
+                    message: msg
+                }).yields();
+
+                dao._uploadToSent({
+                    message: msg
+                }, function(err) {
+                    expect(err).to.not.exist;
+
+                    expect(imapClientStub.uploadMessage.calledOnce).to.be.true;
+                    done();
+                });
+            });
         });
     });
 });

@@ -259,7 +259,6 @@ EmailDAO.prototype.openFolder = function(options, callback) {
         path: options.folder.path
     }, callback);
 };
-
 /**
  * Synchronizes a folder's contents from disk to memory, i.e. if
  * a message has disappeared from the disk, this method will remove it from folder.messages, and
@@ -1022,22 +1021,13 @@ EmailDAO.prototype.sendEncrypted = function(options, callback) {
             return callback(err);
         }
 
-        // upload the sent message to the sent folder if necessary
-        var sentFolder = _.findWhere(self._account.folders, {
-            type: FOLDER_TYPE_SENT
-        });
-
-        if (self.ignoreUploadOnSent || !sentFolder || !rfcText) {
-            self.done();
-            return callback();
-        }
-
-        self._imapClient.uploadMessage({
-            path: sentFolder.path,
+        // try to upload to sent, but we don't actually care if the upload failed or not
+        // this should not negatively impact the process of sending
+        self._uploadToSent({
             message: rfcText
-        }, function(err) {
+        }, function() {
             self.done();
-            callback(err);
+            callback();
         });
     });
 };
@@ -1072,22 +1062,13 @@ EmailDAO.prototype.sendPlaintext = function(options, callback) {
             return callback(err);
         }
 
-        // upload the sent message to the sent folder if necessary
-        var sentFolder = _.findWhere(self._account.folders, {
-            type: FOLDER_TYPE_SENT
-        });
-
-        if (self.ignoreUploadOnSent || !sentFolder || !rfcText) {
-            self.done();
-            return callback();
-        }
-
-        self._imapClient.uploadMessage({
-            path: sentFolder.path,
+        // try to upload to sent, but we don't actually care if the upload failed or not
+        // this should not negatively impact the process of sending
+        self._uploadToSent({
             message: rfcText
-        }, function(err) {
+        }, function() {
             self.done();
-            callback(err);
+            callback();
         });
     });
 };
@@ -1568,6 +1549,20 @@ EmailDAO.prototype._imapListMessages = function(options, callback) {
 };
 
 /**
+ * Uploads a built message to a folder
+ *
+ * @param {Object} options.folder The folder where to find the message
+ * @param {String} options.message The rfc2822 compatible raw ASCII e-mail source
+ * @param {Function} callback (error) The callback when the imap client is done uploading
+ */
+EmailDAO.prototype._imapUploadMessage = function(options, callback) {
+    this._imapClient.uploadMessage({
+        path: options.folder.path,
+        message: options.message
+    }, callback);
+};
+
+/**
  * Stream an email messsage's body
  * @param {String} options.folder The folder
  * @param {String} options.uid the message's uid
@@ -1651,6 +1646,48 @@ EmailDAO.prototype._localDeleteMessage = function(options, callback) {
     var dbType = 'email_' + path + '_' + (uid || id);
     this._devicestorage.removeList(dbType, callback);
 };
+
+
+//
+//
+// Internal Helper Methods
+//
+//
+
+/**
+ * Uploads a message to the sent folder, if necessary.
+ * Calls back immediately if ignoreUploadOnSent == true or not sent folder was found.
+ * 
+ * @param {String} options.message The rfc2822 compatible raw ASCII e-mail source
+ * @param {Function} callback (error) The callback when the imap client is done uploading
+ */
+EmailDAO.prototype._uploadToSent = function(options, callback) {
+    var self = this;
+
+    self.busy();
+
+    // upload the sent message to the sent folder if necessary
+    var sentFolder = _.findWhere(self._account.folders, {
+        type: FOLDER_TYPE_SENT
+    });
+
+    // return for wrong usage
+    if (self.ignoreUploadOnSent || !sentFolder || !options.message) {
+        self.done();
+        return callback();
+    }
+
+    // upload
+    self._imapUploadMessage({
+        folder: sentFolder,
+        message: options.message
+    }, function(err) {
+        self.done();
+        callback(err);
+    });
+};
+
+
 
 
 //
