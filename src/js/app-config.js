@@ -164,21 +164,18 @@ if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getManifes
 }
 
 function setConfigParams(manifest) {
-    var cfg = exports.config,
-        cloudUrl, keychainUrl;
+    var cfg = exports.config;
+
+    function getUrl(beginsWith) {
+        return _.find(manifest.permissions, function(permission) {
+            return typeof permission === 'string' && permission.indexOf(beginsWith) === 0;
+        }).replace(/\/$/, ''); // remove last '/' from url due to required syntax in manifest
+    }
 
     // get key server base url
-    cloudUrl = _.find(manifest.permissions, function(permission) {
-        return typeof permission === 'string' && permission.indexOf('https://keys') === 0;
-    });
-    // remove last '/' from url due to required syntax in manifest
-    cfg.cloudUrl = cloudUrl.substring(0, cloudUrl.length - 1);
+    cfg.cloudUrl = getUrl('https://keys');
     // get keychain server base url
-    keychainUrl = _.find(manifest.permissions, function(permission) {
-        return typeof permission === 'string' && permission.indexOf('https://keychain') === 0;
-    });
-    // remove last '/' from url due to required syntax in manifest
-    cfg.privkeyServerUrl = keychainUrl.substring(0, keychainUrl.length - 1);
+    cfg.privkeyServerUrl = getUrl('https://keychain');
     // get client ID for OAuth requests
     cfg.gmail.clientId = manifest.oauth2.client_id;
     // get the app version
