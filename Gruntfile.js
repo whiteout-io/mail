@@ -61,7 +61,8 @@ module.exports = function(grunt) {
         },
 
         clean: {
-            dist: ['dist', 'test/lib', 'test/integration/src']
+            dist: ['dist', 'test/lib', 'test/integration/src'],
+            release: ['dist/**/*.browserified.js', 'dist/**/*.js.map']
         },
 
         sass: {
@@ -435,7 +436,7 @@ module.exports = function(grunt) {
     grunt.registerTask('dist-css', ['sass', 'autoprefixer', 'csso']);
     grunt.registerTask('dist-js', ['browserify', 'exorcise', 'uglify']);
     grunt.registerTask('dist-copy', ['copy']);
-    grunt.registerTask('dist', ['clean', 'shell', 'dist-css', 'dist-js', 'dist-copy', 'manifest']);
+    grunt.registerTask('dist', ['clean:dist', 'shell', 'dist-css', 'dist-js', 'dist-copy', 'manifest']);
 
     // Test/Dev tasks
     grunt.registerTask('dev', ['connect:dev']);
@@ -507,8 +508,8 @@ module.exports = function(grunt) {
     }
 
     grunt.registerTask('release-dev', ['dist', 'manifest-dev', 'compress']);
-    grunt.registerTask('release-test', ['dist', 'manifest-test', 'compress']);
-    grunt.registerTask('release-stable', ['dist', 'manifest-stable', 'compress']);
+    grunt.registerTask('release-test', ['dist', 'manifest-test', 'clean:release', 'compress']);
+    grunt.registerTask('release-stable', ['dist', 'manifest-stable', 'clean:release', 'compress']);
     grunt.registerTask('default', ['release-dev']);
 
 };
