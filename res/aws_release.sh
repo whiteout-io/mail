@@ -12,7 +12,8 @@ git merge master --no-edit
 rm -rf node_modules/
 npm cache clear
 npm install
-npm test
+grunt release-$1 --release=$2
+grunt test
 
 # install only production dependencies
 rm -rf node_modules/
