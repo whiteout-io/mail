@@ -1,34 +1,11 @@
 'use strict';
 
-var appVersion, cloudUrl, keychainUrl, clientId;
-
-// parse manifest to get configurations for current runtime
-try {
-    var manifest = chrome.runtime.getManifest();
-    // get key server base url
-    cloudUrl = _.find(manifest.permissions, function(permission) {
-        return typeof permission === 'string' && permission.indexOf('https://keys') === 0;
-    });
-    // remove last '/' from url due to required syntax in manifest
-    cloudUrl = cloudUrl.substring(0, cloudUrl.length - 1);
-    // get keychain server base url
-    keychainUrl = _.find(manifest.permissions, function(permission) {
-        return typeof permission === 'string' && permission.indexOf('https://keychain') === 0;
-    });
-    // remove last '/' from url due to required syntax in manifest
-    keychainUrl = keychainUrl.substring(0, keychainUrl.length - 1);
-    // get client ID for OAuth requests
-    clientId = manifest.oauth2.client_id;
-    // get the app version
-    appVersion = manifest.version;
-} catch (e) {}
-
 /**
  * Global app configurations
  */
 exports.config = {
-    cloudUrl: cloudUrl || 'https://keys.whiteout.io',
-    privkeyServerUrl: keychainUrl || 'https://keychain.whiteout.io',
+    cloudUrl: 'https://keys.whiteout.io',
+    privkeyServerUrl: 'https://keychain.whiteout.io',
     adminUrl: 'https://admin-node.whiteout.io',
     wmailDomain: 'wmail.io',
     serverPrivateKeyId: 'EE342F0DDBB0F3BE',
@@ -57,7 +34,7 @@ exports.config = {
         }
     },
     gmail: {
-        clientId: clientId || '440907777130.apps.googleusercontent.com',
+        clientId: '440907777130.apps.googleusercontent.com',
         imap: {
             host: 'imap.gmail.com',
             port: 993,
@@ -171,13 +148,39 @@ exports.config = {
     verificationUrl: '/verify/',
     verificationUuidLength: 36,
     dbVersion: 5,
-    appVersion: appVersion,
+    appVersion: undefined,
     outboxMailboxPath: 'OUTBOX',
     outboxMailboxName: 'Outbox',
     outboxMailboxType: 'Outbox',
     connDocTimeout: 5000,
     imapUpdateBatchSize: 25
 };
+
+// parse manifest to get configurations for current runtime
+if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getManifest) {
+    setConfigParams(chrome.runtime.getManifest());
+} else if (typeof $ !== 'undefined' && $.get) {
+    $.get('/manifest.json', setConfigParams, 'json');
+}
+
+function setConfigParams(manifest) {
+    var cfg = exports.config;
+
+    function getUrl(beginsWith) {
+        return _.find(manifest.permissions, function(permission) {
+            return typeof permission === 'string' && permission.indexOf(beginsWith) === 0;
+        }).replace(/\/$/, ''); // remove last '/' from url due to required syntax in manifest
+    }
+
+    // get key server base url
+    cfg.cloudUrl = getUrl('https://keys');
+    // get keychain server base url
+    cfg.privkeyServerUrl = getUrl('https://keychain');
+    // get client ID for OAuth requests
+    cfg.gmail.clientId = manifest.oauth2.client_id;
+    // get the app version
+    cfg.appVersion = manifest.version;
+}
 
 /**
  * Strings are maintained here
