@@ -197,8 +197,13 @@ ctrl.logout = function() {
                 return;
             }
 
-            // navigate to login
-            window.location.href = '/';
+            if (typeof window.chrome !== 'undefined' && chrome.runtime && chrome.runtime.reload) {
+                // reload chrome app
+                chrome.runtime.reload();
+            } else {
+                // navigate to login
+                window.location.href = '/';
+            }
         });
     });
 };
