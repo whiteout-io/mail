@@ -22,7 +22,9 @@ npm install --production
 find node_modules/ -name ".gitignore" -exec rm -rf {} \;
 
 # Add runtime dependencies to git
-git add node_modules/ dist/
+sed -i "" '/dist/d' .gitignore
+sed -i "" '/node_modules/d' .gitignore
+git add .gitignore node_modules/ dist/
 git commit -m "Update aws-dist"
 
 # push to aws
