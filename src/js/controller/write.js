@@ -460,6 +460,7 @@ ngModule.directive('focusMe', function($timeout, $parse) {
                         if (el.type === 'textarea') {
                             el.selectionStart = 0;
                             el.selectionEnd = 0;
+                            el.scrollTop = 0;
                         }
                     }, 100);
                 }
