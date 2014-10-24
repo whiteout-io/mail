@@ -450,7 +450,7 @@ module.exports = function(grunt) {
     grunt.registerTask('manifest-dev', function() {
         patchManifest({
             suffix: ' (DEV)',
-            version: '9999.9999.9999.9999'
+            version: '9999.9999.9999'
         });
     });
     grunt.registerTask('manifest-test', function() {
