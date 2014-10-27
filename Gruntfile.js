@@ -30,7 +30,7 @@ module.exports = function(grunt) {
 
         clean: {
             dist: ['dist', 'compile', 'test/lib', 'test/integration/src'],
-            release: ['dist/**/*.browserified.js', 'dist/**/*.js.map']
+            release: ['dist/**/*.browserified.js', 'dist/**/*.js.map', 'dist/js/app.templates.js']
         },
 
         copy: {
@@ -74,7 +74,7 @@ module.exports = function(grunt) {
             tpl: {
                 expand: true,
                 cwd: 'src/tpl/',
-                src: ['*'],
+                src: ['read-sandbox.html'],
                 dest: 'dist/tpl/'
             },
             app: {
@@ -231,6 +231,22 @@ module.exports = function(grunt) {
             }
         },
 
+        ngtemplates: {
+            mail: {
+                src: [
+                    'tpl/**/*.html'
+                ],
+                dest: 'dist/js/app.templates.js',
+                cwd: 'src/',
+                options: {
+                    htmlmin: {
+                        collapseWhitespace: true,
+                        removeComments: true // we do not use comment directives
+                    }
+                }
+            }
+        },
+
         concat: {
             options: {
                 separator: ';\n',
@@ -249,7 +265,8 @@ module.exports = function(grunt) {
                     'src/lib/lawnchair/lawnchair-git.js',
                     'src/lib/lawnchair/lawnchair-adapter-webkit-sqlite-git.js',
                     'src/lib/lawnchair/lawnchair-adapter-indexed-db-git.js',
-                    'dist/js/app.browserified.js'
+                    'dist/js/app.browserified.js',
+                    '<%= ngtemplates.mail.dest %>'
                 ],
                 dest: 'dist/js/app.min.js',
                 options: {
@@ -498,6 +515,8 @@ module.exports = function(grunt) {
                         'appcache.manifest',
                         'manifest.webapp',
                         'manifest.mobile.json',
+                        'background.js',
+                        'js/app.templates.js',
                         'js/app.js.map',
                         'js/app.min.js.map',
                         'js/app.browserified.js',
@@ -540,16 +559,18 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-svgmin');
     grunt.loadNpmTasks('grunt-svgstore');
     grunt.loadNpmTasks('grunt-shell');
+    grunt.loadNpmTasks('grunt-angular-templates');
 
     // Build tasks
     grunt.registerTask('dist-css', ['sass', 'autoprefixer', 'csso']);
-    grunt.registerTask('dist-js', ['browserify', 'exorcise', 'concat', 'uglify']);
+    grunt.registerTask('dist-js', ['browserify', 'exorcise', 'ngtemplates', 'concat', 'uglify']);
     grunt.registerTask('dist-js-app', [
         'browserify:app',
         'browserify:pbkdf2Worker',
         'browserify:mailreaderWorker',
         'browserify:tlsWorker',
         'exorcise:app',
+        'ngtemplates',
         'concat:app',
         'concat:readSandbox',
         'concat:pbkdf2Worker',
