@@ -19,8 +19,18 @@ module.exports = function(grunt) {
 
         // General
 
+        shell: {
+            options: {
+                stderr: false
+            },
+            target: {
+                command: 'dir=$(pwd) && cd node_modules/mailreader/ && npm install --production && cd $dir'
+            }
+        },
+
         clean: {
-            dist: ['dist', 'compile', 'test/lib', 'test/integration/src']
+            dist: ['dist', 'compile', 'test/lib', 'test/integration/src'],
+            release: ['dist/**/*.browserified.js', 'dist/**/*.js.map']
         },
 
         copy: {
@@ -35,8 +45,8 @@ module.exports = function(grunt) {
                     'node_modules/sinon/pkg/sinon.js',
                     'node_modules/browsercrow/src/*.js',
                     'node_modules/browsersmtp/src/*.js',
-                    'src/lib/openpgp/openpgp.js',
-                    'src/lib/openpgp/openpgp.worker.js',
+                    'src/lib/openpgp/openpgp.min.js',
+                    'src/lib/openpgp/openpgp.worker.min.js',
                     'src/lib/forge/forge.min.js',
                     'dist/js/pbkdf2-worker.min.js'
                 ],
@@ -46,7 +56,7 @@ module.exports = function(grunt) {
                 expand: true,
                 flatten: true,
                 cwd: 'src/lib/',
-                src: ['openpgp/openpgp.js', 'openpgp/openpgp.worker.js', 'forge/forge.min.js'],
+                src: ['openpgp/openpgp.min.js', 'openpgp/openpgp.worker.min.js', 'forge/forge.min.js'],
                 dest: 'dist/js/'
             },
             font: {
@@ -487,13 +497,14 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-string-replace');
     grunt.loadNpmTasks('grunt-svgmin');
     grunt.loadNpmTasks('grunt-svgstore');
+    grunt.loadNpmTasks('grunt-shell');
 
     // Build tasks
     grunt.registerTask('dist-css', ['sass', 'autoprefixer', 'csso']);
     grunt.registerTask('dist-js', ['browserify', 'exorcise', 'uglify']);
     grunt.registerTask('dist-copy', ['copy']);
     grunt.registerTask('dist-assets', ['svgmin', 'svgstore', 'string-replace']);
-    grunt.registerTask('dist', ['clean', 'dist-css', 'dist-js', 'dist-assets', 'dist-copy', 'manifest']);
+    grunt.registerTask('dist', ['clean:dist', 'shell', 'dist-css', 'dist-js', 'dist-assets', 'dist-copy', 'manifest']);
 
     // Test/Dev tasks
     grunt.registerTask('dev', ['connect:dev']);
@@ -565,8 +576,8 @@ module.exports = function(grunt) {
     }
 
     grunt.registerTask('release-dev', ['dist', 'manifest-dev', 'compress']);
-    grunt.registerTask('release-test', ['dist', 'manifest-test', 'compress']);
-    grunt.registerTask('release-stable', ['dist', 'manifest-stable', 'compress']);
+    grunt.registerTask('release-test', ['dist', 'manifest-test', 'clean:release', 'compress']);
+    grunt.registerTask('release-stable', ['dist', 'manifest-stable', 'clean:release', 'compress']);
     grunt.registerTask('default', ['release-dev']);
 
 };
