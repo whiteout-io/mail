@@ -555,18 +555,18 @@ function createDummyMails() {
         this.answered = answered;
         this.sentDate = new Date('Thu Sep 19 2013 20:41:23 GMT+0200 (CEST)');
         this.subject = 'Getting started'; // Subject line
-        // this.body = 'And a good day to you too sir. \n' +
-        //     '\n' +
-        //     'Thursday, Apr 24, 2014 3:33 PM safewithme.testuser@gmail.com wrote:\n' +
-        //     '> adsfadfasdfasdfasfdasdfasdfas\n' +
-        //     '\n' +
-        //     'http://example.com\n' +
-        //     '\n' +
-        //     '> Tuesday, Mar 25, 2014 4:19 PM gianniarcore@gmail.com wrote:\n' +
-        //     '>> from 0.7.0.1\n' +
-        //     '>>\n' +
-        //     '>> God speed!'; // plaintext body
-        this.html = '<!DOCTYPE html><html><head></head><body><h1 style="border: 1px solid red; width: 500px;">Hello there' + Math.random() + '</h1></body></html>';
+        this.body = 'And a good day to you too sir. \n' +
+            '\n' +
+            'Thursday, Apr 24, 2014 3:33 PM safewithme.testuser@gmail.com wrote:\n' +
+            '> adsfadfasdfasdfasfdasdfasdfas\n' +
+            '\n' +
+            'http://example.com\n' +
+            '\n' +
+            '> Tuesday, Mar 25, 2014 4:19 PM gianniarcore@gmail.com wrote:\n' +
+            '>> from 0.7.0.1\n' +
+            '>>\n' +
+            '>> God speed!'; // plaintext body
+        //this.html = '<!DOCTYPE html><html><head></head><body><h1 style="border: 1px solid red; width: 500px;">Hello there' + Math.random() + '</h1></body></html>';
         this.encrypted = true;
         this.decrypted = true;
     };
