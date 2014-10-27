@@ -1,0 +1,122 @@
+<nav class="nav">
+  <h1>WHITEOUT.IO</h1>
+  <div class="nav__write">
+    <button class="btn" wo-touch="state.writer.write(); $event.stopPropagation()">Write</button>
+  </div>
+  <ul class="nav__folders">
+    <li class="nav__folder nav__folder--open">
+      <a href="javascript:;">
+        <svg role="presentation"><use xlink:href="#icon-inbox" /></svg> Inbox
+        <span class="nav__counter">99+</span>
+      </a>
+      <button class="btn-icon-very-light">
+        <svg><use xlink:href="#icon-dropdown" /><title>More</title></svg>
+      </button>
+    </li>
+    <li class="nav__folder">
+      <a href="javascript:;">
+        <svg role="presentation"><use xlink:href="#icon-sent" /></svg> Sent
+      </a>
+    </li>
+    <li class="nav__folder">
+      <a href="javascript:;">
+        <svg role="presentation"><use xlink:href="#icon-draft" /></svg> Drafts
+      </a>
+    </li>
+    <li class="nav__folder">
+      <a href="javascript:;">
+        <svg role="presentation"><use xlink:href="#icon-trash" /></svg> Trash
+      </a>
+    </li>
+    <li class="nav__folder">
+      <a href="javascript:;">
+        <svg role="presentation"><use xlink:href="#icon-star" /></svg> Markiert
+        <span class="nav__counter">1</span>
+      </a>
+    </li>
+  </ul>
+  <ul class="nav__folders">
+    <li class="nav__folder">
+      <a href="javascript:;">
+        <svg role="presentation"><use xlink:href="#icon-folder" /></svg> Extra long folder name
+      </a>
+    </li>
+    <li class="nav__folder">
+      <a href="javascript:;">
+        <svg role="presentation"><use xlink:href="#icon-folder" /></svg> Travel
+      </a>
+    </li>
+    <li class="nav__folder">
+      <a href="javascript:;">
+        <svg role="presentation"><use xlink:href="#icon-folder" /></svg> Bank
+      </a>
+    </li>
+  </ul>
+
+  <ul class="nav__secondary">
+    <li>
+      <a href="javascript:;" wo-touch="state.account.toggle(true); $event.preventDefault()">
+        <svg role="presentation"><use xlink:href="#icon-account" /></svg> Account
+      </a>
+    </li>
+    <li>
+      <a href="javascript:;" wo-touch="state.contacts.toggle(true); $event.preventDefault()">
+        <svg role="presentation"><use xlink:href="#icon-contact" /></svg> Contacts
+      </a>
+    </li>
+    <li>
+      <a href="javascript:;" wo-touch="state.privateKeyUpload.toggle(true); $event.preventDefault()">
+        <svg role="presentation"><use xlink:href="#icon-key" /></svg> Key sync (experimental)
+      </a>
+    </li>
+    <li>
+      <a href="javascript:;" wo-touch="state.writer.reportBug(); $event.preventDefault()">
+        <svg role="presentation"><use xlink:href="#icon-bug" /></svg> Report a bug
+      </a>
+    </li>
+    <li>
+      <a href="javascript:;" wo-touch="state.about.toggle(true); $event.preventDefault()">
+        <svg role="presentation"><use xlink:href="#icon-about" /></svg> About
+      </a>
+    </li>
+  </ul>
+
+  <footer ng-class="{syncing: account.loggingIn || account.busy || searching}">
+    <span class="spinner"></span>
+    <span class="text" ng-switch="account.online">
+      <span ng-switch-when="false">
+        <svg><use xlink:href="#icon-offline" /></svg>
+      </span>
+      {{lastUpdateLbl}} {{lastUpdate | date:'shortTime'}}
+    </span>
+  </footer>
+</nav>
+
+<!--<div class="nav">
+  <header>
+    <h1>WHITEOUT<span>.IO</span></h1>
+  </header>
+
+  <ul class="nav-primary">
+    <li ng-repeat="folder in account.folders" ng-switch="folder.count !== undefined && folder.count > 0">
+      <a href="#" wo-touch="openFolder(folder); $event.preventDefault()">
+        {{folder.type}}
+        <span class="label-wrapper" ng-switch-when="true">
+          <span class="label label-light">{{folder.count}}</span>
+        </span>
+      </a>
+    </li>
+  </ul>
+
+  <ul class="nav-secondary">
+    <li><a href="#" wo-touch="state.account.toggle(true); $event.preventDefault()">Account</a></li>
+    <li><a href="#" wo-touch="state.contacts.toggle(true); $event.preventDefault()">Contacts</a></li>
+    <li><a href="#" wo-touch="state.privateKeyUpload.toggle(true); $event.preventDefault()">Key sync (experimental)</a></li>
+    <li><a href="#" wo-touch="state.writer.reportBug(); $event.preventDefault()">Report a bug</a></li>
+    <li><a href="#" wo-touch="state.about.toggle(true); $event.preventDefault()">About</a></li>
+  </ul>
+
+  <footer>
+    {{lastUpdateLbl}} {{lastUpdate | date:'shortTime'}}
+  </footer>
+</div>-->

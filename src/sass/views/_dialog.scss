@@ -1,7 +1,7 @@
 .view-dialog {
     height: auto;
 
-    @include respond-to(desktop) {
+    @include respond-to(md) {
         max-width: 350px;
     }
 

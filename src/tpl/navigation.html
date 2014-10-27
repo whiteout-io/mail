@@ -6,7 +6,7 @@
   <ul class="nav-primary">
     <li ng-repeat="folder in account.folders" ng-switch="folder.count !== undefined && folder.count > 0">
       <a href="#" wo-touch="openFolder(folder); $event.preventDefault()">
-        {{folder.type}}
+        {{folder.wellknown? folder.type : folder.name}}
         <span class="label-wrapper" ng-switch-when="true">
           <span class="label label-light">{{folder.count}}</span>
         </span>

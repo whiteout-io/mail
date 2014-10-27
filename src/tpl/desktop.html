@@ -1,22 +1,15 @@
-<div class="nav-container nav-effect" ng-class="{'nav-menu-open': state.nav.open}">
-
-  <!-- main navigation -->
-  <nav class="nav-menu nav-effect" ng-include="'tpl/navigation.html'"></nav>
-
-  <!-- content wrapper pushed right -->
-  <div class="nav-pusher" ng-click="state.nav.toggle(false)">
-    <section class="content main-content" ng-class="{'shift-right': state.read.open}">
-
-      <!-- left column: containing list view and navigation header -->
-      <div class="column column-left" ng-include="'tpl/mail-list.html'"></div>
-
-      <!-- right column: containing list read view -->
-      <div class="column" ng-include="'tpl/read.html'"></div>
-
-    </section>
-  </div><!--/.nav-pusher-->
-
-</div><!--/.nav-container-->
+<div class="app" ng-class="{'app--show-aside': state.nav.open}">
+  <aside class="app__aside" ng-include="'tpl/nav.html'"></aside>
+  <div class="app__container" ng-click="state.nav.toggle(false)">
+    <header class="app__header" ng-include="'tpl/action-bar.html'"></header>
+    <main class="app__main">
+      <div class="mail-list-wrapper" ng-class="{'mail-list-wrapper--show-aside': !state.read.open}">
+        <aside class="mail-list-wrapper__aside" ng-include="'tpl/mail-list.html'"></aside>
+        <div class="mail-list-wrapper__container" ng-include="'tpl/read.html'"></div>
+      </div>
+    </main>
+  </div>
+</div>
 
 <!-- lightbox  -->
 <div class="lightbox-overlay" ng-class="{'show': state.lightbox === 'write'}">

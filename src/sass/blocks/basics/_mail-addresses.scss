@@ -1,0 +1,52 @@
+.mail-addresses {
+    position: relative;
+    margin-bottom: 0.2em;
+    padding-left: 3em;
+
+    & > label {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 3em;
+        line-height: 1.5em; // valign with .label
+        color: $color-text-light;
+        text-align: left;
+    }
+    .label {
+        margin-right: 0.2em;
+        margin-bottom: 0.2em;
+    }
+
+    &__more {
+        position: relative;
+        z-index: 1;
+        float: right;
+        line-height: 1.5em; // valign with .label
+
+        & > button {
+            display: inline-block;
+            background: none;
+            padding: 0;
+            margin: 0 0 0 1em;
+            text-decoration: none;
+            color: $color-black;
+            transition: color 0.3s;
+            border: 0;
+            outline: 0;
+
+            &:hover,
+            &:focus {
+                color: $color-blue;
+                text-decoration: underline;
+            }
+
+            &.ng-animate {
+                transition: none;
+            }
+        }
+    }
+
+    &__stripped:after {
+        content: "…";
+    }
+}

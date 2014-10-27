@@ -1,0 +1,324 @@
+
+// Regular buttons with disabled support
+// -------------------------------------------
+
+.btn {
+    position: relative;
+    display: inline-block;
+    padding: 0.5em 0.7em;
+    font-size: $font-size-big;
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+    border: 0;
+    border-radius: 0;
+    white-space: nowrap;
+    user-select: none;
+    background-image: none; // Reset unusual Firefox-on-Android default style; see https://github.com/necolas/normalize.css/issues/214
+    background-color: $color-main;
+    color: $color-main-text;
+    transition: background-color 0.3s;
+    text-decoration: none;
+    font-weight: normal;
+    outline: none;
+    min-width: 5em;
+
+    & > svg {
+        width: 1em;
+        height: 1em;
+        fill: $color-main-text;
+
+        // for better valignment
+        position: relative;
+        top: 0.15em;
+    }
+
+    &:hover,
+    &:focus {
+        background-color: lighten($color-main, 10%);
+    }
+
+    &:active {
+        background-image: none;
+        box-shadow: none;
+        transform: translateX(2px) translateY(2px);
+    }
+
+    &[disabled],
+    &[aria-disabled="true"] {
+        cursor: not-allowed;
+        pointer-events: none; // Future-proof disabling of clicks
+        color: $color-white;
+        background-color: $color-grey-lighter;
+        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAGCAYAAADgzO9IAAAAJUlEQVQIW2NkQABJIPM5lCvJCGMgC4LYIAkUlTAFMB0gjRQaBQCw8go5lVnl5wAAAABJRU5ErkJggg==);
+
+        & > svg {
+            fill: $color-white;
+        }
+
+        @include scut-hd-bp {
+            background-size: 3px 3px;
+        }
+    }
+
+    // Invalid button state
+    &--invalid {
+        background-color: $color-error;
+        color: $color-error-text;
+        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAGCAYAAADgzO9IAAAAJUlEQVQIW2NkQABJIPM5lCvJCGMgC4LYIAkUlTAFMB0gjRQaBQCw8go5lVnl5wAAAABJRU5ErkJggg==);
+
+        & > svg {
+            fill: $color-error-text;
+        }
+
+        @include scut-hd-bp {
+            background-size: 3px 3px;
+        }
+
+        &:hover,
+        &:focus {
+            background-color: lighten($color-error, 5%);
+        }
+    }
+
+    // Secondary button
+    &--secondary {
+        background-color: $color-grey-input;
+
+        &:hover,
+        &:focus {
+            background-color: lighten($color-grey-input, 10%);
+        }
+    }
+
+    // Small lightweight button
+    &--light {
+        height: 2em;
+        padding: 0.3em 0.5em;
+        font-size: $font-size-base;
+        border: 1px solid $color-main;
+        background: transparent;
+        color: $color-main;
+
+        & > svg {
+            fill: $color-main;
+        }
+
+        &:hover,
+        &:focus {
+            background-color: rgba($color-main, 0.1);
+        }
+
+        &[disabled],
+        &[aria-disabled="true"] {
+            color: $color-grey;
+            border-color: $color-grey;
+            background: transparent;
+
+            & > svg {
+                fill: $color-grey;
+            }
+        }
+    }
+
+    // Small lightweight dropdown button
+    &--light-dropdown {
+        height: 2em;
+        padding: 0.3em 0.5em;
+        font-size: $font-size-base;
+        border: 1px solid $color-main;
+        background: transparent;
+        color: $color-main;
+        text-align: left;
+        min-width: 0;
+
+        & > svg {
+            fill: $color-main;
+        }
+
+        .btn__dropdown {
+            margin-left: 0.75em;
+            top: 0.2em; // optimized valignment
+        }
+
+        &:hover,
+        &:focus {
+            background-color: rgba($color-main, 0.1);
+        }
+
+        &[disabled],
+        &[aria-disabled="true"] {
+            color: $color-grey;
+            border-color: $color-grey;
+            background: transparent;
+
+            & > svg {
+                fill: $color-grey;
+            }
+        }
+
+
+        // special class if icon button is used as dropdown
+        &.wo-dropdown-active {
+            background-color: $color-main;
+            color: $color-main-text;
+            & > svg {
+                fill: $color-main-text;
+            }
+        }
+    }
+}
+
+.btn-navicon {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
+    outline: 0;
+
+    & > svg {
+        fill: $color-blue;
+        width: 2em;
+        height: 2em;
+        vertical-align: middle;
+    }
+}
+
+// Icon Button
+// -------------------------------------------
+
+.btn-icon {
+    position: relative;
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+    border: 2px solid $color-main;
+    border-radius: 50%;
+    vertical-align: middle;
+    cursor: pointer;
+    white-space: nowrap;
+    user-select: none;
+    background-image: none; // Reset unusual Firefox-on-Android default style; see https://github.com/necolas/normalize.css/issues/214
+    text-decoration: none;
+    font-weight: normal;
+    font-size: $font-size-base;
+    background: transparent;
+    line-height: 1;
+    height: 2.7em;
+    width: 2.7em;
+    text-align: center;
+    outline: none;
+    -webkit-font-smoothing: antialiased;
+
+    & > svg {
+        width: 1.05em;
+        height: 1.05em;
+        fill: $color-main;
+        vertical-align: middle;
+        margin-top: -0.1em; // optimize valignment
+    }
+
+    &--disabled,
+    &[disabled],
+    &[aria-disabled="true"] {
+        cursor: not-allowed;
+        pointer-events: none; // Future-proof disabling of clicks
+        color: $color-grey;
+        box-shadow: 0 0 0 2px $color-grey;
+        & > svg {
+            fill: $color-grey;
+        }
+    }
+
+    &:active {
+        transform: translateX(2px) translateY(2px);
+    }
+
+    &:hover,
+    &:focus {
+        background-color: rgba($color-main, 0.1);
+    }
+
+    // special class if icon button is used as dropdown
+    &.wo-dropdown-active {
+        background-color: $color-main;
+        color: $color-main-text;
+        & > svg {
+            fill: $color-main-text;
+        }
+    }
+}
+
+// Light icon button without any border
+// -------------------------------------------
+
+.btn-icon-light {
+    position: relative;
+    display: inline-block;
+    background: transparent;
+    border-radius: 0;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    font-size: $font-size-base;
+    transition: opacity 0.3s;
+    outline: 0;
+
+    & > svg {
+        width: 1.5em;
+        height: 1.5em;
+        fill: $color-main;
+    }
+
+    &--disabled,
+    &[disabled],
+    &[aria-disabled="true"] {
+        cursor: not-allowed;
+        pointer-events: none; // Future-proof disabling of clicks
+        & > svg {
+            fill: $color-text-light;
+        }
+    }
+
+    &:active {
+        transform: translateX(1px) translateY(1px);
+    }
+}
+
+// Very small and light icon button without any border
+// -------------------------------------------
+
+.btn-icon-very-light {
+    position: relative;
+    display: inline-block;
+    background: transparent;
+    border-radius: 0;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    font-size: $font-size-base;
+    opacity: 0.5;
+    outline: 0;
+
+    &:focus,
+    &:hover {
+        opacity: 1;
+    }
+
+    & > svg {
+        width: 1em;
+        height: 1em;
+        fill: $color-text-light;
+    }
+
+    &--disabled,
+    &[disabled],
+    &[aria-disabled="true"] {
+        display: none;
+    }
+
+    &:active {
+        transform: translateX(1px) translateY(1px);
+    }
+}

@@ -1,0 +1,56 @@
+
+// Custom scrollbars in webkit
+// @see http://css-tricks.com/custom-scrollbars-in-webkit/
+
+$scrollbar-width: 10px;
+$scrollbar-themes: (
+    base: (
+        thumb:          $color-border-light,
+        thumb-hover:    $color-main),
+    main: (
+        thumb:          rgba($color-main-text, 0.7),
+        thumb-hover:    $color-main-text)
+);
+
+@mixin scrollbar($theme:base) {
+    @if map-has-key($scrollbar-themes, $theme) {
+        $t: map-get($scrollbar-themes, $theme);
+
+        @if & {
+            &::-webkit-scrollbar {
+                width: $scrollbar-width;
+            }
+            &::-webkit-scrollbar-track {
+                background: transparent;
+            }
+            &::-webkit-scrollbar-thumb {
+                background: map-get($t, thumb);
+                border: 3px solid transparent;
+                background-clip: content-box;
+                &:hover {
+                    background-color: map-get($t, thumb-hover);
+                }
+            }
+        }
+        @else {
+            ::-webkit-scrollbar {
+                width: $scrollbar-width;
+            }
+            ::-webkit-scrollbar-track {
+                background: transparent;
+            }
+            ::-webkit-scrollbar-thumb {
+                background: map-get($t, thumb);
+                border: 3px solid transparent;
+                background-clip: content-box;
+                &:hover {
+                    background-color: map-get($t, thumb-hover);
+                }
+            }
+        }
+    }
+    @else {
+        @warn "Unfortunately, no value could be retrieved from `#{$theme}`. "
+            + "Please make sure it is defined in `$scrollbar-themes` map.";
+    }
+}

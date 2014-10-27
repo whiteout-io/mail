@@ -1,0 +1,23 @@
+
+// Actual media queries
+$mediaqueries: (
+    sm-only:             "(max-width: #{$screen-sm-max})",
+    md:                  "(min-width: #{$screen-md-min})",
+    md-only:             "(min-width: #{$screen-md-min}) and (max-width: #{$screen-md-max})",
+    lg:                  "(min-width: #{$screen-lg-min})",
+    not-md:              "(max-width: #{$screen-sm-max}), (min-width: #{$screen-lg-min})",
+    not-lg:              "(max-width: #{$screen-md-max})"
+);
+
+// Central Media Query Mixin
+@mixin respond-to($query) {
+    @if map-has-key($mediaqueries, $query) {
+        @media #{map-get($mediaqueries, $query)} {
+            @content;
+        }
+    }
+    @else {
+        @warn "Unfortunately, no value could be retrieved from `#{$query}`. "
+            + "Please make sure it is defined in `$mediaqueries` map.";
+    }
+}

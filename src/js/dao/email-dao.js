@@ -16,10 +16,12 @@ var SYNC_TYPE_NEW = 'new';
 var SYNC_TYPE_DELETED = 'deleted';
 var SYNC_TYPE_MSGS = 'messages';
 
+// well known folders
 var FOLDER_TYPE_INBOX = 'Inbox';
 var FOLDER_TYPE_SENT = 'Sent';
 var FOLDER_TYPE_DRAFTS = 'Drafts';
 var FOLDER_TYPE_TRASH = 'Trash';
+var FOLDER_TYPE_FLAGGED = 'Flagged';
 
 var MSG_ATTR_UID = 'uid';
 var MSG_PART_ATTR_CONTENT = 'content';
@@ -1348,6 +1350,9 @@ EmailDAO.prototype._initFoldersFromImap = function(callback) {
 
     // fetch list from imap server
     self._imapClient.listWellKnownFolders(function(err, wellKnownFolders) {
+        var foldersChanged = false, // indicates if we need to persist anything to disk
+            imapFolders = []; // aggregate all the imap folders
+
         if (err) {
             return done(err);
         }
@@ -1355,52 +1360,80 @@ EmailDAO.prototype._initFoldersFromImap = function(callback) {
         // initialize the folders to something meaningful if that hasn't already happened
         self._account.folders = self._account.folders || [];
 
-        // smuggle the outbox into the well known folders, which is obv not present on imap...
+        // smuggle the outbox into the well known folders, which is obv not present on imap
         wellKnownFolders[config.outboxMailboxType] = [{
             name: config.outboxMailboxName,
             type: config.outboxMailboxType,
             path: config.outboxMailboxPath
         }];
 
-        // indicates if we need to persist anything to disk
-        var foldersChanged = false;
+        // aggregate all of the imap folders in one place
+        for (var folderType in wellKnownFolders) {
+            if (wellKnownFolders.hasOwnProperty(folderType) && Array.isArray(wellKnownFolders[folderType])) {
+                imapFolders = imapFolders.concat(wellKnownFolders[folderType]);
+            }
+        }
 
-        // the folders listed in the navigation pane
-        [FOLDER_TYPE_INBOX, FOLDER_TYPE_SENT, config.outboxMailboxType, FOLDER_TYPE_DRAFTS, FOLDER_TYPE_TRASH].forEach(function(mbxType) {
-            var localFolderWithType, imapFolderWithPath;
+        // find out all the imap paths that are new/removed
+        var imapFolderPaths = _.pluck(imapFolders, 'path'),
+            localFolderPaths = _.pluck(self._account.folders, 'path'),
+            newFolderPaths = _.difference(imapFolderPaths, localFolderPaths),
+            removedFolderPaths = _.difference(localFolderPaths, imapFolderPaths);
 
-            // check if there is a folder of this type locally available
-            localFolderWithType = _.findWhere(self._account.folders, {
-                type: mbxType
+        // folders need updating if there are new/removed folders
+        foldersChanged = !!newFolderPaths.length || !!removedFolderPaths.length;
+
+        // remove all the remotely deleted folders
+        removedFolderPaths.forEach(function(removedPath) {
+            self._account.folders.splice(self._account.folders.indexOf(_.findWhere(self._account.folders, {
+                path: removedPath
+            })), 1);
+        });
+
+        // add all the new imap folders
+        newFolderPaths.forEach(function(newPath) {
+            self._account.folders.push(_.findWhere(imapFolders, {
+                path: newPath
+            }));
+        });
+
+        // 
+        // by now, all the folders are up to date. now we need to find all the well known folders
+        // 
+
+        // check for the well known folders to be displayed in the uppermost ui part
+        [
+            FOLDER_TYPE_INBOX,
+            FOLDER_TYPE_SENT,
+            config.outboxMailboxType,
+            FOLDER_TYPE_DRAFTS,
+            FOLDER_TYPE_FLAGGED,
+            FOLDER_TYPE_TRASH
+        ].forEach(function(mbxType) {
+            // check if there is a well known folder of this type
+            var wellknownFolder = _.findWhere(self._account.folders, {
+                type: mbxType,
+                wellknown: true
             });
 
-            if (localFolderWithType) {
-                // we have a local folder available, so let's check if this folder still exists on imap
-
-                imapFolderWithPath = _.findWhere(wellKnownFolders[mbxType], {
-                    path: localFolderWithType.path
-                });
-
-                if (imapFolderWithPath) {
-                    // folder present on imap, no need to update.
-                    return;
-                }
-
-                // folder not present on imap, so remove the folder and see if there are any updates for this folder type
-                self._account.folders.splice(self._account.folders.indexOf(localFolderWithType), 1);
-                foldersChanged = true;
-            }
-
-            if (!wellKnownFolders[mbxType] || !wellKnownFolders[mbxType].length) {
-                // no imap folders of the respective mailbox type, so nothing to do here
+            if (wellknownFolder) {
+                // well known folder found, no need to find a replacement
                 return;
             }
 
-            /**
-             * we have no local folder of the type, so do something intelligent,
-             * i.e. take the first folder of the respective type
-             */
-            self._account.folders.push(wellKnownFolders[mbxType][0]);
+            // we have no folder of the respective type marked as wellknown, so find the 
+            // next best folder of the respective type and flag it as wellknown so that
+            // we can display it properly
+            wellknownFolder = _.findWhere(self._account.folders, {
+                type: mbxType
+            });
+
+            if (!wellknownFolder) {
+                // no folder of that type, to mark as well known, nothing to do here
+                return;
+            }
+
+            wellknownFolder.wellknown = true;
             foldersChanged = true;
         });
 
@@ -1415,9 +1448,11 @@ EmailDAO.prototype._initFoldersFromImap = function(callback) {
             return {
                 name: folder.name,
                 path: folder.path,
-                type: folder.type
+                type: folder.type,
+                wellknown: !!folder.wellknown
             };
         });
+
         self._devicestorage.storeList([folders], FOLDER_DB_TYPE, function(err) {
             if (err) {
                 return done(err);

@@ -1,0 +1,52 @@
+
+@include scut-reset-pointer;
+@include scut-reset-semanticize;
+@include scut-reset-button;
+
+*,
+*:before,
+*:after {
+    box-sizing: border-box;
+    // remove flickering on item touch selection in ios
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+@include scrollbar();
+
+// Body reset
+html {
+    font-size: 62.5%;
+    height: 100%;
+}
+body {
+    font-family: $font-family-base;
+    font-size: $font-size-base;
+    line-height: $line-height-base;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    height: 100%;
+}
+
+// Reset fonts for relevant elements
+input,
+button,
+select,
+textarea {
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    // disable box shadow on firefox
+    background-image: none;
+}
+
+fieldset {
+    border: 1px solid $color-grey-lighter;
+}
+
+// ngView
+.main-app-view {
+    height: 100%;
+    overflow: hidden;
+}

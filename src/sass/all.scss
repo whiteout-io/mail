@@ -1,36 +1,28 @@
-// Utilities
-@import "mixins";
-@import "functions";
-@import "grid";
-
 // Third party libs
 @import "lib/angular-csp"; // use angular csp specific classes
 @import "lib/scut";
+@import "lib/normalize";
+
+// Config
+@import "base/config"; // Modify this for custom colors, font-sizes, etc
+
+// Mixins
+@import "mixins/responsive";
+@import "mixins/scrollbar";
 
 // Bootstrap
-@import "normalize";
-@import "variables"; // Modify this for custom colors, font-sizes, etc
-@import "fonts";
-@import "responsive";
-@import "scaffolding";
+@import "base/fonts";
+@import "base/scaffolding";
 
-// Components
-@import "components/buttons";
-@import "components/labels";
-@import "components/icons";
+// Utilities classes
+
+@import "utilities/responsive";
+
+// Components (TODO: refactor to BEM)
 @import "components/lightbox";
-@import "components/nav";
 @import "components/dialog";
-@import "components/mail-list";
-@import "components/layout";
-@import "components/popover";
-@import "components/input";
-@import "components/mail-addresses";
-@import "components/spinner";
-@import "components/scrollbars";
-@import "components/tags-input";
 
-// Views
+// Views (TODO: refactor to BEM)
 @import "views/shared";
 @import "views/add-account";
 @import "views/account";
@@ -39,8 +31,25 @@
 @import "views/contacts";
 @import "views/about";
 @import "views/dialog";
-@import "views/navigation";
-@import "views/mail-list";
-@import "views/read";
-@import "views/write";
 @import "views/login";
+
+// Blocks
+// (BEM-like Naming, see http://cssguidelin.es/#bem-like-naming)
+
+@import "blocks/basics/buttons";
+@import "blocks/basics/labels";
+@import "blocks/basics/form";
+@import "blocks/basics/spinner";
+@import "blocks/basics/tags-input";
+@import "blocks/basics/mail-addresses";
+@import "blocks/basics/attachments";
+@import "blocks/basics/tooltip";
+@import "blocks/basics/dropdown";
+@import "blocks/basics/toolbar";
+@import "blocks/layout/app";
+@import "blocks/layout/nav";
+@import "blocks/layout/action-bar";
+@import "blocks/layout/mail-list-wrapper";
+@import "blocks/views/mail-list";
+@import "blocks/views/read";
+@import "blocks/views/write";

@@ -1,0 +1,108 @@
+// Main Application Layout
+
+.app {
+    $aside-width:           260px;
+    $aside-width-lg:        220px;
+    $header-height:         80px;
+
+    position: relative;
+    height: 100%;
+
+    // disable text selection
+    user-select: none;
+
+    &__aside {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: $aside-width;
+        background: $color-main;
+        color: $color-main-text;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+        @include scrollbar(main);
+
+        // hide scrollbar in webkit
+        &::-webkit-scrollbar {
+            display: none;
+        }
+
+        @include respond-to(not-lg) {
+            transform: translateX(-100%);
+        }
+        @include respond-to(lg) {
+            width: $aside-width-lg;
+            background: $color-bg;
+            color: $color-text;
+            @include scrollbar(base);
+        }
+    }
+    &__container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+
+        @include respond-to(not-lg) {
+            &:after {
+                display: block;
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                background: rgba(0,0,0,0.2);
+                width: 100%;
+                height: 100%;
+                transform: translateX(110%); // translate offscreen
+            }
+        }
+        @include respond-to(lg) {
+            left: $aside-width-lg;
+        }
+    }
+
+    &__header {
+        display: none;
+
+        @include respond-to(lg) {
+            display: block;
+            height: $header-height;
+        }
+    }
+    &__main {
+        height: 100%;
+
+        @include respond-to(lg) {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: auto;
+            top: $header-height;
+            border-top: 1px solid $color-border-light;
+            border-left: 1px solid $color-border-light;
+        }
+    }
+
+    // Modifier to open sidebar
+    &--show-aside {
+        @include respond-to(not-lg) {
+            transform: translateX($aside-width);
+            .app__container:after {
+                transform: none;
+            }
+        }
+    }
+
+    // Animation
+    @include respond-to(not-lg) {
+        will-change: transform;
+        transform-style: preserve3d;
+        transition: transform 0.15s ease-out;
+        .app__container:after {
+            will-change: transform;
+            transform-style: preserve3d;
+        }
+    }
+}

@@ -1,0 +1,62 @@
+.label {
+    display: inline-block;
+    padding: 0.3em 0.8em;
+    font-size: $font-size-small;
+    text-align: center;
+    vertical-align: middle;
+    border-radius: 1em;
+    white-space: nowrap;
+    background-color: $color-main;
+    color: $color-main-text;
+    transition: background-color 0.3s;
+
+    & > svg {
+        display: inline-block;
+        fill: $color-main;
+        width: 1.5em;
+        height: 1em;
+        vertical-align: baseline;
+    }
+
+    &--invalid {
+        background-color: $color-error;
+        color: $color-error-text;
+        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAGCAYAAADgzO9IAAAAJUlEQVQIW2NkQABJIPM5lCvJCGMgC4LYIAkUlTAFMB0gjRQaBQCw8go5lVnl5wAAAABJRU5ErkJggg==);
+
+        & > svg {
+            fill: $color-error;
+        }
+
+        @include scut-hd-bp {
+            background-size: 3px 3px;
+        }
+    }
+
+    &--invalid-clickable {
+        position: relative;
+
+        &:hover,
+        &:focus {
+            transition: none;
+            background-color: lighten($color-main, 5%);
+        }
+
+        &:active,
+        &.active {
+            top: 1px;
+            left: 1px;
+        }
+    }
+
+    &--blank {
+        background-color: transparent;
+        color: $color-black;
+        text-align: left;
+        padding-left: 0;
+        padding-right: 0;
+
+        & > svg {
+            fill: $color-black;
+        }
+    }
+}

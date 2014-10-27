@@ -1,7 +1,9 @@
 <div class="lightbox-body" ng-controller="ContactsCtrl">
   <header>
     <h2>Contacts</h2>
-    <button class="close" wo-touch="state.contacts.toggle(false)" data-action="lightbox-close">&#xe007;</button>
+    <button class="close" wo-touch="state.contacts.toggle(false)" data-action="lightbox-close">
+      <svg><use xlink:href="#icon-close" /><title>Close</title></svg>
+    </button>
   </header>
 
   <div class="content">
@@ -13,7 +15,7 @@
         </div>
         <div class="key-controls-import">
           <input id="keyfile-input" type="file" multiple accept=".asc" keyfile-input>
-          <button class="btn" ng-class="{'btn-primary': sendBtnSecure === false}" keyfile-btn>Import keys</button>
+          <button class="btn" ng-class="{'btn--invalid': sendBtnSecure === false}" keyfile-btn>Import keys</button>
         </div>
       </div>
 
@@ -27,20 +29,20 @@
               <th>Size</th>
             </tr>
             <tr ng-repeat="key in keys | orderBy:'userId' | filter:searchText">
-              <td class="hover" ng-mouseover="getFingerprint(key)" popover="#fingerprint-contact">{{key._id.slice(8)}}</td>
+              <td class="hover" ng-mouseover="getFingerprint(key)" wo-tooltip="#fingerprint-contact">{{key._id.slice(8)}}</td>
               <td>{{key.userId}}</td>
               <td>{{key.created | date:'mediumDate'}}</td>
               <td>{{key.bitSize}} bit</td>
-              <td><button class="remove" wo-touch="removeKey(key)">&#xe007;</button></td>
+              <td><button class="remove" wo-touch="removeKey(key)"><svg><use xlink:href="#icon-close" /><title>Delete</title></svg></button></td>
             </tr>
           </table>
         </div><!--/.key-list-scroll-->
 
-        <!-- popovers -->
-        <div id="fingerprint-contact" class="popover right" ng-controller="PopoverCtrl">
-          <div class="popover-title"><b>Fingerprint</b></div>
-          <div class="popover-content">{{fingerprint}}</div>
-        </div><!--/.popover-->
+        <!-- tooltips -->
+        <div id="fingerprint-contact" class="tooltip">
+          <div class="tooltip__title">Fingerprint</div>
+          <div class="tooltip__content">{{fingerprint}}</div>
+        </div><!--/.tooltip-->
       </div><!--/.key-list-->
 
     </div><!-- /.view-contacts -->

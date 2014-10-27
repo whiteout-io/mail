@@ -5,16 +5,17 @@
     width: 100%;
     height: 100%;
     z-index: 2000;
-    @include respond-to(desktop) {
-        backface-visibility: hidden;
-    }
 
-    @include respond-to(desktop) {
+    @include respond-to(md) {
         margin: 0 auto;
         width: $lightbox-width;
         max-width: $lightbox-max-width;
         height: auto;
         text-align: left;
+        backface-visibility: hidden;
+    }
+    @include respond-to(lg) {
+        max-width: $lightbox-max-width + 100px;
     }
 
     .lightbox-body {
@@ -26,16 +27,19 @@
         display: flex;
         flex-direction: column;
 
-        @include respond-to(desktop) {
+        @include respond-to(md) {
             max-height: $lightbox-min-height;
         }
+        @include respond-to(lg) {
+            max-height: $lightbox-min-height + 50px;
+        }
 
-        header {
+        & > header {
             flex-shrink: 0;
             text-align: center;
             position: relative;
+            margin-bottom: 15px;
             button.close {
-                font-family: $font-family-icons;
                 position: absolute;
                 top: 0px;
                 right: 0px;
@@ -46,6 +50,12 @@
                 margin: 0;
                 color: $color-grey-dark;
                 outline: none;
+
+                svg {
+                    height: 1em;
+                    width: 1em;
+                    fill: $color-grey-dark;
+                }
 
                 &.active {
                     top: 2px;
@@ -61,7 +71,7 @@
                 color: $color-grey-dark;
             }
         }
-        .content {
+        & > .content {
             flex-grow: 1;
             overflow: hidden;
         }
@@ -79,7 +89,7 @@
     background: $color-grey-dark-alpha;
     overflow: auto;
 
-    @include respond-to(desktop) {
+    @include respond-to(md) {
         @include scut-vcenter-ib(".lightbox");
         text-align: center;
     }
@@ -92,12 +102,12 @@
     &.show-add {
         display: block;
         opacity: 0;
-        @include respond-to(desktop) {
+        @include respond-to(md) {
             transition: opacity 0.3s;
         }
         .lightbox-body {
             transform: scale(0.7);
-            @include respond-to(desktop) {
+            @include respond-to(md) {
                 transition: transform 0.3s;
             }
         }
@@ -111,12 +121,12 @@
     &.show-remove {
         display: block;
         opacity: 1;
-        @include respond-to(desktop) {
+        @include respond-to(md) {
             transition: opacity 0.3s;
         }
         .lightbox-body {
             transform: scale(1);
-            @include respond-to(desktop) {
+            @include respond-to(md) {
                 transition: transform 0.3s;
             }
         }

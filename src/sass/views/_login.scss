@@ -16,7 +16,7 @@
             width: 320px;
         }
 
-        @include respond-to(desktop) {
+        @include respond-to(md) {
             margin: 115px auto 75px;
         }
     }
@@ -39,7 +39,6 @@
         }
 
         button, a.btn {
-            color: $btn-color;
             margin-right: 10px;
             margin-bottom: 10px;
             width: 100%;
@@ -107,10 +106,6 @@
                 outline: none;
                 cursor: pointer;
             }
-        }
-
-        .popover-info {
-            display: none; // hide on mobile
         }
     }
 }

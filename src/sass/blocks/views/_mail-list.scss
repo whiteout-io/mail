@@ -1,0 +1,452 @@
+// Container for mail list entries
+.mail-list {
+    $padding-horizontal: 15px;
+    $padding-vertical: 15px;
+    $footer-height: 30px;
+
+    // do not share any common styles between large and other screens
+    // because styling is very different
+
+    @include respond-to(not-lg) {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        width: 100%;
+        background: $color-bg;
+        color: $color-text;
+
+        & > header {
+            position: relative;
+            flex-shrink: 0;
+            padding: $padding-vertical $padding-horizontal;
+            cursor: pointer;
+
+            .btn-navicon {
+                float: left;
+                margin-right: 1em;
+            }
+            h2 {
+                @include scut-truncate;
+                padding-top: 4px; // depends on height of .btn-navicon
+                padding-right: 50px; // depends on with of .btn-icon
+                color: $color-text;
+                font-size: $font-size-bigger;
+                font-weight: normal;
+            }
+            .btn-icon-light {
+                position: absolute;
+                top: $padding-vertical;
+                right: $padding-horizontal;
+                padding-left: 1em;
+                & > svg {
+                    width: 2em;
+                    height: 2em;
+                }
+            }
+
+            &.wo-touch-active {
+                background: $color-touch-active;
+            }
+        }
+        &__search {
+            flex-shrink: 0;
+            padding: 0 $padding-horizontal $padding-vertical;
+        }
+
+        &__scroll-canvas {
+            flex-grow: 1;
+            padding: 0 $padding-horizontal;
+            overflow-y: scroll;
+            // allow scrolling on iOS
+            -webkit-overflow-scrolling: touch;
+            // put layer on GPU
+            transform: translateZ(0);
+
+            // hide scrollbar in webkit
+            &::-webkit-scrollbar {
+                display: none;
+            }
+        }
+        &__entries {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        & > footer {
+            flex-shrink: 0;
+            position: relative;
+            height: $footer-height;
+            padding: 0 $padding-horizontal;
+            background: $color-bg;
+            width: 100%;
+            font-size: $font-size-smaller;
+            color: $color-text;
+            line-height: $footer-height;
+            border-top: 1px solid $color-border-light;
+
+            svg {
+                display: inline-block;
+                height: 1.5em;
+                width: 1.5em;
+                padding-right: 0.5em;
+                fill: $color-text;
+                vertical-align: middle;
+            }
+        }
+    }
+    @include respond-to(md) {
+        & > header {
+            padding: $padding-vertical $padding-horizontal;
+            h2 {
+                padding-right: 0;
+            }
+            .btn-icon-light {
+                display: none;
+            }
+        }
+    }
+
+    @include respond-to(lg) {
+        height: 100%;
+        background: $color-border-light;
+
+        & > header {
+            display: none;
+        }
+        &__search {
+            display: none;
+        }
+        & > footer {
+            display: none;
+        }
+        &__scroll-canvas {
+            height: 100%;
+            overflow-y: scroll;
+            // allow scrolling on iOS
+            -webkit-overflow-scrolling: touch;
+
+            // hide scrollbar in webkit
+            &::-webkit-scrollbar {
+                display: none;
+            }
+        }
+        &__entries {
+            display: table; // import for mail list entry desktop layout
+            table-layout: fixed;
+            width: 100%;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+    }
+}
+
+// Individual mail list entries with several states
+.mail-list-entry {
+    // do not share any common styles between large and other screens
+    // because styling is very different
+
+    @include respond-to(not-lg) {
+        $padding-horizontal: 30px;
+        $padding-vertical: 11px;
+
+        position: relative;
+        display: block;
+        padding: $padding-vertical $padding-horizontal;
+        cursor: pointer;
+        margin-top: 11px;
+
+        &:before {
+            content: '';
+            display: block;
+            position: absolute;
+            top: -6px;
+            left: 0;
+            right: 0;
+            height: 0;
+            border-top: 1px solid $color-border-light;
+        }
+
+        &:first-child {
+            margin-top: 0;
+            &:before {
+                display: none;
+            }
+        }
+        &:last-child {
+            margin-bottom: 5px;
+        }
+
+        // Flags
+
+        &__flags {
+            position: absolute;
+            top: $padding-vertical;
+            left: 0;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            width: $padding-horizontal;
+            line-height: 22px; // roughly valign with lines of main content
+            & > li {
+                font-size: 90%;
+                text-align: center;
+                & > svg {
+                    display: inline-block;
+                    vertical-align: middle;
+                    width: 1em;
+                    height: 1em;
+                }
+            }
+        }
+        &__flags-unread {
+            display: none; // hidden in default state
+            &:after {
+                display: inline-block;
+                content: '';
+                width: 1em;
+                height: 1em;
+                border-radius: 50%;
+                background-color: $color-main;
+                vertical-align: middle;
+            }
+        }
+        &__flags-checked {
+            display: none; // feature on touch layout not available for now
+        }
+        &__flags-favorite {
+            display: none; // feature on touch layout not available for now
+        }
+        &__flags-encrypted {
+            display: none; // hidden on touch layout
+        }
+        &__flags-answered > svg {
+            fill: $color-text-light;
+        }
+        &__flags-attachment {
+            display: none; // hidden in default state
+            & > svg {
+                fill: $color-text-light;
+            }
+        }
+        &__attachment {
+            display: none; // hidden on touch layout
+        }
+        &__encrypted {
+            position: absolute;
+            top: $padding-vertical;
+            right: $padding-vertical;
+            text-align: center;
+            font-size: 90%;
+            & > svg {
+                display: inline-block;
+                vertical-align: middle;
+                width: 1.2em;
+                height: 1.2em;
+                fill: $color-main;
+            }
+        }
+
+        // Main content
+
+        &__name {
+            @include scut-truncate;
+            color: $color-main;
+            font-size: $font-size-bigger;
+            font-weight: normal;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+        &__subject {
+            @include scut-truncate;
+            font-size: $font-size-small;
+            line-height: $font-size-small;
+            font-weight: bold;
+            padding-right: 90px; // to make room for time
+            margin-bottom: 8px;
+        }
+        &__time {
+            @include scut-truncate;
+            position: absolute;
+            top: $padding-vertical + $font-size-bigger + 8px;
+            right: $padding-horizontal;
+            width: 80px;
+            color: $color-text-light;
+            font-size: $font-size-smaller;
+            line-height: $font-size-small; // same line height as subject
+            text-align: right;
+        }
+        &__excerpt {
+            color: $color-grey;
+            height: 2 * $line-height-base * 1em;
+            font-size: $font-size-small;
+            overflow: hidden;
+        }
+
+        // Modifiers
+
+        &:hover {
+            background-color: rgba($color-main, 0.15);
+        }
+        &--unread {
+            .mail-list-entry__flags-unread {
+                display: block;
+            }
+        }
+        &--attachment {
+            .mail-list-entry__flags-attachment {
+                display: block;
+            }
+        }
+        &--active,
+        &--active:hover {
+            background-color: $color-main;
+            color: $color-main-text;
+            .mail-list-entry__name,
+            .mail-list-entry__time,
+            .mail-list-entry__excerpt {
+                color: $color-main-text;
+            }
+            .mail-list-entry__flags-unread:after {
+                background-color: $color-main-text;
+            }
+            .mail-list-entry__flags-answered > svg,
+            .mail-list-entry__flags-encrypted > svg,
+            .mail-list-entry__flags-attachment > svg,
+            .mail-list-entry__encrypted > svg,
+            .mail-list-entry__encrypted > svg:first-child {
+                fill: $color-main-text;
+            }
+        }
+    }
+
+    @include respond-to(lg) {
+        $cell-padding-vertical:         10px;
+        $cell-padding-horizontal:       10px;
+
+        display: table-row;
+        background: mix($color-bg, $color-border-light, 70%);
+        color: $color-grey;
+        cursor: pointer;
+
+        // Flags
+
+        &__flags {
+            display: table-cell;
+            box-sizing: content-box;
+            border-bottom: 1px solid $color-border-light;
+            padding: $cell-padding-vertical $cell-padding-horizontal;
+            list-style: none;
+            width: 8em;
+            white-space: nowrap;
+            & > li {
+                display: inline-block;
+                margin-left: 0.5em;
+                & > svg {
+                    display: inline-block;
+                    vertical-align: middle;
+                    width: 1em;
+                    height: 1em;
+                }
+            }
+        }
+        &__flags-unread {
+            display: none;
+        }
+        &__flags-checked {
+            margin-left: 0 !important;
+            .checkbox {
+                vertical-align: middle;
+            }
+        }
+        &__flags-favorite {
+            & > svg {
+                fill: $color-text-light;
+                &:first-child {
+                    fill: $color-main;
+                }
+                &:hover {
+                    fill: $color-text;
+                    &:first-child {
+                        fill: darken($color-main, 10%);
+                    }
+                }
+            }
+        }
+        &__flags-encrypted > svg {
+            fill: $color-main;
+        }
+        &__flags-answered > svg {
+            fill: $color-text-light;
+        }
+        &__flags-attachment {
+            display: none !important; // hidden on desktop layout
+        }
+        &__attachment {
+            display: table-cell;
+            box-sizing: content-box;
+            border-bottom: 1px solid $color-border-light;
+            padding: $cell-padding-vertical $cell-padding-horizontal;
+            width: 1em;
+            & > svg {
+                visibility: hidden; // hidden in default state
+                display: inline-block;
+                vertical-align: middle;
+                width: 1em;
+                height: 1em;
+                fill: $color-text-light;
+            }
+        }
+
+        // Main content
+
+        &__name {
+            @include scut-truncate;
+            display: table-cell;
+            border-bottom: 1px solid $color-border-light;
+            padding: $cell-padding-vertical $cell-padding-horizontal;
+        }
+        &__subject {
+            @include scut-truncate;
+            display: table-cell;
+            border-bottom: 1px solid $color-border-light;
+            padding: $cell-padding-vertical $cell-padding-horizontal;
+        }
+        &__time {
+            display: table-cell;
+            border-bottom: 1px solid $color-border-light;
+            padding: $cell-padding-vertical $cell-padding-horizontal;
+            width: 8em; // make room for time
+            text-align: right;
+            white-space: nowrap;
+        }
+        &__excerpt {
+            display: none; // hidden on desktop layout
+        }
+        &__encrypted {
+            display: none; // hidden on desktop layout
+        }
+
+        // Modifiers
+
+        &:hover {
+            background-color: mix($color-bg, $color-main, 85%);
+        }
+        &--unread {
+            background-color: $color-bg;
+            font-weight: bold;
+            .mail-list-entry__name {
+                font-weight: bold;
+            }
+        }
+        &--attachment {
+            .mail-list-entry__attachment > svg {
+                visibility: visible;
+            }
+        }
+        &--checked {
+            background-color: mix($color-bg, $color-main, 85%);
+        }
+    }
+}

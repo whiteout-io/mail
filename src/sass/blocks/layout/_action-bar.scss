@@ -1,0 +1,20 @@
+.action-bar {
+    @include scut-clearfix;
+    padding: 24px 20px 0 0; // magic number to vcenter buttons
+
+    &__primary {
+        float: left;
+    }
+    &__secondary {
+        float: left;
+        margin-left: 20px;
+    }
+    &__search {
+        float: right;
+        margin-left: 20px;
+        width: 20em;
+    }
+    .btn {
+        margin-right: 0.2em;
+    }
+}

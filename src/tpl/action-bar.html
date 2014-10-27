@@ -1,0 +1,34 @@
+<div class="action-bar">
+  <div class="action-bar__primary">
+    <button class="btn btn--light">Delete</button>
+    <button class="btn btn--light">Spam</button>
+    <button class="btn btn--light-dropdown" wo-dropdown="#dropdown-folder">
+      <svg><use xlink:href="#icon-folder" /><title>Folder</title></svg>
+      <svg class="btn__dropdown" role="presentation"><use xlink:href="#icon-dropdown" /></svg>
+    </button>
+  </div>
+  <div class="action-bar__secondary">
+    <button class="btn btn--light-dropdown" wo-dropdown="#dropdown-more">
+      More
+      <svg class="btn__dropdown" role="presentation"><use xlink:href="#icon-dropdown" /></svg>
+    </button>
+  </div>
+  <div class="action-bar__search">
+    <div class="search">
+      <svg><use xlink:href="#icon-search" /><title>Search</title></svg>
+      <input class="input-text" type="text" ng-model="searchText"
+        ng-change="displaySearchResults(searchText)"
+        placeholder="Search" focus-me="state.mailList.searching">
+    </div>
+  </div>
+
+  <!-- dropdowns -->
+  <ul id="dropdown-folder" class="dropdown">
+    <li><button><svg><use xlink:href="#icon-folder" /></svg> Lorem</button></li>
+    <li><button><svg><use xlink:href="#icon-folder" /></svg> Ipsum</button></li>
+  </ul>
+  <ul id="dropdown-more" class="dropdown">
+    <li><button>Mark as read</button></li>
+    <li><button>Mark as unread</button></li>
+  </ul>
+</div>

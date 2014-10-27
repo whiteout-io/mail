@@ -1,7 +1,0 @@
-@function strip-units($number) {
-    @return $number / ($number * 0 + 1);
-}
-
-@function em($target, $context: $font-size-base) {
-    @return (strip-units($target) / strip-units($context)) * 1em;
-}
