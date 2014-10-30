@@ -17,13 +17,13 @@
 // Utilities classes
 
 @import "utilities/responsive";
+@import "utilities/others";
 
 // Components (TODO: refactor to BEM)
 @import "components/lightbox";
 @import "components/dialog";
 
 // Views (TODO: refactor to BEM)
-@import "views/shared";
 @import "views/add-account";
 @import "views/account";
 @import "views/privatekey-upload";
