@@ -6,8 +6,37 @@
     "ios": {
         "oauth2": {
             "client_id": "440907777130-m0cn01eot554ik1h70hfcmvidnq61oer.apps.googleusercontent.com"
-        }
+        },
+        "icons": {
+            "29": "img/icon-29-ios.png",
+            "40": "img/icon-40-ios.png",
+            "50": "img/icon-50-ios.png",
+            "57": "img/icon-57-ios.png",
+            "58": "img/icon-58-ios.png",
+            "60": "img/icon-60-ios.png",
+            "72": "img/icon-72-ios.png",
+            "76": "img/icon-76-ios.png",
+            "80": "img/icon-80-ios.png",
+            "87": "img/icon-87-ios.png",
+            "100": "img/icon-100-ios.png",
+            "114": "img/icon-114-ios.png",
+            "120": "img/icon-120-ios.png",
+            "144": "img/icon-144-ios.png",
+            "152": "img/icon-152-ios.png",
+            "180": "img/icon-180-ios.png"
+        },
     },
 
-    "android": {}
+    "android": {
+        "icons": {
+            "36": "icon-36-android.png",
+            "48": "icon-48-android.png",
+            "60": "icon-60-android.png",
+            "72": "icon-72-android.png",
+            "78": "icon-78-android.png",
+            "96": "icon-96-android.png",
+            "144": "icon-144-android.png",
+            "192": "icon-192-android.png"
+        },
+    }
 }
