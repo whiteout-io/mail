@@ -7,7 +7,6 @@ src/css/
 dist/
 release/
 test/integration/src/
-.elasticbeanstalk/
 test/*/index.js
 **/*.browserified.js
 **/*.js.map
