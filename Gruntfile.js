@@ -523,7 +523,7 @@ module.exports = function(grunt) {
     });
     grunt.registerTask('manifest-test', function() {
         if (!version) {
-            throw new Error('You must specify the version: "--release=1.0"');
+            throw new Error('You must specify the version: "--release=1.0.0"');
         }
 
         patchManifest({
@@ -533,9 +533,9 @@ module.exports = function(grunt) {
             deleteKey: true
         });
     });
-    grunt.registerTask('manifest-stable', function() {
+    grunt.registerTask('manifest-prod', function() {
         if (!version) {
-            throw new Error('You must specify the version: "--release=1.0"');
+            throw new Error('You must specify the version: "--release=1.0.0"');
         }
 
         patchManifest({
@@ -577,7 +577,7 @@ module.exports = function(grunt) {
 
     grunt.registerTask('release-dev', ['dist', 'manifest-dev', 'compress']);
     grunt.registerTask('release-test', ['dist', 'manifest-test', 'clean:release', 'compress']);
-    grunt.registerTask('release-stable', ['dist', 'manifest-stable', 'clean:release', 'compress']);
+    grunt.registerTask('release-prod', ['dist', 'manifest-prod', 'clean:release', 'compress']);
     grunt.registerTask('default', ['release-dev']);
 
 };
