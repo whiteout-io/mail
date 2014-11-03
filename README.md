@@ -67,11 +67,11 @@ Just download the most recent `*_webmail.zip` file under [releases](https://gith
 
 ### Build from source
 
-1. Clone the git repository
+Clone the git repository
 
     git clone git@github.com:whiteout-io/mail-html5.git
 
-2. Build and generate the `dist/` directory:
+Build and generate the `dist/` directory:
 
     npm install && grunt
 
