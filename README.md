@@ -59,17 +59,35 @@ Then visit [http://localhost:8580/dist/#/desktop?dev=true](http://localhost:8580
 
 ## Deploying Web App & Selfhosting
 
-The App can be used both as a Chrome Packaged App or just by hosting it on you own trusted web server.
+The App can be used either as a Chrome Packaged App or just by hosting it on your own trusted web server. You can build the app from source or download a rebuilt version.
 
-First build and generate the `dist/` directory:
+### Download prebuild version
 
-    grunt
+Just download the most recent `*_webmail.zip` file under [releases](https://github.com/whiteout-io/mail-html5/releases)
 
-Then start the server and navigate to [http://localhost:8585](http://localhost:8585) (or whatever port is set using the `PORT` environment variable):
+### Build from source
+
+1. Clone the git repository
+
+    git clone git@github.com:whiteout-io/mail-html5.git
+
+2. Build and generate the `dist/` directory:
+
+    npm install && grunt
+
+### Running the server
+
+To test the server, start it in development mode (without SSL):
+
+    node server.js --dev
+
+Navigate to [http://localhost:8889](http://localhost:8889) (or whatever port is set using the `PORT` environment variable).
+
+To start the server for production use (this automatically redirects to `https`)
 
     npm start
 
-**A note on security:** The app should not be used without SSL so it's best to set up a reverse proxy or Loadbalancer with your SSL certificates. If you are not sure how to do this it might be easier to use our managed web hosting or packaged apps under [https://whiteout.io/#product](https://whiteout.io/#product).
+**A note on security: The app should not be used without SSL so it's best to set up a reverse proxy or Loadbalancer with your SSL certificates. If you are not sure how to do this it might be easier to use our managed web hosting or packaged apps under [https://whiteout.io/#product](https://whiteout.io/#product).**
 
 You can limit incoming and outgoing connections to the socket.io proxy by setting the following environment variables:
 
