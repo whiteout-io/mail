@@ -5,7 +5,7 @@
       <button class="btn-navicon">
         <svg><use xlink:href="#icon-navicon" /><title>Toggle Navigation</title></svg>
       </button>
-      <h2>{{state.nav.currentFolder.type}}</h2>
+      <h2>{{state.nav.currentFolder.wellknown ? state.nav.currentFolder.type : state.nav.currentFolder.name}}</h2>
     </div>
 
     <button class="btn-icon-light" title="New mail" wo-touch="state.writer.write(); $event.stopPropagation()">
