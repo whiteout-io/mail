@@ -25,7 +25,7 @@
   </ul><!--/nav__folders-->
 
   <ul class="nav__folders">
-    <li ng-repeat="folder in account.folders" ng-if="!folder.wellknown" class="nav__folder" ng-class="{'nav__folder--open': state.nav.currentFolder === folder}">
+    <li ng-repeat="folder in account.folders" ng-if="!folder.wellknown" class="nav__folder nav__folder__other" ng-class="{'nav__folder--open': state.nav.currentFolder === folder}">
       <a href="javascript:;" wo-touch="openFolder(folder)">
         <svg role="presentation"><use xlink:href="#icon-folder" /></svg>
         {{folder.name}}
@@ -67,8 +67,8 @@
     </li>
   </ul><!--/nav__secondary-->
 
-  <footer ng-class="{syncing: account.loggingIn || account.busy || searching}">
-    <span class="spinner"></span>
+  <footer>
+    <span class="spinner" ng-show="account.loggingIn || account.busy || searching"></span>
     <span class="text" ng-switch="account.online">
       <span ng-switch-when="false">
         <svg><use xlink:href="#icon-offline" /></svg>

@@ -1,6 +1,7 @@
 // Main Navigation Menu
 
 .nav {
+    $nav-padding-left: 8px;
     $nav-padding-h: 10px;
     $footer-height: 30px;
 
@@ -133,9 +134,9 @@
         }
         &__folder {
             font-size: $font-size-base;
-            padding-left: 5px;
+            padding-left: $nav-padding-left;
             padding-right: 20px;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
             a {
                 color: $color-main;
                 & > svg {
@@ -148,6 +149,9 @@
                 right: 0;
                 top: 0.25em;
             }
+        }
+        &__folder__other {
+            margin-bottom: 8px;
         }
         &__counter {
             display: inline;
@@ -165,7 +169,7 @@
             border-top-color: $color-border-light;
             & > li {
                 font-size: $font-size-small;
-                padding-left: 5px;
+                padding-left: $nav-padding-left;
                 padding-right: 5px;
                 a {
                     color: $color-text-light;
