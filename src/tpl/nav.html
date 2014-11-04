@@ -5,7 +5,8 @@
   </div>
 
   <ul class="nav__folders">
-    <li ng-repeat="folder in account.folders" ng-if="folder.wellknown" class="nav__folder" ng-class="{'nav__folder--open': state.nav.currentFolder === folder}">
+    <li ng-repeat="folder in account.folders" ng-if="folder.wellknown" ng-hide="folder.type === 'Outbox' && folder.count < 1"
+      class="nav__folder" ng-class="{'nav__folder--open': state.nav.currentFolder === folder}">
       <a href="javascript:;" wo-touch="openFolder(folder)">
         <svg role="presentation">
           <use ng-if="folder.type === 'Inbox'" xlink:href="#icon-inbox" />
