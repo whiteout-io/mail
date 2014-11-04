@@ -631,6 +631,60 @@ EmailDAO.prototype.setFlags = function(options, callback) {
 };
 
 /**
+ * Moves a message to another folder
+ * 
+ * @param {Object} options.folder The origin folder
+ * @param {Object} options.destination The destination folder
+ * @param {Object} options.message The message that should be moved
+ * @param {Function} callback(error) Invoked when the message was moved, or an error occurred
+ */
+EmailDAO.prototype.moveMessage = function(options, callback) {
+    var self = this,
+        folder = options.folder,
+        destination = options.destination,
+        message = options.message;
+
+    self.busy();
+
+    if (!self._account.online) {
+        // no action if we're not online
+        done({
+            errMsg: 'Client is currently offline!',
+            code: 42
+        });
+        return;
+    }
+
+    folder.messages.splice(folder.messages.indexOf(message), 1);
+
+    // delete from IMAP
+    self._imapMoveMessage({
+        folder: folder,
+        destination: destination,
+        uid: message.uid
+    }, function(err) {
+        if (err) {
+            // re-add the message to the folder in case of an error, only makes sense if IMAP errors
+            folder.messages.unshift(message);
+            done(err);
+            return;
+        }
+
+        // delete from local indexed db, will be synced when new folder is opened
+        self._localDeleteMessage({
+            folder: folder,
+            uid: message.uid
+        }, done);
+    });
+
+    function done(err) {
+        self.done(); // stop the spinner
+        updateUnreadCount(folder); // update the unread count, if necessary
+        callback(err);
+    }
+};
+
+/**
  * Streams message content
  * @param {Object} options.message The message for which to retrieve the body
  * @param {Object} options.folder The IMAP folder
@@ -1089,7 +1143,6 @@ EmailDAO.prototype.encrypt = function(options, callback) {
         self.done();
         callback(err);
     });
-
 };
 
 
@@ -1552,13 +1605,29 @@ EmailDAO.prototype._imapDeleteMessage = function(options, callback) {
         return;
     }
 
-    // move the message to the trash folder
-    this._imapClient.moveMessage({
-        path: options.folder.path,
-        destination: trash.path,
+    this._imapMoveMessage({
+        folder: options.folder,
+        destination: trash,
         uid: options.uid
     }, callback);
 };
+
+/**
+ * Move stuff around on the server
+ *
+ * @param {String} options.folder The folder
+ * @param {Number} options.destination The destination folder
+ * @param {String} options.uid the message's uid
+ * @param {Function} callback (error) The callback when the message is moved
+ */
+EmailDAO.prototype._imapMoveMessage = function(options, callback) {
+    this._imapClient.moveMessage({
+        path: options.folder.path,
+        destination: options.destination.path,
+        uid: options.uid
+    }, callback);
+};
+
 
 /**
  * Get list messsage headers without the body
@@ -1692,7 +1761,7 @@ EmailDAO.prototype._localDeleteMessage = function(options, callback) {
 /**
  * Uploads a message to the sent folder, if necessary.
  * Calls back immediately if ignoreUploadOnSent == true or not sent folder was found.
- * 
+ *
  * @param {String} options.message The rfc2822 compatible raw ASCII e-mail source
  * @param {Function} callback (error) The callback when the imap client is done uploading
  */
@@ -1721,7 +1790,6 @@ EmailDAO.prototype._uploadToSent = function(options, callback) {
         callback(err);
     });
 };
-
 
 
 
