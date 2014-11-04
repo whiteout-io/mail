@@ -1,7 +1,7 @@
 // Container for mail list entries
 .mail-list {
     $padding-horizontal: 15px;
-    $padding-vertical: 10px;
+    $padding-vertical: 15px;
     $footer-height: 30px;
 
     // do not share any common styles between large and other screens
@@ -50,7 +50,7 @@
         }
         &__search {
             flex-shrink: 0;
-            padding: 0 $padding-horizontal $padding-vertical;
+            padding: 0 $padding-horizontal 10px;
         }
 
         &__scroll-canvas {
