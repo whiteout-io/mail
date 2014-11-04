@@ -7,7 +7,7 @@
 
     min-height: 100%;
     position: relative;
-    padding: 10px $nav-padding-h;
+    padding: $nav-padding-h + 5px;
     background: $color-main;
     color: $color-main-text;
 
@@ -35,7 +35,7 @@
     &__folder {
         position: relative;
         font-size: $font-size-bigger;
-        margin-bottom: 10px;
+        margin-bottom: 16px;
         padding-right: 40px;
         &:last-child {
             margin-bottom: 0;
@@ -111,6 +111,7 @@
     }
 
     @include respond-to(lg) {
+        padding: $nav-padding-h;
         padding-top: 27px; // magic number to valign logo with action bar
         padding-bottom: $footer-height;
         background: $color-bg;
