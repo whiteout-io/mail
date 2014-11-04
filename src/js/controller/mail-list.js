@@ -242,19 +242,19 @@ var MailListCtrl = function($scope, $routeParams) {
         if (!searchText) {
             // set display buffer to first messages
             $scope.displayMessages = currentFolder().messages.slice(0, INIT_DISPLAY_LEN);
-            $scope.searching = false;
+            setSearching(false);
             updateStatus('Online');
             return;
         }
 
         // display searching spinner
-        $scope.searching = true;
+        setSearching(true);
         updateStatus('Searching ...');
         searchTimeout = setTimeout(function() {
             $scope.$apply(function() {
                 // filter relevant messages
                 $scope.displayMessages = $scope.search(currentFolder().messages, searchText);
-                $scope.searching = false;
+                setSearching(false);
                 updateStatus('Matches in this folder');
             });
         }, 500);
@@ -366,8 +366,12 @@ var MailListCtrl = function($scope, $routeParams) {
     }
 
     function updateStatus(lbl, time) {
-        $scope.lastUpdateLbl = lbl;
-        $scope.lastUpdate = (time) ? time : '';
+        $scope.state.mailList.lastUpdateLbl = lbl;
+        $scope.state.mailList.lastUpdate = (time) ? time : '';
+    }
+
+    function setSearching(state) {
+        $scope.state.mailList.searching = state;
     }
 
     function currentFolder() {

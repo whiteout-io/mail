@@ -67,12 +67,12 @@
   </div>
 
   <footer>
-    <span class="spinner" ng-show="account.loggingIn || account.busy || searching"></span>
+    <span class="spinner" ng-show="account.loggingIn || account.busy || state.mailList.searching"></span>
     <span class="text" ng-switch="account.online">
       <span ng-switch-when="false">
         <svg><use xlink:href="#icon-offline" /></svg>
       </span>
-      {{lastUpdateLbl}} {{lastUpdate | date:'shortTime'}}
+      {{state.mailList.lastUpdateLbl}} {{state.mailList.lastUpdate | date:'shortTime'}}
     </span>
   </footer>
 </div>

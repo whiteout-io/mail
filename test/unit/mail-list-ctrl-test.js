@@ -137,8 +137,8 @@ describe('Mail List controller unit test', function() {
 
         it('should show initial message on empty', function() {
             scope.displaySearchResults();
-            expect(scope.searching).to.be.false;
-            expect(scope.lastUpdateLbl).to.equal('Online');
+            expect(scope.state.mailList.searching).to.be.false;
+            expect(scope.state.mailList.lastUpdateLbl).to.equal('Online');
             expect(scope.displayMessages.length).to.equal(2);
         });
         it('should show initial message on empty', function() {
@@ -147,13 +147,13 @@ describe('Mail List controller unit test', function() {
 
 
             scope.displaySearchResults('query');
-            expect(scope.searching).to.be.true;
-            expect(scope.lastUpdateLbl).to.equal('Searching ...');
+            expect(scope.state.mailList.searching).to.be.true;
+            expect(scope.state.mailList.lastUpdateLbl).to.equal('Searching ...');
             clock.tick(500);
 
             expect(scope.displayMessages).to.deep.equal(['a']);
-            expect(scope.searching).to.be.false;
-            expect(scope.lastUpdateLbl).to.equal('Matches in this folder');
+            expect(scope.state.mailList.searching).to.be.false;
+            expect(scope.state.mailList.lastUpdateLbl).to.equal('Matches in this folder');
 
         });
     });
