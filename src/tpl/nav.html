@@ -26,7 +26,7 @@
   </ul><!--/nav__folders-->
 
   <ul class="nav__folders">
-    <li ng-repeat="folder in account.folders | orderBy:folder.name" ng-if="!folder.wellknown"
+    <li ng-repeat="folder in account.folders" ng-if="!folder.wellknown"
       class="nav__folder nav__folder__other" ng-class="{'nav__folder--open': state.nav.currentFolder === folder}">
       <a href="javascript:;" wo-touch="openFolder(folder)">
         <svg role="presentation"><use xlink:href="#icon-folder" /></svg>
