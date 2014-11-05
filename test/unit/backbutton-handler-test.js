@@ -3,7 +3,7 @@
 var btnHandler = require('../../src/js/util/backbutton-handler');
 
 describe('Backbutton Handler', function() {
-    chai.Assertion.includeStack = true;
+    chai.config.includeStack = true;
 
     var scope, event;
 

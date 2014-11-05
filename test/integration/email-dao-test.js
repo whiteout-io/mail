@@ -14,7 +14,7 @@ var ImapClient = require('imap-client'),
 
 describe('Email DAO integration tests', function() {
     this.timeout(100000);
-    chai.Assertion.includeStack = true;
+    chai.config.includeStack = true;
 
     var emailDao, imapClient, imapMessages, imapFolders, imapServer, smtpServer, smtpClient, userStorage,
         mockKeyPair, inbox, spam;
