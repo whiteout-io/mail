@@ -632,7 +632,7 @@ EmailDAO.prototype.setFlags = function(options, callback) {
 
 /**
  * Moves a message to another folder
- * 
+ *
  * @param {Object} options.folder The origin folder
  * @param {Object} options.destination The destination folder
  * @param {Object} options.message The message that should be moved
@@ -1436,14 +1436,18 @@ EmailDAO.prototype._initFoldersFromImap = function(callback) {
         // 
 
         // check for the well known folders to be displayed in the uppermost ui part
-        [
+        // in that order
+        var wellknownTypes = [
             FOLDER_TYPE_INBOX,
             FOLDER_TYPE_SENT,
             config.outboxMailboxType,
             FOLDER_TYPE_DRAFTS,
-            FOLDER_TYPE_FLAGGED,
-            FOLDER_TYPE_TRASH
-        ].forEach(function(mbxType) {
+            FOLDER_TYPE_TRASH,
+            FOLDER_TYPE_FLAGGED
+        ];
+
+        // make sure the well known folders are detected
+        wellknownTypes.forEach(function(mbxType) {
             // check if there is a well known folder of this type
             var wellknownFolder = _.findWhere(self._account.folders, {
                 type: mbxType,
@@ -1469,6 +1473,23 @@ EmailDAO.prototype._initFoldersFromImap = function(callback) {
 
             wellknownFolder.wellknown = true;
             foldersChanged = true;
+        });
+
+        // order folders
+        self._account.folders.sort(function(a, b) {
+            if (a.wellknown && b.wellknown) {
+                // well known folders should be ordered like the types in the wellknownTypes array
+                return wellknownTypes.indexOf(a.type) - wellknownTypes.indexOf(b.type);
+            } else if (a.wellknown && !b.wellknown) {
+                // wellknown folders should always appear BEFORE the other folders
+                return -1;
+            } else if (!a.wellknown && b.wellknown) {
+                // non-wellknown folders should always appear AFTER wellknown folders
+                return 1;
+            } else {
+                // non-wellknown folders should be sorted case-insensitive
+                return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+            }
         });
 
         // if folders have not changed, can fill them with messages directly
