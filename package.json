@@ -37,7 +37,7 @@
         "axe-logger": "~0.0.2",
         "crypto-lib": "~0.2.1",
         "dompurify": "~0.4.2",
-        "imap-client": "~0.5.0",
+        "imap-client": "https://github.com/whiteout-io/imap-client/tarball/dev/WO-660",
         "jquery": "~2.1.1",
         "mailreader": "~0.4.0",
         "ng-infinite-scroll": "~1.1.2",

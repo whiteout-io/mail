@@ -728,7 +728,8 @@ describe('Email DAO unit tests', function() {
                 folder: inboxFolder,
                 uid: message.uid,
                 unread: message.unread,
-                answered: message.answered
+                answered: message.answered,
+                flagged: message.flagged
             }).yieldsAsync();
 
             localListStub.withArgs({
