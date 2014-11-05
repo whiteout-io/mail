@@ -1,48 +1,58 @@
-<div class="lightbox-body" ng-controller="PrivateKeyUploadCtrl">
-  <header>
+<div class="lightbox__body" ng-controller="PrivateKeyUploadCtrl">
+  <header class="lightbox__header">
     <h2>Setup Key Sync</h2>
-    <button class="close" wo-touch="state.privateKeyUpload.toggle(false)" data-action="lightbox-close">
+    <button class="lightbox__close" wo-touch="state.privateKeyUpload.toggle(false)" data-action="lightbox-close">
       <svg><use xlink:href="#icon-close" /><title>Close</title></svg>
     </button>
   </header>
 
-  <div class="content">
-    <div class="dialog view-privatekey-upload">
+  <div class="lightbox__content">
 
-      <div class="step" ng-show="step === 1">
-        <p>Your keychain code can be used to securely backup and sync your PGP key between devices. This feature is experimental and not recommended for production use. <a href="https://blog.whiteout.io/2014/07/07/secure-pgp-key-sync-a-proposal/" target="_blank">Learn more</a>.</p>
-
-        <h2>{{displayedCode}}</h2>
-
-        <p>Please write down your keychain code and keep it in a safe place. Whiteout Networks cannot recover a lost code.</p>
+      <div ng-show="step === 1">
+        <p class="typo-paragraph">
+          Your keychain code can be used to securely backup and sync your PGP key between devices.
+          This feature is experimental and not recommended for production use.
+          <a href="https://blog.whiteout.io/2014/07/07/secure-pgp-key-sync-a-proposal/" target="_blank">Learn more</a>.
+        </p>
+        <p class="typo-paragraph">
+          <code class="typo-code">{{displayedCode}}</code>
+        </p>
+        <p class="typo-paragraph">
+          Please write down your keychain code and keep it in a safe place. Whiteout Networks cannot recover a lost code.
+        </p>
       </div>
 
-      <div class="step" ng-show="step === 2">
-        <p>Please confirm the keychain code you have written down.</p>
-        <input type="text" class="input-text" size="4" maxlength="4" ng-model="code0" focus-me="step === 2" focus-next ng-paste="handlePaste($event)"> -
-        <input type="text" class="input-text" size="4" maxlength="4" ng-model="code1" focus-next> -
-        <input type="text" class="input-text" size="4" maxlength="4" ng-model="code2" focus-next> -
-        <input type="text" class="input-text" size="4" maxlength="4" ng-model="code3" focus-next> -
-        <input type="text" class="input-text" size="4" maxlength="4" ng-model="code4" focus-next> -
-        <input type="text" class="input-text" size="4" maxlength="4" ng-model="code5">
+      <div ng-show="step === 2">
+        <p class="typo-paragraph">Please confirm the keychain code you have written down.</p>
+        <form class="form">
+          <div class="input-code">
+            <input type="text" class="input-text" size="4" maxlength="4" ng-model="code0" focus-me="step === 2" focus-next ng-paste="handlePaste($event)"> -
+            <input type="text" class="input-text" size="4" maxlength="4" ng-model="code1" focus-next> -
+            <input type="text" class="input-text" size="4" maxlength="4" ng-model="code2" focus-next> -
+            <input type="text" class="input-text" size="4" maxlength="4" ng-model="code3" focus-next> -
+            <input type="text" class="input-text" size="4" maxlength="4" ng-model="code4" focus-next> -
+            <input type="text" class="input-text" size="4" maxlength="4" ng-model="code5">
+          </div>
+        </form>
       </div>
 
-      <div class="step" ng-show="step === 3">
-        <p>Please enter a memorable name for this device e.g. "MacBook Work".</p>
-        <input type="text" class="input-text" ng-model="deviceName" placeholder="Device name" focus-me="step === 3">
+      <div ng-show="step === 3">
+        <p class="typo-paragraph">Please enter a memorable name for this device e.g. “MacBook Work”.</p>
+        <form class="form">
+          <input type="text" class="input-text" ng-model="deviceName" placeholder="Device name" focus-me="step === 3">
+        </form>
       </div>
 
-      <div class="step" ng-show="step === 4">
-        <div class="working">
-          <span class="spinner"></span>
-        </div><!--/.working-->
+      <div ng-show="step === 4">
+        <div class="spinner-block" ng-show="busy">
+          <span class="spinner spinner--big"></span>
+        </div>
       </div>
 
-      <div class="control">
-        <button ng-show="step > 1 && step < 4" class="btn btn--secondary" wo-touch="goBack()">Go back</button>
-        <button ng-show="step < 4" class="btn" wo-touch="goForward()">Continue</button>
-      </div>
+  </div>
 
-    </div><!-- /.view-privatekey-upload -->
-  </div><!-- /.content -->
-</div><!-- /.lightbox-body -->
+  <footer class="lightbox__controls">
+    <button ng-show="step > 1 && step < 4" class="btn btn--secondary" wo-touch="goBack()">Go back</button>
+    <button ng-show="step < 4" class="btn" wo-touch="goForward()">Continue</button>
+  </footer>
+</div>

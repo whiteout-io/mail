@@ -5,6 +5,7 @@ $font-size-small:                   14px;
 $font-size-smaller:                 12px;
 $font-size-big:                     18px;
 $font-size-bigger:                  22px;
+$font-size-huge:                    28px;
 
 $font-family-base:                  "PT Sans", Arial, sans-serif;
 
@@ -43,6 +44,8 @@ $color-touch-active:                rgba(0, 0, 0, 0.1);
 // Breakpoints
 // -------------------------------------------
 
+$screen-xs-max:                     419px;
+$screen-sm-min:                     420px;
 $screen-sm-max:                     699px;
 $screen-md-min:                     700px;
 $screen-md-max:                     1099px;

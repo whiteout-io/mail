@@ -44,6 +44,11 @@
         transform: translateX(2px) translateY(2px);
     }
 
+    // prevent triggering ngAnimate animations
+    &.ng-animate {
+        transition: none;
+    }
+
     &[disabled],
     &[aria-disabled="true"] {
         cursor: not-allowed;
@@ -59,6 +64,11 @@
         @include scut-hd-bp {
             background-size: 3px 3px;
         }
+    }
+
+    // this modifier can be combined with other modifiers, too
+    &--big {
+        font-size: $font-size-bigger;
     }
 
     // Invalid button state

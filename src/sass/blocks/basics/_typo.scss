@@ -1,0 +1,30 @@
+.typo-title {
+    font-size: $font-size-bigger;
+    color: $color-main;
+    margin: 0 0 10px;
+
+    @include respond-to(md) {
+        font-size: $font-size-huge;
+    }
+}
+
+.typo-paragraph {
+    margin: 0 0 10px;
+
+    strong {
+        font-weight: normal;
+        color: $color-main;
+    }
+    em {
+        font-style: italic;
+    }
+    a {
+        color: $color-main;
+        text-decoration: underline;
+    }
+}
+
+.typo-code {
+    font-family: monospace;
+    font-weight: bold;
+}

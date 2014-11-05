@@ -1,0 +1,84 @@
+// Simple page layout
+
+.page {
+    height: 100%;
+    overflow-y: auto;
+
+    // disable text selection
+    user-select: none;
+
+    &__canvas {
+        min-height: 100%;
+        display: flex;
+        flex-direction: column;
+        padding: 10px 20px;
+        background: $color-grey-lighterer;
+        color: $color-text;
+    }
+
+    &__header {
+        margin: 45px 0;
+        img {
+            display: block;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        @include respond-to(md) {
+            margin: 115px 0 75px;
+        }
+    }
+
+    &__main {
+        flex-grow: 1;
+        margin: 0 auto 20px;
+        max-width: 400px;
+        width: 100%;
+    }
+
+    &__footer {
+        width: 100%;
+        text-align: center;
+        font-size: $font-size-small;
+        color: $color-text-light;
+        line-height: 1.5;
+
+        nav {
+            ul {
+                list-style: none;
+                margin: 0;
+                padding: 0;
+            }
+            li {
+                display: inline;
+                white-space: nowrap;
+                &:after {
+                    display: inline-block;
+                    content: ' | ';
+                    margin: 0 0.5em;
+                }
+                &:last-child:after {
+                    display: none;
+                }
+            }
+            a {
+                color: inherit;
+                text-decoration: none;
+                &:hover,
+                &:focus {
+                    text-decoration: underline;
+                }
+            }
+        }
+
+        @include respond-to(md) {
+            text-align: left;
+            nav {
+                float: right;
+            }
+        }
+    }
+}
+
+

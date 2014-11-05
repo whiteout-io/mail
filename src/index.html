@@ -41,9 +41,8 @@
     <div ng-view class="main-app-view"></div>
 
     <!-- error dialog lightbox -->
-    <div class="lightbox-overlay" ng-class="{'show': state.dialog.open}">
-      <div class="lightbox dialog view-dialog" ng-include="'tpl/dialog.html'"></div>
-    </div><!--/.lightbox-overlay-->
+    <div class="lightbox lightbox--dialog" ng-class="{'lightbox--show': state.dialog.open}"
+        ng-include="'tpl/dialog.html'"></div>
 
   </body>
 </html>

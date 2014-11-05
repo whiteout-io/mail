@@ -1,37 +1,57 @@
-<div class="view-login view-login-initial" ng-class="{'u-waiting-cursor': state.ui === 3}">
-  <div class="logo">
-    <img src="img/whiteout_logo.svg" alt="whiteout.io">
-  </div><!--/logo-->
+<section class="page" ng-class="{'u-waiting-cursor': state.ui === 3}">
+  <div class="page__canvas">
+    <header class="page__header">
+      <img src="img/whiteout_logo.svg" alt="whiteout.io">
+    </header>
+    <main class="page__main">
+      <div ng-show="state.ui === 1">
+        <h2 class="typo-title">PGP key</h2>
+        <p class="typo-paragraph">
+          You can either import an existing PGP key or generate a new one.
+          Your private key remains on your device and is not sent to our servers.
+        </p>
 
-  <div class="content">
+        <form class="form" name="form">
+          <!-- TODO: remove error dialog and use inline error messages -->
+          <!--<p class="form__error-message" ng-show="errMsg">{{errMsg}}</p>
+          <p class="form__error-message" ng-show="form.$invalid">Please fill out all required fields!</p>-->
+          <div class="form__row">
+            <label class="input-checkbox">
+              <span class="checkbox">
+                <input type="checkbox" ng-model="state.agree">
+                <span class="input-checkbox__box"><svg role="presentation"><use xlink:href="#icon-check" /></svg></span>
+              </span>
+              I agree to the Whiteout Networks <a href="https://whiteout.io/terms.html" target="_blank">Terms of Service</a> and have read the <a href="https://whiteout.io/privacy-service.html" target="_blank">Privacy Policy</a>
+            </label>
+          </div>
+          <div class="form__row">
+            <label class="input-checkbox">
+              <span class="checkbox">
+                <input type="checkbox" ng-model="state.newsletter">
+                <span class="input-checkbox__box"><svg role="presentation"><use xlink:href="#icon-check" /></svg></span>
+              </span>
+              Stay up to date on Whiteout Networks products and important announcements.
+            </label>
+          </div>
+          <div class="form__row">
+            <button type="submit" wo-touch="generateKey()" class="btn" tabindex="3">Generate new key</button>
+          </div>
+          <div class="form__row">
+            <button type="button" wo-touch="importKey()" class="btn btn--secondary">Import existing key</button>
+          </div>
+        </form>
+      </div>
 
-    <div ng-show="state.ui === 1">
-      <p><b>PGP key.</b> You can either import an existing PGP key or generate a new one. Your private key remains on your device and is not sent to our servers.</p>
-
-      <form>
-        <div class="option terms">
-          <input type="checkbox" ng-model="state.agree" id="cb-agree">
-          <label for="cb-agree">I agree to the Whiteout Networks <a href="https://whiteout.io/terms.html" target="_blank">Terms of Service</a> and have read the <a href="https://whiteout.io/privacy-service.html" target="_blank">Privacy Policy</a>.</label>
+      <div ng-show="state.ui === 2">
+        <h2 class="typo-title">Generating key</h2>
+        <p class="typo-paragraph">
+          Please stand by. This can take a while…
+        </p>
+        <div class="u-text-center">
+          <span class="spinner spinner--big"></span>
         </div>
-
-        <div class="option newsletter">
-          <input type="checkbox" ng-model="state.newsletter" id="cb-newsletter">
-          <label for="cb-newsletter">Stay up to date on Whiteout Networks products and important announcements.</label>
-        </div>
-
-        <div>
-          <button type="submit" wo-touch="generateKey()" class="btn"tabindex="3">Generate new key</button>
-          <button wo-touch="importKey()" class="btn btn--secondary">Import existing key</button>
-        </div>
-      </form>
-    </div>
-
-    <div ng-show="state.ui === 2">
-      <p><b>Generating key.</b> Please stand by. This can take a while...</p>
-      <div class="working">
-        <span class="spinner"></span>
-      </div><!--/.working-->
-    </div>
-
-  </div><!--/content-->
-</div>
+      </div>
+    </main>
+    <div ng-include="'tpl/page-footer.html'"></div>
+  </div>
+</section>

@@ -4,8 +4,7 @@
     flex-direction: column;
 
     @include respond-to(md) {
-        // this number depends on max-height set on .lightbox
-        height: 590px; // magic number
+        height: 590px; // magic number: chosen to look good
     }
 
     // Header components

@@ -1,0 +1,24 @@
+<section class="page">
+  <div class="page__canvas">
+    <header class="page__header">
+      <img src="img/whiteout_logo.svg" alt="whiteout.io">
+    </header>
+    <main class="page__main">
+      <h2 class="typo-title">Validate phone number</h2>
+      <p class="typo-paragraph">We have sent you a validation code via SMS. Please enter this code to confirm your phone number.</p>
+      <form class="form" name="formValidate">
+        <p class="form__error-message" ng-show="errMsgValidate">{{errMsgValidate}}</p>
+        <div class="form__row">
+          <input type="text" class="input-text input-text--big" size="6" maxlength="6" ng-model="token" placeholder="Code" focus-me="step === 3" required pattern="([a-zA-Z0-9]*)">
+        </div>
+        <div class="spinner-block" ng-show="busyValidate">
+          <span class="spinner spinner--big"></span>
+        </div>
+        <div class="form__row">
+          <button class="btn btn--big" type="submit" ng-click="validateUser()">Confirm code</button>
+        </div>
+      </form>
+    </main>
+    <div ng-include="'tpl/page-footer.html'"></div>
+  </div>
+</section>
