@@ -11,8 +11,9 @@
         {{state.nav.currentFolder.wellknown ? state.nav.currentFolder.type : state.nav.currentFolder.name}}
       </a>
     </div>
-  </div>
-  <div class="read__action-toolbar">
+  </div><!--/read__folder-toolbar-->
+
+  <div class="read__action-toolbar" ng-controller="ActionBarCtrl">
     <div class="toolbar">
       <ul class="toolbar__actions">
         <li>
@@ -32,7 +33,7 @@
           </button>
         </li>
         <li>
-          <button wo-touch="state.mailList.remove(state.mailList.selected)" class="btn-icon-light" title="Delete mail">
+          <button wo-touch="deleteMessage(state.mailList.selected)" class="btn-icon-light" title="Delete mail">
             <svg><use xlink:href="#icon-trash" /><title>Delete mail</title></svg>
           </button>
         </li>
@@ -51,13 +52,14 @@
         </li>
       </ul>
     </div>
-  </div>
+  </div><!--/read__action-toolbar-->
+
   <header class="read__header">
     <div class="read__controls">
       <button class="btn-icon-light" wo-touch="state.writer.write(state.mailList.selected)" title="Reply"><svg><use xlink:href="#icon-reply_light" /></svg></button>
       <button class="btn-icon-light" wo-touch="state.writer.write(state.mailList.selected, true)" title="Reply All"><svg><use xlink:href="#icon-reply_all_light" /></svg></button>
       <button class="btn-icon-light" wo-touch="state.writer.write(state.mailList.selected, null, true)" title="Forward"><svg><use xlink:href="#icon-forward_light" /></svg></button>
-    </div>
+    </div><!--/read__controls-->
 
     <h2 class="read__subject" wo-touch="notStripped = !notStripped">
       <button ng-hide="notStripped" class="btn-icon-very-light">
@@ -114,7 +116,7 @@
         {{attachment.filename}}
       </li>
     </ul>
-  </header>
+  </header><!--/read__header-->
 
   <!-- working spinner -->
   <div class="read__working"
@@ -140,7 +142,7 @@
     <iframe sandbox="allow-popups allow-scripts" src="tpl/read-sandbox.html"
       frame-load>
     </iframe>
-  </div>
+  </div><!--/read__body-->
 
   <!-- tooltips -->
   <div id="fingerprint-info" class="tooltip">
@@ -153,10 +155,15 @@
     <li><button wo-touch="state.writer.write(state.mailList.selected)"><svg><use xlink:href="#icon-reply_light" /></svg> Reply</button></li>
     <li><button wo-touch="state.writer.write(state.mailList.selected, true)"><svg><use xlink:href="#icon-reply_all_light" /></svg> Reply All</button></li>
     <li><button wo-touch="state.writer.write(state.mailList.selected, null, true)"><svg><use xlink:href="#icon-forward_light" /></svg> Forward</button></li>
-  </ul>
-  <ul id="read-dropdown-folder" class="dropdown">
-    <li><button><svg><use xlink:href="#icon-folder" /></svg> Lorem</button></li>
-    <li><button><svg><use xlink:href="#icon-folder" /></svg> Ipsum</button></li>
-  </ul>
+  </ul><!--/dropdown-->
+
+  <ul id="read-dropdown-folder" class="dropdown" ng-controller="ActionBarCtrl">
+    <li ng-repeat="folder in account.folders">
+      <button wo-touch="moveMessage(state.mailList.selected, folder)">
+        <svg><use xlink:href="#icon-folder" /></svg>
+        {{folder.wellknown ? folder.type : folder.name}}
+      </button>
+    </li>
+  </ul><!--/dropdown-->
 
 </div>

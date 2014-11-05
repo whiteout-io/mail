@@ -30,9 +30,9 @@
         ng-repeat="email in displayMessages">
         <ul class="mail-list-entry__flags">
           <li class="mail-list-entry__flags-unread"></li>
-          <li class="mail-list-entry__flags-checked">
+          <li class="mail-list-entry__flags-checked" wo-touch="$event.stopPropagation()">
             <label class="checkbox">
-              <input type="checkbox">
+              <input type="checkbox" ng-model="email.checked">
               <span><svg role="presentation"><use xlink:href="#icon-check" /></svg></span>
             </label>
           </li>

@@ -97,74 +97,13 @@ var MailListCtrl = function($scope, $routeParams) {
                 }
             }
 
-            $scope.toggleUnread(email);
-        }
-    };
-
-    /**
-     * Mark an email as unread or read, respectively
-     */
-    $scope.toggleUnread = function(message) {
-        updateStatus('Updating unread flag...');
-
-        message.unread = !message.unread;
-        emailDao.setFlags({
-            folder: currentFolder(),
-            message: message
-        }, function(err) {
-            if (err && err.code === 42) {
-                // offline, restore
-                message.unread = !message.unread;
-                updateStatus('Unable to mark unread flag in offline mode!');
-                return;
-            }
-
-            if (err) {
-                updateStatus('Error on sync!');
-                $scope.onError(err);
-                return;
-            }
-
-            updateStatus('Online');
-            $scope.$apply();
-        });
-    };
-
-    /**
-     * Delete a message
-     */
-    $scope.remove = function(message) {
-        if (!message) {
-            return;
-        }
-
-        updateStatus('Deleting message...');
-        remove();
-
-        function remove() {
-            emailDao.deleteMessage({
-                folder: currentFolder(),
-                message: message
-            }, function(err) {
-                if (err) {
-                    // show errors where appropriate
-                    if (err.code === 42) {
-                        $scope.select(message);
-                        updateStatus('Unable to delete message in offline mode!');
-                        return;
-                    }
-                    updateStatus('Error during delete!');
-                    $scope.onError(err);
-                }
-                updateStatus('Message deleted!');
-                $scope.$apply();
-            });
+            $scope.state.actionBar.markMessage(email, false);
         }
     };
 
     // share local scope functions with root state
     $scope.state.mailList = {
-        remove: $scope.remove
+        updateStatus: updateStatus
     };
 
     //

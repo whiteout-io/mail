@@ -1,18 +1,20 @@
-<div class="action-bar">
+<div class="action-bar" ng-controller="ActionBarCtrl">
   <div class="action-bar__primary">
-    <button class="btn btn--light">Delete</button>
-    <button class="btn btn--light">Spam</button>
+    <button class="btn btn--light" wo-touch="state.read.open ? deleteMessage(state.mailList.selected) : deleteCheckedMessages()">Delete</button>
+    <button class="btn btn--light" disabled>Spam</button>
     <button class="btn btn--light-dropdown" wo-dropdown="#dropdown-folder">
       <svg><use xlink:href="#icon-folder" /><title>Folder</title></svg>
       <svg class="btn__dropdown" role="presentation"><use xlink:href="#icon-dropdown" /></svg>
     </button>
-  </div>
+  </div><!--/action-bar__primary-->
+
   <div class="action-bar__secondary">
     <button class="btn btn--light-dropdown" wo-dropdown="#dropdown-more">
       More
       <svg class="btn__dropdown" role="presentation"><use xlink:href="#icon-dropdown" /></svg>
     </button>
-  </div>
+  </div><!--/action-bar__secondary-->
+
   <div class="action-bar__search">
     <div class="search">
       <svg><use xlink:href="#icon-search" /><title>Search</title></svg>
@@ -20,15 +22,20 @@
         ng-change="displaySearchResults(searchText)"
         placeholder="Search" focus-me="state.mailList.searching">
     </div>
-  </div>
+  </div><!--/action-bar__search-->
 
   <!-- dropdowns -->
   <ul id="dropdown-folder" class="dropdown">
-    <li><button><svg><use xlink:href="#icon-folder" /></svg> Lorem</button></li>
-    <li><button><svg><use xlink:href="#icon-folder" /></svg> Ipsum</button></li>
-  </ul>
+    <li ng-repeat="folder in account.folders">
+      <button wo-touch="state.read.open ? moveMessage(state.mailList.selected, folder) : moveCheckedMessages(folder)">
+        <svg><use xlink:href="#icon-folder" /></svg>
+        {{folder.wellknown ? folder.type : folder.name}}
+      </button>
+    </li>
+  </ul><!--/dropdown-->
+
   <ul id="dropdown-more" class="dropdown">
-    <li><button>Mark as read</button></li>
-    <li><button>Mark as unread</button></li>
-  </ul>
+    <li><button wo-touch="state.read.open ? markMessage(state.mailList.selected, false) : markCheckedMessages(false)">Mark as read</button></li>
+    <li><button wo-touch="state.read.open ? markMessage(state.mailList.selected, true) : markCheckedMessages(true)">Mark as unread</button></li>
+  </ul><!--/dropdown-->
 </div>
