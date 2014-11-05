@@ -1,0 +1,149 @@
+.lightbox {
+    display: none;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    background: $color-grey-dark-alpha;
+    overflow: auto;
+    text-align: center;
+
+    @include respond-to(md) {
+        @include scut-vcenter-ib(".lightbox__body");
+    }
+
+    &__body {
+        position: relative;
+        width: 100%;
+        min-height: 100%;
+        padding: 15px;
+        background: $color-bg;
+        color: $color-text;
+        backface-visibility: hidden;
+        display: flex;
+        flex-direction: column;
+        text-align: left;
+        margin: 0 auto;
+
+        @include respond-to(md) {
+            width: 90%;
+            max-width: 762px;
+            min-height: 0;
+            backface-visibility: hidden;
+        }
+    }
+
+    &__header {
+        flex-shrink: 0;
+        text-align: center;
+        position: relative;
+        margin-bottom: 20px;
+        h2 {
+            margin: 0;
+            padding: 0;
+            font-size: $font-size-bigger;
+            font-weight: normal;
+            line-height: 1em;
+            color: $color-grey-dark;
+        }
+    }
+    &__close {
+        position: absolute;
+        top: 0px;
+        right: 0px;
+        display: block;
+        border: none;
+        background: none;
+        padding: 0 0 0 40px;
+        margin: 0;
+        color: $color-grey-dark;
+        outline: none;
+
+        svg {
+            height: 1em;
+            width: 1em;
+            fill: $color-grey-dark;
+        }
+    }
+
+    &__content {
+        flex-grow: 1;
+        overflow: hidden;
+    }
+
+    &__controls {
+        text-align: right;
+        margin-top: 15px;
+        flex-shrink: 0;
+
+        .btn {
+            min-width: 6em;
+            margin-top: 5px;
+        }
+    }
+
+    /* Modifiers */
+
+    &--dialog {
+        @include scut-vcenter-ib(".lightbox__body");
+
+        .lightbox__body {
+            min-height: 0;
+            max-width: 450px;
+        }
+        .lightbox__content {
+            padding: 0 15px;
+            text-align: center;
+        }
+        .lightbox__controls {
+            text-align: center;
+            margin-top: 25px;
+        }
+    }
+
+    &--show {
+        display: block;
+    }
+
+    /* ngAnimate */
+    &--show-add {
+        display: block;
+        opacity: 0;
+        @include respond-to(md) {
+            transition: opacity 0.3s;
+        }
+        .lightbox__body {
+            transform: scale(0.7);
+            @include respond-to(md) {
+                transition: transform 0.3s;
+            }
+        }
+    }
+    &--show-add-active {
+        opacity: 1;
+        .lightbox__body {
+            transform: scale(1);
+        }
+    }
+    &--show-remove {
+        display: block;
+        opacity: 1;
+        @include respond-to(md) {
+            transition: opacity 0.3s;
+        }
+        .lightbox__body {
+            transform: scale(1);
+            @include respond-to(md) {
+                transition: transform 0.3s;
+            }
+        }
+    }
+    &--show-remove-active {
+        opacity: 0;
+        .lightbox__body {
+            transform: scale(0.7);
+        }
+    }
+}

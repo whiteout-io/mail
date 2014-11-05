@@ -1,19 +1,31 @@
-<div class="view-login view-login-existing">
-  <div class="logo">
-    <img src="img/whiteout_logo.svg" alt="whiteout.io">
-  </div><!--/logo-->
+<section class="page">
+  <div class="page__canvas">
+    <header class="page__header">
+      <img src="img/whiteout_logo.svg" alt="whiteout.io">
+    </header>
+    <main class="page__main">
+      <h2 class="typo-title">Unlock mailbox</h2>
+      <p class="typo-paragraph">Please enter your passphrase to unlock the mailbox.</p>
+      <form class="form">
+        <!-- TODO add error messages -->
+        <!--<p class="form__error-message" ng-show="errMsg">{{errMsg}}</p>
+        <p class="form__error-message" ng-show="form.$invalid">Please fill out all required fields!</p>-->
 
-  <div class="content">
-    <p><b>Unlock mailbox.</b> Please enter your passphrase to unlock the mailbox.</p>
-
-    <form>
-      <div>
-       <input class="input-text" type="password" ng-model="passphrase" ng-change="change()" ng-class="{'input-text--error':incorrect}" placeholder="Passphrase" tabindex="1" focus-me="true">
-      </div>
-      <a href="https://whiteout.io/revocation.html" title="Click here to reset your account." target="_blank">Forgot your passphrase?</a>
-      <div>
-        <button type="submit" wo-touch="confirmPassphrase()" class="btn" data-icon="&#xe009;" ng-disabled="!buttonEnabled" tabindex="2">Unlock</button>
-      </div>
-    </form>
-  </div><!--/content-->
-</div>
+        <div class="form__row">
+          <input class="input-text input-text--big" type="password" ng-model="passphrase" ng-change="change()"
+            ng-class="{'input-text--error':incorrect}" placeholder="Passphrase" tabindex="1" focus-me="true">
+        </div>
+        <div class="form__row">
+          <button class="btn btn--big" type="submit" wo-touch="confirmPassphrase()" ng-disabled="!buttonEnabled" tabindex="2">
+            <svg role="presentation"><use xlink:href="#icon-decrypted" /></svg>
+            Unlock
+          </button>
+        </div>
+      </form>
+      <p class="typo-paragraph">
+        <a href="https://whiteout.io/revocation.html" title="Click here to reset your account." target="_blank">Forgot your passphrase?</a>
+      </p>
+    </main>
+    <div ng-include="'tpl/page-footer.html'"></div>
+  </div>
+</section>

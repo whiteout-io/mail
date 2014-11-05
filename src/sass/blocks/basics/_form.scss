@@ -1,5 +1,85 @@
+// Form layout
+
+.form {
+    margin: 20px auto 40px;
+    // same as max page with
+    // form should never be wider because it just doesn't look good
+    max-width: 400px;
+
+    &__error-message {
+        margin-bottom: 10px;
+        color: $color-error;
+    }
+    &__password-strong-message {
+        margin-bottom: 10px;
+        color: green;
+    }
+
+    &__row {
+        margin-bottom: 10px;
+
+        &--multi {
+            margin-bottom: 0;
+
+            @include respond-to(sm) {
+                display: flex;
+            }
+        }
+    }
+
+    &__col {
+        margin-bottom: 10px;
+
+        @include respond-to(sm) {
+            flex-grow: 1;
+            & + .form__col {
+                margin-left: 10px;
+            }
+
+            &--2 {
+                flex-grow: 2;
+            }
+        }
+    }
+
+    .btn {
+        width: 100%;
+    }
+}
+
+.form-fieldset {
+    margin: 0 0 20px;
+    border: 1px solid $color-border-light;
+
+    legend {
+        color: $color-blue;
+        padding: 0 0.5em;
+    }
+
+    & > :first-child {
+        margin-top: 0;
+    }
+    & > :last-child {
+        margin-bottom: 0;
+    }
+
+    &--standalone {
+        margin: 30px 0 40px;
+    }
+    &--error {
+        border-color: $color-error;
+        legend {
+            color: $color-error;
+        }
+    }
+}
+
+
+// Form elements
+
 .input-text {
-    background-color: white;
+    width: 100%;
+    background-color: $color-bg;
     border: 1px solid $color-border-light;
     color: $color-text;
     font-size: $font-size-base;
@@ -18,8 +98,57 @@
     &--error {
         border-color: $color-error;
     }
+
+    &--big {
+        font-size: $font-size-bigger;
+    }
 }
 
+// Attention: Webkit support only!
+.input-select {
+    position: relative;
+
+    &:after {
+        position: absolute;
+        right: 0.5em;
+        top: 0;
+        content: '<>';
+        color: $color-text;
+        transform: rotate(90deg);
+        pointer-events: none;
+    }
+    select {
+        @extend .input-text;
+        padding-right: 2em;
+    }
+}
+
+// Attention: Webkit support only!
+.input-file {
+    width: 100%;
+    background-color: $color-bg;
+    border: 1px solid $color-border-light;
+    color: $color-text;
+    font-size: 1em;
+    padding: 4px 4px;
+    outline: none;
+
+    &::-webkit-file-upload-button {
+        background-color: $color-grey-input;
+        border: 0;
+        color: $color-bg;
+        padding: 4px 10px;
+        font-family: inherit;
+        font-size: inherit;
+        line-height: inherit;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        outline: none;
+        cursor: pointer;
+    }
+}
+
+// TODO: remove, has been replace by general form class
 .input-error-message {
     margin: 5px 0;
     padding: 0;
@@ -31,7 +160,6 @@
     position: relative;
     width: 100%;
     .input-text {
-        width: 100%;
         padding-left: 1.8em;
     }
     & > svg {
@@ -41,6 +169,22 @@
         top: 0.7em;
         height: 1em;
         width: 1em;
+    }
+}
+
+.input-checkbox {
+    display: block;
+    padding-left: 2em;
+
+    .checkbox {
+        float: left;
+        margin-top: 0.1em;
+        margin-left: -2em;
+    }
+
+    a {
+        color: $color-main;
+        text-decoration: underline;
     }
 }
 
@@ -76,5 +220,30 @@
         span {
             border-color: $color-text;
         }
+    }
+}
+
+.input-email-fixed-domain {
+    display: flex;
+    & > input {
+        flex-grow: 1;
+        margin-right: 10px;
+    }
+    & > span {
+        font-size: $font-size-big;
+        flex-shrink: 0;
+        line-height: 38px; // magic number: depends on .input-text height
+
+        @include respond-to(md) {
+            font-size: $font-size-bigger;
+        }
+    }
+}
+
+/* TODO: refactore this block, simply doesn't work on mobile */
+.input-code {
+    & > input {
+        display: inline-block;
+        width: 4em;
     }
 }

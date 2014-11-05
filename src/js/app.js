@@ -53,13 +53,21 @@ var app = angular.module('mail', [
 
 // set router paths
 app.config(function($routeProvider) {
+    $routeProvider.when('/login', {
+        templateUrl: 'tpl/login.html',
+        controller: LoginCtrl
+    });
     $routeProvider.when('/add-account', {
         templateUrl: 'tpl/add-account.html',
         controller: AddAccountCtrl
     });
-    $routeProvider.when('/login', {
-        templateUrl: 'tpl/login.html',
-        controller: LoginCtrl
+    $routeProvider.when('/create-account', {
+        templateUrl: 'tpl/create-account.html'/*,
+        controller: AddAccountCtrl*/
+    });
+    $routeProvider.when('/validate-phone', {
+        templateUrl: 'tpl/validate-phone.html'/*,
+        controller: AddAccountCtrl*/
     });
     $routeProvider.when('/login-set-credentials', {
         templateUrl: 'tpl/login-set-credentials.html',

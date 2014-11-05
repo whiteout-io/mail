@@ -1,0 +1,20 @@
+.account {
+    // TODO: remove table layout -> use <dl>
+    table {
+        margin: 50px auto 60px;
+        td {
+            padding-top: 15px;
+            text-align: left;
+            &:first-child {
+                text-align: right;
+                padding-right: 15px;
+                font-weight: bold;
+            }
+
+            a {
+                color: $color-main;
+                text-decoration: underline;
+            }
+        }
+    }
+}

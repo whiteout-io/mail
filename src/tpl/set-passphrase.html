@@ -1,40 +1,41 @@
-<div class="lightbox-body" ng-controller="SetPassphraseCtrl">
-  <header>
+<div class="lightbox__body" ng-controller="SetPassphraseCtrl">
+  <header class="lightbox__header">
     <h2>Set passphrase</h2>
-    <button class="close" wo-touch="state.setPassphrase.toggle(false)" data-action="lightbox-close">
+    <button class="lightbox__close" wo-touch="state.setPassphrase.toggle(false)" data-action="lightbox-close">
       <svg><use xlink:href="#icon-close" /><title>Close</title></svg>
     </button>
   </header>
 
-  <div class="content">
-    <div class="dialog view-set-passphrase">
-      <p>You can set a passphrase to protect your key on disk. This must be entered everytime you start the app.</p>
+  <div class="lightbox__content">
+    <p class="typo-paragraph">
+      You can set a passphrase to protect your key on disk. This must be entered everytime you start the app.
+    </p>
 
-      <table>
-        <tbody>
-          <tr>
-            <td><label>Current passphrase</label></td>
-            <td><input class="input-text" type="password" ng-model="oldPassphrase" tabindex="1" focus-me="true"></td>
-          </tr>
-          <tr>
-            <td></td>
-            <td><label class="input-error-message" ng-class="{'passphrase-label-ok': passphraseRating >= 2}">{{passphraseMsg}}</label></td>
-          </tr>
-          <tr>
-            <td class="no-padding"><label>New passphrase</label></td>
-            <td class="no-padding"><input class="input-text" type="password" ng-model="newPassphrase" ng-change="checkPassphraseQuality()" tabindex="2"></td>
-          </tr>
-          <tr>
-            <td><label>Confirm passphrase</label></td>
-            <td><input class="input-text" type="password" ng-model="confirmation" ng-class="{'input-text--error': (confirmation || newPassphrase) && confirmation !== newPassphrase}" tabindex="3"></td>
-          </tr>
-        </tbody>
-      </table>
+    <form class="form" name="form">
+      <! TODO use error messages -->
+      <!--<p class="form__error-message" ng-show="errMsg">{{errMsg}}</p>
+      <p class="form__error-message" ng-show="form.$invalid">Please fill out all required fields!</p>-->
 
-      <div class="control">
-        <button wo-touch="setPassphrase()" class="btn" ng-disabled="(confirmation || newPassphrase) && confirmation !== newPassphrase" tabindex="4">Set passphrase</button>
+      <div class="form__row">
+        <input class="input-text" type="password" ng-model="oldPassphrase" placeholder="Current passphrase" tabindex="1" focus-me="true">
       </div>
 
-    </div><!-- /.view-set-passphrase -->
-  </div><!-- /.content -->
-</div><!-- /.lightbox-body -->
+      <p class="form__error-message" ng-show="passphraseMsg && passphraseRating < 2">{{passphraseMsg}}</p>
+      <p class="form__password-strong-message" ng-show="passphraseMsg && passphraseRating >= 2">{{passphraseMsg}}</p>
+      <div class="form__row form__row--multi">
+        <div class="form__col">
+          <input class="input-text" type="password" ng-model="newPassphrase"
+            placeholder="New passphrase" ng-change="checkPassphraseQuality()" tabindex="2">
+        </div>
+        <div class="form__col">
+          <input class="input-text" type="password" ng-model="confirmation" placeholder="Confirm passphrase"
+            ng-class="{'input-text--error': (confirmation || newPassphrase) && confirmation !== newPassphrase}" tabindex="3">
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <footer class="lightbox__controls">
+    <button wo-touch="setPassphrase()" class="btn" ng-disabled="(confirmation || newPassphrase) && confirmation !== newPassphrase" tabindex="4">Set passphrase</button>
+  </footer>
+</div>

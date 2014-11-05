@@ -10,6 +10,10 @@
     border-bottom: 0.17em solid rgba($color-black, 0.2);
     border-top: 0.17em solid rgba($color-black, 0.7);
     border-radius: 100%;
+
+    &--big {
+        font-size: 150%;
+    }
 }
 
 @keyframes spinner-rotation {
@@ -19,4 +23,9 @@
     to {
         transform: rotate(359deg);
     }
+}
+
+.spinner-block {
+    text-align: center;
+    margin: 50px 0;
 }
