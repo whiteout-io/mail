@@ -48,3 +48,6 @@ if (!Function.prototype.bind) {
 
 // set worker path for tests
 require('../src/js/app-config').config.workerPath = '../lib';
+
+var axe = require('axe-logger');
+axe.removeAppender(axe.defaultAppender);
