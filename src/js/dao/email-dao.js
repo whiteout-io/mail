@@ -1442,8 +1442,8 @@ EmailDAO.prototype._initFoldersFromImap = function(callback) {
             FOLDER_TYPE_SENT,
             config.outboxMailboxType,
             FOLDER_TYPE_DRAFTS,
-            FOLDER_TYPE_FLAGGED,
-            FOLDER_TYPE_TRASH
+            FOLDER_TYPE_TRASH,
+            FOLDER_TYPE_FLAGGED
         ];
 
         // make sure the well known folders are detected

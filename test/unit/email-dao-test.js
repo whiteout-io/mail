@@ -25,7 +25,7 @@ describe('Email DAO unit tests', function() {
     var emailAddress, passphrase, asymKeySize, account;
 
     // test data
-    var folders, inboxFolder, sentFolder, draftsFolder, outboxFolder, trashFolder, otherFolder, mockKeyPair;
+    var folders, inboxFolder, sentFolder, draftsFolder, outboxFolder, trashFolder, flaggedFolder, otherFolder, mockKeyPair;
 
     beforeEach(function() {
         //
@@ -67,6 +67,13 @@ describe('Email DAO unit tests', function() {
             name: 'Trash',
             type: 'Trash',
             path: 'TRASH',
+            messages: []
+        };
+
+        flaggedFolder = {
+            name: 'Flagged',
+            type: 'Flagged',
+            path: 'FLAGGED',
             messages: []
         };
 
@@ -2105,6 +2112,7 @@ describe('Email DAO unit tests', function() {
                     Sent: [sentFolder],
                     Drafts: [draftsFolder],
                     Trash: [trashFolder],
+                    Flagged: [flaggedFolder],
                     Other: [otherFolder]
                 });
                 devicestorageStub.storeList.withArgs(sinon.match(function(arg) {
@@ -2123,9 +2131,12 @@ describe('Email DAO unit tests', function() {
                     expect(arg[0][4].name).to.deep.equal(trashFolder.name);
                     expect(arg[0][4].path).to.deep.equal(trashFolder.path);
                     expect(arg[0][4].type).to.deep.equal(trashFolder.type);
-                    expect(arg[0][5].name).to.deep.equal(otherFolder.name);
-                    expect(arg[0][5].path).to.deep.equal(otherFolder.path);
-                    expect(arg[0][5].type).to.deep.equal(otherFolder.type);
+                    expect(arg[0][5].name).to.deep.equal(flaggedFolder.name);
+                    expect(arg[0][5].path).to.deep.equal(flaggedFolder.path);
+                    expect(arg[0][5].type).to.deep.equal(flaggedFolder.type);
+                    expect(arg[0][6].name).to.deep.equal(otherFolder.name);
+                    expect(arg[0][6].path).to.deep.equal(otherFolder.path);
+                    expect(arg[0][6].type).to.deep.equal(otherFolder.type);
                     return true;
                 }), 'folders').yieldsAsync();
 
@@ -2151,6 +2162,7 @@ describe('Email DAO unit tests', function() {
                     Sent: [sentFolder],
                     Drafts: [draftsFolder],
                     Trash: [trashFolder],
+                    Flagged: [flaggedFolder],
                     Other: [otherFolder]
                 });
                 devicestorageStub.storeList.withArgs(sinon.match(function(arg) {
@@ -2178,6 +2190,11 @@ describe('Email DAO unit tests', function() {
                         name: trashFolder.name,
                         path: trashFolder.path,
                         type: trashFolder.type,
+                        wellknown: true
+                    }, {
+                        name: flaggedFolder.name,
+                        path: flaggedFolder.path,
+                        type: flaggedFolder.type,
                         wellknown: true
                     }, {
                         name: otherFolder.name,
