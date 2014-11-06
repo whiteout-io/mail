@@ -5,10 +5,12 @@ var controller = require('../../src/js/app-controller'),
     OutboxBO = require('../../src/js/bo/outbox'),
     DeviceStorageDAO = require('../../src/js/dao/devicestorage-dao'),
     UpdateHandler = require('../../src/js/util/update/update-handler'),
+    KeychainDAO = require('../../src/js/dao/keychain-dao'),
+    config = require('../../src/js/app-config').config,
     Auth = require('../../src/js/bo/auth');
 
 describe('App Controller unit tests', function() {
-    var emailDaoStub, outboxStub, updateHandlerStub, appConfigStoreStub, devicestorageStub, isOnlineStub, authStub;
+    var emailDaoStub, outboxStub, updateHandlerStub, appConfigStoreStub, devicestorageStub, isOnlineStub, authStub, keychainStub;
 
     beforeEach(function() {
         controller._emailDao = emailDaoStub = sinon.createStubInstance(EmailDAO);
@@ -17,6 +19,7 @@ describe('App Controller unit tests', function() {
         controller._userStorage = devicestorageStub = sinon.createStubInstance(DeviceStorageDAO);
         controller._updateHandler = updateHandlerStub = sinon.createStubInstance(UpdateHandler);
         controller._auth = authStub = sinon.createStubInstance(Auth);
+        controller._keychain = keychainStub = sinon.createStubInstance(KeychainDAO);
 
         isOnlineStub = sinon.stub(controller, 'isOnline');
     });
@@ -133,10 +136,13 @@ describe('App Controller unit tests', function() {
     });
 
     describe('init', function() {
-        var onConnectStub, emailAddress;
+        var onConnectStub, emailAddress, keysWithPubKey;
 
         beforeEach(function() {
             emailAddress = 'alice@bob.com';
+            keysWithPubKey = {
+                publicKey: {}
+            };
 
             // onConnect
             onConnectStub = sinon.stub(controller, 'onConnect');
@@ -146,10 +152,22 @@ describe('App Controller unit tests', function() {
             onConnectStub.restore();
         });
 
-        it('should fail due to error in storage initialization', function(done) {
-            devicestorageStub.init.withArgs(undefined).yields({});
+        it('should fail due to malformed email address', function(done) {
+            controller.init({
+                emailAddress: 'ishallfail'
+            }, function(err, keypair) {
+                expect(err).to.exist;
+                expect(keypair).to.not.exist;
+                done();
+            });
+        });
 
-            controller.init({}, function(err, keypair) {
+        it('should fail due to error in storage initialization', function(done) {
+            devicestorageStub.init.withArgs(emailAddress).yields(new Error());
+
+            controller.init({
+                emailAddress: emailAddress
+            }, function(err, keypair) {
                 expect(err).to.exist;
                 expect(keypair).to.not.exist;
                 expect(devicestorageStub.init.calledOnce).to.be.true;
@@ -160,7 +178,7 @@ describe('App Controller unit tests', function() {
 
         it('should fail due to error in update handler', function(done) {
             devicestorageStub.init.yields();
-            updateHandlerStub.update.yields({});
+            updateHandlerStub.update.yields(new Error());
 
             controller.init({
                 emailAddress: emailAddress
@@ -169,6 +187,42 @@ describe('App Controller unit tests', function() {
                 expect(keypair).to.not.exist;
                 expect(updateHandlerStub.update.calledOnce).to.be.true;
                 expect(devicestorageStub.init.calledOnce).to.be.true;
+                done();
+            });
+        });
+
+        it('should fail due to error in getUserKeyPair', function(done) {
+            devicestorageStub.init.yields();
+            updateHandlerStub.update.yields();
+            keychainStub.getUserKeyPair.yields(new Error());
+
+            controller.init({
+                emailAddress: emailAddress
+            }, function(err, keypair) {
+                expect(err).to.exist;
+                expect(keypair).to.not.exist;
+                expect(updateHandlerStub.update.calledOnce).to.be.true;
+                expect(devicestorageStub.init.calledOnce).to.be.true;
+                expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
+                done();
+            });
+        });
+
+        it('should fail due to error in refreshKeyForUserId', function(done) {
+            devicestorageStub.init.yields();
+            updateHandlerStub.update.yields();
+            keychainStub.getUserKeyPair.yields(null, keysWithPubKey);
+            keychainStub.refreshKeyForUserId.yields(new Error());
+
+            controller.init({
+                emailAddress: emailAddress
+            }, function(err, keypair) {
+                expect(err).to.exist;
+                expect(keypair).to.not.exist;
+                expect(updateHandlerStub.update.calledOnce).to.be.true;
+                expect(devicestorageStub.init.calledOnce).to.be.true;
+                expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
+                expect(keychainStub.refreshKeyForUserId.calledOnce).to.be.true;
                 done();
             });
         });
@@ -176,7 +230,9 @@ describe('App Controller unit tests', function() {
         it('should fail due to error in emailDao.init', function(done) {
             devicestorageStub.init.yields();
             updateHandlerStub.update.yields();
-            emailDaoStub.init.yields({});
+            keychainStub.getUserKeyPair.yields(null, keysWithPubKey);
+            keychainStub.refreshKeyForUserId.yields();
+            emailDaoStub.init.yields(new Error());
 
             controller.init({
                 emailAddress: emailAddress
@@ -184,25 +240,41 @@ describe('App Controller unit tests', function() {
                 expect(err).to.exist;
                 expect(keypair).to.not.exist;
                 expect(updateHandlerStub.update.calledOnce).to.be.true;
-                expect(emailDaoStub.init.calledOnce).to.be.true;
                 expect(devicestorageStub.init.calledOnce).to.be.true;
+                expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
+                expect(keychainStub.refreshKeyForUserId.calledOnce).to.be.true;
+                expect(emailDaoStub.init.calledOnce).to.be.true;
                 done();
             });
         });
 
-        it('should work and return a keypair', function(done) {
+        it('should work and not return a keypair', function(done) {
             devicestorageStub.init.withArgs(emailAddress).yields();
-            emailDaoStub.init.yields(null, {});
             updateHandlerStub.update.yields();
+            keychainStub.getUserKeyPair.withArgs(emailAddress).yields(null, keysWithPubKey);
+            keychainStub.refreshKeyForUserId.withArgs({
+                userId: emailAddress,
+                overridePermission: true
+            }).yields();
+            emailDaoStub.init.withArgs({
+                account: {
+                    realname: undefined,
+                    emailAddress: emailAddress,
+                    asymKeySize: config.asymKeySize
+                }
+            }).yields();
 
             controller.init({
                 emailAddress: emailAddress
             }, function(err, keypair) {
                 expect(err).to.not.exist;
-                expect(keypair).to.exist;
+                expect(keypair.publicKey).to.not.exist;
                 expect(updateHandlerStub.update.calledOnce).to.be.true;
-                expect(emailDaoStub.init.calledOnce).to.be.true;
                 expect(devicestorageStub.init.calledOnce).to.be.true;
+                expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
+                expect(keychainStub.refreshKeyForUserId.calledOnce).to.be.true;
+                expect(emailDaoStub.init.calledOnce).to.be.true;
+
                 done();
             });
         });

@@ -364,7 +364,9 @@ describe('Mail List controller unit test', function() {
                 }
             };
 
-            keychainMock.refreshKeyForUserId.withArgs(mail.from[0].address).yields();
+            keychainMock.refreshKeyForUserId.withArgs({
+                userId: mail.from[0].address
+            }).yields();
 
             scope.select(mail);
 
@@ -397,7 +399,7 @@ describe('Mail List controller unit test', function() {
                 }
             };
 
-            keychainMock.refreshKeyForUserId.withArgs(mail.from[0].address).yields();
+            keychainMock.refreshKeyForUserId.withArgs({userId: mail.from[0].address}).yields();
 
             scope.select(mail);
 

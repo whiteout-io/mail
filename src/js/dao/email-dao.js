@@ -1,7 +1,6 @@
 'use strict';
 
-var util = require('crypto-lib').util,
-    config = require('../app-config').config,
+var config = require('../app-config').config,
     str = require('../app-config').string;
 
 //
@@ -65,60 +64,21 @@ var EmailDAO = function(keychain, pgp, devicestorage, pgpbuilder, mailreader) {
 
 /**
  * Initializes the email dao:
- * - validates the email address
- * - retrieves the user's key pair (if available)
+ * - assigns _account
  * - initializes _account.folders with the content from memory
  *
- * @param {Object} options.account The account
  * @param {String} options.account.emailAddress The user's id
+ * @param {String} options.account.realname The user's id
  * @param {Function} callback(error, keypair) Invoked with the keypair or error information when the email dao is initialized
  */
 EmailDAO.prototype.init = function(options, callback) {
-    var self = this,
-        keypair;
+    this._account = options.account;
+    this._account.busy = 0; // > 0 triggers the spinner
+    this._account.online = false;
+    this._account.loggingIn = false;
 
-    self._account = options.account;
-    self._account.busy = 0; // triggers the spinner
-    self._account.online = false;
-    self._account.loggingIn = false;
-
-    // validate email address
-    var emailAddress = self._account.emailAddress;
-    if (!util.validateEmailAddress(emailAddress)) {
-        callback({
-            errMsg: 'The user email address must be specified!'
-        });
-        return;
-    }
-
-    // init keychain and then crypto module
-    initKeychain();
-
-    function initKeychain() {
-        // call getUserKeyPair to read/sync keypair with devicestorage/cloud
-        self._keychain.getUserKeyPair(emailAddress, function(err, storedKeypair) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            keypair = storedKeypair;
-            initFolders();
-        });
-    }
-
-    function initFolders() {
-        // try init folders from memory, since imap client not initiated yet
-        self._initFoldersFromDisk(function(err) {
-            // dont handle offline case this time
-            if (err && err.code !== 42) {
-                callback(err);
-                return;
-            }
-
-            callback(null, keypair);
-        });
-    }
+    // init folders from memory
+    this._initFoldersFromDisk(callback);
 };
 
 /**

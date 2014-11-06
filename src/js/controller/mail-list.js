@@ -71,7 +71,9 @@ var MailListCtrl = function($scope, $routeParams) {
         }
         firstSelect = false;
 
-        keychainDao.refreshKeyForUserId(email.from[0].address, onKeyRefreshed);
+        keychainDao.refreshKeyForUserId({
+            userId: email.from[0].address
+        }, onKeyRefreshed);
 
         function onKeyRefreshed(err) {
             if (err) {

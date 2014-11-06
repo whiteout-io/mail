@@ -148,32 +148,14 @@ describe('Email DAO unit tests', function() {
             initFoldersStub = sinon.stub(dao, '_initFoldersFromDisk');
         });
 
-        it('should initialize folders and return keypair', function(done) {
-            keychainStub.getUserKeyPair.withArgs(emailAddress).yieldsAsync(null, mockKeyPair);
+        it('should initialize folders', function(done) {
             initFoldersStub.yieldsAsync();
 
             dao.init({
                 account: account
-            }, function(err, keypair) {
+            }, function(err) {
                 expect(err).to.not.exist;
-                expect(keypair).to.exist;
-                expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
                 expect(initFoldersStub.calledOnce).to.be.true;
-
-                done();
-            });
-        });
-
-        it('should fail when keychain errors', function(done) {
-            keychainStub.getUserKeyPair.yieldsAsync({});
-
-            dao.init({
-                account: account
-            }, function(err, keypair) {
-                expect(err).to.exist;
-                expect(keypair).to.not.exist;
-                expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
-                expect(initFoldersStub.called).to.be.false;
 
                 done();
             });
