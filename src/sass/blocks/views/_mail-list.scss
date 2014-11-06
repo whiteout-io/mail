@@ -256,7 +256,7 @@
             font-size: $font-size-bigger;
             font-weight: normal;
             line-height: 1;
-            margin-bottom: 8px;
+            padding-bottom: 8px;
         }
         &__subject {
             @include scut-truncate;
@@ -264,7 +264,7 @@
             line-height: $font-size-small;
             font-weight: bold;
             padding-right: 90px; // to make room for time
-            margin-bottom: 8px;
+            padding-bottom: 8px;
         }
         &__time {
             @include scut-truncate;
