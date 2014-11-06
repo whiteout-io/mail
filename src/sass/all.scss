@@ -19,9 +19,6 @@
 @import "utilities/responsive";
 @import "utilities/others";
 
-// Views (TODO: refactor to BEM)
-@import "views/contacts";
-
 // Blocks
 // (BEM-like Naming, see http://cssguidelin.es/#bem-like-naming)
 
@@ -46,3 +43,4 @@
 @import "blocks/views/read";
 @import "blocks/views/write";
 @import "blocks/views/account";
+@import "blocks/views/contacts";

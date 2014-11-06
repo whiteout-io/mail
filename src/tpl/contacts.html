@@ -5,47 +5,42 @@
       <svg><use xlink:href="#icon-close" /><title>Close</title></svg>
     </button>
   </header>
-
   <div class="lightbox__content">
-    <div class="view-contacts">
+    <input class="u-hide-visually" id="keyfile-input" type="file" multiple accept=".asc" keyfile-input>
+    <div class="form-input-with-button u-gap-bottom">
+      <input class="input-text" type="text" placeholder="Search..." ng-model="searchText">
+      <button class="btn" ng-class="{'btn--invalid': sendBtnSecure === false}" keyfile-btn>Import keys</button>
+    </div>
 
-      <div class="key-controls">
-        <div class="key-controls-search">
-          <input class="input-text" type="text" placeholder="Search..." ng-model="searchText">
+    <p class="typo-paragraph u-text-center" ng-show="!keys.length">
+      There are no contacts, yet.
+    </p>
+
+    <ul class="contacts">
+      <li class="contacts__contact" ng-repeat="key in keys | orderBy:'userId' | filter:searchText"
+        ng-class="{ 'contacts__contact--open': key.open }">
+        <div class="contacts__delete">
+          <button class="btn-icon-very-light" wo-touch="removeKey(key)">
+            <svg><use xlink:href="#icon-close" /><title>Delete</title></svg>
+          </button>
         </div>
-        <div class="key-controls-import">
-          <input id="keyfile-input" type="file" multiple accept=".asc" keyfile-input>
-          <button class="btn" ng-class="{'btn--invalid': sendBtnSecure === false}" keyfile-btn>Import keys</button>
-        </div>
-      </div>
 
-      <div class="key-list">
-        <div class="key-list-scroll">
-          <table>
-            <tr>
-              <th>Key ID</th>
-              <th>Email</th>
-              <th>Created</th>
-              <th>Size</th>
-            </tr>
-            <tr ng-repeat="key in keys | orderBy:'userId' | filter:searchText">
-              <td class="hover" ng-mouseover="getFingerprint(key)" wo-tooltip="#fingerprint-contact">{{key._id.slice(8)}}</td>
-              <td>{{key.userId}}</td>
-              <td>{{key.created | date:'mediumDate'}}</td>
-              <td>{{key.bitSize}} bit</td>
-              <td><button class="remove" wo-touch="removeKey(key)"><svg><use xlink:href="#icon-close" /><title>Delete</title></svg></button></td>
-            </tr>
-          </table>
-        </div><!--/.key-list-scroll-->
+        <h3 class="contacts__title" wo-touch="key.open = !key.open">{{key.userId}}</h3>
+        <p class="contacts__short-description">
+          {{key._id.slice(8)}}
+        </p>
+        <dl class="contacts__long-description">
+          <dt>Fingerprint</dt>
+          <dd>{{key.fingerprint}}</dd>
 
-        <!-- tooltips -->
-        <div id="fingerprint-contact" class="tooltip">
-          <div class="tooltip__title">Fingerprint</div>
-          <div class="tooltip__content">{{fingerprint}}</div>
-        </div><!--/.tooltip-->
-      </div><!--/.key-list-->
+          <dt>Size</dt>
+          <dd>{{key.bitSize}} bit</dd>
 
-    </div><!-- /.view-contacts -->
+          <dt>Created</dt>
+          <dd>{{key.created | date:'mediumDate'}}</dd>
+        </dl>
+      </li>
+    </ul>
   </div>
 
 </div>
