@@ -119,6 +119,9 @@ ngModule.directive('woDropdown', function($document, $timeout) {
 
         elm.on('touchstart click', toggle);
 
+        // close if user clicks button in dropdown list
+        dropdown.on('touchstart.woDropdown click.woDropdown', 'button', disappear);
+
         // close if user clicks outside of dropdown and elm
         $document.on('touchstart.woDropdown click.woDropdown', function(e) {
             var t = angular.element(e.target);
@@ -132,6 +135,7 @@ ngModule.directive('woDropdown', function($document, $timeout) {
         // remove event listener on document
         scope.$on('$destroy', function() {
             $document.off('touchstart.woDropdown click.woDropdown');
+            dropdown.off('touchstart.woDropdown click.woDropdown');
         });
     };
 });
