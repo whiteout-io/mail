@@ -7,28 +7,19 @@
   </header>
 
   <div class="lightbox__content">
-    <div class="account">
-      <table>
-        <tbody>
-          <tr>
-            <td>Email</td>
-            <td>{{eMail}}</td>
-          </tr>
-          <tr>
-            <td>PGP Key ID</td>
-            <td>{{keyId}} (<a href="https://whiteout.io/revocation.html" title="Click to reset your account." target="_blank">Revoke key</a>)</td>
-          </tr>
-          <tr>
-            <td>PGP Fingerprint</td>
-            <td><a href="{{publicKeyUrl}}" title="Click to share your public key." target="_blank">{{fingerprint}}</a></td>
-          </tr>
-          <tr>
-            <td>Key Size (RSA)</td>
-            <td>{{keysize}} bit</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <dl class="account">
+      <dt>Email</dt>
+      <dd>{{eMail}}</dd>
+
+      <dt>PGP Key ID</dt>
+      <dd>{{keyId}} (<a href="https://whiteout.io/revocation.html" title="Click to reset your account." target="_blank">Revoke key</a>)</dd>
+
+      <dt>PGP Fingerprint</dt>
+      <dd><a href="{{publicKeyUrl}}" title="Click to share your public key." target="_blank">{{fingerprint}}</a></dd>
+
+      <dt>Key Size (RSA)</dt>
+      <dd>{{keysize}} bit</dd>
+    </dl>
   </div>
 
   <footer class="lightbox__controls">

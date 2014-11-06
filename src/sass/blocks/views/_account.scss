@@ -1,20 +1,42 @@
 .account {
-    // TODO: remove table layout -> use <dl>
-    table {
-        margin: 50px auto 60px;
-        td {
-            padding-top: 15px;
-            text-align: left;
-            &:first-child {
-                text-align: right;
-                padding-right: 15px;
-                font-weight: bold;
-            }
+    margin: 0;
+    text-align: center;
+    dt {
+        font-weight: bold;
+    }
+    dd {
+        margin: 0 0 10px;
+    }
+    a {
+        color: $color-main;
+        text-decoration: underline;
+    }
 
-            a {
-                color: $color-main;
-                text-decoration: underline;
-            }
+    & > :last-child {
+        margin-bottom: 0;
+    }
+
+    @include respond-to(md) {
+        @include scut-clearfix;
+
+        dt ~ dt,
+        dd ~ dd {
+            margin: 10px 0 0;
+        }
+
+        dt {
+            float: left;
+            padding-right: 0.5em;
+            text-align: right;
+            width: 50%;
+            margin: 0;
+        }
+        dd {
+            float: right;
+            padding-left: 0.5em;
+            text-align: left;
+            width: 50%;
+            margin: 0;
         }
     }
 }
