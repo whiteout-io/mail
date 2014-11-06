@@ -85,7 +85,9 @@ describe('Keychain DAO unit tests', function() {
         it('should not find a key', function(done) {
             getPubKeyStub.yields();
 
-            keychainDao.refreshKeyForUserId(testUser, function(err, key) {
+            keychainDao.refreshKeyForUserId({
+                userId: testUser
+            }, function(err, key) {
                 expect(err).to.not.exist;
                 expect(key).to.not.exist;
 
@@ -97,7 +99,9 @@ describe('Keychain DAO unit tests', function() {
             getPubKeyStub.yields(null, oldKey);
             pubkeyDaoStub.get.withArgs(oldKey._id).yields(null, oldKey);
 
-            keychainDao.refreshKeyForUserId(testUser, function(err, key) {
+            keychainDao.refreshKeyForUserId({
+                userId: testUser
+            }, function(err, key) {
                 expect(err).to.not.exist;
                 expect(key).to.to.equal(oldKey);
 
@@ -121,7 +125,33 @@ describe('Keychain DAO unit tests', function() {
             lawnchairDaoStub.remove.withArgs('publickey_' + oldKey._id).yields();
             lawnchairDaoStub.persist.withArgs('publickey_' + newKey._id, newKey).yields();
 
-            keychainDao.refreshKeyForUserId(testUser, function(err, key) {
+            keychainDao.refreshKeyForUserId({
+                userId: testUser
+            }, function(err, key) {
+                expect(err).to.not.exist;
+                expect(key).to.equal(newKey);
+
+                expect(getPubKeyStub.calledOnce).to.be.true;
+                expect(pubkeyDaoStub.get.calledOnce).to.be.true;
+                expect(pubkeyDaoStub.getByUserId.calledOnce).to.be.true;
+                expect(lawnchairDaoStub.remove.calledOnce).to.be.true;
+                expect(lawnchairDaoStub.persist.calledOnce).to.be.true;
+
+                done();
+            });
+        });
+
+        it('should update key without approval', function(done) {
+            getPubKeyStub.yields(null, oldKey);
+            pubkeyDaoStub.get.withArgs(oldKey._id).yields();
+            pubkeyDaoStub.getByUserId.withArgs(testUser).yields(null, newKey);
+            lawnchairDaoStub.remove.withArgs('publickey_' + oldKey._id).yields();
+            lawnchairDaoStub.persist.withArgs('publickey_' + newKey._id, newKey).yields();
+
+            keychainDao.refreshKeyForUserId({
+                userId: testUser,
+                overridePermission: true
+            }, function(err, key) {
                 expect(err).to.not.exist;
                 expect(key).to.equal(newKey);
 
@@ -146,7 +176,9 @@ describe('Keychain DAO unit tests', function() {
             };
             lawnchairDaoStub.remove.withArgs('publickey_' + oldKey._id).yields();
 
-            keychainDao.refreshKeyForUserId(testUser, function(err, key) {
+            keychainDao.refreshKeyForUserId({
+                userId: testUser
+            }, function(err, key) {
                 expect(err).to.not.exist;
                 expect(key).to.not.exist;
 
@@ -167,7 +199,9 @@ describe('Keychain DAO unit tests', function() {
                 code: 42
             });
 
-            keychainDao.refreshKeyForUserId(testUser, function(err, key) {
+            keychainDao.refreshKeyForUserId({
+                userId: testUser
+            }, function(err, key) {
                 expect(err).to.not.exist;
                 expect(key).to.to.equal(oldKey);
 
@@ -191,7 +225,9 @@ describe('Keychain DAO unit tests', function() {
                 cb(false);
             };
 
-            keychainDao.refreshKeyForUserId(testUser, function(err, key) {
+            keychainDao.refreshKeyForUserId({
+                userId: testUser
+            }, function(err, key) {
                 expect(err).to.not.exist;
                 expect(key).to.equal(oldKey);
 
@@ -208,7 +244,9 @@ describe('Keychain DAO unit tests', function() {
         it('should not remove manually imported key', function(done) {
             getPubKeyStub.yields(null, importedKey);
 
-            keychainDao.refreshKeyForUserId(testUser, function(err, key) {
+            keychainDao.refreshKeyForUserId({
+                userId: testUser
+            }, function(err, key) {
                 expect(err).to.not.exist;
                 expect(key).to.equal(importedKey);
 
@@ -225,7 +263,9 @@ describe('Keychain DAO unit tests', function() {
                 code: 42
             });
 
-            keychainDao.refreshKeyForUserId(testUser, function(err, key) {
+            keychainDao.refreshKeyForUserId({
+                userId: testUser
+            }, function(err, key) {
                 expect(err).to.not.exist;
                 expect(key).to.to.equal(oldKey);
 
@@ -251,7 +291,9 @@ describe('Keychain DAO unit tests', function() {
             lawnchairDaoStub.remove.withArgs('publickey_' + oldKey._id).yields();
             lawnchairDaoStub.persist.yields({});
 
-            keychainDao.refreshKeyForUserId(testUser, function(err, key) {
+            keychainDao.refreshKeyForUserId({
+                userId: testUser
+            }, function(err, key) {
                 expect(err).to.exist;
                 expect(key).to.not.exist;
 
@@ -275,7 +317,9 @@ describe('Keychain DAO unit tests', function() {
             };
             lawnchairDaoStub.remove.yields({});
 
-            keychainDao.refreshKeyForUserId(testUser, function(err, key) {
+            keychainDao.refreshKeyForUserId({
+                userId: testUser
+            }, function(err, key) {
                 expect(err).to.exist;
                 expect(key).to.not.exist;
 
@@ -301,7 +345,9 @@ describe('Keychain DAO unit tests', function() {
             lawnchairDaoStub.remove.withArgs('publickey_' + oldKey._id).yields();
             lawnchairDaoStub.persist.yields({});
 
-            keychainDao.refreshKeyForUserId(testUser, function(err, key) {
+            keychainDao.refreshKeyForUserId({
+                userId: testUser
+            }, function(err, key) {
                 expect(err).to.exist;
                 expect(key).to.not.exist;
 
@@ -319,7 +365,9 @@ describe('Keychain DAO unit tests', function() {
             getPubKeyStub.yields(null, oldKey);
             pubkeyDaoStub.get.withArgs(oldKey._id).yields({});
 
-            keychainDao.refreshKeyForUserId(testUser, function(err, key) {
+            keychainDao.refreshKeyForUserId({
+                userId: testUser
+            }, function(err, key) {
                 expect(err).to.exist;
                 expect(key).to.not.exist;
 

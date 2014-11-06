@@ -192,7 +192,9 @@ describe('Write controller unit test', function() {
                 address: 'asds@example.com'
             };
 
-            keychainMock.refreshKeyForUserId.withArgs(recipient.address).yields({
+            keychainMock.refreshKeyForUserId.withArgs({
+                userId: recipient.address
+            }).yields({
                 errMsg: '404 not found yadda yadda'
             });
 
@@ -212,7 +214,9 @@ describe('Write controller unit test', function() {
                 address: 'asdf@example.com'
             };
 
-            keychainMock.refreshKeyForUserId.withArgs(recipient.address).yields(null, {
+            keychainMock.refreshKeyForUserId.withArgs({
+                userId: recipient.address
+            }).yields(null, {
                 userId: 'asdf@example.com'
             });
 
@@ -240,7 +244,9 @@ describe('Write controller unit test', function() {
                 }]
             };
 
-            keychainMock.refreshKeyForUserId.withArgs(recipient.address).yields(null, key);
+            keychainMock.refreshKeyForUserId.withArgs({
+                userId: recipient.address
+            }).yields(null, key);
 
             scope.$digest = function() {
                 expect(recipient.key).to.deep.equal(key);

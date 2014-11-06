@@ -81,11 +81,14 @@ KeychainDAO.prototype.getPublicKeys = function(ids, callback) {
 
 /**
  * Checks for public key updates of a given user id
- * @param {String} userId The user id (email address) for which to check the key
+ * @param {String} options.userId The user id (email address) for which to check the key
+ * @param {String} options.overridePermission (optional) Indicates if the update should happen automatically (true) or with the user being queried (false). Defaults to false
  * @param {Function} callback(error, key) Invoked when the key has been updated or an error occurred
  */
-KeychainDAO.prototype.refreshKeyForUserId = function(userId, callback) {
-    var self = this;
+KeychainDAO.prototype.refreshKeyForUserId = function(options, callback) {
+    var self = this,
+        userId = options.userId,
+        overridePermission = options.overridePermission;
 
     // get the public key corresponding to the userId
     self.getReceiverPublicKey(userId, function(err, localKey) {
@@ -146,10 +149,18 @@ KeychainDAO.prototype.refreshKeyForUserId = function(userId, callback) {
             }
 
             // the public key has changed, we need to ask for permission to update the key
-            self.requestPermissionForKeyUpdate({
-                userId: userId,
-                newKey: newKey
-            }, function(granted) {
+            if (overridePermission) {
+                // don't query the user, update the public key right away
+                onPermissionReceived(true);
+            } else {
+                // query the user if the public key should be updated
+                self.requestPermissionForKeyUpdate({
+                    userId: userId,
+                    newKey: newKey
+                }, onPermissionReceived);
+            }
+
+            function onPermissionReceived(granted) {
                 if (!granted) {
                     // permission was not given to update the key, so don't overwrite the old one!
                     callback(null, localKey);
@@ -169,8 +180,7 @@ KeychainDAO.prototype.refreshKeyForUserId = function(userId, callback) {
                         callback(err, err ? undefined : newKey);
                     });
                 });
-            });
-
+            }
         });
     }
 };

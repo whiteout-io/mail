@@ -49,12 +49,26 @@ var LoginCtrl = function($scope, $location) {
     }
 
     function redirect(availableKeys) {
-        // redirect if needed
-        if (typeof availableKeys === 'undefined') {
-            // no public key available, start onboarding process
-            goTo('/login-initial');
+        if (availableKeys && availableKeys.publicKey && availableKeys.privateKey) {
+            // public and private key available, try empty passphrase
+            appController._emailDao.unlock({
+                keypair: availableKeys,
+                passphrase: undefined
+            }, function(err) {
+                if (err) {
+                    goTo('/login-existing');
+                    return;
+                }
 
-        } else if (availableKeys && !availableKeys.privateKey) {
+                appController._auth.storeCredentials(function(err) {
+                    if (err) {
+                        return $scope.onError(err);
+                    }
+
+                    goTo('/desktop');
+                });
+            });
+        } else if (availableKeys && availableKeys.publicKey && !availableKeys.privateKey) {
             // check if private key is synced
             appController._keychain.requestPrivateKeyDownload({
                 userId: availableKeys.publicKey.userId,
@@ -74,26 +88,9 @@ var LoginCtrl = function($scope, $location) {
                 // no private key, import key file
                 goTo('/login-new-device');
             });
-
         } else {
-            // public and private key available, try empty passphrase
-            appController._emailDao.unlock({
-                keypair: availableKeys,
-                passphrase: undefined
-            }, function(err) {
-                if (err) {
-                    goTo('/login-existing');
-                    return;
-                }
-
-                appController._auth.storeCredentials(function(err) {
-                    if (err) {
-                        return $scope.onError(err);
-                    }
-
-                    goTo('/desktop');
-                });
-            });
+            // no public key available, start onboarding process
+            goTo('/login-initial');
         }
     }
 

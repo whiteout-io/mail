@@ -229,7 +229,9 @@ var WriteCtrl = function($scope, $filter, $q) {
         if (keychainDao) {
             // check if to address is contained in known public keys
             // when we write an email, we always need to work with the latest keys available
-            keychainDao.refreshKeyForUserId(recipient.address, function(err, key) {
+            keychainDao.refreshKeyForUserId({
+                userId: recipient.address
+            }, function(err, key) {
                 if (err) {
                     $scope.onError(err);
                     return;

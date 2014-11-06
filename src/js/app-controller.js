@@ -7,8 +7,9 @@
 var axe = require('axe-logger'),
     Auth = require('./bo/auth'),
     PGP = require('./crypto/pgp'),
-    PgpMailer = require('pgpmailer'),
     OAuth = require('./util/oauth'),
+    PgpMailer = require('pgpmailer'),
+    util = require('crypto-lib').util,
     PgpBuilder = require('pgpbuilder'),
     OutboxBO = require('./bo/outbox'),
     mailreader = require('mailreader'),
@@ -121,46 +122,80 @@ ctrl.checkForUpdate = function() {
 };
 
 /**
- * Instanciate the mail email data access object and its dependencies. Login to imap on init.
+ * Fire up the database, retrieve the available keys for the user and initialize the email data access object
  */
 ctrl.init = function(options, callback) {
-    // init user's local database
-    ctrl._userStorage.init(options.emailAddress, function(err) {
-        if (err) {
-            callback(err);
-            return;
-        }
+    // account information for the email dao
+    var account = {
+        realname: options.realname,
+        emailAddress: options.emailAddress,
+        asymKeySize: config.asymKeySize
+    };
 
-        // Migrate the databases if necessary
-        ctrl._updateHandler.update(onUpdate);
-    });
+    // Pre-Flight check: don't even start to initialize stuff if the email address is not valid
+    if (!util.validateEmailAddress(options.emailAddress)) {
+        return callback(new Error('The user email address is invalid!'));
+    }
 
-    function onUpdate(err) {
-        if (err) {
-            callback({
-                errMsg: 'Update failed, please reinstall the app.',
-                err: err
-            });
-            return;
-        }
+    prepareDatabase();
 
-        // account information for the email dao
-        var account = {
-            realname: options.realname,
-            emailAddress: options.emailAddress,
-            asymKeySize: config.asymKeySize
-        };
-
-        // init email dao
-        ctrl._emailDao.init({
-            account: account
-        }, function(err, keypair) {
+    // Pre-Flight check: initialize and prepare user's local database
+    function prepareDatabase() {
+        ctrl._userStorage.init(options.emailAddress, function(err) {
             if (err) {
-                callback(err);
+                return callback(err);
+            }
+
+            // Migrate the databases if necessary
+            ctrl._updateHandler.update(function(err) {
+                if (err) {
+                    return callback(new Error('Updating the internal database failed. Please reinstall the app! Reason: ' + err.message));
+                }
+
+                prepareKeys();
+            });
+        });
+    }
+
+    // retrieve keypair fom devicestorage/cloud, refresh public key if signup was incomplete before
+    function prepareKeys() {
+        ctrl._keychain.getUserKeyPair(options.emailAddress, function(err, keys) {
+            if (err) {
+                return callback(err);
+            }
+
+            // this is either a first start on a new device, OR a subsequent start without completing the signup,
+            // since we can't differenciate those cases here, do a public key refresh because it might be outdated
+            if (keys && keys.publicKey && !keys.privateKey) {
+                ctrl._keychain.refreshKeyForUserId({
+                    userId: options.emailAddress,
+                    overridePermission: true
+                }, function(err, publicKey) {
+                    if (err) {
+                        return callback(err);
+                    }
+
+                    initEmailDao({
+                        publicKey: publicKey
+                    });
+                });
                 return;
             }
 
-            callback(null, keypair);
+            // either signup was complete or no pubkey is available, so we're good here.
+            initEmailDao(keys);
+        });
+    }
+
+    function initEmailDao(keys) {
+        ctrl._emailDao.init({
+            account: account
+        }, function(err) {
+            if (err) {
+                return callback(err);
+            }
+
+            callback(null, keys);
         });
     }
 };
