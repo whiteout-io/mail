@@ -5,11 +5,11 @@ var OutboxBO = require('../../src/js/bo/outbox'),
     EmailDAO = require('../../src/js/dao/email-dao'),
     DeviceStorageDAO = require('../../src/js/dao/devicestorage-dao');
 
-chai.Assertion.includeStack = true;
-
 describe('Outbox Business Object unit test', function() {
     var outbox, emailDaoStub, devicestorageStub, keychainStub,
         dummyUser = 'spiderpig@springfield.com';
+
+    chai.config.includeStack = true;
 
     beforeEach(function() {
         emailDaoStub = sinon.createStubInstance(EmailDAO);

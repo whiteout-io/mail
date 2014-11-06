@@ -8,7 +8,7 @@ var mocks = angular.mock,
     appController = require('../../src/js/app-controller'),
     notification = require('../../src/js/util/notification');
 
-chai.Assertion.includeStack = true;
+chai.config.includeStack = true;
 
 describe('Mail List controller unit test', function() {
     var scope, ctrl, origEmailDao, emailDaoMock, keychainMock, deviceStorageMock,

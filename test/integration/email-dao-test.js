@@ -14,7 +14,7 @@ var ImapClient = require('imap-client'),
 
 describe('Email DAO integration tests', function() {
     this.timeout(100000);
-    chai.Assertion.includeStack = true;
+    chai.config.includeStack = true;
 
     var emailDao, imapClient, imapMessages, imapFolders, imapServer, smtpServer, smtpClient, userStorage,
         mockKeyPair, inbox, spam;
@@ -321,11 +321,13 @@ describe('Email DAO integration tests', function() {
             it('should receive new messages', function(done) {
                 emailDao.onIncomingMessage = function(messages) {
                     expect(messages.length).to.equal(1);
-                    expect(messages[0].answered).to.be.false;
+                    expect(messages[0].answered).to.be.true;
+                    expect(messages[0].flagged).to.be.true;
+                    expect(messages[0].unread).to.be.false;
                     done();
                 };
 
-                imapServer.appendMessage('INBOX', ['$My$Flag'], false, 'Message-id: <n1>\r\nSubject: new message\r\n\r\nhello world!');
+                imapServer.appendMessage('INBOX', ['\\Flagged', '\\Seen', '\\Answered'], false, 'Message-id: <n1>\r\nSubject: new message\r\n\r\nhello world!');
             });
 
             it('should delete a message', function(done) {
@@ -391,6 +393,7 @@ describe('Email DAO integration tests', function() {
                 var message = inbox.messages[1];
                 message.unread = false;
                 message.answered = true;
+                message.flagged = true;
 
                 emailDao.setFlags({
                     folder: inbox,

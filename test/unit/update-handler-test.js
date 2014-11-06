@@ -9,7 +9,7 @@ var DeviceStorageDAO = require('../../src/js/dao/devicestorage-dao'),
 describe('UpdateHandler', function() {
     var updateHandler, appConfigStorageStub, authStub, userStorageStub, origDbVersion;
 
-    chai.Assertion.includeStack = true;
+    chai.config.includeStack = true;
 
     beforeEach(function() {
         origDbVersion = cfg.dbVersion;

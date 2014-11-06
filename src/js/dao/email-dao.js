@@ -545,7 +545,8 @@ EmailDAO.prototype.setFlags = function(options, callback) {
             folder: folder,
             uid: options.message.uid,
             unread: options.message.unread,
-            answered: options.message.answered
+            answered: options.message.answered,
+            flagged: options.message.flagged
         }, function(err) {
             if (err) {
                 done(err);
@@ -572,6 +573,7 @@ EmailDAO.prototype.setFlags = function(options, callback) {
             // set the flags
             var storedMessage = storedMessages[0];
             storedMessage.unread = options.message.unread;
+            storedMessage.flagged = options.message.flagged;
             storedMessage.answered = options.message.answered;
             storedMessage.modseq = options.message.modseq || storedMessage.modseq;
 

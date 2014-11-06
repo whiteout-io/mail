@@ -13,7 +13,7 @@ var mailreader = require('mailreader'),
 
 describe('Email DAO unit tests', function() {
     // show the stack trace when an error occurred
-    chai.Assertion.includeStack = true;
+    chai.config.includeStack = true;
 
     // SUT
     var dao;
@@ -717,7 +717,8 @@ describe('Email DAO unit tests', function() {
                 folder: inboxFolder,
                 uid: message.uid,
                 unread: message.unread,
-                answered: message.answered
+                answered: message.answered,
+                flagged: message.flagged
             }).yieldsAsync();
 
             localListStub.withArgs({
