@@ -27,5 +27,9 @@
 
 .spinner-block {
     text-align: center;
-    margin: 50px 0;
+    margin: 20px 0;
+
+    &--standalone {
+        margin: 50px 0;
+    }
 }
