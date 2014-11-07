@@ -7,6 +7,7 @@ exports.config = {
     cloudUrl: 'https://keys.whiteout.io',
     privkeyServerUrl: 'https://keychain.whiteout.io',
     adminUrl: 'https://admin-node.whiteout.io',
+    settingsUrl: 'https://settings.whiteout.io/autodiscovery/',
     wmailDomain: 'wmail.io',
     serverPrivateKeyId: 'EE342F0DDBB0F3BE',
     symKeySize: 256,

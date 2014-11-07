@@ -27,6 +27,8 @@ var SetCredentialsCtrl = function($scope, $location, $routeParams) {
 
     if ($scope.useOAuth) {
         $scope.emailAddress = auth.emailAddress;
+    } else if ($scope.state.emailAddress) {
+        $scope.emailAddress = $scope.state.emailAddress;
     }
 
     if ($scope.hasProviderPreset) {

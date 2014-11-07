@@ -1,12 +1,12 @@
-<footer class="page__footer">
-    <nav>
-        <ul>
-            <li><a href="https://whiteout.io/imprint.html">Imprint</a></li>
-            <li><a href="https://whiteout.io/privacy.html">Privacy</a></li>
-            <li><a href="https://whiteout.io/terms.html">Terms</a></li>
-            <li><a href="https://github.com/whiteout-io/mail-html5#license">License</a></li>
-            <li>Version: TODO</li>
-        </ul>
-    </nav>
-    &copy; 2014 Whiteout Networks GmbH
+<footer class="page__footer" ng-controller="AboutCtrl">
+  <nav>
+    <ul>
+      <li><a href="https://whiteout.io/imprint.html" target="_blank">Imprint</a></li>
+      <li><a href="https://whiteout.io/privacy-service.html" target="_blank">Privacy</a></li>
+      <li><a href="https://whiteout.io/terms.html" target="_blank">Terms</a></li>
+      <li><a href="https://github.com/whiteout-io/mail-html5#license" target="_blank">License</a></li>
+      <li>Version: {{version}}</li>
+    </ul>
+  </nav>
+  &copy; {{ date | date:'yyyy'}} Whiteout Networks GmbH
 </footer>
