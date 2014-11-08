@@ -22,49 +22,80 @@ var AddAccountCtrl = function($scope, $location, $routeParams, $http) {
 
         $http.get(url).success(function(config) {
             $scope.busy = false;
-            $scope.state.mailConfig = config;
-            $scope.state.emailAddress = $scope.emailAddress;
+            $scope.state.login = {
+                mailConfig: config,
+                emailAddress: $scope.emailAddress
+            };
 
-            // check for gmail/oauth server
             var hostname = config.imap.hostname;
-            if (hostname.match(/.gmail.com$/) || hostname.match(/.googlemail.com$/)) {
+            if (hostname && hostname.match(/.gmail.com$/) || hostname.match(/.googlemail.com$/)) {
+                // check for gmail/oauth support
                 $scope.connectToGoogle();
-                return;
+            } else if (config.imap.source === 'guess') {
+                // use standard password login... show config details due to guess
+                setCredentials('custom');
+            } else {
+                // use standard password login... hide config details
+                setCredentials();
             }
 
         }).error(function() {
             $scope.busy = false;
-            $scope.errMsg = 'Error getting IMAP settings for that email address!';
+            $scope.errMsg = 'Error fetching IMAP settings for that email address!';
         });
     };
 
     $scope.connectToGoogle = function() {
         // test for oauth support
         if (appCtrl._auth._oauth.isSupported()) {
-            // fetches the email address from the chrome identity api
-            appCtrl._auth.getOAuthToken(function(err) {
-                if (err) {
-                    return $scope.onError(err);
+            // ask user to use the platform's native OAuth api
+            $scope.onError({
+                title: 'Google Account Login',
+                message: 'You are signing into a Google account. Would you like to sign in with Google or just continue with a password login?',
+                positiveBtnStr: 'Google sign in',
+                negativeBtnStr: 'Password',
+                showNegativeBtn: true,
+                faqLink: 'https://github.com/whiteout-io/mail-html5/wiki/FAQ#how-does-sign-in-with-google-work',
+                callback: function(granted) {
+                    if (granted) {
+                        useOAuth();
+                    } else {
+                        setGmailPassword();
+                        $scope.$apply();
+                    }
                 }
-                $location.path('/login-set-credentials').search({
-                    provider: 'gmail'
-                });
-                $scope.$apply();
             });
-            return;
+        } else {
+            // no oauth support
+            setGmailPassword();
         }
-
-        // use normal user/password login
-        $location.path('/login-set-credentials').search({
-            provider: 'gmail'
-        });
     };
 
-    $scope.connectTo = function(provider) {
+    //
+    // Helper functions
+    //
+
+    function useOAuth() {
+        // fetches the email address from the chrome identity api
+        appCtrl._auth.getOAuthToken(function(err) {
+            if (err) {
+                return $scope.onError(err);
+            }
+            setCredentials('gmail');
+            $scope.$apply();
+        });
+    }
+
+    function setGmailPassword() {
+        // use normal user/password login
+        setCredentials('gmail');
+    }
+
+    function setCredentials(provider) {
         $location.path('/login-set-credentials').search({
             provider: provider
         });
-    };
+    }
 };
 
 module.exports = AddAccountCtrl;

@@ -4,14 +4,15 @@
       <img src="img/whiteout_logo.svg" alt="whiteout.io">
     </header>
     <main class="page__main">
-      <h2 class="typo-title">Connect email account</h2>
-      <p class="typo-paragraph">Connect the Whiteout Mail client to your existing email account via IMAP for easy to use end-to-end encryption. We cannot read your password or messages. <a href="https://github.com/whiteout-io/mail-html5/wiki/FAQ#encryption-and-security" target="_blank">Learn more</a></p>
+      <h2 class="typo-title">Connect your email account</h2>
+      <p class="typo-paragraph">Connect the Whiteout Mail client to your existing email account via IMAP for easy to use end-to-end encryption. We cannot read your password or messages. <a href="https://github.com/whiteout-io/mail-html5/wiki/FAQ#email-account-login" target="_blank">Learn more</a></p>
 
       <form class="form" name="form">
         <p class="form__error-message" ng-show="errMsg">{{errMsg}}</p>
-        <p class="form__error-message" ng-show="form.$invalid">Please fill out all required fields!</p>
+        <p class="form__error-message" ng-show="form.$invalid">Please enter a valid email address!</p>
         <div class="form__row">
-          <input type="email" ng-model="emailAddress" class="input-text input-text--big" placeholder="Enter email address" required>
+          <input type="email" ng-model="emailAddress" class="input-text input-text--big" placeholder="Enter email address" required
+          autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
         </div>
         <div class="spinner-block" ng-show="busy">
           <span class="spinner spinner--big"></span>
