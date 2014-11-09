@@ -57,7 +57,7 @@ PGP.prototype.getFingerprint = function(keyArmored) {
         throw new Error('No public key set for fingerprint generation!');
     }
 
-    // get local fingerpring
+    // get local fingerprint
     return fingerprint(this._publicKey);
 };
 
@@ -105,7 +105,7 @@ PGP.prototype.getKeyParams = function(keyArmored) {
 
     packet = key.primaryKey;
 
-    // read user names and email addresses
+    // read usernames and email addresses
     userIds = [];
     key.getUserIds().forEach(function(userId) {
         userIds.push({
@@ -291,7 +291,7 @@ PGP.prototype.encrypt = function(plaintext, publicKeysArmored, callback) {
  * Decrypts a ciphertext
  * @param  {String}   ciphertext       The encrypted PGP message block
  * @param  {String}   publicKeyArmored The public key used to sign the message
- * @param  {Function} callback(error, plaintext, signaturesValid) signaturesValid is undefined in case there are no signature, null in case there are signatures but the wrong public key or no key was used to verify, true if the signature was successfully verified, or false if the signataure verification failed.
+ * @param  {Function} callback(error, plaintext, signaturesValid) signaturesValid is undefined in case there are no signature, null in case there are signatures but the wrong public key or no key was used to verify, true if the signature was successfully verified, or false if the signature verification failed.
  */
 PGP.prototype.decrypt = function(ciphertext, publicKeyArmored, callback) {
     var publicKeys, message;
@@ -328,7 +328,7 @@ PGP.prototype.decrypt = function(ciphertext, publicKeyArmored, callback) {
  * Verifies a clearsigned message
  * @param {String} clearSignedText The clearsigned text, usually from a signed pgp/inline message
  * @param {String} publicKeyArmored The public key used to signed the message
- * @param  {Function} callback(error, signaturesValid) signaturesValid is undefined in case there are no signature, null in case there are signatures but the wrong public key or no key was used to verify, true if the signature was successfully verified, or false if the signataure verification failed.
+ * @param  {Function} callback(error, signaturesValid) signaturesValid is undefined in case there are no signature, null in case there are signatures but the wrong public key or no key was used to verify, true if the signature was successfully verified, or false if the signature verification failed.
  */
 PGP.prototype.verifyClearSignedMessage = function(clearSignedText, publicKeyArmored, callback) {
     var publicKeys,
@@ -364,8 +364,8 @@ PGP.prototype.verifyClearSignedMessage = function(clearSignedText, publicKeyArmo
  * Verifies a message with a detached signature
  * @param {String} message The signed text, usually from a signed pgp/mime message
  * @param {String} pgpSignature The detached signature, usually from a signed pgp/mime message
- * @param {String} publicKeyArmored The public key used to signed the message
- * @param  {Function} callback(error, signaturesValid) signaturesValid is undefined in case there are no signature, null in case there are signatures but the wrong public key or no key was used to verify, true if the signature was successfully verified, or false if the signataure verification failed.
+ * @param {String} publicKeyArmored The public key used to sign the message
+ * @param  {Function} callback(error, signaturesValid) signaturesValid is undefined in case there are no signature, null in case there are signatures but the wrong public key or no key was used to verify, true if the signature was successfully verified, or false if the signature verification failed.
  */
 PGP.prototype.verifySignedMessage = function(message, pgpSignature, publicKeyArmored, callback) {
     var publicKeys;
