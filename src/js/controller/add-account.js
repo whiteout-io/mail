@@ -20,7 +20,9 @@ var AddAccountCtrl = function($scope, $location, $routeParams, $http) {
         var domain = $scope.emailAddress.split('@')[1];
         var url = cfg.settingsUrl + domain;
 
-        $http.get(url).success(function(config) {
+        return $http.get(url).then(function(res) {
+            var config = res.data;
+
             $scope.busy = false;
             $scope.state.login = {
                 mailConfig: config,
@@ -39,7 +41,7 @@ var AddAccountCtrl = function($scope, $location, $routeParams, $http) {
                 setCredentials();
             }
 
-        }).error(function() {
+        }).catch(function() {
             $scope.busy = false;
             $scope.errMsg = 'Error fetching IMAP settings for that email address!';
         });
