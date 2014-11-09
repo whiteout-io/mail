@@ -9,10 +9,10 @@
 
       <form class="form" name="form">
         <p class="form__error-message" ng-show="errMsg">{{errMsg}}</p>
-        <p class="form__error-message" ng-show="form.$invalid">Please enter a valid email address!</p>
         <div class="form__row">
-          <input type="email" ng-model="emailAddress" class="input-text input-text--big" placeholder="Enter email address" required
-          autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+          <input type="email" ng-model="emailAddress" placeholder="Enter email address" required tabindex="1"
+            class="input-text input-text--big" ng-class="{'input-text--error': errMsg}"
+            autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
         </div>
         <div class="spinner-block" ng-show="busy">
           <span class="spinner spinner--big"></span>

@@ -11,16 +11,24 @@ var CreateAccountCtrl = function($scope, $location, $routeParams) {
 
     $scope.createWhiteoutAccount = function() {
         if ($scope.form.$invalid) {
+            $scope.errMsg = 'Please fill out all required fields!';
             return;
         }
 
         $scope.busy = true;
         $scope.errMsg = undefined; // reset error msg
-        $scope.emailAddress = $scope.user + '@' + cfg.wmailDomain;
+        var emailAddress = $scope.user + '@' + cfg.wmailDomain;
+
+        // set to state for next view
+        $scope.state.createAccount = {
+            emailAddress: emailAddress,
+            pass: $scope.pass,
+            realname: $scope.realname
+        };
 
         // call REST api
         appCtrl._adminDao.createUser({
-            emailAddress: $scope.emailAddress,
+            emailAddress: emailAddress,
             password: $scope.pass,
             phone: $scope.phone.replace(/\s+/g, ''), // remove spaces from the phone number
             betaCode: $scope.betaCode.toUpperCase()

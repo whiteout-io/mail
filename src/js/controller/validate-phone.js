@@ -10,21 +10,22 @@ var ValidatePhoneCtrl = function($scope, $location, $routeParams) {
     }
 
     $scope.validateUser = function() {
-        if ($scope.formValidate.$invalid) {
+        if ($scope.form.$invalid) {
+            $scope.errMsg = 'Please fill out all required fields!';
             return;
         }
 
-        $scope.busyValidate = true;
-        $scope.errMsgValidate = undefined; // reset error msg
+        $scope.busy = true;
+        $scope.errMsg = undefined; // reset error msg
 
         // verify user to REST api
         appCtrl._adminDao.validateUser({
-            emailAddress: $scope.emailAddress,
+            emailAddress: $scope.state.createAccount.emailAddress,
             token: $scope.token.toUpperCase()
         }, function(err) {
             if (err) {
-                $scope.busyValidate = false;
-                $scope.errMsgValidate = err.errMsg || err.message;
+                $scope.busy = false;
+                $scope.errMsg = err.errMsg || err.message;
                 $scope.$apply();
                 return;
             }
@@ -38,10 +39,10 @@ var ValidatePhoneCtrl = function($scope, $location, $routeParams) {
         // store credentials in memory
         appCtrl._auth.setCredentials({
             provider: 'wmail',
-            emailAddress: $scope.emailAddress,
-            username: $scope.emailAddress,
-            realname: $scope.realname,
-            password: $scope.pass,
+            emailAddress: $scope.state.createAccount.emailAddress,
+            username: $scope.state.createAccount.emailAddress,
+            realname: $scope.state.createAccount.realname,
+            password: $scope.state.createAccount.pass,
             imap: cfg.wmail.imap,
             smtp: cfg.wmail.smtp
         });

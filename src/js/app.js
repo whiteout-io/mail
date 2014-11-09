@@ -16,6 +16,8 @@ if (typeof window.applicationCache !== 'undefined') {
 
 var DialogCtrl = require('./controller/dialog'),
     AddAccountCtrl = require('./controller/add-account'),
+    CreateAccountCtrl = require('./controller/create-account'),
+    ValidatePhoneCtrl = require('./controller/validate-phone'),
     AccountCtrl = require('./controller/account'),
     SetPassphraseCtrl = require('./controller/set-passphrase'),
     PrivateKeyUploadCtrl = require('./controller/privatekey-upload'),
@@ -63,12 +65,12 @@ app.config(function($routeProvider) {
         controller: AddAccountCtrl
     });
     $routeProvider.when('/create-account', {
-        templateUrl: 'tpl/create-account.html'/*,
-        controller: AddAccountCtrl*/
+        templateUrl: 'tpl/create-account.html',
+        controller: CreateAccountCtrl
     });
     $routeProvider.when('/validate-phone', {
-        templateUrl: 'tpl/validate-phone.html'/*,
-        controller: AddAccountCtrl*/
+        templateUrl: 'tpl/validate-phone.html',
+        controller: ValidatePhoneCtrl
     });
     $routeProvider.when('/login-set-credentials', {
         templateUrl: 'tpl/login-set-credentials.html',

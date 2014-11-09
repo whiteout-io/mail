@@ -11,6 +11,7 @@ var AddAccountCtrl = function($scope, $location, $routeParams, $http) {
 
     $scope.getAccountSettings = function() {
         if ($scope.form.$invalid) {
+            $scope.errMsg = 'Please enter a valid email address!';
             return;
         }
 
