@@ -293,7 +293,7 @@ module.exports = function(grunt) {
                         'src/lib/angular/angular.min.js',
                         'src/lib/angular/angular-route.min.js',
                         'src/lib/angular/angular-animate.min.js',
-                        'node_modules/angularjs/src/ngMock/angular-mocks.js',
+                        'src/lib/angular/angular-mocks.js',
                         'src/lib/lawnchair/lawnchair-git.js',
                         'src/lib/lawnchair/lawnchair-adapter-webkit-sqlite-git.js',
                         'src/lib/lawnchair/lawnchair-adapter-indexed-db-git.js',
