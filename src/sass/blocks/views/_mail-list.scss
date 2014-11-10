@@ -326,7 +326,7 @@
         $cell-padding-horizontal:       10px;
 
         display: table-row;
-        background: mix($color-bg, $color-border-light, 70%);
+        background: $color-bg-dark;
         color: $color-grey;
         cursor: pointer;
 
