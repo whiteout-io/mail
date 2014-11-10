@@ -17,7 +17,7 @@
             fill: $color-main;
             vertical-align: baseline;
             height: 0.8em;
-            width: 0.8em;
+            width: 0.8em * 18 / 32; // compute with correct aspect ratio of back icon (width 18 and height 32)
         }
         &.wo-touch-active {
             background: $color-touch-active;
