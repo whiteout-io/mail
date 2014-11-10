@@ -117,7 +117,13 @@ ngModule.directive('woDropdown', function($document, $timeout) {
             }
         }
 
-        elm.on('touchstart click', toggle);
+        elm.on('touchstart click', function(e) {
+            e.preventDefault();
+            toggle();
+        });
+
+        // close if user clicks button in dropdown list
+        dropdown.on('touchstart.woDropdown click.woDropdown', 'button', disappear);
 
         // close if user clicks outside of dropdown and elm
         $document.on('touchstart.woDropdown click.woDropdown', function(e) {
@@ -132,6 +138,7 @@ ngModule.directive('woDropdown', function($document, $timeout) {
         // remove event listener on document
         scope.$on('$destroy', function() {
             $document.off('touchstart.woDropdown click.woDropdown');
+            dropdown.off('touchstart.woDropdown click.woDropdown');
         });
     };
 });
