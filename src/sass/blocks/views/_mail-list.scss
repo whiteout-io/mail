@@ -109,7 +109,7 @@
 
     @include respond-to(lg) {
         height: 100%;
-        background: $color-border-light;
+        background: $color-bg-dark;
 
         & > header {
             display: none;
