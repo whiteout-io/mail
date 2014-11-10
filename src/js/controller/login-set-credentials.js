@@ -4,8 +4,7 @@ var ENCRYPTION_METHOD_NONE = 0;
 var ENCRYPTION_METHOD_STARTTLS = 1;
 var ENCRYPTION_METHOD_TLS = 2;
 
-var appCtrl = require('../app-controller'),
-    config = require('../app-config').config;
+var appCtrl = require('../app-controller');
 
 var SetCredentialsCtrl = function($scope, $location, $routeParams) {
     if (!appCtrl._auth && !$routeParams.dev) {

@@ -36,10 +36,10 @@ var AddAccountCtrl = function($scope, $location, $routeParams, $http) {
                 $scope.connectToGoogle();
             } else if (config.imap.source === 'guess') {
                 // use standard password login... show config details due to guess
-                setCredentials('custom');
+                $scope.setCredentials('custom');
             } else {
                 // use standard password login... hide config details
-                setCredentials();
+                $scope.setCredentials();
             }
 
         }).catch(function() {
@@ -61,44 +61,38 @@ var AddAccountCtrl = function($scope, $location, $routeParams, $http) {
                 faqLink: 'https://github.com/whiteout-io/mail-html5/wiki/FAQ#how-does-sign-in-with-google-work',
                 callback: function(granted) {
                     if (granted) {
+                        // query oauth token
                         useOAuth();
                     } else {
-                        setGmailPassword();
+                        // use normal user/password login
+                        $scope.setCredentials('gmail');
                         $scope.$apply();
                     }
                 }
             });
         } else {
             // no oauth support
-            setGmailPassword();
+            // use normal user/password login
+            $scope.setCredentials('gmail');
+        }
+
+        function useOAuth() {
+            // fetches the email address from the chrome identity api
+            appCtrl._auth.getOAuthToken(function(err) {
+                if (err) {
+                    return $scope.onError(err);
+                }
+                $scope.setCredentials('gmail');
+                $scope.$apply();
+            });
         }
     };
 
-    //
-    // Helper functions
-    //
-
-    function useOAuth() {
-        // fetches the email address from the chrome identity api
-        appCtrl._auth.getOAuthToken(function(err) {
-            if (err) {
-                return $scope.onError(err);
-            }
-            setCredentials('gmail');
-            $scope.$apply();
-        });
-    }
-
-    function setGmailPassword() {
-        // use normal user/password login
-        setCredentials('gmail');
-    }
-
-    function setCredentials(provider) {
+    $scope.setCredentials = function(provider) {
         $location.path('/login-set-credentials').search({
             provider: provider
         });
-    }
+    };
 };
 
 module.exports = AddAccountCtrl;

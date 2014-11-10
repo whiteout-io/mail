@@ -171,6 +171,8 @@ module.exports = function(grunt) {
                         'test/unit/devicestorage-dao-test.js',
                         'test/unit/dialog-ctrl-test.js',
                         'test/unit/add-account-ctrl-test.js',
+                        'test/unit/create-account-ctrl-test.js',
+                        'test/unit/validate-phone-ctrl-test.js',
                         'test/unit/account-ctrl-test.js',
                         'test/unit/set-passphrase-ctrl-test.js',
                         'test/unit/contacts-ctrl-test.js',
