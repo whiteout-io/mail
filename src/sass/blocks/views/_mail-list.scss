@@ -257,6 +257,7 @@
             font-weight: normal;
             line-height: 1;
             padding-bottom: 8px;
+            padding-right: 0.5em;
         }
         &__subject {
             @include scut-truncate;
