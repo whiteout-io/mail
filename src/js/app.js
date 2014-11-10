@@ -31,6 +31,7 @@ var DialogCtrl = require('./controller/dialog'),
     ReadCtrl = require('./controller/read'),
     WriteCtrl = require('./controller/write'),
     NavigationCtrl = require('./controller/navigation'),
+    ActionBarCtrl = require('./controller/action-bar'),
     errorUtil = require('./util/error'),
     backButtonUtil = require('./util/backbutton-handler');
 require('./directives/common');
@@ -114,3 +115,4 @@ app.controller('PrivateKeyUploadCtrl', PrivateKeyUploadCtrl);
 app.controller('ContactsCtrl', ContactsCtrl);
 app.controller('AboutCtrl', AboutCtrl);
 app.controller('DialogCtrl', DialogCtrl);
+app.controller('ActionBarCtrl', ActionBarCtrl);

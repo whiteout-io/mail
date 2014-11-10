@@ -132,6 +132,10 @@
         }
         &__folders + .nav__folders {
             border-top-color: $color-border-light;
+
+            .nav__folder {
+                margin-bottom: 8px;
+            }
         }
         &__folder {
             font-size: $font-size-base;
@@ -150,9 +154,6 @@
                 right: 0;
                 top: 0.25em;
             }
-        }
-        &__folder__other {
-            margin-bottom: 8px;
         }
         &__counter {
             display: inline;

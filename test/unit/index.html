@@ -29,7 +29,9 @@
       if (window.mochaPhantomJS) {
         mochaPhantomJS.run();
       } else {
-        mocha.run();
+        setTimeout(function() {
+          mocha.run();
+        }, 1000)
       }
     </script>
   </body>

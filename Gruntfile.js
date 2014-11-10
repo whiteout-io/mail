@@ -185,6 +185,7 @@ module.exports = function(grunt) {
                         'test/unit/navigation-ctrl-test.js',
                         'test/unit/mail-list-ctrl-test.js',
                         'test/unit/write-ctrl-test.js',
+                        'test/unit/action-bar-ctrl-test.js',
                         'test/unit/outbox-bo-test.js',
                         'test/unit/invitation-dao-test.js',
                         'test/unit/update-handler-test.js',
@@ -301,6 +302,7 @@ module.exports = function(grunt) {
                 },
                 options: {
                     mangle: false,
+                    compress: false,
                     sourceMap: true,
                     sourceMapIn: 'test/unit/index.browserified.js.map',
                     sourceMapIncludeSources: true,
@@ -319,6 +321,7 @@ module.exports = function(grunt) {
                 },
                 options: {
                     mangle: false,
+                    compress: false,
                     sourceMap: true,
                     sourceMapIn: 'test/integration/index.browserified.js.map',
                     sourceMapIncludeSources: true,
@@ -417,7 +420,7 @@ module.exports = function(grunt) {
                 tasks: ['dist-css', 'manifest']
             },
             js: {
-                files: ['src/js/**/*.js'],
+                files: ['src/js/**/*.js', 'test/unit/*.js', 'test/integration/*.js'],
                 tasks: ['dist-js', 'manifest']
             },
             icons: {

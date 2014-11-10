@@ -241,7 +241,6 @@ describe('Mail List controller unit test', function() {
     describe('scope variables', function() {
         it('should be set correctly', function() {
             expect(scope.select).to.exist;
-            expect(scope.remove).to.exist;
             expect(scope.state.mailList).to.exist;
         });
     });
@@ -361,6 +360,9 @@ describe('Mail List controller unit test', function() {
                 mailList: {},
                 read: {
                     toggle: function() {}
+                },
+                actionBar: {
+                    markMessage: function() {}
                 }
             };
 
@@ -399,51 +401,15 @@ describe('Mail List controller unit test', function() {
                 }
             };
 
-            keychainMock.refreshKeyForUserId.withArgs({userId: mail.from[0].address}).yields();
+            keychainMock.refreshKeyForUserId.withArgs({
+                userId: mail.from[0].address
+            }).yields();
 
             scope.select(mail);
 
             expect(emailDaoMock.decryptBody.calledOnce).to.be.true;
             expect(keychainMock.refreshKeyForUserId.calledOnce).to.be.true;
             expect(scope.state.mailList.selected).to.equal(mail);
-        });
-    });
-
-    describe('remove', function() {
-        it('should not delete without a selected mail', function() {
-            scope.remove();
-        });
-
-        it('should delete the selected mail', function() {
-            var uid, mail, currentFolder;
-
-            scope._stopWatchTask();
-
-            scope.account = {};
-            uid = 123;
-            mail = {
-                uid: uid,
-                from: [{
-                    address: 'asd'
-                }],
-                subject: '[whiteout] asdasd',
-                unread: true
-            };
-            currentFolder = {
-                type: 'Inbox',
-                path: 'INBOX',
-                messages: [mail]
-            };
-            scope.account.folders = [currentFolder];
-            scope.state.nav = {
-                currentFolder: currentFolder
-            };
-            emailDaoMock.deleteMessage.yields();
-
-            scope.remove(mail);
-
-            expect(emailDaoMock.deleteMessage.calledOnce).to.be.true;
-            expect(scope.state.mailList.selected).to.exist;
         });
     });
 });
