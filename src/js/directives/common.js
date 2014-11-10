@@ -117,7 +117,10 @@ ngModule.directive('woDropdown', function($document, $timeout) {
             }
         }
 
-        elm.on('touchstart click', toggle);
+        elm.on('touchstart click', function(e) {
+            e.preventDefault();
+            toggle();
+        });
 
         // close if user clicks button in dropdown list
         dropdown.on('touchstart.woDropdown click.woDropdown', 'button', disappear);
