@@ -409,7 +409,7 @@
             display: table-cell;
             border-bottom: 1px solid $color-border-light;
             padding: $cell-padding-vertical $cell-padding-horizontal;
-            width: 25%;
+            width: 12em;
         }
         &__subject {
             @include scut-truncate;
@@ -420,8 +420,12 @@
                 font-weight: normal;
             }
             & > span {
-                margin-left: 0.5em;
+                margin-left: 0.2em;
                 color: $color-text-light;
+                &:before {
+                    content: '-';
+                    margin-right: 0.2em;
+                }
             }
         }
         &__time {
