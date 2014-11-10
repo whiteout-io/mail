@@ -143,4 +143,24 @@ ngModule.directive('woDropdown', function($document, $timeout) {
     };
 });
 
+ngModule.directive('woFocusMe', function($timeout, $parse) {
+    return function(scope, element, attrs) {
+        var model = $parse(attrs.woFocusMe);
+        scope.$watch(model, function(value) {
+            if (value === true) {
+                $timeout(function() {
+                    var el = element[0];
+                    el.focus();
+                    // set cursor to start of textarea
+                    if (el.type === 'textarea') {
+                        el.selectionStart = 0;
+                        el.selectionEnd = 0;
+                        el.scrollTop = 0;
+                    }
+                }, 100);
+            }
+        });
+    };
+});
+
 module.exports = ngModule;

@@ -448,29 +448,6 @@ var WriteCtrl = function($scope, $filter, $q) {
 
 var ngModule = angular.module('write', []);
 
-ngModule.directive('focusMe', function($timeout, $parse) {
-    return {
-        //scope: true,   // optionally create a child scope
-        link: function(scope, element, attrs) {
-            var model = $parse(attrs.focusMe);
-            scope.$watch(model, function(value) {
-                if (value === true) {
-                    $timeout(function() {
-                        var el = element[0];
-                        el.focus();
-                        // set cursor to start of textarea
-                        if (el.type === 'textarea') {
-                            el.selectionStart = 0;
-                            el.selectionEnd = 0;
-                            el.scrollTop = 0;
-                        }
-                    }, 100);
-                }
-            });
-        }
-    };
-});
-
 ngModule.directive('focusInput', function($timeout, $parse) {
     return {
         //scope: true,   // optionally create a child scope

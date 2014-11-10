@@ -10,7 +10,7 @@
         <p class="form__error-message" ng-show="errMsg">{{errMsg}}</p>
         <div class="form__row">
           <input type="text" class="input-text input-text--big" ng-class="{'input-text--error': errMsg}"
-          size="6" maxlength="6" ng-model="token" placeholder="Code" required pattern="([a-zA-Z0-9]*)" focus-me="true" tabindex="1">
+          size="6" maxlength="6" ng-model="token" placeholder="Code" required pattern="([a-zA-Z0-9]*)" wo-focus-me="true" tabindex="1">
         </div>
         <div class="spinner-block" ng-show="busy">
           <span class="spinner spinner--big"></span>
