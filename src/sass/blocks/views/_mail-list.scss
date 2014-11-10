@@ -265,6 +265,9 @@
             font-weight: bold;
             padding-right: 90px; // to make room for time
             padding-bottom: 8px;
+            & > span {
+                display: none;
+            }
         }
         &__time {
             @include scut-truncate;
@@ -406,12 +409,20 @@
             display: table-cell;
             border-bottom: 1px solid $color-border-light;
             padding: $cell-padding-vertical $cell-padding-horizontal;
+            width: 25%;
         }
         &__subject {
             @include scut-truncate;
             display: table-cell;
             border-bottom: 1px solid $color-border-light;
             padding: $cell-padding-vertical $cell-padding-horizontal;
+            & > strong {
+                font-weight: normal;
+            }
+            & > span {
+                margin-left: 0.5em;
+                color: $color-text-light;
+            }
         }
         &__time {
             display: table-cell;
@@ -438,6 +449,12 @@
             font-weight: bold;
             .mail-list-entry__name {
                 font-weight: bold;
+            }
+            .mail-list-entry__subject {
+                font-weight: normal;
+                & > strong {
+                    font-weight: bold;
+                }
             }
         }
         &--attachment {
