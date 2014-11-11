@@ -1,9 +1,8 @@
 'use strict';
 
-var appCtrl = require('../app-controller'),
-    cfg = require('../app-config').config;
+var appCtrl = require('../app-controller');
 
-var AddAccountCtrl = function($scope, $location, $routeParams, $http) {
+var AddAccountCtrl = function($scope, $location, $routeParams, mailConfig) {
     if (!appCtrl._auth && !$routeParams.dev) {
         $location.path('/'); // init app
         return;
@@ -18,12 +17,7 @@ var AddAccountCtrl = function($scope, $location, $routeParams, $http) {
         $scope.busy = true;
         $scope.errMsg = undefined; // reset error msg
 
-        var domain = $scope.emailAddress.split('@')[1];
-        var url = cfg.settingsUrl + domain;
-
-        return $http.get(url).then(function(res) {
-            var config = res.data;
-
+        return mailConfig.get($scope.emailAddress).then(function(config) {
             $scope.busy = false;
             $scope.state.login = {
                 mailConfig: config,
@@ -31,14 +25,11 @@ var AddAccountCtrl = function($scope, $location, $routeParams, $http) {
             };
 
             var hostname = config.imap.hostname;
-            if (hostname && hostname.match(/.gmail.com$/) || hostname.match(/.googlemail.com$/)) {
-                // check for gmail/oauth support
-                $scope.connectToGoogle();
-            } else if (config.imap.source === 'guess') {
-                // use standard password login... show config details due to guess
-                $scope.setCredentials('custom');
+            if (appCtrl._auth.useOAuth(hostname)) {
+                // check for oauth support
+                $scope.oauthPossible();
             } else {
-                // use standard password login... hide config details
+                // use standard password login
                 $scope.setCredentials();
             }
 
@@ -48,50 +39,41 @@ var AddAccountCtrl = function($scope, $location, $routeParams, $http) {
         });
     };
 
-    $scope.connectToGoogle = function() {
-        // test for oauth support
-        if (appCtrl._auth._oauth.isSupported()) {
-            // ask user to use the platform's native OAuth api
-            $scope.onError({
-                title: 'Google Account Login',
-                message: 'You are signing into a Google account. Would you like to sign in with Google or just continue with a password login?',
-                positiveBtnStr: 'Google sign in',
-                negativeBtnStr: 'Password',
-                showNegativeBtn: true,
-                faqLink: 'https://github.com/whiteout-io/mail-html5/wiki/FAQ#how-does-sign-in-with-google-work',
-                callback: function(granted) {
-                    if (granted) {
-                        // query oauth token
-                        useOAuth();
-                    } else {
-                        // use normal user/password login
-                        $scope.setCredentials('gmail');
-                        $scope.$apply();
-                    }
+    $scope.oauthPossible = function() {
+        // ask user to use the platform's native OAuth api
+        $scope.onError({
+            title: 'Google Account Login',
+            message: 'You are signing into a Google account. Would you like to sign in with Google or just continue with a password login?',
+            positiveBtnStr: 'Google sign in',
+            negativeBtnStr: 'Password',
+            showNegativeBtn: true,
+            faqLink: 'https://github.com/whiteout-io/mail-html5/wiki/FAQ#how-does-sign-in-with-google-work',
+            callback: function(granted) {
+                if (granted) {
+                    // query oauth token
+                    getOAuthToken();
+                } else {
+                    // use normal user/password login
+                    $scope.setCredentials();
+                    $scope.$apply();
                 }
-            });
-        } else {
-            // no oauth support
-            // use normal user/password login
-            $scope.setCredentials('gmail');
-        }
+            }
+        });
 
-        function useOAuth() {
+        function getOAuthToken() {
             // fetches the email address from the chrome identity api
             appCtrl._auth.getOAuthToken(function(err) {
                 if (err) {
                     return $scope.onError(err);
                 }
-                $scope.setCredentials('gmail');
+                $scope.setCredentials();
                 $scope.$apply();
             });
         }
     };
 
-    $scope.setCredentials = function(provider) {
-        $location.path('/login-set-credentials').search({
-            provider: provider
-        });
+    $scope.setCredentials = function() {
+        $location.path('/login-set-credentials');
     };
 };
 

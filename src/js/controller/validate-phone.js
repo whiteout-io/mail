@@ -1,9 +1,8 @@
 'use strict';
 
-var appCtrl = require('../app-controller'),
-    cfg = require('../app-config').config;
+var appCtrl = require('../app-controller');
 
-var ValidatePhoneCtrl = function($scope, $location, $routeParams) {
+var ValidatePhoneCtrl = function($scope, $location, $routeParams, mailConfig) {
     if (!appCtrl._auth && !$routeParams.dev) {
         $location.path('/'); // init app
         return;
@@ -36,20 +35,33 @@ var ValidatePhoneCtrl = function($scope, $location, $routeParams) {
     };
 
     $scope.login = function() {
-        // store credentials in memory
-        appCtrl._auth.setCredentials({
-            provider: 'wmail',
-            emailAddress: $scope.state.createAccount.emailAddress,
-            username: $scope.state.createAccount.emailAddress,
-            realname: $scope.state.createAccount.realname,
-            password: $scope.state.createAccount.pass,
-            imap: cfg.wmail.imap,
-            smtp: cfg.wmail.smtp
-        });
+        var address = $scope.state.createAccount.emailAddress;
+        return mailConfig.get(address).then(function(config) {
+            // store credentials in memory
+            appCtrl._auth.setCredentials({
+                emailAddress: $scope.state.createAccount.emailAddress,
+                username: $scope.state.createAccount.emailAddress,
+                realname: $scope.state.createAccount.realname,
+                password: $scope.state.createAccount.pass,
+                imap: {
+                    host: config.imap.hostname,
+                    port: parseInt(config.imap.port, 10),
+                    secure: config.imap.secure
+                },
+                smtp: {
+                    host: config.smtp.hostname,
+                    port: parseInt(config.smtp.port, 10),
+                    secure: config.smtp.secure
+                }
+            });
 
-        // proceed to login and keygen
-        $location.path('/login');
-        $scope.$apply();
+            // proceed to login and keygen
+            $location.path('/login');
+
+        }).catch(function() {
+            $scope.busy = false;
+            $scope.errMsg = 'Error fetching IMAP settings!';
+        });
     };
 };
 

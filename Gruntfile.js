@@ -192,6 +192,7 @@ module.exports = function(grunt) {
                         'test/unit/invitation-dao-test.js',
                         'test/unit/update-handler-test.js',
                         'test/unit/connection-doctor-test.js',
+                        'test/unit/mail-config-service-test.js',
                         'test/main.js'
                     ]
                 },

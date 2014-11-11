@@ -32,8 +32,15 @@ describe('Login (Set Credentials) Controller unit test', function() {
             location.search({
                 provider: provider
             });
+            scope.state = {
+                login: {
+                    mailConfig: {
+                        imap: {},
+                        smtp: {}
+                    }
+                }
+            };
 
-            scope.state = {};
             setCredentialsCtrl = $controller(SetCredentialsCtrl, {
                 $scope: scope,
                 $routeParams: {}
@@ -60,7 +67,6 @@ describe('Login (Set Credentials) Controller unit test', function() {
             scope.realname = 'peter pan';
 
             var expectedCredentials = {
-                provider: provider,
                 emailAddress: scope.emailAddress,
                 username: scope.username || scope.emailAddress,
                 realname: scope.realname,
@@ -70,17 +76,13 @@ describe('Login (Set Credentials) Controller unit test', function() {
                     host: scope.imapHost.toLowerCase(),
                     port: scope.imapPort,
                     secure: true,
-                    ignoreTLS: false,
-                    ca: undefined,
-                    pinned: false
+                    ignoreTLS: false
                 },
                 smtp: {
                     host: scope.smtpHost.toLowerCase(),
                     port: scope.smtpPort,
                     secure: false,
-                    ignoreTLS: false,
-                    ca: undefined,
-                    pinned: false
+                    ignoreTLS: false
                 }
             };
 

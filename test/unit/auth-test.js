@@ -11,7 +11,6 @@ describe('Auth unit tests', function() {
     var USERNAME_DB_KEY = 'username';
     var REALNAME_DB_KEY = 'realname';
     var PASSWD_DB_KEY = 'password';
-    var PROVIDER_DB_KEY = 'provider';
     var IMAP_DB_KEY = 'imap';
     var SMTP_DB_KEY = 'smtp';
     // SUT
@@ -25,7 +24,6 @@ describe('Auth unit tests', function() {
     var password = 'passwordpasswordpassword';
     var encryptedPassword = 'pgppasswordpgppassword';
     var oauthToken = 'tokentokentokentoken';
-    var provider = 'gmail';
     var realname = 'Bla Blubb';
     var username = 'bla';
     var imap = {
@@ -52,7 +50,6 @@ describe('Auth unit tests', function() {
         it('should load credentials and retrieve credentials from cfg', function(done) {
             storageStub.listItems.withArgs(EMAIL_ADDR_DB_KEY, 0, null).yieldsAsync(null, [emailAddress]);
             storageStub.listItems.withArgs(PASSWD_DB_KEY, 0, null).yieldsAsync(null, [encryptedPassword]);
-            storageStub.listItems.withArgs(PROVIDER_DB_KEY, 0, null).yieldsAsync(null, [provider]);
             storageStub.listItems.withArgs(USERNAME_DB_KEY, 0, null).yieldsAsync(null, [username]);
             storageStub.listItems.withArgs(REALNAME_DB_KEY, 0, null).yieldsAsync(null, [realname]);
             storageStub.listItems.withArgs(IMAP_DB_KEY, 0, null).yieldsAsync(null, [imap]);
@@ -62,7 +59,6 @@ describe('Auth unit tests', function() {
             auth.getCredentials(function(err, cred) {
                 expect(err).to.not.exist;
 
-                expect(auth.provider).to.equal(provider);
                 expect(auth.emailAddress).to.equal(emailAddress);
                 expect(auth.password).to.equal(password);
 
@@ -80,7 +76,7 @@ describe('Auth unit tests', function() {
                 expect(cred.smtp.auth.user).to.equal(username);
                 expect(cred.smtp.auth.pass).to.equal(password);
 
-                expect(storageStub.listItems.callCount).to.equal(7);
+                expect(storageStub.listItems.callCount).to.equal(6);
                 expect(pgpStub.decrypt.calledOnce).to.be.true;
 
                 done();
@@ -91,7 +87,6 @@ describe('Auth unit tests', function() {
     describe('#setCredentials', function() {
         it('should set the credentials', function() {
             auth.setCredentials({
-                provider: 'albhsvadlbvsdalbsadflb',
                 emailAddress: emailAddress,
                 username: username,
                 realname: realname,
@@ -100,7 +95,6 @@ describe('Auth unit tests', function() {
                 smtp: smtp
             });
 
-            expect(auth.provider).to.equal('albhsvadlbvsdalbsadflb');
             expect(auth.emailAddress).to.equal(emailAddress);
             expect(auth.username).to.equal(username);
             expect(auth.realname).to.equal(realname);
@@ -109,7 +103,6 @@ describe('Auth unit tests', function() {
             expect(auth.imap).to.equal(imap);
             expect(auth.credentialsDirty).to.be.true;
         });
-
     });
 
     describe('#storeCredentials', function() {
@@ -121,11 +114,9 @@ describe('Auth unit tests', function() {
             auth.password = password;
             auth.smtp = smtp;
             auth.imap = imap;
-            auth.provider = provider;
 
             storageStub.storeList.withArgs([encryptedPassword], PASSWD_DB_KEY).yieldsAsync();
             storageStub.storeList.withArgs([emailAddress], EMAIL_ADDR_DB_KEY).yieldsAsync();
-            storageStub.storeList.withArgs([provider], PROVIDER_DB_KEY).yieldsAsync();
             storageStub.storeList.withArgs([username], USERNAME_DB_KEY).yieldsAsync();
             storageStub.storeList.withArgs([realname], REALNAME_DB_KEY).yieldsAsync();
             storageStub.storeList.withArgs([imap], IMAP_DB_KEY).yieldsAsync();
@@ -135,11 +126,34 @@ describe('Auth unit tests', function() {
             auth.storeCredentials(function(err) {
                 expect(err).to.not.exist;
 
-                expect(storageStub.storeList.callCount).to.equal(7);
+                expect(storageStub.storeList.callCount).to.equal(6);
                 expect(pgpStub.encrypt.calledOnce).to.be.true;
 
                 done();
             });
+        });
+    });
+
+    describe('#useOAuth', function() {
+        it('should not recommend oauth for unsupported platorm', function() {
+            oauthStub.isSupported.returns(false);
+
+            var res = auth.useOAuth('imap.gmail.com');
+            expect(res).to.be.false;
+        });
+
+        it('should recommend oauth for whitelisted host', function() {
+            oauthStub.isSupported.returns(true);
+
+            var res = auth.useOAuth('imap.gmail.com');
+            expect(res).to.be.true;
+        });
+
+        it('should not recommend oauth for other hosts', function() {
+            oauthStub.isSupported.returns(true);
+
+            var res = auth.useOAuth('imap.ggmail.com');
+            expect(res).to.be.false;
         });
     });
 
@@ -231,7 +245,6 @@ describe('Auth unit tests', function() {
         it('should work', function(done) {
             storageStub.listItems.withArgs(EMAIL_ADDR_DB_KEY, 0, null).yieldsAsync(null, [emailAddress]);
             storageStub.listItems.withArgs(PASSWD_DB_KEY, 0, null).yieldsAsync(null, [encryptedPassword]);
-            storageStub.listItems.withArgs(PROVIDER_DB_KEY, 0, null).yieldsAsync(null, [provider]);
             storageStub.listItems.withArgs(USERNAME_DB_KEY, 0, null).yieldsAsync(null, [username]);
             storageStub.listItems.withArgs(REALNAME_DB_KEY, 0, null).yieldsAsync(null, [realname]);
             storageStub.listItems.withArgs(IMAP_DB_KEY, 0, null).yieldsAsync(null, [imap]);
@@ -241,7 +254,6 @@ describe('Auth unit tests', function() {
                 expect(err).to.not.exist;
                 expect(auth.emailAddress).to.equal(emailAddress);
                 expect(auth.password).to.equal(encryptedPassword);
-                expect(auth.provider).to.equal(provider);
                 expect(auth.imap).to.equal(imap);
                 expect(auth.smtp).to.equal(smtp);
                 expect(auth.username).to.equal(username);
@@ -249,7 +261,7 @@ describe('Auth unit tests', function() {
 
                 expect(auth.passwordNeedsDecryption).to.be.true;
 
-                expect(storageStub.listItems.callCount).to.equal(7);
+                expect(storageStub.listItems.callCount).to.equal(6);
 
                 done();
             });
@@ -262,7 +274,6 @@ describe('Auth unit tests', function() {
                 expect(err).to.exist;
                 expect(auth.emailAddress).to.not.exist;
                 expect(auth.password).to.not.exist;
-                expect(auth.provider).to.not.exist;
                 expect(auth.imap).to.not.exist;
                 expect(auth.smtp).to.not.exist;
                 expect(auth.username).to.not.exist;

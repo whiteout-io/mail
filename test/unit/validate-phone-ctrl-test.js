@@ -5,9 +5,10 @@ var mocks = angular.mock,
     Auth = require('../../src/js/bo/auth'),
     AdminDao = require('../../src/js/dao/admin-dao'),
     appController = require('../../src/js/app-controller');
+require('../../src/js/services/mail-config');
 
 describe('Validate Phone Controller unit test', function() {
-    var scope, location, ctrl, authStub, origAuth, adminStub;
+    var scope, location, mailConfigMock, ctrl, authStub, origAuth, adminStub;
 
     beforeEach(function() {
         // remember original module to restore later, then replace it
@@ -15,14 +16,15 @@ describe('Validate Phone Controller unit test', function() {
         appController._auth = authStub = sinon.createStubInstance(Auth);
         appController._adminDao = adminStub = sinon.createStubInstance(AdminDao);
 
-        angular.module('validatephonetest', []);
+        angular.module('validatephonetest', ['woServices']);
         mocks.module('validatephonetest');
-        mocks.inject(function($controller, $rootScope, $location) {
+        mocks.inject(function($controller, $rootScope, $location, mailConfig) {
             location = $location;
+            mailConfigMock = mailConfig;
             scope = $rootScope.$new();
             scope.state = {
                 createAccount: {
-                    emailAddress: 'test@example.com',
+                    emailAddress: 'test@wmail.io',
                     pass: 'asdf',
                     realname: 'Test User'
                 }
@@ -36,7 +38,8 @@ describe('Validate Phone Controller unit test', function() {
             ctrl = $controller(ValidatePhoneCtrl, {
                 $location: location,
                 $scope: scope,
-                $routeParams: {}
+                $routeParams: {},
+                mailConfig: mailConfigMock
             });
         });
     });
@@ -93,14 +96,24 @@ describe('Validate Phone Controller unit test', function() {
     });
 
     describe('login', function() {
-        it('should work', function() {
+        it('should work', inject(function($q, $rootScope) {
             scope.form.$invalid = false;
             authStub.setCredentials.returns();
 
+            var deferred = $q.defer();
+            sinon.stub(mailConfigMock, 'get').returns(deferred.promise);
+            deferred.resolve({
+                imap: {},
+                smtp: {}
+            });
+
             scope.login();
+
+            $rootScope.$apply();
+            expect(mailConfigMock.get.calledOnce).to.be.true;
             expect(authStub.setCredentials.calledOnce).to.be.true;
             expect(location.path.calledWith('/login')).to.be.true;
-        });
+        }));
     });
 
 });

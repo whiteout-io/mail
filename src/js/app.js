@@ -36,7 +36,8 @@ var DialogCtrl = require('./controller/dialog'),
     ActionBarCtrl = require('./controller/action-bar'),
     errorUtil = require('./util/error'),
     backButtonUtil = require('./util/backbutton-handler');
-require('./directives/common');
+require('./directives/common'),
+require('./services/mail-config');
 
 // init main angular module including dependencies
 var app = angular.module('mail', [
@@ -51,7 +52,8 @@ var app = angular.module('mail', [
     'privatekey-upload',
     'infinite-scroll',
     'ngTagsInput',
-    'woDirectives'
+    'woDirectives',
+    'woServices'
 ]);
 
 // set router paths

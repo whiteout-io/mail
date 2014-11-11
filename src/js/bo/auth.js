@@ -1,13 +1,13 @@
 'use strict';
 
 var axe = require('axe-logger'),
+    cfg = require('../app-config').config,
     str = require('../app-config').string;
 
 var EMAIL_ADDR_DB_KEY = 'emailaddress';
 var USERNAME_DB_KEY = 'username';
 var REALNAME_DB_KEY = 'realname';
 var PASSWD_DB_KEY = 'password';
-var PROVIDER_DB_KEY = 'provider';
 var IMAP_DB_KEY = 'imap';
 var SMTP_DB_KEY = 'smtp';
 
@@ -18,7 +18,7 @@ var SMTP_DB_KEY = 'smtp';
  * var auth = new Auth(...);
  * auth.setCredentials(...); // during the account setup
  * auth.getEmailAddress(...); // called from the login controller to determine if there is already a user present on the device
- * auth.getCredentials(...); // called to gather all the information to connect to IMAP/SMTP, e.g. pinned intermediate certificates,
+ * auth.getCredentials(...); // called to gather all the information to connect to IMAP/SMTP,
  *                              username, password / oauth token, IMAP/SMTP server host names, ...
  */
 var Auth = function(appConfigStore, oauth, pgp) {
@@ -39,7 +39,7 @@ var Auth = function(appConfigStore, oauth, pgp) {
 Auth.prototype.getCredentials = function(callback) {
     var self = this;
 
-    if (!self.provider || !self.emailAddress) {
+    if (!self.emailAddress) {
         // we're not yet initialized, so let's load our stuff from disk
         self._loadCredentials(function(err) {
             if (err) {
@@ -54,8 +54,8 @@ Auth.prototype.getCredentials = function(callback) {
     chooseLogin();
 
     function chooseLogin() {
-        if (self.provider === 'gmail' && !self.password) {
-            // oauth login for gmail
+        if (self.useOAuth(self.imap.host) && !self.password) {
+            // oauth login
             self.getOAuthToken(function(err) {
                 if (err) {
                     return callback(err);
@@ -91,7 +91,6 @@ Auth.prototype.getCredentials = function(callback) {
                 port: self.imap.port,
                 host: self.imap.host,
                 ca: self.imap.ca,
-                pinned: self.imap.pinned,
                 auth: {
                     user: self.username,
                     xoauth2: self.oauthToken, // password or oauthToken is undefined
@@ -103,7 +102,6 @@ Auth.prototype.getCredentials = function(callback) {
                 port: self.smtp.port,
                 host: self.smtp.host,
                 ca: self.smtp.ca,
-                pinned: self.smtp.pinned,
                 auth: {
                     user: self.username,
                     xoauth2: self.oauthToken,
@@ -119,7 +117,6 @@ Auth.prototype.getCredentials = function(callback) {
 /**
  * Set the credentials
  *
- * @param {String} options.provider The service provider, e.g. 'gmail', 'yahoo', 'tonline'. Matches the entry in the app-config.
  * @param {String} options.emailAddress The email address
  * @param {String} options.username The user name
  * @param {String} options.realname The user's real name
@@ -129,13 +126,12 @@ Auth.prototype.getCredentials = function(callback) {
  */
 Auth.prototype.setCredentials = function(options) {
     this.credentialsDirty = true;
-    this.provider = options.provider;
     this.emailAddress = options.emailAddress;
     this.username = options.username;
     this.realname = options.realname ? options.realname : '';
     this.password = options.password;
-    this.smtp = options.smtp; // host, port, secure, ca, pinned
-    this.imap = options.imap; // host, port, secure, ca, pinned
+    this.smtp = options.smtp; // host, port, secure, ca
+    this.imap = options.imap; // host, port, secure, ca
 };
 
 Auth.prototype.storeCredentials = function(callback) {
@@ -145,7 +141,7 @@ Auth.prototype.storeCredentials = function(callback) {
         return callback();
     }
 
-    // persist the provider
+    // persist the config
     self._appConfigStore.storeList([self.smtp], SMTP_DB_KEY, function(err) {
         if (err) {
             return callback(err);
@@ -156,57 +152,51 @@ Auth.prototype.storeCredentials = function(callback) {
                 return callback(err);
             }
 
-            self._appConfigStore.storeList([self.provider], PROVIDER_DB_KEY, function(err) {
+            self._appConfigStore.storeList([self.emailAddress], EMAIL_ADDR_DB_KEY, function(err) {
                 if (err) {
                     return callback(err);
                 }
 
-                self._appConfigStore.storeList([self.emailAddress], EMAIL_ADDR_DB_KEY, function(err) {
+                self._appConfigStore.storeList([self.username], USERNAME_DB_KEY, function(err) {
                     if (err) {
                         return callback(err);
                     }
 
-                    self._appConfigStore.storeList([self.username], USERNAME_DB_KEY, function(err) {
+                    self._appConfigStore.storeList([self.realname], REALNAME_DB_KEY, function(err) {
                         if (err) {
                             return callback(err);
                         }
 
-                        self._appConfigStore.storeList([self.realname], REALNAME_DB_KEY, function(err) {
-                            if (err) {
-                                return callback(err);
-                            }
+                        if (!self.password) {
+                            self.credentialsDirty = false;
+                            return callback();
+                        }
 
-                            if (!self.password) {
-                                self.credentialsDirty = false;
-                                return callback();
-                            }
-
-                            if (self.passwordNeedsDecryption) {
-                                // password is not decrypted yet, so no need to re-encrypt it before storing...
-                                self._appConfigStore.storeList([self.password], PASSWD_DB_KEY, function(err) {
-                                    if (err) {
-                                        return callback(err);
-                                    }
-
-                                    self.credentialsDirty = false;
-                                    callback();
-                                });
-                                return;
-                            }
-
-                            self._pgp.encrypt(self.password, undefined, function(err, ciphertext) {
+                        if (self.passwordNeedsDecryption) {
+                            // password is not decrypted yet, so no need to re-encrypt it before storing...
+                            self._appConfigStore.storeList([self.password], PASSWD_DB_KEY, function(err) {
                                 if (err) {
                                     return callback(err);
                                 }
 
-                                self._appConfigStore.storeList([ciphertext], PASSWD_DB_KEY, function(err) {
-                                    if (err) {
-                                        return callback(err);
-                                    }
+                                self.credentialsDirty = false;
+                                callback();
+                            });
+                            return;
+                        }
 
-                                    self.credentialsDirty = false;
-                                    callback();
-                                });
+                        self._pgp.encrypt(self.password, undefined, function(err, ciphertext) {
+                            if (err) {
+                                return callback(err);
+                            }
+
+                            self._appConfigStore.storeList([ciphertext], PASSWD_DB_KEY, function(err) {
+                                if (err) {
+                                    return callback(err);
+                                }
+
+                                self.credentialsDirty = false;
+                                callback();
                             });
                         });
                     });
@@ -239,6 +229,26 @@ Auth.prototype.getEmailAddress = function(callback) {
             realname: self.realname
         });
     });
+};
+
+/**
+ * Check if the current platform and mail provider support OAuth.
+ * @param  {String} hostname    The hostname of the mail server e.g. imap.gmail.com
+ * @return {Boolean}            If oauth should be used
+ */
+Auth.prototype.useOAuth = function(hostname) {
+    if (!this._oauth.isSupported()) {
+        return false;
+    }
+
+    var regex = cfg.oauthDomains;
+    for (var i = 0; i < regex.length; i++) {
+        if (regex[i].test(hostname)) {
+            return true;
+        }
+    }
+
+    return false;
 };
 
 /**
@@ -291,7 +301,7 @@ Auth.prototype.getOAuthToken = function(callback) {
 };
 
 /**
- * Loads email address, password, provider, ... from disk and sets them on `this`
+ * Loads email address, password, ... from disk and sets them on `this`
  */
 Auth.prototype._loadCredentials = function(callback) {
     var self = this;
@@ -334,23 +344,16 @@ Auth.prototype._loadCredentials = function(callback) {
                                 return callback(err);
                             }
 
-                            loadFromDB(PROVIDER_DB_KEY, function(err, provider) {
-                                if (err) {
-                                    return callback(err);
-                                }
+                            self.emailAddress = emailAddress;
+                            self.password = password;
+                            self.passwordNeedsDecryption = !!password;
+                            self.username = username;
+                            self.realname = realname;
+                            self.smtp = smtp;
+                            self.imap = imap;
+                            self.initialized = true;
 
-                                self.emailAddress = emailAddress;
-                                self.password = password;
-                                self.passwordNeedsDecryption = !!password;
-                                self.provider = provider;
-                                self.username = username;
-                                self.realname = realname;
-                                self.smtp = smtp;
-                                self.imap = imap;
-                                self.initialized = true;
-
-                                callback();
-                            });
+                            callback();
                         });
                     });
                 });
@@ -386,16 +389,6 @@ Auth.prototype.handleCertificateUpdate = function(component, onConnect, callback
 
     if (self[component].ca === pemEncodedCert) {
         // ignore multiple successive tls handshakes, e.g. for gmail
-        return;
-    }
-
-    if (self[component].ca && self[component].pinned) {
-        // do not update the pinned certificates!
-        callback({
-            title: str.outdatedCertificateTitle,
-            message: str.outdatedCertificateMessage.replace('{0}', self[component].host),
-            faqLink: str.certificateFaqLink,
-        });
         return;
     }
 
