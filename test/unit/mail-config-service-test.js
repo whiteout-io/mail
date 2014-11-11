@@ -2,7 +2,7 @@
 
 var mocks = angular.mock,
     cfg = require('../../src/js/app-config').config;
-require('../../src/js/services/mail-config');
+require('../../src/js/service/mail-config');
 
 describe('Mail Config Service unit test', function() {
     var mailConfig, httpBackend;

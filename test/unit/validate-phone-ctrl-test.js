@@ -5,7 +5,6 @@ var mocks = angular.mock,
     Auth = require('../../src/js/bo/auth'),
     AdminDao = require('../../src/js/dao/admin-dao'),
     appController = require('../../src/js/app-controller');
-require('../../src/js/services/mail-config');
 
 describe('Validate Phone Controller unit test', function() {
     var scope, location, mailConfigMock, ctrl, authStub, origAuth, adminStub;

@@ -36,8 +36,8 @@ var DialogCtrl = require('./controller/dialog'),
     ActionBarCtrl = require('./controller/action-bar'),
     errorUtil = require('./util/error'),
     backButtonUtil = require('./util/backbutton-handler');
-require('./directives/common'),
-require('./services/mail-config');
+require('./directive/common'),
+require('./service/mail-config');
 
 // init main angular module including dependencies
 var app = angular.module('mail', [
