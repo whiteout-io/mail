@@ -278,17 +278,11 @@ ctrl.onConnect = function(callback) {
         imapClient.onCert = ctrl._auth.handleCertificateUpdate.bind(ctrl._auth, 'imap', ctrl.onConnect, ctrl.onError);
         pgpMailer.onCert = ctrl._auth.handleCertificateUpdate.bind(ctrl._auth, 'smtp', ctrl.onConnect, ctrl.onError);
 
-        // TODO: remove provider here
-
-        // after-setup configuration depending on the provider:
-        // gmail does not require you to upload to the sent items folder
-        // after successful sending, whereas most other providers do
-        ctrl._emailDao.ignoreUploadOnSent = !!(config[ctrl._auth.provider] && config[ctrl._auth.provider].ignoreUploadOnSent);
-
         // connect to clients
         ctrl._emailDao.onConnect({
             imapClient: imapClient,
-            pgpMailer: pgpMailer
+            pgpMailer: pgpMailer,
+            ignoreUploadOnSent: ctrl._emailDao.checkIgnoreUploadOnSent(credentials.imap.host)
         }, callback);
     }
 

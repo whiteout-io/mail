@@ -10,6 +10,7 @@ exports.config = {
     settingsUrl: 'https://settings.whiteout.io/autodiscovery/',
     wmailDomain: 'wmail.io',
     oauthDomains: [/\.gmail\.com$/, /\.googlemail\.com$/],
+    ignoreUploadOnSentDomains: [/\.gmail\.com$/, /\.googlemail\.com$/],
     serverPrivateKeyId: 'EE342F0DDBB0F3BE',
     symKeySize: 256,
     symIvSize: 96,

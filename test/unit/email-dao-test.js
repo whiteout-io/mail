@@ -1854,6 +1854,7 @@ describe('Email DAO unit tests', function() {
                 }, function(err) {
 
                     expect(err).to.not.exist;
+                    expect(dao.ignoreUploadOnSent).to.be.false;
                     expect(imapClientStub.login.calledOnce).to.be.true;
                     expect(initFoldersStub.calledOnce).to.be.true;
                     expect(imapClientStub.mailboxCache).to.deep.equal({
@@ -2476,6 +2477,18 @@ describe('Email DAO unit tests', function() {
                     expect(imapClientStub.uploadMessage.calledOnce).to.be.true;
                     done();
                 });
+            });
+        });
+
+
+        describe('#checkIgnoreUploadOnSent', function() {
+            it('should ignore upload on gmail', function() {
+                expect(dao.checkIgnoreUploadOnSent('bla.gmail.com')).to.be.true;
+                expect(dao.checkIgnoreUploadOnSent('bla.googlemail.com')).to.be.true;
+            });
+
+            it('should not ignore upload on other domain', function() {
+                expect(dao.checkIgnoreUploadOnSent('imap.foo.com')).to.be.false;
             });
         });
     });
