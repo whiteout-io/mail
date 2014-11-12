@@ -37,6 +37,7 @@ var DialogCtrl = require('./controller/dialog'),
     errorUtil = require('./util/error'),
     backButtonUtil = require('./util/backbutton-handler');
 require('./directive/common'),
+require('./service/newsletter'),
 require('./service/mail-config');
 
 // init main angular module including dependencies
@@ -57,7 +58,7 @@ var app = angular.module('mail', [
 ]);
 
 // set router paths
-app.config(function($routeProvider) {
+app.config(function($routeProvider, $animateProvider) {
     $routeProvider.when('/login', {
         templateUrl: 'tpl/login.html',
         controller: LoginCtrl
@@ -101,6 +102,9 @@ app.config(function($routeProvider) {
     $routeProvider.otherwise({
         redirectTo: '/login'
     });
+
+    // activate ngAnimate for whitelisted classes only
+    $animateProvider.classNameFilter(/^lightbox$/);
 });
 
 app.run(function($rootScope) {

@@ -44,11 +44,6 @@
         transform: translateX(2px) translateY(2px);
     }
 
-    // prevent triggering ngAnimate animations
-    &.ng-animate {
-        transition: none;
-    }
-
     &[disabled],
     &[aria-disabled="true"] {
         cursor: not-allowed;
@@ -307,7 +302,7 @@
     border: 0;
     padding: 0;
     margin: 0;
-    font-size: $font-size-base;
+    font-size: $font-size-small;
     opacity: 0.5;
     outline: 0;
 

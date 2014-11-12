@@ -8,16 +8,18 @@
       <div ng-show="step === 1">
         <h2 class="typo-title">Key sync</h2>
         <p class="typo-paragraph">We have sent you an email containing a recovery token. Please copy and paste the token below to download your key.</p>
-        <form class="form">
-          <!-- TODO add error messages -->
-          <!--<p class="form__error-message" ng-show="errMsg">{{errMsg}}</p>
-          <p class="form__error-message" ng-show="form.$invalid">Please fill out all required fields!</p>-->
+        <form class="form" name="tokenForm">
+          <p class="form__error-message" ng-show="errMsg">{{errMsg}}</p>
 
           <div class="form__row">
-            <input type="text" class="input-text input-text--big" size="6" maxlength="6" ng-model="recoveryToken" placeholder="Token" focus-me="step === 1" pattern="([a-zA-Z0-9]*)">
+            <input type="text" class="input-text input-text--big" ng-class="{'input-text--error':incorrect}"
+              size="6" maxlength="6" ng-model="recoveryToken" placeholder="Token" focus-me="step === 1" pattern="([a-zA-Z0-9]*)" required>
+          </div>
+          <div class="spinner-block" ng-show="busy">
+            <span class="spinner spinner--big"></span>
           </div>
           <div class="form__row">
-            <button class="btn btn--big" wo-touch="goForward()">Confirm token</button>
+            <button class="btn btn--big" type="submit" ng-click="checkToken()">Confirm token</button>
           </div>
         </form>
 
@@ -37,23 +39,24 @@
       <div ng-show="step === 2">
         <h2 class="typo-title">Key sync</h2>
         <p class="typo-paragraph">Please enter the keychain code you wrote down during sync setup.</p>
-        <form class="form">
-          <!-- TODO add error messages -->
-          <!--<p class="form__error-message" ng-show="errMsg">{{errMsg}}</p>
-          <p class="form__error-message" ng-show="form.$invalid">Please fill out all required fields!</p>-->
+        <form class="form" name="codeForm">
+          <p class="form__error-message" ng-show="errMsg">{{errMsg}}</p>
 
           <div class="form__row">
             <div class="input-code">
-              <input type="text" class="input-text" size="4" maxlength="4" ng-model="code0" focus-me="step === 2" focus-next ng-paste="handlePaste($event)"> -
-              <input type="text" class="input-text" size="4" maxlength="4" ng-model="code1" focus-next> -
-              <input type="text" class="input-text" size="4" maxlength="4" ng-model="code2" focus-next> -
-              <input type="text" class="input-text" size="4" maxlength="4" ng-model="code3" focus-next> -
-              <input type="text" class="input-text" size="4" maxlength="4" ng-model="code4" focus-next> -
-              <input type="text" class="input-text" size="4" maxlength="4" ng-model="code5">
+              <input type="text" class="input-text" size="4" maxlength="4" ng-model="code0" focus-me="step === 2" focus-next required ng-paste="handlePaste($event)"> -
+              <input type="text" class="input-text" size="4" maxlength="4" ng-model="code1" focus-next required> -
+              <input type="text" class="input-text" size="4" maxlength="4" ng-model="code2" focus-next required> -
+              <input type="text" class="input-text" size="4" maxlength="4" ng-model="code3" focus-next required> -
+              <input type="text" class="input-text" size="4" maxlength="4" ng-model="code4" focus-next required> -
+              <input type="text" class="input-text" size="4" maxlength="4" ng-model="code5" required>
             </div>
           </div>
+          <div class="spinner-block" ng-show="busy">
+            <span class="spinner spinner--big"></span>
+          </div>
           <div class="form__row">
-            <button class="btn" wo-touch="goForward()">Complete sync</button>
+            <button class="btn" type="submit" ng-click="checkCode()">Complete sync</button>
           </div>
         </form>
         <p class="typo-paragraph">

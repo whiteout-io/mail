@@ -33,6 +33,8 @@ describe('Login Private Key Download Controller unit test', function() {
         mocks.inject(function($controller, $rootScope) {
             scope = $rootScope.$new();
             scope.state = {};
+            scope.tokenForm = {};
+            scope.codeForm = {};
             ctrl = $controller(LoginPrivateKeyDownloadCtrl, {
                 $location: location,
                 $scope: scope,
@@ -55,6 +57,35 @@ describe('Login Private Key Download Controller unit test', function() {
         });
     });
 
+    describe('checkToken', function() {
+        var verifyRecoveryTokenStub;
+
+        beforeEach(function() {
+            verifyRecoveryTokenStub = sinon.stub(scope, 'verifyRecoveryToken');
+        });
+        afterEach(function() {
+            verifyRecoveryTokenStub.restore();
+        });
+
+        it('should fail for empty recovery token', function() {
+            scope.tokenForm.$invalid = true;
+
+            scope.checkToken();
+
+            expect(verifyRecoveryTokenStub.calledOnce).to.be.false;
+            expect(scope.errMsg).to.exist;
+        });
+
+        it('should work', function() {
+            verifyRecoveryTokenStub.yields();
+
+            scope.checkToken();
+
+            expect(verifyRecoveryTokenStub.calledOnce).to.be.true;
+            expect(scope.step).to.equal(2);
+        });
+    });
+
     describe('verifyRecoveryToken', function() {
         var testKeypair = {
             publicKey: {
@@ -62,53 +93,35 @@ describe('Login Private Key Download Controller unit test', function() {
             }
         };
 
-        it('should fail for empty recovery token', function(done) {
-            scope.onError = function(err) {
-                expect(err).to.exist;
-                done();
-            };
+        it('should fail in keychain.getUserKeyPair', function() {
+            keychainMock.getUserKeyPair.yields(new Error('asdf'));
 
-            scope.recoveryToken = undefined;
             scope.verifyRecoveryToken();
+
+            expect(scope.errMsg).to.exist;
+            expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
         });
 
-        it('should fail in keychain.getUserKeyPair', function(done) {
-            keychainMock.getUserKeyPair.yields(42);
-
-            scope.onError = function(err) {
-                expect(err).to.exist;
-                expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
-                done();
-            };
-
-            scope.recoveryToken = 'token';
-            scope.verifyRecoveryToken();
-        });
-
-        it('should fail in keychain.downloadPrivateKey', function(done) {
+        it('should fail in keychain.downloadPrivateKey', function() {
             keychainMock.getUserKeyPair.yields(null, testKeypair);
-            keychainMock.downloadPrivateKey.yields(42);
-
-            scope.onError = function(err) {
-                expect(err).to.exist;
-                expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
-                expect(keychainMock.downloadPrivateKey.calledOnce).to.be.true;
-                done();
-            };
-
+            keychainMock.downloadPrivateKey.yields(new Error('asdf'));
             scope.recoveryToken = 'token';
+
             scope.verifyRecoveryToken();
+
+            expect(scope.errMsg).to.exist;
+            expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
+            expect(keychainMock.downloadPrivateKey.calledOnce).to.be.true;
         });
 
-        it('should work', function(done) {
+        it('should work', function() {
             keychainMock.getUserKeyPair.yields(null, testKeypair);
             keychainMock.downloadPrivateKey.yields(null, 'encryptedPrivateKey');
-
             scope.recoveryToken = 'token';
-            scope.verifyRecoveryToken(function() {
-                expect(scope.encryptedPrivateKey).to.equal('encryptedPrivateKey');
-                done();
-            });
+
+            scope.verifyRecoveryToken(function() {});
+
+            expect(scope.encryptedPrivateKey).to.equal('encryptedPrivateKey');
         });
     });
 
@@ -151,39 +164,20 @@ describe('Login Private Key Download Controller unit test', function() {
             };
         });
 
-        it('should fail on empty code', function(done) {
-            scope.code0 = '';
-            scope.code1 = '';
-            scope.code2 = '';
-            scope.code3 = '';
-            scope.code4 = '';
-            scope.code5 = '';
-
-            scope.onError = function(err) {
-                expect(err).to.exist;
-                done();
-            };
+        it('should fail on decryptAndStorePrivateKeyLocally', function() {
+            keychainMock.decryptAndStorePrivateKeyLocally.yields(new Error('asdf'));
 
             scope.decryptAndStorePrivateKeyLocally();
-        });
 
-        it('should fail on decryptAndStorePrivateKeyLocally', function(done) {
-            keychainMock.decryptAndStorePrivateKeyLocally.yields(42);
-
-            scope.onError = function(err) {
-                expect(err).to.exist;
-                expect(keychainMock.decryptAndStorePrivateKeyLocally.calledOnce).to.be.true;
-                done();
-            };
-
-            scope.decryptAndStorePrivateKeyLocally();
+            expect(scope.errMsg).to.exist;
+            expect(keychainMock.decryptAndStorePrivateKeyLocally.calledOnce).to.be.true;
         });
 
         it('should goto /login-existing on emailDao.unlock fail', function(done) {
             keychainMock.decryptAndStorePrivateKeyLocally.yields(null, {
                 encryptedKey: 'keyArmored'
             });
-            emailDaoMock.unlock.yields(42);
+            emailDaoMock.unlock.yields(new Error('asdf'));
 
             scope.goTo = function(location) {
                 expect(location).to.equal('/login-existing');
@@ -210,30 +204,6 @@ describe('Login Private Key Download Controller unit test', function() {
             };
 
             scope.decryptAndStorePrivateKeyLocally();
-        });
-    });
-
-    describe('goForward', function() {
-        it('should work in step 1', function() {
-            var verifyRecoveryTokenStub = sinon.stub(scope, 'verifyRecoveryToken');
-            verifyRecoveryTokenStub.yields();
-            scope.step = 1;
-
-            scope.goForward();
-
-            expect(verifyRecoveryTokenStub.calledOnce).to.be.true;
-            expect(scope.step).to.equal(2);
-            verifyRecoveryTokenStub.restore();
-        });
-        it('should work in step 2', function() {
-            var decryptAndStorePrivateKeyLocallyStub = sinon.stub(scope, 'decryptAndStorePrivateKeyLocally');
-            decryptAndStorePrivateKeyLocallyStub.returns();
-            scope.step = 2;
-
-            scope.goForward();
-
-            expect(decryptAndStorePrivateKeyLocallyStub.calledOnce).to.be.true;
-            decryptAndStorePrivateKeyLocallyStub.restore();
         });
     });
 
