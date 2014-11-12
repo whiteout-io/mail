@@ -2,20 +2,24 @@
 
 var appController = require('../app-controller');
 
-var LoginInitialCtrl = function($scope, $location, $routeParams) {
+var LoginInitialCtrl = function($scope, $location, $routeParams, newsletter) {
     if (!appController._emailDao && !$routeParams.dev) {
         $location.path('/'); // init app
         return;
     }
 
-    var emailDao = appController._emailDao,
-        states, termsMsg = 'You must accept the Terms of Service to continue.';
+    if (appController._emailDao) {
+        var emailDao = appController._emailDao,
+            emailAddress = emailDao._account.emailAddress;
+    }
 
-    states = {
-        IDLE: 1,
-        PROCESSING: 2,
-        DONE: 3
-    };
+    var termsMsg = 'You must accept the Terms of Service to continue.',
+        states = {
+            IDLE: 1,
+            PROCESSING: 2,
+            DONE: 3
+        };
+
     $scope.state.ui = states.IDLE; // initial state
 
     //
@@ -26,15 +30,15 @@ var LoginInitialCtrl = function($scope, $location, $routeParams) {
      * Continue to key import screen
      */
     $scope.importKey = function() {
-        if (!$scope.state.agree) {
-            $scope.onError({
-                message: termsMsg
-            });
+        if (!$scope.agree) {
+            displayError(new Error(termsMsg));
             return;
         }
 
+        $scope.errMsg = undefined;
+
         // sing up to newsletter
-        $scope.signUpToNewsletter();
+        newsletter.signup(emailAddress, $scope.newsletter);
         // go to key import
         $location.path('/login-new-device');
     };
@@ -43,77 +47,47 @@ var LoginInitialCtrl = function($scope, $location, $routeParams) {
      * Continue to keygen
      */
     $scope.generateKey = function() {
-        if (!$scope.state.agree) {
-            $scope.onError({
-                message: termsMsg
-            });
+        if (!$scope.agree) {
+            displayError(new Error(termsMsg));
             return;
         }
 
+        $scope.errMsg = undefined;
+
         // sing up to newsletter
-        $scope.signUpToNewsletter();
+        newsletter.signup(emailAddress, $scope.newsletter);
         // go to set keygen screen
         $scope.setState(states.PROCESSING);
 
-        setTimeout(function() {
-            emailDao.unlock({
-                passphrase: undefined // generate key without passphrase
-            }, function(err) {
+        emailDao.unlock({
+            passphrase: undefined // generate key without passphrase
+        }, function(err) {
+            if (err) {
+                displayError(err);
+                return;
+            }
+
+            appController._auth.storeCredentials(function(err) {
                 if (err) {
-                    $scope.setState(states.IDLE);
-                    $scope.onError(err);
+                    displayError(err);
                     return;
                 }
 
-                appController._auth.storeCredentials(function(err) {
-                    if (err) {
-                        return $scope.onError(err);
-                    }
-
-                    $location.path('/desktop');
-                    $scope.$apply();
-                });
+                $location.path('/desktop');
+                $scope.$apply();
             });
-        }, 500);
-    };
-
-    /**
-     * [signUpToNewsletter description]
-     * @param  {Function} callback (optional)
-     */
-    $scope.signUpToNewsletter = function(callback) {
-        if (!$scope.state.newsletter) {
-            return;
-        }
-
-        var address = emailDao._account.emailAddress;
-        var uri = 'https://whiteout.us8.list-manage.com/subscribe/post?u=52ea5a9e1be9e1d194f184158&id=6538e8f09f';
-
-        var formData = new FormData();
-        formData.append('EMAIL', address);
-        formData.append('b_52ea5a9e1be9e1d194f184158_6538e8f09f', '');
-
-        var xhr = new XMLHttpRequest();
-        xhr.open('post', uri, true);
-
-        xhr.onload = function() {
-            if (callback) {
-                callback(null, xhr);
-            }
-        };
-
-        xhr.onerror = function(err) {
-            if (callback) {
-                callback(err);
-            }
-        };
-
-        xhr.send(formData);
+        });
     };
 
     $scope.setState = function(state) {
         $scope.state.ui = state;
     };
+
+    function displayError(err) {
+        $scope.setState(states.IDLE);
+        $scope.errMsg = err.errMsg || err.message;
+        $scope.$apply();
+    }
 };
 
 module.exports = LoginInitialCtrl;

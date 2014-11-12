@@ -37,6 +37,7 @@ describe('Login (new device) Controller unit test', function() {
             scope.state = {
                 ui: {}
             };
+            scope.form = {};
             ctrl = $controller(LoginNewDeviceCtrl, {
                 $scope: scope,
                 $routeParams: {}
@@ -103,7 +104,7 @@ describe('Login (new device) Controller unit test', function() {
             expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
         });
 
-        it('should not work when keypair upload fails', function(done) {
+        it('should not work when keypair upload fails', function() {
             scope.passphrase = passphrase;
             scope.key = {
                 privateKeyArmored: 'b'
@@ -123,19 +124,15 @@ describe('Login (new device) Controller unit test', function() {
                 errMsg: 'yo mamma.'
             });
 
-            scope.onError = function(err) {
-                expect(err.errMsg).to.equal('yo mamma.');
-                done();
-            };
-
             scope.confirmPassphrase();
 
             expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
             expect(emailDaoMock.unlock.calledOnce).to.be.true;
             expect(keychainMock.putUserKeyPair.calledOnce).to.be.true;
+            expect(scope.errMsg).to.equal('yo mamma.');
         });
 
-        it('should not work when unlock fails', function(done) {
+        it('should not work when unlock fails', function() {
             scope.passphrase = passphrase;
             scope.key = {
                 privateKeyArmored: 'b'
@@ -154,33 +151,28 @@ describe('Login (new device) Controller unit test', function() {
                 errMsg: 'yo mamma.'
             });
 
-            scope.onError = function(err) {
-                expect(err.errMsg).to.equal('yo mamma.');
-                done();
-            };
-
             scope.confirmPassphrase();
 
             expect(scope.incorrect).to.be.true;
             expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
             expect(emailDaoMock.unlock.calledOnce).to.be.true;
+            expect(scope.errMsg).to.equal('yo mamma.');
         });
 
-        it('should not work when keypair retrieval', function(done) {
+        it('should not work when keypair retrieval', function() {
             scope.passphrase = passphrase;
+            scope.key = {
+                privateKeyArmored: 'b'
+            };
 
             keychainMock.getUserKeyPair.withArgs(emailAddress).yields({
                 errMsg: 'yo mamma.'
             });
 
-            scope.onError = function(err) {
-                expect(err.errMsg).to.equal('yo mamma.');
-                done();
-            };
-
             scope.confirmPassphrase();
 
             expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
+            expect(scope.errMsg).to.equal('yo mamma.');
         });
     });
 });

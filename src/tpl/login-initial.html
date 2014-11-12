@@ -12,13 +12,11 @@
         </p>
 
         <form class="form" name="form">
-          <!-- TODO: remove error dialog and use inline error messages -->
-          <!--<p class="form__error-message" ng-show="errMsg">{{errMsg}}</p>
-          <p class="form__error-message" ng-show="form.$invalid">Please fill out all required fields!</p>-->
+          <p class="form__error-message" ng-show="errMsg">{{errMsg}}</p>
           <div class="form__row">
             <label class="input-checkbox">
               <span class="checkbox">
-                <input type="checkbox" ng-model="state.agree">
+                <input type="checkbox" ng-model="agree">
                 <span class="input-checkbox__box"><svg role="presentation"><use xlink:href="#icon-check" /></svg></span>
               </span>
               I agree to the Whiteout Networks <a href="https://whiteout.io/terms.html" target="_blank">Terms of Service</a> and have read the <a href="https://whiteout.io/privacy-service.html" target="_blank">Privacy Policy</a>
@@ -27,17 +25,17 @@
           <div class="form__row">
             <label class="input-checkbox">
               <span class="checkbox">
-                <input type="checkbox" ng-model="state.newsletter">
+                <input type="checkbox" ng-model="newsletter">
                 <span class="input-checkbox__box"><svg role="presentation"><use xlink:href="#icon-check" /></svg></span>
               </span>
               Stay up to date on Whiteout Networks products and important announcements.
             </label>
           </div>
           <div class="form__row">
-            <button type="submit" wo-touch="generateKey()" class="btn" tabindex="3">Generate new key</button>
+            <button type="submit" ng-click="generateKey()" class="btn" tabindex="3">Generate new key</button>
           </div>
           <div class="form__row">
-            <button type="button" wo-touch="importKey()" class="btn btn--secondary">Import existing key</button>
+            <button type="button" ng-click="importKey()" class="btn btn--secondary">Import existing key</button>
           </div>
         </form>
       </div>
@@ -47,7 +45,7 @@
         <p class="typo-paragraph">
           Please stand by. This can take a while…
         </p>
-        <div class="u-text-center">
+        <div class="spinner-block spinner-block--standalone">
           <span class="spinner spinner--big"></span>
         </div>
       </div>

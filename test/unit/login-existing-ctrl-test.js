@@ -35,6 +35,7 @@ describe('Login (existing user) Controller unit test', function() {
             location = $location;
             scope = $rootScope.$new();
             scope.state = {};
+            scope.form = {};
             ctrl = $controller(LoginExistingCtrl, {
                 $scope: scope,
                 $routeParams: {}
@@ -50,64 +51,37 @@ describe('Login (existing user) Controller unit test', function() {
 
     describe('initial state', function() {
         it('should be well defined', function() {
-            expect(scope.buttonEnabled).to.be.true;
-            expect(scope.incorrect).to.be.false;
-            expect(scope.change).to.exist;
-            expect(scope.confirmPassphrase).to.exist;
+            expect(scope.incorrect).to.be.undefined;
         });
     });
 
-    describe('functionality', function() {
-        describe('change', function() {
-            it('should set incorrect to false', function() {
-                scope.incorrect = true;
+    describe('confirm passphrase', function() {
+        it('should unlock crypto and start', function() {
+            var keypair = {},
+                pathSpy = sinon.spy(location, 'path');
+            scope.passphrase = passphrase;
+            keychainMock.getUserKeyPair.withArgs(emailAddress).yields(null, keypair);
+            emailDaoMock.unlock.withArgs({
+                keypair: keypair,
+                passphrase: passphrase
+            }).yields();
+            authMock.storeCredentials.yields();
 
-                scope.change();
-                expect(scope.incorrect).to.be.false;
-            });
+            scope.confirmPassphrase();
+
+            expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
+            expect(emailDaoMock.unlock.calledOnce).to.be.true;
+            expect(pathSpy.calledOnce).to.be.true;
+            expect(pathSpy.calledWith('/desktop')).to.be.true;
         });
 
-        describe('confirm passphrase', function() {
-            it('should unlock crypto and start', function() {
-                var keypair = {},
-                    pathSpy = sinon.spy(location, 'path');
-                scope.passphrase = passphrase;
-                keychainMock.getUserKeyPair.withArgs(emailAddress).yields(null, keypair);
-                emailDaoMock.unlock.withArgs({
-                    keypair: keypair,
-                    passphrase: passphrase
-                }).yields();
-                authMock.storeCredentials.yields();
+        it('should not work when keypair unavailable', function() {
+            scope.passphrase = passphrase;
+            keychainMock.getUserKeyPair.withArgs(emailAddress).yields(new Error('asd'));
 
-
-                scope.confirmPassphrase();
-
-                expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
-                expect(emailDaoMock.unlock.calledOnce).to.be.true;
-                expect(pathSpy.calledOnce).to.be.true;
-                expect(pathSpy.calledWith('/desktop')).to.be.true;
-            });
-
-            it('should not do anything without passphrase', function() {
-                var pathSpy = sinon.spy(location, 'path');
-                scope.passphrase = '';
-
-                scope.confirmPassphrase();
-                expect(pathSpy.callCount).to.equal(0);
-            });
-
-            it('should not work when keypair unavailable', function(done) {
-                scope.passphrase = passphrase;
-                keychainMock.getUserKeyPair.withArgs(emailAddress).yields(new Error('asd'));
-
-                scope.onError = function(err) {
-                    expect(err.message).to.equal('asd');
-                    expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
-                    done();
-                };
-
-                scope.confirmPassphrase();
-            });
+            scope.confirmPassphrase();
+            expect(scope.errMsg).to.exist;
+            expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
         });
     });
 });

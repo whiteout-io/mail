@@ -17,23 +17,19 @@
           </p>
         </fieldset>
 
-        <!-- TODO -->
-        <!--<p class="form__error-message" ng-show="errMsg">{{errMsg}}</p>
-        <p class="form__error-message" ng-show="form.$invalid">Please fill out all required fields!</p>-->
-
+        <p class="form__error-message" ng-show="errMsg">{{errMsg}}</p>
         <div class="form__row">
-          <input class="input-file" type="file" accept=".asc" file-reader tabindex="1">
+          <input class="input-file" type="file" accept=".asc" file-reader tabindex="1" required>
         </div>
         <div class="form__row">
           <input class="input-text" type="password" ng-model="passphrase"
             ng-class="{'input-text--error':incorrect}" placeholder="Passphrase" tabindex="2">
         </div>
-        <!-- TODO -->
-        <!--<div class="spinner-block" ng-show="busy">
+        <div class="spinner-block" ng-show="busy">
           <span class="spinner spinner--big"></span>
-        </div>-->
+        </div>
         <div class="form__row">
-          <button type="submit" wo-touch="confirmPassphrase()" class="btn" ng-disabled="!key" tabindex="3">Import</button>
+          <button type="submit" ng-click="confirmPassphrase()" class="btn" tabindex="3">Import</button>
         </div>
       </form>
       <p class="typo-paragraph">

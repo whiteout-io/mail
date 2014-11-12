@@ -169,6 +169,8 @@ module.exports = function(grunt) {
                         'test/unit/lawnchair-dao-test.js',
                         'test/unit/keychain-dao-test.js',
                         'test/unit/devicestorage-dao-test.js',
+                        'test/unit/newsletter-service-test.js',
+                        'test/unit/mail-config-service-test.js',
                         'test/unit/dialog-ctrl-test.js',
                         'test/unit/add-account-ctrl-test.js',
                         'test/unit/create-account-ctrl-test.js',
@@ -192,7 +194,6 @@ module.exports = function(grunt) {
                         'test/unit/invitation-dao-test.js',
                         'test/unit/update-handler-test.js',
                         'test/unit/connection-doctor-test.js',
-                        'test/unit/mail-config-service-test.js',
                         'test/main.js'
                     ]
                 },
