@@ -68,7 +68,7 @@
 
     // Invalid button state
     &--invalid {
-        background-color: $color-error;
+        background-color: $color-error-area;
         color: $color-error-text;
         background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAGCAYAAADgzO9IAAAAJUlEQVQIW2NkQABJIPM5lCvJCGMgC4LYIAkUlTAFMB0gjRQaBQCw8go5lVnl5wAAAABJRU5ErkJggg==);
 
@@ -82,7 +82,7 @@
 
         &:hover,
         &:focus {
-            background-color: lighten($color-error, 5%);
+            background-color: lighten($color-error-area, 5%);
         }
     }
 
