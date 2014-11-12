@@ -2,6 +2,27 @@
     cursor: wait !important;
 }
 
+// Visibility
+
+.u-hide-visually {
+    visibility: hidden;
+    position: absolute;
+    width: 0;
+    height: 0;
+}
+
+// Text alignment
+
 .u-text-center {
     text-align: center;
+}
+
+// Whitespacing
+
+.u-gap-top {
+    margin-top: 30px;
+}
+
+.u-gap-bottom {
+    margin-bottom: 30px;
 }

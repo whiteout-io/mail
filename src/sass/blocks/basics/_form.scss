@@ -74,6 +74,25 @@
     }
 }
 
+.form-input-with-button {
+    display: flex;
+    flex-direction: row;
+
+    & > .input-text {
+        flex-grow: 1;
+        margin-right: 10px;
+        height: 40px;
+    }
+    & > .btn {
+        flex-shrink: 0;
+        height: 40px;
+
+        @include respond-to(md) {
+            min-width: 8em;
+        }
+    }
+}
+
 
 // Form elements
 
