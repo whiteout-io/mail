@@ -73,6 +73,7 @@
     }
     &__main {
         height: 100%;
+        transform: translateZ(0);
 
         @include respond-to(lg) {
             position: absolute;
@@ -85,6 +86,17 @@
         }
     }
 
+    // Animation
+    @include respond-to(not-lg) {
+        will-change: transform;
+        transform-style: preserve-3d;
+        transition: transform 0.15s ease-out;
+        .app__container:after {
+            will-change: transform;
+            transform-style: preserve-3d;
+        }
+    }
+
     // Modifier to open sidebar
     &--show-aside {
         @include respond-to(not-lg) {
@@ -92,17 +104,6 @@
             .app__container:after {
                 transform: none;
             }
-        }
-    }
-
-    // Animation
-    @include respond-to(not-lg) {
-        will-change: transform;
-        transform-style: preserve3d;
-        transition: transform 0.15s ease-out;
-        .app__container:after {
-            will-change: transform;
-            transform-style: preserve3d;
         }
     }
 }

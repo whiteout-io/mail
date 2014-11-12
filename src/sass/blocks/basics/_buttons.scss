@@ -44,11 +44,6 @@
         transform: translateX(2px) translateY(2px);
     }
 
-    // prevent triggering ngAnimate animations
-    &.ng-animate {
-        transition: none;
-    }
-
     &[disabled],
     &[aria-disabled="true"] {
         cursor: not-allowed;
