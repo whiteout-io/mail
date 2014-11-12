@@ -57,6 +57,7 @@
         width: 100%;
         border: none;
         outline: none;
+        resize: none;
         color: $color-grey-dark;
         line-height: 1.5em;
         overflow-y: auto;
@@ -64,10 +65,5 @@
         -webkit-overflow-scrolling: touch;
         // put layer on GPU
         transform: translatez(0);
-    }
-    &__submit {
-        position: absolute;
-        bottom: 0;
-        right: 0;
     }
 }
