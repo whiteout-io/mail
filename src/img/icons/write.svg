@@ -2,12 +2,10 @@
 <!-- Generator: Adobe Illustrator 18.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="155.9 279.2 283.5 283.5" enable-background="new 155.9 279.2 283.5 283.5" xml:space="preserve">
-<g id="icomoon-ignore">
-	<line fill="none" stroke="#449FDB" x1="316.7" y1="420.9" x2="316.7" y2="420.9"/>
-</g>
-<path d="M374.1,445.7l25.9-25.9v76.5c0,15.8-12.4,28.1-27,28.1H221c-15.8,0-27-12.4-27-28.1V345.6c0-15.7,12.4-28.1,27-28.1h154.1
-	l-25.9,25.9H230c-5.6,0-10.1,4.5-10.1,10.1v133.9c0,5.6,4.5,10.1,10.1,10.1H364c5.6,0,10.1-4.5,10.1-10.1V445.7z M320,463.7l-27-27
-	l-10.1,37.1L320,463.7L320,463.7z M329,454.7l87.8-87.8l-27-27l-87.7,86.6L329,454.7L329,454.7z M427,358l12.4-12.4l-28.1-28.1
-	l-12.4,12.4L427,358z"/>
+	 viewBox="603.6 369 71.2 60" enable-background="new 603.6 369 71.2 60" xml:space="preserve">
+<polygon points="640.1,411.4 632.3,403.6 629.4,414.3 "/>
+<polygon points="642.7,408.8 668.2,383.3 660.4,375.5 634.9,400.6 "/>
+<rect x="666.3" y="369.1" transform="matrix(0.7071 -0.7071 0.7071 0.7071 -69.1702 582.7595)" width="5.1" height="11.5"/>
+<path d="M659.7,402.2l3.6-3.5v22.2c0,4.6-3.6,8.1-7.8,8.1h-44.1c-4.6,0-7.8-3.6-7.8-8.1v-43.7c0-4.6,3.6-8.1,7.8-8.1h44.7l-3.6,3.6
+	H611c-1.6,0-3.8,2.2-3.8,3.8v44.8c0,1.6,2.2,3.8,3.8,3.8h44.8c1.6,0,3.8-2.2,3.8-3.8V402.2z"/>
 </svg>
