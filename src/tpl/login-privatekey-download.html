@@ -13,7 +13,7 @@
 
           <div class="form__row">
             <input type="text" class="input-text input-text--big" ng-class="{'input-text--error':incorrect}"
-              size="6" maxlength="6" ng-model="recoveryToken" placeholder="Token" focus-me="step === 1" pattern="([a-zA-Z0-9]*)" required>
+              size="6" maxlength="6" ng-model="recoveryToken" placeholder="Token" wo-focus-me="step === 1" pattern="([a-zA-Z0-9]*)" required>
           </div>
           <div class="spinner-block" ng-show="busy">
             <span class="spinner spinner--big"></span>
@@ -44,7 +44,7 @@
 
           <div class="form__row">
             <div class="input-code">
-              <input type="text" class="input-text" size="4" maxlength="4" ng-model="code0" focus-me="step === 2" focus-next required ng-paste="handlePaste($event)"> -
+              <input type="text" class="input-text" size="4" maxlength="4" ng-model="code0" wo-focus-me="step === 2" focus-next required ng-paste="handlePaste($event)"> -
               <input type="text" class="input-text" size="4" maxlength="4" ng-model="code1" focus-next required> -
               <input type="text" class="input-text" size="4" maxlength="4" ng-model="code2" focus-next required> -
               <input type="text" class="input-text" size="4" maxlength="4" ng-model="code3" focus-next required> -

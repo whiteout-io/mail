@@ -64,7 +64,7 @@
       </ul>
     </header>
 
-    <textarea class="write__body" ng-model="body" spellcheck="true" focus-me="state.lightbox === 'write' && writerTitle === 'Reply'" tabindex="3"></textarea>
+    <textarea class="write__body" ng-model="body" spellcheck="true" wo-focus-me="state.lightbox === 'write' && writerTitle === 'Reply'" tabindex="3"></textarea>
 
     <div class="write__submit">
       <button wo-touch="sendToOutbox()" class="btn" ng-class="{'btn--invalid': sendBtnSecure === false}" ng-disabled="!okToSend" tabindex="4">{{sendBtnText || 'Send'}}</button>

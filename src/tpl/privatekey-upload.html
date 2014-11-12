@@ -26,7 +26,7 @@
         <p class="typo-paragraph">Please confirm the keychain code you have written down.</p>
         <form class="form">
           <div class="input-code">
-            <input type="text" class="input-text" size="4" maxlength="4" ng-model="code0" focus-me="step === 2" focus-next ng-paste="handlePaste($event)"> -
+            <input type="text" class="input-text" size="4" maxlength="4" ng-model="code0" wo-focus-me="step === 2" focus-next ng-paste="handlePaste($event)"> -
             <input type="text" class="input-text" size="4" maxlength="4" ng-model="code1" focus-next> -
             <input type="text" class="input-text" size="4" maxlength="4" ng-model="code2" focus-next> -
             <input type="text" class="input-text" size="4" maxlength="4" ng-model="code3" focus-next> -
@@ -39,7 +39,7 @@
       <div ng-show="step === 3">
         <p class="typo-paragraph">Please enter a memorable name for this device e.g. “MacBook Work”.</p>
         <form class="form">
-          <input type="text" class="input-text" ng-model="deviceName" placeholder="Device name" focus-me="step === 3">
+          <input type="text" class="input-text" ng-model="deviceName" placeholder="Device name" wo-focus-me="step === 3">
         </form>
       </div>
 
