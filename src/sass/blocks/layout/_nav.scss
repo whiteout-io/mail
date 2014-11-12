@@ -49,8 +49,9 @@
                 fill: $color-white;
                 width: 20px;
                 height: 1em;
-                vertical-align: baseline;
+                vertical-align: middle;
                 margin-right: 5px;
+                margin-top: -0.25em;
             }
         }
         .btn-icon-very-light {
@@ -96,8 +97,9 @@
                     fill: $color-white;
                     width: 20px;
                     height: 1em;
-                    vertical-align: baseline;
+                    vertical-align: middle;
                     margin-right: 5px;
+                    margin-top: -0.25em;
                 }
             }
 
