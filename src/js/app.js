@@ -16,6 +16,8 @@ if (typeof window.applicationCache !== 'undefined') {
 
 var DialogCtrl = require('./controller/dialog'),
     AddAccountCtrl = require('./controller/add-account'),
+    CreateAccountCtrl = require('./controller/create-account'),
+    ValidatePhoneCtrl = require('./controller/validate-phone'),
     AccountCtrl = require('./controller/account'),
     SetPassphraseCtrl = require('./controller/set-passphrase'),
     PrivateKeyUploadCtrl = require('./controller/privatekey-upload'),
@@ -34,7 +36,8 @@ var DialogCtrl = require('./controller/dialog'),
     ActionBarCtrl = require('./controller/action-bar'),
     errorUtil = require('./util/error'),
     backButtonUtil = require('./util/backbutton-handler');
-require('./directives/common');
+require('./directive/common'),
+require('./service/mail-config');
 
 // init main angular module including dependencies
 var app = angular.module('mail', [
@@ -49,18 +52,27 @@ var app = angular.module('mail', [
     'privatekey-upload',
     'infinite-scroll',
     'ngTagsInput',
-    'woDirectives'
+    'woDirectives',
+    'woServices'
 ]);
 
 // set router paths
 app.config(function($routeProvider) {
+    $routeProvider.when('/login', {
+        templateUrl: 'tpl/login.html',
+        controller: LoginCtrl
+    });
     $routeProvider.when('/add-account', {
         templateUrl: 'tpl/add-account.html',
         controller: AddAccountCtrl
     });
-    $routeProvider.when('/login', {
-        templateUrl: 'tpl/login.html',
-        controller: LoginCtrl
+    $routeProvider.when('/create-account', {
+        templateUrl: 'tpl/create-account.html',
+        controller: CreateAccountCtrl
+    });
+    $routeProvider.when('/validate-phone', {
+        templateUrl: 'tpl/validate-phone.html',
+        controller: ValidatePhoneCtrl
     });
     $routeProvider.when('/login-set-credentials', {
         templateUrl: 'tpl/login-set-credentials.html',

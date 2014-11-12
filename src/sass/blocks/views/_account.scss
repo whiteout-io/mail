@@ -1,0 +1,42 @@
+.account {
+    margin: 0;
+    text-align: center;
+    dt {
+        font-weight: bold;
+    }
+    dd {
+        margin: 0 0 10px;
+    }
+    a {
+        color: $color-main;
+        text-decoration: underline;
+    }
+
+    & > :last-child {
+        margin-bottom: 0;
+    }
+
+    @include respond-to(md) {
+        @include scut-clearfix;
+
+        dt ~ dt,
+        dd ~ dd {
+            margin: 10px 0 0;
+        }
+
+        dt {
+            float: left;
+            padding-right: 0.5em;
+            text-align: right;
+            width: 50%;
+            margin: 0;
+        }
+        dd {
+            float: right;
+            padding-left: 0.5em;
+            text-align: left;
+            width: 50%;
+            margin: 0;
+        }
+    }
+}

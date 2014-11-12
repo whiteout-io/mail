@@ -17,21 +17,10 @@
 // Utilities classes
 
 @import "utilities/responsive";
-
-// Components (TODO: refactor to BEM)
-@import "components/lightbox";
-@import "components/dialog";
+@import "utilities/others";
 
 // Views (TODO: refactor to BEM)
-@import "views/shared";
-@import "views/add-account";
-@import "views/account";
-@import "views/privatekey-upload";
-@import "views/set-passphrase";
 @import "views/contacts";
-@import "views/about";
-@import "views/dialog";
-@import "views/login";
 
 // Blocks
 // (BEM-like Naming, see http://cssguidelin.es/#bem-like-naming)
@@ -46,10 +35,14 @@
 @import "blocks/basics/tooltip";
 @import "blocks/basics/dropdown";
 @import "blocks/basics/toolbar";
+@import "blocks/basics/typo";
 @import "blocks/layout/app";
+@import "blocks/layout/page";
 @import "blocks/layout/nav";
 @import "blocks/layout/action-bar";
 @import "blocks/layout/mail-list-wrapper";
+@import "blocks/layout/lightbox";
 @import "blocks/views/mail-list";
 @import "blocks/views/read";
 @import "blocks/views/write";
+@import "blocks/views/account";

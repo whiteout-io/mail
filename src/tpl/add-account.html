@@ -1,189 +1,31 @@
-<div class="view-login view-add-account">
-
-  <div ng-show="step === 1">
-    <div class="logo">
+<section class="page">
+  <div class="page__canvas">
+    <header class="page__header">
       <img src="img/whiteout_logo.svg" alt="whiteout.io">
-    </div><!--/logo-->
+    </header>
+    <main class="page__main">
+      <h2 class="typo-title">Connect your email account</h2>
+      <p class="typo-paragraph">Connect the Whiteout Mail client to your existing email account via IMAP for easy to use end-to-end encryption. We cannot read your password or messages. <a href="https://github.com/whiteout-io/mail-html5/wiki/FAQ#email-account-login" target="_blank">Learn more</a></p>
 
-    <div class="content choose">
-      <div class="choice">
-        <p><b>Create Whiteout account.</b> Create a new fully encrypted Whiteout Mailbox.</p>
-        <button class="btn" wo-touch="goTo(2)">Create new account</button>
-      </div>
-      <hr>
-      <div class="choice">
-        <p><b>Login to IMAP account.</b> Connect Whiteout Mail to any existing email account via IMAP.</p>
-        <button class="btn btn--secondary" wo-touch="goTo(4)">Login to existing</button>
-      </div>
-    </div>
-  </div>
-
-  <div ng-show="step === 2">
-    <div class="logo">
-      <img src="img/whiteout_logo.svg" alt="whiteout.io">
-    </div><!--/logo-->
-
-    <div class="content create-account">
-      <p><b>Create Whiteout account.</b> Please fill out the following form. You will need a <i>beta access code</i> during the private beta period.</p>
-      <form name="form">
-        <label class="input-error-message" ng-show="errMsg">{{errMsg}}</label>
-        <label class="input-error-message" ng-show="form.$invalid">Please fill out all required fields!</label>
-        <div class="flex">
-          <input class="input-text wmail" ng-model="user" required type="text" pattern='^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))' placeholder="User name"  focus-me="step === 2">
-          <span class="domain">@wmail.io</span>
+      <form class="form" name="form">
+        <p class="form__error-message" ng-show="errMsg">{{errMsg}}</p>
+        <div class="form__row">
+          <input type="email" ng-model="emailAddress" placeholder="Enter email address" required tabindex="1"
+            class="input-text input-text--big" ng-class="{'input-text--error': errMsg}"
+            autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
         </div>
-        <input class="input-text" type="text" ng-model="realname" placeholder="Full name (optional)"></input>
-        <div class="flex">
-          <input class="input-text" ng-model="pass" required type="password" placeholder="Password" pattern=".{3,30}">
-          <input class="input-text right" ng-model="confirmPass" required type="password" placeholder="Confirm password" ng-class="{'input-text--error': (pass || confirmPass) && pass !== confirmPass}">
+        <div class="spinner-block" ng-show="busy">
+          <span class="spinner spinner--big"></span>
         </div>
-        <input class="input-text"  type="tel" ng-model="phone" required placeholder="Mobile phone number (e.g. +49 170 1234567)"/>
-        <input class="input-text" type="text" class="input-text" ng-model="betaCode" required placeholder="Beta access code">
-
-        <div class="working" ng-show="busy">
-          <span class="spinner"></span>
-        </div>
-
-        <div>
-          <button class="btn" type="submit" ng-click="createWhiteoutAccount()">Create</button>
+        <div class="form__row">
+          <button class="btn btn--big" type="submit" ng-click="getAccountSettings()">Connect</button>
         </div>
       </form>
-    </div>
+
+      <p class="typo-paragraph">
+        Or sign up for a new fully encrypted <a href="#create-account">Whiteout Mailbox</a>.
+      </p>
+    </main>
+    <div ng-include="'tpl/page-footer.html'"></div>
   </div>
-
-  <div ng-show="step === 3">
-    <div class="logo">
-      <img src="img/whiteout_logo.svg" alt="whiteout.io">
-    </div><!--/logo-->
-
-    <div class="content">
-      <p><b>Validate phone number.</b> We have sent you a validation code via SMS. Please enter this code to confirm your phone number.</p>
-      <form name="formValidate">
-        <label class="input-error-message" ng-show="errMsgValidate">{{errMsgValidate}}</label>
-        <br>
-        <input type="text" class="input-text token" size="6" maxlength="6" ng-model="token" placeholder="Code" focus-me="step === 3" required pattern="([a-zA-Z0-9]*)">
-
-        <div class="working" ng-show="busyValidate">
-          <span class="spinner"></span>
-        </div>
-
-        <div>
-          <button class="btn" type="submit" ng-click="validateUser()">Confirm code</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <div class="providers" ng-show="step === 4">
-    <h1>Select account</h1>
-
-    <ul>
-      <li class="whiteout" wo-tooltip="#whiteout-info" wo-touch="connectTo('wmail')">
-        <div><img src="img/whiteout_logo.svg" alt="Whiteout Mailbox"></div>
-      </li>
-      <li class="google" wo-tooltip="#google-info" wo-touch="connectToGoogle()">
-        <div><img src="img/google_logo.png" alt="Google Mail"></div>
-      </li>
-      <li class="outlook" wo-tooltip="#outlook-info" wo-touch="connectTo('outlook')">
-        <div><img src="img/outlook_logo.jpg" alt="Outlook.com"></div>
-      </li>
-      <li class="yahoo" wo-tooltip="#yahoo-info" wo-touch="connectTo('yahoo')">
-        <div><img src="img/yahoo_logo.png" alt="Yahoo! Mail"></div>
-      </li>
-      <li class="gmx" wo-tooltip="#gmx-info" wo-touch="connectTo('gmx')">
-        <div><img src="img/gmx_logo.jpg" alt="GMX.net"></div>
-      </li>
-      <li class="webde" wo-tooltip="#webde-info" wo-touch="connectTo('webde')">
-        <div><img src="img/webde_logo.jpg" alt="Web.de"></div>
-      </li>
-      <li class="tonline" wo-tooltip="#tonline-info" wo-touch="connectTo('tonline')">
-        <div><img src="img/tonline_logo.jpg" alt="T-Online"></div>
-      </li>
-      <li class="other" wo-tooltip="#custom-info" wo-touch="connectTo('custom')">
-        <h3>Custom server...</h3>
-      </li>
-    </ul>
-  </div>
-
-</div>
-
-<!-- tooltips -->
-<div id="google-info" class="tooltip u-hidden-sm">
-  <div class="tooltip__arrow"></div>
-  <div class="tooltip__title">Google Account</div>
-  <div class="tooltip__content">
-    <p>Connect Whiteout Mail to your Gmail or Google Apps account.</p>
-    <p>Encrypted and cleartext messages are stored on Google's servers.</p>
-    <p>Your emails and password remain on your device and are never sent to our servers.</p>
-  </div>
-</div><!--/.tooltip-->
-
-<div id="whiteout-info" class="tooltip u-hidden-sm">
-  <div class="tooltip__arrow"></div>
-  <div class="tooltip__title">Whiteout Mailbox</div>
-  <div class="tooltip__content">
-    <p>Connect Whiteout Mail to your fully encrypted Whiteout Mailbox (hosted in Europe).</p>
-    <p>Incoming cleartext messages are encrypted with your public PGP key before being stored in your inbox.</p>
-    <p>This way your email is protected against hackers and can only be read on your device.</p>
-  </div>
-</div><!--/.tooltip-->
-
-<div id="yahoo-info" class="tooltip u-hidden-sm">
-  <div class="tooltip__arrow"></div>
-  <div class="tooltip__title">Yahoo Mail</div>
-  <div class="tooltip__content">
-    <p>Connect Whiteout Mail to your Yahoo Mail account.</p>
-    <p>Encrypted and cleartext messages are stored on Yahoo's servers.</p>
-    <p>Your emails and password remain on your device and are never sent to our servers.</p>
-  </div>
-</div><!--/.tooltip-->
-
-<div id="tonline-info" class="tooltip u-hidden-sm">
-  <div class="tooltip__arrow"></div>
-  <div class="tooltip__title">T-Online Account</div>
-  <div class="tooltip__content">
-    <p>Connect Whiteout Mail to your T-Online account.</p>
-    <p>Encrypted and cleartext messages are stored on T-Online's servers.</p>
-    <p>Your emails and password remain on your device and are never sent to our servers.</p>
-  </div>
-</div><!--/.tooltip-->
-
-<div id="outlook-info" class="tooltip u-hidden-sm">
-  <div class="tooltip__arrow"></div>
-  <div class="tooltip__title">Outlook.com Account</div>
-  <div class="tooltip__content">
-    <p>Connect Whiteout Mail to your Outlook.com account.</p>
-    <p>Encrypted and cleartext messages are stored on Microsoft's servers.</p>
-    <p>Your emails and password remain on your device and are never sent to our servers.</p>
-  </div>
-</div><!--/.tooltip-->
-
-<div id="gmx-info" class="tooltip u-hidden-sm">
-  <div class="tooltip__arrow"></div>
-  <div class="tooltip__title">GMX.net Account</div>
-  <div class="tooltip__content">
-    <p>Connect Whiteout Mail to your GMX.net account.</p>
-    <p>Encrypted and cleartext messages are stored on GMX's servers.</p>
-    <p>Your emails and password remain on your device and are never sent to our servers.</p>
-  </div>
-</div><!--/.tooltip-->
-
-<div id="webde-info" class="tooltip u-hidden-sm">
-  <div class="tooltip__arrow"></div>
-  <div class="tooltip__title">Web.de Account</div>
-  <div class="tooltip__content">
-    <p>Connect Whiteout Mail to your Web.de account.</p>
-    <p>Encrypted and cleartext messages are stored on Web.de's servers.</p>
-    <p>Your emails and password remain on your device and are never sent to our servers.</p>
-  </div>
-</div><!--/.tooltip-->
-
-<div id="custom-info" class="tooltip u-hidden-sm">
-  <div class="tooltip__arrow"></div>
-  <div class="tooltip__title">Custom server</div>
-  <div class="tooltip__content">
-    <p>Connect Whiteout Mail to your own email server.</p>
-    <p>Encrypted and cleartext messages are stored on your server.</p>
-    <p>Your emails and password remain on your device and are never sent to our servers.</p>
-  </div>
-</div><!--/.tooltip-->
+</section>

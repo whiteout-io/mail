@@ -3,8 +3,7 @@
 var DeviceStorageDAO = require('../../src/js/dao/devicestorage-dao'),
     Auth = require('../../src/js/bo/auth'),
     cfg = require('../../src/js/app-config').config,
-    UpdateHandler = require('../../src/js/util/update/update-handler'),
-    config = require('../../src/js/app-config').config;
+    UpdateHandler = require('../../src/js/util/update/update-handler');
 
 describe('UpdateHandler', function() {
     var updateHandler, appConfigStorageStub, authStub, userStorageStub, origDbVersion;
@@ -276,8 +275,16 @@ describe('UpdateHandler', function() {
             var REALNAME_DB_KEY = 'realname';
             var emailaddress = 'bla@blubb.io';
 
-            var imap = config.gmail.imap,
-                smtp = config.gmail.smtp;
+            var imap = {
+                    host: 'imap.gmail.com',
+                    port: 993,
+                    secure: true
+                },
+                smtp = {
+                    host: 'smtp.gmail.com',
+                    port: 465,
+                    secure: true
+                };
 
             beforeEach(function() {
                 cfg.dbVersion = 4; // app requires database version 4

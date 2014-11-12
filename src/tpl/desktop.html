@@ -12,26 +12,20 @@
 </div>
 
 <!-- lightbox  -->
-<div class="lightbox-overlay" ng-class="{'show': state.lightbox === 'write'}">
-  <div class="lightbox" ng-include="'tpl/write.html'"></div>
-</div>
+<div class="lightbox" ng-class="{'lightbox--show': state.lightbox === 'write'}"
+  ng-include="'tpl/write.html'"></div>
 
-<div class="lightbox-overlay" ng-class="{'show': state.lightbox === 'account'}">
-  <div class="lightbox" ng-include="'tpl/account.html'"></div>
-</div>
+<div class="lightbox lightbox--dialog" ng-class="{'lightbox--show': state.lightbox === 'account'}"
+  ng-include="'tpl/account.html'"></div>
 
-<div class="lightbox-overlay" ng-class="{'show': state.lightbox === 'set-passphrase'}">
-  <div class="lightbox" ng-include="'tpl/set-passphrase.html'"></div>
-</div>
+<div class="lightbox" ng-class="{'lightbox--show': state.lightbox === 'set-passphrase'}"
+  ng-include="'tpl/set-passphrase.html'"></div>
 
-<div class="lightbox-overlay" ng-class="{'show': state.lightbox === 'privatekey-upload'}">
-  <div class="lightbox" ng-include="'tpl/privatekey-upload.html'"></div>
-</div>
+<div class="lightbox" ng-class="{'lightbox--show': state.lightbox === 'privatekey-upload'}"
+  ng-include="'tpl/privatekey-upload.html'"></div>
 
-<div class="lightbox-overlay" ng-class="{'show': state.lightbox === 'contacts'}">
-  <div class="lightbox" ng-include="'tpl/contacts.html'"></div>
-</div>
+<div class="lightbox" ng-class="{'lightbox--show': state.lightbox === 'contacts'}"
+  ng-include="'tpl/contacts.html'"></div>
 
-<div class="lightbox-overlay" ng-class="{'show': state.lightbox === 'about'}">
-  <div class="lightbox view-about" ng-include="'tpl/about.html'"></div>
-</div>
+<div class="lightbox lightbox--dialog" ng-class="{'lightbox--show': state.lightbox === 'about'}"
+  ng-include="'tpl/about.html'"></div>

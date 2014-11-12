@@ -1,40 +1,29 @@
-<div class="lightbox-body" ng-controller="AccountCtrl">
-  <header>
+<div class="lightbox__body" ng-controller="AccountCtrl">
+  <header class="lightbox__header">
     <h2>Account</h2>
-    <button class="close" wo-touch="state.account.toggle(false)" data-action="lightbox-close">
+    <button class="lightbox__close" wo-touch="state.account.toggle(false)" data-action="lightbox-close">
       <svg><use xlink:href="#icon-close" /><title>Close</title></svg>
     </button>
   </header>
 
-  <div class="content">
-    <div class="dialog view-account">
+  <div class="lightbox__content">
+    <dl class="account">
+      <dt>Email</dt>
+      <dd>{{eMail}}</dd>
 
-      <table>
-        <tbody>
-          <tr>
-            <td>Email</td>
-            <td>{{eMail}}</td>
-          </tr>
-          <tr>
-            <td>PGP Key ID</td>
-            <td>{{keyId}} (<a href="https://whiteout.io/revocation.html" title="Click to reset your account." target="_blank">Revoke key</a>)</td>
-          </tr>
-          <tr>
-            <td>PGP Fingerprint</td>
-            <td><a href="{{publicKeyUrl}}" title="Click to share your public key." target="_blank">{{fingerprint}}</a></td>
-          </tr>
-          <tr>
-            <td>Key Size (RSA)</td>
-            <td>{{keysize}} bit</td>
-          </tr>
-        </tbody>
-      </table>
+      <dt>PGP Key ID</dt>
+      <dd>{{keyId}} (<a href="https://whiteout.io/revocation.html" title="Click to reset your account." target="_blank">Revoke key</a>)</dd>
 
-      <div class="control">
-        <button wo-touch="state.account.toggle(false); state.setPassphrase.toggle(true)" class="btn btn--secondary">Set passphrase</button>
-        <button wo-touch="exportKeyFile()" class="btn">Export keypair</button>
-      </div>
+      <dt>PGP Fingerprint</dt>
+      <dd><a href="{{publicKeyUrl}}" title="Click to share your public key." target="_blank">{{fingerprint}}</a></dd>
 
-    </div><!-- /.view-account -->
-  </div><!-- /.content -->
-</div><!-- /.lightbox-body -->
+      <dt>Key Size (RSA)</dt>
+      <dd>{{keysize}} bit</dd>
+    </dl>
+  </div>
+
+  <footer class="lightbox__controls">
+    <button wo-touch="state.account.toggle(false); state.setPassphrase.toggle(true)" class="btn btn--secondary">Set passphrase</button>
+    <button wo-touch="exportKeyFile()" class="btn">Export keypair</button>
+  </footer>
+</div>

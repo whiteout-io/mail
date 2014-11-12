@@ -1,8 +1,5 @@
 'use strict';
 
-var config = require('../../app-config').config;
-
-
 /**
  * Update handler for transition database version 3 -> 4
  *
@@ -20,9 +17,16 @@ function update(options, callback) {
         REALNAME_DB_KEY = 'realname',
         POST_UPDATE_DB_VERSION = 4;
 
-
-    var imap = config.gmail.imap,
-        smtp = config.gmail.smtp;
+    var imap = {
+            host: 'imap.gmail.com',
+            port: 993,
+            secure: true
+        },
+        smtp = {
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true
+        };
 
     // load the email address (if existing)
     loadFromDB(EMAIL_ADDR_DB_KEY, function(err, emailAddress) {

@@ -1,17 +1,23 @@
-<div class="lightbox-body" ng-controller="AboutCtrl">
-  <header>
-    <button class="close" wo-touch="state.about.toggle(false)" data-action="lightbox-close">
+<div class="lightbox__body" ng-controller="AboutCtrl">
+  <header class="lightbox__header">
+    <button class="lightbox__close" wo-touch="state.about.toggle(false)" data-action="lightbox-close">
       <svg><use xlink:href="#icon-close" /><title>Close</title></svg>
     </button>
   </header>
 
-  <div class="content">
+  <div class="lightbox__content">
+    <p class="typo-paragraph">
+      <img src="img/icon.svg" style="width: 120px; height: 120px;">
+    </p>
 
-    <img src="img/icon-128.png">
-    <h2>Whiteout Mail</h2>
-    <p>Version {{version}}</p>
-    <p>&copy; {{ date | date:'yyyy'}} Whiteout Networks GmbH</p>
-    <p><a href="https://whiteout.io/imprint.html" target="_blank">Imprint</a> &middot; <a href="https://whiteout.io/privacy-service.html" target="_blank">Privacy</a> &middot; <a href="https://whiteout.io/terms.html" target="_blank">Terms</a> &middot; <a href="https://github.com/whiteout-io/mail-html5#license" target="_blank">Licenses</a></p>
-
-  </div><!-- /.content -->
-</div><!-- /.lightbox-body -->
+    <h2 class="typo-title">Whiteout Mail</h2>
+    <p class="typo-paragraph">Version {{version}}</p>
+    <p class="typo-paragraph">&copy; {{ date | date:'yyyy'}} Whiteout Networks GmbH</p>
+    <p class="typo-paragraph">
+      <a href="https://whiteout.io/imprint.html" target="_blank">Imprint</a> &middot;
+      <a href="https://whiteout.io/privacy-service.html" target="_blank">Privacy</a> &middot;
+      <a href="https://whiteout.io/terms.html" target="_blank">Terms</a> &middot;
+      <a href="https://github.com/whiteout-io/mail-html5#license" target="_blank">Licenses</a>
+    </p>
+  </div>
+</div>

@@ -1,0 +1,46 @@
+<section class="page">
+  <div class="page__canvas">
+    <header class="page__header">
+      <img src="img/whiteout_logo.svg" alt="whiteout.io">
+    </header>
+    <main class="page__main">
+      <h2 class="typo-title">Create Whiteout account</h2>
+      <p class="typo-paragraph">Please fill out the following form. You will need a <em>beta access code</em> during the private beta period. To participate in the private beta just <a href="mailto:support@whiteout.io?subject=Beta%20Access%20Code&body=I%20would%20like%20to%20try%20the%20encrypted%20Whiteout%20Mailbox%20service.%20Please%20send%20me%20a%20beta%20access%20code." target="_blank">get in touch</a>.</p>
+      <form class="form" name="form">
+        <p class="form__error-message" ng-show="errMsg">{{errMsg}}</p>
+        <div class="form__row">
+          <div class="input-email-fixed-domain">
+            <input class="input-text" ng-model="user" required type="text" focus-me="true" tabindex="1"
+              pattern='[a-zA-Z0-9\.]+' placeholder="User name"
+              autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+            <span>@wmail.io</span>
+          </div>
+        </div>
+        <div class="form__row">
+          <input class="input-text" type="text" ng-model="realname" placeholder="Full name (optional)" tabindex="2">
+        </div>
+        <div class="form__row form__row--multi">
+          <div class="form__col">
+            <input class="input-text" ng-model="pass" required type="password" placeholder="Password" pattern=".{3,30}"  tabindex="3">
+          </div>
+          <div class="form__col">
+            <input class="input-text right" ng-model="confirmPass" required type="password" placeholder="Confirm password" ng-class="{'input-text--error': (pass || confirmPass) && pass !== confirmPass}" tabindex="4">
+          </div>
+        </div>
+        <div class="form__row">
+          <input class="input-text"  type="tel" ng-model="phone" required placeholder="Mobile phone number (e.g. +49 170 1234567)" tabindex="5">
+        </div>
+        <div class="form__row">
+          <input class="input-text" type="text" ng-model="betaCode" required placeholder="Beta access code" tabindex="6">
+        </div>
+        <div class="spinner-block" ng-show="busy">
+          <span class="spinner spinner--big"></span>
+        </div>
+        <div class="form__row">
+          <button class="btn" type="submit" ng-click="createWhiteoutAccount()">Create</button>
+        </div>
+      </form>
+    </main>
+    <div ng-include="'tpl/page-footer.html'"></div>
+  </div>
+</section>

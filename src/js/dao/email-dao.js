@@ -1132,6 +1132,9 @@ EmailDAO.prototype.onConnect = function(options, callback) {
     self._imapClient = options.imapClient;
     self._pgpMailer = options.pgpMailer;
 
+    // gmail does not require you to upload to the sent items folder after successful sending, whereas most other providers do
+    self.ignoreUploadOnSent = !!options.ignoreUploadOnSent;
+
     self._imapClient.login(function(err) {
         self._account.loggingIn = false;
 
@@ -1774,6 +1777,29 @@ EmailDAO.prototype._uploadToSent = function(options, callback) {
     });
 };
 
+
+
+//
+//
+// External Heler Methods
+//
+//
+
+/**
+ * Checks whether we need to upload to the sent folder after sending an email.
+ *
+ * @param {String} hostname The hostname to check
+ * @return {Boolean} true if upload can be ignored, otherwise false
+ */
+EmailDAO.prototype.checkIgnoreUploadOnSent = function(hostname) {
+    for (var i = 0; i < config.ignoreUploadOnSentDomains.length; i++) {
+        if (config.ignoreUploadOnSentDomains[i].test(hostname)) {
+            return true;
+        }
+    }
+
+    return false;
+};
 
 
 //

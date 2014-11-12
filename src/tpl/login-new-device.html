@@ -1,25 +1,47 @@
-<div class="view-login">
-  <div class="logo">
-    <img src="img/whiteout_logo.svg" alt="whiteout.io">
-  </div><!--/logo-->
+<section class="page">
+  <div class="page__canvas">
+    <header class="page__header">
+      <img src="img/whiteout_logo.svg" alt="whiteout.io">
+    </header>
+    <main class="page__main">
+      <h2 class="typo-title">Import PGP key</h2>
+      <p class="typo-paragraph">Please import an existing key from the file system.</p>
 
-  <div class="content">
-    <p><b>Import PGP key.</b> Please import an existing key from the file system.</p>
+      <form class="form" name="form">
+        <fieldset class="form-fieldset form-fieldset--standalone">
+          <legend>On a mobile device?</legend>
+          <p class="typo-paragraph">
+            If you cannot import your key via a USB stick, you can setup <em>Key sync</em>
+            on a desktop PC to securely transfer your PGP key over the Whiteout cloud.
+            <a href="https://blog.whiteout.io/2014/07/07/secure-pgp-key-sync-a-proposal/" target="_blank">Learn more</a>.
+          </p>
+        </fieldset>
 
-    <fieldset>
-      <legend>On a mobile device?</legend>
-      <p>If you cannot import your key via a USB stick, you can setup <i>Key sync</i> on a desktop PC to securely transfer your PGP key over the Whiteout cloud. <a href="https://blog.whiteout.io/2014/07/07/secure-pgp-key-sync-a-proposal/" target="_blank">Learn more</a>.</p>
-    </fieldset>
+        <!-- TODO -->
+        <!--<p class="form__error-message" ng-show="errMsg">{{errMsg}}</p>
+        <p class="form__error-message" ng-show="form.$invalid">Please fill out all required fields!</p>-->
 
-    <form>
-      <div>
-        <input type="file" accept=".asc" file-reader tabindex="1">
-      </div>
-      <div>
-        <input class="input-text" type="password" ng-model="passphrase" ng-class="{'input-text--error':incorrect}" placeholder="Passphrase" tabindex="2">
-      </div>
-      <a href="https://whiteout.io/revocation.html" title="Click here to reset your account." target="_blank">Lost your keyfile or passphrase?</a>
-      <div><button type="submit" wo-touch="confirmPassphrase()" class="btn" ng-disabled="!key" tabindex="3">Import</button>
-    </form>
+        <div class="form__row">
+          <input class="input-file" type="file" accept=".asc" file-reader tabindex="1">
+        </div>
+        <div class="form__row">
+          <input class="input-text" type="password" ng-model="passphrase"
+            ng-class="{'input-text--error':incorrect}" placeholder="Passphrase" tabindex="2">
+        </div>
+        <!-- TODO -->
+        <!--<div class="spinner-block" ng-show="busy">
+          <span class="spinner spinner--big"></span>
+        </div>-->
+        <div class="form__row">
+          <button type="submit" wo-touch="confirmPassphrase()" class="btn" ng-disabled="!key" tabindex="3">Import</button>
+        </div>
+      </form>
+      <p class="typo-paragraph">
+        <a href="https://whiteout.io/revocation.html" title="Click here to reset your account." target="_blank">
+          Lost your keyfile or passphrase?
+        </a>
+      </p>
+    </main>
+    <div ng-include="'tpl/page-footer.html'"></div>
   </div>
-</div>
+</section>

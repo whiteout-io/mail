@@ -5,6 +5,7 @@ $font-size-small:                   14px;
 $font-size-smaller:                 12px;
 $font-size-big:                     18px;
 $font-size-bigger:                  22px;
+$font-size-huge:                    28px;
 
 $font-family-base:                  "PT Sans", Arial, sans-serif;
 
@@ -16,7 +17,7 @@ $line-height-base:                  20 / 16;
 $color-black:                       #000;
 $color-white:                       #fff;
 $color-blue:                        #00c6ff;
-$color-red:                         #ff878d;
+$color-red:                         #ff3f49;
 $color-grey:                        #666;
 $color-grey-input:                  #949494;
 $color-grey-dark:                   #333;
@@ -43,17 +44,9 @@ $color-touch-active:                rgba(0, 0, 0, 0.1);
 // Breakpoints
 // -------------------------------------------
 
+$screen-xs-max:                     419px;
+$screen-sm-min:                     420px;
 $screen-sm-max:                     699px;
 $screen-md-min:                     700px;
 $screen-md-max:                     1099px;
 $screen-lg-min:                     1100px;
-
-// Layout
-// -------------------------------------------
-
-$content-nav-width:                 344px;
-
-$lightbox-padding:                  15px;
-$lightbox-max-width:                662px;
-$lightbox-width:                    90%;
-$lightbox-min-height:               644px;

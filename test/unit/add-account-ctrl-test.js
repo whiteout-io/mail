@@ -3,26 +3,25 @@
 var mocks = angular.mock,
     AddAccountCtrl = require('../../src/js/controller/add-account'),
     Auth = require('../../src/js/bo/auth'),
-    AdminDao = require('../../src/js/dao/admin-dao'),
-    appController = require('../../src/js/app-controller');
+    appController = require('../../src/js/app-controller'),
+    cfg = require('../../src/js/app-config').config;
 
 describe('Add Account Controller unit test', function() {
-    var scope, location, ctrl, authStub, origAuth, adminStub;
+    var scope, location, mailConfigMock, ctrl, authStub, origAuth;
 
     beforeEach(function() {
         // remember original module to restore later, then replace it
         origAuth = appController._auth;
         appController._auth = authStub = sinon.createStubInstance(Auth);
-        appController._adminDao = adminStub = sinon.createStubInstance(AdminDao);
 
-        angular.module('addaccounttest', []);
+        angular.module('addaccounttest', ['woServices']);
         mocks.module('addaccounttest');
-        mocks.inject(function($controller, $rootScope, $location) {
+        mocks.inject(function($controller, $rootScope, $location, mailConfig) {
             location = $location;
+            mailConfigMock = mailConfig;
             scope = $rootScope.$new();
             scope.state = {};
             scope.form = {};
-            scope.formValidate = {};
 
             sinon.stub(location, 'path').returns(location);
             sinon.stub(location, 'search').returns(location);
@@ -31,7 +30,8 @@ describe('Add Account Controller unit test', function() {
             ctrl = $controller(AddAccountCtrl, {
                 $location: location,
                 $scope: scope,
-                $routeParams: {}
+                $routeParams: {},
+                mailConfig: mailConfigMock
             });
         });
     });
@@ -47,165 +47,121 @@ describe('Add Account Controller unit test', function() {
         }
     });
 
-    describe('createWhiteoutAccount', function() {
-        it('should return early for invalid form', function() {
-            scope.form.$invalid = true;
-            scope.createWhiteoutAccount();
-            expect(adminStub.createUser.called).to.be.false;
-        });
+    describe('getAccountSettings', function() {
+        var url, oauthPossibleStub, setCredentialsStub, mailConfigStub, mailConfig;
 
-        it('should fail to error creating user', function(done) {
+        beforeEach(inject(function($q) {
             scope.form.$invalid = false;
-            scope.betaCode = 'asfd';
-            scope.phone = '12345';
-            adminStub.createUser.yieldsAsync(new Error('asdf'));
-
-            scope.$apply = function() {
-                expect(scope.busy).to.be.false;
-                expect(scope.errMsg).to.equal('asdf');
-                expect(adminStub.createUser.calledOnce).to.be.true;
-                done();
-            };
-
-            scope.createWhiteoutAccount();
-            expect(scope.busy).to.be.true;
-        });
-
-        it('should work', function(done) {
-            scope.form.$invalid = false;
-            scope.betaCode = 'asfd';
-            scope.phone = '12345';
-            adminStub.createUser.yieldsAsync();
-
-            scope.$apply = function() {
-                expect(scope.busy).to.be.false;
-                expect(scope.errMsg).to.be.undefined;
-                expect(scope.step).to.equal(3);
-                expect(adminStub.createUser.calledOnce).to.be.true;
-                done();
-            };
-
-            scope.createWhiteoutAccount();
-            expect(scope.busy).to.be.true;
-        });
-    });
-
-    describe('validateUser', function() {
-        it('should return early for invalid form', function() {
-            scope.formValidate.$invalid = true;
-            scope.validateUser();
-            expect(adminStub.validateUser.called).to.be.false;
-        });
-
-        it('should fail to error creating user', function(done) {
-            scope.formValidate.$invalid = false;
-            scope.token = 'asfd';
-            adminStub.validateUser.yieldsAsync(new Error('asdf'));
-
-            scope.$apply = function() {
-                expect(scope.busyValidate).to.be.false;
-                expect(scope.errMsgValidate).to.equal('asdf');
-                expect(adminStub.validateUser.calledOnce).to.be.true;
-                done();
-            };
-
-            scope.validateUser();
-            expect(scope.busyValidate).to.be.true;
-        });
-
-        it('should work', function(done) {
-            scope.formValidate.$invalid = false;
-            scope.token = 'asfd';
-            adminStub.validateUser.yieldsAsync();
-
-            scope.login = function() {
-                expect(scope.busyValidate).to.be.true;
-                expect(scope.errMsgValidate).to.be.undefined;
-                expect(adminStub.validateUser.calledOnce).to.be.true;
-                done();
-            };
-
-            scope.validateUser();
-            expect(scope.busyValidate).to.be.true;
-        });
-    });
-
-    describe('login', function() {
-        it('should work', function() {
-            scope.form.$invalid = false;
-            authStub.setCredentials.returns();
-
-            scope.login();
-            expect(authStub.setCredentials.calledOnce).to.be.true;
-            expect(location.path.calledWith('/login')).to.be.true;
-        });
-    });
-
-    describe('connectToGoogle', function() {
-        it('should forward to login', function() {
-            authStub._oauth = {
-                isSupported: function() {
-                    return true;
+            scope.emailAddress = 'test@example.com';
+            url = cfg.settingsUrl + 'example.com';
+            mailConfig = {
+                imap: {
+                    hostname: 'imap.example.com',
+                    source: 'guess'
                 }
             };
+            var deferred = $q.defer();
+            mailConfigStub = sinon.stub(mailConfigMock, 'get');
+            mailConfigStub.returns(deferred.promise);
+            deferred.resolve(mailConfig);
 
+            oauthPossibleStub = sinon.stub(scope, 'oauthPossible');
+            setCredentialsStub = sinon.stub(scope, 'setCredentials');
+        }));
+
+        afterEach(function() {
+            mailConfigStub.restore();
+            oauthPossibleStub.restore();
+            setCredentialsStub.restore();
+        });
+
+        it('should work for gmail', inject(function($rootScope) {
+            authStub.useOAuth.returns(true);
+
+            scope.getAccountSettings();
+            $rootScope.$apply();
+
+            expect(oauthPossibleStub.calledOnce).to.be.true;
+        }));
+
+        it('should work for other domain', inject(function($rootScope) {
+            authStub.useOAuth.returns(false);
+
+            scope.getAccountSettings();
+            $rootScope.$apply();
+
+            expect(setCredentialsStub.calledOnce).to.be.true;
+        }));
+
+        it('should fail for mailConfig error', inject(function($q, $rootScope) {
+            authStub.useOAuth.returns(false);
+
+            var deferred = $q.defer();
+            mailConfigStub.returns(deferred.promise);
+            deferred.reject(new Error());
+
+            scope.getAccountSettings();
+            $rootScope.$apply();
+
+            expect(scope.errMsg).to.exist;
+        }));
+    });
+
+    describe('oauthPossible', function() {
+        var setCredentialsStub;
+
+        beforeEach(function() {
+            setCredentialsStub = sinon.stub(scope, 'setCredentials');
+        });
+
+        afterEach(function() {
+            setCredentialsStub.restore();
+        });
+
+        it('should use oauth', function() {
+            scope.onError = function(options) {
+                options.callback(true);
+            };
             authStub.getOAuthToken.yields();
 
-            scope.connectToGoogle();
+            scope.oauthPossible();
 
-            expect(location.path.calledWith('/login-set-credentials')).to.be.true;
-            expect(location.search.calledWith({
-                provider: 'gmail'
-            })).to.be.true;
+            expect(setCredentialsStub.calledOnce).to.be.true;
             expect(authStub.getOAuthToken.calledOnce).to.be.true;
         });
 
-        it('should not use oauth for gmail', function() {
-            authStub._oauth = {
-                isSupported: function() {
-                    return false;
-                }
+        it('should not use oauth', function() {
+            scope.onError = function(options) {
+                options.callback(false);
             };
 
-            scope.connectToGoogle();
+            scope.oauthPossible();
 
-            expect(location.path.calledWith('/login-set-credentials')).to.be.true;
-            expect(location.search.calledWith({
-                provider: 'gmail'
-            })).to.be.true;
+            expect(setCredentialsStub.calledOnce).to.be.true;
             expect(authStub.getOAuthToken.called).to.be.false;
         });
 
         it('should not forward to login when oauth fails', function(done) {
-            authStub._oauth = {
-                isSupported: function() {
-                    return true;
-                }
-            };
+            scope.onError = function(options) {
+                scope.onError = function(err) {
+                    expect(err).to.exist;
+                    expect(setCredentialsStub.called).to.be.false;
+                    done();
+                };
 
+                options.callback(true);
+            };
             authStub.getOAuthToken.yields(new Error());
 
-            scope.onError = function(err) {
-                expect(err).to.exist;
-                expect(location.path.called).to.be.false;
-                expect(location.search.called).to.be.false;
-
-                done();
-            };
-
-            scope.connectToGoogle();
+            scope.oauthPossible();
         });
     });
 
-    describe('connectTo', function() {
-        it('should forward to login', function() {
-            var provider = 'wmail';
-            scope.connectTo(provider);
+    describe('setCredentials', function() {
+        it('should work', function() {
+            scope.setCredentials();
 
             expect(location.path.calledWith('/login-set-credentials')).to.be.true;
-            expect(location.search.calledWith({
-                provider: provider
-            })).to.be.true;
         });
     });
 
