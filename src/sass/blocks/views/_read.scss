@@ -18,14 +18,8 @@
     }
     &__action-toolbar {
         flex-shrink: 0;
-        order: 100; // stick to bottom on mobile
         border-top: 1px solid $color-border-light;
         @include respond-to(md) {
-            order: initial;
-            border-top: none;
-            border-bottom: 1px solid $color-border-light;
-        }
-        @include respond-to(lg) {
             display: none;
         }
     }
@@ -52,13 +46,14 @@
         .btn-icon-light {
             margin-left: 1em;
         }
-        @include respond-to(lg) {
+        @include respond-to(md) {
             display: block;
         }
     }
     &__subject {
-        font-weight: bold;
+        font-weight: normal;
         color: $color-text;
+        font-size: $font-size-bigger;
         margin: 0 0 0.2em;
         &.wo-touch-active {
             background: $color-touch-active;

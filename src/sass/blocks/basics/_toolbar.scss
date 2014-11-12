@@ -9,7 +9,7 @@
         line-height: 24px;
         height: 24px;
 
-        font-size: $font-size-bigger;
+        font-size: $font-size-base;
         color: $color-text;
         text-decoration: none;
         & > svg {
@@ -21,6 +21,10 @@
         }
         &.wo-touch-active {
             background: $color-touch-active;
+        }
+
+        @include respond-to(md) {
+            font-size: $font-size-bigger;
         }
     }
     &__actions {
