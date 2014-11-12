@@ -409,7 +409,7 @@
             display: table-cell;
             border-bottom: 1px solid $color-border-light;
             padding: $cell-padding-vertical $cell-padding-horizontal;
-            width: 12em;
+            width: 16em;
         }
         &__subject {
             @include scut-truncate;
