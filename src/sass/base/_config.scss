@@ -25,7 +25,7 @@ $color-grey-dark:                   #333;
 $color-grey-medium:                 #999;
 $color-grey-light:                  #ccc;
 $color-grey-lighter:                #ddd;
-$color-grey-lighterer:              #f0eff5;
+$color-grey-lighterer:              #f4f4f4;
 $color-grey-lightest:               #f9f9f9;
 $color-grey-dark-alpha:             rgba(0, 0, 0, 0.80);
 
@@ -33,6 +33,7 @@ $color-grey-dark-alpha:             rgba(0, 0, 0, 0.80);
 // -------------------------------------------
 
 $color-bg:                          $color-white;
+$color-bg-dark:                     $color-grey-lighterer;
 $color-text:                        $color-grey-dark;
 $color-text-light:                  $color-grey-medium;
 $color-main:                        $color-blue;

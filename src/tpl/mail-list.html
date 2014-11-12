@@ -52,7 +52,12 @@
           </li>
         </ul>
         <h3 class="mail-list-entry__name">{{email.from[0].name || email.from[0].address}}</h3>
-        <div class="mail-list-entry__subject">{{email.subject || 'No subject'}}</div>
+        <div class="mail-list-entry__subject">
+          <strong>{{email.subject || 'No subject'}}</strong>
+          <span>
+            {{email.body ? email.body.substr(0, 200) : ''}}
+          </span>
+        </div>
         <div class="mail-list-entry__attachment">
           <svg><use xlink:href="#icon-attachment" /><title>Attachments</title></svg>
         </div>
