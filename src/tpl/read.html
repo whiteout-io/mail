@@ -104,7 +104,7 @@
   <div class="read__working"
     ng-if="state.mailList.selected && state.mailList.selected.html === undefined && (state.mailList.selected.body === undefined || (state.mailList.selected.encrypted && !state.mailList.selected.decrypted))">
     <div>
-      <span class="spinner spinner--big"></span>
+      <span class="spinner"></span>
       <strong ng-bind="(state.mailList.selected.decryptingBody) ? 'Decrypting...' : 'Loading...' "></strong>
     </div>
   </div>
