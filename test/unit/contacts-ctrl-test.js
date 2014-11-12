@@ -36,7 +36,6 @@ describe('Contacts Controller unit test', function() {
 
     describe('scope variables', function() {
         it('should be set correctly', function() {
-            expect(scope.fingerprint).to.equal('XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX');
             expect(scope.state.contacts.toggle).to.exist;
         });
     });
