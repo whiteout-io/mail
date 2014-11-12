@@ -6,17 +6,19 @@
     <main class="page__main">
       <h2 class="typo-title">Unlock mailbox</h2>
       <p class="typo-paragraph">Please enter your passphrase to unlock the mailbox.</p>
-      <form class="form">
-        <!-- TODO add error messages -->
-        <!--<p class="form__error-message" ng-show="errMsg">{{errMsg}}</p>
-        <p class="form__error-message" ng-show="form.$invalid">Please fill out all required fields!</p>-->
+      <form class="form" name="form">
+        <p class="form__error-message" ng-show="errMsg">{{errMsg}}</p>
 
         <div class="form__row">
-          <input class="input-text input-text--big" type="password" ng-model="passphrase" ng-change="change()"
-            ng-class="{'input-text--error':incorrect}" placeholder="Passphrase" tabindex="1" focus-me="true">
+          <input type="password" ng-model="passphrase"
+            class="input-text input-text--big" ng-class="{'input-text--error':incorrect}"
+            placeholder="Passphrase" tabindex="1" focus-me="true" required>
+        </div>
+        <div class="spinner-block" ng-show="busy">
+          <span class="spinner spinner--big"></span>
         </div>
         <div class="form__row">
-          <button class="btn btn--big" type="submit" wo-touch="confirmPassphrase()" ng-disabled="!buttonEnabled" tabindex="2">
+          <button class="btn btn--big" type="submit" ng-click="confirmPassphrase()" tabindex="2">
             <svg role="presentation"><use xlink:href="#icon-decrypted" /></svg>
             Unlock
           </button>

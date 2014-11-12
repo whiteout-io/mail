@@ -9,7 +9,7 @@ var Auth = require('../../src/js/bo/auth'),
 
 describe('Login (initial user) Controller unit test', function() {
     var scope, ctrl, location, origEmailDao, emailDaoMock,
-        origAuth, authMock,
+        origAuth, authMock, newsletterStub,
         emailAddress = 'fred@foo.com',
         keyId, expectedKeyId,
         cryptoMock;
@@ -31,17 +31,19 @@ describe('Login (initial user) Controller unit test', function() {
             emailAddress: emailAddress,
         };
 
-        angular.module('logininitialtest', []);
+        angular.module('logininitialtest', ['woServices']);
         mocks.module('logininitialtest');
-        mocks.inject(function($rootScope, $controller, $location) {
+        mocks.inject(function($rootScope, $controller, $location, newsletter) {
             scope = $rootScope.$new();
             location = $location;
+            newsletterStub = sinon.stub(newsletter, 'signup');
             scope.state = {
                 ui: {}
             };
             ctrl = $controller(LoginInitialCtrl, {
                 $scope: scope,
-                $routeParams: {}
+                $routeParams: {},
+                newsletter: newsletter
             });
         });
     });
@@ -58,140 +60,65 @@ describe('Login (initial user) Controller unit test', function() {
         });
     });
 
-    describe('signUpToNewsletter', function() {
-        var xhrMock, requests;
-
-        beforeEach(function() {
-            xhrMock = sinon.useFakeXMLHttpRequest();
-            requests = [];
-
-            xhrMock.onCreate = function(xhr) {
-                requests.push(xhr);
-            };
-        });
-
-        afterEach(function() {
-            xhrMock.restore();
-        });
-
-        it('should not signup', function() {
-            scope.state.newsletter = false;
-
-            scope.signUpToNewsletter();
-            expect(requests.length).to.equal(0);
-        });
-
-        it('should fail', function(done) {
-            scope.state.newsletter = true;
-
-            scope.signUpToNewsletter(function(err, xhr) {
-                expect(err).to.exist;
-                expect(xhr).to.not.exist;
-                done();
-            });
-
-            expect(requests.length).to.equal(1);
-            requests[0].onerror('err');
-        });
-
-        it('should work without callback', function() {
-            scope.state.newsletter = true;
-
-            scope.signUpToNewsletter();
-
-            expect(requests.length).to.equal(1);
-            requests[0].respond(200, {
-                "Content-Type": "text/plain"
-            }, 'foobar!');
-        });
-    });
-
     describe('go to import key', function() {
-        var signUpToNewsletterStub;
-        beforeEach(function() {
-            signUpToNewsletterStub = sinon.stub(scope, 'signUpToNewsletter');
-        });
-        afterEach(function() {
-            signUpToNewsletterStub.restore();
-        });
-
-        it('should not continue if terms are not accepted', function(done) {
-            scope.state.agree = undefined;
-
-            scope.onError = function(err) {
-                expect(err.message).to.contain('Terms');
-                expect(signUpToNewsletterStub.called).to.be.false;
-                done();
-            };
+        it('should not continue if terms are not accepted', function() {
+            scope.agree = undefined;
 
             scope.importKey();
+
+            expect(scope.errMsg).to.contain('Terms');
+            expect(newsletterStub.called).to.be.false;
         });
 
         it('should work', function() {
-            scope.state.agree = true;
+            scope.agree = true;
             scope.importKey();
-            expect(signUpToNewsletterStub.calledOnce).to.be.true;
+            expect(newsletterStub.calledOnce).to.be.true;
             expect(location.$$path).to.equal('/login-new-device');
         });
     });
 
     describe('generate key', function() {
-        var signUpToNewsletterStub;
-        beforeEach(function() {
-            signUpToNewsletterStub = sinon.stub(scope, 'signUpToNewsletter');
-        });
-        afterEach(function() {
-            signUpToNewsletterStub.restore();
-        });
-
-        it('should not continue if terms are not accepted', function(done) {
-            scope.state.agree = undefined;
-
-            scope.onError = function(err) {
-                expect(err.message).to.contain('Terms');
-                expect(scope.state.ui).to.equal(1);
-                expect(signUpToNewsletterStub.called).to.be.false;
-                done();
-            };
+        it('should not continue if terms are not accepted', function() {
+            scope.agree = undefined;
 
             scope.generateKey();
+
+            expect(scope.errMsg).to.contain('Terms');
+            expect(scope.state.ui).to.equal(1);
+            expect(newsletterStub.called).to.be.false;
         });
 
-        it('should fail due to error in emailDao.unlock', function(done) {
-            scope.state.agree = true;
+        it('should fail due to error in emailDao.unlock', function() {
+            scope.agree = true;
 
             emailDaoMock.unlock.withArgs({
                 passphrase: undefined
-            }).yields(new Error());
+            }).yields(new Error('asdf'));
             authMock.storeCredentials.yields();
 
-            scope.onError = function(err) {
-                expect(err).to.exist;
-                expect(scope.state.ui).to.equal(1);
-                expect(signUpToNewsletterStub.called).to.be.true;
-                done();
-            };
-
             scope.generateKey();
-            expect(scope.state.ui).to.equal(2);
+
+            expect(scope.errMsg).to.exist;
+            expect(scope.state.ui).to.equal(1);
+            expect(newsletterStub.called).to.be.true;
         });
 
-        it('should unlock crypto', function(done) {
-            scope.state.agree = true;
+        it('should unlock crypto', function() {
+            scope.agree = true;
 
             emailDaoMock.unlock.withArgs({
                 passphrase: undefined
             }).yields();
             authMock.storeCredentials.yields();
 
-            scope.$apply = function() {
-                expect(scope.state.ui).to.equal(2);
-                expect(location.$$path).to.equal('/desktop');
-                expect(emailDaoMock.unlock.calledOnce).to.be.true;
-                done();
-            };
-
             scope.generateKey();
+
+            expect(scope.errMsg).to.not.exist;
+            expect(scope.state.ui).to.equal(2);
+            expect(newsletterStub.called).to.be.true;
+            expect(location.$$path).to.equal('/desktop');
+            expect(emailDaoMock.unlock.calledOnce).to.be.true;
         });
     });
 });

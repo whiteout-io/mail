@@ -14,7 +14,15 @@ var LoginExistingCtrl = function($scope, $location, $routeParams) {
     $scope.incorrect = false;
 
     $scope.confirmPassphrase = function() {
+        if ($scope.form.$invalid || !$scope.key) {
+            $scope.errMsg = 'Please fill out all required fields!';
+            return;
+        }
+
+        $scope.busy = true;
+        $scope.errMsg = undefined; // reset error msg
         $scope.incorrect = false;
+
         unlockCrypto();
     };
 
@@ -23,7 +31,7 @@ var LoginExistingCtrl = function($scope, $location, $routeParams) {
         // check if user already has a public key on the key server
         emailDao._keychain.getUserKeyPair(userId, function(err, keypair) {
             if (err) {
-                $scope.onError(err);
+                $scope.displayError(err);
                 return;
             }
 
@@ -34,7 +42,7 @@ var LoginExistingCtrl = function($scope, $location, $routeParams) {
                 try {
                     $scope.key.publicKeyArmored = pgp.extractPublicKey($scope.key.privateKeyArmored);
                 } catch (e) {
-                    $scope.onError(new Error('Error parsing public key from private key!'));
+                    $scope.displayError(new Error('Error reading PGP key!'));
                     return;
                 }
             }
@@ -45,7 +53,7 @@ var LoginExistingCtrl = function($scope, $location, $routeParams) {
                 privKeyParams = pgp.getKeyParams($scope.key.privateKeyArmored);
                 pubKeyParams = pgp.getKeyParams($scope.key.publicKeyArmored);
             } catch (e) {
-                $scope.onError(new Error('Error reading key params!'));
+                $scope.displayError(new Error('Error reading key params!'));
                 return;
             }
 
@@ -74,7 +82,7 @@ var LoginExistingCtrl = function($scope, $location, $routeParams) {
             }, function(err) {
                 if (err) {
                     $scope.incorrect = true;
-                    $scope.onError(err);
+                    $scope.displayError(err);
                     return;
                 }
 
@@ -85,19 +93,26 @@ var LoginExistingCtrl = function($scope, $location, $routeParams) {
 
     function onUnlock(err) {
         if (err) {
-            $scope.onError(err);
+            $scope.displayError(err);
             return;
         }
 
         appController._auth.storeCredentials(function(err) {
             if (err) {
-                return $scope.onError(err);
+                $scope.displayError(err);
+                return;
             }
 
             $location.path('/desktop');
             $scope.$apply();
         });
     }
+
+    $scope.displayError = function(err) {
+        $scope.busy = false;
+        $scope.errMsg = err.errMsg || err.message;
+        $scope.$apply();
+    };
 };
 
 var ngModule = angular.module('login-new-device', []);
@@ -117,7 +132,7 @@ ngModule.directive('fileReader', function() {
                     keyParts;
 
                 if (index === -1) {
-                    scope.onError(new Error('Error parsing private PGP key block!'));
+                    scope.displayError(new Error('Error parsing private PGP key block!'));
                     return;
                 }
 

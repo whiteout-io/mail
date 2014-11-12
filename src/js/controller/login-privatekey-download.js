@@ -8,11 +8,115 @@ var LoginPrivateKeyDownloadCtrl = function($scope, $location, $routeParams) {
         return;
     }
 
-    var keychain = appController._keychain,
-        emailDao = appController._emailDao,
-        userId = emailDao._account.emailAddress;
+    if (appController._emailDao) {
+        var keychain = appController._keychain,
+            emailDao = appController._emailDao,
+            userId = emailDao._account.emailAddress;
+    }
 
     $scope.step = 1;
+
+    //
+    // Token
+    //
+
+    $scope.checkToken = function() {
+        if ($scope.tokenForm.$invalid) {
+            $scope.errMsg = 'Please enter a valid recovery token!';
+            return;
+        }
+
+        $scope.busy = true;
+        $scope.errMsg = undefined;
+
+        $scope.verifyRecoveryToken(function() {
+            $scope.busy = false;
+            $scope.errMsg = undefined;
+            $scope.step++;
+            $scope.$apply();
+        });
+    };
+
+    $scope.verifyRecoveryToken = function(callback) {
+        keychain.getUserKeyPair(userId, function(err, keypair) {
+            if (err) {
+                displayError(err);
+                return;
+            }
+
+            // remember for storage later
+            $scope.cachedKeypair = keypair;
+
+            keychain.downloadPrivateKey({
+                userId: userId,
+                keyId: keypair.publicKey._id,
+                recoveryToken: $scope.recoveryToken.toUpperCase()
+            }, function(err, encryptedPrivateKey) {
+                if (err) {
+                    displayError(err);
+                    return;
+                }
+
+                $scope.encryptedPrivateKey = encryptedPrivateKey;
+                callback();
+            });
+        });
+    };
+
+    //
+    // Keychain code
+    //
+
+    $scope.checkCode = function() {
+        if ($scope.codeForm.$invalid) {
+            $scope.errMsg = 'Please fill out all required fields!';
+            return;
+        }
+
+        $scope.busy = true;
+        $scope.errMsg = undefined;
+
+        $scope.decryptAndStorePrivateKeyLocally();
+    };
+
+    $scope.decryptAndStorePrivateKeyLocally = function() {
+        var inputCode = '' + $scope.code0 + $scope.code1 + $scope.code2 + $scope.code3 + $scope.code4 + $scope.code5;
+
+        var options = $scope.encryptedPrivateKey;
+        options.code = inputCode.toUpperCase();
+
+        keychain.decryptAndStorePrivateKeyLocally(options, function(err, privateKey) {
+            if (err) {
+                displayError(err);
+                return;
+            }
+
+            // add private key to cached keypair object
+            $scope.cachedKeypair.privateKey = privateKey;
+
+            // try empty passphrase
+            emailDao.unlock({
+                keypair: $scope.cachedKeypair,
+                passphrase: undefined
+            }, function(err) {
+                if (err) {
+                    // go to passphrase login screen
+                    $scope.goTo('/login-existing');
+                    return;
+                }
+
+                // passphrase is corrent ... go to main app
+                appController._auth.storeCredentials(function(err) {
+                    if (err) {
+                        displayError(err);
+                        return;
+                    }
+
+                    $scope.goTo('/desktop');
+                });
+            });
+        });
+    };
 
     $scope.handlePaste = function(event) {
         var evt = event;
@@ -34,99 +138,21 @@ var LoginPrivateKeyDownloadCtrl = function($scope, $location, $routeParams) {
         $scope.code5 = value.slice(20, 24);
     };
 
-    $scope.verifyRecoveryToken = function(callback) {
-        if (!$scope.recoveryToken) {
-            $scope.onError(new Error('Please set the recovery token!'));
-            return;
-        }
-
-        keychain.getUserKeyPair(userId, function(err, keypair) {
-            if (err) {
-                $scope.onError(err);
-                return;
-            }
-
-            // remember for storage later
-            $scope.cachedKeypair = keypair;
-
-            keychain.downloadPrivateKey({
-                userId: userId,
-                keyId: keypair.publicKey._id,
-                recoveryToken: $scope.recoveryToken.toUpperCase()
-            }, function(err, encryptedPrivateKey) {
-                if (err) {
-                    $scope.onError(err);
-                    return;
-                }
-
-                $scope.encryptedPrivateKey = encryptedPrivateKey;
-                callback();
-            });
-        });
-    };
-
-    $scope.decryptAndStorePrivateKeyLocally = function() {
-        var inputCode = '' + $scope.code0 + $scope.code1 + $scope.code2 + $scope.code3 + $scope.code4 + $scope.code5;
-
-        if (!inputCode) {
-            $scope.onError(new Error('Please enter the keychain code!'));
-            return;
-        }
-
-        var options = $scope.encryptedPrivateKey;
-        options.code = inputCode.toUpperCase();
-
-        keychain.decryptAndStorePrivateKeyLocally(options, function(err, privateKey) {
-            if (err) {
-                $scope.onError(err);
-                return;
-            }
-
-            // add private key to cached keypair object
-            $scope.cachedKeypair.privateKey = privateKey;
-
-            // try empty passphrase
-            emailDao.unlock({
-                keypair: $scope.cachedKeypair,
-                passphrase: undefined
-            }, function(err) {
-                if (err) {
-                    // go to passphrase login screen
-                    $scope.goTo('/login-existing');
-                    return;
-                }
-
-                // passphrase is corrent ... go to main app
-                appController._auth.storeCredentials(function(err) {
-                    if (err) {
-                        return $scope.onError(err);
-                    }
-
-                    $scope.goTo('/desktop');
-                });
-            });
-        });
-    };
-
-    $scope.goForward = function() {
-        if ($scope.step === 1) {
-            $scope.verifyRecoveryToken(function() {
-                $scope.step++;
-                $scope.$apply();
-            });
-            return;
-        }
-
-        if ($scope.step === 2) {
-            $scope.decryptAndStorePrivateKeyLocally();
-            return;
-        }
-    };
+    //
+    // helper functions
+    //
 
     $scope.goTo = function(location) {
         $location.path(location);
         $scope.$apply();
     };
+
+    function displayError(err) {
+        $scope.busy = false;
+        $scope.incorrect = true;
+        $scope.errMsg = err.errMsg || err.message;
+        $scope.$apply();
+    }
 };
 
 module.exports = LoginPrivateKeyDownloadCtrl;
