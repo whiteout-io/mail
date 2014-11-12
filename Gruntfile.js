@@ -466,6 +466,7 @@ module.exports = function(grunt) {
                     exclude: [
                         'appcache.manifest',
                         'manifest.webapp',
+                        'manifest.mobile.json',
                         'js/app.min.js.map',
                         'js/app.browserified.js',
                         'js/app.browserified.js.map',
