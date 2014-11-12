@@ -19,9 +19,6 @@ var ContactsCtrl = function($scope) {
         }
     };
 
-    // set default value so that the popover height is correct on init
-    $scope.fingerprint = 'XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX';
-
     //
     // scope functions
     //
