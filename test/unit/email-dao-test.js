@@ -910,7 +910,7 @@ describe('Email DAO unit tests', function() {
         var localListStub, localStoreStub, imapGetStub, uid;
 
         beforeEach(function() {
-            uid = 12345,
+            uid = 12345;
             localListStub = sinon.stub(dao, '_localListMessages');
             localStoreStub = sinon.stub(dao, '_localStoreMessages');
             imapGetStub = sinon.stub(dao, '_getBodyParts');
@@ -1842,7 +1842,7 @@ describe('Email DAO unit tests', function() {
             it('should connect', function(done) {
                 inboxFolder.messages = [{
                     uid: 123,
-                    modseq: 123
+                    modseq: '123'
                 }];
                 imapClientStub.login.yieldsAsync();
                 imapClientStub.listenForChanges.yieldsAsync();
@@ -1862,7 +1862,7 @@ describe('Email DAO unit tests', function() {
                             exists: 123,
                             uidNext: 124,
                             uidlist: [123],
-                            highestModseq: 123
+                            highestModseq: '123'
                         }
                     });
 

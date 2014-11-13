@@ -1154,7 +1154,7 @@ EmailDAO.prototype.onConnect = function(options, callback) {
             self._imapClient.onSyncUpdate = self._onSyncUpdate.bind(self);
 
             // fill the imap mailboxCache with information we have locally available:
-            // - highest locally available moseq
+            // - highest locally available moseq (NB! JavaScript can't handle 64 bit uints, so modseq values are strings)
             // - list of locally available uids
             // - highest locally available uid
             // - next expected uid
@@ -1172,8 +1172,13 @@ EmailDAO.prototype.onConnect = function(options, callback) {
                 lastUid = uids[uids.length - 1];
 
                 highestModseq = _.pluck(folder.messages, 'modseq').sort(function(a, b) {
-                    return a - b;
-                }).pop();
+                    // We treat modseq values as numbers here as an exception, should
+                    // be strings everywhere else.
+                    // If it turns out that someone actually uses 64 bit uint numbers
+                    // that do not fit to the JavaScript number type then we should
+                    // use a helper for handling big integers.
+                    return (Number(a) || 0) - (Number(b) || 0);
+                }).pop().toString();
 
                 mailboxCache[folder.path] = {
                     exists: lastUid,
@@ -1396,9 +1401,9 @@ EmailDAO.prototype._initFoldersFromImap = function(callback) {
             }));
         });
 
-        // 
+        //
         // by now, all the folders are up to date. now we need to find all the well known folders
-        // 
+        //
 
         // check for the well known folders to be displayed in the uppermost ui part
         // in that order
@@ -1424,7 +1429,7 @@ EmailDAO.prototype._initFoldersFromImap = function(callback) {
                 return;
             }
 
-            // we have no folder of the respective type marked as wellknown, so find the 
+            // we have no folder of the respective type marked as wellknown, so find the
             // next best folder of the respective type and flag it as wellknown so that
             // we can display it properly
             wellknownFolder = _.findWhere(self._account.folders, {
