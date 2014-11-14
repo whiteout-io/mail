@@ -18,7 +18,7 @@ var AboutCtrl = function($scope) {
     // scope variables
     //
 
-    $scope.version = cfg.appVersion;
+    $scope.version = cfg.appVersion + ' (beta)';
     $scope.date = new Date();
 
     //
