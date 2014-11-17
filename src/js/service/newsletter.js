@@ -1,6 +1,6 @@
 'use strict';
 
-var ngModule = angular.module('woServices', []);
+var ngModule = angular.module('woServices');
 ngModule.service('newsletter', Newsletter);
 
 function Newsletter($q) {

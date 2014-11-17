@@ -41,7 +41,7 @@ ctrl.start = function(options, callback) {
     }
 
     ctrl.started = true;
-    ctrl.onError = options.onError;
+    ctrl.onError = options.onError; // TODO: replace by errorService
 
     // are we running in a cordova app or in a browser environment?
     if (window.cordova) {
@@ -57,15 +57,20 @@ ctrl.start = function(options, callback) {
     function onDeviceReady() {
         axe.debug('Starting app.');
 
+        // TODO: will be replaced by angular dependency management
         ctrl.buildModules();
 
+        // TODO: move self-contained connection management in emailDao
         // Handle offline and online gracefully
         window.addEventListener('online', ctrl.onConnect.bind(ctrl, ctrl.onError));
         window.addEventListener('offline', ctrl.onDisconnect.bind(ctrl));
 
+        // TODO: move appConfigService shared singleton
         ctrl._appConfigStore.init('app-config', callback);
     }
 };
+
+// TODO: will be replaced by angular dependency management
 
 /**
  * Initialize the dependency tree.
@@ -120,6 +125,8 @@ ctrl.buildModules = function() {
 ctrl.checkForUpdate = function() {
     ctrl._updateHandler.checkForUpdate(ctrl.onError);
 };
+
+// TODO: move to AccountService
 
 /**
  * Fire up the database, retrieve the available keys for the user and initialize the email data access object
@@ -207,12 +214,16 @@ ctrl.isOnline = function() {
     return navigator.onLine;
 };
 
+// TODO: move to AccountService
+
 /**
  * Event handler that is called when the user agent goes offline.
  */
 ctrl.onDisconnect = function() {
     ctrl._emailDao.onDisconnect();
 };
+
+// TODO: move to AccountService
 
 /**
  * Log the current user out by clear the app config store and deleting instances of imap-client and pgp-mailer.
@@ -242,6 +253,8 @@ ctrl.logout = function() {
         });
     });
 };
+
+// TODO: move onConnect to emailDao
 
 /**
  * Event that is called when the user agent goes online. This create new instances of the imap-client and pgp-mailer and connects to the mail server.
