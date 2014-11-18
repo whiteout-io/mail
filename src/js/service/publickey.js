@@ -1,13 +1,17 @@
 'use strict';
 
-var PublicKeyDAO = function(restDao) {
+var ngModule = angular.module('woServices');
+ngModule.service('publicKey', PublicKey);
+module.exports = PublicKey;
+
+function PublicKey(restDao) {
     this._restDao = restDao;
-};
+}
 
 /**
  * Verify the public key behind the given uuid
  */
-PublicKeyDAO.prototype.verify = function(uuid, callback) {
+PublicKey.prototype.verify = function(uuid, callback) {
     var uri = '/verify/' + uuid;
 
     this._restDao.get({
@@ -27,7 +31,7 @@ PublicKeyDAO.prototype.verify = function(uuid, callback) {
 /**
  * Find the user's corresponding public key
  */
-PublicKeyDAO.prototype.get = function(keyId, callback) {
+PublicKey.prototype.get = function(keyId, callback) {
     var uri = '/publickey/key/' + keyId;
 
     this._restDao.get({
@@ -50,7 +54,7 @@ PublicKeyDAO.prototype.get = function(keyId, callback) {
 /**
  * Find the user's corresponding public key by email
  */
-PublicKeyDAO.prototype.getByUserId = function(userId, callback) {
+PublicKey.prototype.getByUserId = function(userId, callback) {
     var uri = '/publickey/user/' + userId;
 
     this._restDao.get({
@@ -87,7 +91,7 @@ PublicKeyDAO.prototype.getByUserId = function(userId, callback) {
 /**
  * Persist the user's publc key
  */
-PublicKeyDAO.prototype.put = function(pubkey, callback) {
+PublicKey.prototype.put = function(pubkey, callback) {
     var uri = '/publickey/user/' + pubkey.userId + '/key/' + pubkey._id;
     this._restDao.put(pubkey, uri, callback);
 };
@@ -95,9 +99,7 @@ PublicKeyDAO.prototype.put = function(pubkey, callback) {
 /**
  * Delete the public key from the cloud storage service
  */
-PublicKeyDAO.prototype.remove = function(keyId, callback) {
+PublicKey.prototype.remove = function(keyId, callback) {
     var uri = '/publickey/key/' + keyId;
     this._restDao.remove(uri, callback);
 };
-
-module.exports = PublicKeyDAO;

@@ -1,14 +1,20 @@
 'use strict';
 
+var ngModule = angular.module('woServices');
+ngModule.factory('restDao', function() {
+    return new RestDAO();
+});
+module.exports = RestDAO;
+
 var config = require('../app-config').config;
 
-var RestDAO = function(baseUri) {
+function RestDAO(baseUri) {
     if (baseUri) {
         this._baseUri = baseUri;
     } else {
         this._baseUri = config.cloudUrl;
     }
-};
+}
 
 /**
  * GET (read) request
@@ -117,5 +123,3 @@ RestDAO.prototype._processRequest = function(options, callback) {
 
     xhr.send(options.payload ? JSON.stringify(options.payload) : undefined);
 };
-
-module.exports = RestDAO;

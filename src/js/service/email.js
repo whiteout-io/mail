@@ -1,5 +1,9 @@
 'use strict';
 
+var ngModule = angular.module('woServices');
+ngModule.service('email', Email);
+module.exports = Email;
+
 var config = require('../app-config').config,
     str = require('../app-config').string;
 
@@ -32,7 +36,7 @@ var MSG_PART_TYPE_HTML = 'html';
 
 //
 //
-// Email Dao
+// Email Service
 //
 //
 
@@ -46,13 +50,13 @@ var MSG_PART_TYPE_HTML = 'html';
  * @param {Object} pgpbuilder Generates and encrypts MIME and SMTP messages
  * @param {Object} mailreader Parses MIME messages received from IMAP
  */
-var EmailDAO = function(keychain, pgp, devicestorage, pgpbuilder, mailreader) {
+function Email(keychain, pgp, devicestorage, pgpbuilder, mailreader) {
     this._keychain = keychain;
     this._pgp = pgp;
     this._devicestorage = devicestorage;
     this._pgpbuilder = pgpbuilder;
     this._mailreader = mailreader;
-};
+}
 
 
 //
@@ -71,7 +75,7 @@ var EmailDAO = function(keychain, pgp, devicestorage, pgpbuilder, mailreader) {
  * @param {String} options.account.realname The user's id
  * @param {Function} callback(error, keypair) Invoked with the keypair or error information when the email dao is initialized
  */
-EmailDAO.prototype.init = function(options, callback) {
+Email.prototype.init = function(options, callback) {
     this._account = options.account;
     this._account.busy = 0; // > 0 triggers the spinner
     this._account.online = false;
@@ -86,7 +90,7 @@ EmailDAO.prototype.init = function(options, callback) {
  * @param {String} options.passphrase The passphrase to decrypt the private key
  * @param {Function} callback(error) Invoked when the the keychain is unlocked or when an error occurred buring unlocking
  */
-EmailDAO.prototype.unlock = function(options, callback) {
+Email.prototype.unlock = function(options, callback) {
     var self = this;
 
     if (options.keypair) {
@@ -202,7 +206,7 @@ EmailDAO.prototype.unlock = function(options, callback) {
  * @param {Object} options.folder The folder to be opened
  * @param {Function} callback(error) Invoked when the folder has been opened
  */
-EmailDAO.prototype.openFolder = function(options, callback) {
+Email.prototype.openFolder = function(options, callback) {
     var self = this,
         err;
 
@@ -229,7 +233,7 @@ EmailDAO.prototype.openFolder = function(options, callback) {
  * @param {Object} options.folder The folder to synchronize
  * @param {Function} callback [description]
  */
-EmailDAO.prototype.refreshFolder = function(options, callback) {
+Email.prototype.refreshFolder = function(options, callback) {
     var self = this,
         folder = options.folder;
 
@@ -289,7 +293,7 @@ EmailDAO.prototype.refreshFolder = function(options, callback) {
  * @param {Object} options.folder The folder for which to fetch the message
  * @param {Function} callback(error) Invoked when the message is persisted and added to folder.messages
  */
-EmailDAO.prototype.fetchMessages = function(options, callback) {
+Email.prototype.fetchMessages = function(options, callback) {
     var self = this,
         folder = options.folder;
 
@@ -440,7 +444,7 @@ EmailDAO.prototype.fetchMessages = function(options, callback) {
  * @param {Boolean} options.localOnly Indicated if the message should not be removed from IMAP
  * @param {Function} callback(error) Invoked when the message was delete, or an error occurred
  */
-EmailDAO.prototype.deleteMessage = function(options, callback) {
+Email.prototype.deleteMessage = function(options, callback) {
     var self = this,
         folder = options.folder,
         message = options.message;
@@ -508,7 +512,7 @@ EmailDAO.prototype.deleteMessage = function(options, callback) {
  * @param {[type]} options [description]
  * @param {Function} callback [description]
  */
-EmailDAO.prototype.setFlags = function(options, callback) {
+Email.prototype.setFlags = function(options, callback) {
     var self = this,
         folder = options.folder,
         message = options.message;
@@ -600,7 +604,7 @@ EmailDAO.prototype.setFlags = function(options, callback) {
  * @param {Object} options.message The message that should be moved
  * @param {Function} callback(error) Invoked when the message was moved, or an error occurred
  */
-EmailDAO.prototype.moveMessage = function(options, callback) {
+Email.prototype.moveMessage = function(options, callback) {
     var self = this,
         folder = options.folder,
         destination = options.destination,
@@ -652,7 +656,7 @@ EmailDAO.prototype.moveMessage = function(options, callback) {
  * @param {Object} options.folder The IMAP folder
  * @param {Function} callback(error, message) Invoked when the message is streamed, or provides information if an error occurred
  */
-EmailDAO.prototype.getBody = function(options, callback) {
+Email.prototype.getBody = function(options, callback) {
     var self = this,
         message = options.message,
         folder = options.folder;
@@ -837,7 +841,7 @@ EmailDAO.prototype.getBody = function(options, callback) {
     }
 };
 
-EmailDAO.prototype._checkSignatures = function(message, callback) {
+Email.prototype._checkSignatures = function(message, callback) {
     var self = this;
 
     self._keychain.getReceiverPublicKey(message.from[0].address, function(err, senderPublicKey) {
@@ -866,7 +870,7 @@ EmailDAO.prototype._checkSignatures = function(message, callback) {
  * @param {Object} options.attachment The attachment body part to fetch and parse from IMAP
  * @param {Function} callback(error, attachment) Invoked when the attachment body part was retrieved and parsed, or an error occurred
  */
-EmailDAO.prototype.getAttachment = function(options, callback) {
+Email.prototype.getAttachment = function(options, callback) {
     var self = this,
         attachment = options.attachment;
 
@@ -896,7 +900,7 @@ EmailDAO.prototype.getAttachment = function(options, callback) {
  * @param {Object} options.message The message
  * @param {Function} callback(error, message)
  */
-EmailDAO.prototype.decryptBody = function(options, callback) {
+Email.prototype.decryptBody = function(options, callback) {
     var self = this,
         message = options.message;
 
@@ -1016,7 +1020,7 @@ EmailDAO.prototype.decryptBody = function(options, callback) {
  * @param {Object} options.email The message to be sent
  * @param {Function} callback(error) Invoked when the message was sent, or an error occurred
  */
-EmailDAO.prototype.sendEncrypted = function(options, callback) {
+Email.prototype.sendEncrypted = function(options, callback) {
     var self = this;
 
     if (!self._account.online) {
@@ -1056,7 +1060,7 @@ EmailDAO.prototype.sendEncrypted = function(options, callback) {
  * @param {Object} options.email The message to be sent
  * @param {Function} callback(error) Invoked when the message was sent, or an error occurred
  */
-EmailDAO.prototype.sendPlaintext = function(options, callback) {
+Email.prototype.sendPlaintext = function(options, callback) {
     var self = this;
 
     if (!self._account.online) {
@@ -1097,7 +1101,7 @@ EmailDAO.prototype.sendPlaintext = function(options, callback) {
  * @param {Object} options.email The message to be encrypted
  * @param {Function} callback(error, message) Invoked when the message was encrypted, or an error occurred
  */
-EmailDAO.prototype.encrypt = function(options, callback) {
+Email.prototype.encrypt = function(options, callback) {
     var self = this;
 
     self.busy();
@@ -1124,7 +1128,7 @@ EmailDAO.prototype.encrypt = function(options, callback) {
  * @param {Object} options.pgpMailer The SMTP client used to send messages
  * @param {Function} callback [description]
  */
-EmailDAO.prototype.onConnect = function(options, callback) {
+Email.prototype.onConnect = function(options, callback) {
     var self = this;
 
     self._account.loggingIn = true;
@@ -1212,7 +1216,7 @@ EmailDAO.prototype.onConnect = function(options, callback) {
  * This handler should be invoked when navigator.onLine === false.
  * It will discard the imap client and pgp mailer
  */
-EmailDAO.prototype.onDisconnect = function(callback) {
+Email.prototype.onDisconnect = function(callback) {
     var self = this;
 
     // logout of imap-client
@@ -1239,7 +1243,7 @@ EmailDAO.prototype.onDisconnect = function(callback) {
  * @param {String} options.path The mailbox for which updates are available
  * @param {Array} options.list Array containing update information. Number (uid) or mail with Object (uid and flags), respectively
  */
-EmailDAO.prototype._onSyncUpdate = function(options) {
+Email.prototype._onSyncUpdate = function(options) {
     var self = this;
 
     var folder = _.findWhere(self._account.folders, {
@@ -1319,7 +1323,7 @@ EmailDAO.prototype._onSyncUpdate = function(options) {
  *
  * @param {Function} callback Invoked when the folders are up to date
  */
-EmailDAO.prototype._initFoldersFromDisk = function(callback) {
+Email.prototype._initFoldersFromDisk = function(callback) {
     var self = this;
 
     self.busy(); // start the spinner
@@ -1347,7 +1351,7 @@ EmailDAO.prototype._initFoldersFromDisk = function(callback) {
  *
  * @param {Function} callback Invoked when the folders are up to date
  */
-EmailDAO.prototype._initFoldersFromImap = function(callback) {
+Email.prototype._initFoldersFromImap = function(callback) {
     var self = this;
 
     self.busy(); // start the spinner
@@ -1498,7 +1502,7 @@ EmailDAO.prototype._initFoldersFromImap = function(callback) {
  *
  * @param {Function} callback Invoked when the folders are filled with messages
  */
-EmailDAO.prototype._initMessagesFromDisk = function(callback) {
+Email.prototype._initMessagesFromDisk = function(callback) {
     var self = this;
 
     if (!self._account.folders || self._account.folders.length === 0) {
@@ -1526,11 +1530,11 @@ EmailDAO.prototype._initMessagesFromDisk = function(callback) {
     });
 };
 
-EmailDAO.prototype.busy = function() {
+Email.prototype.busy = function() {
     this._account.busy++;
 };
 
-EmailDAO.prototype.done = function() {
+Email.prototype.done = function() {
     if (this._account.busy > 0) {
         this._account.busy--;
     }
@@ -1552,7 +1556,7 @@ EmailDAO.prototype.done = function() {
  * @param {Number} options.unread Un-/Read flag
  * @param {Number} options.answered Un-/Answered flag
  */
-EmailDAO.prototype._imapMark = function(options, callback) {
+Email.prototype._imapMark = function(options, callback) {
     if (!this._account.online) {
         callback({
             errMsg: 'Client is currently offline!',
@@ -1573,7 +1577,7 @@ EmailDAO.prototype._imapMark = function(options, callback) {
  * @param {Number} options.uid The uid of the message
  * @param {Function} callback(error) Callback with an error object in case something went wrong.
  */
-EmailDAO.prototype._imapDeleteMessage = function(options, callback) {
+Email.prototype._imapDeleteMessage = function(options, callback) {
     if (!this._account.online) {
         callback({
             errMsg: 'Client is currently offline!',
@@ -1611,7 +1615,7 @@ EmailDAO.prototype._imapDeleteMessage = function(options, callback) {
  * @param {String} options.uid the message's uid
  * @param {Function} callback (error) The callback when the message is moved
  */
-EmailDAO.prototype._imapMoveMessage = function(options, callback) {
+Email.prototype._imapMoveMessage = function(options, callback) {
     this._imapClient.moveMessage({
         path: options.folder.path,
         destination: options.destination.path,
@@ -1628,7 +1632,7 @@ EmailDAO.prototype._imapMoveMessage = function(options, callback) {
  * @param {Number} options.lastUid The upper bound of the uid range (inclusive)
  * @param {Function} callback (error, messages) The callback when the imap client is done fetching message metadata
  */
-EmailDAO.prototype._imapListMessages = function(options, callback) {
+Email.prototype._imapListMessages = function(options, callback) {
     var self = this;
 
     if (!this._account.online) {
@@ -1650,7 +1654,7 @@ EmailDAO.prototype._imapListMessages = function(options, callback) {
  * @param {String} options.message The rfc2822 compatible raw ASCII e-mail source
  * @param {Function} callback (error) The callback when the imap client is done uploading
  */
-EmailDAO.prototype._imapUploadMessage = function(options, callback) {
+Email.prototype._imapUploadMessage = function(options, callback) {
     this._imapClient.uploadMessage({
         path: options.folder.path,
         message: options.message
@@ -1664,7 +1668,7 @@ EmailDAO.prototype._imapUploadMessage = function(options, callback) {
  * @param {Object} options.bodyParts The message, as retrieved by _imapListMessages
  * @param {Function} callback (error, message) The callback when the imap client is done streaming message text content
  */
-EmailDAO.prototype._getBodyParts = function(options, callback) {
+Email.prototype._getBodyParts = function(options, callback) {
     var self = this;
 
     if (!self._account.online) {
@@ -1702,7 +1706,7 @@ EmailDAO.prototype._getBodyParts = function(options, callback) {
  * @param {Object} options.uid A specific uid to look up locally in the folder
  * @param {Function} callback(error, list) Invoked with the results of the query, or further information, if an error occurred
  */
-EmailDAO.prototype._localListMessages = function(options, callback) {
+Email.prototype._localListMessages = function(options, callback) {
     var dbType = 'email_' + options.folder.path + (options.uid ? '_' + options.uid : '');
     this._devicestorage.listItems(dbType, 0, null, callback);
 };
@@ -1714,7 +1718,7 @@ EmailDAO.prototype._localListMessages = function(options, callback) {
  * @param {Array} options.messages The messages to store
  * @param {Function} callback(error, list) Invoked with the results of the query, or further information, if an error occurred
  */
-EmailDAO.prototype._localStoreMessages = function(options, callback) {
+Email.prototype._localStoreMessages = function(options, callback) {
     var dbType = 'email_' + options.folder.path;
     this._devicestorage.storeList(options.emails, dbType, callback);
 };
@@ -1726,7 +1730,7 @@ EmailDAO.prototype._localStoreMessages = function(options, callback) {
  * @param {Array} options.messages The messages to store
  * @param {Function} callback(error, list) Invoked with the results of the query, or further information, if an error occurred
  */
-EmailDAO.prototype._localDeleteMessage = function(options, callback) {
+Email.prototype._localDeleteMessage = function(options, callback) {
     var path = options.folder.path,
         uid = options.uid,
         id = options.id;
@@ -1756,7 +1760,7 @@ EmailDAO.prototype._localDeleteMessage = function(options, callback) {
  * @param {String} options.message The rfc2822 compatible raw ASCII e-mail source
  * @param {Function} callback (error) The callback when the imap client is done uploading
  */
-EmailDAO.prototype._uploadToSent = function(options, callback) {
+Email.prototype._uploadToSent = function(options, callback) {
     var self = this;
 
     self.busy();
@@ -1796,7 +1800,7 @@ EmailDAO.prototype._uploadToSent = function(options, callback) {
  * @param {String} hostname The hostname to check
  * @return {Boolean} true if upload can be ignored, otherwise false
  */
-EmailDAO.prototype.checkIgnoreUploadOnSent = function(hostname) {
+Email.prototype.checkIgnoreUploadOnSent = function(hostname) {
     for (var i = 0; i < config.ignoreUploadOnSentDomains.length; i++) {
         if (config.ignoreUploadOnSentDomains[i].test(hostname)) {
             return true;
@@ -1877,5 +1881,3 @@ function inlineExternalImages(message) {
         return prefix + localSource + suffix;
     });
 }
-
-module.exports = EmailDAO;

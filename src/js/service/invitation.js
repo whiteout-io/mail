@@ -1,20 +1,24 @@
 'use strict';
 
+var ngModule = angular.module('woServices');
+ngModule.service('invitation', Invitation);
+module.exports = Invitation;
+
 /**
- * The InvitationDAO is a high level Data Access Object that access the invitation service REST endpoint.
+ * The Invitation is a high level Data Access Object that access the invitation service REST endpoint.
  * @param {Object} restDao The REST Data Access Object abstraction
  */
-var InvitationDAO = function(restDao) {
+function Invitation(restDao) {
     this._restDao = restDao;
-};
+}
 
 //
 // Constants
 //
 
-InvitationDAO.INVITE_MISSING = 1;
-InvitationDAO.INVITE_PENDING = 2;
-InvitationDAO.INVITE_SUCCESS = 4;
+Invitation.INVITE_MISSING = 1;
+Invitation.INVITE_PENDING = 2;
+Invitation.INVITE_SUCCESS = 4;
 
 //
 // API
@@ -26,7 +30,7 @@ InvitationDAO.INVITE_SUCCESS = 4;
  * @param {String} options.sender User ID of the sender
  * @param {Function} callback(error, status) Returns information if the invitation worked (INVITE_SUCCESS), if an invitation is already pendin (INVITE_PENDING), or information if an error occurred.
  */
-InvitationDAO.prototype.invite = function(options, callback) {
+Invitation.prototype.invite = function(options, callback) {
     if (typeof options !== 'object' || typeof options.recipient !== 'string' || typeof options.recipient !== 'string') {
         callback({
             errMsg: 'erroneous usage of api: incorrect parameters!'
@@ -44,10 +48,10 @@ InvitationDAO.prototype.invite = function(options, callback) {
         }
 
         if (status === 201) {
-            callback(null, InvitationDAO.INVITE_SUCCESS);
+            callback(null, Invitation.INVITE_SUCCESS);
             return;
         } else if (status === 304) {
-            callback(null, InvitationDAO.INVITE_PENDING);
+            callback(null, Invitation.INVITE_PENDING);
             return;
         }
 
@@ -56,5 +60,3 @@ InvitationDAO.prototype.invite = function(options, callback) {
         });
     }
 };
-
-module.exports = InvitationDAO;

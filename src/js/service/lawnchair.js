@@ -1,11 +1,18 @@
+'use strict';
+
+var ngModule = angular.module('woServices');
+ngModule.service('lawnchairDAO', LawnchairDAO);
+module.exports = LawnchairDAO;
+
 /**
  * Handles generic caching of JSON objects in a lawnchair adapter
  */
+function LawnchairDAO() {}
 
-'use strict';
-
-var LawnchairDAO = function() {};
-
+/**
+ * Initialize the lawnchair database
+ * @param  {String}   dbName   The name of the database
+ */
 LawnchairDAO.prototype.init = function(dbName, callback) {
     if (!dbName) {
         callback({
@@ -212,5 +219,3 @@ LawnchairDAO.prototype.removeList = function(type, callback) {
 LawnchairDAO.prototype.clear = function(callback) {
     this._db.nuke(callback);
 };
-
-module.exports = LawnchairDAO;

@@ -1,14 +1,17 @@
+'use strict';
+
+var ngModule = angular.module('woServices');
+ngModule.service('deviceStorage', DeviceStorage);
+module.exports = DeviceStorage;
+
 /**
  * High level storage api that handles all persistence on the device.
  */
-
-'use strict';
-
-var DeviceStorageDAO = function(localDbDao) {
+function DeviceStorage(localDbDao) {
     this._localDbDao = localDbDao;
-};
+}
 
-DeviceStorageDAO.prototype.init = function(emailAddress, callback) {
+DeviceStorage.prototype.init = function(emailAddress, callback) {
     this._localDbDao.init(emailAddress, callback);
 };
 
@@ -17,7 +20,7 @@ DeviceStorageDAO.prototype.init = function(emailAddress, callback) {
  * @param list [Array] The list of items to be persisted
  * @param type [String] The type of item to be persisted e.g. 'email'
  */
-DeviceStorageDAO.prototype.storeList = function(list, type, callback) {
+DeviceStorage.prototype.storeList = function(list, type, callback) {
     var key, items = [];
 
     // nothing to store
@@ -49,7 +52,7 @@ DeviceStorageDAO.prototype.storeList = function(list, type, callback) {
 /**
  *  Deletes items of a certain type from storage
  */
-DeviceStorageDAO.prototype.removeList = function(type, callback) {
+DeviceStorage.prototype.removeList = function(type, callback) {
     this._localDbDao.removeList(type, callback);
 };
 
@@ -59,7 +62,7 @@ DeviceStorageDAO.prototype.removeList = function(type, callback) {
  * @param offset [Number] The offset of items to fetch (0 is the last stored item)
  * @param num [Number] The number of items to fetch (null means fetch all)
  */
-DeviceStorageDAO.prototype.listItems = function(type, offset, num, callback) {
+DeviceStorage.prototype.listItems = function(type, offset, num, callback) {
     // fetch all items of a certain type from the data-store
     this._localDbDao.list(type, offset, num, callback);
 };
@@ -67,7 +70,7 @@ DeviceStorageDAO.prototype.listItems = function(type, offset, num, callback) {
 /**
  * Clear the whole device data-store
  */
-DeviceStorageDAO.prototype.clear = function(callback) {
+DeviceStorage.prototype.clear = function(callback) {
     this._localDbDao.clear(callback);
 };
 
@@ -89,5 +92,3 @@ function createKey(i, type) {
 
     return key;
 }
-
-module.exports = DeviceStorageDAO;

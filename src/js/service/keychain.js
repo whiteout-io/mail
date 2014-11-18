@@ -1,9 +1,8 @@
-/**
- * A high-level Data-Access Api for handling Keypair synchronization
- * between the cloud service and the device's local storage
- */
-
 'use strict';
+
+var ngModule = angular.module('woServices');
+ngModule.service('keychain', Keychain);
+module.exports = Keychain;
 
 var util = require('crypto-lib').util,
     config = require('../app-config').config;
@@ -13,13 +12,17 @@ var DB_PUBLICKEY = 'publickey',
     DB_DEVICENAME = 'devicename',
     DB_DEVICE_SECRET = 'devicesecret';
 
-var KeychainDAO = function(localDbDao, publicKeyDao, privateKeyDao, crypto, pgp) {
+/**
+ * A high-level Data-Access Api for handling Keypair synchronization
+ * between the cloud service and the device's local storage
+ */
+function Keychain(localDbDao, publicKeyDao, privateKeyDao, crypto, pgp) {
     this._localDbDao = localDbDao;
     this._publicKeyDao = publicKeyDao;
     this._privateKeyDao = privateKeyDao;
     this._crypto = crypto;
     this._pgp = pgp;
-};
+}
 
 //
 // Public key functions
@@ -30,7 +33,7 @@ var KeychainDAO = function(localDbDao, publicKeyDao, privateKeyDao, crypto, pgp)
  * @param {String} uuid The uuid to verify the key
  * @param {Function} callback(error) Callback with an optional error object when the verification is done. If the was an error, the error object contains the information for it.
  */
-KeychainDAO.prototype.verifyPublicKey = function(uuid, callback) {
+Keychain.prototype.verifyPublicKey = function(uuid, callback) {
     this._publicKeyDao.verify(uuid, callback);
 };
 
@@ -40,7 +43,7 @@ KeychainDAO.prototype.verifyPublicKey = function(uuid, callback) {
  * @param ids [Array] the key ids as [{_id, userId}]
  * @return [PublicKeyCollection] The requiested public keys
  */
-KeychainDAO.prototype.getPublicKeys = function(ids, callback) {
+Keychain.prototype.getPublicKeys = function(ids, callback) {
     var self = this,
         after, already, pubkeys = [];
 
@@ -85,7 +88,7 @@ KeychainDAO.prototype.getPublicKeys = function(ids, callback) {
  * @param {String} options.overridePermission (optional) Indicates if the update should happen automatically (true) or with the user being queried (false). Defaults to false
  * @param {Function} callback(error, key) Invoked when the key has been updated or an error occurred
  */
-KeychainDAO.prototype.refreshKeyForUserId = function(options, callback) {
+Keychain.prototype.refreshKeyForUserId = function(options, callback) {
     var self = this,
         userId = options.userId,
         overridePermission = options.overridePermission;
@@ -189,7 +192,7 @@ KeychainDAO.prototype.refreshKeyForUserId = function(options, callback) {
  * Look up a reveiver's public key by user id
  * @param userId [String] the receiver's email address
  */
-KeychainDAO.prototype.getReceiverPublicKey = function(userId, callback) {
+Keychain.prototype.getReceiverPublicKey = function(userId, callback) {
     var self = this;
 
     // search local keyring for public key
@@ -266,7 +269,7 @@ KeychainDAO.prototype.getReceiverPublicKey = function(userId, callback) {
  * @param {String}   deviceName The device name
  * @param {Function} callback(error)
  */
-KeychainDAO.prototype.setDeviceName = function(deviceName, callback) {
+Keychain.prototype.setDeviceName = function(deviceName, callback) {
     if (!deviceName) {
         callback(new Error('Please set a device name!'));
         return;
@@ -280,7 +283,7 @@ KeychainDAO.prototype.setDeviceName = function(deviceName, callback) {
  * @param  {Function} callback(error, deviceName)
  * @return {String} The device name
  */
-KeychainDAO.prototype.getDeviceName = function(callback) {
+Keychain.prototype.getDeviceName = function(callback) {
     // check if deviceName is already persisted in storage
     this._localDbDao.read(DB_DEVICENAME, function(err, deviceName) {
         if (err) {
@@ -301,7 +304,7 @@ KeychainDAO.prototype.getDeviceName = function(callback) {
  * Geneate a device specific key and secret to authenticate to the private key service.
  * @param {Function} callback(error, deviceSecret:[base64 encoded string])
  */
-KeychainDAO.prototype.getDeviceSecret = function(callback) {
+Keychain.prototype.getDeviceSecret = function(callback) {
     var self = this;
 
     // generate random deviceSecret or get from storage
@@ -336,7 +339,7 @@ KeychainDAO.prototype.getDeviceSecret = function(callback) {
  * @param  {String}   options.userId The user's email address
  * @param  {Function} callback(error)
  */
-KeychainDAO.prototype.registerDevice = function(options, callback) {
+Keychain.prototype.registerDevice = function(options, callback) {
     var self = this,
         devName;
 
@@ -435,7 +438,7 @@ KeychainDAO.prototype.registerDevice = function(options, callback) {
  * @param  {Function} callback(error, authSessionKey)
  * @return {Object} {sessionId:String, sessionKey:[base64 encoded]}
  */
-KeychainDAO.prototype._authenticateToPrivateKeyServer = function(userId, callback) {
+Keychain.prototype._authenticateToPrivateKeyServer = function(userId, callback) {
     var self = this,
         sessionId;
 
@@ -552,7 +555,7 @@ KeychainDAO.prototype._authenticateToPrivateKeyServer = function(userId, callbac
  * @param  {String}   options.code     The randomly generated or self selected code used to derive the key for the encryption of the private PGP key
  * @param  {Function} callback(error)
  */
-KeychainDAO.prototype.uploadPrivateKey = function(options, callback) {
+Keychain.prototype.uploadPrivateKey = function(options, callback) {
     var self = this,
         keySize = config.symKeySize,
         salt;
@@ -646,7 +649,7 @@ KeychainDAO.prototype.uploadPrivateKey = function(options, callback) {
  * @param  {String}   options.keyId     The private PGP key id
  * @param  {Function} callback(error)
  */
-KeychainDAO.prototype.requestPrivateKeyDownload = function(options, callback) {
+Keychain.prototype.requestPrivateKeyDownload = function(options, callback) {
     this._privateKeyDao.requestDownload(options, callback);
 };
 
@@ -656,7 +659,7 @@ KeychainDAO.prototype.requestPrivateKeyDownload = function(options, callback) {
  * @param  {String}   options.keyId     The private PGP key id
  * @param  {Function} callback(error)
  */
-KeychainDAO.prototype.hasPrivateKey = function(options, callback) {
+Keychain.prototype.hasPrivateKey = function(options, callback) {
     this._privateKeyDao.hasPrivateKey(options, callback);
 };
 
@@ -667,7 +670,7 @@ KeychainDAO.prototype.hasPrivateKey = function(options, callback) {
  * @param  {String}   options.recoveryToken The recovery token acquired via email/sms from the key server
  * @param  {Function} callback(error, encryptedPrivateKey)
  */
-KeychainDAO.prototype.downloadPrivateKey = function(options, callback) {
+Keychain.prototype.downloadPrivateKey = function(options, callback) {
     this._privateKeyDao.download(options, callback);
 };
 
@@ -681,7 +684,7 @@ KeychainDAO.prototype.downloadPrivateKey = function(options, callback) {
  * @param  {String}   options.iv The iv used to encrypt the private PGP key
  * @param  {Function} callback(error, keyObject)
  */
-KeychainDAO.prototype.decryptAndStorePrivateKeyLocally = function(options, callback) {
+Keychain.prototype.decryptAndStorePrivateKeyLocally = function(options, callback) {
     var self = this,
         code = options.code,
         salt = options.salt,
@@ -756,7 +759,7 @@ KeychainDAO.prototype.decryptAndStorePrivateKeyLocally = function(options, callb
  * If no key pair exists, null is returned.
  * return [Object] The user's key pair {publicKey, privateKey}
  */
-KeychainDAO.prototype.getUserKeyPair = function(userId, callback) {
+Keychain.prototype.getUserKeyPair = function(userId, callback) {
     var self = this;
 
     // search for user's public key locally
@@ -833,7 +836,7 @@ KeychainDAO.prototype.getUserKeyPair = function(userId, callback) {
  * locally and in the cloud and persist arccordingly
  * @param [Object] The user's key pair {publicKey, privateKey}
  */
-KeychainDAO.prototype.putUserKeyPair = function(keypair, callback) {
+Keychain.prototype.putUserKeyPair = function(keypair, callback) {
     var self = this;
 
     // validate input
@@ -872,7 +875,7 @@ KeychainDAO.prototype.putUserKeyPair = function(keypair, callback) {
 // Helper functions
 //
 
-KeychainDAO.prototype.lookupPublicKey = function(id, callback) {
+Keychain.prototype.lookupPublicKey = function(id, callback) {
     var self = this;
 
     if (!id) {
@@ -917,30 +920,28 @@ KeychainDAO.prototype.lookupPublicKey = function(id, callback) {
 /**
  * List all the locally stored public keys
  */
-KeychainDAO.prototype.listLocalPublicKeys = function(callback) {
+Keychain.prototype.listLocalPublicKeys = function(callback) {
     // search local keyring for public key
     this._localDbDao.list(DB_PUBLICKEY, 0, null, callback);
 };
 
-KeychainDAO.prototype.removeLocalPublicKey = function(id, callback) {
+Keychain.prototype.removeLocalPublicKey = function(id, callback) {
     this._localDbDao.remove(DB_PUBLICKEY + '_' + id, callback);
 };
 
-KeychainDAO.prototype.lookupPrivateKey = function(id, callback) {
+Keychain.prototype.lookupPrivateKey = function(id, callback) {
     // lookup in local storage
     this._localDbDao.read(DB_PRIVATEKEY + '_' + id, callback);
 };
 
-KeychainDAO.prototype.saveLocalPublicKey = function(pubkey, callback) {
+Keychain.prototype.saveLocalPublicKey = function(pubkey, callback) {
     // persist public key (email, _id)
     var pkLookupKey = DB_PUBLICKEY + '_' + pubkey._id;
     this._localDbDao.persist(pkLookupKey, pubkey, callback);
 };
 
-KeychainDAO.prototype.saveLocalPrivateKey = function(privkey, callback) {
+Keychain.prototype.saveLocalPrivateKey = function(privkey, callback) {
     // persist private key (email, _id)
     var prkLookupKey = DB_PRIVATEKEY + '_' + privkey._id;
     this._localDbDao.persist(prkLookupKey, privkey, callback);
 };
-
-module.exports = KeychainDAO;

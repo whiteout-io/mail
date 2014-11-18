@@ -1,8 +1,12 @@
 'use strict';
 
-var AdminDAO = function(restDao) {
+var ngModule = angular.module('woServices');
+ngModule.service('admin', Admin);
+module.exports = Admin;
+
+function Admin(restDao) {
     this._restDao = restDao;
-};
+}
 
 /**
  * Create a new email account.
@@ -11,7 +15,7 @@ var AdminDAO = function(restDao) {
  * @param  {String}   options.phone         The user's mobile phone number (required for verification and password reset).
  * @param  {Function} callback(error)
  */
-AdminDAO.prototype.createUser = function(options, callback) {
+Admin.prototype.createUser = function(options, callback) {
     var uri;
 
     if (!options.emailAddress || !options.password || !options.phone) {
@@ -39,7 +43,7 @@ AdminDAO.prototype.createUser = function(options, callback) {
  * @param  {String}   options.token         The validation token.
  * @param  {Function} callback(error)
  */
-AdminDAO.prototype.validateUser = function(options, callback) {
+Admin.prototype.validateUser = function(options, callback) {
     var uri;
 
     if (!options.emailAddress || !options.token) {
@@ -57,5 +61,3 @@ AdminDAO.prototype.validateUser = function(options, callback) {
         }
     });
 };
-
-module.exports = AdminDAO;

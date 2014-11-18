@@ -1,8 +1,12 @@
 'use strict';
 
-var PrivateKeyDAO = function(restDao) {
+var ngModule = angular.module('woServices');
+ngModule.service('privateKey', PrivateKey);
+module.exports = PrivateKey;
+
+function PrivateKey(restDao) {
     this._restDao = restDao;
-};
+}
 
 //
 // Device registration functions
@@ -15,7 +19,7 @@ var PrivateKeyDAO = function(restDao) {
  * @param  {Function} callback(error, regSessionKey)
  * @return {Object} {encryptedRegSessionKey:[base64]}
  */
-PrivateKeyDAO.prototype.requestDeviceRegistration = function(options, callback) {
+PrivateKey.prototype.requestDeviceRegistration = function(options, callback) {
     var uri;
 
     if (!options.userId || !options.deviceName) {
@@ -35,7 +39,7 @@ PrivateKeyDAO.prototype.requestDeviceRegistration = function(options, callback) 
  * @param  {String}   options.iv                    The iv used for encryption
  * @param  {Function} callback(error)
  */
-PrivateKeyDAO.prototype.uploadDeviceSecret = function(options, callback) {
+PrivateKey.prototype.uploadDeviceSecret = function(options, callback) {
     var uri;
 
     if (!options.userId || !options.deviceName || !options.encryptedDeviceSecret || !options.iv) {
@@ -57,7 +61,7 @@ PrivateKeyDAO.prototype.uploadDeviceSecret = function(options, callback) {
  * @param  {Function} callback(error, authSessionKey)
  * @return {Object} {sessionId, encryptedAuthSessionKey:[base64 encoded], encryptedChallenge:[base64 encoded]}
  */
-PrivateKeyDAO.prototype.requestAuthSessionKey = function(options, callback) {
+PrivateKey.prototype.requestAuthSessionKey = function(options, callback) {
     var uri;
 
     if (!options.userId) {
@@ -77,7 +81,7 @@ PrivateKeyDAO.prototype.requestAuthSessionKey = function(options, callback) {
  * @param  {String}   options.iv                        The iv used for encryption
  * @param  {Function} callback(error)
  */
-PrivateKeyDAO.prototype.verifyAuthentication = function(options, callback) {
+PrivateKey.prototype.verifyAuthentication = function(options, callback) {
     var uri;
 
     if (!options.userId || !options.sessionId || !options.encryptedChallenge || !options.encryptedDeviceSecret || !options.iv) {
@@ -97,7 +101,7 @@ PrivateKeyDAO.prototype.verifyAuthentication = function(options, callback) {
  * @param  {String}   options.sessionId             The session id
  * @param  {Function} callback(error)
  */
-PrivateKeyDAO.prototype.upload = function(options, callback) {
+PrivateKey.prototype.upload = function(options, callback) {
     var uri;
 
     if (!options._id || !options.userId || !options.encryptedPrivateKey || !options.sessionId || !options.salt || !options.iv) {
@@ -116,7 +120,7 @@ PrivateKeyDAO.prototype.upload = function(options, callback) {
  * @param  {Function} callback(error, found)
  * @return {Boolean} whether the key was found on the server or not.
  */
-PrivateKeyDAO.prototype.hasPrivateKey = function(options, callback) {
+PrivateKey.prototype.hasPrivateKey = function(options, callback) {
     if (!options.userId || !options.keyId) {
         callback(new Error('Incomplete arguments!'));
         return;
@@ -147,7 +151,7 @@ PrivateKeyDAO.prototype.hasPrivateKey = function(options, callback) {
  * @param  {Function} callback(error, found)
  * @return {Boolean} whether the key was found on the server or not.
  */
-PrivateKeyDAO.prototype.requestDownload = function(options, callback) {
+PrivateKey.prototype.requestDownload = function(options, callback) {
     if (!options.userId || !options.keyId) {
         callback(new Error('Incomplete arguments!'));
         return;
@@ -179,7 +183,7 @@ PrivateKeyDAO.prototype.requestDownload = function(options, callback) {
  * @param  {Function} callback(error, encryptedPrivateKey)
  * @return {Object} {_id:[hex encoded capital 16 char key id], encryptedPrivateKey:[base64 encoded], encryptedUserId: [base64 encoded]}
  */
-PrivateKeyDAO.prototype.download = function(options, callback) {
+PrivateKey.prototype.download = function(options, callback) {
     var uri;
 
     if (!options.userId || !options.keyId || !options.recoveryToken) {
@@ -192,5 +196,3 @@ PrivateKeyDAO.prototype.download = function(options, callback) {
         uri: uri
     }, callback);
 };
-
-module.exports = PrivateKeyDAO;

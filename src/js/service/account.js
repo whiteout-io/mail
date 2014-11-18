@@ -3,10 +3,10 @@
 var ngModule = angular.module('woServices');
 ngModule.service('account', Account);
 
-var EmailDAO = require('../dao/email-dao');
+var Email = require('./email');
 
 function Account() {
-	this._emailDAOs = [];
+    this._emailDAOs = [];
 }
 
 /**
@@ -14,9 +14,9 @@ function Account() {
  * @return {Array<Object>} The account objects containing folder and message objects
  */
 Account.prototype.all = function() {
-	return this._emailDAOs.map(function(emailDao) {
-		return emailDao._account;
-	});
+    return this._emailDAOs.map(function(emailDao) {
+        return emailDao._account;
+    });
 };
 
 /**
@@ -24,8 +24,8 @@ Account.prototype.all = function() {
  * @param  {String} options.emailAddress	The account's email address
  */
 Account.prototype.login = function(options) {
-	var emailDao = new EmailDAO();
-	this._emailDAOs.push(emailDao);
+    var emailDao = new Email();
+    this._emailDAOs.push(emailDao);
 };
 
 /**
