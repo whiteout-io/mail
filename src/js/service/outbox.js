@@ -1,5 +1,9 @@
 'use strict';
 
+var ngModule = angular.module('woServices');
+ngModule.service('outbox', Outbox);
+module.exports = Outbox;
+
 var util = require('crypto-lib').util,
     config = require('../app-config').config,
     outboxDb = 'email_OUTBOX';
@@ -9,7 +13,7 @@ var util = require('crypto-lib').util,
  * The local outbox takes care of the emails before they are being sent.
  * It also checks periodically if there are any mails in the local device storage to be sent.
  */
-var OutboxBO = function(emailDao, keychain, devicestorage) {
+function Outbox(emailDao, keychain, devicestorage) {
     /** @private */
     this._emailDao = emailDao;
 
@@ -23,13 +27,13 @@ var OutboxBO = function(emailDao, keychain, devicestorage) {
      * Semaphore-esque flag to avoid 'concurrent' calls to _processOutbox when the timeout fires, but a call is still in process.
      * @private */
     this._outboxBusy = false;
-};
+}
 
 /**
  * This function activates the periodic checking of the local device storage for pending mails.
  * @param {Function} callback(error, pendingMailsCount) Callback that informs you about the count of pending mails.
  */
-OutboxBO.prototype.startChecking = function(callback) {
+Outbox.prototype.startChecking = function(callback) {
     // remember global callback
     this._onUpdate = callback;
     // start periodic checking of outbox
@@ -39,7 +43,7 @@ OutboxBO.prototype.startChecking = function(callback) {
 /**
  * Outbox stops the periodic checking of the local device storage for pending mails.
  */
-OutboxBO.prototype.stopChecking = function() {
+Outbox.prototype.stopChecking = function() {
     if (!this._intervalId) {
         return;
     }
@@ -53,7 +57,7 @@ OutboxBO.prototype.stopChecking = function() {
  * @param  {Object}   mail     The Email DTO
  * @param  {Function} callback Invoked when the object was encrypted and persisted to disk
  */
-OutboxBO.prototype.put = function(mail, callback) {
+Outbox.prototype.put = function(mail, callback) {
     var self = this,
         allReaders = mail.from.concat(mail.to.concat(mail.cc.concat(mail.bcc))); // all the users that should be able to read the mail
 
@@ -133,7 +137,7 @@ OutboxBO.prototype.put = function(mail, callback) {
  * Checks the local device storage for pending mails.
  * @param {Function} callback(error, pendingMailsCount) Callback that informs you about the count of pending mails.
  */
-OutboxBO.prototype._processOutbox = function(callback) {
+Outbox.prototype._processOutbox = function(callback) {
     var self = this,
         unsentMails = 0;
 
@@ -225,5 +229,3 @@ OutboxBO.prototype._processOutbox = function(callback) {
         });
     }
 };
-
-module.exports = OutboxBO;
