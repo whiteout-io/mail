@@ -13,7 +13,7 @@ function Account() {
  * Lists all of the current accounts connected to the app
  * @return {Array<Object>} The account objects containing folder and message objects
  */
-Account.prototype.all = function() {
+Account.prototype.list = function() {
     return this._emailDAOs.map(function(emailDao) {
         return emailDao._account;
     });

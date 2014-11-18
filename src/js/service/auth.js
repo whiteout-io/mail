@@ -1,5 +1,9 @@
 'use strict';
 
+var ngModule = angular.module('woServices');
+ngModule.service('auth', Auth);
+module.exports = Auth;
+
 var axe = require('axe-logger'),
     cfg = require('../app-config').config,
     str = require('../app-config').string;
@@ -21,11 +25,11 @@ var SMTP_DB_KEY = 'smtp';
  * auth.getCredentials(...); // called to gather all the information to connect to IMAP/SMTP,
  *                              username, password / oauth token, IMAP/SMTP server host names, ...
  */
-var Auth = function(appConfigStore, oauth, pgp) {
+function Auth(appConfigStore, oauth, pgp) {
     this._appConfigStore = appConfigStore;
     this._oauth = oauth;
     this._pgp = pgp;
-};
+}
 
 /**
  * Retrieves credentials and IMAP/SMTP settings:
@@ -440,5 +444,3 @@ Auth.prototype.logout = function(callback) {
         callback();
     });
 };
-
-module.exports = Auth;

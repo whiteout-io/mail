@@ -1,8 +1,13 @@
 'use strict';
 
-var OAuth = function(googleApi) {
-    this._googleApi = googleApi;
-};
+var ngModule = angular.module('woServices');
+ngModule.service('oauth', OAuth);
+module.exports = OAuth;
+
+function OAuth(restDao) {
+    this._googleApi = restDao;
+    this._googleApi.setBaseUri('https://www.googleapis.com');
+}
 
 /**
  * Check if chrome.identity api is supported
@@ -95,5 +100,3 @@ OAuth.prototype.queryEmailAddress = function(token, callback) {
         callback(null, info.email);
     });
 };
-
-module.exports = OAuth;

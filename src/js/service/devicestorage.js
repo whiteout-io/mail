@@ -1,14 +1,16 @@
 'use strict';
 
 var ngModule = angular.module('woServices');
-ngModule.service('deviceStorage', DeviceStorage);
+ngModule.factory('deviceStorage', ['lawnchairDAO', function(lawnchairDAO) {
+    return new DeviceStorage(lawnchairDAO);
+}]);
 module.exports = DeviceStorage;
 
 /**
  * High level storage api that handles all persistence on the device.
  */
-function DeviceStorage(localDbDao) {
-    this._localDbDao = localDbDao;
+function DeviceStorage(lawnchairDAO) {
+    this._localDbDao = lawnchairDAO;
 }
 
 DeviceStorage.prototype.init = function(emailAddress, callback) {

@@ -6,15 +6,15 @@ ngModule.factory('restDao', function() {
 });
 module.exports = RestDAO;
 
-var config = require('../app-config').config;
+function RestDAO() {}
 
-function RestDAO(baseUri) {
-    if (baseUri) {
-        this._baseUri = baseUri;
-    } else {
-        this._baseUri = config.cloudUrl;
-    }
-}
+/**
+ * Set the REST DAO's base url
+ * @param {String} baseUri The base url e.g. https://api.example.com
+ */
+RestDAO.prototype.setBaseUri = function(baseUri) {
+    this._baseUri = baseUri;
+};
 
 /**
  * GET (read) request
