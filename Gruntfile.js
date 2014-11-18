@@ -218,12 +218,12 @@ module.exports = function(grunt) {
             },
             unitTest: {
                 files: {
-                    'test/unit/index.js.map': ['test/unit/index.browserified.js'],
+                    'test/unit/index.browserified.js.map': ['test/unit/index.browserified.js'],
                 }
             },
             integrationTest: {
                 files: {
-                    'test/integration/index.js.map': ['test/integration/index.browserified.js'],
+                    'test/integration/index.browserified.js.map': ['test/integration/index.browserified.js'],
                 }
             }
         },
@@ -231,14 +231,15 @@ module.exports = function(grunt) {
         concat: {
             options: {
                 separator: ';\n',
+                sourceMap: true
             },
             app: {
                 src: [
-                    'src/lib/underscore/underscore-min.js',
+                    'src/lib/underscore/underscore.js',
                     'node_modules/jquery/dist/jquery.min.js',
-                    'src/lib/angular/angular.min.js',
-                    'src/lib/angular/angular-route.min.js',
-                    'src/lib/angular/angular-animate.min.js',
+                    'src/lib/angular/angular.js',
+                    'src/lib/angular/angular-route.js',
+                    'src/lib/angular/angular-animate.js',
                     'src/lib/ngtagsinput/ng-tags-input.min.js',
                     'node_modules/ng-infinite-scroll/build/ng-infinite-scroll.min.js',
                     'src/lib/fastclick/fastclick.js',
@@ -248,6 +249,9 @@ module.exports = function(grunt) {
                     'dist/js/app.browserified.js'
                 ],
                 dest: 'dist/js/app.min.js',
+                options: {
+                    sourceMapName: 'dist/js/app.js.map'
+                }
             },
             readSandbox: {
                 src: [
@@ -270,28 +274,34 @@ module.exports = function(grunt) {
             },
             unitTest: {
                 src: [
-                    'src/lib/underscore/underscore-min.js',
+                    'src/lib/underscore/underscore.js',
                     'node_modules/jquery/dist/jquery.min.js',
-                    'src/lib/angular/angular.min.js',
-                    'src/lib/angular/angular-route.min.js',
-                    'src/lib/angular/angular-animate.min.js',
+                    'src/lib/angular/angular.js',
+                    'src/lib/angular/angular-route.js',
+                    'src/lib/angular/angular-animate.js',
                     'src/lib/angular/angular-mocks.js',
                     'src/lib/lawnchair/lawnchair-git.js',
                     'src/lib/lawnchair/lawnchair-adapter-webkit-sqlite-git.js',
                     'src/lib/lawnchair/lawnchair-adapter-indexed-db-git.js',
                     'test/unit/index.browserified.js'
                 ],
-                dest: 'test/unit/index.js'
+                dest: 'test/unit/index.js',
+                options: {
+                    sourceMapName: 'test/unit/index.js.map'
+                }
             },
             integrationTest: {
                 src: [
-                    'src/lib/underscore/underscore-min.js',
+                    'src/lib/underscore/underscore.js',
                     'src/lib/lawnchair/lawnchair-git.js',
                     'src/lib/lawnchair/lawnchair-adapter-webkit-sqlite-git.js',
                     'src/lib/lawnchair/lawnchair-adapter-indexed-db-git.js',
                     'test/integration/index.browserified.js'
                 ],
-                dest: 'test/integration/index.js'
+                dest: 'test/integration/index.js',
+                options: {
+                    sourceMapName: 'test/integration/index.js.map'
+                }
             }
         },
 
@@ -303,7 +313,7 @@ module.exports = function(grunt) {
                 options: {
                     mangle: false,
                     sourceMap: true,
-                    sourceMapIn: 'dist/js/app.browserified.js.map',
+                    sourceMapIn: 'dist/js/app.js.map',
                     sourceMapIncludeSources: true,
                     sourceMapName: 'dist/js/app.min.js.map'
                 }
@@ -483,11 +493,13 @@ module.exports = function(grunt) {
                         'appcache.manifest',
                         'manifest.webapp',
                         'manifest.mobile.json',
+                        'js/app.js.map',
                         'js/app.min.js.map',
                         'js/app.browserified.js',
                         'js/app.browserified.js.map',
                         'js/crypto/pbkdf2-worker.browserified.js',
                         'js/pbkdf2-worker.browserified.js',
+                        'js/pbkdf2-worker.min.js.map',
                         'js/read-sandbox.min.js.map',
                         'js/mailreader-parser-worker.browserified.js',
                         'js/mailreader-parser-worker.min.js.map',
@@ -543,12 +555,12 @@ module.exports = function(grunt) {
     grunt.registerTask('dist-js-unitTest', [
         'browserify:unitTest',
         'exorcise:unitTest',
-        'concat:unitTest',
+        'concat:unitTest'
     ]);
     grunt.registerTask('dist-js-integrationTest', [
         'browserify:integrationTest',
         'exorcise:integrationTest',
-        'concat:integrationTest',
+        'concat:integrationTest'
     ]);
     grunt.registerTask('dist-copy', ['copy']);
     grunt.registerTask('dist-assets', ['svgmin', 'svgstore', 'string-replace']);
