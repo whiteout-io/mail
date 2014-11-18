@@ -34,7 +34,7 @@ module.exports = function(grunt) {
         },
 
         copy: {
-            npmDev: {
+            libTest: {
                 expand: true,
                 flatten: true,
                 cwd: './',
@@ -218,33 +218,87 @@ module.exports = function(grunt) {
             },
             unitTest: {
                 files: {
-                    'test/unit/index.browserified.js.map': ['test/unit/index.browserified.js'],
+                    'test/unit/index.js.map': ['test/unit/index.browserified.js'],
                 }
             },
             integrationTest: {
                 files: {
-                    'test/integration/index.browserified.js.map': ['test/integration/index.browserified.js'],
+                    'test/integration/index.js.map': ['test/integration/index.browserified.js'],
                 }
+            }
+        },
+
+        concat: {
+            options: {
+                separator: ';\n',
+            },
+            app: {
+                src: [
+                    'src/lib/underscore/underscore-min.js',
+                    'node_modules/jquery/dist/jquery.min.js',
+                    'src/lib/angular/angular.min.js',
+                    'src/lib/angular/angular-route.min.js',
+                    'src/lib/angular/angular-animate.min.js',
+                    'src/lib/ngtagsinput/ng-tags-input.min.js',
+                    'node_modules/ng-infinite-scroll/build/ng-infinite-scroll.min.js',
+                    'src/lib/fastclick/fastclick.js',
+                    'src/lib/lawnchair/lawnchair-git.js',
+                    'src/lib/lawnchair/lawnchair-adapter-webkit-sqlite-git.js',
+                    'src/lib/lawnchair/lawnchair-adapter-indexed-db-git.js',
+                    'dist/js/app.browserified.js'
+                ],
+                dest: 'dist/js/app.min.js',
+            },
+            readSandbox: {
+                src: [
+                    'node_modules/dompurify/purify.js',
+                    'src/js/controller/read-sandbox.js'
+                ],
+                dest: 'dist/js/read-sandbox.min.js'
+            },
+            pbkdf2Worker: {
+                src: ['dist/js/pbkdf2-worker.browserified.js'],
+                dest: 'dist/js/pbkdf2-worker.min.js'
+            },
+            mailreaderWorker: {
+                src: ['dist/js/mailreader-parser-worker.browserified.js'],
+                dest: 'dist/js/mailreader-parser-worker.min.js'
+            },
+            tlsWorker: {
+                src: ['dist/js/tcp-socket-tls-worker.browserified.js'],
+                dest: 'dist/js/tcp-socket-tls-worker.min.js'
+            },
+            unitTest: {
+                src: [
+                    'src/lib/underscore/underscore-min.js',
+                    'node_modules/jquery/dist/jquery.min.js',
+                    'src/lib/angular/angular.min.js',
+                    'src/lib/angular/angular-route.min.js',
+                    'src/lib/angular/angular-animate.min.js',
+                    'src/lib/angular/angular-mocks.js',
+                    'src/lib/lawnchair/lawnchair-git.js',
+                    'src/lib/lawnchair/lawnchair-adapter-webkit-sqlite-git.js',
+                    'src/lib/lawnchair/lawnchair-adapter-indexed-db-git.js',
+                    'test/unit/index.browserified.js'
+                ],
+                dest: 'test/unit/index.js'
+            },
+            integrationTest: {
+                src: [
+                    'src/lib/underscore/underscore-min.js',
+                    'src/lib/lawnchair/lawnchair-git.js',
+                    'src/lib/lawnchair/lawnchair-adapter-webkit-sqlite-git.js',
+                    'src/lib/lawnchair/lawnchair-adapter-indexed-db-git.js',
+                    'test/integration/index.browserified.js'
+                ],
+                dest: 'test/integration/index.js'
             }
         },
 
         uglify: {
             app: {
                 files: {
-                    'dist/js/app.min.js': [
-                        'src/lib/underscore/underscore-min.js',
-                        'node_modules/jquery/dist/jquery.min.js',
-                        'src/lib/angular/angular.min.js',
-                        'src/lib/angular/angular-route.min.js',
-                        'src/lib/angular/angular-animate.min.js',
-                        'src/lib/ngtagsinput/ng-tags-input.min.js',
-                        'node_modules/ng-infinite-scroll/build/ng-infinite-scroll.min.js',
-                        'src/lib/fastclick/fastclick.js',
-                        'src/lib/lawnchair/lawnchair-git.js',
-                        'src/lib/lawnchair/lawnchair-adapter-webkit-sqlite-git.js',
-                        'src/lib/lawnchair/lawnchair-adapter-indexed-db-git.js',
-                        'dist/js/app.browserified.js'
-                    ]
+                    'dist/js/app.min.js': ['dist/js/app.min.js']
                 },
                 options: {
                     mangle: false,
@@ -256,10 +310,7 @@ module.exports = function(grunt) {
             },
             readSandbox: {
                 files: {
-                    'dist/js/read-sandbox.min.js': [
-                        'node_modules/dompurify/purify.js',
-                        'src/js/controller/read-sandbox.js'
-                    ]
+                    'dist/js/read-sandbox.min.js': ['dist/js/read-sandbox.min.js']
                 },
                 options: {
                     sourceMap: true,
@@ -268,12 +319,12 @@ module.exports = function(grunt) {
             },
             pbkdf2Worker: {
                 files: {
-                    'dist/js/pbkdf2-worker.min.js': ['dist/js/pbkdf2-worker.browserified.js']
+                    'dist/js/pbkdf2-worker.min.js': ['dist/js/pbkdf2-worker.min.js']
                 }
             },
             mailreaderWorker: {
                 files: {
-                    'dist/js/mailreader-parser-worker.min.js': ['dist/js/mailreader-parser-worker.browserified.js']
+                    'dist/js/mailreader-parser-worker.min.js': ['dist/js/mailreader-parser-worker.min.js']
                 },
                 options: {
                     sourceMap: true,
@@ -282,54 +333,11 @@ module.exports = function(grunt) {
             },
             tlsWorker: {
                 files: {
-                    'dist/js/tcp-socket-tls-worker.min.js': ['dist/js/tcp-socket-tls-worker.browserified.js']
+                    'dist/js/tcp-socket-tls-worker.min.js': ['dist/js/tcp-socket-tls-worker.min.js']
                 },
                 options: {
                     sourceMap: true,
                     sourceMapName: 'dist/js/tcp-socket-tls-worker.min.js.map'
-                }
-            },
-            unitTest: {
-                files: {
-                    'test/unit/index.js': [
-                        'src/lib/underscore/underscore-min.js',
-                        'node_modules/jquery/dist/jquery.min.js',
-                        'src/lib/angular/angular.min.js',
-                        'src/lib/angular/angular-route.min.js',
-                        'src/lib/angular/angular-animate.min.js',
-                        'src/lib/angular/angular-mocks.js',
-                        'src/lib/lawnchair/lawnchair-git.js',
-                        'src/lib/lawnchair/lawnchair-adapter-webkit-sqlite-git.js',
-                        'src/lib/lawnchair/lawnchair-adapter-indexed-db-git.js',
-                        'test/unit/index.browserified.js'
-                    ]
-                },
-                options: {
-                    mangle: false,
-                    compress: false,
-                    sourceMap: true,
-                    sourceMapIn: 'test/unit/index.browserified.js.map',
-                    sourceMapIncludeSources: true,
-                    sourceMapName: 'test/unit/index.js.map'
-                }
-            },
-            integrationTest: {
-                files: {
-                    'test/integration/index.js': [
-                        'src/lib/underscore/underscore-min.js',
-                        'src/lib/lawnchair/lawnchair-git.js',
-                        'src/lib/lawnchair/lawnchair-adapter-webkit-sqlite-git.js',
-                        'src/lib/lawnchair/lawnchair-adapter-indexed-db-git.js',
-                        'test/integration/index.browserified.js'
-                    ]
-                },
-                options: {
-                    mangle: false,
-                    compress: false,
-                    sourceMap: true,
-                    sourceMapIn: 'test/integration/index.browserified.js.map',
-                    sourceMapIncludeSources: true,
-                    sourceMapName: 'test/integration/index.js.map'
                 }
             },
             options: {
@@ -423,9 +431,17 @@ module.exports = function(grunt) {
                 files: ['src/sass/**/*.scss'],
                 tasks: ['dist-css', 'manifest']
             },
-            js: {
-                files: ['src/js/**/*.js', 'test/unit/*.js', 'test/integration/*.js'],
-                tasks: ['dist-js', 'manifest']
+            jsApp: {
+                files: ['src/js/**/*.js'],
+                tasks: ['dist-js-app']
+            },
+            jsUnitTest: {
+                files: ['test/unit/*-test.js'],
+                tasks: ['dist-js-unitTest']
+            },
+            jsIntegrationTest: {
+                files: ['test/integration/*-test.js'],
+                tasks: ['dist-js-integrationTest']
             },
             icons: {
                 files: ['src/index.html', 'src/img/icons/*.svg', '!src/img/icons/all.svg'],
@@ -489,6 +505,7 @@ module.exports = function(grunt) {
 
     // Load the plugin(s)
     grunt.loadNpmTasks('grunt-browserify');
+    grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-connect');
     grunt.loadNpmTasks('grunt-contrib-jshint');
@@ -509,7 +526,30 @@ module.exports = function(grunt) {
 
     // Build tasks
     grunt.registerTask('dist-css', ['sass', 'autoprefixer', 'csso']);
-    grunt.registerTask('dist-js', ['browserify', 'exorcise', 'uglify']);
+    grunt.registerTask('dist-js', ['browserify', 'exorcise', 'concat', 'uglify']);
+    grunt.registerTask('dist-js-app', [
+        'browserify:app',
+        'browserify:pbkdf2Worker',
+        'browserify:mailreaderWorker',
+        'browserify:tlsWorker',
+        'exorcise:app',
+        'concat:app',
+        'concat:readSandbox',
+        'concat:pbkdf2Worker',
+        'concat:mailreaderWorker',
+        'concat:tlsWorker',
+        'manifest'
+    ]);
+    grunt.registerTask('dist-js-unitTest', [
+        'browserify:unitTest',
+        'exorcise:unitTest',
+        'concat:unitTest',
+    ]);
+    grunt.registerTask('dist-js-integrationTest', [
+        'browserify:integrationTest',
+        'exorcise:integrationTest',
+        'concat:integrationTest',
+    ]);
     grunt.registerTask('dist-copy', ['copy']);
     grunt.registerTask('dist-assets', ['svgmin', 'svgstore', 'string-replace']);
     grunt.registerTask('dist', ['clean:dist', 'shell', 'dist-css', 'dist-js', 'dist-assets', 'dist-copy', 'manifest']);
