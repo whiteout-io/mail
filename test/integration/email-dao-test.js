@@ -221,6 +221,9 @@ describe('Email DAO integration tests', function() {
 
         smtpClient._TCPSocket = smtpServer.createTCPSocket();
 
+        // phantomjs is really slow, so setting the tcp socket timeouts to 200s will effectively disarm the timeout
+        imapClient._client.client.TIMEOUT_SOCKET_LOWER_BOUND = smtpClient.TIMEOUT_SOCKET_LOWER_BOUND = 200000;
+
         sinon.stub(mailreader, 'startWorker', function() {});
         sinon.stub(openpgp, 'initWorker', function() {});
 
