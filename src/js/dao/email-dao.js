@@ -1171,14 +1171,14 @@ EmailDAO.prototype.onConnect = function(options, callback) {
                 });
                 lastUid = uids[uids.length - 1];
 
-                highestModseq = _.pluck(folder.messages, 'modseq').sort(function(a, b) {
+                highestModseq = (_.pluck(folder.messages, 'modseq').sort(function(a, b) {
                     // We treat modseq values as numbers here as an exception, should
                     // be strings everywhere else.
                     // If it turns out that someone actually uses 64 bit uint numbers
                     // that do not fit to the JavaScript number type then we should
                     // use a helper for handling big integers.
                     return (Number(a) || 0) - (Number(b) || 0);
-                }).pop().toString();
+                }).pop() || 0).toString();
 
                 mailboxCache[folder.path] = {
                     exists: lastUid,
