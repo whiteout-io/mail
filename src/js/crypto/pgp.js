@@ -117,7 +117,7 @@ PGP.prototype.getKeyParams = function(keyArmored) {
     return {
         _id: packet.getKeyId().toHex().toUpperCase(),
         userId: userIds[0].emailAddress, // the primary (first) email address of the key
-        userIds: userIds, // a dictonary of all the key's name/address pairs
+        userIds: userIds, // a dictionary of all the key's name/address pairs
         fingerprint: packet.getFingerprint().toUpperCase(),
         algorithm: packet.algorithm,
         bitSize: packet.getBitSize(),
@@ -128,7 +128,7 @@ PGP.prototype.getKeyParams = function(keyArmored) {
 /**
  * Extract a public key from a private key
  * @param  {String}   privateKeyArmored The private PGP key block
- * @return {String}                     The publick PGP key block
+ * @return {String}                     The public PGP key block
  */
 PGP.prototype.extractPublicKey = function(privateKeyArmored) {
     var privkey = openpgp.key.readArmored(privateKeyArmored).keys[0];
@@ -288,7 +288,7 @@ PGP.prototype.encrypt = function(plaintext, publicKeysArmored, callback) {
 };
 
 /**
- * Decrypts a ciphertext
+ * Decrypts ciphertext
  * @param  {String}   ciphertext       The encrypted PGP message block
  * @param  {String}   publicKeyArmored The public key used to sign the message
  * @param  {Function} callback(error, plaintext, signaturesValid) signaturesValid is undefined in case there are no signature, null in case there are signatures but the wrong public key or no key was used to verify, true if the signature was successfully verified, or false if the signataure verification failed.
