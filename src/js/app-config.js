@@ -1,9 +1,17 @@
 'use strict';
 
+var appCfg = {};
+
+var ngModule = angular.module('mail');
+ngModule.factory('appConfig', function() {
+    return appCfg;
+});
+exports = appCfg;
+
 /**
  * Global app configurations
  */
-exports.config = {
+appCfg.config = {
     cloudUrl: 'https://keys.whiteout.io',
     privkeyServerUrl: 'https://keychain.whiteout.io',
     adminUrl: 'https://admin-node.whiteout.io',
@@ -38,7 +46,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getManifes
 }
 
 function setConfigParams(manifest) {
-    var cfg = exports.config;
+    var cfg = appCfg.config;
 
     function getUrl(beginsWith) {
         return _.find(manifest.permissions, function(permission) {
@@ -57,7 +65,7 @@ function setConfigParams(manifest) {
 /**
  * Strings are maintained here
  */
-exports.string = {
+appCfg.string = {
     fallbackSubject: '(no subject)',
     invitationSubject: 'Invitation to a private conversation',
     invitationMessage: 'Hi,\n\nI use Whiteout Mail to send and receive encrypted email. I would like to exchange encrypted messages with you as well.\n\nPlease install the Whiteout Mail application. This application makes it easy to read and write messages securely with PGP encryption applied.\n\nGo to the Whiteout Networks homepage to learn more and to download the application: https://whiteout.io\n\n',

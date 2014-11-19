@@ -1,5 +1,9 @@
 'use strict';
 
+var ngModule = angular.module('woUtil');
+ngModule.service('connectionDoctor', ConnectionDoctor);
+module.exports = ConnectionDoctor;
+
 var TCPSocket = require('tcp-socket'),
     appConfig = require('../app-config'),
     cfg = appConfig.config,
@@ -14,7 +18,7 @@ var TCPSocket = require('tcp-socket'),
  *
  * @constructor
  */
-var ConnectionDoctor = function() {};
+function ConnectionDoctor() {}
 
 
 //
@@ -294,5 +298,3 @@ function createError(code, message, underlyingError) {
 
     return error;
 }
-
-module.exports = ConnectionDoctor;

@@ -2,12 +2,12 @@
 
 var ngModule = angular.module('woServices');
 ngModule.service('mailConfig', MailConfig);
+module.exports = MailConfig;
 
-var cfg = require('../app-config').config;
-
-function MailConfig($http, $q) {
+function MailConfig($http, $q, appConfig) {
     this._http = $http;
     this._q = $q;
+    this._appConfig = appConfig;
 }
 
 /**
@@ -20,7 +20,7 @@ MailConfig.prototype.get = function(emailAddress) {
         });
     }
 
-    var url = cfg.settingsUrl + emailAddress.split('@')[1];
+    var url = this._appConfig.settingsUrl + emailAddress.split('@')[1];
     return this._http.get(url).then(function(res) {
         return res.data;
     });

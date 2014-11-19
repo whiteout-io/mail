@@ -4,7 +4,6 @@ var ngModule = angular.module('woUtil');
 ngModule.service('updateHandler', ['deviceStorage', 'deviceStorage', 'auth', UpdateHandler]);
 module.exports = UpdateHandler;
 
-
 var axe = require('axe-logger'),
     cfg = require('../../app-config').config,
     updateV1 = require('./update-v1'),

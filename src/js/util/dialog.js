@@ -2,6 +2,7 @@
 
 var ngModule = angular.module('woUtil');
 ngModule.service('dialog', Dialog);
+module.exports = Dialog;
 
 function Dialog() {}
 

@@ -253,7 +253,7 @@ ctrl.logout = function() {
     });
 };
 
-// TODO: move onConnect to emailDao
+// TODO: move onConnect to Account service
 
 /**
  * Event that is called when the user agent goes online. This create new instances of the imap-client and pgp-mailer and connects to the mail server.
