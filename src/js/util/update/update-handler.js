@@ -1,5 +1,10 @@
 'use strict';
 
+var ngModule = angular.module('woUtil');
+ngModule.service('updateHandler', ['deviceStorage', 'deviceStorage', 'auth', UpdateHandler]);
+module.exports = UpdateHandler;
+
+
 var axe = require('axe-logger'),
     cfg = require('../../app-config').config,
     updateV1 = require('./update-v1'),
@@ -11,12 +16,12 @@ var axe = require('axe-logger'),
 /**
  * Handles database migration
  */
-var UpdateHandler = function(appConfigStorage, userStorage, auth) {
+function UpdateHandler(appConfigStorage, userStorage, auth) {
     this._appConfigStorage = appConfigStorage;
     this._userStorage = userStorage;
     this._updateScripts = [updateV1, updateV2, updateV3, updateV4, updateV5];
     this._auth = auth;
-};
+}
 
 /**
  * Executes all the necessary updates
@@ -126,5 +131,3 @@ UpdateHandler.prototype.checkForUpdate = function(dialog) {
         });
     }
 };
-
-module.exports = UpdateHandler;

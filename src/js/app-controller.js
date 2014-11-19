@@ -78,9 +78,6 @@ ctrl.start = function(options, callback) {
 ctrl.buildModules = function() {
     var lawnchairDao, restDao, pubkeyDao, privkeyDao, crypto, emailDao, keychain, pgp, userStorage, pgpbuilder, oauth, appConfigStore, auth;
 
-    // start the mailreader's worker thread
-    mailreader.startWorker(config.workerPath + '/mailreader-parser-worker.min.js');
-
     // init objects and inject dependencies
     restDao = new RestDAO();
     lawnchairDao = new LawnchairDAO();
@@ -91,6 +88,8 @@ ctrl.buildModules = function() {
     crypto = new Crypto();
     ctrl._pgp = pgp = new PGP();
     ctrl._keychain = keychain = new KeychainDAO(lawnchairDao, pubkeyDao, privkeyDao, crypto, pgp);
+
+    // TODO: inject dialog service directly into keychain service
     keychain.requestPermissionForKeyUpdate = function(params, callback) {
         var message = params.newKey ? str.updatePublicKeyMsgNewKey : str.updatePublicKeyMsgRemovedKey;
         message = message.replace('{0}', params.userId);

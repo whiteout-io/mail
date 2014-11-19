@@ -1,9 +1,11 @@
 'use strict';
 
 var ngModule = angular.module('woServices');
-ngModule.factory('deviceStorage', ['lawnchairDAO', function(lawnchairDAO) {
-    return new DeviceStorage(lawnchairDAO);
-}]);
+ngModule.factory('deviceStorage', ['lawnchairDAO',
+    function(lawnchairDAO) {
+        return new DeviceStorage(lawnchairDAO);
+    }
+]);
 module.exports = DeviceStorage;
 
 /**
@@ -13,8 +15,8 @@ function DeviceStorage(lawnchairDAO) {
     this._localDbDao = lawnchairDAO;
 }
 
-DeviceStorage.prototype.init = function(emailAddress, callback) {
-    this._localDbDao.init(emailAddress, callback);
+DeviceStorage.prototype.init = function(dbName, callback) {
+    this._localDbDao.init(dbName, callback);
 };
 
 /**
