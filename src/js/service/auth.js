@@ -25,11 +25,25 @@ var SMTP_DB_KEY = 'smtp';
  * auth.getCredentials(...); // called to gather all the information to connect to IMAP/SMTP,
  *                              username, password / oauth token, IMAP/SMTP server host names, ...
  */
-function Auth(deviceStorage, oauth, pgp) {
-    this._appConfigStore = deviceStorage;
+function Auth(appConfigStore, oauth, pgp) {
+    this._appConfigStore = appConfigStore;
     this._oauth = oauth;
     this._pgp = pgp;
 }
+
+/**
+ * Initialize the service
+ */
+Auth.prototype.init = function() {
+    this._initialized = true;
+};
+
+/**
+ * Check if the service has been initialized.
+ */
+Auth.prototype.isInitialized = function() {
+    return this._initialized;
+};
 
 /**
  * Retrieves credentials and IMAP/SMTP settings:

@@ -1,31 +1,19 @@
 'use strict';
 
-var appController = require('../app-controller');
+var LoginCtrl = function($scope, $location, updateHandler, account, auth, email, keychain, dialog) {
 
-var LoginCtrl = function($scope, $location) {
-
-    // start main application controller
-    appController.start({
-        onError: $scope.onError
-    }, function(err) {
-        if (err) {
-            $scope.onError(err);
-            return;
-        }
-
-        // check for app update
-        appController.checkForUpdate();
-
-        initializeUser();
-    });
-
-    // TODO: move to Account service login function
+    // check for app update
+    updateHandler.checkForUpdate();
+    // initialize the user account
+    initializeUser();
 
     function initializeUser() {
+        // init the auth modules
+        auth.init();
         // get OAuth token from chrome
-        appController._auth.getEmailAddress(function(err, info) {
+        auth.getEmailAddress(function(err, info) {
             if (err) {
-                $scope.onError(err);
+                dialog.error(err);
                 return;
             }
 
@@ -35,13 +23,13 @@ var LoginCtrl = function($scope, $location) {
                 return;
             }
 
-            // initiate controller by creating email dao
-            appController.init({
+            // initiate the account by initializing the email dao and user storage
+            account.init({
                 emailAddress: info.emailAddress,
                 realname: info.realname
             }, function(err, availableKeys) {
                 if (err) {
-                    $scope.onError(err);
+                    dialog.error(err);
                     return;
                 }
 
@@ -53,7 +41,7 @@ var LoginCtrl = function($scope, $location) {
     function redirect(availableKeys) {
         if (availableKeys && availableKeys.publicKey && availableKeys.privateKey) {
             // public and private key available, try empty passphrase
-            appController._emailDao.unlock({
+            email.unlock({
                 keypair: availableKeys,
                 passphrase: undefined
             }, function(err) {
@@ -62,9 +50,9 @@ var LoginCtrl = function($scope, $location) {
                     return;
                 }
 
-                appController._auth.storeCredentials(function(err) {
+                auth.storeCredentials(function(err) {
                     if (err) {
-                        return $scope.onError(err);
+                        return dialog.error(err);
                     }
 
                     goTo('/desktop');
@@ -72,12 +60,12 @@ var LoginCtrl = function($scope, $location) {
             });
         } else if (availableKeys && availableKeys.publicKey && !availableKeys.privateKey) {
             // check if private key is synced
-            appController._keychain.requestPrivateKeyDownload({
+            keychain.requestPrivateKeyDownload({
                 userId: availableKeys.publicKey.userId,
                 keyId: availableKeys.publicKey._id,
             }, function(err, privateKeySynced) {
                 if (err) {
-                    $scope.onError(err);
+                    dialog.error(err);
                     return;
                 }
 

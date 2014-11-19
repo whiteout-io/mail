@@ -1,8 +1,17 @@
 'use strict';
 
-angular.module('woServices', []);
+angular.module('woServices', ['woAppConfig', 'woUtil', 'woCrypto']);
 
-require('./newsletter');
+require('./rest');
+require('./invitation');
 require('./mail-config');
-require('./account');
-require('.pgpbuilder');
+require('./newsletter');
+require('./oauth');
+require('./privatekey');
+require('./publickey');
+require('./admin');
+require('./lawnchair');
+require('./devicestorage');
+require('./app-config-store');
+require('./auth');
+require('./keychain');

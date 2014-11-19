@@ -1,17 +1,9 @@
 'use strict';
 
-var appController = require('../app-controller');
+var LoginInitialCtrl = function($scope, $location, $routeParams, newsletter, email, auth) {
+    !$routeParams.dev && !auth.isInitialized() && $location.path('/'); // init app
 
-var LoginInitialCtrl = function($scope, $location, $routeParams, newsletter) {
-    if (!appController._emailDao && !$routeParams.dev) {
-        $location.path('/'); // init app
-        return;
-    }
-
-    if (appController._emailDao) {
-        var emailDao = appController._emailDao,
-            emailAddress = emailDao._account.emailAddress;
-    }
+    var emailAddress = auth.emailAddress;
 
     var termsMsg = 'You must accept the Terms of Service to continue.',
         states = {
@@ -59,7 +51,7 @@ var LoginInitialCtrl = function($scope, $location, $routeParams, newsletter) {
         // go to set keygen screen
         $scope.setState(states.PROCESSING);
 
-        emailDao.unlock({
+        email.unlock({
             passphrase: undefined // generate key without passphrase
         }, function(err) {
             if (err) {
@@ -67,7 +59,7 @@ var LoginInitialCtrl = function($scope, $location, $routeParams, newsletter) {
                 return;
             }
 
-            appController._auth.storeCredentials(function(err) {
+            auth.storeCredentials(function(err) {
                 if (err) {
                     displayError(err);
                     return;

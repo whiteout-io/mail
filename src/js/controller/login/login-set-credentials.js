@@ -4,16 +4,8 @@ var ENCRYPTION_METHOD_NONE = 0;
 var ENCRYPTION_METHOD_STARTTLS = 1;
 var ENCRYPTION_METHOD_TLS = 2;
 
-var appCtrl = require('../app-controller');
-
-var SetCredentialsCtrl = function($scope, $location, $routeParams) {
-    if (!appCtrl._auth && !$routeParams.dev) {
-        $location.path('/'); // init app
-        return;
-    }
-
-    var auth = appCtrl._auth;
-    var doctor = appCtrl._doctor;
+var SetCredentialsCtrl = function($scope, $location, $routeParams, auth, connectionDoctor) {
+    !$routeParams.dev && !auth.isInitialized() && $location.path('/'); // init app
 
     //
     // Presets and Settings
@@ -87,11 +79,11 @@ var SetCredentialsCtrl = function($scope, $location, $routeParams) {
         };
 
         // use the credentials in the connection doctor
-        doctor.configure(credentials);
+        connectionDoctor.configure(credentials);
 
         // run connection doctor test suite
         $scope.busy = true;
-        doctor.check(function(err) {
+        connectionDoctor.check(function(err) {
             if (err) {
                 // display the error in the settings UI
                 $scope.connectionError = err;

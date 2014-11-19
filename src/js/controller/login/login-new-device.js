@@ -1,15 +1,7 @@
 'use strict';
 
-var appController = require('../app-controller');
-
-var LoginExistingCtrl = function($scope, $location, $routeParams) {
-    if (!appController._emailDao && !$routeParams.dev) {
-        $location.path('/'); // init app
-        return;
-    }
-
-    var emailDao = appController._emailDao,
-        pgp = appController._pgp;
+var LoginExistingCtrl = function($scope, $location, $routeParams, email, auth, pgp, keychain) {
+    !$routeParams.dev && !auth.isInitialized() && $location.path('/'); // init app
 
     $scope.incorrect = false;
 
@@ -27,9 +19,9 @@ var LoginExistingCtrl = function($scope, $location, $routeParams) {
     };
 
     function unlockCrypto() {
-        var userId = emailDao._account.emailAddress;
+        var userId = auth.emailAddress;
         // check if user already has a public key on the key server
-        emailDao._keychain.getUserKeyPair(userId, function(err, keypair) {
+        keychain.getUserKeyPair(userId, function(err, keypair) {
             if (err) {
                 $scope.displayError(err);
                 return;
@@ -76,7 +68,7 @@ var LoginExistingCtrl = function($scope, $location, $routeParams) {
             }
 
             // import and validate keypair
-            emailDao.unlock({
+            email.unlock({
                 keypair: keypair,
                 passphrase: $scope.passphrase
             }, function(err) {
@@ -86,7 +78,7 @@ var LoginExistingCtrl = function($scope, $location, $routeParams) {
                     return;
                 }
 
-                emailDao._keychain.putUserKeyPair(keypair, onUnlock);
+                keychain.putUserKeyPair(keypair, onUnlock);
             });
         });
     }
@@ -97,7 +89,7 @@ var LoginExistingCtrl = function($scope, $location, $routeParams) {
             return;
         }
 
-        appController._auth.storeCredentials(function(err) {
+        auth.storeCredentials(function(err) {
             if (err) {
                 $scope.displayError(err);
                 return;

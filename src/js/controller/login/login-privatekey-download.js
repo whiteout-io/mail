@@ -1,18 +1,7 @@
 'use strict';
 
-var appController = require('../app-controller');
-
-var LoginPrivateKeyDownloadCtrl = function($scope, $location, $routeParams) {
-    if (!appController._emailDao && !$routeParams.dev) {
-        $location.path('/'); // init app
-        return;
-    }
-
-    if (appController._emailDao) {
-        var keychain = appController._keychain,
-            emailDao = appController._emailDao,
-            userId = emailDao._account.emailAddress;
-    }
+var LoginPrivateKeyDownloadCtrl = function($scope, $location, $routeParams, auth, email, keychain) {
+    !$routeParams.dev && !auth.isInitialized() && $location.path('/'); // init app
 
     $scope.step = 1;
 
@@ -38,6 +27,7 @@ var LoginPrivateKeyDownloadCtrl = function($scope, $location, $routeParams) {
     };
 
     $scope.verifyRecoveryToken = function(callback) {
+        var userId = auth.emailAddress;
         keychain.getUserKeyPair(userId, function(err, keypair) {
             if (err) {
                 displayError(err);
@@ -95,7 +85,7 @@ var LoginPrivateKeyDownloadCtrl = function($scope, $location, $routeParams) {
             $scope.cachedKeypair.privateKey = privateKey;
 
             // try empty passphrase
-            emailDao.unlock({
+            email.unlock({
                 keypair: $scope.cachedKeypair,
                 passphrase: undefined
             }, function(err) {
@@ -106,7 +96,7 @@ var LoginPrivateKeyDownloadCtrl = function($scope, $location, $routeParams) {
                 }
 
                 // passphrase is corrent ... go to main app
-                appController._auth.storeCredentials(function(err) {
+                auth.storeCredentials(function(err) {
                     if (err) {
                         displayError(err);
                         return;

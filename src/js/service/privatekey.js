@@ -4,11 +4,9 @@ var ngModule = angular.module('woServices');
 ngModule.service('privateKey', PrivateKey);
 module.exports = PrivateKey;
 
-var config = require('../app-config').config;
-
-function PrivateKey(restDao) {
+function PrivateKey(restDao, appConfig) {
     this._restDao = restDao;
-    this._restDao.setBaseUri(config.privkeyServerUrl);
+    this._restDao.setBaseUri(appConfig.config.privkeyServerUrl);
 }
 
 //

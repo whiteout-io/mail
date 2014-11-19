@@ -1,13 +1,7 @@
 'use strict';
 
-var appCtrl = require('../app-controller'),
-    cfg = require('../app-config').config;
-
-var CreateAccountCtrl = function($scope, $location, $routeParams) {
-    if (!appCtrl._auth && !$routeParams.dev) {
-        $location.path('/'); // init app
-        return;
-    }
+var CreateAccountCtrl = function($scope, $location, $routeParams, auth, admin, appConfig) {
+    !$routeParams.dev && !auth.isInitialized() && $location.path('/'); // init app
 
     $scope.createWhiteoutAccount = function() {
         if ($scope.form.$invalid) {
@@ -17,17 +11,17 @@ var CreateAccountCtrl = function($scope, $location, $routeParams) {
 
         $scope.busy = true;
         $scope.errMsg = undefined; // reset error msg
-        var emailAddress = $scope.user + '@' + cfg.wmailDomain;
+        var emailAddress = $scope.user + '@' + appConfig.config.wmailDomain;
 
         // set to state for next view
-        $scope.state.createAccount = {
+        auth.setCredentials({
             emailAddress: emailAddress,
-            pass: $scope.pass,
+            password: $scope.pass,
             realname: $scope.realname
-        };
+        });
 
         // call REST api
-        appCtrl._adminDao.createUser({
+        admin.createUser({
             emailAddress: emailAddress,
             password: $scope.pass,
             phone: $scope.phone.replace(/\s+/g, ''), // remove spaces from the phone number

@@ -1,12 +1,7 @@
 'use strict';
 
-var appCtrl = require('../app-controller');
-
-var ValidatePhoneCtrl = function($scope, $location, $routeParams, mailConfig) {
-    if (!appCtrl._auth && !$routeParams.dev) {
-        $location.path('/'); // init app
-        return;
-    }
+var ValidatePhoneCtrl = function($scope, $location, $routeParams, mailConfig, auth, admin) {
+    !$routeParams.dev && !auth.isInitialized() && $location.path('/'); // init app
 
     // TODO: move to Account service create function
 
@@ -20,8 +15,8 @@ var ValidatePhoneCtrl = function($scope, $location, $routeParams, mailConfig) {
         $scope.errMsg = undefined; // reset error msg
 
         // verify user to REST api
-        appCtrl._adminDao.validateUser({
-            emailAddress: $scope.state.createAccount.emailAddress,
+        admin.validateUser({
+            emailAddress: auth.emailAddress,
             token: $scope.token.toUpperCase()
         }, function(err) {
             if (err) {
@@ -37,14 +32,14 @@ var ValidatePhoneCtrl = function($scope, $location, $routeParams, mailConfig) {
     };
 
     $scope.login = function() {
-        var address = $scope.state.createAccount.emailAddress;
+        var address = auth.emailAddress;
         return mailConfig.get(address).then(function(config) {
             // store credentials in memory
-            appCtrl._auth.setCredentials({
-                emailAddress: $scope.state.createAccount.emailAddress,
-                username: $scope.state.createAccount.emailAddress,
-                realname: $scope.state.createAccount.realname,
-                password: $scope.state.createAccount.pass,
+            auth.setCredentials({
+                emailAddress: auth.emailAddress,
+                username: auth.emailAddress,
+                realname: auth.realname,
+                password: auth.password,
                 imap: {
                     host: config.imap.hostname,
                     port: parseInt(config.imap.port, 10),

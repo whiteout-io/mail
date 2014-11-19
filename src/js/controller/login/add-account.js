@@ -1,12 +1,7 @@
 'use strict';
 
-var appCtrl = require('../app-controller');
-
-var AddAccountCtrl = function($scope, $location, $routeParams, mailConfig) {
-    if (!appCtrl._auth && !$routeParams.dev) {
-        $location.path('/'); // init app
-        return;
-    }
+var AddAccountCtrl = function($scope, $location, $routeParams, mailConfig, auth) {
+    !$routeParams.dev && !auth.isInitialized() && $location.path('/'); // init app
 
     $scope.getAccountSettings = function() {
         if ($scope.form.$invalid) {
@@ -25,7 +20,7 @@ var AddAccountCtrl = function($scope, $location, $routeParams, mailConfig) {
             };
 
             var hostname = config.imap.hostname;
-            if (appCtrl._auth.useOAuth(hostname)) {
+            if (auth.useOAuth(hostname)) {
                 // check for oauth support
                 $scope.oauthPossible();
             } else {
@@ -62,7 +57,7 @@ var AddAccountCtrl = function($scope, $location, $routeParams, mailConfig) {
 
         function getOAuthToken() {
             // fetches the email address from the chrome identity api
-            appCtrl._auth.getOAuthToken(function(err) {
+            auth.getOAuthToken(function(err) {
                 if (err) {
                     return $scope.onError(err);
                 }

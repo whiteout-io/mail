@@ -1,14 +1,7 @@
 'use strict';
 
-var appController = require('../app-controller');
-
-var LoginExistingCtrl = function($scope, $location, $routeParams) {
-    if (!appController._emailDao && !$routeParams.dev) {
-        $location.path('/'); // init app
-        return;
-    }
-
-    var emailDao = appController._emailDao;
+var LoginExistingCtrl = function($scope, $location, $routeParams, email, auth, keychain) {
+    !$routeParams.dev && !auth.isInitialized() && $location.path('/'); // init app
 
     $scope.confirmPassphrase = function() {
         if ($scope.form.$invalid) {
@@ -24,14 +17,14 @@ var LoginExistingCtrl = function($scope, $location, $routeParams) {
     };
 
     function unlockCrypto() {
-        var userId = emailDao._account.emailAddress;
-        emailDao._keychain.getUserKeyPair(userId, function(err, keypair) {
+        var userId = auth.emailAddress;
+        keychain.getUserKeyPair(userId, function(err, keypair) {
             if (err) {
                 displayError(err);
                 return;
             }
 
-            emailDao.unlock({
+            email.unlock({
                 keypair: keypair,
                 passphrase: $scope.passphrase
             }, onUnlock);
@@ -44,7 +37,7 @@ var LoginExistingCtrl = function($scope, $location, $routeParams) {
             return;
         }
 
-        appController._auth.storeCredentials(function(err) {
+        auth.storeCredentials(function(err) {
             if (err) {
                 displayError(err);
                 return;

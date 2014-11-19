@@ -16,17 +16,39 @@ var DB_PUBLICKEY = 'publickey',
  * A high-level Data-Access Api for handling Keypair synchronization
  * between the cloud service and the device's local storage
  */
-function Keychain(localDbDao, publicKeyDao, privateKeyDao, crypto, pgp) {
-    this._localDbDao = localDbDao;
-    this._publicKeyDao = publicKeyDao;
-    this._privateKeyDao = privateKeyDao;
+function Keychain(lawnchairDAO, publicKey, privateKey, crypto, pgp, dialog, appConfig) {
+    this._lawnchairDAO = lawnchairDAO;
+    this._publicKeyDao = publicKey;
+    this._privateKeyDao = privateKey;
     this._crypto = crypto;
     this._pgp = pgp;
+    this._dialog = dialog;
+    this._appConfig = appConfig;
 }
 
 //
 // Public key functions
 //
+
+/**
+ * Display confirmation dialog to request a public key update
+ * @param  {Object}   params.newKey   The user's updated public key object
+ * @param  {String}   params.userId   The user's email address
+ */
+Keychain.prototype.requestPermissionForKeyUpdate = function(params, callback) {
+    var str = this._appConfig.string;
+    var message = params.newKey ? str.updatePublicKeyMsgNewKey : str.updatePublicKeyMsgRemovedKey;
+    message = message.replace('{0}', params.userId);
+
+    this._dialog.confirm({
+        title: str.updatePublicKeyTitle,
+        message: message,
+        positiveBtnStr: str.updatePublicKeyPosBtn,
+        negativeBtnStr: str.updatePublicKeyNegBtn,
+        showNegativeBtn: true,
+        callback: callback
+    });
+};
 
 /**
  * Verifies the public key of a user o nthe public key store
@@ -196,7 +218,7 @@ Keychain.prototype.getReceiverPublicKey = function(userId, callback) {
     var self = this;
 
     // search local keyring for public key
-    self._localDbDao.list(DB_PUBLICKEY, 0, null, function(err, allPubkeys) {
+    self._lawnchairDAO.list(DB_PUBLICKEY, 0, null, function(err, allPubkeys) {
         if (err) {
             callback(err);
             return;
@@ -275,7 +297,7 @@ Keychain.prototype.setDeviceName = function(deviceName, callback) {
         return;
     }
 
-    this._localDbDao.persist(DB_DEVICENAME, deviceName, callback);
+    this._lawnchairDAO.persist(DB_DEVICENAME, deviceName, callback);
 };
 
 /**
@@ -285,7 +307,7 @@ Keychain.prototype.setDeviceName = function(deviceName, callback) {
  */
 Keychain.prototype.getDeviceName = function(callback) {
     // check if deviceName is already persisted in storage
-    this._localDbDao.read(DB_DEVICENAME, function(err, deviceName) {
+    this._lawnchairDAO.read(DB_DEVICENAME, function(err, deviceName) {
         if (err) {
             callback(err);
             return;
@@ -308,7 +330,7 @@ Keychain.prototype.getDeviceSecret = function(callback) {
     var self = this;
 
     // generate random deviceSecret or get from storage
-    self._localDbDao.read(DB_DEVICE_SECRET, function(err, storedDevSecret) {
+    self._lawnchairDAO.read(DB_DEVICE_SECRET, function(err, storedDevSecret) {
         if (err) {
             callback(err);
             return;
@@ -323,7 +345,7 @@ Keychain.prototype.getDeviceSecret = function(callback) {
         // generate random deviceSecret
         var deviceSecret = util.random(config.symKeySize);
         // persist deviceSecret to local storage (in plaintext)
-        self._localDbDao.persist(DB_DEVICE_SECRET, deviceSecret, function(err) {
+        self._lawnchairDAO.persist(DB_DEVICE_SECRET, deviceSecret, function(err) {
             if (err) {
                 callback(err);
                 return;
@@ -763,7 +785,7 @@ Keychain.prototype.getUserKeyPair = function(userId, callback) {
     var self = this;
 
     // search for user's public key locally
-    self._localDbDao.list(DB_PUBLICKEY, 0, null, function(err, allPubkeys) {
+    self._lawnchairDAO.list(DB_PUBLICKEY, 0, null, function(err, allPubkeys) {
         if (err) {
             callback(err);
             return;
@@ -886,7 +908,7 @@ Keychain.prototype.lookupPublicKey = function(id, callback) {
     }
 
     // lookup in local storage
-    self._localDbDao.read(DB_PUBLICKEY + '_' + id, function(err, pubkey) {
+    self._lawnchairDAO.read(DB_PUBLICKEY + '_' + id, function(err, pubkey) {
         if (err) {
             callback(err);
             return;
@@ -922,26 +944,26 @@ Keychain.prototype.lookupPublicKey = function(id, callback) {
  */
 Keychain.prototype.listLocalPublicKeys = function(callback) {
     // search local keyring for public key
-    this._localDbDao.list(DB_PUBLICKEY, 0, null, callback);
+    this._lawnchairDAO.list(DB_PUBLICKEY, 0, null, callback);
 };
 
 Keychain.prototype.removeLocalPublicKey = function(id, callback) {
-    this._localDbDao.remove(DB_PUBLICKEY + '_' + id, callback);
+    this._lawnchairDAO.remove(DB_PUBLICKEY + '_' + id, callback);
 };
 
 Keychain.prototype.lookupPrivateKey = function(id, callback) {
     // lookup in local storage
-    this._localDbDao.read(DB_PRIVATEKEY + '_' + id, callback);
+    this._lawnchairDAO.read(DB_PRIVATEKEY + '_' + id, callback);
 };
 
 Keychain.prototype.saveLocalPublicKey = function(pubkey, callback) {
     // persist public key (email, _id)
     var pkLookupKey = DB_PUBLICKEY + '_' + pubkey._id;
-    this._localDbDao.persist(pkLookupKey, pubkey, callback);
+    this._lawnchairDAO.persist(pkLookupKey, pubkey, callback);
 };
 
 Keychain.prototype.saveLocalPrivateKey = function(privkey, callback) {
     // persist private key (email, _id)
     var prkLookupKey = DB_PRIVATEKEY + '_' + privkey._id;
-    this._localDbDao.persist(prkLookupKey, privkey, callback);
+    this._lawnchairDAO.persist(prkLookupKey, privkey, callback);
 };

@@ -4,8 +4,9 @@ var ngModule = angular.module('woServices');
 ngModule.service('admin', Admin);
 module.exports = Admin;
 
-function Admin(restDao) {
+function Admin(restDao, appConfig) {
     this._restDao = restDao;
+    this._restDao.setBaseUri(appConfig.config.adminUrl);
 }
 
 /**

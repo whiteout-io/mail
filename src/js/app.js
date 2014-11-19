@@ -14,7 +14,8 @@ if (typeof window.applicationCache !== 'undefined') {
     };
 }
 
-var DialogCtrl = require('./controller/dialog'),
+var axe = require('axe-logger'),
+    DialogCtrl = require('./controller/dialog'),
     AddAccountCtrl = require('./controller/add-account'),
     CreateAccountCtrl = require('./controller/create-account'),
     ValidatePhoneCtrl = require('./controller/validate-phone'),
@@ -36,13 +37,26 @@ var DialogCtrl = require('./controller/dialog'),
     ActionBarCtrl = require('./controller/action-bar'),
     errorUtil = require('./util/error'),
     backButtonUtil = require('./util/backbutton-handler');
-require('./directive/common'),
+
+// include angular modules
+require('./app-config');
+require('./directive/common');
+require('./util');
+require('./crypto');
 require('./service');
+require('./email');
 
 // init main angular module including dependencies
 var app = angular.module('mail', [
     'ngRoute',
     'ngAnimate',
+    'ngTagsInput',
+    'woAppConfig',
+    'woDirectives',
+    'woUtil',
+    'woCrypto,',
+    'woServices',
+    'woEmail',
     'navigation',
     'mail-list',
     'write',
@@ -50,10 +64,7 @@ var app = angular.module('mail', [
     'contacts',
     'login-new-device',
     'privatekey-upload',
-    'infinite-scroll',
-    'ngTagsInput',
-    'woDirectives',
-    'woServices'
+    'infinite-scroll'
 ]);
 
 // set router paths
@@ -131,3 +142,24 @@ app.controller('ContactsCtrl', ContactsCtrl);
 app.controller('AboutCtrl', AboutCtrl);
 app.controller('DialogCtrl', DialogCtrl);
 app.controller('ActionBarCtrl', ActionBarCtrl);
+
+//
+// Manual angular bootstraping
+//
+
+// are we running in a cordova app or in a browser environment?
+if (window.cordova) {
+    // wait for 'deviceready' event to make sure plugins are loaded
+    axe.debug('Assuming Cordova environment...');
+    document.addEventListener('deviceready', bootstrap, false);
+} else {
+    // No need to wait on events... just start the app
+    axe.debug('Assuming Browser environment...');
+    bootstrap();
+}
+
+function bootstrap() {
+    angular.element(document).ready(function() {
+        angular.bootstrap(document, ['mail']);
+    });
+}

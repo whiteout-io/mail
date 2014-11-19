@@ -5,8 +5,7 @@ var appController = require('../app-controller'),
     backBtnHandler = require('../util/backbutton-handler'),
     appCfg = require('../app-config'),
     config = appCfg.config,
-    str = appCfg.string,
-    emailDao, outboxBo;
+    str = appCfg.string;
 
 //
 // Constants
@@ -19,14 +18,8 @@ var NOTIFICATION_SENT_TIMEOUT = 2000;
 // Controller
 //
 
-var NavigationCtrl = function($scope, $routeParams, $location) {
-    if (!appController._emailDao && !$routeParams.dev) {
-        $location.path('/'); // init app
-        return;
-    }
-
-    emailDao = appController._emailDao;
-    outboxBo = appController._outboxBo;
+var NavigationCtrl = function($scope, $routeParams, $location, account, email, outbox) {
+    !$routeParams.dev && !account.isLoggedIn() && $location.path('/'); // init app
 
     //
     // scope functions
@@ -51,14 +44,14 @@ var NavigationCtrl = function($scope, $routeParams, $location) {
         }
 
         // update the outbox mail count
-        var outbox = _.findWhere($scope.account.folders, {
+        var ob = _.findWhere($scope.account.folders, {
             type: config.outboxMailboxType
         });
-        outbox.count = count;
+        ob.count = count;
         $scope.$apply();
 
-        emailDao.refreshFolder({
-            folder: outbox
+        email.refreshFolder({
+            folder: ob
         }, $scope.onError);
     };
 
@@ -114,18 +107,19 @@ var NavigationCtrl = function($scope, $routeParams, $location) {
         }
 
         // get pointer to account/folder/message tree on root scope
-        $scope.$root.account = emailDao._account;
+        $scope.$root.account = email._account;
+        // TODO: $scope.accounts = account.list();
 
         // set notificatio handler for sent messages
-        outboxBo.onSent = sentNotification;
+        outbox.onSent = sentNotification;
         // start checking outbox periodically
-        outboxBo.startChecking($scope.onOutboxUpdate);
+        outbox.startChecking($scope.onOutboxUpdate);
     }
 
-    function sentNotification(email) {
+    function sentNotification(message) {
         notification.create({
             title: 'Message sent',
-            message: email.subject,
+            message: message.subject,
             timeout: NOTIFICATION_SENT_TIMEOUT
         }, function() {});
     }

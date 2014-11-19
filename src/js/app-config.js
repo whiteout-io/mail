@@ -2,7 +2,7 @@
 
 var appCfg = {};
 
-var ngModule = angular.module('mail');
+var ngModule = angular.module('woAppConfig');
 ngModule.factory('appConfig', function() {
     return appCfg;
 });

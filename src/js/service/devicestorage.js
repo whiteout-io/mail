@@ -1,22 +1,18 @@
 'use strict';
 
 var ngModule = angular.module('woServices');
-ngModule.factory('deviceStorage', ['lawnchairDAO',
-    function(lawnchairDAO) {
-        return new DeviceStorage(lawnchairDAO);
-    }
-]);
+ngModule.service('deviceStorage', DeviceStorage);
 module.exports = DeviceStorage;
 
 /**
- * High level storage api that handles all persistence on the device.
+ * High level storage api that handles all persistence of a user's data on the device.
  */
 function DeviceStorage(lawnchairDAO) {
     this._localDbDao = lawnchairDAO;
 }
 
-DeviceStorage.prototype.init = function(dbName, callback) {
-    this._localDbDao.init(dbName, callback);
+DeviceStorage.prototype.init = function(dbName) {
+    this._localDbDao.init(dbName);
 };
 
 /**

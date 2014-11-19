@@ -1,7 +1,7 @@
 'use strict';
 
 var ngModule = angular.module('woUtil');
-ngModule.service('updateHandler', ['deviceStorage', 'deviceStorage', 'auth', UpdateHandler]);
+ngModule.service('updateHandler', UpdateHandler);
 module.exports = UpdateHandler;
 
 var axe = require('axe-logger'),
@@ -15,11 +15,12 @@ var axe = require('axe-logger'),
 /**
  * Handles database migration
  */
-function UpdateHandler(appConfigStorage, userStorage, auth) {
-    this._appConfigStorage = appConfigStorage;
-    this._userStorage = userStorage;
+function UpdateHandler(appConfigStore, deviceStorage, auth, dialog) {
+    this._appConfigStorage = appConfigStore;
+    this._userStorage = deviceStorage;
     this._updateScripts = [updateV1, updateV2, updateV3, updateV4, updateV5];
     this._auth = auth;
+    this._dialog = dialog;
 }
 
 /**
@@ -99,14 +100,16 @@ UpdateHandler.prototype._applyUpdate = function(options, callback) {
 /**
  * Check application version and update correspondingly
  */
-UpdateHandler.prototype.checkForUpdate = function(dialog) {
+UpdateHandler.prototype.checkForUpdate = function() {
+    var self = this;
+
     // Chrome Packaged App
     if (typeof window.chrome !== 'undefined' && chrome.runtime && chrome.runtime.onUpdateAvailable) {
         // check for Chrome app update and restart
         chrome.runtime.onUpdateAvailable.addListener(function(details) {
             axe.debug('New Chrome App update... requesting reload.');
             // Chrome downloaded a new app version
-            dialog({
+            self._dialog.confirm({
                 title: 'Update available',
                 message: 'A new version ' + details.version + ' of the app is available. Restart the app to update?',
                 positiveBtnStr: 'Restart',

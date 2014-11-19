@@ -4,15 +4,13 @@ var ngModule = angular.module('woServices');
 ngModule.service('invitation', Invitation);
 module.exports = Invitation;
 
-var config = require('../app-config').config;
-
 /**
  * The Invitation is a high level Data Access Object that access the invitation service REST endpoint.
  * @param {Object} restDao The REST Data Access Object abstraction
  */
-function Invitation(restDao) {
+function Invitation(restDao, appConfig) {
     this._restDao = restDao;
-    this._restDao.setBaseUri(config.cloudUrl);
+    this._restDao.setBaseUri(appConfig.config.cloudUrl);
 }
 
 //

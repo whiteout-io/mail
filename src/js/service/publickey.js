@@ -4,11 +4,9 @@ var ngModule = angular.module('woServices');
 ngModule.service('publicKey', PublicKey);
 module.exports = PublicKey;
 
-var config = require('../app-config').config;
-
-function PublicKey(restDao) {
+function PublicKey(restDao, appConfig) {
     this._restDao = restDao;
-    this._restDao.setBaseUri(config.cloudUrl);
+    this._restDao.setBaseUri(appConfig.config.cloudUrl);
 }
 
 /**
