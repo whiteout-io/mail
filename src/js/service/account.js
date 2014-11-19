@@ -2,11 +2,12 @@
 
 var ngModule = angular.module('woServices');
 ngModule.service('account', Account);
+module.exports = Account;
 
-var Email = require('./email');
-
-function Account() {
-    this._emailDAOs = [];
+function Account(email, outbox) {
+    this._emailDAOs = [email];
+    this._outboxes = [outbox];
+    this._accounts = undefined;
 }
 
 /**
@@ -14,9 +15,11 @@ function Account() {
  * @return {Array<Object>} The account objects containing folder and message objects
  */
 Account.prototype.list = function() {
-    return this._emailDAOs.map(function(emailDao) {
+    this._accounts = this._emailDAOs.map(function(emailDao) {
         return emailDao._account;
     });
+
+    return this._accounts;
 };
 
 /**
