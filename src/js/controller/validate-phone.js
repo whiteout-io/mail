@@ -8,6 +8,8 @@ var ValidatePhoneCtrl = function($scope, $location, $routeParams, mailConfig) {
         return;
     }
 
+    // TODO: move to Account service create function
+
     $scope.validateUser = function() {
         if ($scope.form.$invalid) {
             $scope.errMsg = 'Please fill out all required fields!';

@@ -19,6 +19,8 @@ var LoginCtrl = function($scope, $location) {
         initializeUser();
     });
 
+    // TODO: move to Account service login function
+
     function initializeUser() {
         // get OAuth token from chrome
         appController._auth.getEmailAddress(function(err, info) {
