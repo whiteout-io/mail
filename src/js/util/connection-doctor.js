@@ -5,9 +5,6 @@ ngModule.service('connectionDoctor', ConnectionDoctor);
 module.exports = ConnectionDoctor;
 
 var TCPSocket = require('tcp-socket'),
-    appConfig = require('../app-config'),
-    cfg = appConfig.config,
-    strings = appConfig.string,
     ImapClient = require('imap-client'),
     SmtpClient = require('wo-smtpclient');
 
@@ -18,8 +15,10 @@ var TCPSocket = require('tcp-socket'),
  *
  * @constructor
  */
-function ConnectionDoctor() {}
-
+function ConnectionDoctor(appConfig) {
+    this._appConfig = appConfig;
+    this._workerPath = appConfig.config.workerPath + '/tcp-socket-tls-worker.min.js';
+}
 
 //
 // Error codes
@@ -32,9 +31,6 @@ var HOST_TIMEOUT = ConnectionDoctor.HOST_TIMEOUT = 45;
 var AUTH_REJECTED = ConnectionDoctor.AUTH_REJECTED = 46;
 var NO_INBOX = ConnectionDoctor.NO_INBOX = 47;
 var GENERIC_ERROR = ConnectionDoctor.GENERIC_ERROR = 48;
-
-
-var WORKER_PATH = cfg.workerPath + '/tcp-socket-tls-worker.min.js';
 
 //
 // Public API
@@ -58,7 +54,7 @@ ConnectionDoctor.prototype.configure = function(credentials) {
         secure: this.credentials.imap.secure,
         ignoreTLS: this.credentials.imap.ignoreTLS,
         ca: this.credentials.imap.ca,
-        tlsWorkerPath: WORKER_PATH,
+        tlsWorkerPath: this._workerPath,
         auth: {
             user: this.credentials.username,
             pass: this.credentials.password,
@@ -70,7 +66,7 @@ ConnectionDoctor.prototype.configure = function(credentials) {
         useSecureTransport: this.credentials.smtp.secure,
         ignoreTLS: this.credentials.smtp.ignoreTLS,
         ca: this.credentials.smtp.ca,
-        tlsWorkerPath: WORKER_PATH,
+        tlsWorkerPath: this._workerPath,
         auth: {
             user: this.credentials.username,
             pass: this.credentials.password,
@@ -137,7 +133,7 @@ ConnectionDoctor.prototype._checkOnline = function(callback) {
     if (navigator.onLine) {
         callback();
     } else {
-        callback(createError(OFFLINE, strings.connDocOffline));
+        callback(createError(OFFLINE, this._appConfig.string.connDocOffline));
     }
 };
 
@@ -154,18 +150,19 @@ ConnectionDoctor.prototype._checkReachable = function(options, callback) {
         error, // remember the error message
         timeout, // remember the timeout object
         host = options.host + ':' + options.port,
-        hasTimedOut = false; // prevents multiple callbacks
+        hasTimedOut = false, // prevents multiple callbacks
+        cfg = this._appConfig.config;
 
     timeout = setTimeout(function() {
         hasTimedOut = true;
-        callback(createError(HOST_TIMEOUT, strings.connDocHostTimeout.replace('{0}', host).replace('{1}', cfg.connDocTimeout)));
+        callback(createError(HOST_TIMEOUT, this._appConfig.string.connDocHostTimeout.replace('{0}', host).replace('{1}', cfg.connDocTimeout)));
     }, cfg.connDocTimeout);
 
     socket = TCPSocket.open(options.host, options.port, {
         binaryType: 'arraybuffer',
         useSecureTransport: options.secure,
         ca: options.ca,
-        tlsWorkerPath: WORKER_PATH
+        tlsWorkerPath: this._workerPath
     });
 
     socket.ondata = function() {}; // we don't actually care about the data
@@ -178,14 +175,14 @@ ConnectionDoctor.prototype._checkReachable = function(options, callback) {
         socket.oncert = function() {
             if (options.ca) {
                 // the certificate we already have is outdated
-                error = createError(TLS_WRONG_CERT, strings.connDocTlsWrongCert.replace('{0}', host));
+                error = createError(TLS_WRONG_CERT, this._appConfig.string.connDocTlsWrongCert.replace('{0}', host));
             }
         };
     } catch (e) {}
 
     socket.onerror = function(e) {
         if (!error) {
-            error = createError(HOST_UNREACHABLE, strings.connDocHostUnreachable.replace('{0}', host), e.data);
+            error = createError(HOST_UNREACHABLE, this._appConfig.string.connDocHostUnreachable.replace('{0}', host), e.data);
         }
     };
 
@@ -223,9 +220,9 @@ ConnectionDoctor.prototype._checkImap = function(callback) {
     // the global onError handler, so we need to track if login was successful
     self._imap.onError = function(error) {
         if (!loggedIn) {
-            callback(createError(AUTH_REJECTED, strings.connDocAuthRejected.replace('{0}', host), error));
+            callback(createError(AUTH_REJECTED, this._appConfig.string.connDocAuthRejected.replace('{0}', host), error));
         } else {
-            callback(createError(GENERIC_ERROR, strings.connDocGenericError.replace('{0}', host).replace('{1}', error.message), error));
+            callback(createError(GENERIC_ERROR, this._appConfig.string.connDocGenericError.replace('{0}', host).replace('{1}', error.message), error));
         }
     };
 
@@ -234,12 +231,12 @@ ConnectionDoctor.prototype._checkImap = function(callback) {
 
         self._imap.listWellKnownFolders(function(error, wellKnownFolders) {
             if (error) {
-                return callback(createError(GENERIC_ERROR, strings.connDocGenericError.replace('{0}', host).replace('{1}', error.message), error));
+                return callback(createError(GENERIC_ERROR, this._appConfig.string.connDocGenericError.replace('{0}', host).replace('{1}', error.message), error));
             }
 
             if (wellKnownFolders.Inbox.length === 0) {
                 // the client needs at least an inbox folder to work properly
-                return callback(createError(NO_INBOX, strings.connDocNoInbox.replace('{0}', host)));
+                return callback(createError(NO_INBOX, this._appConfig.string.connDocNoInbox.replace('{0}', host)));
             }
 
             self._imap.logout(function() {
@@ -269,7 +266,7 @@ ConnectionDoctor.prototype._checkSmtp = function(callback) {
     self._smtp.onerror = function(error) {
         if (error) {
             errored = true;
-            callback(createError(AUTH_REJECTED, strings.connDocAuthRejected.replace('{0}', host), error));
+            callback(createError(AUTH_REJECTED, this._appConfig.string.connDocAuthRejected.replace('{0}', host), error));
         }
     };
 

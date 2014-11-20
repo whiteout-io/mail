@@ -1,6 +1,6 @@
 'use strict';
 
-var backBtnHandler = require('../util/backbutton-handler');
+var backBtnHandler = require('../../util/backbutton-handler');
 
 //
 // Constants

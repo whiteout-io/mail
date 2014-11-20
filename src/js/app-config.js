@@ -2,11 +2,11 @@
 
 var appCfg = {};
 
-var ngModule = angular.module('woAppConfig');
+var ngModule = angular.module('woAppConfig', []);
 ngModule.factory('appConfig', function() {
     return appCfg;
 });
-exports = appCfg;
+module.exports = appCfg;
 
 /**
  * Global app configurations
