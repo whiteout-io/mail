@@ -30,6 +30,7 @@
             text-align: right;
             width: 50%;
             margin: 0;
+            clear: both;
         }
         dd {
             float: right;
@@ -37,6 +38,7 @@
             text-align: left;
             width: 50%;
             margin: 0;
+            word-wrap: break-word;
         }
     }
 }
