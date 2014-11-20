@@ -54,7 +54,7 @@ var app = angular.module('mail', [
     'woAppConfig',
     'woDirectives',
     'woUtil',
-    'woCrypto,',
+    'woCrypto',
     'woServices',
     'woEmail',
     'navigation',

@@ -104,8 +104,7 @@ var NavigationCtrl = function($scope, $routeParams, $location, account, email, o
         }
 
         // get pointer to account/folder/message tree on root scope
-        $scope.$root.account = email._account;
-        // TODO: $scope.accounts = account.list();
+        $scope.$root.account = account.list()[0];
 
         // set notificatio handler for sent messages
         outbox.onSent = sentNotification;

@@ -12,9 +12,12 @@ var INIT_DISPLAY_LEN = 20,
     NOTIFICATION_INBOX_TIMEOUT = 5000;
 
 var MailListCtrl = function($scope, $routeParams, statusDisplay, notification, email, keychain, dialog) {
+
     //
     // Init
     //
+
+    $scope.state.mailList = {};
 
     /**
      * Gathers unread notifications to be cancelled later

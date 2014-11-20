@@ -1,6 +1,6 @@
 'use strict';
 
-var ngModule = angular.module('woServices');
+var ngModule = angular.module('woEmail');
 ngModule.service('email', Email);
 module.exports = Email;
 
@@ -57,7 +57,9 @@ function Email(keychain, pgp, accountStore, pgpbuilder, mailreader, dialog) {
     this._pgpbuilder = pgpbuilder;
     this._mailreader = mailreader;
 
-    this.onError = dialog.error;
+    this.onError = function(err) {
+        dialog.error(err);
+    };
 }
 
 

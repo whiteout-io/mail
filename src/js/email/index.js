@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('woEmail', ['woAppConfig', 'woUtil', 'woServices']);
+angular.module('woEmail', ['woAppConfig', 'woUtil', 'woServices', 'woCrypto']);
 
 require('./mailreader');
 require('./pgpbuilder');

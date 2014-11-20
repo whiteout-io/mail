@@ -1,6 +1,6 @@
 'use strict';
 
-var ngModule = angular.module('woServices');
+var ngModule = angular.module('woEmail');
 ngModule.service('account', Account);
 module.exports = Account;
 
@@ -61,19 +61,20 @@ Account.prototype.init = function(options, callback) {
 
     // Pre-Flight check: initialize and prepare user's local database
     function prepareDatabase() {
-        self._accountStore.init(options.emailAddress, function(err) {
+        try {
+            self._accountStore.init(options.emailAddress);
+        } catch (err) {
+            callback(err);
+            return;
+        }
+
+        // Migrate the databases if necessary
+        self._updateHandler.update(function(err) {
             if (err) {
-                return callback(err);
+                return callback(new Error('Updating the internal database failed. Please reinstall the app! Reason: ' + err.message));
             }
 
-            // Migrate the databases if necessary
-            self._updateHandler.update(function(err) {
-                if (err) {
-                    return callback(new Error('Updating the internal database failed. Please reinstall the app! Reason: ' + err.message));
-                }
-
-                prepareKeys();
-            });
+            prepareKeys();
         });
     }
 

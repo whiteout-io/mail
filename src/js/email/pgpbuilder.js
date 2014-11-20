@@ -1,4 +1,9 @@
 'use strict';
 
-var ngModule = angular.module('woServices');
-ngModule.service('pgpbuilder', require('pgpbuilder'));
+var PgpBuilder = require('pgpbuilder');
+var instance = new PgpBuilder();
+
+var ngModule = angular.module('woEmail');
+ngModule.factory('pgpbuilder', function() {
+    return instance;
+});

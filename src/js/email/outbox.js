@@ -1,6 +1,6 @@
 'use strict';
 
-var ngModule = angular.module('woServices');
+var ngModule = angular.module('woEmail');
 ngModule.service('outbox', Outbox);
 module.exports = Outbox;
 
