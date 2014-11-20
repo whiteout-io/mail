@@ -50,10 +50,10 @@ var MSG_PART_TYPE_HTML = 'html';
  * @param {Object} pgpbuilder Generates and encrypts MIME and SMTP messages
  * @param {Object} mailreader Parses MIME messages received from IMAP
  */
-function Email(keychain, pgp, deviceStorage, pgpbuilder, mailreader, dialog) {
+function Email(keychain, pgp, accountStore, pgpbuilder, mailreader, dialog) {
     this._keychain = keychain;
     this._pgp = pgp;
-    this._devicestorage = deviceStorage;
+    this._devicestorage = accountStore;
     this._pgpbuilder = pgpbuilder;
     this._mailreader = mailreader;
 

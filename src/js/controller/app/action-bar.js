@@ -1,15 +1,6 @@
 'use strict';
 
-var appController = require('../app-controller'),
-    emailDao;
-
-//
-// Controller
-//
-
-var ActionBarCtrl = function($scope) {
-
-    emailDao = appController._emailDao;
+var ActionBarCtrl = function($scope, email, dialog, statusDisplay) {
 
     /**
      * Move a single message from the currently selected folder to another folder
@@ -24,9 +15,9 @@ var ActionBarCtrl = function($scope) {
         // close read state
         $scope.state.read.open = false;
 
-        $scope.state.mailList.updateStatus('Moving message...');
+        statusDisplay.update('Moving message...');
 
-        emailDao.moveMessage({
+        email.moveMessage({
             folder: currentFolder(),
             destination: destination,
             message: message
@@ -35,14 +26,14 @@ var ActionBarCtrl = function($scope) {
                 // show errors where appropriate
                 if (err.code === 42) {
                     $scope.select(message);
-                    $scope.state.mailList.updateStatus('Unable to move message in offline mode!');
+                    statusDisplay.update('Unable to move message in offline mode!');
                     return;
                 }
-                $scope.state.mailList.updateStatus('Error during move!');
-                $scope.onError(err);
+                statusDisplay.update('Error during move!');
+                dialog.error(err);
                 return;
             }
-            $scope.state.mailList.updateStatus('Message moved.');
+            statusDisplay.update('Message moved.');
             $scope.$apply();
         });
     };
@@ -70,9 +61,9 @@ var ActionBarCtrl = function($scope) {
         // close read state
         $scope.state.read.open = false;
 
-        $scope.state.mailList.updateStatus('Deleting message...');
+        statusDisplay.update('Deleting message...');
 
-        emailDao.deleteMessage({
+        email.deleteMessage({
             folder: currentFolder(),
             message: message
         }, function(err) {
@@ -80,14 +71,14 @@ var ActionBarCtrl = function($scope) {
                 // show errors where appropriate
                 if (err.code === 42) {
                     $scope.select(message);
-                    $scope.state.mailList.updateStatus('Unable to delete message in offline mode!');
+                    statusDisplay.update('Unable to delete message in offline mode!');
                     return;
                 }
-                $scope.state.mailList.updateStatus('Error during delete!');
-                $scope.onError(err);
+                statusDisplay.update('Error during delete!');
+                dialog.error(err);
                 return;
             }
-            $scope.state.mailList.updateStatus('Message deleted.');
+            statusDisplay.update('Message deleted.');
             $scope.$apply();
         });
     };
@@ -110,31 +101,31 @@ var ActionBarCtrl = function($scope) {
             return;
         }
 
-        $scope.state.mailList.updateStatus('Updating unread flag...');
+        statusDisplay.update('Updating unread flag...');
 
         // close read state
         $scope.state.read.open = false;
 
         var originalState = message.unread;
         message.unread = unread;
-        emailDao.setFlags({
+        email.setFlags({
             folder: currentFolder(),
             message: message
         }, function(err) {
             if (err && err.code === 42) {
                 // offline, restore
                 message.unread = originalState;
-                $scope.state.mailList.updateStatus('Unable to mark message in offline mode!');
+                statusDisplay.update('Unable to mark message in offline mode!');
                 return;
             }
 
             if (err) {
-                $scope.state.mailList.updateStatus('Error on sync!');
-                $scope.onError(err);
+                statusDisplay.update('Error on sync!');
+                dialog.error(err);
                 return;
             }
 
-            $scope.state.mailList.updateStatus('Online');
+            statusDisplay.update('Online');
             $scope.$apply();
         });
     };

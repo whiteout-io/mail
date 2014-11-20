@@ -1,11 +1,15 @@
 'use strict';
 
-var cfg = require('../app-config').config;
+var ngModule = angular.module('woUtil');
+ngModule.service('notification', Notif);
+module.exports = Notif;
 
-var notif = {};
+function Notif(appConfig) {
+    this._appConfig = appConfig;
 
-if (window.Notification) {
-    notif.hasPermission = Notification.permission === "granted";
+    if (window.Notification) {
+        this.hasPermission = Notification.permission === "granted";
+    }
 }
 
 /**
@@ -17,25 +21,27 @@ if (window.Notification) {
  * @param {Function} options.onClick (optional) callback when the notification is clicked
  * @returns {Notification} A notification instance
  */
-notif.create = function(options) {
+Notif.prototype.create = function(options) {
+    var self = this;
+
     options.onClick = options.onClick || function() {};
 
     if (!window.Notification) {
         return;
     }
 
-    if (!notif.hasPermission) {
+    if (!self.hasPermission) {
         // don't wait until callback returns
         Notification.requestPermission(function(permission) {
             if (permission === "granted") {
-                notif.hasPermission = true;
+                self.hasPermission = true;
             }
         });
     }
 
     var notification = new Notification(options.title, {
         body: options.message,
-        icon: cfg.iconPath
+        icon: self._appConfig.config.iconPath
     });
     notification.onclick = function() {
         window.focus();
@@ -51,8 +57,6 @@ notif.create = function(options) {
     return notification;
 };
 
-notif.close = function(notification) {
+Notif.prototype.close = function(notification) {
     notification.close();
 };
-
-module.exports = notif;

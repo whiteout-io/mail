@@ -1,12 +1,8 @@
 'use strict';
 
-var appController = require('../app-controller'),
-    util = require('crypto-lib').util,
-    keychain, pgp;
+var util = require('crypto-lib').util;
 
-var PrivateKeyUploadCtrl = function($scope) {
-    keychain = appController._keychain;
-    pgp = keychain._pgp;
+var PrivateKeyUploadCtrl = function($scope, keychain, pgp, dialog, auth) {
 
     $scope.state.privateKeyUpload = {
         toggle: function(to) {
@@ -24,7 +20,7 @@ var PrivateKeyUploadCtrl = function($scope) {
                     // close lightbox
                     $scope.state.lightbox = undefined;
                     // show message
-                    $scope.onError({
+                    dialog.info({
                         title: 'Info',
                         message: 'Your PGP key has already been synced.'
                     });
@@ -64,7 +60,7 @@ var PrivateKeyUploadCtrl = function($scope) {
             keyId: keyParams._id
         }, function(err, privateKeySynced) {
             if (err) {
-                $scope.onError(err);
+                dialog.error(err);
                 return;
             }
 
@@ -93,8 +89,7 @@ var PrivateKeyUploadCtrl = function($scope) {
 
         if (inputCode.toUpperCase() !== $scope.code) {
             var err = new Error('The code does not match. Please go back and check the generated code.');
-            err.sync = true;
-            $scope.onError(err);
+            dialog.error(err);
             return false;
         }
 
@@ -106,7 +101,7 @@ var PrivateKeyUploadCtrl = function($scope) {
     };
 
     $scope.encryptAndUploadKey = function(callback) {
-        var userId = appController._emailDao._account.emailAddress;
+        var userId = auth.emailAddress;
         var code = $scope.code;
 
         // register device to keychain service
@@ -114,7 +109,7 @@ var PrivateKeyUploadCtrl = function($scope) {
             userId: userId
         }, function(err) {
             if (err) {
-                $scope.onError(err);
+                dialog.error(err);
                 return;
             }
 
@@ -147,7 +142,7 @@ var PrivateKeyUploadCtrl = function($scope) {
             // set device name to local storage
             $scope.setDeviceName(function(err) {
                 if (err) {
-                    $scope.onError(err);
+                    dialog.error(err);
                     return;
                 }
 
@@ -158,14 +153,14 @@ var PrivateKeyUploadCtrl = function($scope) {
                 // init key sync
                 $scope.encryptAndUploadKey(function(err) {
                     if (err) {
-                        $scope.onError(err);
+                        dialog.error(err);
                         return;
                     }
 
                     // close sync dialog
                     $scope.state.privateKeyUpload.toggle(false);
                     // show success message
-                    $scope.onError({
+                    dialog.info({
                         title: 'Success',
                         message: 'Whiteout Keychain setup successful!'
                     });

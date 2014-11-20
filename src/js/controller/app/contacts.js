@@ -1,15 +1,10 @@
 'use strict';
 
-var appController = require('../app-controller'),
-    keychain, pgp;
-
 //
 // Controller
 //
 
-var ContactsCtrl = function($scope) {
-    keychain = appController._keychain,
-    pgp = appController._pgp;
+var ContactsCtrl = function($scope, keychain, pgp, dialog) {
 
     $scope.state.contacts = {
         toggle: function(to) {
@@ -26,7 +21,7 @@ var ContactsCtrl = function($scope) {
     $scope.listKeys = function() {
         keychain.listLocalPublicKeys(function(err, keys) {
             if (err) {
-                $scope.onError(err);
+                dialog.error(err);
                 return;
             }
 
@@ -54,7 +49,7 @@ var ContactsCtrl = function($scope) {
 
         // verifiy public key string
         if (publicKeyArmored.indexOf('-----BEGIN PGP PUBLIC KEY BLOCK-----') < 0) {
-            $scope.onError({
+            dialog.error({
                 showBugReporter: false,
                 message: 'Invalid public key!'
             });
@@ -64,7 +59,7 @@ var ContactsCtrl = function($scope) {
         try {
             keyParams = pgp.getKeyParams(publicKeyArmored);
         } catch (e) {
-            $scope.onError(new Error('Error reading public key params!'));
+            dialog.error(new Error('Error reading public key params!'));
             return;
         }
 
@@ -78,7 +73,7 @@ var ContactsCtrl = function($scope) {
 
         keychain.saveLocalPublicKey(pubkey, function(err) {
             if (err) {
-                $scope.onError(err);
+                dialog.error(err);
                 return;
             }
 
@@ -90,7 +85,7 @@ var ContactsCtrl = function($scope) {
     $scope.removeKey = function(key) {
         keychain.removeLocalPublicKey(key._id, function(err) {
             if (err) {
-                $scope.onError(err);
+                dialog.error(err);
                 return;
             }
 

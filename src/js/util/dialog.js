@@ -6,8 +6,14 @@ module.exports = Dialog;
 
 function Dialog() {}
 
-Dialog.prototype.error = function() {};
+Dialog.prototype.info = function(options) {
+    this.displayInfo(options);
+};
 
-Dialog.prototype.info = function() {};
+Dialog.prototype.error = function(options) {
+    this.displayError(options);
+};
 
-Dialog.prototype.confirm = function() {};
+Dialog.prototype.confirm = function(options) {
+    this.displayConfirm(options);
+};

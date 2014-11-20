@@ -12,6 +12,5 @@ require('./publickey');
 require('./admin');
 require('./lawnchair');
 require('./devicestorage');
-require('./app-config-store');
 require('./auth');
 require('./keychain');

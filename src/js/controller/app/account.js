@@ -1,18 +1,7 @@
 'use strict';
 
-var appController = require('../app-controller'),
-    dl = require('../util/download'),
-    config = require('../app-config').config,
-    pgp, keychain, userId;
-
-//
-// Controller
-//
-
-var AccountCtrl = function($scope) {
-    userId = appController._emailDao._account.emailAddress;
-    keychain = appController._keychain;
-    pgp = appController._pgp;
+var AccountCtrl = function($scope, auth, keychain, pgp, appConfig, download, dialog) {
+    var userId = auth.emailAddress;
 
     $scope.state.account = {
         toggle: function(to) {
@@ -31,7 +20,7 @@ var AccountCtrl = function($scope) {
     var fpr = keyParams.fingerprint;
     $scope.fingerprint = fpr.slice(0, 4) + ' ' + fpr.slice(4, 8) + ' ' + fpr.slice(8, 12) + ' ' + fpr.slice(12, 16) + ' ' + fpr.slice(16, 20) + ' ' + fpr.slice(20, 24) + ' ' + fpr.slice(24, 28) + ' ' + fpr.slice(28, 32) + ' ' + fpr.slice(32, 36) + ' ' + fpr.slice(36);
     $scope.keysize = keyParams.bitSize;
-    $scope.publicKeyUrl = config.cloudUrl + '/' + userId;
+    $scope.publicKeyUrl = appConfig.config.cloudUrl + '/' + userId;
 
     //
     // scope functions
@@ -40,14 +29,14 @@ var AccountCtrl = function($scope) {
     $scope.exportKeyFile = function() {
         keychain.getUserKeyPair(userId, function(err, keys) {
             if (err) {
-                $scope.onError(err);
+                dialog.error(err);
                 return;
             }
 
             var keyId = keys.publicKey._id;
             var file = 'whiteout_mail_' + userId + '_' + keyId.substring(8, keyId.length);
 
-            dl.createDownload({
+            download.createDownload({
                 content: keys.publicKey.publicKey + '\r\n' + keys.privateKey.encryptedKey,
                 filename: file + '.asc',
                 contentType: 'text/plain'

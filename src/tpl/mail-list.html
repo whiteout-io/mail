@@ -17,7 +17,7 @@
       <svg><use xlink:href="#icon-search" /><title>Search</title></svg>
       <input class="input-text" type="text" ng-model="searchText"
         ng-change="displaySearchResults(searchText)"
-        placeholder="Search" wo-focus-me="state.mailList.searching">
+        placeholder="Search">
     </div>
   </div>
 
@@ -71,13 +71,13 @@
     </ul>
   </div>
 
-  <footer>
-    <span class="spinner" ng-show="account.loggingIn || account.busy || state.mailList.searching"></span>
+  <footer ng-controller="StatusDisplayCtrl">
+    <span class="spinner" ng-show="account.loggingIn || account.busy || searching"></span>
     <span class="text" ng-switch="account.online">
       <span ng-switch-when="false">
         <svg><use xlink:href="#icon-offline" /></svg>
       </span>
-      {{state.mailList.lastUpdateLbl}} {{state.mailList.lastUpdate | date:'shortTime'}}
+      {{lastUpdateLbl}} {{lastUpdate | date:'shortTime'}}
     </span>
   </footer>
 </div>

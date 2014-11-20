@@ -1,15 +1,10 @@
 'use strict';
 
-var appController = require('../app-controller'),
-    pgp, keychain;
+var SetPassphraseCtrl = function($scope, pgp, keychain, dialog) {
 
-//
-// Controller
-//
-
-var SetPassphraseCtrl = function($scope) {
-    keychain = appController._keychain;
-    pgp = appController._pgp;
+    //
+    // scope variables
+    //
 
     $scope.state.setPassphrase = {
         toggle: function(to) {
@@ -21,10 +16,6 @@ var SetPassphraseCtrl = function($scope) {
             $scope.passphraseMsg = undefined;
         }
     };
-
-    //
-    // scope variables
-    //
 
     //
     // scope functions
@@ -87,7 +78,7 @@ var SetPassphraseCtrl = function($scope) {
         var keyId = pgp.getKeyParams()._id;
         keychain.lookupPrivateKey(keyId, function(err, savedKey) {
             if (err) {
-                $scope.onError(err);
+                dialog.error(err);
                 return;
             }
 
@@ -102,7 +93,7 @@ var SetPassphraseCtrl = function($scope) {
     function onPassphraseChanged(err, newPrivateKeyArmored) {
         if (err) {
             err.showBugReporter = false;
-            $scope.onError(err);
+            dialog.error(err);
             return;
         }
 
@@ -120,13 +111,13 @@ var SetPassphraseCtrl = function($scope) {
 
     function onKeyPersisted(err) {
         if (err) {
-            $scope.onError(err);
+            dialog.error(err);
             return;
         }
 
         $scope.state.setPassphrase.toggle(false);
         $scope.$apply();
-        $scope.onError({
+        dialog.info({
             title: 'Success',
             message: 'Passphrase change complete.'
         });

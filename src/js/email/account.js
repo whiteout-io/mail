@@ -9,7 +9,7 @@ var axe = require('axe-logger'),
     PgpMailer = require('pgpmailer'),
     ImapClient = require('imap-client');
 
-function Account(appConfig, auth, admin, mailConfig, keychain, pgpbuilder, email, outbox, deviceStorage, updateHandler) {
+function Account(appConfig, auth, admin, mailConfig, keychain, pgpbuilder, email, outbox, accountStore, updateHandler) {
     this._appConfig = appConfig;
     this._auth = auth;
     this._admin = admin;
@@ -18,7 +18,7 @@ function Account(appConfig, auth, admin, mailConfig, keychain, pgpbuilder, email
     this._emailDao = email;
     this._pgpbuilder = pgpbuilder;
     this._outbox = outbox;
-    this._deviceStorage = deviceStorage;
+    this._accountStore = accountStore;
     this._updateHandler = updateHandler;
     this._accounts = []; // init accounts list
 }
@@ -61,7 +61,7 @@ Account.prototype.init = function(options, callback) {
 
     // Pre-Flight check: initialize and prepare user's local database
     function prepareDatabase() {
-        self._deviceStorage.init(options.emailAddress, function(err) {
+        self._accountStore.init(options.emailAddress, function(err) {
             if (err) {
                 return callback(err);
             }

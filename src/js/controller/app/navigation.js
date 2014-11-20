@@ -1,11 +1,6 @@
 'use strict';
 
-var appController = require('../app-controller'),
-    notification = require('../util/notification'),
-    backBtnHandler = require('../util/backbutton-handler'),
-    appCfg = require('../app-config'),
-    config = appCfg.config,
-    str = appCfg.string;
+var backBtnHandler = require('../util/backbutton-handler');
 
 //
 // Constants
@@ -18,8 +13,11 @@ var NOTIFICATION_SENT_TIMEOUT = 2000;
 // Controller
 //
 
-var NavigationCtrl = function($scope, $routeParams, $location, account, email, outbox) {
+var NavigationCtrl = function($scope, $routeParams, $location, account, email, outbox, notification, appConfig, dialog) {
     !$routeParams.dev && !account.isLoggedIn() && $location.path('/'); // init app
+
+    var str = appConfig.string,
+        config = appConfig.config;
 
     //
     // scope functions
@@ -39,7 +37,7 @@ var NavigationCtrl = function($scope, $routeParams, $location, account, email, o
 
     $scope.onOutboxUpdate = function(err, count) {
         if (err) {
-            $scope.onError(err);
+            dialog.error(err);
             return;
         }
 
@@ -52,19 +50,18 @@ var NavigationCtrl = function($scope, $routeParams, $location, account, email, o
 
         email.refreshFolder({
             folder: ob
-        }, $scope.onError);
+        }, dialog.error);
     };
 
     $scope.logout = function() {
-        $scope.onError({
+        dialog.confirm({
             title: str.logoutTitle,
             message: str.logoutMessage,
             callback: function(confirm) {
                 if (confirm) {
-                    appController.logout();
+                    account.logout();
                 }
-            },
-            sync: true
+            }
         });
     };
 
@@ -82,9 +79,9 @@ var NavigationCtrl = function($scope, $routeParams, $location, account, email, o
         $scope.openFolder($scope.account.folders[0]);
     }
     // connect imap/smtp clients on first startup
-    appController.onConnect(function(err) {
+    account.onConnect(function(err) {
         if (err) {
-            $scope.onError(err);
+            dialog.error(err);
             return;
         }
 

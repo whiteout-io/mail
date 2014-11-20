@@ -1,21 +1,12 @@
 'use strict';
 
-var appController = require('../app-controller'),
-    download = require('../util/download'),
-    str = require('../app-config').string,
-    emailDao, invitationDao, outbox, pgp, keychain;
-
 //
 // Controller
 //
 
-var ReadCtrl = function($scope) {
+var ReadCtrl = function($scope, email, invitation, outbox, pgp, keychain, appConfig, download, auth, dialog) {
 
-    emailDao = appController._emailDao;
-    invitationDao = appController._invitationDao;
-    outbox = appController._outboxBo;
-    pgp = appController._pgp;
-    keychain = appController._keychain;
+    var str = appConfig.string;
 
     // set default value so that the popover height is correct on init
     $scope.keyId = 'No key found.';
@@ -31,7 +22,7 @@ var ReadCtrl = function($scope) {
         $scope.keyId = 'Searching...';
         keychain.getReceiverPublicKey(address, function(err, pubkey) {
             if (err) {
-                $scope.onError(err);
+                dialog.error(err);
                 return;
             }
 
@@ -71,7 +62,7 @@ var ReadCtrl = function($scope) {
 
         keychain.getReceiverPublicKey(user.address, function(err, pubkey) {
             if (err) {
-                $scope.onError(err);
+                dialog.error(err);
                 return;
             }
 
@@ -97,12 +88,12 @@ var ReadCtrl = function($scope) {
         }
 
         var folder = $scope.state.nav.currentFolder;
-        var email = $scope.state.mailList.selected;
-        emailDao.getAttachment({
+        var message = $scope.state.mailList.selected;
+        email.getAttachment({
             folder: folder,
-            uid: email.uid,
+            uid: message.uid,
             attachment: attachment
-        }, $scope.onError);
+        }, dialog.error);
     };
 
     $scope.invite = function(user) {
@@ -113,15 +104,15 @@ var ReadCtrl = function($scope) {
 
         $scope.keyId = 'Sending invitation...';
 
-        var sender = emailDao._account.emailAddress,
+        var sender = auth.emailAddress,
             recipient = user.address;
 
-        invitationDao.invite({
+        invitation.invite({
             recipient: recipient,
             sender: sender
         }, function(err) {
             if (err) {
-                $scope.onError(err);
+                dialog.error(err);
                 return;
             }
 
@@ -139,7 +130,7 @@ var ReadCtrl = function($scope) {
             };
 
             // send invitation mail
-            outbox.put(invitationMail, $scope.onError);
+            outbox.put(invitationMail, dialog.error);
         });
     };
 };

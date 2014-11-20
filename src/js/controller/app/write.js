@@ -1,21 +1,15 @@
 'use strict';
 
-var appController = require('../app-controller'),
-    axe = require('axe-logger'),
-    util = require('crypto-lib').util,
-    str = require('../app-config').string,
-    pgp, emailDao, outbox, keychainDao, auth;
+var axe = require('axe-logger'),
+    util = require('crypto-lib').util;
 
 //
 // Controller
 //
 
-var WriteCtrl = function($scope, $filter, $q) {
-    pgp = appController._pgp;
-    auth = appController._auth;
-    emailDao = appController._emailDao;
-    outbox = appController._outboxBo;
-    keychainDao = appController._keychain;
+var WriteCtrl = function($scope, $filter, $q, appConfig, auth, keychain, pgp, email, outbox, dialog) {
+
+    var str = appConfig.string;
 
     // set default value so that the popover height is correct on init
     $scope.keyId = 'XXXXXXXX';
@@ -133,7 +127,7 @@ var WriteCtrl = function($scope, $filter, $q) {
         }
         if (replyAll) {
             re.to.concat(re.cc).forEach(function(recipient) {
-                var me = emailDao._account.emailAddress;
+                var me = auth.emailAddress;
                 if (recipient.address === me && replyTo !== me) {
                     // don't reply to yourself
                     return;
@@ -225,15 +219,15 @@ var WriteCtrl = function($scope, $filter, $q) {
             return;
         }
 
-        // keychainDao is undefined in local dev environment
-        if (keychainDao) {
+        // keychain is undefined in local dev environment
+        if (keychain) {
             // check if to address is contained in known public keys
             // when we write an email, we always need to work with the latest keys available
-            keychainDao.refreshKeyForUserId({
+            keychain.refreshKeyForUserId({
                 userId: recipient.address
             }, function(err, key) {
                 if (err) {
-                    $scope.onError(err);
+                    dialog.error(err);
                     return;
                 }
 
@@ -318,13 +312,13 @@ var WriteCtrl = function($scope, $filter, $q) {
     //
 
     $scope.sendToOutbox = function() {
-        var email;
+        var message;
 
         // build email model for smtp-client
-        email = {
+        message = {
             from: [{
-                name: emailDao._account.realname,
-                address: emailDao._account.emailAddress
+                name: auth.realname,
+                address: auth.emailAddress
             }],
             to: $scope.to.filter(filterEmptyAddresses),
             cc: $scope.cc.filter(filterEmptyAddresses),
@@ -337,11 +331,11 @@ var WriteCtrl = function($scope, $filter, $q) {
         };
 
         if ($scope.inReplyTo) {
-            email.headers['in-reply-to'] = '<' + $scope.inReplyTo + '>';
+            message.headers['in-reply-to'] = '<' + $scope.inReplyTo + '>';
         }
 
         if ($scope.references && $scope.references.length) {
-            email.headers.references = $scope.references.map(function(reference) {
+            message.headers.references = $scope.references.map(function(reference) {
                 return '<' + reference + '>';
             }).join(' ');
         }
@@ -350,9 +344,9 @@ var WriteCtrl = function($scope, $filter, $q) {
         $scope.state.writer.close();
 
         // persist the email to disk for later sending
-        outbox.put(email, function(err) {
+        outbox.put(message, function(err) {
             if (err) {
-                $scope.onError(err);
+                dialog.error(err);
                 return;
             }
 
@@ -363,12 +357,12 @@ var WriteCtrl = function($scope, $filter, $q) {
             }
 
             $scope.replyTo.answered = true;
-            emailDao.setFlags({
+            email.setFlags({
                 folder: currentFolder(),
                 message: $scope.replyTo
             }, function(err) {
                 if (err && err.code !== 42) {
-                    $scope.onError(err);
+                    dialog.error(err);
                     return;
                 }
 
@@ -396,9 +390,9 @@ var WriteCtrl = function($scope, $filter, $q) {
 
         if (!$scope.addressBookCache) {
             // populate address book cache
-            keychainDao.listLocalPublicKeys(function(err, keys) {
+            keychain.listLocalPublicKeys(function(err, keys) {
                 if (err) {
-                    $scope.onError(err);
+                    dialog.error(err);
                     return;
                 }
 

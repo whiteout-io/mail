@@ -13,7 +13,7 @@ var util = require('crypto-lib').util,
  * The local outbox takes care of the emails before they are being sent.
  * It also checks periodically if there are any mails in the local device storage to be sent.
  */
-function Outbox(email, keychain, deviceStorage) {
+function Outbox(email, keychain, accountStore) {
     /** @private */
     this._emailDao = email;
 
@@ -21,7 +21,7 @@ function Outbox(email, keychain, deviceStorage) {
     this._keychain = keychain;
 
     /** @private */
-    this._devicestorage = deviceStorage;
+    this._devicestorage = accountStore;
 
     /**
      * Semaphore-esque flag to avoid 'concurrent' calls to _processOutbox when the timeout fires, but a call is still in process.

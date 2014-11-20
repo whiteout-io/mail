@@ -1,8 +1,6 @@
 'use strict';
 
-var appController = require('../app-controller'),
-    notification = require('../util/notification'),
-    emailDao, outboxBo, keychainDao, searchTimeout, firstSelect;
+var searchTimeout, firstSelect;
 
 //
 // Constants
@@ -13,14 +11,10 @@ var INIT_DISPLAY_LEN = 20,
     FOLDER_TYPE_INBOX = 'Inbox',
     NOTIFICATION_INBOX_TIMEOUT = 5000;
 
-var MailListCtrl = function($scope, $routeParams) {
+var MailListCtrl = function($scope, $routeParams, statusDisplay, notification, email, keychain, dialog) {
     //
     // Init
     //
-
-    emailDao = appController._emailDao;
-    outboxBo = appController._outboxBo;
-    keychainDao = appController._keychain;
 
     /**
      * Gathers unread notifications to be cancelled later
@@ -31,39 +25,39 @@ var MailListCtrl = function($scope, $routeParams) {
     // scope functions
     //
 
-    $scope.getBody = function(email) {
-        emailDao.getBody({
+    $scope.getBody = function(message) {
+        email.getBody({
             folder: currentFolder(),
-            message: email
+            message: message
         }, function(err) {
             if (err && err.code !== 42) {
-                $scope.onError(err);
+                dialog.error(err);
                 return;
             }
 
             // display fetched body
             $scope.$digest();
 
-            // automatically decrypt if it's the selected email
-            if (email === currentMessage()) {
-                emailDao.decryptBody({
-                    message: email
-                }, $scope.onError);
+            // automatically decrypt if it's the selected message
+            if (message === currentMessage()) {
+                email.decryptBody({
+                    message: message
+                }, dialog.error);
             }
         });
     };
 
     /**
-     * Called when clicking on an email list item
+     * Called when clicking on an message list item
      */
-    $scope.select = function(email) {
+    $scope.select = function(message) {
         // unselect an item
-        if (!email) {
+        if (!message) {
             $scope.state.mailList.selected = undefined;
             return;
         }
 
-        $scope.state.mailList.selected = email;
+        $scope.state.mailList.selected = message;
 
         if (!firstSelect) {
             // only toggle to read view on 2nd select in mobile mode
@@ -71,22 +65,22 @@ var MailListCtrl = function($scope, $routeParams) {
         }
         firstSelect = false;
 
-        keychainDao.refreshKeyForUserId({
-            userId: email.from[0].address
+        keychain.refreshKeyForUserId({
+            userId: message.from[0].address
         }, onKeyRefreshed);
 
         function onKeyRefreshed(err) {
             if (err) {
-                $scope.onError(err);
+                dialog.error(err);
             }
 
-            emailDao.decryptBody({
-                message: email
-            }, $scope.onError);
+            email.decryptBody({
+                message: message
+            }, dialog.error);
 
-            // if the email is unread, please sync the new state.
+            // if the message is unread, please sync the new state.
             // otherweise forget about it.
-            if (!email.unread) {
+            if (!message.unread) {
                 return;
             }
 
@@ -97,13 +91,8 @@ var MailListCtrl = function($scope, $routeParams) {
                 }
             }
 
-            $scope.state.actionBar.markMessage(email, false);
+            $scope.state.actionBar.markMessage(message, false);
         }
-    };
-
-    // share local scope functions with root state
-    $scope.state.mailList = {
-        updateStatus: updateStatus
     };
 
     //
@@ -111,7 +100,7 @@ var MailListCtrl = function($scope, $routeParams) {
     //
 
     /**
-     * List emails from folder when user changes folder
+     * List messages from folder when user changes folder
      */
     $scope._stopWatchTask = $scope.$watch('state.nav.currentFolder', function() {
         if (!currentFolder()) {
@@ -123,7 +112,7 @@ var MailListCtrl = function($scope, $routeParams) {
 
         // in development, display dummy mail objects
         if ($routeParams.dev) {
-            updateStatus('Last update: ', new Date());
+            statusDisplay.update('Last update: ', new Date());
             currentFolder().messages = createDummyMails();
             return;
         }
@@ -183,20 +172,20 @@ var MailListCtrl = function($scope, $routeParams) {
         if (!searchText) {
             // set display buffer to first messages
             $scope.displayMessages = currentFolder().messages.slice(0, INIT_DISPLAY_LEN);
-            setSearching(false);
-            updateStatus('Online');
+            statusDisplay.setSearching(false);
+            statusDisplay.update('Online');
             return;
         }
 
         // display searching spinner
-        setSearching(true);
-        updateStatus('Searching ...');
+        statusDisplay.setSearching(true);
+        statusDisplay.update('Searching ...');
         searchTimeout = setTimeout(function() {
             $scope.$apply(function() {
                 // filter relevant messages
                 $scope.displayMessages = $scope.search(currentFolder().messages, searchText);
-                setSearching(false);
-                updateStatus('Matches in this folder');
+                statusDisplay.setSearching(false);
+                statusDisplay.update('Matches in this folder');
             });
         }, 500);
     };
@@ -276,10 +265,10 @@ var MailListCtrl = function($scope, $routeParams) {
      */
     $scope.watchOnline = $scope.$watch('account.online', function(isOnline) {
         if (isOnline) {
-            updateStatus('Online');
+            statusDisplay.update('Online');
             openCurrentFolder();
         } else {
-            updateStatus('Offline mode');
+            statusDisplay.update('Offline mode');
         }
     }, true);
 
@@ -292,7 +281,7 @@ var MailListCtrl = function($scope, $routeParams) {
             return;
         }
 
-        emailDao.openFolder({
+        email.openFolder({
             folder: currentFolder()
         }, function(error) {
             // dont wait until scroll to load visible mail bodies
@@ -302,17 +291,8 @@ var MailListCtrl = function($scope, $routeParams) {
             if (error && error.code === 42) {
                 return;
             }
-            $scope.onError(error);
+            dialog.error(error);
         });
-    }
-
-    function updateStatus(lbl, time) {
-        $scope.state.mailList.lastUpdateLbl = lbl;
-        $scope.state.mailList.lastUpdate = (time) ? time : '';
-    }
-
-    function setSearching(state) {
-        $scope.state.mailList.searching = state;
     }
 
     function currentFolder() {
@@ -327,7 +307,7 @@ var MailListCtrl = function($scope, $routeParams) {
     // Notification API
     //
 
-    (emailDao || {}).onIncomingMessage = function(msgs) {
+    (email || {}).onIncomingMessage = function(msgs) {
         var note, title, message, unreadMsgs;
 
         unreadMsgs = msgs.filter(function(msg) {
@@ -402,7 +382,7 @@ ngModule.directive('listScroll', function() {
                 }
 
                 for (var i = 0, len = listItems.length; i < len; i++) {
-                    // the n-th list item (the dom representation of an email) corresponds to
+                    // the n-th list item (the dom representation of an message) corresponds to
                     // the n-th message model in the filteredMessages array
                     listItem = listItems.item(i).getBoundingClientRect();
 

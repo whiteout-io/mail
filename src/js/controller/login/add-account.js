@@ -1,6 +1,6 @@
 'use strict';
 
-var AddAccountCtrl = function($scope, $location, $routeParams, mailConfig, auth) {
+var AddAccountCtrl = function($scope, $location, $routeParams, mailConfig, auth, dialog) {
     !$routeParams.dev && !auth.isInitialized() && $location.path('/'); // init app
 
     $scope.getAccountSettings = function() {
@@ -36,7 +36,7 @@ var AddAccountCtrl = function($scope, $location, $routeParams, mailConfig, auth)
 
     $scope.oauthPossible = function() {
         // ask user to use the platform's native OAuth api
-        $scope.onError({
+        dialog.confirm({
             title: 'Google Account Login',
             message: 'You are signing into a Google account. Would you like to sign in with Google or just continue with a password login?',
             positiveBtnStr: 'Google sign in',
@@ -59,7 +59,7 @@ var AddAccountCtrl = function($scope, $location, $routeParams, mailConfig, auth)
             // fetches the email address from the chrome identity api
             auth.getOAuthToken(function(err) {
                 if (err) {
-                    return $scope.onError(err);
+                    return dialog.error(err);
                 }
                 $scope.setCredentials();
                 $scope.$apply();

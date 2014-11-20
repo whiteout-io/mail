@@ -1,12 +1,6 @@
 'use strict';
 
-var cfg = require('../app-config').config;
-
-//
-// Controller
-//
-
-var AboutCtrl = function($scope) {
+var AboutCtrl = function($scope, appConfig) {
 
     $scope.state.about = {
         toggle: function(to) {
@@ -18,7 +12,7 @@ var AboutCtrl = function($scope) {
     // scope variables
     //
 
-    $scope.version = cfg.appVersion + ' (beta)';
+    $scope.version = appConfig.config.appVersion + ' (beta)';
     $scope.date = new Date();
 
     //

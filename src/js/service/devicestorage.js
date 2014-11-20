@@ -1,18 +1,29 @@
 'use strict';
 
 var ngModule = angular.module('woServices');
-ngModule.service('deviceStorage', DeviceStorage);
+ngModule.factory('deviceStorage', function(lawnchairDAO) {
+    return new DeviceStorage(lawnchairDAO);
+});
 module.exports = DeviceStorage;
+
+// expose an instance with the static dbName 'app-config' to store configuration data
+ngModule.factory('appConfigStore', function(deviceStorage) {
+    deviceStorage.init('app-config');
+    return deviceStorage;
+});
+
+// expose a singleton instance of DeviceStorage called 'accountStore' to persist user data
+ngModule.service('accountStore', DeviceStorage);
 
 /**
  * High level storage api that handles all persistence of a user's data on the device.
  */
 function DeviceStorage(lawnchairDAO) {
-    this._localDbDao = lawnchairDAO;
+    this._lawnchairDAO = lawnchairDAO;
 }
 
 DeviceStorage.prototype.init = function(dbName) {
-    this._localDbDao.init(dbName);
+    this._lawnchairDAO.init(dbName);
 };
 
 /**
@@ -46,14 +57,14 @@ DeviceStorage.prototype.storeList = function(list, type, callback) {
         });
     });
 
-    this._localDbDao.batch(items, callback);
+    this._lawnchairDAO.batch(items, callback);
 };
 
 /**
  *  Deletes items of a certain type from storage
  */
 DeviceStorage.prototype.removeList = function(type, callback) {
-    this._localDbDao.removeList(type, callback);
+    this._lawnchairDAO.removeList(type, callback);
 };
 
 /**
@@ -64,14 +75,14 @@ DeviceStorage.prototype.removeList = function(type, callback) {
  */
 DeviceStorage.prototype.listItems = function(type, offset, num, callback) {
     // fetch all items of a certain type from the data-store
-    this._localDbDao.list(type, offset, num, callback);
+    this._lawnchairDAO.list(type, offset, num, callback);
 };
 
 /**
  * Clear the whole device data-store
  */
 DeviceStorage.prototype.clear = function(callback) {
-    this._localDbDao.clear(callback);
+    this._lawnchairDAO.clear(callback);
 };
 
 //

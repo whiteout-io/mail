@@ -35,8 +35,8 @@ var axe = require('axe-logger'),
     WriteCtrl = require('./controller/write'),
     NavigationCtrl = require('./controller/navigation'),
     ActionBarCtrl = require('./controller/action-bar'),
-    errorUtil = require('./util/error'),
-    backButtonUtil = require('./util/backbutton-handler');
+    backButtonUtil = require('./util/backbutton-handler'),
+    StatusDisplayCtrl = require('./controller/app/status-display');
 
 // include angular modules
 require('./app-config');
@@ -121,9 +121,6 @@ app.run(function($rootScope) {
     // global state... inherited to all child scopes
     $rootScope.state = {};
 
-    // attach global error handler
-    errorUtil.attachHandler($rootScope);
-
     // attach the back button handler to the root scope
     backButtonUtil.attachHandler($rootScope);
 
@@ -142,6 +139,7 @@ app.controller('ContactsCtrl', ContactsCtrl);
 app.controller('AboutCtrl', AboutCtrl);
 app.controller('DialogCtrl', DialogCtrl);
 app.controller('ActionBarCtrl', ActionBarCtrl);
+app.controller('StatusDisplayCtrl', StatusDisplayCtrl);
 
 //
 // Manual angular bootstraping
