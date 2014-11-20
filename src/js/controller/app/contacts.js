@@ -119,13 +119,4 @@ ngModule.directive('keyfileInput', function() {
     };
 });
 
-ngModule.directive('keyfileBtn', function() {
-    return function(scope, elm) {
-        elm.on('click touchstart', function(e) {
-            e.preventDefault();
-            document.querySelector('#keyfile-input').click();
-        });
-    };
-});
-
 module.exports = ContactsCtrl;
