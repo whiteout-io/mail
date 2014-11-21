@@ -15,9 +15,9 @@ var axe = require('axe-logger'),
 /**
  * Handles database migration
  */
-function UpdateHandler(appConfigStore, deviceStorage, auth, dialog) {
+function UpdateHandler(appConfigStore, accountStore, auth, dialog) {
     this._appConfigStorage = appConfigStore;
-    this._userStorage = deviceStorage;
+    this._userStorage = accountStore;
     this._updateScripts = [updateV1, updateV2, updateV3, updateV4, updateV5];
     this._auth = auth;
     this._dialog = dialog;

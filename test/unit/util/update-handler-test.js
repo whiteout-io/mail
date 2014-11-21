@@ -1,12 +1,13 @@
 'use strict';
 
-var DeviceStorageDAO = require('../../src/js/dao/devicestorage-dao'),
-    Auth = require('../../src/js/bo/auth'),
-    cfg = require('../../src/js/app-config').config,
-    UpdateHandler = require('../../src/js/util/update/update-handler');
+var DeviceStorageDAO = require('../../../src/js/service/devicestorage'),
+    Auth = require('../../../src/js/service/auth'),
+    cfg = require('../../../src/js/app-config').config,
+    UpdateHandler = require('../../../src/js/util/update/update-handler'),
+    Dialog = require('../../../src/js/util/dialog');
 
 describe('UpdateHandler', function() {
-    var updateHandler, appConfigStorageStub, authStub, userStorageStub, origDbVersion;
+    var updateHandler, appConfigStorageStub, authStub, userStorageStub, dialogStub, origDbVersion;
 
     chai.config.includeStack = true;
 
@@ -15,7 +16,8 @@ describe('UpdateHandler', function() {
         appConfigStorageStub = sinon.createStubInstance(DeviceStorageDAO);
         userStorageStub = sinon.createStubInstance(DeviceStorageDAO);
         authStub = sinon.createStubInstance(Auth);
-        updateHandler = new UpdateHandler(appConfigStorageStub, userStorageStub, authStub);
+        dialogStub = sinon.createStubInstance(Dialog);
+        updateHandler = new UpdateHandler(appConfigStorageStub, userStorageStub, authStub, dialogStub);
     });
 
     afterEach(function() {

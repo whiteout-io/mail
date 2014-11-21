@@ -3,8 +3,9 @@
 var TCPSocket = require('tcp-socket'),
     ImapClient = require('imap-client'),
     SmtpClient = require('wo-smtpclient'),
-    ConnectionDoctor = require('../../src/js/util/connection-doctor'),
-    cfg = require('../../src/js/app-config').config;
+    ConnectionDoctor = require('../../../src/js/util/connection-doctor'),
+    appConfig = require('../../../src/js/app-config'),
+    cfg = appConfig.config;
 
 describe('Connection Doctor', function() {
     var doctor;
@@ -22,7 +23,7 @@ describe('Connection Doctor', function() {
             }
         };
 
-        workerPath = 'js/tcp-socket-tls-worker.min.js';
+        workerPath = '../lib/tcp-socket-tls-worker.min.js';
         imapStub = sinon.createStubInstance(ImapClient);
         smtpStub = sinon.createStubInstance(SmtpClient);
 
@@ -51,7 +52,7 @@ describe('Connection Doctor', function() {
         //
         // Setup SUT
         //
-        doctor = new ConnectionDoctor();
+        doctor = new ConnectionDoctor(appConfig);
         doctor.configure(credentials);
         doctor._imap = imapStub;
         doctor._smtp = smtpStub;

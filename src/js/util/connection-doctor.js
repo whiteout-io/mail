@@ -151,11 +151,12 @@ ConnectionDoctor.prototype._checkReachable = function(options, callback) {
         timeout, // remember the timeout object
         host = options.host + ':' + options.port,
         hasTimedOut = false, // prevents multiple callbacks
-        cfg = this._appConfig.config;
+        cfg = this._appConfig.config,
+        str = this._appConfig.string;
 
     timeout = setTimeout(function() {
         hasTimedOut = true;
-        callback(createError(HOST_TIMEOUT, this._appConfig.string.connDocHostTimeout.replace('{0}', host).replace('{1}', cfg.connDocTimeout)));
+        callback(createError(HOST_TIMEOUT, str.connDocHostTimeout.replace('{0}', host).replace('{1}', cfg.connDocTimeout)));
     }, cfg.connDocTimeout);
 
     socket = TCPSocket.open(options.host, options.port, {
@@ -175,14 +176,14 @@ ConnectionDoctor.prototype._checkReachable = function(options, callback) {
         socket.oncert = function() {
             if (options.ca) {
                 // the certificate we already have is outdated
-                error = createError(TLS_WRONG_CERT, this._appConfig.string.connDocTlsWrongCert.replace('{0}', host));
+                error = createError(TLS_WRONG_CERT, str.connDocTlsWrongCert.replace('{0}', host));
             }
         };
     } catch (e) {}
 
     socket.onerror = function(e) {
         if (!error) {
-            error = createError(HOST_UNREACHABLE, this._appConfig.string.connDocHostUnreachable.replace('{0}', host), e.data);
+            error = createError(HOST_UNREACHABLE, str.connDocHostUnreachable.replace('{0}', host), e.data);
         }
     };
 
@@ -207,8 +208,8 @@ ConnectionDoctor.prototype._checkReachable = function(options, callback) {
 ConnectionDoctor.prototype._checkImap = function(callback) {
     var self = this,
         loggedIn = false,
-        host = self.credentials.imap.host + ':' + self.credentials.imap.port;
-
+        host = self.credentials.imap.host + ':' + self.credentials.imap.port,
+        str = this._appConfig.string;
 
     self._imap.onCert = function(pemEncodedCert) {
         if (!self.credentials.imap.ca) {
@@ -220,9 +221,9 @@ ConnectionDoctor.prototype._checkImap = function(callback) {
     // the global onError handler, so we need to track if login was successful
     self._imap.onError = function(error) {
         if (!loggedIn) {
-            callback(createError(AUTH_REJECTED, this._appConfig.string.connDocAuthRejected.replace('{0}', host), error));
+            callback(createError(AUTH_REJECTED, str.connDocAuthRejected.replace('{0}', host), error));
         } else {
-            callback(createError(GENERIC_ERROR, this._appConfig.string.connDocGenericError.replace('{0}', host).replace('{1}', error.message), error));
+            callback(createError(GENERIC_ERROR, str.connDocGenericError.replace('{0}', host).replace('{1}', error.message), error));
         }
     };
 
@@ -231,12 +232,12 @@ ConnectionDoctor.prototype._checkImap = function(callback) {
 
         self._imap.listWellKnownFolders(function(error, wellKnownFolders) {
             if (error) {
-                return callback(createError(GENERIC_ERROR, this._appConfig.string.connDocGenericError.replace('{0}', host).replace('{1}', error.message), error));
+                return callback(createError(GENERIC_ERROR, str.connDocGenericError.replace('{0}', host).replace('{1}', error.message), error));
             }
 
             if (wellKnownFolders.Inbox.length === 0) {
                 // the client needs at least an inbox folder to work properly
-                return callback(createError(NO_INBOX, this._appConfig.string.connDocNoInbox.replace('{0}', host)));
+                return callback(createError(NO_INBOX, str.connDocNoInbox.replace('{0}', host)));
             }
 
             self._imap.logout(function() {
@@ -255,7 +256,8 @@ ConnectionDoctor.prototype._checkImap = function(callback) {
 ConnectionDoctor.prototype._checkSmtp = function(callback) {
     var self = this,
         host = self.credentials.smtp.host + ':' + self.credentials.smtp.port,
-        errored = false; // tracks if we need to invoke the callback at onclose or not
+        errored = false, // tracks if we need to invoke the callback at onclose or not
+        str = this._appConfig.string;
 
     self._smtp.oncert = function(pemEncodedCert) {
         if (!self.credentials.smtp.ca) {
@@ -266,7 +268,7 @@ ConnectionDoctor.prototype._checkSmtp = function(callback) {
     self._smtp.onerror = function(error) {
         if (error) {
             errored = true;
-            callback(createError(AUTH_REJECTED, this._appConfig.string.connDocAuthRejected.replace('{0}', host), error));
+            callback(createError(AUTH_REJECTED, str.connDocAuthRejected.replace('{0}', host), error));
         }
     };
 

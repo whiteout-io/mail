@@ -3,17 +3,14 @@
 var StatusDisplayCtrl = function($scope, statusDisplay) {
 
     // set the show functions
-    statusDisplay.showStatus = updateStatus;
-    statusDisplay.showSearching = setSearching;
-
-    function updateStatus(lbl, time) {
+    statusDisplay.showStatus = function(lbl, time) {
         $scope.lastUpdateLbl = lbl;
         $scope.lastUpdate = (time) ? time : '';
-    }
+    };
 
-    function setSearching(state) {
+    statusDisplay.showSearching = function(state) {
         $scope.searching = state;
-    }
+    };
 
 };
 

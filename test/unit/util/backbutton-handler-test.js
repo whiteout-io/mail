@@ -1,6 +1,6 @@
 'use strict';
 
-var btnHandler = require('../../src/js/util/backbutton-handler');
+var btnHandler = require('../../../src/js/util/backbutton-handler');
 
 describe('Backbutton Handler', function() {
     chai.config.includeStack = true;
