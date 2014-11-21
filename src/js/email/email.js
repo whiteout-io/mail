@@ -56,8 +56,7 @@ function Email(keychain, pgp, accountStore, pgpbuilder, mailreader, dialog) {
     this._devicestorage = accountStore;
     this._pgpbuilder = pgpbuilder;
     this._mailreader = mailreader;
-
-    this.onError = dialog.error.bind(dialog);
+    this._dialog = dialog;
 }
 
 
@@ -1263,7 +1262,7 @@ Email.prototype._onSyncUpdate = function(options) {
             folder: folder,
             firstUid: Math.min.apply(null, options.list),
             lastUid: Math.max.apply(null, options.list)
-        }, self.onError.bind(self));
+        }, self._dialog.error);
     } else if (options.type === SYNC_TYPE_DELETED) {
         // messages have been deleted, remove from local storage and memory
         options.list.forEach(function(uid) {
@@ -1279,7 +1278,7 @@ Email.prototype._onSyncUpdate = function(options) {
                 folder: folder,
                 message: message,
                 localOnly: true
-            }, self.onError.bind(self));
+            }, self._dialog.error);
         });
     } else if (options.type === SYNC_TYPE_MSGS) {
         // NB! several possible reasons why this could be called.
@@ -1306,7 +1305,7 @@ Email.prototype._onSyncUpdate = function(options) {
                 folder: folder,
                 message: message,
                 localOnly: true
-            }, self.onError.bind(self));
+            }, self._dialog.error);
         });
     }
 };

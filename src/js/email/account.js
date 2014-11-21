@@ -9,17 +9,16 @@ var axe = require('axe-logger'),
     PgpMailer = require('pgpmailer'),
     ImapClient = require('imap-client');
 
-function Account(appConfig, auth, admin, mailConfig, keychain, pgpbuilder, email, outbox, accountStore, updateHandler) {
+function Account(appConfig, auth, accountStore, email, outbox, keychain, updateHandler, pgpbuilder, dialog) {
     this._appConfig = appConfig;
     this._auth = auth;
-    this._admin = admin;
-    this._mailConfig = mailConfig;
-    this._keychain = keychain;
-    this._emailDao = email;
-    this._pgpbuilder = pgpbuilder;
-    this._outbox = outbox;
     this._accountStore = accountStore;
+    this._emailDao = email;
+    this._outbox = outbox;
+    this._keychain = keychain;
     this._updateHandler = updateHandler;
+    this._pgpbuilder = pgpbuilder;
+    this._dialog = dialog;
     this._accounts = []; // init accounts list
 }
 
@@ -236,9 +235,3 @@ Account.prototype.logout = function() {
         });
     });
 };
-
-/**
- * Create a new whiteout account. This creates a new email data access object instance for that account and logs in via IMAP.
- * @param  {String} options.emailAddress	The account's email address
- */
-Account.prototype.create = function() {};

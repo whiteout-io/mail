@@ -177,6 +177,7 @@ module.exports = function(grunt) {
                         'test/unit/service/invitation-dao-test.js',
                         'test/unit/email/outbox-bo-test.js',
                         'test/unit/email/email-dao-test.js',
+                        'test/unit/email/account-test.js',
                         /*'test/unit/dialog-ctrl-test.js',
                         'test/unit/add-account-ctrl-test.js',
                         'test/unit/create-account-ctrl-test.js',

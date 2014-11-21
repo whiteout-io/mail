@@ -1899,64 +1899,55 @@ describe('Email DAO unit tests', function() {
                 setFlagsStub = sinon.stub(dao, 'setFlags');
             });
 
-            it('should get new message', function(done) {
+            it('should get new message', function() {
                 fetchMessagesStub.withArgs({
                     folder: inboxFolder,
                     firstUid: 1,
                     lastUid: 3
-                }).yieldsAsync();
-
-                dao.onError = function(err) {
-                    expect(err).to.not.exist;
-                    expect(fetchMessagesStub.calledOnce).to.be.true;
-                    done();
-                };
+                }).yields();
 
                 dao._onSyncUpdate({
                     type: 'new',
                     path: inboxFolder.path,
                     list: [1, 3]
                 });
+
+                expect(dialogStub.error.calledOnce).to.be.true;
+                expect(fetchMessagesStub.calledOnce).to.be.true;
             });
 
-            it('should delete message', function(done) {
+            it('should delete message', function() {
                 deleteMessagesStub.withArgs({
                     folder: inboxFolder,
                     message: msgs[0],
                     localOnly: true
-                }).yieldsAsync();
-
-                dao.onError = function(err) {
-                    expect(err).to.not.exist;
-                    expect(deleteMessagesStub.calledOnce).to.be.true;
-                    done();
-                };
+                }).yields();
 
                 dao._onSyncUpdate({
                     type: 'deleted',
                     path: inboxFolder.path,
                     list: [5]
                 });
+
+                expect(dialogStub.error.calledOnce).to.be.true;
+                expect(deleteMessagesStub.calledOnce).to.be.true;
             });
 
-            it('should fetch flags', function(done) {
+            it('should fetch flags', function() {
                 setFlagsStub.withArgs({
                     folder: inboxFolder,
                     message: msgs[0],
                     localOnly: true
-                }).yieldsAsync();
-
-                dao.onError = function(err) {
-                    expect(err).to.not.exist;
-                    expect(setFlagsStub.calledOnce).to.be.true;
-                    done();
-                };
+                }).yields();
 
                 dao._onSyncUpdate({
                     type: 'messages',
                     path: inboxFolder.path,
                     list: msgs
                 });
+
+                expect(dialogStub.error.calledOnce).to.be.true;
+                expect(setFlagsStub.calledOnce).to.be.true;
             });
         });
     });
