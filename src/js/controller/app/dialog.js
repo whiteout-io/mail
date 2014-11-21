@@ -1,41 +1,27 @@
 'use strict';
 
-var axe = require('axe-logger');
-
-var DialogCtrl = function($scope, $q, dialog) {
-
-    var callback;
+var DialogCtrl = function($scope, dialog) {
 
     //
     // Set dialog disply functions
     //
 
     dialog.displayInfo = function(options) {
-        return $q(function(resolve) {
-            setOptions(options);
-            resolve();
-        });
+        setOptions(options);
     };
 
     dialog.displayError = function(options) {
-        return $q(function(resolve) {
-            if (options) {
-                axe.error((options.errMsg || options.message) + (options.stack ? ('\n' + options.stack) : ''));
+        if (!options) {
+            return;
+        }
 
-                setOptions(options);
-                $scope.title = options.title || 'Error';
-                $scope.showBugReporter = (typeof options.showBugReporter !== 'undefined' ? options.showBugReporter : !options.title); // if title is set, presume it's not an error by default
-            }
-
-            resolve();
-        });
+        setOptions(options);
+        $scope.title = options.title || 'Error';
+        $scope.showBugReporter = (typeof options.showBugReporter !== 'undefined' ? options.showBugReporter : !options.title); // if title is set, presume it's not an error by default
     };
 
     dialog.displayConfirm = function(options) {
-        return $q(function(resolve) {
-            setOptions(options);
-            resolve();
-        });
+        setOptions(options);
     };
 
     function setOptions(options) {
@@ -46,8 +32,7 @@ var DialogCtrl = function($scope, $q, dialog) {
         $scope.positiveBtnStr = options.positiveBtnStr || 'Ok';
         $scope.negativeBtnStr = options.negativeBtnStr || 'Cancel';
         $scope.showNegativeBtn = options.showNegativeBtn || false;
-
-        callback = options.callback;
+        $scope.callback = options.callback;
     }
 
     //
@@ -57,10 +42,10 @@ var DialogCtrl = function($scope, $q, dialog) {
     $scope.confirm = function(ok) {
         $scope.open = false;
 
-        if (callback) {
-            callback(ok);
+        if ($scope.callback) {
+            $scope.callback(ok);
         }
-        callback = undefined;
+        $scope.callback = undefined;
     };
 };
 

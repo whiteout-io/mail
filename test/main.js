@@ -46,8 +46,19 @@ if (!Function.prototype.bind) {
     }
 })();
 
+//
+// Test setup
+//
+
 // set worker path for tests
 require('../src/js/app-config').config.workerPath = '../lib';
 
 var axe = require('axe-logger');
 axe.removeAppender(axe.defaultAppender);
+
+// include angular modules
+require('../src/js/app-config');
+require('../src/js/util');
+require('../src/js/crypto');
+require('../src/js/service');
+require('../src/js/email');
