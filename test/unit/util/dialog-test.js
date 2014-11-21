@@ -1,7 +1,7 @@
 'use strict';
 
 describe('Dialog Service unit test', function() {
-    var dialog,
+    var dialog, logErrorStub,
         opt = {
             foo: 'bar'
         };
@@ -9,12 +9,15 @@ describe('Dialog Service unit test', function() {
     beforeEach(function() {
         angular.module('dialog-test', ['woUtil']);
         angular.mock.module('dialog-test');
-        angular.mock.inject(function($injector) {
+        angular.mock.inject(function($injector, axe) {
+            logErrorStub = sinon.stub(axe, 'error');
             dialog = $injector.get('dialog');
         });
     });
 
-    afterEach(function() {});
+    afterEach(function() {
+        logErrorStub.restore();
+    });
 
     describe('info', function() {
         it('should work', inject(function($rootScope) {
@@ -46,6 +49,7 @@ describe('Dialog Service unit test', function() {
                 expect(result).to.not.exist;
             });
 
+            expect(logErrorStub.calledOnce).to.be.true;
             $rootScope.$apply();
             expect(displayErrorStub.withArgs(opt).calledOnce).to.be.true;
         }));
@@ -54,6 +58,7 @@ describe('Dialog Service unit test', function() {
                 expect(err.message).to.match(/displayError/);
             });
 
+            expect(logErrorStub.calledOnce).to.be.true;
             $rootScope.$apply();
         }));
     });
