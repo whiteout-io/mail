@@ -1,15 +1,12 @@
 'use strict';
 
-var mocks = angular.mock;
-require('../../src/js/service/newsletter');
-
 describe('Newsletter Service unit test', function() {
     var newsletter;
 
     beforeEach(function() {
         angular.module('newsletter-test', ['woServices']);
-        mocks.module('newsletter-test');
-        mocks.inject(function($injector) {
+        angular.mock.module('newsletter-test');
+        angular.mock.inject(function($injector) {
             newsletter = $injector.get('newsletter');
         });
     });

@@ -1,9 +1,9 @@
 'use strict';
 
-var Auth = require('../../src/js/bo/auth'),
-    OAuth = require('../../src/js/util/oauth'),
-    PGP = require('../../src/js/crypto/pgp'),
-    DeviceStorageDAO = require('../../src/js/dao/devicestorage-dao');
+var Auth = require('../../../src/js/service/auth'),
+    OAuth = require('../../../src/js/service/oauth'),
+    PGP = require('../../../src/js/crypto/pgp'),
+    DeviceStorageDAO = require('../../../src/js/service/devicestorage');
 
 describe('Auth unit tests', function() {
     // Constancts

@@ -1,7 +1,7 @@
 'use strict';
 
-var LawnchairDAO = require('../../src/js/dao/lawnchair-dao'),
-    DeviceStorageDAO = require('../../src/js/dao/devicestorage-dao');
+var LawnchairDAO = require('../../../src/js/service/lawnchair'),
+    DeviceStorageDAO = require('../../../src/js/service/devicestorage');
 
 var testUser = 'test@example.com';
 
@@ -17,14 +17,9 @@ describe('Device Storage DAO unit tests', function() {
     afterEach(function() {});
 
     describe('init', function() {
-        it('should work', function(done) {
-            lawnchairDaoStub.init.yields();
-
-            storageDao.init(testUser, function(err) {
-                expect(err).to.not.exist;
-                expect(lawnchairDaoStub.init.calledOnce).to.be.true;
-                done();
-            });
+        it('should work', function() {
+            storageDao.init(testUser);
+            expect(lawnchairDaoStub.init.calledOnce).to.be.true;
         });
     });
 

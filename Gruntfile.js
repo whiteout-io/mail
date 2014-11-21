@@ -155,23 +155,29 @@ module.exports = function(grunt) {
             unitTest: {
                 files: {
                     'test/unit/index.browserified.js': [
-                        'test/unit/oauth-test.js',
-                        'test/unit/auth-test.js',
-                        'test/unit/email-dao-test.js',
-                        'test/unit/app-controller-test.js',
-                        'test/unit/pgp-test.js',
-                        'test/unit/crypto-test.js',
-                        'test/unit/backbutton-handler-test.js',
-                        'test/unit/rest-dao-test.js',
-                        'test/unit/admin-dao-test.js',
-                        'test/unit/publickey-dao-test.js',
-                        'test/unit/privatekey-dao-test.js',
-                        'test/unit/lawnchair-dao-test.js',
-                        'test/unit/keychain-dao-test.js',
-                        'test/unit/devicestorage-dao-test.js',
-                        'test/unit/newsletter-service-test.js',
-                        'test/unit/mail-config-service-test.js',
-                        'test/unit/dialog-ctrl-test.js',
+                        'test/main.js',
+                        'test/unit/util/dialog-test.js',
+                        'test/unit/util/connection-doctor-test.js',
+                        'test/unit/util/update-handler-test.js',
+                        'test/unit/util/backbutton-handler-test.js',
+                        'test/unit/util/status-display-test.js',
+                        'test/unit/crypto/pgp-test.js',
+                        'test/unit/crypto/crypto-test.js',
+                        'test/unit/service/rest-dao-test.js',
+                        'test/unit/service/admin-dao-test.js',
+                        'test/unit/service/auth-test.js',
+                        'test/unit/service/oauth-test.js',
+                        'test/unit/service/publickey-dao-test.js',
+                        'test/unit/service/privatekey-dao-test.js',
+                        'test/unit/service/lawnchair-dao-test.js',
+                        'test/unit/service/keychain-dao-test.js',
+                        'test/unit/service/devicestorage-dao-test.js',
+                        'test/unit/service/newsletter-service-test.js',
+                        'test/unit/service/mail-config-service-test.js',
+                        'test/unit/service/invitation-dao-test.js',
+                        'test/unit/email/outbox-bo-test.js',
+                        'test/unit/email/email-dao-test.js',
+                        /*'test/unit/dialog-ctrl-test.js',
                         'test/unit/add-account-ctrl-test.js',
                         'test/unit/create-account-ctrl-test.js',
                         'test/unit/validate-phone-ctrl-test.js',
@@ -189,12 +195,7 @@ module.exports = function(grunt) {
                         'test/unit/navigation-ctrl-test.js',
                         'test/unit/mail-list-ctrl-test.js',
                         'test/unit/write-ctrl-test.js',
-                        'test/unit/action-bar-ctrl-test.js',
-                        'test/unit/outbox-bo-test.js',
-                        'test/unit/invitation-dao-test.js',
-                        'test/unit/update-handler-test.js',
-                        'test/unit/connection-doctor-test.js',
-                        'test/main.js'
+                        'test/unit/action-bar-ctrl-test.js',*/
                     ]
                 },
                 options: browserifyOpt
@@ -202,8 +203,8 @@ module.exports = function(grunt) {
             integrationTest: {
                 files: {
                     'test/integration/index.browserified.js': [
-                        'test/integration/email-dao-test.js',
-                        'test/main.js'
+                        'test/main.js',
+                        /*'test/integration/email-dao-test.js'*/
                     ]
                 },
                 options: browserifyOpt
@@ -446,11 +447,11 @@ module.exports = function(grunt) {
                 tasks: ['dist-js-app']
             },
             jsUnitTest: {
-                files: ['test/unit/*-test.js'],
+                files: ['test/unit/**/*-test.js', 'test/*.js'],
                 tasks: ['dist-js-unitTest']
             },
             jsIntegrationTest: {
-                files: ['test/integration/*-test.js'],
+                files: ['test/integration/*-test.js', 'test/*.js'],
                 tasks: ['dist-js-integrationTest']
             },
             icons: {

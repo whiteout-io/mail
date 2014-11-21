@@ -1,7 +1,7 @@
 'use strict';
 
-var OAuth = require('../../src/js/util/oauth'),
-    RestDAO = require('../../src/js/dao/rest-dao');
+var OAuth = require('../../../src/js/service/oauth'),
+    RestDAO = require('../../../src/js/service/rest');
 
 describe('OAuth unit tests', function() {
     var oauth, googleApiStub, identityStub, getPlatformInfoStub, removeCachedStub,

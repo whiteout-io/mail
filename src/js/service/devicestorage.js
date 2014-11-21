@@ -6,6 +6,10 @@ ngModule.factory('deviceStorage', function(lawnchairDAO) {
 });
 module.exports = DeviceStorage;
 
+//
+// Export special device storage singletons
+//
+
 // expose an instance with the static dbName 'app-config' to store configuration data
 ngModule.factory('appConfigStore', function(deviceStorage) {
     deviceStorage.init('app-config');
@@ -15,6 +19,10 @@ ngModule.factory('appConfigStore', function(deviceStorage) {
 // expose a singleton instance of DeviceStorage called 'accountStore' to persist user data
 ngModule.service('accountStore', DeviceStorage);
 
+//
+// Implementation
+//
+
 /**
  * High level storage api that handles all persistence of a user's data on the device.
  */
@@ -22,6 +30,10 @@ function DeviceStorage(lawnchairDAO) {
     this._lawnchairDAO = lawnchairDAO;
 }
 
+/**
+ * Initialize the lawnchair database
+ * @param  {String}   dbName   The name of the database
+ */
 DeviceStorage.prototype.init = function(dbName) {
     this._lawnchairDAO.init(dbName);
 };

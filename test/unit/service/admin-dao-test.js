@@ -1,7 +1,8 @@
 'use strict';
 
-var RestDAO = require('../../src/js/dao/rest-dao'),
-    AdminDAO = require('../../src/js/dao/admin-dao');
+var RestDAO = require('../../../src/js/service/rest'),
+    AdminDAO = require('../../../src/js/service/admin'),
+    appConfig = require('../../../src/js/app-config');
 
 describe('Admin DAO unit tests', function() {
 
@@ -11,7 +12,7 @@ describe('Admin DAO unit tests', function() {
 
     beforeEach(function() {
         restDaoStub = sinon.createStubInstance(RestDAO);
-        adminDao = new AdminDAO(restDaoStub);
+        adminDao = new AdminDAO(restDaoStub, appConfig);
     });
 
     afterEach(function() {});

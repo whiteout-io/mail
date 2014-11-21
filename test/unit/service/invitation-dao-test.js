@@ -1,7 +1,8 @@
 'use strict';
 
-var RestDAO = require('../../src/js/dao/rest-dao'),
-    InvitationDAO = require('../../src/js/dao/invitation-dao');
+var RestDAO = require('../../../src/js/service/rest'),
+    InvitationDAO = require('../../../src/js/service/invitation'),
+    appConfig = require('../../../src/js/app-config');
 
 describe('Invitation DAO unit tests', function() {
     var restDaoStub, invitationDao,
@@ -11,7 +12,7 @@ describe('Invitation DAO unit tests', function() {
 
     beforeEach(function() {
         restDaoStub = sinon.createStubInstance(RestDAO);
-        invitationDao = new InvitationDAO(restDaoStub);
+        invitationDao = new InvitationDAO(restDaoStub, appConfig);
     });
 
     describe('initialization', function() {

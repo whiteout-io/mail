@@ -1,7 +1,7 @@
 'use strict';
 
-var Crypto = require('../../src/js/crypto/crypto'),
-    config = require('../../src/js/app-config').config,
+var Crypto = require('../../../src/js/crypto/crypto'),
+    config = require('../../../src/js/app-config').config,
     util = require('crypto-lib').util;
 
 describe('Crypto unit tests', function() {

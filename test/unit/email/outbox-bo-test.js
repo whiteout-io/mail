@@ -1,9 +1,9 @@
 'use strict';
 
-var OutboxBO = require('../../src/js/bo/outbox'),
-    KeychainDAO = require('../../src/js/dao/keychain-dao'),
-    EmailDAO = require('../../src/js/dao/email-dao'),
-    DeviceStorageDAO = require('../../src/js/dao/devicestorage-dao');
+var OutboxBO = require('../../../src/js/email/outbox'),
+    KeychainDAO = require('../../../src/js/service/keychain'),
+    EmailDAO = require('../../../src/js/email/email'),
+    DeviceStorageDAO = require('../../../src/js/service/devicestorage');
 
 describe('Outbox Business Object unit test', function() {
     var outbox, emailDaoStub, devicestorageStub, keychainStub,

@@ -1,6 +1,6 @@
 'use strict';
 
-var RestDAO = require('../../src/js/dao/rest-dao');
+var RestDAO = require('../../../src/js/service/rest');
 
 describe('Rest DAO unit tests', function() {
 
@@ -20,18 +20,12 @@ describe('Rest DAO unit tests', function() {
         xhrMock.restore();
     });
 
-    describe('contructor', function() {
-        it('should set default base uri', function() {
-            restDao = new RestDAO();
-            expect(restDao).to.exist;
-            expect(restDao._baseUri).to.exist;
-        });
-
-        it('should accept default base uri', function() {
+    describe('setBaseUri', function() {
+        it('should accept base uri', function() {
             var baseUri = 'http://custom.com';
-
-            restDao = new RestDAO(baseUri);
-            expect(restDao).to.exist;
+            restDao = new RestDAO();
+            expect(restDao._baseUri).to.not.exist;
+            restDao.setBaseUri(baseUri);
             expect(restDao._baseUri).to.equal(baseUri);
         });
     });

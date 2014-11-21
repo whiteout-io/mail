@@ -1,6 +1,6 @@
 'use strict';
 
-var PGP = require('../../src/js/crypto/pgp');
+var PGP = require('../../../src/js/crypto/pgp');
 
 describe('PGP Crypto Api unit tests', function() {
     this.timeout(20000);

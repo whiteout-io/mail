@@ -4,8 +4,7 @@ var ngModule = angular.module('woServices');
 ngModule.service('keychain', Keychain);
 module.exports = Keychain;
 
-var util = require('crypto-lib').util,
-    config = require('../app-config').config;
+var util = require('crypto-lib').util;
 
 var DB_PUBLICKEY = 'publickey',
     DB_PRIVATEKEY = 'privatekey',
@@ -327,7 +326,8 @@ Keychain.prototype.getDeviceName = function(callback) {
  * @param {Function} callback(error, deviceSecret:[base64 encoded string])
  */
 Keychain.prototype.getDeviceSecret = function(callback) {
-    var self = this;
+    var self = this,
+        config = self._appConfig.config;
 
     // generate random deviceSecret or get from storage
     self._lawnchairDAO.read(DB_DEVICE_SECRET, function(err, storedDevSecret) {
@@ -363,7 +363,8 @@ Keychain.prototype.getDeviceSecret = function(callback) {
  */
 Keychain.prototype.registerDevice = function(options, callback) {
     var self = this,
-        devName;
+        devName,
+        config = self._appConfig.config;
 
     // check if deviceName is already persisted in storage
     self.getDeviceName(function(err, deviceName) {
@@ -462,7 +463,8 @@ Keychain.prototype.registerDevice = function(options, callback) {
  */
 Keychain.prototype._authenticateToPrivateKeyServer = function(userId, callback) {
     var self = this,
-        sessionId;
+        sessionId,
+        config = self._appConfig.config;
 
     // request auth session key required for upload
     self._privateKeyDao.requestAuthSessionKey({
@@ -579,6 +581,7 @@ Keychain.prototype._authenticateToPrivateKeyServer = function(userId, callback) 
  */
 Keychain.prototype.uploadPrivateKey = function(options, callback) {
     var self = this,
+        config = self._appConfig.config,
         keySize = config.symKeySize,
         salt;
 
@@ -710,6 +713,7 @@ Keychain.prototype.decryptAndStorePrivateKeyLocally = function(options, callback
     var self = this,
         code = options.code,
         salt = options.salt,
+        config = self._appConfig.config,
         keySize = config.symKeySize;
 
     if (!options._id || !options.userId || !options.code || !options.salt || !options.encryptedPrivateKey || !options.iv) {

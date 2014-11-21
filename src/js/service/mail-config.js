@@ -20,7 +20,7 @@ MailConfig.prototype.get = function(emailAddress) {
         });
     }
 
-    var url = this._appConfig.settingsUrl + emailAddress.split('@')[1];
+    var url = this._appConfig.config.settingsUrl + emailAddress.split('@')[1];
     return this._http.get(url).then(function(res) {
         return res.data;
     });

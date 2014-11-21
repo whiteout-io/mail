@@ -4,11 +4,12 @@ var mailreader = require('mailreader'),
     ImapClient = require('imap-client'),
     PgpMailer = require('pgpmailer'),
     PgpBuilder = require('pgpbuilder'),
-    cfg = require('../../src/js/app-config').config,
-    EmailDAO = require('../../src/js/dao/email-dao'),
-    KeychainDAO = require('../../src/js/dao/keychain-dao'),
-    PGP = require('../../src/js/crypto/pgp'),
-    DeviceStorageDAO = require('../../src/js/dao/devicestorage-dao');
+    cfg = require('../../../src/js/app-config').config,
+    EmailDAO = require('../../../src/js/email/email'),
+    KeychainDAO = require('../../../src/js/service/keychain'),
+    PGP = require('../../../src/js/crypto/pgp'),
+    DeviceStorageDAO = require('../../../src/js/service/devicestorage'),
+    Dialog = require('../../../src/js/util/dialog');
 
 
 describe('Email DAO unit tests', function() {
@@ -19,7 +20,7 @@ describe('Email DAO unit tests', function() {
     var dao;
 
     // mocks
-    var keychainStub, imapClientStub, pgpMailerStub, pgpBuilderStub, pgpStub, devicestorageStub, parseStub;
+    var keychainStub, imapClientStub, pgpMailerStub, pgpBuilderStub, pgpStub, devicestorageStub, parseStub, dialogStub;
 
     // config
     var emailAddress, passphrase, asymKeySize, account;
@@ -116,11 +117,12 @@ describe('Email DAO unit tests', function() {
         pgpStub = sinon.createStubInstance(PGP);
         parseStub = sinon.stub(mailreader, 'parse');
         devicestorageStub = sinon.createStubInstance(DeviceStorageDAO);
+        dialogStub = sinon.createStubInstance(Dialog);
 
         //
         // setup the SUT
         //
-        dao = new EmailDAO(keychainStub, pgpStub, devicestorageStub, pgpBuilderStub, mailreader);
+        dao = new EmailDAO(keychainStub, pgpStub, devicestorageStub, pgpBuilderStub, mailreader, dialogStub);
         dao._account = account;
         dao._pgpMailer = pgpMailerStub;
         dao._imapClient = imapClientStub;

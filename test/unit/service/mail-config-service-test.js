@@ -1,16 +1,14 @@
 'use strict';
 
-var mocks = angular.mock,
-    cfg = require('../../src/js/app-config').config;
-require('../../src/js/service/mail-config');
+var cfg = require('../../../src/js/app-config').config;
 
 describe('Mail Config Service unit test', function() {
     var mailConfig, httpBackend;
 
     beforeEach(function() {
         angular.module('mail-config-test', ['woServices']);
-        mocks.module('mail-config-test');
-        mocks.inject(function($injector, $httpBackend) {
+        angular.mock.module('mail-config-test');
+        angular.mock.inject(function($injector, $httpBackend) {
             httpBackend = $httpBackend;
             mailConfig = $injector.get('mailConfig');
         });

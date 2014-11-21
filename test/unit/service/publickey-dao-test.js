@@ -1,7 +1,8 @@
 'use strict';
 
-var RestDAO = require('../../src/js/dao/rest-dao'),
-    PublicKeyDAO = require('../../src/js/dao/publickey-dao');
+var RestDAO = require('../../../src/js/service/rest'),
+    PublicKeyDAO = require('../../../src/js/service/publickey'),
+    appConfig = require('../../../src/js/app-config');
 
 describe('Public Key DAO unit tests', function() {
 
@@ -9,7 +10,7 @@ describe('Public Key DAO unit tests', function() {
 
     beforeEach(function() {
         restDaoStub = sinon.createStubInstance(RestDAO);
-        pubkeyDao = new PublicKeyDAO(restDaoStub);
+        pubkeyDao = new PublicKeyDAO(restDaoStub, appConfig);
     });
 
     afterEach(function() {});

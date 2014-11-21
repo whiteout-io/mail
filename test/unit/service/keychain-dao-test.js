@@ -1,17 +1,19 @@
 'use strict';
 
-var LawnchairDAO = require('../../src/js/dao/lawnchair-dao'),
-    PublicKeyDAO = require('../../src/js/dao/publickey-dao'),
-    KeychainDAO = require('../../src/js/dao/keychain-dao'),
-    PrivateKeyDAO = require('../../src/js/dao/privatekey-dao'),
-    Crypto = require('../../src/js/crypto/crypto'),
-    PGP = require('../../src/js/crypto/pgp');
+var LawnchairDAO = require('../../../src/js/service/lawnchair'),
+    PublicKeyDAO = require('../../../src/js/service/publickey'),
+    KeychainDAO = require('../../../src/js/service/keychain'),
+    PrivateKeyDAO = require('../../../src/js/service/privatekey'),
+    Crypto = require('../../../src/js/crypto/crypto'),
+    PGP = require('../../../src/js/crypto/pgp'),
+    Dialog = require('../../../src/js/util/dialog'),
+    appConfig = require('../../../src/js/app-config');
 
 var testUser = 'test@example.com';
 
 describe('Keychain DAO unit tests', function() {
 
-    var keychainDao, lawnchairDaoStub, pubkeyDaoStub, privkeyDaoStub, cryptoStub, pgpStub;
+    var keychainDao, lawnchairDaoStub, pubkeyDaoStub, privkeyDaoStub, cryptoStub, pgpStub, dialogStub;
 
     beforeEach(function() {
         lawnchairDaoStub = sinon.createStubInstance(LawnchairDAO);
@@ -19,10 +21,24 @@ describe('Keychain DAO unit tests', function() {
         privkeyDaoStub = sinon.createStubInstance(PrivateKeyDAO);
         cryptoStub = sinon.createStubInstance(Crypto);
         pgpStub = sinon.createStubInstance(PGP);
-        keychainDao = new KeychainDAO(lawnchairDaoStub, pubkeyDaoStub, privkeyDaoStub, cryptoStub, pgpStub);
+        dialogStub = sinon.createStubInstance(Dialog);
+        keychainDao = new KeychainDAO(lawnchairDaoStub, pubkeyDaoStub, privkeyDaoStub, cryptoStub, pgpStub, dialogStub, appConfig);
     });
 
     afterEach(function() {});
+
+    describe('requestPermissionForKeyUpdate', function() {
+        it('should work', function() {
+            var opt = {
+                newKey: {},
+                userId: 'asdf@example.com'
+            };
+
+            keychainDao.requestPermissionForKeyUpdate(opt, function() {
+                expect(dialogStub.confirm.calledOnce).to.be.true;
+            });
+        });
+    });
 
     describe('verify public key', function() {
         it('should verify public key', function(done) {
