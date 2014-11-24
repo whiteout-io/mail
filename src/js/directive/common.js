@@ -173,4 +173,129 @@ ngModule.directive('woClickFileInput', function() {
     };
 });
 
+ngModule.directive('woInputCode', function() {
+    var BLOCK_SIZE = 4;
+    var NUM_BLOCKS = 6;
+    var BLOCK_DIVIDER = '-';
+
+    // helpers
+
+    function getBlockIndex(code, pos) {
+        return code.substr(0, pos).replace(new RegExp('[^' + BLOCK_DIVIDER + ']', 'g'), '').length;
+    }
+
+    function getBlockDimensions(code, i) {
+        var start = 0;
+        var end = code.length;
+        var found = 0;
+        for(var j = 0; j < code.length; j++) {
+            if(code[j] === BLOCK_DIVIDER) {
+                found++;
+                if(found === i) {
+                    start = j + 1;
+                }
+                if(found === i + 1) {
+                    end = j - 1;
+                }
+            }
+        }
+
+        return {
+            start: start,
+            end: end
+        };
+    }
+
+    function getBlock(code, i) {
+        var dims = getBlockDimensions(code, i);
+        return code.substring(dims.start, dims.end + 1);
+    }
+
+    function setBlock(code, i, val) {
+        var dims = getBlockDimensions(code, i);
+        return code.substring(0, dims.start) + val + code.substring(dims.end + 1);
+    }
+
+    return {
+        restrict: 'A',
+        require: 'ngModel',
+        link: function(scope, elm, attrs, ngModelCtrl) {
+            function format(val) {
+                var str = '';
+                for(var i = 0; i < val.length; i++) {
+                    if(i > 0 && i % BLOCK_SIZE === 0) {
+                        str += BLOCK_DIVIDER;
+                    }
+                    str += val[i];
+                }
+
+                return str;
+            }
+
+            function parse(val) {
+                var parsed = val.replace(new RegExp(BLOCK_DIVIDER, 'g'), '').trim();
+                return parsed;
+            }
+
+            ngModelCtrl.$parsers.push(parse);
+            ngModelCtrl.$formatters.push(format);
+
+            var maxlength = NUM_BLOCKS * (BLOCK_SIZE + 1) - 1;
+
+            elm.on('input', function() {
+                var start = this.selectionStart;
+                var end = this.selectionEnd;
+                var val = this.value;
+
+                var blockIndex = getBlockIndex(val, start);
+                var blockDims = getBlockDimensions(val, blockIndex);
+                var block = getBlock(val, blockIndex);
+
+                // add new block to the end
+                if(val.length < maxlength && start === val.length && block.length > BLOCK_SIZE) {
+                    val = setBlock(val, blockIndex, block.substr(0, BLOCK_SIZE) + BLOCK_DIVIDER + block.substr(BLOCK_SIZE));
+                    start = val.length;
+                    end = val.length;
+                }
+                // maxsize in last block
+                else if(start === val.length && block.length > BLOCK_SIZE) {
+                    val = setBlock(val, blockIndex, block.substr(0, BLOCK_SIZE));
+                    start = val.length;
+                    end = val.length;
+                }
+                // overwrite next char if block is full
+                else if(block.length > BLOCK_SIZE && start <= blockDims.end) {
+                    val = val.substring(0, start) + val.substring(start + 1);
+                }
+                // jump to next block if cursor is at the end of the block and block is full
+                else if(block.length > BLOCK_SIZE && start === blockDims.end + 1) {
+                    var overflow = block.substr(BLOCK_SIZE);
+                    if(overflow.length > BLOCK_SIZE) {
+                        overflow = overflow.substr(0, BLOCK_SIZE);
+                    }
+                    val = setBlock(val, blockIndex, block.substr(0, BLOCK_SIZE));
+
+                    var nextBlock = getBlock(val, blockIndex + 1);
+                    val = setBlock(val, blockIndex + 1, (overflow + nextBlock).substr(0, BLOCK_SIZE));
+
+                    start++;
+                    end++;
+                }
+
+                ngModelCtrl.$setViewValue(val);
+                ngModelCtrl.$render();
+
+                this.setSelectionRange(start, end);
+            });
+
+            elm.on('click', function() {
+                var blockIndex = getBlockIndex(this.value, this.selectionStart);
+                var dims = getBlockDimensions(this.value, blockIndex);
+
+                this.setSelectionRange(dims.start, dims.end + 1);
+            });
+        }
+    };
+});
+
 module.exports = ngModule;

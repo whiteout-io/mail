@@ -43,6 +43,7 @@
           <p class="form__error-message" ng-show="errMsg">{{errMsg}}</p>
 
           <div class="form__row">
+            <!-- TODO utilize woInputCode -->
             <div class="input-code">
               <input type="text" class="input-text" size="4" maxlength="4" ng-model="code0" wo-focus-me="step === 2" focus-next required ng-paste="handlePaste($event)"> -
               <input type="text" class="input-text" size="4" maxlength="4" ng-model="code1" focus-next required> -
@@ -51,6 +52,7 @@
               <input type="text" class="input-text" size="4" maxlength="4" ng-model="code4" focus-next required> -
               <input type="text" class="input-text" size="4" maxlength="4" ng-model="code5" required>
             </div>
+            <input type="text" class="input-text" ng-model="code" wo-focus-me="step === 2" wo-input-code required>
           </div>
           <div class="spinner-block" ng-show="busy">
             <span class="spinner spinner--big"></span>
