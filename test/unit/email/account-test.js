@@ -11,6 +11,7 @@ var Account = require('../../../src/js/email/account'),
 
 describe('Account Service unit test', function() {
     var account, authStub, outboxStub, emailStub, devicestorageStub, keychainStub, updateHandlerStub, pgpbuilderStub,
+        realname = 'John Doe',
         dummyUser = 'spiderpig@springfield.com';
 
     chai.config.includeStack = true;
@@ -47,6 +48,167 @@ describe('Account Service unit test', function() {
             }];
             account._accounts = testAccounts;
             expect(account.list()).to.deep.equal(testAccounts);
+        });
+    });
+
+    describe('init', function() {
+        it('should fail for invalid email address', function() {
+            account.init({
+                emailAddress: dummyUser.replace('@'),
+                realname: realname
+            }, onInit);
+
+            function onInit(err, keys) {
+                expect(err).to.exist;
+                expect(keys).to.not.exist;
+            }
+        });
+
+        it('should fail for _accountStore.init', function() {
+            devicestorageStub.init.throws(new Error('asdf'));
+
+            account.init({
+                emailAddress: dummyUser,
+                realname: realname
+            }, onInit);
+
+            function onInit(err, keys) {
+                expect(err.message).to.match(/asdf/);
+                expect(keys).to.not.exist;
+            }
+        });
+
+        it('should fail for _updateHandler.update', function() {
+            updateHandlerStub.update.yields(new Error('asdf'));
+
+            account.init({
+                emailAddress: dummyUser,
+                realname: realname
+            }, onInit);
+
+            function onInit(err, keys) {
+                expect(err.message).to.match(/Updating/);
+                expect(keys).to.not.exist;
+            }
+        });
+
+        it('should fail for _keychain.getUserKeyPair', function() {
+            updateHandlerStub.update.yields();
+            keychainStub.getUserKeyPair.yields(new Error('asdf'));
+
+            account.init({
+                emailAddress: dummyUser,
+                realname: realname
+            }, onInit);
+
+            function onInit(err, keys) {
+                expect(err.message).to.match(/asdf/);
+                expect(keys).to.not.exist;
+            }
+        });
+
+        it('should fail for _keychain.refreshKeyForUserId', function() {
+            var storedKeys = {
+                publicKey: 'publicKey'
+            };
+
+            updateHandlerStub.update.yields();
+            keychainStub.getUserKeyPair.yields(null, storedKeys);
+            keychainStub.refreshKeyForUserId.yields(new Error('asdf'));
+
+            account.init({
+                emailAddress: dummyUser,
+                realname: realname
+            }, onInit);
+
+            function onInit(err, keys) {
+                expect(err.message).to.match(/asdf/);
+                expect(keys).to.not.exist;
+            }
+        });
+
+        it('should fail for _emailDao.init after _keychain.refreshKeyForUserId', function() {
+            var storedKeys = {
+                publicKey: 'publicKey'
+            };
+
+            updateHandlerStub.update.yields();
+            keychainStub.getUserKeyPair.yields(null, storedKeys);
+            keychainStub.refreshKeyForUserId.yields(null, storedKeys);
+            emailStub.init.yields(new Error('asdf'));
+
+            account.init({
+                emailAddress: dummyUser,
+                realname: realname
+            }, onInit);
+
+            function onInit(err, keys) {
+                expect(err.message).to.match(/asdf/);
+                expect(keys).to.not.exist;
+            }
+        });
+
+        it('should fail for _emailDao.init', function() {
+            var storedKeys = {
+                publicKey: 'publicKey',
+                privateKey: 'privateKey'
+            };
+
+            updateHandlerStub.update.yields();
+            keychainStub.getUserKeyPair.yields(null, storedKeys);
+            emailStub.init.yields(new Error('asdf'));
+
+            account.init({
+                emailAddress: dummyUser,
+                realname: realname
+            }, onInit);
+
+            function onInit(err, keys) {
+                expect(err.message).to.match(/asdf/);
+                expect(keys).to.not.exist;
+            }
+        });
+
+        it('should work after _keychain.refreshKeyForUserId', function() {
+            var storedKeys = {
+                publicKey: 'publicKey'
+            };
+
+            updateHandlerStub.update.yields();
+            keychainStub.getUserKeyPair.yields(null, storedKeys);
+            keychainStub.refreshKeyForUserId.yields(null, 'publicKey');
+            emailStub.init.yields();
+
+            account.init({
+                emailAddress: dummyUser,
+                realname: realname
+            }, onInit);
+
+            function onInit(err, keys) {
+                expect(err).to.not.exist;
+                expect(keys).to.deep.equal(storedKeys);
+            }
+        });
+
+        it('should work', function() {
+            var storedKeys = {
+                publicKey: 'publicKey',
+                privateKey: 'privateKey'
+            };
+
+            updateHandlerStub.update.yields();
+            keychainStub.getUserKeyPair.yields(null, storedKeys);
+            emailStub.init.yields();
+
+            account.init({
+                emailAddress: dummyUser,
+                realname: realname
+            }, onInit);
+
+            function onInit(err, keys) {
+                expect(err).to.not.exist;
+                expect(keys).to.equal(storedKeys);
+            }
         });
     });
 
