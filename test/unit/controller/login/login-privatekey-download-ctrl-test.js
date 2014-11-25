@@ -1,55 +1,43 @@
 'use strict';
 
-var mocks = angular.mock,
-    Auth = require('../../src/js/bo/auth'),
-    LoginPrivateKeyDownloadCtrl = require('../../src/js/controller/login-privatekey-download'),
-    EmailDAO = require('../../src/js/dao/email-dao'),
-    appController = require('../../src/js/app-controller'),
-    KeychainDAO = require('../../src/js/dao/keychain-dao');
+var Auth = require('../../../../src/js/service/auth'),
+    LoginPrivateKeyDownloadCtrl = require('../../../../src/js/controller/login/login-privatekey-download'),
+    Email = require('../../../../src/js/email/email'),
+    Keychain = require('../../../../src/js/service/keychain');
 
 describe('Login Private Key Download Controller unit test', function() {
     var scope, location, ctrl,
-        origEmailDao, emailDaoMock,
-        origAuth, authMock,
-        origKeychain, keychainMock,
+        emailDaoMock, authMock, keychainMock,
         emailAddress = 'fred@foo.com';
 
     beforeEach(function(done) {
-        // remember original module to restore later, then replace it
-        origEmailDao = appController._emailDao;
-        origKeychain = appController._keychain;
-        origAuth = appController._auth;
+        emailDaoMock = sinon.createStubInstance(Email);
+        keychainMock = sinon.createStubInstance(Keychain);
+        authMock = sinon.createStubInstance(Auth);
 
-        appController._emailDao = emailDaoMock = sinon.createStubInstance(EmailDAO);
-        appController._keychain = keychainMock = sinon.createStubInstance(KeychainDAO);
-        appController._auth = authMock = sinon.createStubInstance(Auth);
+        authMock.emailAddress = emailAddress;
 
-        emailDaoMock._account = {
-            emailAddress: emailAddress
-        };
-
-        angular.module('login-privatekey-download-test', []);
-        mocks.module('login-privatekey-download-test');
-        mocks.inject(function($controller, $rootScope) {
+        angular.module('login-privatekey-download-test', ['woServices']);
+        angular.mock.module('login-privatekey-download-test');
+        angular.mock.inject(function($controller, $rootScope, $location) {
             scope = $rootScope.$new();
             scope.state = {};
             scope.tokenForm = {};
             scope.codeForm = {};
+            location = $location;
             ctrl = $controller(LoginPrivateKeyDownloadCtrl, {
                 $location: location,
                 $scope: scope,
-                $routeParams: {}
+                $routeParams: {},
+                auth: authMock,
+                email: emailDaoMock,
+                keychain: keychainMock
             });
             done();
         });
     });
 
-    afterEach(function() {
-        // restore the app controller module
-        appController._emailDao = origEmailDao;
-        appController._keychain = origKeychain;
-        appController._auth = origAuth;
-    });
+    afterEach(function() {});
 
     describe('initialization', function() {
         it('should work', function() {
@@ -208,20 +196,9 @@ describe('Login Private Key Download Controller unit test', function() {
     });
 
     describe('goTo', function() {
-        it('should work', function(done) {
-            mocks.inject(function($controller, $rootScope, $location) {
-                location = $location;
-                sinon.stub(location, 'path', function(path) {
-                    expect(path).to.equal('/desktop');
-                    done();
-                });
-                scope = $rootScope.$new();
-                scope.state = {};
-                ctrl = $controller(LoginPrivateKeyDownloadCtrl, {
-                    $location: location,
-                    $scope: scope,
-                    $routeParams: {}
-                });
+        it('should work', function() {
+            sinon.stub(location, 'path', function(path) {
+                expect(path).to.equal('/desktop');
             });
 
             scope.goTo('/desktop');

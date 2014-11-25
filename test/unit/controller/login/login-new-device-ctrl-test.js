@@ -1,38 +1,32 @@
 'use strict';
 
-var mocks = angular.mock,
-    PGP = require('../../src/js/crypto/pgp'),
-    LoginNewDeviceCtrl = require('../../src/js/controller/login-new-device'),
-    KeychainDAO = require('../../src/js/dao/keychain-dao'),
-    EmailDAO = require('../../src/js/dao/email-dao'),
-    appController = require('../../src/js/app-controller');
+var PGP = require('../../../../src/js/crypto/pgp'),
+    LoginNewDeviceCtrl = require('../../../../src/js/controller/login/login-new-device'),
+    KeychainDAO = require('../../../../src/js/service/keychain'),
+    EmailDAO = require('../../../../src/js/email/email'),
+    Auth = require('../../../../src/js/service/auth');
 
 describe('Login (new device) Controller unit test', function() {
-    var scope, ctrl, origEmailDao, emailDaoMock, pgpMock,
+    var scope, ctrl, emailMock, pgpMock, authMock,
         emailAddress = 'fred@foo.com',
         passphrase = 'asd',
         keyId,
         keychainMock;
 
     beforeEach(function() {
-        // remember original module to restore later
-        origEmailDao = appController._emailDao;
-
-        emailDaoMock = sinon.createStubInstance(EmailDAO);
-        appController._emailDao = emailDaoMock;
+        emailMock = sinon.createStubInstance(EmailDAO);
+        authMock = sinon.createStubInstance(Auth);
 
         keyId = '9FEB47936E712926';
-        emailDaoMock._keychain = keychainMock = sinon.createStubInstance(KeychainDAO);
-        appController._pgp = pgpMock = sinon.createStubInstance(PGP);
+        keychainMock = sinon.createStubInstance(KeychainDAO);
+        pgpMock = sinon.createStubInstance(PGP);
         pgpMock.extractPublicKey.returns('publicKeyArmored');
 
-        emailDaoMock._account = {
-            emailAddress: emailAddress,
-        };
+        authMock.emailAddress = emailAddress;
 
-        angular.module('loginnewdevicetest', []);
-        mocks.module('loginnewdevicetest');
-        mocks.inject(function($rootScope, $controller) {
+        angular.module('loginnewdevicetest', ['woServices']);
+        angular.mock.module('loginnewdevicetest');
+        angular.mock.inject(function($rootScope, $controller) {
             scope = $rootScope.$new();
             scope.state = {
                 ui: {}
@@ -40,15 +34,16 @@ describe('Login (new device) Controller unit test', function() {
             scope.form = {};
             ctrl = $controller(LoginNewDeviceCtrl, {
                 $scope: scope,
-                $routeParams: {}
+                $routeParams: {},
+                email: emailMock,
+                auth: authMock,
+                pgp: pgpMock,
+                keychain: keychainMock
             });
         });
     });
 
-    afterEach(function() {
-        // restore the module
-        appController._emailDao = origEmailDao;
-    });
+    afterEach(function() {});
 
     describe('initial state', function() {
         it('should be well defined', function() {
@@ -73,12 +68,12 @@ describe('Login (new device) Controller unit test', function() {
                 _id: keyId,
                 publicKey: 'a'
             });
-            emailDaoMock.unlock.withArgs(sinon.match.any, passphrase).yields();
+            emailMock.unlock.withArgs(sinon.match.any, passphrase).yields();
             keychainMock.putUserKeyPair.yields();
 
             scope.confirmPassphrase();
 
-            expect(emailDaoMock.unlock.calledOnce).to.be.true;
+            expect(emailMock.unlock.calledOnce).to.be.true;
             expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
         });
 
@@ -95,12 +90,12 @@ describe('Login (new device) Controller unit test', function() {
             });
 
             keychainMock.getUserKeyPair.withArgs(emailAddress).yields();
-            emailDaoMock.unlock.withArgs(sinon.match.any, passphrase).yields();
+            emailMock.unlock.withArgs(sinon.match.any, passphrase).yields();
             keychainMock.putUserKeyPair.yields();
 
             scope.confirmPassphrase();
 
-            expect(emailDaoMock.unlock.calledOnce).to.be.true;
+            expect(emailMock.unlock.calledOnce).to.be.true;
             expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
         });
 
@@ -119,7 +114,7 @@ describe('Login (new device) Controller unit test', function() {
                 _id: keyId,
                 publicKey: 'a'
             });
-            emailDaoMock.unlock.yields();
+            emailMock.unlock.yields();
             keychainMock.putUserKeyPair.yields({
                 errMsg: 'yo mamma.'
             });
@@ -127,7 +122,7 @@ describe('Login (new device) Controller unit test', function() {
             scope.confirmPassphrase();
 
             expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
-            expect(emailDaoMock.unlock.calledOnce).to.be.true;
+            expect(emailMock.unlock.calledOnce).to.be.true;
             expect(keychainMock.putUserKeyPair.calledOnce).to.be.true;
             expect(scope.errMsg).to.equal('yo mamma.');
         });
@@ -147,7 +142,7 @@ describe('Login (new device) Controller unit test', function() {
                 _id: keyId,
                 publicKey: 'a'
             });
-            emailDaoMock.unlock.yields({
+            emailMock.unlock.yields({
                 errMsg: 'yo mamma.'
             });
 
@@ -155,7 +150,7 @@ describe('Login (new device) Controller unit test', function() {
 
             expect(scope.incorrect).to.be.true;
             expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
-            expect(emailDaoMock.unlock.calledOnce).to.be.true;
+            expect(emailMock.unlock.calledOnce).to.be.true;
             expect(scope.errMsg).to.equal('yo mamma.');
         });
 

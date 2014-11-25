@@ -1,236 +1,184 @@
 'use strict';
 
-var mocks = angular.mock,
-    LoginCtrl = require('../../src/js/controller/login'),
-    EmailDAO = require('../../src/js/dao/email-dao'),
-    Auth = require('../../src/js/bo/auth'),
-    appController = require('../../src/js/app-controller'),
-    KeychainDAO = require('../../src/js/dao/keychain-dao');
+var LoginCtrl = require('../../../../src/js/controller/login/login'),
+    Email = require('../../../../src/js/email/email'),
+    Account = require('../../../../src/js/email/account'),
+    Dialog = require('../../../../src/js/util/dialog'),
+    UpdateHandler = require('../../../../src/js/util/update/update-handler'),
+    Auth = require('../../../../src/js/service/auth'),
+    Keychain = require('../../../../src/js/service/keychain');
 
 describe('Login Controller unit test', function() {
     var scope, location, ctrl,
-        origEmailDao, emailDaoMock,
-        origKeychain, keychainMock,
-        origAuth, authStub,
-        emailAddress = 'fred@foo.com',
-        startAppStub,
-        checkForUpdateStub,
-        initStub;
+        emailMock, keychainMock, authMock, accountMock, dialogMock, updateHandlerMock, pathStub,
+        emailAddress = 'fred@foo.com';
 
-    describe('initialization', function() {
-        var hasChrome, hasIdentity;
+    beforeEach(function() {
+        emailMock = sinon.createStubInstance(Email);
+        accountMock = sinon.createStubInstance(Account);
+        authMock = sinon.createStubInstance(Auth);
+        keychainMock = sinon.createStubInstance(Keychain);
+        dialogMock = sinon.createStubInstance(Dialog);
+        updateHandlerMock = sinon.createStubInstance(UpdateHandler);
 
-        beforeEach(function() {
-            hasChrome = !!window.chrome;
-            hasIdentity = !!window.chrome.identity;
-            window.chrome = window.chrome || {};
-            window.chrome.identity = window.chrome.identity || {};
+        location = {
+            path: function() {}
+        };
+        pathStub = sinon.stub(location, 'path');
 
-            // remember original module to restore later, then replace it
-            origEmailDao = appController._emailDao;
-            origKeychain = appController._keychain;
-            origAuth = appController._auth;
-            appController._emailDao = emailDaoMock = sinon.createStubInstance(EmailDAO);
-            appController._keychain = keychainMock = sinon.createStubInstance(KeychainDAO);
-            appController._auth = authStub = sinon.createStubInstance(Auth);
-
-            startAppStub = sinon.stub(appController, 'start');
-            checkForUpdateStub = sinon.stub(appController, 'checkForUpdate');
-            initStub = sinon.stub(appController, 'init');
-        });
-
-        afterEach(function() {
-            // restore the browser
-            if (!hasIdentity) {
-                delete window.chrome.identity;
-            }
-
-            if (!hasChrome) {
-                delete window.chrome;
-            }
-
-            // restore the app controller module
-            appController._emailDao = origEmailDao;
-            appController._keychain = origKeychain;
-            appController._auth = origAuth;
-            appController.start.restore && appController.start.restore();
-            appController.checkForUpdate.restore && appController.checkForUpdate.restore();
-            appController.init.restore && appController.init.restore();
-            location.path.restore && location.path.restore();
-
-            startAppStub.restore();
-            checkForUpdateStub.restore();
-            initStub.restore();
-        });
-
-        it('should forward directly to desktop for empty passphrase', function(done) {
-            var testKeys = {
-                privateKey: 'a',
-                publicKey: 'b'
-            };
-
-            startAppStub.yields();
-            authStub.getEmailAddress.yields(null, {
-                emailAddress: emailAddress,
-                realname: 'asd'
-            });
-            authStub.storeCredentials.yields();
-            initStub.yields(null, testKeys);
-
-            emailDaoMock.unlock.withArgs({
-                keypair: testKeys,
-                passphrase: undefined
-            }).yields();
-
-            angular.module('logintest', []);
-            mocks.module('logintest');
-            mocks.inject(function($controller, $rootScope, $location) {
-                location = $location;
-                sinon.stub(location, 'path', function(path) {
-                    expect(path).to.equal('/desktop');
-                    expect(startAppStub.calledOnce).to.be.true;
-                    expect(checkForUpdateStub.calledOnce).to.be.true;
-                    expect(authStub.getEmailAddress.calledOnce).to.be.true;
-                    expect(authStub.storeCredentials.calledOnce).to.be.true;
-                    done();
-                });
-                scope = $rootScope.$new();
-                scope.state = {};
-                ctrl = $controller(LoginCtrl, {
-                    $location: location,
-                    $scope: scope
-                });
-            });
-        });
-
-        it('should forward to existing user login', function(done) {
-            var testKeys = {
-                privateKey: 'a',
-                publicKey: 'b'
-            };
-
-            startAppStub.yields();
-            authStub.getEmailAddress.yields(null, {
-                emailAddress: emailAddress,
-                realname: 'asd'
-            });
-            initStub.yields(null, testKeys);
-
-            emailDaoMock.unlock.withArgs({
-                keypair: testKeys,
-                passphrase: undefined
-            }).yields({});
-
-            angular.module('logintest', []);
-            mocks.module('logintest');
-            mocks.inject(function($controller, $rootScope, $location) {
-                location = $location;
-                sinon.stub(location, 'path', function(path) {
-                    expect(path).to.equal('/login-existing');
-                    expect(startAppStub.calledOnce).to.be.true;
-                    expect(checkForUpdateStub.calledOnce).to.be.true;
-                    expect(authStub.getEmailAddress.calledOnce).to.be.true;
-                    done();
-                });
-                scope = $rootScope.$new();
-                scope.state = {};
-                ctrl = $controller(LoginCtrl, {
-                    $location: location,
-                    $scope: scope
-                });
-            });
-        });
-
-        it('should forward to privatekey download login', function(done) {
-            startAppStub.yields();
-            authStub.getEmailAddress.yields(null, {
-                emailAddress: emailAddress,
-                realname: 'asd'
-            });
-            initStub.yields(null, {
-                publicKey: 'b'
-            });
-            keychainMock.requestPrivateKeyDownload.yields(null, {});
-
-            angular.module('logintest', []);
-            mocks.module('logintest');
-            mocks.inject(function($controller, $rootScope, $location) {
-                location = $location;
-                sinon.stub(location, 'path', function(path) {
-                    expect(path).to.equal('/login-privatekey-download');
-                    expect(startAppStub.calledOnce).to.be.true;
-                    expect(checkForUpdateStub.calledOnce).to.be.true;
-                    expect(authStub.getEmailAddress.calledOnce).to.be.true;
-                    expect(keychainMock.requestPrivateKeyDownload.calledOnce).to.be.true;
-                    done();
-                });
-                scope = $rootScope.$new();
-                scope.state = {};
-                ctrl = $controller(LoginCtrl, {
-                    $location: location,
-                    $scope: scope
-                });
-            });
-        });
-
-        it('should forward to new device login', function(done) {
-            startAppStub.yields();
-            authStub.getEmailAddress.yields(null, {
-                emailAddress: emailAddress,
-                realname: 'asd'
-            });
-            initStub.yields(null, {
-                publicKey: 'b'
-            });
-            keychainMock.requestPrivateKeyDownload.yields();
-
-            angular.module('logintest', []);
-            mocks.module('logintest');
-            mocks.inject(function($controller, $rootScope, $location) {
-                location = $location;
-                sinon.stub(location, 'path', function(path) {
-                    expect(path).to.equal('/login-new-device');
-                    expect(startAppStub.calledOnce).to.be.true;
-                    expect(checkForUpdateStub.calledOnce).to.be.true;
-                    expect(authStub.getEmailAddress.calledOnce).to.be.true;
-                    expect(keychainMock.requestPrivateKeyDownload.calledOnce).to.be.true;
-                    done();
-                });
-                scope = $rootScope.$new();
-                scope.state = {};
-                ctrl = $controller(LoginCtrl, {
-                    $location: location,
-                    $scope: scope
-                });
-            });
-        });
-
-        it('should forward to initial login', function(done) {
-            startAppStub.yields();
-            authStub.getEmailAddress.yields(null, {
-                emailAddress: emailAddress,
-                realname: 'asd'
-            });
-            initStub.yields();
-
-            angular.module('logintest', []);
-            mocks.module('logintest');
-            mocks.inject(function($controller, $rootScope, $location) {
-                location = $location;
-                sinon.stub(location, 'path', function(path) {
-                    expect(path).to.equal('/login-initial');
-                    expect(startAppStub.calledOnce).to.be.true;
-                    expect(checkForUpdateStub.calledOnce).to.be.true;
-                    expect(authStub.getEmailAddress.calledOnce).to.be.true;
-                    done();
-                });
-                scope = $rootScope.$new();
-                scope.state = {};
-                ctrl = $controller(LoginCtrl, {
-                    $location: location,
-                    $scope: scope
-                });
-            });
-        });
+        authMock.emailAddress = emailAddress;
     });
+
+    function createController() {
+        angular.module('login-test', ['woServices', 'woEmail', 'woUtil']);
+        angular.mock.module('login-test');
+        angular.mock.inject(function($rootScope, $controller) {
+            scope = $rootScope.$new();
+            scope.state = {};
+            scope.form = {};
+            ctrl = $controller(LoginCtrl, {
+                $scope: scope,
+                $location: location,
+                updateHandler: updateHandlerMock,
+                account: accountMock,
+                auth: authMock,
+                email: emailMock,
+                keychain: keychainMock,
+                dialog: dialogMock
+            });
+        });
+    }
+
+    afterEach(function() {});
+
+    it('should fail for auth.getEmailAddress', function() {
+        authMock.getEmailAddress.yields(new Error());
+
+        createController();
+
+        expect(updateHandlerMock.checkForUpdate.calledOnce).to.be.true;
+        expect(authMock.init.calledOnce).to.be.true;
+        expect(dialogMock.error.calledOnce).to.be.true;
+    });
+
+    it('should redirect to /add-account', function() {
+        authMock.getEmailAddress.yields(null, {});
+
+        createController();
+
+        expect(pathStub.withArgs('/add-account').calledOnce).to.be.true;
+    });
+
+    it('should fail for auth.init', function() {
+        authMock.getEmailAddress.yields(null, {
+            emailAddress: emailAddress
+        });
+        accountMock.init.yields(new Error());
+
+        createController();
+
+        expect(accountMock.init.calledOnce).to.be.true;
+        expect(dialogMock.error.calledOnce).to.be.true;
+    });
+
+    it('should redirect to /login-existing', function() {
+        authMock.getEmailAddress.yields(null, {
+            emailAddress: emailAddress
+        });
+        accountMock.init.yields(null, {
+            publicKey: 'publicKey',
+            privateKey: 'privateKey'
+        });
+        emailMock.unlock.yields(new Error());
+
+        createController();
+
+        expect(pathStub.withArgs('/login-existing').calledOnce).to.be.true;
+    });
+
+    it('should fail for auth.storeCredentials', function() {
+        authMock.getEmailAddress.yields(null, {
+            emailAddress: emailAddress
+        });
+        accountMock.init.yields(null, {
+            publicKey: 'publicKey',
+            privateKey: 'privateKey'
+        });
+        emailMock.unlock.yields();
+        authMock.storeCredentials.yields(new Error());
+
+        createController();
+
+        expect(dialogMock.error.calledOnce).to.be.true;
+    });
+
+    it('should redirect to /desktop', function() {
+        authMock.getEmailAddress.yields(null, {
+            emailAddress: emailAddress
+        });
+        accountMock.init.yields(null, {
+            publicKey: 'publicKey',
+            privateKey: 'privateKey'
+        });
+        emailMock.unlock.yields();
+        authMock.storeCredentials.yields();
+
+        createController();
+
+        expect(pathStub.withArgs('/desktop').calledOnce).to.be.true;
+    });
+
+    it('should fail for keychain.requestPrivateKeyDownload', function() {
+        authMock.getEmailAddress.yields(null, {
+            emailAddress: emailAddress
+        });
+        accountMock.init.yields(null, {
+            publicKey: 'publicKey'
+        });
+        keychainMock.requestPrivateKeyDownload.yields(new Error());
+
+        createController();
+
+        expect(dialogMock.error.calledOnce).to.be.true;
+    });
+
+    it('should redirect to /login-privatekey-download', function() {
+        authMock.getEmailAddress.yields(null, {
+            emailAddress: emailAddress
+        });
+        accountMock.init.yields(null, {
+            publicKey: 'publicKey'
+        });
+        keychainMock.requestPrivateKeyDownload.yields(null, true);
+
+        createController();
+
+        expect(pathStub.withArgs('/login-privatekey-download').calledOnce).to.be.true;
+    });
+
+    it('should redirect to /login-new-device', function() {
+        authMock.getEmailAddress.yields(null, {
+            emailAddress: emailAddress
+        });
+        accountMock.init.yields(null, {
+            publicKey: 'publicKey'
+        });
+        keychainMock.requestPrivateKeyDownload.yields();
+
+        createController();
+
+        expect(pathStub.withArgs('/login-new-device').calledOnce).to.be.true;
+    });
+
+    it('should redirect to /login-initial', function() {
+        authMock.getEmailAddress.yields(null, {
+            emailAddress: emailAddress
+        });
+        accountMock.init.yields(null, {});
+
+        createController();
+
+        expect(pathStub.withArgs('/login-initial').calledOnce).to.be.true;
+    });
+
 });

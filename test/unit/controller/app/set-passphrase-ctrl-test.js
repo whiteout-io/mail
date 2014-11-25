@@ -1,31 +1,31 @@
 'use strict';
 
-var mocks = angular.mock,
-    SetPassphraseCtrl = require('../../src/js/controller/set-passphrase'),
-    PGP = require('../../src/js/crypto/pgp'),
-    appController = require('../../src/js/app-controller'),
-    KeychainDAO = require('../../src/js/dao/keychain-dao');
+var SetPassphraseCtrl = require('../../../../src/js/controller/app/set-passphrase'),
+    PGP = require('../../../../src/js/crypto/pgp'),
+    Keychain = require('../../../../src/js/service/keychain'),
+    Dialog = require('../../../../src/js/util/dialog');
 
 describe('Set Passphrase Controller unit test', function() {
     var scope, setPassphraseCtrl,
         dummyFingerprint, expectedFingerprint,
         dummyKeyId, expectedKeyId,
-        emailAddress, keySize, cryptoMock, keychainMock;
+        emailAddress, keySize, pgpStub, keychainStub, dialogStub;
 
     beforeEach(function() {
-        appController._pgp = cryptoMock = sinon.createStubInstance(PGP);
-        appController._keychain = keychainMock = sinon.createStubInstance(KeychainDAO);
+        pgpStub = sinon.createStubInstance(PGP);
+        keychainStub = sinon.createStubInstance(Keychain);
+        dialogStub = sinon.createStubInstance(Dialog);
 
         dummyFingerprint = '3A2D39B4E1404190B8B949DE7D7E99036E712926';
         expectedFingerprint = '3A2D 39B4 E140 4190 B8B9 49DE 7D7E 9903 6E71 2926';
         dummyKeyId = '9FEB47936E712926';
         expectedKeyId = '6E712926';
-        cryptoMock.getFingerprint.returns(dummyFingerprint);
-        cryptoMock.getKeyId.returns(dummyKeyId);
+        pgpStub.getFingerprint.returns(dummyFingerprint);
+        pgpStub.getKeyId.returns(dummyKeyId);
         emailAddress = 'fred@foo.com';
         keySize = 1234;
 
-        cryptoMock.getKeyParams.returns({
+        pgpStub.getKeyParams.returns({
             _id: dummyKeyId,
             fingerprint: dummyFingerprint,
             userId: emailAddress,
@@ -33,13 +33,16 @@ describe('Set Passphrase Controller unit test', function() {
             bitSize: keySize
         });
 
-        angular.module('setpassphrasetest', []);
-        mocks.module('setpassphrasetest');
-        mocks.inject(function($rootScope, $controller) {
+        angular.module('setpassphrasetest', ['woServices', 'woUtil']);
+        angular.mock.module('setpassphrasetest');
+        angular.mock.inject(function($rootScope, $controller) {
             scope = $rootScope.$new();
             scope.state = {};
             setPassphraseCtrl = $controller(SetPassphraseCtrl, {
-                $scope: scope
+                $scope: scope,
+                pgp: pgpStub,
+                keychain: keychainStub,
+                dialog: dialogStub
             });
         });
     });
@@ -47,33 +50,30 @@ describe('Set Passphrase Controller unit test', function() {
     afterEach(function() {});
 
     describe('setPassphrase', function() {
-        it('should work', function(done) {
+        it('should work', function() {
             scope.oldPassphrase = 'old';
             scope.newPassphrase = 'new';
 
-            keychainMock.lookupPrivateKey.withArgs(dummyKeyId).yields(null, {
+            keychainStub.lookupPrivateKey.withArgs(dummyKeyId).yields(null, {
                 encryptedKey: 'encrypted'
             });
 
-            cryptoMock.changePassphrase.withArgs({
+            pgpStub.changePassphrase.withArgs({
                 privateKeyArmored: 'encrypted',
                 oldPassphrase: 'old',
                 newPassphrase: 'new'
             }).yields(null, 'newArmoredKey');
 
-            keychainMock.saveLocalPrivateKey.withArgs({
+            keychainStub.saveLocalPrivateKey.withArgs({
                 _id: dummyKeyId,
                 userId: emailAddress,
                 userIds: [],
                 encryptedKey: 'newArmoredKey'
             }).yields();
 
-            scope.onError = function(err) {
-                expect(err.title).to.equal('Success');
-                done();
-            };
-
             scope.setPassphrase();
+
+            expect(dialogStub.info.calledOnce).to.be.true;
         });
     });
 

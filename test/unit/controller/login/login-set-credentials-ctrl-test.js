@@ -1,32 +1,28 @@
 'use strict';
 
-var mocks = angular.mock,
-    Auth = require('../../src/js/bo/auth'),
-    ConnectionDoctor = require('../../src/js/util/connection-doctor'),
-    SetCredentialsCtrl = require('../../src/js/controller/login-set-credentials'),
-    appController = require('../../src/js/app-controller');
+var Auth = require('../../../../src/js/service/auth'),
+    ConnectionDoctor = require('../../../../src/js/util/connection-doctor'),
+    SetCredentialsCtrl = require('../../../../src/js/controller/login/login-set-credentials');
 
 describe('Login (Set Credentials) Controller unit test', function() {
     // Angular parameters
     var scope, location, provider;
 
     // Stubs
-    var auth, origAuth, doctor, origDoctor;
+    var auth, doctor;
 
     // SUT
     var setCredentialsCtrl;
 
     beforeEach(function() {
         // remeber pre-test state to restore later
-        origAuth = appController._auth;
-        origDoctor = appController._doctor;
-        auth = appController._auth = sinon.createStubInstance(Auth);
-        doctor = appController._doctor = sinon.createStubInstance(ConnectionDoctor);
+        auth = sinon.createStubInstance(Auth);
+        doctor = sinon.createStubInstance(ConnectionDoctor);
 
         // setup the controller
         angular.module('setcredentialstest', []);
-        mocks.module('setcredentialstest');
-        mocks.inject(function($rootScope, $controller, $location) {
+        angular.mock.module('setcredentialstest');
+        angular.mock.inject(function($rootScope, $controller, $location) {
             scope = $rootScope.$new();
             location = $location;
             location.search({
@@ -43,16 +39,14 @@ describe('Login (Set Credentials) Controller unit test', function() {
 
             setCredentialsCtrl = $controller(SetCredentialsCtrl, {
                 $scope: scope,
-                $routeParams: {}
+                $routeParams: {},
+                auth: auth,
+                connectionDoctor: doctor
             });
         });
     });
 
-    afterEach(function() {
-        // restore pre-test state
-        appController._auth = origAuth;
-        appController._doctor = origDoctor;
-    });
+    afterEach(function() {});
 
     describe('set credentials', function() {
         it('should work', function() {

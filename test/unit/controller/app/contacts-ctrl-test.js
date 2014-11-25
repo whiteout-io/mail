@@ -1,38 +1,33 @@
 'use strict';
 
-var mocks = angular.mock,
-    ContactsCtrl = require('../../src/js/controller/contacts'),
-    appController = require('../../src/js/app-controller'),
-    KeychainDAO = require('../../src/js/dao/keychain-dao'),
-    PGP = require('../../src/js/crypto/pgp');
+var ContactsCtrl = require('../../../../src/js/controller/app/contacts'),
+    Keychain = require('../../../../src/js/service/keychain'),
+    PGP = require('../../../../src/js/crypto/pgp'),
+    Dialog = require('../../../../src/js/util/dialog');
 
 describe('Contacts Controller unit test', function() {
-    var scope, contactsCtrl,
-        origKeychain, keychainMock,
-        origPgp, pgpMock;
+    var scope, contactsCtrl, keychainStub, pgpStub, dialogStub;
 
     beforeEach(function() {
-        origPgp = appController._pgp;
-        appController._pgp = pgpMock = sinon.createStubInstance(PGP);
-        origKeychain = appController._keychain;
-        appController._keychain = keychainMock = sinon.createStubInstance(KeychainDAO);
+        pgpStub = sinon.createStubInstance(PGP);
+        keychainStub = sinon.createStubInstance(Keychain);
+        dialogStub = sinon.createStubInstance(Dialog);
 
-        angular.module('contactstest', []);
-        mocks.module('contactstest');
-        mocks.inject(function($rootScope, $controller) {
+        angular.module('contactstest', ['woServices']);
+        angular.mock.module('contactstest');
+        angular.mock.inject(function($rootScope, $controller) {
             scope = $rootScope.$new();
             scope.state = {};
             contactsCtrl = $controller(ContactsCtrl, {
-                $scope: scope
+                $scope: scope,
+                keychain: keychainStub,
+                pgp: pgpStub,
+                dialog: dialogStub
             });
         });
     });
 
-    afterEach(function() {
-        // restore the module
-        appController._pgp = origPgp;
-        appController._keychain = origKeychain;
-    });
+    afterEach(function() {});
 
     describe('scope variables', function() {
         it('should be set correctly', function() {
@@ -41,34 +36,28 @@ describe('Contacts Controller unit test', function() {
     });
 
     describe('listKeys', function() {
-        it('should fail due to error in keychain.listLocalPublicKeys', function(done) {
-            keychainMock.listLocalPublicKeys.yields(42);
-
-            scope.onError = function(err) {
-                expect(err).to.equal(42);
-                done();
-            };
+        it('should fail due to error in keychain.listLocalPublicKeys', function() {
+            keychainStub.listLocalPublicKeys.yields(42);
 
             scope.listKeys();
+
+            expect(dialogStub.error.calledOnce).to.be.true;
         });
 
-        it('should work', function(done) {
-            keychainMock.listLocalPublicKeys.yields(null, [{
+        it('should work', function() {
+            keychainStub.listLocalPublicKeys.yields(null, [{
                 _id: '12345'
             }]);
-            pgpMock.getKeyParams.returns({
+            pgpStub.getKeyParams.returns({
                 fingerprint: 'asdf'
             });
 
-            scope.$apply = function() {
-                expect(scope.keys.length).to.equal(1);
-                expect(scope.keys[0]._id).to.equal('12345');
-                expect(scope.keys[0].fingerprint).to.equal('asdf');
-                done();
-            };
-
             expect(scope.keys).to.not.exist;
             scope.listKeys();
+
+            expect(scope.keys.length).to.equal(1);
+            expect(scope.keys[0]._id).to.equal('12345');
+            expect(scope.keys[0].fingerprint).to.equal('asdf');
         });
     });
 
@@ -88,13 +77,13 @@ describe('Contacts Controller unit test', function() {
         it('should work', function(done) {
             var keyArmored = '-----BEGIN PGP PUBLIC KEY BLOCK-----';
 
-            pgpMock.getKeyParams.returns({
+            pgpStub.getKeyParams.returns({
                 _id: '12345',
                 userId: 'max@example.com',
                 userIds: []
             });
 
-            keychainMock.saveLocalPublicKey.withArgs({
+            keychainStub.saveLocalPublicKey.withArgs({
                 _id: '12345',
                 userId: 'max@example.com',
                 userIds: [],
@@ -109,46 +98,36 @@ describe('Contacts Controller unit test', function() {
             scope.importKey(keyArmored);
         });
 
-        it('should fail due to invalid armored key', function(done) {
+        it('should fail due to invalid armored key', function() {
             var keyArmored = '-----BEGIN PGP PRIVATE KEY BLOCK-----';
 
-            scope.onError = function(err) {
-                expect(err).to.exist;
-                done();
-            };
-
             scope.importKey(keyArmored);
+
+            expect(dialogStub.error.calledOnce).to.be.true;
         });
 
-        it('should fail due to error in pgp.getKeyParams', function(done) {
+        it('should fail due to error in pgp.getKeyParams', function() {
             var keyArmored = '-----BEGIN PGP PUBLIC KEY BLOCK-----';
-
-            pgpMock.getKeyParams.throws(new Error('WAT'));
-
-            scope.onError = function(err) {
-                expect(err).to.exist;
-                done();
-            };
+            pgpStub.getKeyParams.throws(new Error('WAT'));
 
             scope.importKey(keyArmored);
+
+            expect(dialogStub.error.calledOnce).to.be.true;
         });
 
-        it('should fail due to error in keychain.saveLocalPublicKey', function(done) {
+        it('should fail due to error in keychain.saveLocalPublicKey', function() {
             var keyArmored = '-----BEGIN PGP PUBLIC KEY BLOCK-----';
 
-            pgpMock.getKeyParams.returns({
+            pgpStub.getKeyParams.returns({
                 _id: '12345',
                 userId: 'max@example.com'
             });
 
-            keychainMock.saveLocalPublicKey.yields(42);
-
-            scope.onError = function(err) {
-                expect(err).to.equal(42);
-                done();
-            };
+            keychainStub.saveLocalPublicKey.yields(42);
 
             scope.importKey(keyArmored);
+
+            expect(dialogStub.error.calledOnce).to.be.true;
         });
     });
 
@@ -158,7 +137,7 @@ describe('Contacts Controller unit test', function() {
                 _id: '12345'
             };
 
-            keychainMock.removeLocalPublicKey.withArgs('12345').yields();
+            keychainStub.removeLocalPublicKey.withArgs('12345').yields();
 
             scope.listKeys = function() {
                 done();
@@ -167,19 +146,16 @@ describe('Contacts Controller unit test', function() {
             scope.removeKey(key);
         });
 
-        it('should fail due to error in keychain.removeLocalPublicKey', function(done) {
+        it('should fail due to error in keychain.removeLocalPublicKey', function() {
             var key = {
                 _id: '12345'
             };
 
-            keychainMock.removeLocalPublicKey.withArgs('12345').yields(42);
-
-            scope.onError = function(err) {
-                expect(err).to.equal(42);
-                done();
-            };
+            keychainStub.removeLocalPublicKey.withArgs('12345').yields(42);
 
             scope.removeKey(key);
+
+            expect(dialogStub.error.calledOnce).to.be.true;
         });
     });
 });

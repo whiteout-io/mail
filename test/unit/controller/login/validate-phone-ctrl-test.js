@@ -1,23 +1,19 @@
 'use strict';
 
-var mocks = angular.mock,
-    ValidatePhoneCtrl = require('../../src/js/controller/validate-phone'),
-    Auth = require('../../src/js/bo/auth'),
-    AdminDao = require('../../src/js/dao/admin-dao'),
-    appController = require('../../src/js/app-controller');
+var ValidatePhoneCtrl = require('../../../../src/js/controller/login/validate-phone'),
+    Auth = require('../../../../src/js/service/auth'),
+    AdminDao = require('../../../../src/js/service/admin');
 
 describe('Validate Phone Controller unit test', function() {
-    var scope, location, mailConfigMock, ctrl, authStub, origAuth, adminStub;
+    var scope, location, mailConfigMock, ctrl, authStub, adminStub;
 
     beforeEach(function() {
-        // remember original module to restore later, then replace it
-        origAuth = appController._auth;
-        appController._auth = authStub = sinon.createStubInstance(Auth);
-        appController._adminDao = adminStub = sinon.createStubInstance(AdminDao);
+        authStub = sinon.createStubInstance(Auth);
+        adminStub = sinon.createStubInstance(AdminDao);
 
         angular.module('validatephonetest', ['woServices']);
-        mocks.module('validatephonetest');
-        mocks.inject(function($controller, $rootScope, $location, mailConfig) {
+        angular.mock.module('validatephonetest');
+        angular.mock.inject(function($controller, $rootScope, $location, mailConfig) {
             location = $location;
             mailConfigMock = mailConfig;
             scope = $rootScope.$new();
@@ -38,15 +34,14 @@ describe('Validate Phone Controller unit test', function() {
                 $location: location,
                 $scope: scope,
                 $routeParams: {},
-                mailConfig: mailConfigMock
+                mailConfig: mailConfigMock,
+                auth: authStub,
+                admin: adminStub
             });
         });
     });
 
     afterEach(function() {
-        // restore the app controller module
-        appController._auth = origAuth;
-
         location.path.restore();
         location.search.restore();
         if (scope.$apply.restore) {

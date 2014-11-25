@@ -1,19 +1,17 @@
 'use strict';
 
-var mocks = angular.mock,
-    NavigationCtrl = require('../../src/js/controller/navigation'),
-    EmailDAO = require('../../src/js/dao/email-dao'),
-    OutboxBO = require('../../src/js/bo/outbox'),
-    appController = require('../../src/js/app-controller');
+var NavigationCtrl = require('../../../../src/js/controller/app/navigation'),
+    Email = require('../../../../src/js/email/email'),
+    Account = require('../../../../src/js/email/account'),
+    Outbox = require('../../../../src/js/email/outbox'),
+    Dialog = require('../../../../src/js/util/dialog'),
+    Notif = require('../../../../src/js/util/notification');
 
 describe('Navigation Controller unit test', function() {
-    var scope, ctrl, origEmailDao, emailDaoMock, outboxBoMock, outboxFolder, onConnectStub;
+    var scope, ctrl, emailDaoMock, accountMock, notificationStub, dialogStub, outboxBoMock, outboxFolder;
 
-    beforeEach(function(done) {
-        // remember original module to restore later
-        origEmailDao = appController._emailDao;
-        emailDaoMock = sinon.createStubInstance(EmailDAO);
-        emailDaoMock._account = {
+    beforeEach(function() {
+        var account = {
             folders: [{
                 type: 'Inbox',
                 count: 2,
@@ -24,32 +22,34 @@ describe('Navigation Controller unit test', function() {
                 path: 'OUTBOX'
             }]
         };
-        outboxFolder = emailDaoMock._account.folders[1];
-        appController._emailDao = emailDaoMock;
-        outboxBoMock = sinon.createStubInstance(OutboxBO);
-        appController._outboxBo = outboxBoMock;
-        outboxBoMock.startChecking.returns();
-        onConnectStub = sinon.stub(appController, 'onConnect');
-        onConnectStub.yields();
 
-        angular.module('navigationtest', []);
-        mocks.module('navigationtest');
-        mocks.inject(function($rootScope, $controller) {
+        emailDaoMock = sinon.createStubInstance(Email);
+        outboxFolder = account.folders[1];
+        outboxBoMock = sinon.createStubInstance(Outbox);
+        outboxBoMock.startChecking.returns();
+        dialogStub = sinon.createStubInstance(Dialog);
+        notificationStub = sinon.createStubInstance(Notif);
+        accountMock = sinon.createStubInstance(Account);
+        accountMock.list.returns([account]);
+
+        angular.module('navigationtest', ['woServices', 'woEmail', 'woUtil']);
+        angular.mock.module('navigationtest');
+        angular.mock.inject(function($rootScope, $controller) {
             scope = $rootScope.$new();
             scope.state = {};
             ctrl = $controller(NavigationCtrl, {
                 $scope: scope,
-                $routeParams: {}
+                $routeParams: {},
+                account: accountMock,
+                email: emailDaoMock,
+                outbox: outboxBoMock,
+                notification: notificationStub,
+                dialog: dialogStub
             });
-            done();
         });
     });
 
-    afterEach(function() {
-        // restore the module
-        appController._emailDao = origEmailDao;
-        onConnectStub.restore();
-    });
+    afterEach(function() {});
 
     describe('initial state', function() {
         it('should be well defined', function() {

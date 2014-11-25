@@ -1,53 +1,41 @@
 'use strict';
 
-var Auth = require('../../src/js/bo/auth'),
-    mocks = angular.mock,
-    LoginExistingCtrl = require('../../src/js/controller/login-existing'),
-    EmailDAO = require('../../src/js/dao/email-dao'),
-    KeychainDAO = require('../../src/js/dao/keychain-dao'),
-    appController = require('../../src/js/app-controller');
+var Auth = require('../../../../src/js/service/auth'),
+    LoginExistingCtrl = require('../../../../src/js/controller/login/login-existing'),
+    EmailDAO = require('../../../../src/js/email/email'),
+    KeychainDAO = require('../../../../src/js/service/keychain');
 
 describe('Login (existing user) Controller unit test', function() {
-    var scope, location, ctrl, origEmailDao, emailDaoMock,
-        origAuth, authMock,
+    var scope, location, ctrl, emailDaoMock, authMock,
         emailAddress = 'fred@foo.com',
         passphrase = 'asd',
         keychainMock;
 
     beforeEach(function() {
-        // remember original module to restore later
-        origEmailDao = appController._emailDao;
-        origAuth = appController._auth;
-
-        appController._emailDao = emailDaoMock = sinon.createStubInstance(EmailDAO);
-        appController._auth = authMock = sinon.createStubInstance(Auth);
-
+        emailDaoMock = sinon.createStubInstance(EmailDAO);
+        authMock = sinon.createStubInstance(Auth);
         keychainMock = sinon.createStubInstance(KeychainDAO);
-        emailDaoMock._keychain = keychainMock;
 
-        emailDaoMock._account = {
-            emailAddress: emailAddress,
-        };
+        authMock.emailAddress = emailAddress;
 
-        angular.module('loginexistingtest', []);
-        mocks.module('loginexistingtest');
-        mocks.inject(function($rootScope, $controller, $location) {
+        angular.module('loginexistingtest', ['woServices']);
+        angular.mock.module('loginexistingtest');
+        angular.mock.inject(function($rootScope, $controller, $location) {
             location = $location;
             scope = $rootScope.$new();
             scope.state = {};
             scope.form = {};
             ctrl = $controller(LoginExistingCtrl, {
                 $scope: scope,
-                $routeParams: {}
+                $routeParams: {},
+                email: emailDaoMock,
+                auth: authMock,
+                keychain: keychainMock
             });
         });
     });
 
-    afterEach(function() {
-        // restore the module
-        appController._emailDao = origEmailDao;
-        appController._auth = origAuth;
-    });
+    afterEach(function() {});
 
     describe('initial state', function() {
         it('should be well defined', function() {

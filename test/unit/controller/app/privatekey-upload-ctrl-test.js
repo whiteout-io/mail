@@ -1,48 +1,39 @@
 'use strict';
 
-var mocks = angular.mock,
-    PrivateKeyUploadCtrl = require('../../src/js/controller/privatekey-upload'),
-    appController = require('../../src/js/app-controller'),
-    KeychainDAO = require('../../src/js/dao/keychain-dao'),
-    PGP = require('../../src/js/crypto/pgp');
+var PrivateKeyUploadCtrl = require('../../../../src/js/controller/app/privatekey-upload'),
+    KeychainDAO = require('../../../../src/js/service/keychain'),
+    PGP = require('../../../../src/js/crypto/pgp'),
+    Dialog = require('../../../../src/js/util/dialog');
 
 describe('Private Key Upload Controller unit test', function() {
     var scope, location, ctrl,
-        origEmailDao, emailDaoMock,
-        origKeychain, keychainMock,
-        pgpStub,
+        keychainMock, pgpStub, dialogStub,
         emailAddress = 'fred@foo.com';
 
-    beforeEach(function(done) {
-        // remember original module to restore later, then replace it
-        origEmailDao = appController._emailDao;
-        appController._emailDao = emailDaoMock = {
-            _account: {
-                emailAddress: emailAddress
-            }
-        };
-        origKeychain = appController._keychain;
-        appController._keychain = keychainMock = sinon.createStubInstance(KeychainDAO);
-        keychainMock._pgp = pgpStub = sinon.createStubInstance(PGP);
+    beforeEach(function() {
+        keychainMock = sinon.createStubInstance(KeychainDAO);
+        pgpStub = sinon.createStubInstance(PGP);
+        dialogStub = sinon.createStubInstance(Dialog);
 
-        angular.module('login-privatekey-download-test', []);
-        mocks.module('login-privatekey-download-test');
-        mocks.inject(function($controller, $rootScope) {
+        angular.module('login-privatekey-download-test', ['woServices']);
+        angular.mock.module('login-privatekey-download-test');
+        angular.mock.inject(function($controller, $rootScope) {
             scope = $rootScope.$new();
             scope.state = {};
             ctrl = $controller(PrivateKeyUploadCtrl, {
                 $location: location,
-                $scope: scope
+                $scope: scope,
+                keychain: keychainMock,
+                pgp: pgpStub,
+                dialog: dialogStub,
+                auth: {
+                    emailAddress: emailAddress
+                }
             });
-            done();
         });
     });
 
-    afterEach(function() {
-        // restore the app controller module
-        appController._keychain = origKeychain;
-        appController._emailDao = origEmailDao;
-    });
+    afterEach(function() {});
 
     describe('checkServerForKey', function() {
         var keyParams = {
@@ -50,17 +41,14 @@ describe('Private Key Upload Controller unit test', function() {
             _id: 'keyId',
         };
 
-        it('should fail', function(done) {
+        it('should fail', function() {
             pgpStub.getKeyParams.returns(keyParams);
             keychainMock.hasPrivateKey.yields(42);
 
-            scope.onError = function(err) {
-                expect(err).to.exist;
-                expect(keychainMock.hasPrivateKey.calledOnce).to.be.true;
-                done();
-            };
-
             scope.checkServerForKey();
+
+            expect(dialogStub.error.calledOnce).to.be.true;
+            expect(keychainMock.hasPrivateKey.calledOnce).to.be.true;
         });
 
         it('should return true', function(done) {
@@ -165,16 +153,13 @@ describe('Private Key Upload Controller unit test', function() {
     });
 
     describe('encryptAndUploadKey', function() {
-        it('should fail due to keychain.registerDevice', function(done) {
+        it('should fail due to keychain.registerDevice', function() {
             keychainMock.registerDevice.yields(42);
 
-            scope.onError = function(err) {
-                expect(err).to.exist;
-                expect(keychainMock.registerDevice.calledOnce).to.be.true;
-                done();
-            };
-
             scope.encryptAndUploadKey();
+
+            expect(dialogStub.error.calledOnce).to.be.true;
+            expect(keychainMock.registerDevice.calledOnce).to.be.true;
         });
 
         it('should work', function(done) {
@@ -237,45 +222,36 @@ describe('Private Key Upload Controller unit test', function() {
             expect(scope.step).to.equal(2);
         });
 
-        it('should fail for 3 due to error in setDeviceName', function(done) {
+        it('should fail for 3 due to error in setDeviceName', function() {
             scope.step = 3;
             setDeviceNameStub.yields(42);
 
-            scope.onError = function(err) {
-                expect(err).to.exist;
-                expect(scope.step).to.equal(3);
-                done();
-            };
-
             scope.goForward();
+
+            expect(dialogStub.error.calledOnce).to.be.true;
+            expect(scope.step).to.equal(3);
         });
 
-        it('should fail for 3 due to error in encryptAndUploadKey', function(done) {
+        it('should fail for 3 due to error in encryptAndUploadKey', function() {
             scope.step = 3;
             setDeviceNameStub.yields();
             encryptAndUploadKeyStub.yields(42);
 
-            scope.onError = function(err) {
-                expect(err).to.exist;
-                expect(scope.step).to.equal(4);
-                done();
-            };
-
             scope.goForward();
+
+            expect(dialogStub.error.calledOnce).to.be.true;
+            expect(scope.step).to.equal(4);
         });
 
-        it('should work for 3', function(done) {
+        it('should work for 3', function() {
             scope.step = 3;
             setDeviceNameStub.yields();
             encryptAndUploadKeyStub.yields();
 
-            scope.onError = function(err) {
-                expect(err.title).to.equal('Success');
-                expect(scope.step).to.equal(4);
-                done();
-            };
-
             scope.goForward();
+
+            expect(dialogStub.info.calledOnce).to.be.true;
+            expect(scope.step).to.equal(4);
         });
     });
 });

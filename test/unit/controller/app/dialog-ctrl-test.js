@@ -1,21 +1,22 @@
 'use strict';
 
-var mocks = angular.mock,
-    DialogCtrl = require('../../src/js/controller/dialog');
+var DialogCtrl = require('../../../../src/js/controller/app/dialog');
 
 describe('Dialog Controller unit test', function() {
-    var scope, dialogCtrl;
+    var scope, dialogCtrl, dialogService;
 
     beforeEach(function() {
-        angular.module('dialogtest', []);
-        mocks.module('dialogtest');
-        mocks.inject(function($rootScope, $controller) {
+        angular.module('dialogtest', ['woUtil']);
+        angular.mock.module('dialogtest');
+        angular.mock.inject(function($rootScope, $controller, dialog) {
             scope = $rootScope.$new();
             scope.state = {
                 dialog: {}
             };
+            dialogService = dialog;
             dialogCtrl = $controller(DialogCtrl, {
-                $scope: scope
+                $scope: scope,
+                dialog: dialog
             });
         });
     });
@@ -24,9 +25,9 @@ describe('Dialog Controller unit test', function() {
 
     describe('confirm', function() {
         it('should work', function(done) {
-            scope.state.dialog.callback = function(confirmed) {
+            scope.callback = function(confirmed) {
                 expect(confirmed).to.be.true;
-                expect(scope.state.dialog.open).to.be.false;
+                expect(scope.open).to.be.false;
                 done();
             };
             scope.confirm(true);
@@ -35,9 +36,9 @@ describe('Dialog Controller unit test', function() {
 
     describe('cancel', function() {
         it('should work', function(done) {
-            scope.state.dialog.callback = function(confirmed) {
+            scope.callback = function(confirmed) {
                 expect(confirmed).to.be.false;
-                expect(scope.state.dialog.open).to.be.false;
+                expect(scope.open).to.be.false;
                 done();
             };
             scope.confirm(false);

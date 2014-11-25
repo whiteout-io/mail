@@ -1,22 +1,20 @@
 'use strict';
 
-var mocks = angular.mock,
-    CreateAccountCtrl = require('../../src/js/controller/create-account'),
-    AdminDao = require('../../src/js/dao/admin-dao'),
-    appController = require('../../src/js/app-controller');
+var CreateAccountCtrl = require('../../../../src/js/controller/login/create-account'),
+    AdminDao = require('../../../../src/js/service/admin'),
+    Auth = require('../../../../src/js/service/auth');
 
 describe('Create Account Controller unit test', function() {
-    var scope, location, ctrl, authStub, origAuth, adminStub;
+    var scope, location, ctrl, authStub, adminStub;
 
     beforeEach(function() {
         // remember original module to restore later, then replace it
-        origAuth = appController._auth;
-        appController._auth = authStub = {};
-        appController._adminDao = adminStub = sinon.createStubInstance(AdminDao);
+        adminStub = sinon.createStubInstance(AdminDao);
+        authStub = sinon.createStubInstance(Auth);
 
-        angular.module('createaccounttest', []);
-        mocks.module('createaccounttest');
-        mocks.inject(function($controller, $rootScope, $location) {
+        angular.module('createaccounttest', ['woServices', 'woAppConfig']);
+        angular.mock.module('createaccounttest');
+        angular.mock.inject(function($controller, $rootScope, $location) {
             location = $location;
             scope = $rootScope.$new();
             scope.state = {};
@@ -30,15 +28,14 @@ describe('Create Account Controller unit test', function() {
             ctrl = $controller(CreateAccountCtrl, {
                 $location: location,
                 $scope: scope,
-                $routeParams: {}
+                $routeParams: {},
+                auth: authStub,
+                admin: adminStub
             });
         });
     });
 
     afterEach(function() {
-        // restore the app controller module
-        appController._auth = origAuth;
-
         location.path.restore();
         location.search.restore();
         if (scope.$apply.restore) {

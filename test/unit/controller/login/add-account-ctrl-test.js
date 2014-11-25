@@ -1,22 +1,21 @@
 'use strict';
 
-var mocks = angular.mock,
-    AddAccountCtrl = require('../../src/js/controller/add-account'),
-    Auth = require('../../src/js/bo/auth'),
-    appController = require('../../src/js/app-controller'),
-    cfg = require('../../src/js/app-config').config;
+var AddAccountCtrl = require('../../../../src/js/controller/login/add-account'),
+    Auth = require('../../../../src/js/service/auth'),
+    Dialog = require('../../../../src/js/util/dialog'),
+    cfg = require('../../../../src/js/app-config').config;
 
 describe('Add Account Controller unit test', function() {
-    var scope, location, mailConfigMock, ctrl, authStub, origAuth;
+    var scope, location, mailConfigMock, ctrl, authStub, dialogStub;
 
     beforeEach(function() {
         // remember original module to restore later, then replace it
-        origAuth = appController._auth;
-        appController._auth = authStub = sinon.createStubInstance(Auth);
+        authStub = sinon.createStubInstance(Auth);
+        dialogStub = sinon.createStubInstance(Dialog);
 
         angular.module('addaccounttest', ['woServices']);
-        mocks.module('addaccounttest');
-        mocks.inject(function($controller, $rootScope, $location, mailConfig) {
+        angular.mock.module('addaccounttest');
+        angular.mock.inject(function($controller, $rootScope, $location, mailConfig) {
             location = $location;
             mailConfigMock = mailConfig;
             scope = $rootScope.$new();
@@ -31,15 +30,14 @@ describe('Add Account Controller unit test', function() {
                 $location: location,
                 $scope: scope,
                 $routeParams: {},
-                mailConfig: mailConfigMock
+                mailConfig: mailConfigMock,
+                auth: authStub,
+                dialog: dialogStub
             });
         });
     });
 
     afterEach(function() {
-        // restore the app controller module
-        appController._auth = origAuth;
-
         location.path.restore();
         location.search.restore();
         if (scope.$apply.restore) {
@@ -119,7 +117,7 @@ describe('Add Account Controller unit test', function() {
         });
 
         it('should use oauth', function() {
-            scope.onError = function(options) {
+            dialogStub.confirm = function(options) {
                 options.callback(true);
             };
             authStub.getOAuthToken.yields();
@@ -131,7 +129,7 @@ describe('Add Account Controller unit test', function() {
         });
 
         it('should not use oauth', function() {
-            scope.onError = function(options) {
+            dialogStub.confirm = function(options) {
                 options.callback(false);
             };
 
@@ -141,19 +139,16 @@ describe('Add Account Controller unit test', function() {
             expect(authStub.getOAuthToken.called).to.be.false;
         });
 
-        it('should not forward to login when oauth fails', function(done) {
-            scope.onError = function(options) {
-                scope.onError = function(err) {
-                    expect(err).to.exist;
-                    expect(setCredentialsStub.called).to.be.false;
-                    done();
-                };
-
+        it('should not forward to login when oauth fails', function() {
+            dialogStub.confirm = function(options) {
                 options.callback(true);
             };
             authStub.getOAuthToken.yields(new Error());
 
             scope.oauthPossible();
+
+            expect(dialogStub.error.calledOnce).to.be.true;
+            expect(setCredentialsStub.called).to.be.false;
         });
     });
 

@@ -1,50 +1,53 @@
 'use strict';
 
-var mocks = angular.mock,
-    AccountCtrl = require('../../src/js/controller/account'),
-    PGP = require('../../src/js/crypto/pgp'),
-    dl = require('../../src/js/util/download'),
-    appController = require('../../src/js/app-controller'),
-    KeychainDAO = require('../../src/js/dao/keychain-dao');
+var AccountCtrl = require('../../../../src/js/controller/app/account'),
+    PGP = require('../../../../src/js/crypto/pgp'),
+    Download = require('../../../../src/js/util/download'),
+    Keychain = require('../../../../src/js/service/keychain'),
+    Auth = require('../../../../src/js/service/auth'),
+    Dialog = require('../../../../src/js/util/dialog');
 
 describe('Account Controller unit test', function() {
     var scope, accountCtrl,
         dummyFingerprint, expectedFingerprint,
         dummyKeyId, expectedKeyId,
-        emailAddress, keySize, pgpMock, keychainMock;
+        emailAddress, keySize, pgpStub, keychainStub, authStub, dialogStub, downloadStub;
 
     beforeEach(function() {
-        appController._pgp = pgpMock = sinon.createStubInstance(PGP);
-        appController._keychain = keychainMock = sinon.createStubInstance(KeychainDAO);
+        pgpStub = sinon.createStubInstance(PGP);
+        authStub = sinon.createStubInstance(Auth);
+        keychainStub = sinon.createStubInstance(Keychain);
+        dialogStub = sinon.createStubInstance(Dialog);
+        downloadStub = sinon.createStubInstance(Download);
 
         dummyFingerprint = '3A2D39B4E1404190B8B949DE7D7E99036E712926';
         expectedFingerprint = '3A2D 39B4 E140 4190 B8B9 49DE 7D7E 9903 6E71 2926';
         dummyKeyId = '9FEB47936E712926';
         expectedKeyId = '6E712926';
-        pgpMock.getFingerprint.returns(dummyFingerprint);
-        pgpMock.getKeyId.returns(dummyKeyId);
+        pgpStub.getFingerprint.returns(dummyFingerprint);
+        pgpStub.getKeyId.returns(dummyKeyId);
         emailAddress = 'fred@foo.com';
         keySize = 1234;
-        appController._emailDao = {
-            _account: {
-                emailAddress: emailAddress,
-                asymKeySize: keySize
-            }
-        };
-        pgpMock.getKeyParams.returns({
+        authStub.emailAddress = emailAddress;
+        pgpStub.getKeyParams.returns({
             _id: dummyKeyId,
             fingerprint: dummyFingerprint,
             userId: emailAddress,
             bitSize: keySize
         });
 
-        angular.module('accounttest', []);
-        mocks.module('accounttest');
-        mocks.inject(function($rootScope, $controller) {
+        angular.module('accounttest', ['woServices']);
+        angular.mock.module('accounttest');
+        angular.mock.inject(function($rootScope, $controller) {
             scope = $rootScope.$new();
             scope.state = {};
             accountCtrl = $controller(AccountCtrl, {
-                $scope: scope
+                $scope: scope,
+                auth: authStub,
+                keychain: keychainStub,
+                pgp: pgpStub,
+                download: downloadStub,
+                dialog: dialogStub
             });
         });
     });
@@ -61,8 +64,7 @@ describe('Account Controller unit test', function() {
     });
     describe('export to key file', function() {
         it('should work', function() {
-            var createDownloadMock = sinon.stub(dl, 'createDownload');
-            keychainMock.getUserKeyPair.withArgs(emailAddress).yields(null, {
+            keychainStub.getUserKeyPair.withArgs(emailAddress).yields(null, {
                 publicKey: {
                     _id: dummyKeyId,
                     publicKey: 'a'
@@ -71,27 +73,23 @@ describe('Account Controller unit test', function() {
                     encryptedKey: 'b'
                 }
             });
-            createDownloadMock.withArgs(sinon.match(function(arg) {
+            downloadStub.createDownload.withArgs(sinon.match(function(arg) {
                 return arg.content === 'a\r\nb' && arg.filename === 'whiteout_mail_' + emailAddress + '_' + expectedKeyId + '.asc' && arg.contentType === 'text/plain';
             })).returns();
 
             scope.exportKeyFile();
 
             expect(scope.state.lightbox).to.equal(undefined);
-            expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
-            expect(dl.createDownload.calledOnce).to.be.true;
-            dl.createDownload.restore();
+            expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
+            expect(downloadStub.createDownload.calledOnce).to.be.true;
         });
 
-        it('should not work when key export failed', function(done) {
-            keychainMock.getUserKeyPair.yields(new Error('Boom!'));
-            scope.onError = function(err) {
-                expect(err.message).to.equal('Boom!');
-                expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
-                done();
-            };
+        it('should not work when key export failed', function() {
+            keychainStub.getUserKeyPair.yields(new Error());
 
             scope.exportKeyFile();
+
+            expect(dialogStub.error.calledOnce).to.be.true;
         });
     });
 });
