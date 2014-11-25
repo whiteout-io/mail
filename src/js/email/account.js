@@ -137,13 +137,12 @@ Account.prototype.isOnline = function() {
 /**
  * Event that is called when the user agent goes online. This create new instances of the imap-client and pgp-mailer and connects to the mail server.
  */
-Account.prototype.onConnect = function(callback) {
+Account.prototype.onConnect = function() {
     var self = this;
     var config = self._appConfig.config;
 
     if (!self.isOnline() || !self._emailDao || !self._emailDao._account) {
         // prevent connection infinite loop
-        callback();
         return;
     }
 

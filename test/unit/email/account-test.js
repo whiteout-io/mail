@@ -7,10 +7,11 @@ var Account = require('../../../src/js/email/account'),
     Email = require('../../../src/js/email/email'),
     Outbox = require('../../../src/js/email/outbox'),
     Keychain = require('../../../src/js/service/keychain'),
-    UpdateHandler = require('../../../src/js/util/update/update-handler');
+    UpdateHandler = require('../../../src/js/util/update/update-handler'),
+    Dialog = require('../../../src/js/util/dialog');
 
 describe('Account Service unit test', function() {
-    var account, authStub, outboxStub, emailStub, devicestorageStub, keychainStub, updateHandlerStub, pgpbuilderStub,
+    var account, authStub, outboxStub, emailStub, devicestorageStub, keychainStub, updateHandlerStub, pgpbuilderStub, dialogStub,
         realname = 'John Doe',
         dummyUser = 'spiderpig@springfield.com';
 
@@ -25,7 +26,8 @@ describe('Account Service unit test', function() {
         keychainStub = sinon.createStubInstance(Keychain);
         updateHandlerStub = sinon.createStubInstance(UpdateHandler);
         pgpbuilderStub = {};
-        account = new Account(appConfig, authStub, devicestorageStub, emailStub, outboxStub, keychainStub, updateHandlerStub, pgpbuilderStub);
+        dialogStub = sinon.createStubInstance(Dialog);
+        account = new Account(appConfig, authStub, devicestorageStub, emailStub, outboxStub, keychainStub, updateHandlerStub, pgpbuilderStub, dialogStub);
     });
 
     afterEach(function() {});
@@ -209,6 +211,64 @@ describe('Account Service unit test', function() {
                 expect(err).to.not.exist;
                 expect(keys).to.equal(storedKeys);
             }
+        });
+    });
+
+    describe('onConnect', function() {
+        var credentials = {
+            imap: {},
+            smtp: {}
+        };
+        beforeEach(function() {
+            emailStub._account = {};
+            sinon.stub(account, 'isOnline').returns(true);
+        });
+        afterEach(function() {
+            account.isOnline.restore();
+        });
+
+        it('should fail due to _auth.getCredentials', function() {
+            authStub.getCredentials.yields(new Error('asdf'));
+
+            account.onConnect();
+
+            expect(dialogStub.error.calledOnce).to.be.true;
+        });
+
+        it('should work', function() {
+            authStub.getCredentials.yields(null, credentials);
+            emailStub.onConnect.yields();
+
+            account.onConnect();
+
+            expect(emailStub.onConnect.calledOnce).to.be.true;
+            expect(dialogStub.error.calledOnce).to.be.true;
+        });
+    });
+
+    describe('onDisconnect', function() {
+        it('should work', function() {
+            account.onDisconnect();
+            expect(emailStub.onDisconnect.calledOnce).to.be.true;
+        });
+    });
+
+    describe('logout', function() {
+        it('should fail due to _auth.logout', function() {
+            authStub.logout.yields(new Error());
+
+            account.logout();
+
+            expect(dialogStub.error.calledOnce).to.be.true;
+        });
+
+        it('should fail due to _emailDao.onDisconnect', function() {
+            authStub.logout.yields();
+            emailStub.onDisconnect.yields(new Error());
+
+            account.logout();
+
+            expect(dialogStub.error.calledOnce).to.be.true;
         });
     });
 
