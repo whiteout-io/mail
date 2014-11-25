@@ -1,9 +1,9 @@
 'use strict';
 
 var ngModule = angular.module('woServices');
-ngModule.factory('lawnchairDAO', function() {
-    return new LawnchairDAO();
-});
+ngModule.service('appConfigLawnchair', LawnchairDAO);
+ngModule.service('accountLawnchair', LawnchairDAO);
+ngModule.service('keychainLawnchair', LawnchairDAO);
 module.exports = LawnchairDAO;
 
 /**

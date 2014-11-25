@@ -4,9 +4,8 @@ var ngModule = angular.module('woServices');
 ngModule.service('oauth', OAuth);
 module.exports = OAuth;
 
-function OAuth(restDao) {
-    this._googleApi = restDao;
-    this._googleApi.setBaseUri('https://www.googleapis.com');
+function OAuth(oauthRestDao) {
+    this._googleApi = oauthRestDao;
 }
 
 /**

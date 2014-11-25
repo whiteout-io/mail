@@ -15,8 +15,8 @@ var DB_PUBLICKEY = 'publickey',
  * A high-level Data-Access Api for handling Keypair synchronization
  * between the cloud service and the device's local storage
  */
-function Keychain(lawnchairDAO, publicKey, privateKey, crypto, pgp, dialog, appConfig) {
-    this._lawnchairDAO = lawnchairDAO;
+function Keychain(accountLawnchair, publicKey, privateKey, crypto, pgp, dialog, appConfig) {
+    this._lawnchairDAO = accountLawnchair;
     this._publicKeyDao = publicKey;
     this._privateKeyDao = privateKey;
     this._crypto = crypto;
