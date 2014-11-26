@@ -259,7 +259,7 @@ module.exports = function(grunt) {
             readSandbox: {
                 src: [
                     'node_modules/dompurify/purify.js',
-                    'src/js/controller/read-sandbox.js'
+                    'src/js/controller/app/read-sandbox.js'
                 ],
                 dest: 'dist/js/read-sandbox.min.js'
             },
