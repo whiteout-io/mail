@@ -1,0 +1,9 @@
+<div>
+  <span class="spinner" ng-show="account.loggingIn || account.busy || state.statusDisplay.searching"></span>
+  <span class="text" ng-switch="account.online">
+    <span ng-switch-when="false">
+      <svg><use xlink:href="#icon-offline" /></svg>
+    </span>
+    {{state.statusDisplay.text}} {{state.statusDisplay.time | date:'shortTime'}}
+  </span>
+</div>

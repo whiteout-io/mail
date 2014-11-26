@@ -60,8 +60,7 @@ Dialog.prototype.confirm = function(options) {
 Dialog.prototype._handle = function(options, fn, errMsg) {
     return this._q(function(resolve, reject) {
         if (fn) {
-            fn(options);
-            resolve();
+            return resolve(fn(options));
         } else {
             reject(new Error('Dialog service ' + errMsg + ' not set!'));
         }

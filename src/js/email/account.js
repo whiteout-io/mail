@@ -168,8 +168,8 @@ Account.prototype.onConnect = function() {
         pgpMailer.onError = onConnectionError;
 
         // certificate update handling
-        imapClient.onCert = self._auth.handleCertificateUpdate.bind(self._auth, 'imap', self.onConnect, self._dialog.error);
-        pgpMailer.onCert = self._auth.handleCertificateUpdate.bind(self._auth, 'smtp', self.onConnect, self._dialog.error);
+        imapClient.onCert = self._auth.handleCertificateUpdate.bind(self._auth, 'imap', self.onConnect.bind(self), self._dialog.error);
+        pgpMailer.onCert = self._auth.handleCertificateUpdate.bind(self._auth, 'smtp', self.onConnect.bind(self), self._dialog.error);
 
         // connect to clients
         self._emailDao.onConnect({

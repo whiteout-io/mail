@@ -229,7 +229,7 @@ var MailListCtrl = function($scope, $routeParams, statusDisplay, notification, e
     }
 
     function currentFolder() {
-        return $scope.state.nav.currentFolder;
+        return $scope.state.nav && $scope.state.nav.currentFolder;
     }
 
     function currentMessage() {

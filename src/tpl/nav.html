@@ -69,13 +69,5 @@
     </li>
   </ul><!--/nav__secondary-->
 
-  <footer ng-controller="StatusDisplayCtrl">
-    <span class="spinner" ng-show="account.loggingIn || account.busy || searching"></span>
-    <span class="text" ng-switch="account.online">
-      <span ng-switch-when="false">
-        <svg><use xlink:href="#icon-offline" /></svg>
-      </span>
-      {{lastUpdateLbl}} {{lastUpdate | date:'shortTime'}}
-    </span>
-  </footer>
+  <footer ng-include="'tpl/status-display.html'" ng-controller="StatusDisplayCtrl"></footer>
 </nav>

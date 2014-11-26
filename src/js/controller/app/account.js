@@ -2,6 +2,9 @@
 
 var AccountCtrl = function($scope, auth, keychain, pgp, appConfig, download, dialog) {
     var userId = auth.emailAddress;
+    if (!userId) {
+        return;
+    }
 
     $scope.state.account = {
         toggle: function(to) {

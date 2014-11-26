@@ -12,6 +12,7 @@
       <svg><use xlink:href="#icon-write" /><title>New mail</title></svg>
     </button>
   </header>
+
   <div class="mail-list__search">
     <div class="search">
       <svg><use xlink:href="#icon-search" /><title>Search</title></svg>
@@ -71,13 +72,5 @@
     </ul>
   </div>
 
-  <footer ng-controller="StatusDisplayCtrl">
-    <span class="spinner" ng-show="account.loggingIn || account.busy || searching"></span>
-    <span class="text" ng-switch="account.online">
-      <span ng-switch-when="false">
-        <svg><use xlink:href="#icon-offline" /></svg>
-      </span>
-      {{lastUpdateLbl}} {{lastUpdate | date:'shortTime'}}
-    </span>
-  </footer>
+  <footer ng-include="'tpl/status-display.html'"></footer>
 </div>

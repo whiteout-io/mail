@@ -14,7 +14,10 @@ var NOTIFICATION_SENT_TIMEOUT = 2000;
 //
 
 var NavigationCtrl = function($scope, $routeParams, $location, account, email, outbox, notification, appConfig, dialog) {
-    !$routeParams.dev && !account.isLoggedIn() && $location.path('/'); // init app
+    if (!$routeParams.dev && !account.isLoggedIn()) {
+        $location.path('/'); // init app
+        return;
+    }
 
     var str = appConfig.string,
         config = appConfig.config;

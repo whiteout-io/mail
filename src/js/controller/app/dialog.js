@@ -1,31 +1,41 @@
 'use strict';
 
-var DialogCtrl = function($scope, dialog) {
+var DialogCtrl = function($scope, $timeout, dialog) {
+
+    $scope.state.dialog = {
+        open: false
+    };
 
     //
     // Set dialog disply functions
     //
 
     dialog.displayInfo = function(options) {
-        setOptions(options);
+        return $timeout(function() {
+            setOptions(options);
+        });
     };
 
     dialog.displayError = function(options) {
-        if (!options) {
-            return;
-        }
+        return $timeout(function() {
+            if (!options) {
+                return;
+            }
 
-        setOptions(options);
-        $scope.title = options.title || 'Error';
-        $scope.showBugReporter = (typeof options.showBugReporter !== 'undefined' ? options.showBugReporter : !options.title); // if title is set, presume it's not an error by default
+            setOptions(options);
+            $scope.title = options.title || 'Error';
+            $scope.showBugReporter = (typeof options.showBugReporter !== 'undefined' ? options.showBugReporter : !options.title); // if title is set, presume it's not an error by default
+        });
     };
 
     dialog.displayConfirm = function(options) {
-        setOptions(options);
+        return $timeout(function() {
+            setOptions(options);
+        });
     };
 
     function setOptions(options) {
-        $scope.open = true;
+        $scope.state.dialog.open = true;
         $scope.title = options.title;
         $scope.message = options.errMsg || options.message;
         $scope.faqLink = options.faqLink;
@@ -40,7 +50,7 @@ var DialogCtrl = function($scope, dialog) {
     //
 
     $scope.confirm = function(ok) {
-        $scope.open = false;
+        $scope.state.dialog.open = false;
 
         if ($scope.callback) {
             $scope.callback(ok);

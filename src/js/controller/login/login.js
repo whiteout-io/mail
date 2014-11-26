@@ -1,6 +1,6 @@
 'use strict';
 
-var LoginCtrl = function($scope, $location, updateHandler, account, auth, email, keychain, dialog) {
+var LoginCtrl = function($scope, $timeout, $location, updateHandler, account, auth, email, keychain, dialog) {
 
     // check for app update
     updateHandler.checkForUpdate();
@@ -85,7 +85,7 @@ var LoginCtrl = function($scope, $location, updateHandler, account, auth, email,
     }
 
     function goTo(location) {
-        $scope.$apply(function() {
+        return $timeout(function() {
             $location.path(location);
         });
     }

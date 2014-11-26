@@ -22,8 +22,7 @@ StatusDisplay.prototype.update = function(msg, time) {
     self._axe.info('status display', msg);
     return self._q(function(resolve, reject) {
         if (self.showStatus) {
-            self.showStatus(msg, time);
-            resolve();
+            return resolve(self.showStatus(msg, time));
         } else {
             reject(new Error('Status display service showStatus not set!'));
         }
@@ -38,8 +37,7 @@ StatusDisplay.prototype.setSearching = function(state) {
     var self = this;
     return self._q(function(resolve, reject) {
         if (self.showSearching) {
-            self.showSearching(state);
-            resolve();
+            return resolve(self.showSearching(state));
         } else {
             reject(new Error('Status display service showSearching not set!'));
         }
