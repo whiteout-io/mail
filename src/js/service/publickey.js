@@ -4,9 +4,8 @@ var ngModule = angular.module('woServices');
 ngModule.service('publicKey', PublicKey);
 module.exports = PublicKey;
 
-function PublicKey(restDao, appConfig) {
-    this._restDao = restDao;
-    this._restDao.setBaseUri(appConfig.config.cloudUrl);
+function PublicKey(publicKeyRestDao) {
+    this._restDao = publicKeyRestDao;
 }
 
 /**

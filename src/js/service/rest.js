@@ -1,9 +1,42 @@
 'use strict';
 
 var ngModule = angular.module('woServices');
-ngModule.factory('restDao', function() {
-    return new RestDAO();
+
+// rest dao for use in the public key service
+ngModule.factory('publicKeyRestDao', function(appConfig) {
+    var dao = new RestDAO();
+    dao.setBaseUri(appConfig.config.cloudUrl);
+    return dao;
 });
+
+// rest dao for use in the private key service
+ngModule.factory('privateKeyRestDao', function(appConfig) {
+    var dao = new RestDAO();
+    dao.setBaseUri(appConfig.config.privkeyServerUrl);
+    return dao;
+});
+
+// rest dao for use in the invitation service
+ngModule.factory('invitationRestDao', function(appConfig) {
+    var dao = new RestDAO();
+    dao.setBaseUri(appConfig.config.cloudUrl);
+    return dao;
+});
+
+// rest dao for use in the admin service
+ngModule.factory('adminRestDao', function(appConfig) {
+    var dao = new RestDAO();
+    dao.setBaseUri(appConfig.config.adminUrl);
+    return dao;
+});
+
+// rest dao for use in the oauth service
+ngModule.factory('oauthRestDao', function() {
+    var dao = new RestDAO();
+    dao.setBaseUri('https://www.googleapis.com');
+    return dao;
+});
+
 module.exports = RestDAO;
 
 function RestDAO() {}

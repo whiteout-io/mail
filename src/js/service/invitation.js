@@ -8,9 +8,8 @@ module.exports = Invitation;
  * The Invitation is a high level Data Access Object that access the invitation service REST endpoint.
  * @param {Object} restDao The REST Data Access Object abstraction
  */
-function Invitation(restDao, appConfig) {
-    this._restDao = restDao;
-    this._restDao.setBaseUri(appConfig.config.cloudUrl);
+function Invitation(invitationRestDao) {
+    this._restDao = invitationRestDao;
 }
 
 //

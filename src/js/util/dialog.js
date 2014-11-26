@@ -10,6 +10,13 @@ module.exports = Dialog;
 function Dialog($q, axe) {
     this._q = $q;
     this._axe = axe;
+
+    // binds the methods to the instance of the dialog service so that we can e.g.
+    // pass dialog.error as a callback to asynchronous functions without having to
+    // do dialog.error.bind(dialog) every time
+    this.info = this.info.bind(this);
+    this.error = this.error.bind(this);
+    this.confirm = this.confirm.bind(this);
 }
 
 /**
@@ -19,7 +26,7 @@ function Dialog($q, axe) {
  * @return {Promise}
  */
 Dialog.prototype.info = function(options) {
-    return this._handle(options, this.displayInfo, 'displayInfo');
+    return this._handle(options, this.displayInfo.bind(this), 'displayInfo');
 };
 
 /**
@@ -30,8 +37,10 @@ Dialog.prototype.info = function(options) {
  */
 Dialog.prototype.error = function(options) {
     // log the error
-    this._axe.error((options.errMsg || options.message) + (options.stack ? ('\n' + options.stack) : ''));
-    return this._handle(options, this.displayError, 'displayError');
+    if (options) {
+        this._axe.error((options.errMsg || options.message) + (options.stack ? ('\n' + options.stack) : ''));
+    }
+    return this._handle(options, this.displayError.bind(this), 'displayError');
 };
 
 /**
@@ -42,7 +51,7 @@ Dialog.prototype.error = function(options) {
  * @return {Promise}
  */
 Dialog.prototype.confirm = function(options) {
-    return this._handle(options, this.displayConfirm, 'displayConfirm');
+    return this._handle(options, this.displayConfirm.bind(this), 'displayConfirm');
 };
 
 /**

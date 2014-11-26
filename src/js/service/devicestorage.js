@@ -1,23 +1,20 @@
 'use strict';
 
 var ngModule = angular.module('woServices');
-ngModule.factory('deviceStorage', function(lawnchairDAO) {
-    return new DeviceStorage(lawnchairDAO);
-});
-module.exports = DeviceStorage;
-
-//
-// Export special device storage singletons
-//
 
 // expose an instance with the static dbName 'app-config' to store configuration data
-ngModule.factory('appConfigStore', function(deviceStorage) {
+ngModule.factory('appConfigStore', function(appConfigLawnchair) {
+    var deviceStorage = new DeviceStorage(appConfigLawnchair);
     deviceStorage.init('app-config');
     return deviceStorage;
 });
 
 // expose a singleton instance of DeviceStorage called 'accountStore' to persist user data
-ngModule.service('accountStore', DeviceStorage);
+ngModule.factory('accountStore', function(accountLawnchair) {
+    return new DeviceStorage(accountLawnchair);
+});
+
+module.exports = DeviceStorage;
 
 //
 // Implementation
