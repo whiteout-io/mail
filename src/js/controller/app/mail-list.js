@@ -11,7 +11,7 @@ var INIT_DISPLAY_LEN = 20,
     FOLDER_TYPE_INBOX = 'Inbox',
     NOTIFICATION_INBOX_TIMEOUT = 5000;
 
-var MailListCtrl = function($scope, $routeParams, statusDisplay, notification, email, keychain, dialog, search, dummy) {
+var MailListCtrl = function($scope, $timeout, $routeParams, statusDisplay, notification, email, keychain, dialog, search, dummy) {
 
     //
     // Init
@@ -197,12 +197,15 @@ var MailListCtrl = function($scope, $routeParams, statusDisplay, notification, e
      * Sync current folder when client comes back online
      */
     $scope.watchOnline = $scope.$watch('account.online', function(isOnline) {
-        if (isOnline) {
-            statusDisplay.update('Online');
-            openCurrentFolder();
-        } else {
-            statusDisplay.update('Offline mode');
-        }
+        // wait one cycle for the status display controllers to init
+        $timeout(function() {
+            if (isOnline) {
+                statusDisplay.update('Online');
+                openCurrentFolder();
+            } else {
+                statusDisplay.update('Offline mode');
+            }
+        });
     }, true);
 
     //

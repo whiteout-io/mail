@@ -1,26 +1,15 @@
 'use strict';
 
-var StatusDisplayCtrl = function($scope, $timeout, statusDisplay) {
+var StatusDisplayCtrl = function($scope) {
 
-    $scope.state.statusDisplay = {
-        text: '',
-        time: undefined,
-        searching: false
-    };
+    $scope.$on('status', function(e, text, time) {
+        $scope.text = text;
+        $scope.time = (time) ? time : '';
+    });
 
-    // set the show functions
-    statusDisplay.showStatus = function(lbl, time) {
-        return $timeout(function() {
-            $scope.state.statusDisplay.text = lbl;
-            $scope.state.statusDisplay.time = (time) ? time : '';
-        });
-    };
-
-    statusDisplay.showSearching = function(state) {
-        return $timeout(function() {
-            $scope.state.statusDisplay.searching = state;
-        });
-    };
+    $scope.$on('searching', function(e, state) {
+        $scope.searching = state;
+    });
 
 };
 

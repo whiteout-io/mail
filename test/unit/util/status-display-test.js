@@ -1,7 +1,7 @@
 'use strict';
 
 describe('Status Display Service unit test', function() {
-    var statusDisplay, logInfoStub;
+    var statusDisplay, logInfoStub, rootScope, broadcastSpy;
 
     beforeEach(function() {
         angular.module('statusDisplay-test', ['woUtil']);
@@ -9,6 +9,8 @@ describe('Status Display Service unit test', function() {
         angular.mock.inject(function($injector, axe) {
             logInfoStub = sinon.stub(axe, 'info');
             statusDisplay = $injector.get('statusDisplay');
+            rootScope = $injector.get('$rootScope');
+            broadcastSpy = sinon.spy(rootScope, '$broadcast');
         });
     });
 
@@ -17,49 +19,23 @@ describe('Status Display Service unit test', function() {
     });
 
     describe('update', function() {
-        it('should work', inject(function($rootScope) {
+        it('should work', function() {
             var message = 'Tada!',
                 time = new Date();
-            statusDisplay.showStatus = function() {};
-            var showStatusStub = sinon.stub(statusDisplay, 'showStatus');
 
-            statusDisplay.update(message, time).then(function(result) {
-                expect(result).to.not.exist;
-            });
+            statusDisplay.update(message, time);
 
-            expect(logInfoStub.calledOnce).to.be.true;
-            $rootScope.$apply();
-            expect(showStatusStub.withArgs(message, time).calledOnce).to.be.true;
-        }));
-        it('should fail for no display function', inject(function($rootScope) {
-            statusDisplay.update().catch(function(err) {
-                expect(err.message).to.match(/showStatus/);
-            });
-
-            expect(logInfoStub.calledOnce).to.be.true;
-            $rootScope.$apply();
-        }));
+            expect(broadcastSpy.withArgs('status', message, time).calledOnce).to.be.true;
+            expect(logInfoStub.withArgs('status display', message).calledOnce).to.be.true;
+        });
     });
 
     describe('setSearching', function() {
-        it('should work', inject(function($rootScope) {
-            statusDisplay.showSearching = function() {};
-            var showSearchingStub = sinon.stub(statusDisplay, 'showSearching');
+        it('should work', function() {
+            statusDisplay.setSearching(true);
 
-            statusDisplay.setSearching(true).then(function(result) {
-                expect(result).to.not.exist;
-            });
-
-            $rootScope.$apply();
-            expect(showSearchingStub.withArgs(true).calledOnce).to.be.true;
-        }));
-        it('should fail for no display function', inject(function($rootScope) {
-            statusDisplay.setSearching().catch(function(err) {
-                expect(err.message).to.match(/showSearching/);
-            });
-
-            $rootScope.$apply();
-        }));
+            expect(broadcastSpy.withArgs('searching', true).calledOnce).to.be.true;
+        });
     });
 
 });
