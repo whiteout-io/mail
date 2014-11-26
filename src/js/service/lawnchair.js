@@ -3,7 +3,6 @@
 var ngModule = angular.module('woServices');
 ngModule.service('appConfigLawnchair', LawnchairDAO);
 ngModule.service('accountLawnchair', LawnchairDAO);
-ngModule.service('keychainLawnchair', LawnchairDAO);
 module.exports = LawnchairDAO;
 
 /**
