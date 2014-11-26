@@ -7,3 +7,4 @@ require('./pgpbuilder');
 require('./email');
 require('./outbox');
 require('./account');
+require('./search');

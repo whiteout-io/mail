@@ -11,7 +11,7 @@ var INIT_DISPLAY_LEN = 20,
     FOLDER_TYPE_INBOX = 'Inbox',
     NOTIFICATION_INBOX_TIMEOUT = 5000;
 
-var MailListCtrl = function($scope, $routeParams, statusDisplay, notification, email, keychain, dialog) {
+var MailListCtrl = function($scope, $routeParams, statusDisplay, notification, email, keychain, dialog, search, dummy) {
 
     //
     // Init
@@ -116,7 +116,7 @@ var MailListCtrl = function($scope, $routeParams, statusDisplay, notification, e
         // in development, display dummy mail objects
         if ($routeParams.dev) {
             statusDisplay.update('Last update: ', new Date());
-            currentFolder().messages = createDummyMails();
+            currentFolder().messages = dummy.listMails();
             return;
         }
 
@@ -186,81 +186,11 @@ var MailListCtrl = function($scope, $routeParams, statusDisplay, notification, e
         searchTimeout = setTimeout(function() {
             $scope.$apply(function() {
                 // filter relevant messages
-                $scope.displayMessages = $scope.search(currentFolder().messages, searchText);
+                $scope.displayMessages = search.filter(currentFolder().messages, searchText);
                 statusDisplay.setSearching(false);
                 statusDisplay.update('Matches in this folder');
             });
         }, 500);
-    };
-
-    /**
-     * Do full text search on messages. Parse meta data first
-     */
-    $scope.search = function(messages, searchText) {
-        // don't filter on empty searchText
-        if (!searchText) {
-            return messages;
-        }
-
-        // escape search string
-        searchText = searchText.replace(/([.*+?^${}()|\[\]\/\\])/g, "\\$1");
-        // compare all strings (case insensitive)
-        var regex = new RegExp(searchText, 'i');
-
-        function contains(input) {
-            if (!input) {
-                return false;
-            }
-            return regex.test(input);
-        }
-
-        function checkAddresses(header) {
-            if (!header || !header.length) {
-                return false;
-            }
-
-            for (var i = 0; i < header.length; i++) {
-                if (contains(header[i].name) || contains(header[i].address)) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        /**
-         * Filter meta data first and then only look at plaintext and decrypted message bodies
-         */
-        function matchMetaDataFirst(m) {
-            // compare subject
-            if (contains(m.subject)) {
-                return true;
-            }
-            // compares address headers
-            if (checkAddresses(m.from) || checkAddresses(m.to) || checkAddresses(m.cc) || checkAddresses(m.bcc)) {
-                return true;
-            }
-            // compare plaintext body
-            if (m.body && !m.encrypted && contains(m.body)) {
-                return true;
-            }
-            // compare decrypted body
-            if (m.body && m.encrypted && m.decrypted && contains(m.body)) {
-                return true;
-            }
-            // compare plaintex html body
-            if (m.html && !m.encrypted && contains(m.html)) {
-                return true;
-            }
-            // compare decrypted html body
-            if (m.html && m.encrypted && m.decrypted && contains(m.html)) {
-                return true;
-            }
-            return false;
-        }
-
-        // user native js Array.filter
-        return messages.filter(matchMetaDataFirst);
     };
 
     /**
@@ -439,74 +369,6 @@ function byUidDescending(a, b) {
     } else {
         return 0;
     }
-}
-
-// Helper for development mode
-
-function createDummyMails() {
-    var uid = 1000000;
-
-    var Email = function(unread, attachments, answered) {
-        this.uid = uid--;
-        this.from = [{
-            name: 'Whiteout Support',
-            address: 'support@whiteout.io'
-        }]; // sender address
-        this.to = [{
-            address: 'max.musterman@gmail.com'
-        }, {
-            address: 'max.musterman@gmail.com'
-        }]; // list of receivers
-        this.cc = [{
-            address: 'john.doe@gmail.com'
-        }]; // list of receivers
-        this.attachments = attachments ? [{
-            "filename": "a.md",
-            "filesize": 123,
-            "mimeType": "text/x-markdown",
-            "part": "2",
-            "content": null
-        }, {
-            "filename": "b.md",
-            "filesize": 456,
-            "mimeType": "text/x-markdown",
-            "part": "3",
-            "content": null
-        }, {
-            "filename": "c.md",
-            "filesize": 789,
-            "mimeType": "text/x-markdown",
-            "part": "4",
-            "content": null
-        }] : [];
-        this.unread = unread;
-        this.answered = answered;
-        this.sentDate = new Date('Thu Sep 19 2013 20:41:23 GMT+0200 (CEST)');
-        this.subject = 'Getting started'; // Subject line
-        this.body = 'And a good day to you too sir. \n' +
-            '\n' +
-            'Thursday, Apr 24, 2014 3:33 PM safewithme.testuser@gmail.com wrote:\n' +
-            '> adsfadfasdfasdfasfdasdfasdfas\n' +
-            '\n' +
-            'http://example.com\n' +
-            '\n' +
-            '> Tuesday, Mar 25, 2014 4:19 PM gianniarcore@gmail.com wrote:\n' +
-            '>> from 0.7.0.1\n' +
-            '>>\n' +
-            '>> God speed!'; // plaintext body
-        //this.html = '<!DOCTYPE html><html><head></head><body><h1 style="border: 1px solid red; width: 500px;">Hello there' + Math.random() + '</h1></body></html>';
-        this.encrypted = true;
-        this.decrypted = true;
-    };
-
-    var dummies = [],
-        i = 100;
-    while (i--) {
-        // every second/third/fourth dummy mail with unread/attachments/answered
-        dummies.push(new Email((i % 2 === 0), (i % 3 === 0), (i % 5 === 0)));
-    }
-
-    return dummies;
 }
 
 module.exports = MailListCtrl;

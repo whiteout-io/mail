@@ -178,6 +178,7 @@ module.exports = function(grunt) {
                         'test/unit/email/outbox-bo-test.js',
                         'test/unit/email/email-dao-test.js',
                         'test/unit/email/account-test.js',
+                        'test/unit/email/search-test.js',
                         'test/unit/controller/app/dialog-ctrl-test.js',
                         'test/unit/controller/login/add-account-ctrl-test.js',
                         'test/unit/controller/login/create-account-ctrl-test.js',
@@ -194,8 +195,8 @@ module.exports = function(grunt) {
                         'test/unit/controller/app/contacts-ctrl-test.js',
                         'test/unit/controller/app/read-ctrl-test.js',
                         'test/unit/controller/app/navigation-ctrl-test.js',
-                        /*'test/unit/mail-list-ctrl-test.js',
-                        'test/unit/write-ctrl-test.js',
+                        'test/unit/controller/app/mail-list-ctrl-test.js',
+                        /*'test/unit/write-ctrl-test.js',
                         'test/unit/action-bar-ctrl-test.js',*/
                     ]
                 },

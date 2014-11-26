@@ -1,17 +1,17 @@
 'use strict';
 
 var mocks = angular.mock,
-    MailListCtrl = require('../../src/js/controller/mail-list'),
-    EmailDAO = require('../../src/js/dao/email-dao'),
-    DeviceStorageDAO = require('../../src/js/dao/devicestorage-dao'),
-    KeychainDAO = require('../../src/js/dao/keychain-dao'),
-    appController = require('../../src/js/app-controller'),
-    notification = require('../../src/js/util/notification');
+    MailListCtrl = require('../../../../src/js/controller/app/mail-list'),
+    EmailDAO = require('../../../../src/js/email/email'),
+    KeychainDAO = require('../../../../src/js/service/keychain'),
+    StatusDisplay = require('../../../../src/js/util/status-display'),
+    Dialog = require('../../../../src/js/util/dialog'),
+    Search = require('../../../../src/js/email/search');
 
 chai.config.includeStack = true;
 
 describe('Mail List controller unit test', function() {
-    var scope, ctrl, origEmailDao, emailDaoMock, keychainMock, deviceStorageMock,
+    var scope, ctrl, statusDisplayMock, notificationMock, emailMock, keychainMock, dialogMock, searchMock,
         emailAddress, emails,
         hasChrome, hasSocket, hasRuntime, hasIdentity;
 
@@ -41,26 +41,21 @@ describe('Mail List controller unit test', function() {
         }, {
             unread: true
         }];
-        appController._outboxBo = {
-            pendingEmails: emails
-        };
 
-        origEmailDao = appController._emailDao;
-        emailDaoMock = sinon.createStubInstance(EmailDAO);
-        appController._emailDao = emailDaoMock;
         emailAddress = 'fred@foo.com';
-        emailDaoMock._account = {
-            emailAddress: emailAddress,
+
+        notificationMock = {
+            create: function() {},
+            close: function() {}
         };
 
-
+        statusDisplayMock = sinon.createStubInstance(StatusDisplay);
+        emailMock = sinon.createStubInstance(EmailDAO);
         keychainMock = sinon.createStubInstance(KeychainDAO);
-        appController._keychain = keychainMock;
+        dialogMock = sinon.createStubInstance(Dialog);
+        searchMock = sinon.createStubInstance(Search);
 
-        deviceStorageMock = sinon.createStubInstance(DeviceStorageDAO);
-        emailDaoMock._devicestorage = deviceStorageMock;
-
-        angular.module('maillisttest', []);
+        angular.module('maillisttest', ['woEmail', 'woServices', 'woUtil']);
         mocks.module('maillisttest');
         mocks.inject(function($rootScope, $controller) {
             scope = $rootScope.$new();
@@ -73,7 +68,13 @@ describe('Mail List controller unit test', function() {
             scope.loadVisibleBodies = function() {};
             ctrl = $controller(MailListCtrl, {
                 $scope: scope,
-                $routeParams: {}
+                $routeParams: {},
+                statusDisplay: statusDisplayMock,
+                notification: notificationMock,
+                email: emailMock,
+                keychain: keychainMock,
+                dialog: dialogMock,
+                search: searchMock
             });
         });
     });
@@ -91,9 +92,6 @@ describe('Mail List controller unit test', function() {
         if (!hasIdentity) {
             delete window.chrome.identity;
         }
-
-        // restore the module
-        appController._emailDao = origEmailDao;
     });
 
     describe('displayMore', function() {
@@ -137,104 +135,21 @@ describe('Mail List controller unit test', function() {
 
         it('should show initial message on empty', function() {
             scope.displaySearchResults();
-            expect(scope.state.mailList.searching).to.be.false;
-            expect(scope.state.mailList.lastUpdateLbl).to.equal('Online');
+            expect(statusDisplayMock.setSearching.withArgs(false).calledOnce).to.be.true;
+            expect(statusDisplayMock.update.withArgs('Online').calledOnce).to.be.true;
             expect(scope.displayMessages.length).to.equal(2);
         });
         it('should show initial message on empty', function() {
-            var searchStub = sinon.stub(scope, 'search');
-            searchStub.returns(['a']);
-
+            searchMock.filter.returns(['a']);
 
             scope.displaySearchResults('query');
-            expect(scope.state.mailList.searching).to.be.true;
-            expect(scope.state.mailList.lastUpdateLbl).to.equal('Searching ...');
+            expect(statusDisplayMock.setSearching.withArgs(true).calledOnce).to.be.true;
+            expect(statusDisplayMock.update.withArgs('Searching ...').calledOnce).to.be.true;
             clock.tick(500);
 
             expect(scope.displayMessages).to.deep.equal(['a']);
-            expect(scope.state.mailList.searching).to.be.false;
-            expect(scope.state.mailList.lastUpdateLbl).to.equal('Matches in this folder');
-
-        });
-    });
-
-    describe('search', function() {
-        var message1 = {
-                to: [{
-                    name: 'name1',
-                    address: 'address1'
-                }],
-                subject: 'subject1',
-                body: 'body1',
-                html: 'html1'
-            },
-            message2 = {
-                to: [{
-                    name: 'name2',
-                    address: 'address2'
-                }],
-                subject: 'subject2',
-                body: 'body2',
-                html: 'html2'
-            },
-            message3 = {
-                to: [{
-                    name: 'name3',
-                    address: 'address3'
-                }],
-                subject: 'subject3',
-                body: 'body1',
-                html: 'html1',
-                encrypted: true
-            },
-            message4 = {
-                to: [{
-                    name: 'name4',
-                    address: 'address4'
-                }],
-                subject: 'subject4',
-                body: 'body1',
-                html: 'html1',
-                encrypted: true,
-                decrypted: true
-            },
-            testMessages = [message1, message2, message3, message4];
-
-        it('return same messages array on empty query string', function() {
-            var result = scope.search(testMessages, '');
-            expect(result).to.equal(testMessages);
-        });
-
-        it('return message1 on matching subject', function() {
-            var result = scope.search(testMessages, 'subject1');
-            expect(result.length).to.equal(1);
-            expect(result[0]).to.equal(message1);
-        });
-
-        it('return message1 on matching name', function() {
-            var result = scope.search(testMessages, 'name1');
-            expect(result.length).to.equal(1);
-            expect(result[0]).to.equal(message1);
-        });
-
-        it('return message1 on matching address', function() {
-            var result = scope.search(testMessages, 'address1');
-            expect(result.length).to.equal(1);
-            expect(result[0]).to.equal(message1);
-        });
-
-        it('return plaintext and decrypted messages on matching body', function() {
-            var result = scope.search(testMessages, 'body1');
-            expect(result.length).to.equal(2);
-            expect(result[0]).to.equal(message1);
-            expect(result[1]).to.equal(message4);
-        });
-
-        it('return plaintext and decrypted messages on matching html', function() {
-            var result = scope.search(testMessages, 'html1');
-            expect(result.length).to.equal(2);
-            expect(result[0]).to.equal(message1);
-            expect(result[1]).to.equal(message4);
+            expect(statusDisplayMock.setSearching.withArgs(false).calledOnce).to.be.true;
+            expect(statusDisplayMock.update.withArgs('Matches in this folder').calledOnce).to.be.true;
         });
     });
 
@@ -251,7 +166,7 @@ describe('Mail List controller unit test', function() {
         });
 
         afterEach(function() {
-            notification.create.restore();
+            notificationMock.create.restore();
         });
 
         it('should succeed for single mail', function(done) {
@@ -264,7 +179,7 @@ describe('Mail List controller unit test', function() {
                 unread: true
             };
 
-            sinon.stub(notification, 'create', function(opts) {
+            sinon.stub(notificationMock, 'create', function(opts) {
                 expect(opts.title).to.equal(mail.from[0].address);
                 expect(opts.message).to.equal(mail.subject);
 
@@ -280,7 +195,7 @@ describe('Mail List controller unit test', function() {
                 }
             };
 
-            emailDaoMock.onIncomingMessage([mail]);
+            emailMock.onIncomingMessage([mail]);
         });
 
         it('should succeed for multiple mails', function(done) {
@@ -307,7 +222,7 @@ describe('Mail List controller unit test', function() {
                 unread: false
             }];
 
-            sinon.stub(notification, 'create', function(opts) {
+            sinon.stub(notificationMock, 'create', function(opts) {
                 expect(opts.title).to.equal('2 new messages');
                 expect(opts.message).to.equal(mails[0].subject + '\n' + mails[1].subject);
 
@@ -323,7 +238,7 @@ describe('Mail List controller unit test', function() {
                 }
             };
 
-            emailDaoMock.onIncomingMessage(mails);
+            emailMock.onIncomingMessage(mails);
         });
     });
 
@@ -336,14 +251,14 @@ describe('Mail List controller unit test', function() {
             };
 
             scope.getBody();
-            expect(emailDaoMock.getBody.calledOnce).to.be.true;
+            expect(emailMock.getBody.calledOnce).to.be.true;
         });
     });
 
     describe('select', function() {
         it('should decrypt, focus mark an unread mail as read', function() {
             scope.pendingNotifications = ['asd'];
-            sinon.stub(notification, 'close');
+            sinon.stub(notificationMock, 'close');
 
             var mail = {
                 from: [{
@@ -372,13 +287,13 @@ describe('Mail List controller unit test', function() {
 
             scope.select(mail);
 
-            expect(emailDaoMock.decryptBody.calledOnce).to.be.true;
+            expect(emailMock.decryptBody.calledOnce).to.be.true;
             expect(keychainMock.refreshKeyForUserId.calledOnce).to.be.true;
             expect(scope.state.mailList.selected).to.equal(mail);
-            expect(notification.close.calledWith('asd')).to.be.true;
-            expect(notification.close.calledOnce).to.be.true;
+            expect(notificationMock.close.calledWith('asd')).to.be.true;
+            expect(notificationMock.close.calledOnce).to.be.true;
 
-            notification.close.restore();
+            notificationMock.close.restore();
         });
 
         it('should decrypt and focus a read mail', function() {
@@ -407,7 +322,7 @@ describe('Mail List controller unit test', function() {
 
             scope.select(mail);
 
-            expect(emailDaoMock.decryptBody.calledOnce).to.be.true;
+            expect(emailMock.decryptBody.calledOnce).to.be.true;
             expect(keychainMock.refreshKeyForUserId.calledOnce).to.be.true;
             expect(scope.state.mailList.selected).to.equal(mail);
         });
