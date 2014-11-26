@@ -10,7 +10,7 @@ var LoginCtrl = require('../../../../src/js/controller/login/login'),
 
 describe('Login Controller unit test', function() {
     var scope, location, ctrl,
-        emailMock, keychainMock, authMock, accountMock, dialogMock, updateHandlerMock, pathStub,
+        emailMock, keychainMock, authMock, accountMock, dialogMock, updateHandlerMock, goToStub,
         emailAddress = 'fred@foo.com';
 
     beforeEach(function() {
@@ -24,7 +24,6 @@ describe('Login Controller unit test', function() {
         location = {
             path: function() {}
         };
-        pathStub = sinon.stub(location, 'path');
 
         authMock.emailAddress = emailAddress;
     });
@@ -36,6 +35,9 @@ describe('Login Controller unit test', function() {
             scope = $rootScope.$new();
             scope.state = {};
             scope.form = {};
+            scope.goTo = function() {};
+            goToStub = sinon.stub(scope, 'goTo');
+
             ctrl = $controller(LoginCtrl, {
                 $scope: scope,
                 $location: location,
@@ -66,7 +68,7 @@ describe('Login Controller unit test', function() {
 
         createController();
 
-        expect(pathStub.withArgs('/add-account').calledOnce).to.be.true;
+        expect(goToStub.withArgs('/add-account').calledOnce).to.be.true;
     });
 
     it('should fail for auth.init', function() {
@@ -93,7 +95,7 @@ describe('Login Controller unit test', function() {
 
         createController();
 
-        expect(pathStub.withArgs('/login-existing').calledOnce).to.be.true;
+        expect(goToStub.withArgs('/login-existing').calledOnce).to.be.true;
     });
 
     it('should fail for auth.storeCredentials', function() {
@@ -125,7 +127,7 @@ describe('Login Controller unit test', function() {
 
         createController();
 
-        expect(pathStub.withArgs('/desktop').calledOnce).to.be.true;
+        expect(goToStub.withArgs('/desktop').calledOnce).to.be.true;
     });
 
     it('should fail for keychain.requestPrivateKeyDownload', function() {
@@ -153,7 +155,7 @@ describe('Login Controller unit test', function() {
 
         createController();
 
-        expect(pathStub.withArgs('/login-privatekey-download').calledOnce).to.be.true;
+        expect(goToStub.withArgs('/login-privatekey-download').calledOnce).to.be.true;
     });
 
     it('should redirect to /login-new-device', function() {
@@ -167,7 +169,7 @@ describe('Login Controller unit test', function() {
 
         createController();
 
-        expect(pathStub.withArgs('/login-new-device').calledOnce).to.be.true;
+        expect(goToStub.withArgs('/login-new-device').calledOnce).to.be.true;
     });
 
     it('should redirect to /login-initial', function() {
@@ -178,7 +180,7 @@ describe('Login Controller unit test', function() {
 
         createController();
 
-        expect(pathStub.withArgs('/login-initial').calledOnce).to.be.true;
+        expect(goToStub.withArgs('/login-initial').calledOnce).to.be.true;
     });
 
 });

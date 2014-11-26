@@ -27,7 +27,7 @@ describe('Dialog Controller unit test', function() {
         it('should work', function(done) {
             scope.callback = function(confirmed) {
                 expect(confirmed).to.be.true;
-                expect(scope.open).to.be.false;
+                expect(scope.state.dialog.open).to.be.false;
                 done();
             };
             scope.confirm(true);
@@ -38,7 +38,7 @@ describe('Dialog Controller unit test', function() {
         it('should work', function(done) {
             scope.callback = function(confirmed) {
                 expect(confirmed).to.be.false;
-                expect(scope.open).to.be.false;
+                expect(scope.state.dialog.open).to.be.false;
                 done();
             };
             scope.confirm(false);

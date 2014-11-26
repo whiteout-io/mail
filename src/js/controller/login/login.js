@@ -19,7 +19,7 @@ var LoginCtrl = function($scope, $timeout, $location, updateHandler, account, au
 
             // check if account needs to be selected
             if (!info.emailAddress) {
-                goTo('/add-account');
+                $scope.goTo('/add-account');
                 return;
             }
 
@@ -46,7 +46,7 @@ var LoginCtrl = function($scope, $timeout, $location, updateHandler, account, au
                 passphrase: undefined
             }, function(err) {
                 if (err) {
-                    goTo('/login-existing');
+                    $scope.goTo('/login-existing');
                     return;
                 }
 
@@ -55,7 +55,7 @@ var LoginCtrl = function($scope, $timeout, $location, updateHandler, account, au
                         return dialog.error(err);
                     }
 
-                    goTo('/desktop');
+                    $scope.goTo('/desktop');
                 });
             });
         } else if (availableKeys && availableKeys.publicKey && !availableKeys.privateKey) {
@@ -71,24 +71,24 @@ var LoginCtrl = function($scope, $timeout, $location, updateHandler, account, au
 
                 if (privateKeySynced) {
                     // private key is synced, proceed to download
-                    goTo('/login-privatekey-download');
+                    $scope.goTo('/login-privatekey-download');
                     return;
                 }
 
                 // no private key, import key file
-                goTo('/login-new-device');
+                $scope.goTo('/login-new-device');
             });
         } else {
             // no public key available, start onboarding process
-            goTo('/login-initial');
+            $scope.goTo('/login-initial');
         }
     }
 
-    function goTo(location) {
+    $scope.goTo = function(location) {
         return $timeout(function() {
             $location.path(location);
         });
-    }
+    };
 };
 
 module.exports = LoginCtrl;

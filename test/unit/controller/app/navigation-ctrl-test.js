@@ -31,6 +31,7 @@ describe('Navigation Controller unit test', function() {
         notificationStub = sinon.createStubInstance(Notif);
         accountMock = sinon.createStubInstance(Account);
         accountMock.list.returns([account]);
+        accountMock.isLoggedIn.returns(true);
 
         angular.module('navigationtest', ['woServices', 'woEmail', 'woUtil']);
         angular.mock.module('navigationtest');
