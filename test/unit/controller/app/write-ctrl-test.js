@@ -1,57 +1,50 @@
 'use strict';
 
-var mocks = angular.mock,
-    WriteCtrl = require('../../src/js/controller/write'),
-    EmailDAO = require('../../src/js/dao/email-dao'),
-    OutboxBO = require('../../src/js/bo/outbox'),
-    KeychainDAO = require('../../src/js/dao/keychain-dao'),
-    appController = require('../../src/js/app-controller');
+var WriteCtrl = require('../../../../src/js/controller/app/write'),
+    Email = require('../../../../src/js/email/email'),
+    Outbox = require('../../../../src/js/email/outbox'),
+    Keychain = require('../../../../src/js/service/keychain'),
+    Auth = require('../../../../src/js/service/auth'),
+    PGP = require('../../../../src/js/crypto/pgp'),
+    Dialog = require('../../../../src/js/util/dialog');
 
 describe('Write controller unit test', function() {
     var ctrl, scope,
-        origEmailDao, origOutbox, origKeychain,
-        emailDaoMock, keychainMock, outboxMock, emailAddress, realname;
+        authMock, pgpMock, dialogMock, emailMock, keychainMock, outboxMock,
+        emailAddress, realname;
 
     beforeEach(function() {
-        // the app controller is a singleton, we need to remember the
-        // outbox and email dao to restore it after the tests
-        origEmailDao = appController._emailDao;
-        origOutbox = appController._outboxBo;
-        origKeychain = appController._keychain;
 
-        outboxMock = sinon.createStubInstance(OutboxBO);
-        appController._outboxBo = outboxMock;
-
-        emailDaoMock = sinon.createStubInstance(EmailDAO);
-        appController._emailDao = emailDaoMock;
+        authMock = sinon.createStubInstance(Auth);
+        pgpMock = sinon.createStubInstance(PGP);
+        dialogMock = sinon.createStubInstance(Dialog);
+        outboxMock = sinon.createStubInstance(Outbox);
+        emailMock = sinon.createStubInstance(Email);
+        keychainMock = sinon.createStubInstance(Keychain);
 
         emailAddress = 'fred@foo.com';
         realname = 'Fred Foo';
-        emailDaoMock._account = {
-            emailAddress: emailAddress,
-            realname: realname
-        };
+        authMock.emailAddress = emailAddress;
+        authMock.realname = realname;
 
-        keychainMock = sinon.createStubInstance(KeychainDAO);
-        appController._keychain = keychainMock;
-
-        angular.module('writetest', []);
-        mocks.module('writetest');
-        mocks.inject(function($rootScope, $controller) {
+        angular.module('writetest', ['woEmail', 'woServices', 'woUtil']);
+        angular.mock.module('writetest');
+        angular.mock.inject(function($rootScope, $controller) {
             scope = $rootScope.$new();
             scope.state = {};
             ctrl = $controller(WriteCtrl, {
-                $scope: scope
+                $scope: scope,
+                auth: authMock,
+                keychain: keychainMock,
+                pgp: pgpMock,
+                email: emailMock,
+                outbox: outboxMock,
+                dialog: dialogMock
             });
         });
     });
 
-    afterEach(function() {
-        // restore the app controller
-        appController._emailDao = origEmailDao;
-        appController._outboxBo = origOutbox;
-        appController._keychain = origKeychain;
-    });
+    afterEach(function() {});
 
     describe('scope variables', function() {
         it('should be set correctly', function() {
@@ -187,7 +180,7 @@ describe('Write controller unit test', function() {
             expect(keychainMock.getReceiverPublicKey.called).to.be.false;
         });
 
-        it('should not work for error in keychain', function(done) {
+        it('should not work for error in keychain', function() {
             var recipient = {
                 address: 'asds@example.com'
             };
@@ -198,15 +191,13 @@ describe('Write controller unit test', function() {
                 errMsg: '404 not found yadda yadda'
             });
 
-            scope.onError = function() {
-                expect(recipient.key).to.be.undefined;
-                expect(recipient.secure).to.be.false;
-                expect(scope.checkSendStatus.callCount).to.equal(1);
-                expect(keychainMock.refreshKeyForUserId.calledOnce).to.be.true;
-                done();
-            };
-
             scope.verify(recipient);
+
+            expect(dialogMock.error.calledOnce).to.be.true;
+            expect(recipient.key).to.be.undefined;
+            expect(recipient.secure).to.be.false;
+            expect(scope.checkSendStatus.callCount).to.equal(1);
+            expect(keychainMock.refreshKeyForUserId.calledOnce).to.be.true;
         });
 
         it('should work for main userId', function(done) {
@@ -337,6 +328,7 @@ describe('Write controller unit test', function() {
                     address: emailAddress,
                     name: realname
                 }]);
+
                 expect(mail.to).to.deep.equal(scope.to);
                 expect(mail.cc).to.deep.equal(scope.cc);
                 expect(mail.bcc).to.deep.equal(scope.bcc);
@@ -345,19 +337,14 @@ describe('Write controller unit test', function() {
                 expect(mail.attachments).to.be.empty;
                 expect(mail.sentDate).to.exist;
 
-
                 return true;
             })).yields();
-            emailDaoMock.setFlags.yields();
-
-            scope.onError = function(err) {
-                expect(err).to.not.exist;
-            };
+            emailMock.setFlags.yields();
 
             scope.sendToOutbox();
 
             expect(outboxMock.put.calledOnce).to.be.true;
-            expect(emailDaoMock.setFlags.calledOnce).to.be.true;
+            expect(emailMock.setFlags.calledOnce).to.be.true;
             expect(scope.state.lightbox).to.be.undefined;
             expect(scope.replyTo.answered).to.be.true;
         });

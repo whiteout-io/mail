@@ -1,21 +1,21 @@
 'use strict';
 
-var mocks = angular.mock,
-    EmailDAO = require('../../src/js/dao/email-dao'),
-    appController = require('../../src/js/app-controller'),
-    ActionBarCtrl = require('../../src/js/controller/action-bar');
+var Email = require('../../../../src/js/email/email'),
+    Dialog = require('../../../../src/js/util/dialog'),
+    StatusDisplay = require('../../../../src/js/util/status-display'),
+    ActionBarCtrl = require('../../../../src/js/controller/app/action-bar');
 
 describe('Action Bar Controller unit test', function() {
-    var scope, actionBarCtrl, emailDaoMock, origEmailDao;
+    var scope, actionBarCtrl, emailMock, dialogMock, statusDisplayMock;
 
     beforeEach(function() {
-        origEmailDao = appController._emailDao;
-        emailDaoMock = sinon.createStubInstance(EmailDAO);
-        appController._emailDao = emailDaoMock;
+        emailMock = sinon.createStubInstance(Email);
+        dialogMock = sinon.createStubInstance(Dialog);
+        statusDisplayMock = sinon.createStubInstance(StatusDisplay);
 
         angular.module('actionbartest', []);
-        mocks.module('actionbartest');
-        mocks.inject(function($rootScope, $controller) {
+        angular.mock.module('actionbartest');
+        angular.mock.inject(function($rootScope, $controller) {
             scope = $rootScope.$new();
             scope.state = {
                 mailList: {
@@ -40,15 +40,15 @@ describe('Action Bar Controller unit test', function() {
             };
 
             actionBarCtrl = $controller(ActionBarCtrl, {
-                $scope: scope
+                $scope: scope,
+                email: emailMock,
+                dialog: dialogMock,
+                statusDisplay: statusDisplayMock
             });
         });
     });
 
-    afterEach(function() {
-        // restore the module
-        appController._emailDao = origEmailDao;
-    });
+    afterEach(function() {});
 
     describe('deleteMessage', function() {
         it('should not delete without a selected mail', function() {
@@ -56,11 +56,11 @@ describe('Action Bar Controller unit test', function() {
         });
 
         it('should delete the selected mail', function() {
-            emailDaoMock.deleteMessage.yields();
+            emailMock.deleteMessage.yields();
 
             scope.deleteMessage({});
 
-            expect(emailDaoMock.deleteMessage.calledOnce).to.be.true;
+            expect(emailMock.deleteMessage.calledOnce).to.be.true;
             expect(scope.state.read.open).to.be.false;
         });
     });
@@ -88,11 +88,11 @@ describe('Action Bar Controller unit test', function() {
         });
 
         it('should move the selected mail', function() {
-            emailDaoMock.moveMessage.yields();
+            emailMock.moveMessage.yields();
 
             scope.moveMessage({}, {});
 
-            expect(emailDaoMock.moveMessage.calledOnce).to.be.true;
+            expect(emailMock.moveMessage.calledOnce).to.be.true;
             expect(scope.state.read.open).to.be.false;
         });
     });
@@ -120,11 +120,11 @@ describe('Action Bar Controller unit test', function() {
         });
 
         it('should move the selected mail', function() {
-            emailDaoMock.setFlags.yields();
+            emailMock.setFlags.yields();
 
             scope.markMessage({}, true);
 
-            expect(emailDaoMock.setFlags.calledOnce).to.be.true;
+            expect(emailMock.setFlags.calledOnce).to.be.true;
             expect(scope.state.read.open).to.be.false;
         });
     });

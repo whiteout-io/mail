@@ -1,14 +1,11 @@
 'use strict';
 
-var mocks = angular.mock,
-    MailListCtrl = require('../../../../src/js/controller/app/mail-list'),
+var MailListCtrl = require('../../../../src/js/controller/app/mail-list'),
     EmailDAO = require('../../../../src/js/email/email'),
     KeychainDAO = require('../../../../src/js/service/keychain'),
     StatusDisplay = require('../../../../src/js/util/status-display'),
     Dialog = require('../../../../src/js/util/dialog'),
     Search = require('../../../../src/js/email/search');
-
-chai.config.includeStack = true;
 
 describe('Mail List controller unit test', function() {
     var scope, ctrl, statusDisplayMock, notificationMock, emailMock, keychainMock, dialogMock, searchMock,
@@ -56,8 +53,8 @@ describe('Mail List controller unit test', function() {
         searchMock = sinon.createStubInstance(Search);
 
         angular.module('maillisttest', ['woEmail', 'woServices', 'woUtil']);
-        mocks.module('maillisttest');
-        mocks.inject(function($rootScope, $controller) {
+        angular.mock.module('maillisttest');
+        angular.mock.inject(function($rootScope, $controller) {
             scope = $rootScope.$new();
             scope.state = {
                 read: {

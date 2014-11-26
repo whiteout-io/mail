@@ -196,8 +196,8 @@ module.exports = function(grunt) {
                         'test/unit/controller/app/read-ctrl-test.js',
                         'test/unit/controller/app/navigation-ctrl-test.js',
                         'test/unit/controller/app/mail-list-ctrl-test.js',
-                        /*'test/unit/write-ctrl-test.js',
-                        'test/unit/action-bar-ctrl-test.js',*/
+                        'test/unit/controller/app/write-ctrl-test.js',
+                        'test/unit/controller/app/action-bar-ctrl-test.js',
                     ]
                 },
                 options: browserifyOpt

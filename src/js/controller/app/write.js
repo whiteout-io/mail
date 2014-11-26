@@ -1,13 +1,12 @@
 'use strict';
 
-var axe = require('axe-logger'),
-    util = require('crypto-lib').util;
+var util = require('crypto-lib').util;
 
 //
 // Controller
 //
 
-var WriteCtrl = function($scope, $filter, $q, appConfig, auth, keychain, pgp, email, outbox, dialog) {
+var WriteCtrl = function($scope, $filter, $q, appConfig, auth, keychain, pgp, email, outbox, dialog, axe) {
 
     var str = appConfig.string;
 
