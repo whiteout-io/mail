@@ -26,7 +26,7 @@ function Dialog($q, axe) {
  * @return {Promise}
  */
 Dialog.prototype.info = function(options) {
-    return this._handle(options, this.displayInfo.bind(this), 'displayInfo');
+    return this._handle(options, this.displayInfo, 'displayInfo');
 };
 
 /**
@@ -40,7 +40,7 @@ Dialog.prototype.error = function(options) {
     if (options) {
         this._axe.error((options.errMsg || options.message) + (options.stack ? ('\n' + options.stack) : ''));
     }
-    return this._handle(options, this.displayError.bind(this), 'displayError');
+    return this._handle(options, this.displayError, 'displayError');
 };
 
 /**
@@ -51,7 +51,7 @@ Dialog.prototype.error = function(options) {
  * @return {Promise}
  */
 Dialog.prototype.confirm = function(options) {
-    return this._handle(options, this.displayConfirm.bind(this), 'displayConfirm');
+    return this._handle(options, this.displayConfirm, 'displayConfirm');
 };
 
 /**
