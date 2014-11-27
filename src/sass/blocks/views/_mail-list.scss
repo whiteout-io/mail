@@ -83,8 +83,13 @@
             font-size: $font-size-smaller;
             color: $color-text;
             line-height: $footer-height;
-            border-top: 1px solid $color-border-light;
 
+            &:before {
+                content: '';
+                display: block;
+                height: 0;
+                border-top: 1px solid $color-border-light;
+            }
             svg {
                 display: inline-block;
                 height: 1.5em;
