@@ -9,6 +9,7 @@ var util = require('crypto-lib').util;
 var WriteCtrl = function($scope, $filter, $q, appConfig, auth, keychain, pgp, email, outbox, dialog, axe) {
 
     var str = appConfig.string;
+    var cfg = appConfig.config;
 
     // set default value so that the popover height is correct on init
     $scope.keyId = 'XXXXXXXX';
@@ -93,8 +94,7 @@ var WriteCtrl = function($scope, $filter, $q, appConfig, auth, keychain, pgp, em
         }];
         $scope.writerTitle = str.bugReportTitle;
         $scope.subject = str.bugReportSubject;
-        $scope.body = str.bugReportBody + dump;
-
+        $scope.body = str.bugReportBody.replace('{0}', navigator.userAgent).replace('{1}', cfg.appVersion) + dump;
     }
 
     function fillFields(re, replyAll, forward) {
