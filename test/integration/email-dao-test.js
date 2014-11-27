@@ -4,9 +4,8 @@ var ImapClient = require('imap-client'),
     BrowserCrow = require('browsercrow'),
     BrowserSMTP = require('browsersmtp'),
     SmtpClient = require('wo-smtpclient'),
-    LawnchairDAO = require('../../src/js/dao/lawnchair-dao'),
-    DeviceStorageDAO = require('../../src/js/dao/devicestorage-dao'),
-    appController = require('../../src/js/app-controller'),
+    LawnchairDAO = require('../../src/js/service/lawnchair'),
+    DeviceStorageDAO = require('../../src/js/service/devicestorage'),
     mailreader = require('mailreader'),
     PgpMailer = require('pgpmailer'),
     config = require('../../src/js/app-config').config,
@@ -14,9 +13,8 @@ var ImapClient = require('imap-client'),
 
 describe('Email DAO integration tests', function() {
     this.timeout(100000);
-    chai.config.includeStack = true;
 
-    var emailDao, imapClient, imapMessages, imapFolders, imapServer, smtpServer, smtpClient, userStorage,
+    var accountService, emailDao, imapClient, imapMessages, imapFolders, imapServer, smtpServer, smtpClient, userStorage,
         mockKeyPair, inbox, spam;
 
     var testAccount = {
@@ -25,7 +23,11 @@ describe('Email DAO integration tests', function() {
         xoauth2: 'testtoken'
     };
 
-    before(function(done) {
+    beforeEach(function(done) {
+
+        //
+        // Test data
+        //
 
         imapMessages = [{
             raw: 'Message-id: <c>\r\nSubject: hello 3\r\n\r\nWorld 3!',
@@ -129,6 +131,10 @@ describe('Email DAO integration tests', function() {
             }
         };
 
+        //
+        // Test server setup
+        //
+
         var serverUsers = {};
         serverUsers[testAccount.user] = {
             password: testAccount.pass,
@@ -180,124 +186,125 @@ describe('Email DAO integration tests', function() {
             }
         };
 
+        //
+        // Test client setup
+        //
+
         // don't multithread, Function.prototype.bind() is broken in phantomjs in web workers
         window.Worker = undefined;
         navigator.online = true;
 
-        imapClient = new ImapClient({
-            auth: {
-                user: testAccount.user,
-                xoauth2: testAccount.xoauth2
-            },
-            secure: true,
-            ca: ['random string']
-        });
-
-        imapClient._client.client._TCPSocket = imapServer.createTCPSocket();
-        imapClient._listeningClient.client._TCPSocket = imapServer.createTCPSocket();
-        imapClient.onError = function(err) {
-            console.log('IMAP error.', err);
-            console.log('IMAP reconnecting...');
-            // re-init client modules on error
-            appController.onConnect(function(err) {
-                if (err) {
-                    console.error('IMAP reconnect failed!', err);
-                    return;
-                }
-
-                console.log('IMAP reconnect attempt complete.');
-            });
-        };
-
-        smtpClient = new SmtpClient('localhost', 25, {
-            auth: {
-                user: testAccount.user,
-                xoauth2: testAccount.xoauth2
-            },
-            secure: true,
-            ca: ['random string'],
-            onError: console.error
-        });
-
-        smtpClient._TCPSocket = smtpServer.createTCPSocket();
-
-        // phantomjs is really slow, so setting the tcp socket timeouts to 200s will effectively disarm the timeout
-        imapClient._client.client.TIMEOUT_SOCKET_LOWER_BOUND = smtpClient.TIMEOUT_SOCKET_LOWER_BOUND = 200000;
-
         sinon.stub(mailreader, 'startWorker', function() {});
         sinon.stub(openpgp, 'initWorker', function() {});
 
-        sinon.stub(appController, 'onConnect', function(cb) {
-            appController._emailDao.onConnect({
-                imapClient: imapClient,
-                pgpMailer: new PgpMailer({
-                    tls: {
-                        ca: 'random string'
-                    }
-                }, appController._pgpbuilder)
-            }, cb);
+        // build and inject angular services
+        angular.module('email-integration-test', ['woEmail']);
+        angular.mock.module('email-integration-test');
+        angular.mock.inject(function($injector) {
+            accountService = $injector.get('account');
+            initAccountService();
         });
 
-        var cleanup = new DeviceStorageDAO(new LawnchairDAO());
-        cleanup.init(testAccount.user, function(err) {
-            expect(err).to.not.exist;
+        function initAccountService() {
+            // create imap/smtp clients with stubbed tcp sockets
+            imapClient = new ImapClient({
+                auth: {
+                    user: testAccount.user,
+                    xoauth2: testAccount.xoauth2
+                },
+                secure: true,
+                ca: ['random string']
+            });
+
+            imapClient._client.client._TCPSocket = imapServer.createTCPSocket();
+            imapClient._listeningClient.client._TCPSocket = imapServer.createTCPSocket();
+            imapClient.onError = function(err) {
+                console.error('IMAP error.', err);
+                throw err;
+            };
+
+            smtpClient = new SmtpClient('localhost', 25, {
+                auth: {
+                    user: testAccount.user,
+                    xoauth2: testAccount.xoauth2
+                },
+                secure: true,
+                ca: ['random string'],
+                onError: console.error
+            });
+
+            smtpClient._TCPSocket = smtpServer.createTCPSocket();
+
+            // phantomjs is really slow, so setting the tcp socket timeouts to 200s will effectively disarm the timeout
+            imapClient._client.client.TIMEOUT_SOCKET_LOWER_BOUND = smtpClient.TIMEOUT_SOCKET_LOWER_BOUND = 200000;
+
+            // stub the onConnect function to inject the test imap/smtp clients
+            sinon.stub(accountService, 'onConnect', function(cb) {
+                accountService._emailDao.onConnect({
+                    imapClient: imapClient,
+                    pgpMailer: new PgpMailer({
+                        tls: {
+                            ca: 'random string'
+                        }
+                    }, accountService._pgpbuilder)
+                }, cb);
+            });
+
+            // clear the local database before each test
+            var cleanup = new DeviceStorageDAO(new LawnchairDAO());
+            cleanup.init(testAccount.user);
             cleanup.clear(function(err) {
                 expect(err).to.not.exist;
-                appController.start({
-                    onError: function() {}
+
+                userStorage = accountService._accountStore;
+
+                accountService.init({
+                    emailAddress: testAccount.user
                 }, function(err) {
                     expect(err).to.not.exist;
 
+                    emailDao = accountService._emailDao;
+
                     // stub rest request to key server
-                    sinon.stub(appController._emailDao._keychain._publicKeyDao, 'get').yields(null, mockKeyPair.publicKey);
-                    sinon.stub(appController._emailDao._keychain._publicKeyDao, 'getByUserId').yields(null, mockKeyPair.publicKey);
+                    sinon.stub(emailDao._keychain._publicKeyDao, 'get').yields(null, mockKeyPair.publicKey);
+                    sinon.stub(emailDao._keychain._publicKeyDao, 'getByUserId').yields(null, mockKeyPair.publicKey);
 
-                    userStorage = appController._userStorage;
+                    emailDao.onIncomingMessage = function(messages) {
+                        expect(messages.length).to.equal(imapMessages.length);
+                        inbox = emailDao._account.folders.filter(function(folder) {
+                            return folder.path === 'INBOX';
+                        }).pop();
+                        spam = emailDao._account.folders.filter(function(folder) {
+                            return folder.path === '[Gmail]/Spam';
+                        }).pop();
+                        expect(inbox).to.exist;
+                        expect(spam).to.exist;
 
-                    appController.init({
-                        emailAddress: testAccount.user
+                        inbox.messages.sort(function(a, b) {
+                            return a.uid - b.uid;
+                        });
+                        done();
+                    };
+
+                    emailDao.unlock({
+                        passphrase: testAccount.pass,
+                        keypair: mockKeyPair
                     }, function(err) {
                         expect(err).to.not.exist;
 
-                        emailDao = appController._emailDao;
-
-                        emailDao.onIncomingMessage = function(messages) {
-                            expect(messages.length).to.equal(imapMessages.length);
-                            inbox = emailDao._account.folders.filter(function(folder) {
-                                return folder.path === 'INBOX';
-                            }).pop();
-                            spam = emailDao._account.folders.filter(function(folder) {
-                                return folder.path === '[Gmail]/Spam';
-                            }).pop();
-                            expect(inbox).to.exist;
-                            expect(spam).to.exist;
-
-                            inbox.messages.sort(function(a, b) {
-                                return a.uid - b.uid;
-                            });
-                            done();
-                        };
-
-                        emailDao.unlock({
-                            passphrase: testAccount.pass,
-                            keypair: mockKeyPair
-                        }, function(err) {
+                        accountService.onConnect(function(err) {
                             expect(err).to.not.exist;
-
-                            appController.onConnect(function(err) {
-                                expect(err).to.not.exist;
-                            });
                         });
                     });
                 });
             });
-        });
+        }
     });
 
-    after(function(done) {
+    afterEach(function(done) {
         openpgp.initWorker.restore();
         mailreader.startWorker.restore();
-        appController.onConnect.restore();
+        accountService.onConnect.restore();
 
         imapClient._client.close();
         imapClient._listeningClient.close();

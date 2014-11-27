@@ -179,7 +179,6 @@ module.exports = function(grunt) {
                         'test/unit/email/email-dao-test.js',
                         'test/unit/email/account-test.js',
                         'test/unit/email/search-test.js',
-                        'test/unit/controller/app/dialog-ctrl-test.js',
                         'test/unit/controller/login/add-account-ctrl-test.js',
                         'test/unit/controller/login/create-account-ctrl-test.js',
                         'test/unit/controller/login/validate-phone-ctrl-test.js',
@@ -189,6 +188,7 @@ module.exports = function(grunt) {
                         'test/unit/controller/login/login-privatekey-download-ctrl-test.js',
                         'test/unit/controller/login/login-set-credentials-ctrl-test.js',
                         'test/unit/controller/login/login-ctrl-test.js',
+                        'test/unit/controller/app/dialog-ctrl-test.js',
                         'test/unit/controller/app/privatekey-upload-ctrl-test.js',
                         'test/unit/controller/app/account-ctrl-test.js',
                         'test/unit/controller/app/set-passphrase-ctrl-test.js',
@@ -206,7 +206,7 @@ module.exports = function(grunt) {
                 files: {
                     'test/integration/index.browserified.js': [
                         'test/main.js',
-                        /*'test/integration/email-dao-test.js'*/
+                        'test/integration/email-dao-test.js'
                     ]
                 },
                 options: browserifyOpt
@@ -281,7 +281,6 @@ module.exports = function(grunt) {
                     'node_modules/jquery/dist/jquery.min.js',
                     'src/lib/angular/angular.js',
                     'src/lib/angular/angular-route.js',
-                    'src/lib/angular/angular-animate.js',
                     'src/lib/angular/angular-mocks.js',
                     'src/lib/lawnchair/lawnchair-git.js',
                     'src/lib/lawnchair/lawnchair-adapter-webkit-sqlite-git.js',
@@ -296,6 +295,9 @@ module.exports = function(grunt) {
             integrationTest: {
                 src: [
                     'src/lib/underscore/underscore.js',
+                    'node_modules/jquery/dist/jquery.min.js',
+                    'src/lib/angular/angular.js',
+                    'src/lib/angular/angular-mocks.js',
                     'src/lib/lawnchair/lawnchair-git.js',
                     'src/lib/lawnchair/lawnchair-adapter-webkit-sqlite-git.js',
                     'src/lib/lawnchair/lawnchair-adapter-indexed-db-git.js',
