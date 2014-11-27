@@ -11,9 +11,9 @@
         <svg role="presentation">
           <use ng-if="folder.type === 'Inbox'" xlink:href="#icon-inbox" />
           <use ng-if="folder.type === 'Sent'" xlink:href="#icon-sent" />
-          <use ng-if="folder.type === 'Outbox'" xlink:href="#icon-inbox" />
+          <use ng-if="folder.type === 'Outbox'" xlink:href="#icon-outbox" />
           <use ng-if="folder.type === 'Drafts'" xlink:href="#icon-draft" />
-          <use ng-if="folder.type === 'Trash'" xlink:href="#icon-trash" />
+          <use ng-if="folder.type === 'Trash'" xlink:href="#icon-delete" />
           <use ng-if="folder.type === 'Flagged'" xlink:href="#icon-star" />
         </svg>
         {{folder.type}}
@@ -64,7 +64,7 @@
     </li>
     <li>
       <a href="#" wo-touch="$event.preventDefault(); logout()">
-        <svg role="presentation"><use xlink:href="#icon-account" /></svg> Logout
+        <svg role="presentation"><use xlink:href="#icon-logout" /></svg> Logout
       </a>
     </li>
   </ul><!--/nav__secondary-->
