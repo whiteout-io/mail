@@ -155,46 +155,49 @@ module.exports = function(grunt) {
             unitTest: {
                 files: {
                     'test/unit/index.browserified.js': [
-                        'test/unit/oauth-test.js',
-                        'test/unit/auth-test.js',
-                        'test/unit/email-dao-test.js',
-                        'test/unit/app-controller-test.js',
-                        'test/unit/pgp-test.js',
-                        'test/unit/crypto-test.js',
-                        'test/unit/backbutton-handler-test.js',
-                        'test/unit/rest-dao-test.js',
-                        'test/unit/admin-dao-test.js',
-                        'test/unit/publickey-dao-test.js',
-                        'test/unit/privatekey-dao-test.js',
-                        'test/unit/lawnchair-dao-test.js',
-                        'test/unit/keychain-dao-test.js',
-                        'test/unit/devicestorage-dao-test.js',
-                        'test/unit/newsletter-service-test.js',
-                        'test/unit/mail-config-service-test.js',
-                        'test/unit/dialog-ctrl-test.js',
-                        'test/unit/add-account-ctrl-test.js',
-                        'test/unit/create-account-ctrl-test.js',
-                        'test/unit/validate-phone-ctrl-test.js',
-                        'test/unit/account-ctrl-test.js',
-                        'test/unit/set-passphrase-ctrl-test.js',
-                        'test/unit/contacts-ctrl-test.js',
-                        'test/unit/login-existing-ctrl-test.js',
-                        'test/unit/login-initial-ctrl-test.js',
-                        'test/unit/login-new-device-ctrl-test.js',
-                        'test/unit/login-privatekey-download-ctrl-test.js',
-                        'test/unit/login-set-credentials-ctrl-test.js',
-                        'test/unit/privatekey-upload-ctrl-test.js',
-                        'test/unit/login-ctrl-test.js',
-                        'test/unit/read-ctrl-test.js',
-                        'test/unit/navigation-ctrl-test.js',
-                        'test/unit/mail-list-ctrl-test.js',
-                        'test/unit/write-ctrl-test.js',
-                        'test/unit/action-bar-ctrl-test.js',
-                        'test/unit/outbox-bo-test.js',
-                        'test/unit/invitation-dao-test.js',
-                        'test/unit/update-handler-test.js',
-                        'test/unit/connection-doctor-test.js',
-                        'test/main.js'
+                        'test/main.js',
+                        'test/unit/util/dialog-test.js',
+                        'test/unit/util/connection-doctor-test.js',
+                        'test/unit/util/update-handler-test.js',
+                        'test/unit/util/backbutton-handler-test.js',
+                        'test/unit/util/status-display-test.js',
+                        'test/unit/crypto/pgp-test.js',
+                        'test/unit/crypto/crypto-test.js',
+                        'test/unit/service/rest-dao-test.js',
+                        'test/unit/service/admin-dao-test.js',
+                        'test/unit/service/auth-test.js',
+                        'test/unit/service/oauth-test.js',
+                        'test/unit/service/publickey-dao-test.js',
+                        'test/unit/service/privatekey-dao-test.js',
+                        'test/unit/service/lawnchair-dao-test.js',
+                        'test/unit/service/keychain-dao-test.js',
+                        'test/unit/service/devicestorage-dao-test.js',
+                        'test/unit/service/newsletter-service-test.js',
+                        'test/unit/service/mail-config-service-test.js',
+                        'test/unit/service/invitation-dao-test.js',
+                        'test/unit/email/outbox-bo-test.js',
+                        'test/unit/email/email-dao-test.js',
+                        'test/unit/email/account-test.js',
+                        'test/unit/email/search-test.js',
+                        'test/unit/controller/login/add-account-ctrl-test.js',
+                        'test/unit/controller/login/create-account-ctrl-test.js',
+                        'test/unit/controller/login/validate-phone-ctrl-test.js',
+                        'test/unit/controller/login/login-existing-ctrl-test.js',
+                        'test/unit/controller/login/login-initial-ctrl-test.js',
+                        'test/unit/controller/login/login-new-device-ctrl-test.js',
+                        'test/unit/controller/login/login-privatekey-download-ctrl-test.js',
+                        'test/unit/controller/login/login-set-credentials-ctrl-test.js',
+                        'test/unit/controller/login/login-ctrl-test.js',
+                        'test/unit/controller/app/dialog-ctrl-test.js',
+                        'test/unit/controller/app/privatekey-upload-ctrl-test.js',
+                        'test/unit/controller/app/account-ctrl-test.js',
+                        'test/unit/controller/app/set-passphrase-ctrl-test.js',
+                        'test/unit/controller/app/contacts-ctrl-test.js',
+                        'test/unit/controller/app/read-ctrl-test.js',
+                        'test/unit/controller/app/navigation-ctrl-test.js',
+                        'test/unit/controller/app/mail-list-ctrl-test.js',
+                        'test/unit/controller/app/write-ctrl-test.js',
+                        'test/unit/controller/app/action-bar-ctrl-test.js',
                     ]
                 },
                 options: browserifyOpt
@@ -202,8 +205,8 @@ module.exports = function(grunt) {
             integrationTest: {
                 files: {
                     'test/integration/index.browserified.js': [
-                        'test/integration/email-dao-test.js',
-                        'test/main.js'
+                        'test/main.js',
+                        'test/integration/email-dao-test.js'
                     ]
                 },
                 options: browserifyOpt
@@ -256,7 +259,7 @@ module.exports = function(grunt) {
             readSandbox: {
                 src: [
                     'node_modules/dompurify/purify.js',
-                    'src/js/controller/read-sandbox.js'
+                    'src/js/controller/app/read-sandbox.js'
                 ],
                 dest: 'dist/js/read-sandbox.min.js'
             },
@@ -278,7 +281,6 @@ module.exports = function(grunt) {
                     'node_modules/jquery/dist/jquery.min.js',
                     'src/lib/angular/angular.js',
                     'src/lib/angular/angular-route.js',
-                    'src/lib/angular/angular-animate.js',
                     'src/lib/angular/angular-mocks.js',
                     'src/lib/lawnchair/lawnchair-git.js',
                     'src/lib/lawnchair/lawnchair-adapter-webkit-sqlite-git.js',
@@ -293,6 +295,9 @@ module.exports = function(grunt) {
             integrationTest: {
                 src: [
                     'src/lib/underscore/underscore.js',
+                    'node_modules/jquery/dist/jquery.min.js',
+                    'src/lib/angular/angular.js',
+                    'src/lib/angular/angular-mocks.js',
                     'src/lib/lawnchair/lawnchair-git.js',
                     'src/lib/lawnchair/lawnchair-adapter-webkit-sqlite-git.js',
                     'src/lib/lawnchair/lawnchair-adapter-indexed-db-git.js',
@@ -446,11 +451,11 @@ module.exports = function(grunt) {
                 tasks: ['dist-js-app']
             },
             jsUnitTest: {
-                files: ['test/unit/*-test.js'],
+                files: ['test/unit/**/*-test.js', 'test/*.js'],
                 tasks: ['dist-js-unitTest']
             },
             jsIntegrationTest: {
-                files: ['test/integration/*-test.js'],
+                files: ['test/integration/*-test.js', 'test/*.js'],
                 tasks: ['dist-js-integrationTest']
             },
             icons: {

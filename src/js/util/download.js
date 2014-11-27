@@ -1,10 +1,20 @@
 'use strict';
 
+var ngModule = angular.module('woUtil');
+ngModule.service('download', Download);
+module.exports = Download;
+
 var util = require('crypto-lib').util;
 
-var dl = {};
+/**
+ * A download helper to abstract platform specific behavior
+ */
+function Download() {}
 
-dl.createDownload = function(options) {
+/**
+ * Create download link and click on it.
+ */
+Download.prototype.createDownload = function(options) {
     var contentType = options.contentType || 'application/octet-stream';
     var filename = options.filename || 'file';
     var content = options.content;
@@ -54,5 +64,3 @@ dl.createDownload = function(options) {
         window.open('data:' + contentType + ';base64,' + btoa(content), "_blank");
     }
 };
-
-module.exports = dl;

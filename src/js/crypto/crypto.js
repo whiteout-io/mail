@@ -1,16 +1,19 @@
-/**
- * High level crypto api that invokes native crypto (if available) and
- * gracefully degrades to JS crypto (if unavailable)
- */
-
 'use strict';
+
+var ngModule = angular.module('woCrypto');
+ngModule.service('crypto', Crypto);
+module.exports = Crypto;
 
 var aes = require('crypto-lib').aes,
     pbkdf2 = require('./pbkdf2'),
     config = require('../app-config').config,
     axe = require('axe-logger');
 
-var Crypto = function() {};
+/**
+ * High level crypto api that invokes native crypto (if available) and
+ * gracefully degrades to JS crypto (if unavailable)
+ */
+function Crypto() {}
 
 /**
  * Encrypt plaintext using AES-GCM.
@@ -116,5 +119,3 @@ function startWorker(options) {
     }
     options.callback(null, result);
 }
-
-module.exports = Crypto;

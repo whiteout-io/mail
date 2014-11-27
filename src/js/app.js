@@ -14,36 +14,49 @@ if (typeof window.applicationCache !== 'undefined') {
     };
 }
 
-var DialogCtrl = require('./controller/dialog'),
-    AddAccountCtrl = require('./controller/add-account'),
-    CreateAccountCtrl = require('./controller/create-account'),
-    ValidatePhoneCtrl = require('./controller/validate-phone'),
-    AccountCtrl = require('./controller/account'),
-    SetPassphraseCtrl = require('./controller/set-passphrase'),
-    PrivateKeyUploadCtrl = require('./controller/privatekey-upload'),
-    ContactsCtrl = require('./controller/contacts'),
-    AboutCtrl = require('./controller/about'),
-    LoginCtrl = require('./controller/login'),
-    LoginInitialCtrl = require('./controller/login-initial'),
-    LoginNewDeviceCtrl = require('./controller/login-new-device'),
-    LoginExistingCtrl = require('./controller/login-existing'),
-    LoginPrivateKeyDownloadCtrl = require('./controller/login-privatekey-download'),
-    LoginSetCredentialsCtrl = require('./controller/login-set-credentials'),
-    MailListCtrl = require('./controller/mail-list'),
-    ReadCtrl = require('./controller/read'),
-    WriteCtrl = require('./controller/write'),
-    NavigationCtrl = require('./controller/navigation'),
-    ActionBarCtrl = require('./controller/action-bar'),
-    errorUtil = require('./util/error'),
+var axe = require('axe-logger'),
+    AddAccountCtrl = require('./controller/login/add-account'),
+    CreateAccountCtrl = require('./controller/login/create-account'),
+    ValidatePhoneCtrl = require('./controller/login/validate-phone'),
+    LoginCtrl = require('./controller/login/login'),
+    LoginInitialCtrl = require('./controller/login/login-initial'),
+    LoginNewDeviceCtrl = require('./controller/login/login-new-device'),
+    LoginExistingCtrl = require('./controller/login/login-existing'),
+    LoginPrivateKeyDownloadCtrl = require('./controller/login/login-privatekey-download'),
+    LoginSetCredentialsCtrl = require('./controller/login/login-set-credentials'),
+    DialogCtrl = require('./controller/app/dialog'),
+    AccountCtrl = require('./controller/app/account'),
+    SetPassphraseCtrl = require('./controller/app/set-passphrase'),
+    PrivateKeyUploadCtrl = require('./controller/app/privatekey-upload'),
+    ContactsCtrl = require('./controller/app/contacts'),
+    AboutCtrl = require('./controller/app/about'),
+    MailListCtrl = require('./controller/app/mail-list'),
+    ReadCtrl = require('./controller/app/read'),
+    WriteCtrl = require('./controller/app/write'),
+    NavigationCtrl = require('./controller/app/navigation'),
+    ActionBarCtrl = require('./controller/app/action-bar'),
+    StatusDisplayCtrl = require('./controller/app/status-display'),
     backButtonUtil = require('./util/backbutton-handler');
-require('./directive/common'),
-require('./service/newsletter'),
-require('./service/mail-config');
+
+// include angular modules
+require('./app-config');
+require('./directive/common');
+require('./util');
+require('./crypto');
+require('./service');
+require('./email');
 
 // init main angular module including dependencies
 var app = angular.module('mail', [
     'ngRoute',
     'ngAnimate',
+    'ngTagsInput',
+    'woAppConfig',
+    'woDirectives',
+    'woUtil',
+    'woCrypto',
+    'woServices',
+    'woEmail',
     'navigation',
     'mail-list',
     'write',
@@ -51,10 +64,7 @@ var app = angular.module('mail', [
     'contacts',
     'login-new-device',
     'privatekey-upload',
-    'infinite-scroll',
-    'ngTagsInput',
-    'woDirectives',
-    'woServices'
+    'infinite-scroll'
 ]);
 
 // set router paths
@@ -111,9 +121,6 @@ app.run(function($rootScope) {
     // global state... inherited to all child scopes
     $rootScope.state = {};
 
-    // attach global error handler
-    errorUtil.attachHandler($rootScope);
-
     // attach the back button handler to the root scope
     backButtonUtil.attachHandler($rootScope);
 
@@ -132,3 +139,25 @@ app.controller('ContactsCtrl', ContactsCtrl);
 app.controller('AboutCtrl', AboutCtrl);
 app.controller('DialogCtrl', DialogCtrl);
 app.controller('ActionBarCtrl', ActionBarCtrl);
+app.controller('StatusDisplayCtrl', StatusDisplayCtrl);
+
+//
+// Manual angular bootstraping
+//
+
+// are we running in a cordova app or in a browser environment?
+if (window.cordova) {
+    // wait for 'deviceready' event to make sure plugins are loaded
+    axe.debug('Assuming Cordova environment...');
+    document.addEventListener('deviceready', bootstrap, false);
+} else {
+    // No need to wait on events... just start the app
+    axe.debug('Assuming Browser environment...');
+    bootstrap();
+}
+
+function bootstrap() {
+    angular.element(document).ready(function() {
+        angular.bootstrap(document, ['mail']);
+    });
+}

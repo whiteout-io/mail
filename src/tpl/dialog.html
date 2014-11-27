@@ -1,19 +1,19 @@
 <div class="lightbox__body" ng-controller="DialogCtrl">
   <header class="lightbox__header">
-    <h2>{{state.dialog.title}}</h2>
+    <h2>{{title}}</h2>
     <button class="lightbox__close" wo-touch="confirm(false)" data-action="lightbox-close">
       <svg><use xlink:href="#icon-close" /><title>Close</title></svg>
     </button>
   </header>
 
   <div class="lightbox__content">
-    <p class="typo-paragraph">{{state.dialog.message}} <a ng-show="state.dialog.faqLink" href="{{state.dialog.faqLink}}" target="_blank">Learn more</a></p>
+    <p class="typo-paragraph">{{message}} <a ng-show="faqLink" href="{{faqLink}}" target="_blank">Learn more</a></p>
   </div>
 
   <footer class="lightbox__controls">
-    <button wo-touch="confirm(false)" class="btn btn--secondary" ng-show="state.dialog.showNegativeBtn">{{state.dialog.negativeBtnStr}}</button>
+    <button wo-touch="confirm(false)" class="btn btn--secondary" ng-show="showNegativeBtn">{{negativeBtnStr}}</button>
     <!-- only show bug report button if we can actually report a bug, i.e. the writer is attached to the scope -->
-    <button wo-touch="confirm(true)" class="btn" ng-show="!state.writer || !state.dialog.showBugReporter">{{state.dialog.positiveBtnStr}}</button>
-    <button wo-touch="confirm(true); state.writer.reportBug()" class="btn" ng-show="state.writer && state.dialog.showBugReporter">Report bug</button>
+    <button wo-touch="confirm(true)" class="btn" ng-show="!state.writer || !showBugReporter">{{positiveBtnStr}}</button>
+    <button wo-touch="confirm(true); state.writer.reportBug()" class="btn" ng-show="state.writer && showBugReporter">Report bug</button>
   </footer>
 </div>

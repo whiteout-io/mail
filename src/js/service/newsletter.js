@@ -1,7 +1,8 @@
 'use strict';
 
-var ngModule = angular.module('woServices', []);
+var ngModule = angular.module('woServices');
 ngModule.service('newsletter', Newsletter);
+module.exports = Newsletter;
 
 function Newsletter($q) {
     this._q = $q;

@@ -69,13 +69,5 @@
     </li>
   </ul><!--/nav__secondary-->
 
-  <footer>
-    <span class="spinner" ng-show="account.loggingIn || account.busy || state.mailList.searching"></span>
-    <span class="text" ng-switch="account.online">
-      <span ng-switch-when="false">
-        <svg><use xlink:href="#icon-offline" /></svg>
-      </span>
-      {{state.mailList.lastUpdateLbl}} {{state.mailList.lastUpdate | date:'shortTime'}}
-    </span>
-  </footer>
+  <footer ng-include="'tpl/status-display.html'"></footer>
 </nav>

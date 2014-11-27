@@ -1,16 +1,19 @@
-/**
- * High level crypto api that handles all calls to OpenPGP.js
- */
-
 'use strict';
+
+var ngModule = angular.module('woCrypto');
+ngModule.service('pgp', PGP);
+module.exports = PGP;
 
 var util = openpgp.util,
     config = require('../app-config').config;
 
-var PGP = function() {
+/**
+ * High level crypto api that handles all calls to OpenPGP.js
+ */
+function PGP() {
     openpgp.config.prefer_hash_algorithm = openpgp.enums.hash.sha256;
     openpgp.initWorker(config.workerPath + '/openpgp.worker.min.js');
-};
+}
 
 /**
  * Generate a key pair for the user
@@ -427,5 +430,3 @@ function checkSignatureValidity(signatures) {
     // everything is in order
     return true;
 }
-
-module.exports = PGP;
