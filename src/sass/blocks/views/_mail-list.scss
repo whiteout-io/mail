@@ -364,8 +364,8 @@
                 vertical-align: middle;
 
                 // add invisible padding to make increase clickable area around checkbox
-                margin: -1em 0 -1em -2em;
-                padding: 1em 0 1em 2em;
+                margin: -0.5em 0 -0.5em -1em;
+                padding: 0.5em 0 0.5em 1em;
             }
         }
         &__flags-favorite {
