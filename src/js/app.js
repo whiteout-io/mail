@@ -114,7 +114,7 @@ app.config(function($routeProvider, $animateProvider) {
     });
 
     // activate ngAnimate for whitelisted classes only
-    $animateProvider.classNameFilter(/^lightbox$/);
+    $animateProvider.classNameFilter(/lightbox/);
 });
 
 app.run(function($rootScope) {
