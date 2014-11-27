@@ -238,9 +238,6 @@ describe('Email DAO integration tests', function() {
 
             smtpClient._TCPSocket = smtpServer.createTCPSocket();
 
-            // phantomjs is really slow, so setting the tcp socket timeouts to 200s will effectively disarm the timeout
-            imapClient._client.client.TIMEOUT_SOCKET_LOWER_BOUND = smtpClient.TIMEOUT_SOCKET_LOWER_BOUND = 200000;
-
             // stub the onConnect function to inject the test imap/smtp clients
             sinon.stub(accountService, 'onConnect', function(cb) {
                 accountService._emailDao.onConnect({
@@ -286,6 +283,12 @@ describe('Email DAO integration tests', function() {
                         inbox.messages.sort(function(a, b) {
                             return a.uid - b.uid;
                         });
+
+                        // phantomjs is really slow, so setting the tcp socket timeouts to 200s will effectively disarm the timeout
+                        imapClient._client.client.TIMEOUT_SOCKET_LOWER_BOUND = 999999999;
+                        imapClient._listeningClient.client.TIMEOUT_SOCKET_LOWER_BOUND = 999999999;
+                        smtpClient.TIMEOUT_SOCKET_LOWER_BOUND = 999999999;
+
                         done();
                     };
 
