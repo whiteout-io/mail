@@ -94,7 +94,7 @@ var MailListCtrl = function($scope, $timeout, $routeParams, statusDisplay, notif
                 }
             }
 
-            $scope.state.actionBar.markMessage(message, false);
+            $scope.state.actionBar.markMessage(message, false, true);
         }
     };
 

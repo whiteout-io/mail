@@ -96,7 +96,7 @@ var ActionBarCtrl = function($scope, email, dialog, statusDisplay) {
      * @param  {Object}     message The message to be marked
      * @param  {boolean}    unread If the message should be marked as read or unread
      */
-    $scope.markMessage = function(message, unread) {
+    $scope.markMessage = function(message, unread, keepOpen) {
         if (!message) {
             return;
         }
@@ -104,7 +104,9 @@ var ActionBarCtrl = function($scope, email, dialog, statusDisplay) {
         statusDisplay.update('Updating unread flag...');
 
         // close read state
-        $scope.state.read.open = false;
+        if (!keepOpen) {
+            $scope.state.read.open = false;
+        }
 
         var originalState = message.unread;
         message.unread = unread;
