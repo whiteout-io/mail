@@ -7,8 +7,8 @@ module.exports = Dialog;
 /**
  * A central service to display messages to the user in a dialog
  */
-function Dialog($q, axe) {
-    this._q = $q;
+function Dialog($timeout, axe) {
+    this._timeout = $timeout;
     this._axe = axe;
 
     // binds the methods to the instance of the dialog service so that we can e.g.
@@ -58,11 +58,12 @@ Dialog.prototype.confirm = function(options) {
  * Helper function which returns a promise
  */
 Dialog.prototype._handle = function(options, fn, errMsg) {
-    return this._q(function(resolve, reject) {
+    var self = this;
+    return self._timeout(function() {
         if (fn) {
-            return resolve(fn(options));
+            return fn(options);
         } else {
-            reject(new Error('Dialog service ' + errMsg + ' not set!'));
+            self._axe.error('dialog service', errMsg + ' function not set!');
         }
     });
 };

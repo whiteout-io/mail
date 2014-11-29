@@ -1,7 +1,7 @@
 'use strict';
 
 describe('Dialog Service unit test', function() {
-    var dialog, logErrorStub,
+    var dialog, logErrorStub, timeout,
         opt = {
             foo: 'bar'
         };
@@ -9,8 +9,9 @@ describe('Dialog Service unit test', function() {
     beforeEach(function() {
         angular.module('dialog-test', ['woUtil']);
         angular.mock.module('dialog-test');
-        angular.mock.inject(function($injector, axe) {
+        angular.mock.inject(function($injector, $timeout, axe) {
             logErrorStub = sinon.stub(axe, 'error');
+            timeout = $timeout;
             dialog = $injector.get('dialog');
         });
     });
@@ -20,7 +21,7 @@ describe('Dialog Service unit test', function() {
     });
 
     describe('info', function() {
-        it('should work', inject(function($rootScope) {
+        it('should work', function() {
             dialog.displayInfo = function() {};
             var displayInfoStub = sinon.stub(dialog, 'displayInfo');
 
@@ -28,20 +29,19 @@ describe('Dialog Service unit test', function() {
                 expect(result).to.not.exist;
             });
 
-            $rootScope.$apply();
+            timeout.flush();
             expect(displayInfoStub.withArgs(opt).calledOnce).to.be.true;
-        }));
-        it('should fail for no display function', inject(function($rootScope) {
-            dialog.info(opt).catch(function(err) {
-                expect(err.message).to.match(/displayInfo/);
-            });
+        });
+        it('should fail for no display function', function() {
+            dialog.info(opt);
 
-            $rootScope.$apply();
-        }));
+            timeout.flush();
+            expect(logErrorStub.calledOnce).to.be.true;
+        });
     });
 
     describe('error', function() {
-        it('should work', inject(function($rootScope) {
+        it('should work', function() {
             dialog.displayError = function() {};
             var displayErrorStub = sinon.stub(dialog, 'displayError');
 
@@ -50,21 +50,20 @@ describe('Dialog Service unit test', function() {
             });
 
             expect(logErrorStub.calledOnce).to.be.true;
-            $rootScope.$apply();
+            timeout.flush();
             expect(displayErrorStub.withArgs(opt).calledOnce).to.be.true;
-        }));
-        it('should fail for no display function', inject(function($rootScope) {
-            dialog.error(opt).catch(function(err) {
-                expect(err.message).to.match(/displayError/);
-            });
+        });
+        it('should fail for no display function', function() {
+            dialog.error(opt);
 
             expect(logErrorStub.calledOnce).to.be.true;
-            $rootScope.$apply();
-        }));
+            timeout.flush();
+            expect(logErrorStub.calledTwice).to.be.true;
+        });
     });
 
     describe('confirm', function() {
-        it('should work', inject(function($rootScope) {
+        it('should work', function() {
             dialog.displayConfirm = function() {};
             var displayConfirmStub = sinon.stub(dialog, 'displayConfirm');
 
@@ -72,16 +71,15 @@ describe('Dialog Service unit test', function() {
                 expect(result).to.not.exist;
             });
 
-            $rootScope.$apply();
+            timeout.flush();
             expect(displayConfirmStub.withArgs(opt).calledOnce).to.be.true;
-        }));
-        it('should fail for no display function', inject(function($rootScope) {
-            dialog.confirm(opt).catch(function(err) {
-                expect(err.message).to.match(/displayConfirm/);
-            });
+        });
+        it('should fail for no display function', function() {
+            dialog.confirm(opt);
 
-            $rootScope.$apply();
-        }));
+            timeout.flush();
+            expect(logErrorStub.calledOnce).to.be.true;
+        });
     });
 
 });

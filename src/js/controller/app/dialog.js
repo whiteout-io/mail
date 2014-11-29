@@ -1,6 +1,6 @@
 'use strict';
 
-var DialogCtrl = function($scope, $timeout, dialog) {
+var DialogCtrl = function($scope, dialog) {
 
     $scope.state.dialog = {
         open: false
@@ -11,27 +11,21 @@ var DialogCtrl = function($scope, $timeout, dialog) {
     //
 
     dialog.displayInfo = function(options) {
-        return $timeout(function() {
-            setOptions(options);
-        });
+        setOptions(options);
     };
 
     dialog.displayError = function(options) {
-        return $timeout(function() {
-            if (!options) {
-                return;
-            }
+        if (!options) {
+            return;
+        }
 
-            setOptions(options);
-            $scope.title = options.title || 'Error';
-            $scope.showBugReporter = (typeof options.showBugReporter !== 'undefined' ? options.showBugReporter : !options.title); // if title is set, presume it's not an error by default
-        });
+        setOptions(options);
+        $scope.title = options.title || 'Error';
+        $scope.showBugReporter = (typeof options.showBugReporter !== 'undefined' ? options.showBugReporter : !options.title); // if title is set, presume it's not an error by default
     };
 
     dialog.displayConfirm = function(options) {
-        return $timeout(function() {
-            setOptions(options);
-        });
+        setOptions(options);
     };
 
     function setOptions(options) {
