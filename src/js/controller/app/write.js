@@ -491,13 +491,4 @@ ngModule.directive('attachmentInput', function() {
     };
 });
 
-ngModule.directive('attachmentBtn', function() {
-    return function(scope, elm) {
-        elm.on('click touchstart', function(e) {
-            e.preventDefault();
-            document.querySelector('#attachment-input').click();
-        });
-    };
-});
-
 module.exports = WriteCtrl;
