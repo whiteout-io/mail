@@ -188,6 +188,18 @@
         height: 1em;
         width: 0.8em;
     }
+
+    // Small lightweight search field to align with btn--light
+    &--light {
+        .input-text {
+            height: 2em;
+            padding-top: 0.5em;
+            padding-bottom: 0.5em;
+        }
+        & > svg {
+            top: 0.5em;
+        }
+    }
 }
 
 .input-checkbox {
