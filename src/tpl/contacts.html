@@ -9,7 +9,7 @@
     <input class="u-hide-visually" id="keyfile-input" type="file" multiple accept=".asc" keyfile-input>
     <div class="form-input-with-button u-gap-bottom">
       <input class="input-text" type="text" placeholder="Search..." ng-model="searchText">
-      <button class="btn" ng-class="{'btn--invalid': sendBtnSecure === false}" keyfile-btn>Import keys</button>
+      <button class="btn" ng-class="{'btn--invalid': sendBtnSecure === false}" wo-click-file-input="#keyfile-input">Import keys</button>
     </div>
 
     <p class="typo-paragraph u-text-center" ng-show="!keys.length">

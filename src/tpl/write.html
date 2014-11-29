@@ -48,7 +48,7 @@
       <div class="write__subject">
         <input class="input-text" ng-model="subject" spellcheck="true" tabindex="2" placeholder="Subject" ng-change="updatePreview()">
         <input id="attachment-input" type="file" multiple attachment-input>
-        <button class="btn" ng-class="{'btn--invalid': sendBtnSecure === false}" attachment-btn>
+        <button class="btn" ng-class="{'btn--invalid': sendBtnSecure === false}" wo-click-file-input="#attachment-input">
           <svg><use xlink:href="#icon-attachment" /><title>Add attachment</title></svg>
         </button>
       </div>

@@ -163,4 +163,14 @@ ngModule.directive('woFocusMe', function($timeout, $parse) {
     };
 });
 
+ngModule.directive('woClickFileInput', function() {
+    return function(scope, elm, attrs) {
+        var fileInput = document.querySelector(attrs.woClickFileInput);
+        elm.on('click touchstart', function(e) {
+            e.preventDefault();
+            fileInput.click();
+        });
+    };
+});
+
 module.exports = ngModule;
