@@ -6,7 +6,7 @@
     }
 }
 .u-visible-md {
-    @include respond-to(sm-only) {
+    @include respond-to(smaller-md) {
         display: none !important;
     }
     @include respond-to(lg) {
@@ -14,13 +14,13 @@
     }
 }
 .u-visible-lg {
-    @include respond-to(not-lg) {
+    @include respond-to(smaller-lg) {
         display: none !important;
     }
 }
 
 .u-hidden-sm {
-    @include respond-to(sm-only) {
+    @include respond-to(smaller-md) {
         display: none !important;
     }
 }
