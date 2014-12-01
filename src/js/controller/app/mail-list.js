@@ -105,7 +105,7 @@ var MailListCtrl = function($scope, $timeout, $routeParams, $filter, statusDispl
         var now = new Date();
 
         // return time if mail is from today
-        if(now.getDay() === date.getDay() && now.getMonth() === date.getMonth() && now.getFullYear() === date.getFullYear()) {
+        if (now.getDay() === date.getDay() && now.getMonth() === date.getMonth() && now.getFullYear() === date.getFullYear()) {
             return $filter('date')(date, 'shortTime');
         }
 
@@ -176,6 +176,13 @@ var MailListCtrl = function($scope, $timeout, $routeParams, $filter, statusDispl
         var next = currentFolder().messages.slice(dLen, dLen + SCROLL_DISPLAY_LEN);
         Array.prototype.push.apply($scope.displayMessages, next);
     };
+
+    /**
+     * Handle search event in other parts of the app by filtering messages in the mail-list
+     */
+    $scope.$on('search', function(e, query) {
+        $scope.displaySearchResults(query);
+    });
 
     /**
      * This method is called when the user changes the searchText
