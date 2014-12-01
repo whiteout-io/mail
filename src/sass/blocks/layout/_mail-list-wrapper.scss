@@ -43,5 +43,13 @@
                 display: none;
             }
         }
+        @include respond-to(lg) {
+            .mail-list-wrapper__aside {
+                display: block;
+            }
+            .mail-list-wrapper__container {
+                display: none;
+            }
+        }
     }
 }
