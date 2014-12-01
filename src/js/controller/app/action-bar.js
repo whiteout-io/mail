@@ -156,6 +156,13 @@ var ActionBarCtrl = function($scope, email, dialog, statusDisplay) {
             return message.checked;
         });
     }
+
+    /**
+     * This method is called when the user changes the searchText
+     */
+    $scope.displaySearchResults = function(searchText) {
+        $scope.$root.$broadcast('search', searchText);
+    };
 };
 
 module.exports = ActionBarCtrl;
