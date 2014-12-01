@@ -1875,13 +1875,18 @@ describe('Email DAO unit tests', function() {
 
         describe('#onDisconnect', function() {
             it('should discard imapClient and pgpMailer', function(done) {
-                imapClientStub.logout.yieldsAsync();
+                imapClientStub.stopListeningForChanges.yields();
+                imapClientStub.logout.yields();
 
-                dao.onDisconnect(done);
+                dao.onDisconnect(function() {
+                    expect(imapClientStub.stopListeningForChanges.calledOnce).to.be.true;
+                    expect(imapClientStub.logout.calledOnce).to.be.true;
+                    expect(dao._account.online).to.be.false;
+                    expect(dao._imapClient).to.not.exist;
+                    expect(dao._pgpMailer).to.not.exist;
+                    done();
+                });
 
-                expect(dao._account.online).to.be.false;
-                expect(dao._imapClient).to.not.exist;
-                expect(dao._pgpMailer).to.not.exist;
             });
         });
 

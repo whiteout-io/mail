@@ -312,10 +312,11 @@ describe('Email DAO integration tests', function() {
         mailreader.startWorker.restore();
         accountService.onConnect.restore();
 
-        imapClient._client.close();
-        imapClient._listeningClient.close();
-
-        userStorage.clear(done);
+        imapClient.stopListeningForChanges(function() {
+            imapClient.logout(function() {
+                userStorage.clear(done);
+            });
+        });
     });
 
     describe('IMAP Integration Tests', function() {
