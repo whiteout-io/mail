@@ -48,7 +48,7 @@ Account.prototype.init = function(options, callback) {
     var account = {
         realname: options.realname,
         emailAddress: options.emailAddress,
-        asymKeySize: this._appConfig.asymKeySize
+        asymKeySize: this._appConfig.config.asymKeySize
     };
 
     // Pre-Flight check: don't even start to initialize stuff if the email address is not valid
