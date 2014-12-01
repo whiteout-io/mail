@@ -7,7 +7,7 @@
     // do not share any common styles between large and other screens
     // because styling is very different
 
-    @include respond-to(not-lg) {
+    @include respond-to(smaller-lg) {
         display: flex;
         flex-direction: column;
         height: 100%;
@@ -152,7 +152,7 @@
     // do not share any common styles between large and other screens
     // because styling is very different
 
-    @include respond-to(not-lg) {
+    @include respond-to(smaller-lg) {
         $padding-horizontal: 30px;
         $padding-vertical: 11px;
 

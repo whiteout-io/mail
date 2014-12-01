@@ -161,7 +161,7 @@
             }
         }
     }
-    @include respond-to(sm-only) {
+    @include respond-to(smaller-md) {
         &--stripped {
             .read__addresses > * {
                 display: none;

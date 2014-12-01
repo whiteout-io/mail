@@ -35,7 +35,15 @@
 
     // Modifier to open sidebar
     &--show-aside {
-        @include respond-to(not-md) {
+        @include respond-to(smaller-md) {
+            .mail-list-wrapper__aside {
+                display: block;
+            }
+            .mail-list-wrapper__container {
+                display: none;
+            }
+        }
+        @include respond-to(lg) {
             .mail-list-wrapper__aside {
                 display: block;
             }

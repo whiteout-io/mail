@@ -28,7 +28,7 @@
             display: none;
         }
 
-        @include respond-to(not-lg) {
+        @include respond-to(smaller-lg) {
             transform: translateX(-100%);
         }
         @include respond-to(lg) {
@@ -45,7 +45,7 @@
         right: 0;
         bottom: 0;
 
-        @include respond-to(not-lg) {
+        @include respond-to(smaller-lg) {
             &:after {
                 display: block;
                 content: '';
@@ -87,7 +87,7 @@
     }
 
     // Animation
-    @include respond-to(not-lg) {
+    @include respond-to(smaller-lg) {
         will-change: transform;
         transform-style: preserve-3d;
         transition: transform 0.15s ease-out;
@@ -99,7 +99,7 @@
 
     // Modifier to open sidebar
     &--show-aside {
-        @include respond-to(not-lg) {
+        @include respond-to(smaller-lg) {
             transform: translateX($aside-width);
             .app__container:after {
                 transform: none;
