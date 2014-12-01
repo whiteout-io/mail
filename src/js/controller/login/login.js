@@ -9,31 +9,36 @@ var LoginCtrl = function($scope, $timeout, $location, updateHandler, account, au
 
     function initializeUser() {
         // init the auth modules
-        auth.init();
-        // get OAuth token from chrome
-        auth.getEmailAddress(function(err, info) {
+        auth.init(function(err) {
             if (err) {
-                dialog.error(err);
-                return;
+                return dialog.error(err);
             }
 
-            // check if account needs to be selected
-            if (!info.emailAddress) {
-                $scope.goTo('/add-account');
-                return;
-            }
-
-            // initiate the account by initializing the email dao and user storage
-            account.init({
-                emailAddress: info.emailAddress,
-                realname: info.realname
-            }, function(err, availableKeys) {
+            // get OAuth token from chrome
+            auth.getEmailAddress(function(err, info) {
                 if (err) {
                     dialog.error(err);
                     return;
                 }
 
-                redirect(availableKeys);
+                // check if account needs to be selected
+                if (!info.emailAddress) {
+                    $scope.goTo('/add-account');
+                    return;
+                }
+
+                // initiate the account by initializing the email dao and user storage
+                account.init({
+                    emailAddress: info.emailAddress,
+                    realname: info.realname
+                }, function(err, availableKeys) {
+                    if (err) {
+                        dialog.error(err);
+                        return;
+                    }
+
+                    redirect(availableKeys);
+                });
             });
         });
     }

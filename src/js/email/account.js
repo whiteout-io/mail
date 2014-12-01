@@ -60,20 +60,20 @@ Account.prototype.init = function(options, callback) {
 
     // Pre-Flight check: initialize and prepare user's local database
     function prepareDatabase() {
-        try {
-            self._accountStore.init(options.emailAddress);
-        } catch (err) {
-            callback(err);
-            return;
-        }
-
-        // Migrate the databases if necessary
-        self._updateHandler.update(function(err) {
+        self._accountStore.init(options.emailAddress, function(err) {
             if (err) {
-                return callback(new Error('Updating the internal database failed. Please reinstall the app! Reason: ' + err.message));
+                return callback(err);
             }
 
-            prepareKeys();
+            // Migrate the databases if necessary
+            self._updateHandler.update(function(err) {
+                if (err) {
+                    return callback(new Error('Updating the internal database failed. Please reinstall the app! Reason: ' + err.message));
+                }
+
+                prepareKeys();
+            });
+
         });
     }
 

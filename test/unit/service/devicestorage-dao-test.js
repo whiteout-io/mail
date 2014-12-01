@@ -18,8 +18,21 @@ describe('Device Storage DAO unit tests', function() {
 
     describe('init', function() {
         it('should work', function() {
-            storageDao.init(testUser);
-            expect(lawnchairDaoStub.init.calledOnce).to.be.true;
+            lawnchairDaoStub.init.yields();
+
+            storageDao.init(testUser, function(err) {
+                expect(err).to.not.exist;
+                expect(lawnchairDaoStub.init.calledOnce).to.be.true;
+            });
+        });
+
+        it('should fail', function() {
+            lawnchairDaoStub.init.yields(new Error());
+
+            storageDao.init(testUser, function(err) {
+                expect(err).to.exist;
+                expect(lawnchairDaoStub.init.calledOnce).to.be.true;
+            });
         });
     });
 

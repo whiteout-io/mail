@@ -67,7 +67,7 @@ describe('Account Service unit test', function() {
         });
 
         it('should fail for _accountStore.init', function() {
-            devicestorageStub.init.throws(new Error('asdf'));
+            devicestorageStub.init.yields(new Error('asdf'));
 
             account.init({
                 emailAddress: dummyUser,

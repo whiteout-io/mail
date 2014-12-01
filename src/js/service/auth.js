@@ -8,6 +8,7 @@ var axe = require('axe-logger'),
     cfg = require('../app-config').config,
     str = require('../app-config').string;
 
+var APP_CONFIG_DB_NAME = 'app-config';
 var EMAIL_ADDR_DB_KEY = 'emailaddress';
 var USERNAME_DB_KEY = 'username';
 var REALNAME_DB_KEY = 'realname';
@@ -34,8 +35,13 @@ function Auth(appConfigStore, oauth, pgp) {
 /**
  * Initialize the service
  */
-Auth.prototype.init = function() {
-    this._initialized = true;
+Auth.prototype.init = function(callback) {
+    var self = this;
+
+    self._appConfigStore.init(APP_CONFIG_DB_NAME, function(error) {
+        self._initialized = !error;
+        callback(error);
+    });
 };
 
 /**
