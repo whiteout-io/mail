@@ -63,7 +63,6 @@ var app = angular.module('mail', [
     'read',
     'contacts',
     'login-new-device',
-    'privatekey-upload',
     'infinite-scroll'
 ]);
 

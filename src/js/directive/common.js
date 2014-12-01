@@ -222,6 +222,12 @@ ngModule.directive('woInputCode', function() {
         link: function(scope, elm, attrs, ngModelCtrl) {
             function format(val) {
                 var str = '';
+
+                // check if value exists
+                if (!val) {
+                    return str;
+                }
+
                 for(var i = 0; i < val.length; i++) {
                     if(i > 0 && i % BLOCK_SIZE === 0) {
                         str += BLOCK_DIVIDER;

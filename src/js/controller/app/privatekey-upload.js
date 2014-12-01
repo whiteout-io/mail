@@ -33,26 +33,6 @@ var PrivateKeyUploadCtrl = function($scope, keychain, pgp, dialog, auth) {
         }
     };
 
-    $scope.handlePaste = function(event) {
-        var evt = event;
-        if (evt.originalEvent) {
-            evt = evt.originalEvent;
-        }
-
-        var value = evt.clipboardData.getData('text/plain');
-        if (!value) {
-            return;
-        }
-
-        value = value.replace(/-/g, '');
-        $scope.code0 = value.slice(0, 4);
-        $scope.code1 = value.slice(4, 8);
-        $scope.code2 = value.slice(8, 12);
-        $scope.code3 = value.slice(12, 16);
-        $scope.code4 = value.slice(16, 20);
-        $scope.code5 = value.slice(20, 24);
-    };
-
     $scope.checkServerForKey = function(callback) {
         var keyParams = pgp.getKeyParams();
         keychain.hasPrivateKey({
@@ -80,14 +60,12 @@ var PrivateKeyUploadCtrl = function($scope, keychain, pgp, dialog, auth) {
         $scope.code = util.randomString(24);
         $scope.displayedCode = $scope.code.slice(0, 4) + '-' + $scope.code.slice(4, 8) + '-' + $scope.code.slice(8, 12) + '-' + $scope.code.slice(12, 16) + '-' + $scope.code.slice(16, 20) + '-' + $scope.code.slice(20, 24);
 
-        // clear input fields of any previous artifacts
-        $scope.code0 = $scope.code1 = $scope.code2 = $scope.code3 = $scope.code4 = $scope.code5 = '';
+        // clear input field of any previous artifacts
+        $scope.inputCode = '';
     };
 
     $scope.verifyCode = function() {
-        var inputCode = '' + $scope.code0 + $scope.code1 + $scope.code2 + $scope.code3 + $scope.code4 + $scope.code5;
-
-        if (inputCode.toUpperCase() !== $scope.code) {
+        if ($scope.inputCode.toUpperCase() !== $scope.code) {
             var err = new Error('The code does not match. Please go back and check the generated code.');
             dialog.error(err);
             return false;
@@ -170,27 +148,5 @@ var PrivateKeyUploadCtrl = function($scope, keychain, pgp, dialog, auth) {
     };
 
 };
-
-//
-// Directives
-//
-
-var ngModule = angular.module('privatekey-upload', []);
-ngModule.directive('focusNext', function() {
-    return {
-        link: function(scope, element, attr) {
-            var maxLen = element[0].maxLength;
-
-            scope.$watch(attr.ngModel, function(val) {
-                if (val && val.length === maxLen) {
-                    var nextinput = element.next('input');
-                    if (nextinput.length) {
-                        nextinput[0].focus();
-                    }
-                }
-            });
-        }
-    };
-});
 
 module.exports = PrivateKeyUploadCtrl;

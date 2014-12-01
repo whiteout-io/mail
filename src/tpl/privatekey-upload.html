@@ -25,16 +25,8 @@
       <div ng-show="step === 2">
         <p class="typo-paragraph">Please confirm the keychain code you have written down.</p>
         <form class="form">
-          <!-- TODO utilize woInputCode -->
-          <div class="input-code">
-            <input type="text" class="input-text" size="4" maxlength="4" ng-model="code0" wo-focus-me="step === 2" focus-next ng-paste="handlePaste($event)"> -
-            <input type="text" class="input-text" size="4" maxlength="4" ng-model="code1" focus-next> -
-            <input type="text" class="input-text" size="4" maxlength="4" ng-model="code2" focus-next> -
-            <input type="text" class="input-text" size="4" maxlength="4" ng-model="code3" focus-next> -
-            <input type="text" class="input-text" size="4" maxlength="4" ng-model="code4" focus-next> -
-            <input type="text" class="input-text" size="4" maxlength="4" ng-model="code5">
-          </div>
-          <input type="text" class="input-text" ng-model="code" wo-focus-me="step === 2" wo-input-code required>
+          <input type="text" class="input-text" ng-model="inputCode" wo-input-code wo-focus-me="step === 2"
+              required pattern="([a-zA-Z0-9\-]*)" placeholder="0000-0000-0000-0000-0000-0000">
         </form>
       </div>
 
