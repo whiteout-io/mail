@@ -14,13 +14,17 @@ function LawnchairDAO() {}
  * Initialize the lawnchair database
  * @param  {String}   dbName   The name of the database
  */
-LawnchairDAO.prototype.init = function(dbName) {
+LawnchairDAO.prototype.init = function(dbName, callback) {
+    var self = this;
+
     if (!dbName) {
-        throw new Error('Lawnchair DB name must be specified!');
+        return callback(new Error('Lawnchair DB name must be specified!'));
     }
 
-    this._db = new Lawnchair({
+    self._db = new Lawnchair({
         name: dbName
+    }, function(success) {
+        callback(success ? undefined : new Error('Lawnchair initialization ' + dbName + ' failed!'));
     });
 };
 

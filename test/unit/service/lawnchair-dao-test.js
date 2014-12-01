@@ -20,10 +20,13 @@ var data2 = {
 describe('Lawnchair DAO unit tests', function() {
     var lawnchairDao;
 
-    beforeEach(function() {
+    beforeEach(function(done) {
         lawnchairDao = new LawnchairDAO();
-        lawnchairDao.init(dbName);
-        expect(lawnchairDao._db).to.exist;
+        lawnchairDao.init(dbName, function(err) {
+            expect(err).to.not.exist;
+            expect(lawnchairDao._db).to.exist;
+            done();
+        });
     });
 
     afterEach(function(done) {

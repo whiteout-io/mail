@@ -14,7 +14,7 @@ var ImapClient = require('imap-client'),
 describe('Email DAO integration tests', function() {
     this.timeout(100000);
 
-    var accountService, emailDao, imapClient, imapMessages, imapFolders, imapServer, smtpServer, smtpClient, userStorage,
+    var accountService, emailDao, imapClient, imapMessages, imapFolders, imapServer, smtpServer, smtpClient, userStorage, auth,
         mockKeyPair, inbox, spam;
 
     var testAccount = {
@@ -252,58 +252,67 @@ describe('Email DAO integration tests', function() {
 
             // clear the local database before each test
             var cleanup = new DeviceStorageDAO(new LawnchairDAO());
-            cleanup.init(testAccount.user);
-            cleanup.clear(function(err) {
-                expect(err).to.not.exist;
-
-                userStorage = accountService._accountStore;
-
-                accountService.init({
-                    emailAddress: testAccount.user
-                }, function(err) {
+            cleanup.init(testAccount.user, function() {
+                cleanup.clear(function(err) {
                     expect(err).to.not.exist;
 
-                    emailDao = accountService._emailDao;
+                    onCleaned();
+                });
+            });
 
-                    // stub rest request to key server
-                    sinon.stub(emailDao._keychain._publicKeyDao, 'get').yields(null, mockKeyPair.publicKey);
-                    sinon.stub(emailDao._keychain._publicKeyDao, 'getByUserId').yields(null, mockKeyPair.publicKey);
+            function onCleaned() {
+                userStorage = accountService._accountStore;
+                auth = accountService._auth;
 
-                    emailDao.onIncomingMessage = function(messages) {
-                        expect(messages.length).to.equal(imapMessages.length);
-                        inbox = emailDao._account.folders.filter(function(folder) {
-                            return folder.path === 'INBOX';
-                        }).pop();
-                        spam = emailDao._account.folders.filter(function(folder) {
-                            return folder.path === '[Gmail]/Spam';
-                        }).pop();
-                        expect(inbox).to.exist;
-                        expect(spam).to.exist;
-
-                        inbox.messages.sort(function(a, b) {
-                            return a.uid - b.uid;
-                        });
-
-                        // phantomjs is really slow, so setting the tcp socket timeouts to 200s will effectively disarm the timeout
-                        imapClient._client.client.TIMEOUT_SOCKET_LOWER_BOUND = 999999999;
-                        imapClient._listeningClient.client.TIMEOUT_SOCKET_LOWER_BOUND = 999999999;
-                        smtpClient.TIMEOUT_SOCKET_LOWER_BOUND = 999999999;
-
-                        done();
-                    };
-
-                    emailDao.unlock({
-                        passphrase: testAccount.pass,
-                        keypair: mockKeyPair
+                auth.init(function(err) {
+                    expect(err).to.not.exist;
+                    accountService.init({
+                        emailAddress: testAccount.user
                     }, function(err) {
                         expect(err).to.not.exist;
 
-                        accountService.onConnect(function(err) {
+                        emailDao = accountService._emailDao;
+
+                        // stub rest request to key server
+                        sinon.stub(emailDao._keychain._publicKeyDao, 'get').yields(null, mockKeyPair.publicKey);
+                        sinon.stub(emailDao._keychain._publicKeyDao, 'getByUserId').yields(null, mockKeyPair.publicKey);
+
+                        emailDao.onIncomingMessage = function(messages) {
+                            expect(messages.length).to.equal(imapMessages.length);
+                            inbox = emailDao._account.folders.filter(function(folder) {
+                                return folder.path === 'INBOX';
+                            }).pop();
+                            spam = emailDao._account.folders.filter(function(folder) {
+                                return folder.path === '[Gmail]/Spam';
+                            }).pop();
+                            expect(inbox).to.exist;
+                            expect(spam).to.exist;
+
+                            inbox.messages.sort(function(a, b) {
+                                return a.uid - b.uid;
+                            });
+
+                            // phantomjs is really slow, so setting the tcp socket timeouts to 200s will effectively disarm the timeout
+                            imapClient._client.client.TIMEOUT_SOCKET_LOWER_BOUND = 999999999;
+                            imapClient._listeningClient.client.TIMEOUT_SOCKET_LOWER_BOUND = 999999999;
+                            smtpClient.TIMEOUT_SOCKET_LOWER_BOUND = 999999999;
+
+                            done();
+                        };
+
+                        emailDao.unlock({
+                            passphrase: testAccount.pass,
+                            keypair: mockKeyPair
+                        }, function(err) {
                             expect(err).to.not.exist;
+
+                            accountService.onConnect(function(err) {
+                                expect(err).to.not.exist;
+                            });
                         });
                     });
                 });
-            });
+            }
         }
     });
 

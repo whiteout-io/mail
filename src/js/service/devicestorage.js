@@ -4,9 +4,7 @@ var ngModule = angular.module('woServices');
 
 // expose an instance with the static dbName 'app-config' to store configuration data
 ngModule.factory('appConfigStore', function(appConfigLawnchair) {
-    var deviceStorage = new DeviceStorage(appConfigLawnchair);
-    deviceStorage.init('app-config');
-    return deviceStorage;
+    return new DeviceStorage(appConfigLawnchair);
 });
 
 // expose a singleton instance of DeviceStorage called 'accountStore' to persist user data
@@ -31,8 +29,8 @@ function DeviceStorage(lawnchairDAO) {
  * Initialize the lawnchair database
  * @param  {String}   dbName   The name of the database
  */
-DeviceStorage.prototype.init = function(dbName) {
-    this._lawnchairDAO.init(dbName);
+DeviceStorage.prototype.init = function(dbName, callback) {
+    this._lawnchairDAO.init(dbName, callback);
 };
 
 /**

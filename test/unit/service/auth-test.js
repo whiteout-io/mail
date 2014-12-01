@@ -13,6 +13,8 @@ describe('Auth unit tests', function() {
     var PASSWD_DB_KEY = 'password';
     var IMAP_DB_KEY = 'imap';
     var SMTP_DB_KEY = 'smtp';
+    var APP_CONFIG_DB_NAME = 'app-config';
+
     // SUT
     var auth;
 
@@ -44,6 +46,25 @@ describe('Auth unit tests', function() {
         oauthStub = sinon.createStubInstance(OAuth);
         pgpStub = sinon.createStubInstance(PGP);
         auth = new Auth(storageStub, oauthStub, pgpStub);
+    });
+
+    describe('#init', function() {
+        it('should initialize a user db', function(done) {
+            storageStub.init.withArgs(APP_CONFIG_DB_NAME).yields();
+            auth.init(function(err) {
+                expect(err).to.not.exist;
+                expect(auth._initialized).to.be.true;
+                done();
+            });
+        });
+        it('should initialize a user db', function(done) {
+            storageStub.init.withArgs(APP_CONFIG_DB_NAME).yields(new Error());
+            auth.init(function(err) {
+                expect(err).to.exist;
+                expect(auth._initialized).to.be.false;
+                done();
+            });
+        });
     });
 
     describe('#getCredentials', function() {
