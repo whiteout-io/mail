@@ -11,7 +11,7 @@ var INIT_DISPLAY_LEN = 20,
     FOLDER_TYPE_INBOX = 'Inbox',
     NOTIFICATION_INBOX_TIMEOUT = 5000;
 
-var MailListCtrl = function($scope, $timeout, $routeParams, statusDisplay, notification, email, keychain, dialog, search, dummy) {
+var MailListCtrl = function($scope, $timeout, $routeParams, $filter, statusDisplay, notification, email, keychain, dialog, search, dummy) {
 
     //
     // Init
@@ -96,6 +96,20 @@ var MailListCtrl = function($scope, $timeout, $routeParams, statusDisplay, notif
 
             $scope.state.actionBar.markMessage(message, false, true);
         }
+    };
+
+    /**
+     * Date formatting
+     */
+    $scope.formatDate = function(date) {
+        var now = new Date();
+
+        // return time if mail is from today
+        if(now.getDay() === date.getDay() && now.getMonth() === date.getMonth() && now.getFullYear() === date.getFullYear()) {
+            return $filter('date')(date, 'shortTime');
+        }
+
+        return $filter('date')(date, 'mediumDate');
     };
 
     //

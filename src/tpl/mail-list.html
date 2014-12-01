@@ -61,7 +61,7 @@
         <div class="mail-list-entry__attachment">
           <svg><use xlink:href="#icon-attachment" /><title>Attachments</title></svg>
         </div>
-        <time class="mail-list-entry__time">{{email.sentDate | date:'mediumDate'}}</time>
+        <time class="mail-list-entry__time">{{ formatDate(email.sentDate) }}</time>
         <div class="mail-list-entry__excerpt">{{email.body ? email.body.substr(0, 200) : ''}}</div>
         <div class="mail-list-entry__encrypted">
           <svg ng-show="email.encrypted"><use xlink:href="#icon-encrypted" /><title>Encrypted</title></svg>
