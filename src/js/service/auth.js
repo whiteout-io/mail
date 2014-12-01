@@ -430,6 +430,7 @@ Auth.prototype.handleCertificateUpdate = function(component, onConnect, callback
             }
 
             self[component].ca = pemEncodedCert;
+            self.credentialsDirty = true;
             self.storeCredentials(function(err) {
                 if (err) {
                     callback(err);
