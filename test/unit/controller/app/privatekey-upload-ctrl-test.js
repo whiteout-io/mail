@@ -78,70 +78,33 @@ describe('Private Key Upload Controller unit test', function() {
         });
     });
 
-    describe('handlePaste', function() {
-        it('should work', function() {
-            scope.handlePaste({
-                clipboardData: {
-                    getData: function(val) {
-                        expect(val).to.equal('text/plain');
-                        return '1qaz-2wsx-3edc-4rfv-5tgb-6yhn';
-                    }
-                }
-            });
-
-            expect(scope.code0).to.equal('1qaz');
-            expect(scope.code1).to.equal('2wsx');
-            expect(scope.code2).to.equal('3edc');
-            expect(scope.code3).to.equal('4rfv');
-            expect(scope.code4).to.equal('5tgb');
-            expect(scope.code5).to.equal('6yhn');
-        });
-    });
-
     describe('displayUploadUi', function() {
         it('should work', function() {
             // add some artifacts from a previous key input
-            scope.code0 = scope.code1 = scope.code2 = scope.code3 = scope.code4 = scope.code5 = 'asdasd';
+            scope.inputCode = 'asdasd';
 
             scope.displayUploadUi();
             expect(scope.step).to.equal(1);
             expect(scope.code.length).to.equal(24);
 
             // artifacts should be cleared
-            expect(scope.code0).to.be.empty;
-            expect(scope.code1).to.be.empty;
-            expect(scope.code2).to.be.empty;
-            expect(scope.code3).to.be.empty;
-            expect(scope.code4).to.be.empty;
-            expect(scope.code5).to.be.empty;
+            expect(scope.inputCode).to.be.empty;
         });
     });
 
     describe('verifyCode', function() {
         it('should fail for wrong code', function() {
-            scope.code0 = 'b';
-            scope.code1 = 'b';
-            scope.code2 = 'b';
-            scope.code3 = 'b';
-            scope.code4 = 'b';
-            scope.code5 = 'b';
-            scope.code = 'aaaaaa';
+            scope.inputCode = 'bbbbbb';
+            scope.code = 'AAAAAA';
 
-            scope.onError = function() {};
             expect(scope.verifyCode()).to.be.false;
         });
 
         it('should work', function() {
-            scope.code0 = 'a';
-            scope.code1 = 'a';
-            scope.code2 = 'a';
-            scope.code3 = 'a';
-            scope.code4 = 'a';
-            scope.code5 = 'a';
-            scope.code = 'aaaaaa';
+            scope.inputCode = 'aaAaaa';
+            scope.code = 'AAAAAA';
 
-            scope.onError = function() {};
-            expect(scope.verifyCode()).to.be.false;
+            expect(scope.verifyCode()).to.be.true;
         });
     });
 

@@ -70,10 +70,8 @@ var LoginPrivateKeyDownloadCtrl = function($scope, $location, $routeParams, auth
     };
 
     $scope.decryptAndStorePrivateKeyLocally = function() {
-        var inputCode = '' + $scope.code0 + $scope.code1 + $scope.code2 + $scope.code3 + $scope.code4 + $scope.code5;
-
         var options = $scope.encryptedPrivateKey;
-        options.code = inputCode.toUpperCase();
+        options.code = $scope.code.toUpperCase();
 
         keychain.decryptAndStorePrivateKeyLocally(options, function(err, privateKey) {
             if (err) {
@@ -106,26 +104,6 @@ var LoginPrivateKeyDownloadCtrl = function($scope, $location, $routeParams, auth
                 });
             });
         });
-    };
-
-    $scope.handlePaste = function(event) {
-        var evt = event;
-        if (evt.originalEvent) {
-            evt = evt.originalEvent;
-        }
-
-        var value = evt.clipboardData.getData('text/plain');
-        if (!value) {
-            return;
-        }
-
-        value = value.replace(/-/g, '');
-        $scope.code0 = value.slice(0, 4);
-        $scope.code1 = value.slice(4, 8);
-        $scope.code2 = value.slice(8, 12);
-        $scope.code3 = value.slice(12, 16);
-        $scope.code4 = value.slice(16, 20);
-        $scope.code5 = value.slice(20, 24);
     };
 
     //
