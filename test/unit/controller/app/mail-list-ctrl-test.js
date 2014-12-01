@@ -324,4 +324,19 @@ describe('Mail List controller unit test', function() {
             expect(scope.state.mailList.selected).to.equal(mail);
         });
     });
+
+    describe('formatDate', function() {
+        it('should output short time if date is today', angular.mock.inject(function($filter) {
+            var now = new Date();
+            var expected = $filter('date')(now, 'shortTime');
+            expect(scope.formatDate(now)).to.equal(expected);
+        }));
+        it('should output date only if date is not today', angular.mock.inject(function($filter) {
+            var yesterday = new Date();
+            yesterday.setTime(yesterday.getTime() - 24*60*60*1000);
+
+            var expected = $filter('date')(yesterday, 'mediumDate');
+            expect(scope.formatDate(yesterday)).to.equal(expected);
+        }));
+    });
 });
