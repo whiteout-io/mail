@@ -1,7 +1,7 @@
 <div class="action-bar" ng-controller="ActionBarCtrl">
   <div class="action-bar__primary">
     <button class="btn btn--light" wo-touch="state.read.open ? deleteMessage(state.mailList.selected) : deleteCheckedMessages()">Delete</button>
-    <button class="btn btn--light" disabled>Spam</button>
+    <button class="btn btn--light" wo-touch="state.read.open ? moveMessage(state.mailList.selected, getJunkFolder()) : moveCheckedMessages(getJunkFolder())">Spam</button>
     <button class="btn btn--light-dropdown" wo-dropdown="#dropdown-folder">
       <svg><use xlink:href="#icon-folder" /><title>Folder</title></svg>
       <svg class="btn__dropdown" role="presentation"><use xlink:href="#icon-dropdown" /></svg>

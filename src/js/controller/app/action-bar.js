@@ -1,5 +1,7 @@
 'use strict';
 
+var JUNK_FOLDER_TYPE = 'Junk';
+
 var ActionBarCtrl = function($scope, email, dialog, statusDisplay) {
 
     /**
@@ -8,7 +10,7 @@ var ActionBarCtrl = function($scope, email, dialog, statusDisplay) {
      * @param  {Object} destination The folder object where the message should be moved to
      */
     $scope.moveMessage = function(message, destination) {
-        if (!message) {
+        if (!message || !destination) {
             return;
         }
 
@@ -46,6 +48,21 @@ var ActionBarCtrl = function($scope, email, dialog, statusDisplay) {
         getCheckMessages().forEach(function(message) {
             $scope.moveMessage(message, destination);
         });
+    };
+
+    /**
+     * Find the junk folder to mark a message as spam. If no junk folder is found, an error message will be displayed.
+     * @return {Object} The junk folder object tied to the account
+     */
+    $scope.getJunkFolder = function() {
+        var folder = _.findWhere($scope.account.folders, {
+            type: JUNK_FOLDER_TYPE
+        });
+        if (!folder) {
+            dialog.error(new Error('Spam folder not found!'));
+            return;
+        }
+        return folder;
     };
 
     /**
