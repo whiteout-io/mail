@@ -11,7 +11,7 @@ var INIT_DISPLAY_LEN = 20,
     FOLDER_TYPE_INBOX = 'Inbox',
     NOTIFICATION_INBOX_TIMEOUT = 5000;
 
-var MailListCtrl = function($scope, $timeout, $routeParams, $filter, statusDisplay, notification, email, keychain, dialog, search, dummy) {
+var MailListCtrl = function($scope, $timeout, $location, $routeParams, $filter, statusDisplay, notification, email, keychain, dialog, search, dummy) {
 
     //
     // Init
@@ -48,6 +48,10 @@ var MailListCtrl = function($scope, $timeout, $routeParams, $filter, statusDispl
                 }, dialog.error);
             }
         });
+    };
+
+    $scope.navigate = function(message) {
+        $location.path('/account/' + $routeParams.folderIndex + '/' + message.uid);
     };
 
     /**
@@ -97,6 +101,11 @@ var MailListCtrl = function($scope, $timeout, $routeParams, $filter, statusDispl
             $scope.state.actionBar.markMessage(message, false, true);
         }
     };
+
+    var selectedMessage = _.findWhere(currentFolder().messages, {
+        uid: $routeParams.uid
+    });
+    $scope.select(selectedMessage);
 
     $scope.flag = function(message, flagged) {
         $scope.state.actionBar.flagMessage(message, flagged);
@@ -155,7 +164,7 @@ var MailListCtrl = function($scope, $timeout, $routeParams, $filter, statusDispl
         // Shows the next message based on the uid of the currently selected element
         if (currentFolder().messages.indexOf(currentMessage()) === -1) {
             firstSelect = true; // reset first selection
-            $scope.select($scope.displayMessages[0]);
+            $scope.navigate($scope.displayMessages[0]);
         }
     });
 
@@ -301,7 +310,7 @@ var MailListCtrl = function($scope, $timeout, $routeParams, $filter, statusDispl
                 }
 
                 // mark message as read
-                $scope.select(_.findWhere(currentFolder().messages, {
+                $scope.navigate(_.findWhere(currentFolder().messages, {
                     uid: unreadMsgs[0].uid
                 }));
             },

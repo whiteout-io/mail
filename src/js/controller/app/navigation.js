@@ -17,9 +17,13 @@ var NavigationCtrl = function($scope, $routeParams, $location, account, email, o
     if (!$routeParams.dev && !account.isLoggedIn()) {
         $location.path('/'); // init app
         return;
+    } else if (!$routeParams.folderIndex) {
+        $location.path('/account/0'); // navigate to default account's inbox by default
+        return;
     }
 
-    var str = appConfig.string,
+    var folderIndex = $routeParams.folderIndex,
+        str = appConfig.string,
         config = appConfig.config;
 
     //
@@ -77,10 +81,12 @@ var NavigationCtrl = function($scope, $routeParams, $location, account, email, o
     // init folders
     initializeFolders();
 
-    // select inbox as the current folder on init
-    if ($scope.account.folders && $scope.account.folders.length > 0) {
-        $scope.openFolder($scope.account.folders[0]);
+    // select current folder on init
+    if ($scope.account.folders && $scope.account.folders.length > folderIndex) {
+        // navigate to the selected folder index
+        $scope.openFolder($scope.account.folders[folderIndex]);
     }
+
     // connect imap/smtp clients on first startup
     account.onConnect(function(err) {
         if (err) {

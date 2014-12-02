@@ -65,7 +65,7 @@ var LoginInitialCtrl = function($scope, $location, $routeParams, newsletter, ema
                     return;
                 }
 
-                $location.path('/desktop');
+                $location.path('/account');
                 $scope.$apply();
             });
         });

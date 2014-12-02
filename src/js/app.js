@@ -68,6 +68,11 @@ var app = angular.module('mail', [
 
 // set router paths
 app.config(function($routeProvider, $animateProvider) {
+
+    //
+    // Login routes
+    //
+
     $routeProvider.when('/login', {
         templateUrl: 'tpl/login.html',
         controller: LoginCtrl
@@ -104,10 +109,24 @@ app.config(function($routeProvider, $animateProvider) {
         templateUrl: 'tpl/login-privatekey-download.html',
         controller: LoginPrivateKeyDownloadCtrl
     });
-    $routeProvider.when('/desktop', {
+
+    //
+    // main app routes
+    //
+
+    var accountRoute = {
         templateUrl: 'tpl/desktop.html',
         controller: NavigationCtrl
-    });
+    };
+
+    $routeProvider.when('/account', accountRoute);
+    $routeProvider.when('/account/:folderIndex', accountRoute);
+    $routeProvider.when('/account/:folderIndex/:uid', accountRoute);
+
+    //
+    // Default route
+    //
+
     $routeProvider.otherwise({
         redirectTo: '/login'
     });

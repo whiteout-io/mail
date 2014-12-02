@@ -43,7 +43,7 @@ var LoginExistingCtrl = function($scope, $location, $routeParams, email, auth, k
                 return;
             }
 
-            $location.path('/desktop');
+            $location.path('/account');
             $scope.$apply();
         });
     }

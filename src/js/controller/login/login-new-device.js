@@ -95,7 +95,7 @@ var LoginExistingCtrl = function($scope, $location, $routeParams, email, auth, p
                 return;
             }
 
-            $location.path('/desktop');
+            $location.path('/account');
             $scope.$apply();
         });
     }

@@ -60,7 +60,7 @@ var LoginCtrl = function($scope, $timeout, $location, updateHandler, account, au
                         return dialog.error(err);
                     }
 
-                    $scope.goTo('/desktop');
+                    $scope.goTo('/account');
                 });
             });
         } else if (availableKeys && availableKeys.publicKey && !availableKeys.privateKey) {
