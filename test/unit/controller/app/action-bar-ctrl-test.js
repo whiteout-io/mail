@@ -114,6 +114,29 @@ describe('Action Bar Controller unit test', function() {
         });
     });
 
+    describe('getJunkFolder', function() {
+        it('should work', function() {
+            scope.account = {
+                folders: [{
+                    type: 'Junk'
+                }]
+            };
+            var folder = scope.getJunkFolder();
+            expect(folder).to.exist;
+        });
+
+        it('should fail', function() {
+            scope.account = {
+                folders: [{
+                    type: 'NotJunk'
+                }]
+            };
+            var folder = scope.getJunkFolder();
+            expect(folder).to.not.exist;
+            expect(dialogMock.error.calledOnce).to.be.true;
+        });
+    });
+
     describe('markMessage', function() {
         it('should not move without a selected mail', function() {
             scope.markMessage();
