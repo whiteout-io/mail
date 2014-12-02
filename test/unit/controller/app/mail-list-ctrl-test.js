@@ -252,6 +252,31 @@ describe('Mail List controller unit test', function() {
         });
     });
 
+    describe('flag', function() {
+        it('should flag or unflag a message', function() {
+            var mail = {
+                from: [{
+                    address: 'asd'
+                }],
+                flagged: true,
+            };
+
+            scope.state = {
+                actionBar: {
+                    flagMessage: function(mail, flagged) {
+                        mail.flagged = flagged;
+                    }
+                }
+            };
+
+            scope.flag(mail, false);
+            expect(mail.flagged).to.be.false;
+
+            scope.flag(mail, true);
+            expect(mail.flagged).to.be.true;
+        });
+    });
+
     describe('select', function() {
         it('should decrypt, focus mark an unread mail as read', function() {
             scope.pendingNotifications = ['asd'];

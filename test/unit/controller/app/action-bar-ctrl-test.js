@@ -138,11 +138,21 @@ describe('Action Bar Controller unit test', function() {
     });
 
     describe('markMessage', function() {
-        it('should not move without a selected mail', function() {
+        it('should not mark without a selected mail', function() {
             scope.markMessage();
         });
 
-        it('should move the selected mail', function() {
+        it('should not mark when old and new changes are equivalent', function() {
+            scope.markMessage({
+                unread: false
+            }, false);
+
+            scope.markMessage({
+                unread: true
+            }, true);
+        });
+
+        it('should mark the selected mail', function() {
             emailMock.setFlags.yields();
 
             scope.markMessage({}, true);
@@ -162,10 +172,51 @@ describe('Action Bar Controller unit test', function() {
             markMessageStub.restore();
         });
 
-        it('should delete the selected mail', function() {
+        it('should mark the selected mail', function() {
             scope.markCheckedMessages();
 
             expect(markMessageStub.calledOnce).to.be.true;
+        });
+    });
+
+    describe('flagMessage', function() {
+        it('should not flag without a selected mail', function() {
+            scope.flagMessage();
+        });
+
+        it('should not flag when old and new changes are equivalent', function() {
+            scope.flagMessage({
+                flagged: false
+            }, false);
+
+            scope.flagMessage({
+                flagged: true
+            }, true);
+        });
+
+        it('should flag the selected mail', function() {
+            emailMock.setFlags.yields();
+
+            scope.flagMessage({}, true);
+
+            expect(emailMock.setFlags.calledOnce).to.be.true;
+        });
+    });
+
+    describe('flagCheckedMessages', function() {
+        var flagMessageStub;
+
+        beforeEach(function() {
+            flagMessageStub = sinon.stub(scope, 'flagMessage');
+        });
+        afterEach(function() {
+            flagMessageStub.restore();
+        });
+
+        it('should delete the selected mail', function() {
+            scope.flagCheckedMessages();
+
+            expect(flagMessageStub.calledOnce).to.be.true;
         });
     });
 
