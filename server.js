@@ -122,7 +122,7 @@ io.on('connection', function(socket) {
         var socketId = ++idCounter;
         var tcp;
 
-        if (config.server.outboundPorts.indexOf(data.port) < 0) {
+        if (!development && config.server.outboundPorts.indexOf(data.port) < 0) {
             log.warn('io', 'Open request to %s:%s was rejected, closing [%s:%s]', data.host, data.port, socket.conn.id, socketId);
             socket.disconnect();
             return;
