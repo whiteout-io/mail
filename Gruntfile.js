@@ -464,7 +464,7 @@ module.exports = function(grunt) {
                 tasks: ['dist-css', 'manifest']
             },
             jsApp: {
-                files: ['src/js/**/*.js'],
+                files: ['src/js/**/*.js', 'src/**/*.html'],
                 tasks: ['dist-js-app']
             },
             jsUnitTest: {
