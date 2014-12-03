@@ -248,10 +248,10 @@ ngModule.directive('woInputCode', function() {
 
             var maxlength = NUM_BLOCKS * (BLOCK_SIZE + 1) - 1;
 
-            elm.on('input', function() {
-                var start = this.selectionStart;
-                var end = this.selectionEnd;
-                var val = this.value;
+            function handleInput(el) {
+                var start = el.selectionStart;
+                var end = el.selectionEnd;
+                var val = el.value;
 
                 var blockIndex = getBlockIndex(val, start);
                 var blockDims = getBlockDimensions(val, blockIndex);
@@ -291,7 +291,35 @@ ngModule.directive('woInputCode', function() {
                 ngModelCtrl.$setViewValue(val);
                 ngModelCtrl.$render();
 
-                this.setSelectionRange(start, end);
+                el.setSelectionRange(start, end);
+            }
+
+            function handlePastedInput(el) {
+                // reformat whole input value
+                el.value = format(parse(el.value).substr(0, BLOCK_SIZE * NUM_BLOCKS));
+
+                // select first block to have clear predefined selection behavior
+                var dims = getBlockDimensions(el.value, 0);
+                el.setSelectionRange(dims.start, dims.end + 1);
+            }
+
+            // Events
+
+            var pasted = false;
+
+            elm.on('input', function() {
+                if(pasted) {
+                    handlePastedInput(this);
+                    pasted = false;
+                    return;
+                }
+
+                handleInput(this);
+            });
+
+            elm.on('paste', function() {
+                // next input event will handle pasted input
+                pasted = true;
             });
 
             elm.on('click', function() {
