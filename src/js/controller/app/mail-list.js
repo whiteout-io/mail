@@ -98,6 +98,10 @@ var MailListCtrl = function($scope, $timeout, $routeParams, $filter, statusDispl
         }
     };
 
+    $scope.flag = function(message, flagged) {
+        $scope.state.actionBar.flagMessage(message, flagged);
+    };
+
     /**
      * Date formatting
      */

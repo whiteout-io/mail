@@ -114,7 +114,7 @@ var ActionBarCtrl = function($scope, email, dialog, statusDisplay) {
      * @param  {boolean}    unread If the message should be marked as read or unread
      */
     $scope.markMessage = function(message, unread, keepOpen) {
-        if (!message) {
+        if (!message || message.unread === unread) {
             return;
         }
 
@@ -159,9 +159,56 @@ var ActionBarCtrl = function($scope, email, dialog, statusDisplay) {
         });
     };
 
+    /**
+     * Flag a single message
+     * @param  {Object}     message The message to be flagged
+     * @param  {boolean}    flagged If the message should be flagged or unflagged
+     */
+    $scope.flagMessage = function(message, flagged) {
+        if (!message || message.flagged === flagged) {
+            return;
+        }
+
+        statusDisplay.update(flagged ? 'Adding message to favorites...' : 'Removing message from favorites');
+
+        var originalState = message.flagged;
+        message.flagged = flagged;
+        email.setFlags({
+            folder: currentFolder(),
+            message: message
+        }, function(err) {
+            if (err && err.code === 42) {
+                // offline, restore
+                message.unread = originalState;
+                statusDisplay.update('Unable to ' + (flagged ? 'add message to' : 'remove message from') + ' favorites in offline mode!');
+                return;
+            }
+
+            if (err) {
+                statusDisplay.update('Error on sync!');
+                dialog.error(err);
+                return;
+            }
+
+            statusDisplay.update('Online');
+            $scope.$apply();
+        });
+    };
+
+    /**
+     * Mark all of the checked messages as either flagged or unflagged.
+     * @param  {boolean} flagged If the message should be marked as flagged or unflagged
+     */
+    $scope.flagCheckedMessages = function(flagged) {
+        getCheckMessages().forEach(function(message) {
+            $scope.flagMessage(message, flagged);
+        });
+    };
+
     // share local scope functions with root state
     $scope.state.actionBar = {
-        markMessage: $scope.markMessage
+        markMessage: $scope.markMessage,
+        flagMessage: $scope.flagMessage
     };
 
     function currentFolder() {
