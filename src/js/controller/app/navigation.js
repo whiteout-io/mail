@@ -13,7 +13,7 @@ var NOTIFICATION_SENT_TIMEOUT = 2000;
 // Controller
 //
 
-var NavigationCtrl = function($scope, $routeParams, $location, account, email, outbox, notification, appConfig, dialog) {
+var NavigationCtrl = function($scope, $routeParams, $location, account, email, outbox, notification, appConfig, dialog, dummy) {
     if (!$routeParams.dev && !account.isLoggedIn()) {
         $location.path('/'); // init app
         return;
@@ -108,7 +108,8 @@ var NavigationCtrl = function($scope, $routeParams, $location, account, email, o
     function initializeFolders() {
         // create dummy folder in dev environment only
         if ($routeParams.dev) {
-            createDummyFolders();
+            $scope.$root.account = {};
+            $scope.account.folders = dummy.listFolders();
             return;
         }
 
@@ -127,33 +128,6 @@ var NavigationCtrl = function($scope, $routeParams, $location, account, email, o
             message: message.subject,
             timeout: NOTIFICATION_SENT_TIMEOUT
         }, function() {});
-    }
-
-
-    // attach dummy folders for development
-    function createDummyFolders() {
-        $scope.$root.account = {};
-        $scope.account.folders = [{
-            type: 'Inbox',
-            count: 2,
-            path: 'INBOX'
-        }, {
-            type: 'Sent',
-            count: 0,
-            path: 'SENT'
-        }, {
-            type: config.outboxMailboxType,
-            count: 0,
-            path: config.outboxMailboxPath
-        }, {
-            type: 'Drafts',
-            count: 0,
-            path: 'DRAFTS'
-        }, {
-            type: 'Trash',
-            count: 0,
-            path: 'TRASH'
-        }];
     }
 };
 

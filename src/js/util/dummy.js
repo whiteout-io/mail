@@ -6,6 +6,50 @@ module.exports = Dummy;
 
 function Dummy() {}
 
+Dummy.prototype.listFolders = function() {
+    var dummies = [{
+        type: 'Inbox',
+        count: 2,
+        path: 'INBOX',
+        wellknown: true
+    }, {
+        type: 'Sent',
+        count: 0,
+        path: 'SENT',
+        wellknown: true
+    }, {
+        type: 'Outbox',
+        count: 0,
+        path: 'OUTBOX',
+        wellknown: true
+    }, {
+        type: 'Drafts',
+        count: 0,
+        path: 'DRAFTS',
+        wellknown: true
+    }, {
+        type: 'Trash',
+        count: 0,
+        path: 'TRASH',
+        wellknown: true
+    }, {
+        type: 'Flagged',
+        count: 0,
+        path: 'FLAGGED',
+        wellknown: true
+    }, {
+        name: 'Archive',
+        count: 0,
+        path: 'ARCHIVE'
+    }, {
+        name: 'Junk',
+        count: 0,
+        path: 'JUNK'
+    }];
+
+    return dummies;
+};
+
 Dummy.prototype.listMails = function() {
     var uid = 1000000;
 
