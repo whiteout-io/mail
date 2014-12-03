@@ -54,7 +54,6 @@
             }
             li {
                 display: inline;
-                white-space: nowrap;
                 &:after {
                     display: inline-block;
                     content: ' | ';
