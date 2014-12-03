@@ -169,7 +169,7 @@ var ActionBarCtrl = function($scope, email, dialog, statusDisplay) {
             return;
         }
 
-        statusDisplay.update(flagged ? 'Adding message to favorites...' : 'Removing message from favorites');
+        statusDisplay.update(flagged ? 'Adding star to message...' : 'Removing star from message');
 
         var originalState = message.flagged;
         message.flagged = flagged;
@@ -180,7 +180,7 @@ var ActionBarCtrl = function($scope, email, dialog, statusDisplay) {
             if (err && err.code === 42) {
                 // offline, restore
                 message.unread = originalState;
-                statusDisplay.update('Unable to ' + (flagged ? 'add message to' : 'remove message from') + ' favorites in offline mode!');
+                statusDisplay.update('Unable to ' + (flagged ? 'add star to' : 'remove star from') + ' message in offline mode!');
                 return;
             }
 
