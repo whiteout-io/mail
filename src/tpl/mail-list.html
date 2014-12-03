@@ -37,9 +37,9 @@
               <span><svg role="presentation"><use xlink:href="#icon-check" /></svg></span>
             </label>
           </li>
-          <li class="mail-list-entry__flags-favorite" wo-touch="flag(email, !email.flagged); $event.stopPropagation()">
-            <svg ng-show="email.flagged"><use xlink:href="#icon-star_filled" /><title>Favorited</title></svg>
-            <svg ng-show="!email.flagged"><use xlink:href="#icon-star" /><title>Not Favorited</title></svg>
+          <li class="mail-list-entry__flags-flagged" wo-touch="flag(email, !email.flagged); $event.stopPropagation()">
+            <svg ng-show="email.flagged"><use xlink:href="#icon-star_filled" /><title>Flagged</title></svg>
+            <svg ng-show="!email.flagged"><use xlink:href="#icon-star" /><title>Not Flagged</title></svg>
           </li>
           <li class="mail-list-entry__flags-encrypted">
             <svg ng-show="email.encrypted"><use xlink:href="#icon-encrypted" /><title>Encrypted</title></svg>

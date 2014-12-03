@@ -16,9 +16,9 @@
   <header class="read__header">
     <div class="read__controls">
       <span class="u-hidden-lg" ng-controller="ActionBarCtrl">
-        <button wo-touch="flagMessage(state.mailList.selected, !state.mailList.selected.flagged)" class="btn-icon-light" title="{{state.mailList.selected.flagged ? 'Remove from Favorites' : 'Add to Favorites'}}">
-          <svg ng-show="state.mailList.selected.flagged"><use xlink:href="#icon-star_filled" /><title>Favorited</title></svg>
-          <svg ng-show="!state.mailList.selected.flagged"><use xlink:href="#icon-star" /><title>Not Favorited</title></svg>
+        <button wo-touch="flagMessage(state.mailList.selected, !state.mailList.selected.flagged)" class="btn-icon-light" title="{{state.mailList.selected.flagged ? 'Remove Flag' : 'Add Flag'}}">
+          <svg ng-show="state.mailList.selected.flagged"><use xlink:href="#icon-star_filled" /><title>Flagged</title></svg>
+          <svg ng-show="!state.mailList.selected.flagged"><use xlink:href="#icon-star" /><title>Not Flagged</title></svg>
         </button>
         <button class="btn-icon-light" title="Move mail" wo-dropdown="#read-dropdown-folder" wo-dropdown-position="center">
           <svg><use xlink:href="#icon-folder" /><title>Move mail</title></svg>
@@ -128,9 +128,9 @@
     <div class="toolbar">
       <ul class="toolbar__actions">
         <li>
-          <button wo-touch="flagMessage(state.mailList.selected, !state.mailList.selected.flagged)" class="btn-icon-light" title="{{state.mailList.selected.flagged ? 'Remove from Favorites' : 'Add to Favorites'}}">
-            <svg ng-show="state.mailList.selected.flagged"><use xlink:href="#icon-star_filled" /><title>Favorited</title></svg>
-            <svg ng-show="!state.mailList.selected.flagged"><use xlink:href="#icon-star" /><title>Not Favorited</title></svg>
+          <button wo-touch="flagMessage(state.mailList.selected, !state.mailList.selected.flagged)" class="btn-icon-light" title="{{state.mailList.selected.flagged ? 'Remove Flag' : 'Add Flag'}}">
+            <svg ng-show="state.mailList.selected.flagged"><use xlink:href="#icon-star_filled" /><title>Flagged</title></svg>
+            <svg ng-show="!state.mailList.selected.flagged"><use xlink:href="#icon-star" /><title>Not Flagged</title></svg>
           </button>
         </li>
         <li>

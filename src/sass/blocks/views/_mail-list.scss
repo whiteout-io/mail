@@ -220,7 +220,7 @@
         &__flags-checked {
             display: none; // feature on touch layout not available for now
         }
-        &__flags-favorite {
+        &__flags-flagged {
             display: none; // feature on touch layout not available for now
         }
         &__flags-encrypted {
@@ -373,7 +373,7 @@
                 padding: 0.5em 0 0.5em 1em;
             }
         }
-        &__flags-favorite {
+        &__flags-flagged {
             // add invisible padding to increase clickable area around star
             margin: -0.5em 0 -0.5em;
             padding: 0.5em 0 0.5em;
