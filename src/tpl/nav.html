@@ -16,7 +16,7 @@
           <use ng-if="folder.type === 'Trash'" xlink:href="#icon-delete" />
           <use ng-if="folder.type === 'Flagged'" xlink:href="#icon-star" />
         </svg>
-        {{folder.type}}
+        {{folder.type === 'Flagged' ? 'Starred' : folder.type}}
         <span ng-show="folder.count > 0" class="nav__counter">{{folder.count}}</span>
       </a>
       <!--<button class="btn-icon-very-light">
