@@ -130,11 +130,6 @@
             overflow-y: scroll;
             // allow scrolling on iOS
             -webkit-overflow-scrolling: touch;
-
-            // hide scrollbar in webkit
-            &::-webkit-scrollbar {
-                display: none;
-            }
         }
         &__entries {
             display: table; // import for mail list entry desktop layout
