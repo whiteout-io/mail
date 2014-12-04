@@ -67,11 +67,6 @@ var app = angular.module('mail', [
 
 // set router paths
 app.config(function($routeProvider, $animateProvider) {
-
-    //
-    // Login routes
-    //
-
     $routeProvider.when('/login', {
         templateUrl: 'tpl/login.html',
         controller: LoginCtrl
