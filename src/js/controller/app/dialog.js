@@ -2,6 +2,10 @@
 
 var DialogCtrl = function($scope, dialog) {
 
+    //
+    // scope state
+    //
+
     $scope.state.dialog = {
         open: false
     };

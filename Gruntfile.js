@@ -159,7 +159,6 @@ module.exports = function(grunt) {
                         'test/unit/util/dialog-test.js',
                         'test/unit/util/connection-doctor-test.js',
                         'test/unit/util/update-handler-test.js',
-                        'test/unit/util/backbutton-handler-test.js',
                         'test/unit/util/status-display-test.js',
                         'test/unit/crypto/pgp-test.js',
                         'test/unit/crypto/crypto-test.js',

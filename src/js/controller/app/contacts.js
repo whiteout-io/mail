@@ -6,10 +6,13 @@
 
 var ContactsCtrl = function($scope, keychain, pgp, dialog) {
 
+    //
+    // scope state
+    //
+
     $scope.state.contacts = {
         toggle: function(to) {
             $scope.state.lightbox = (to) ? 'contacts' : undefined;
-
             $scope.listKeys();
         }
     };
@@ -93,6 +96,7 @@ var ContactsCtrl = function($scope, keychain, pgp, dialog) {
             $scope.listKeys();
         });
     };
+
 };
 
 //
