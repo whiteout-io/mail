@@ -8,7 +8,8 @@
     <div class="toolbar">
       <a class="toolbar__label" href="javascript:;" wo-touch="state.read.toggle(false)">
         <svg><use xlink:href="#icon-back" /><title>Back</title></svg>
-        {{state.nav.currentFolder.wellknown ? state.nav.currentFolder.type : state.nav.currentFolder.name}}
+        <span ng-show="state.nav.currentFolder.wellknown">{{state.nav.currentFolder.type === 'Flagged' ? 'Starred' : state.nav.currentFolder.type}}</span>
+        <span ng-show="!state.nav.currentFolder.wellknown">{{state.nav.currentFolder.name}}</span>
       </a>
     </div>
   </div><!--/read__folder-toolbar-->
@@ -174,7 +175,8 @@
     <li ng-repeat="folder in account.folders">
       <button wo-touch="moveMessage(state.mailList.selected, folder)">
         <svg><use xlink:href="#icon-folder" /></svg>
-        {{folder.wellknown ? folder.type : folder.name}}
+        <span ng-show="folder.wellknown">{{folder.type === 'Flagged' ? 'Starred' : folder.type}}</span>
+        <span ng-show="!folder.wellknown">{{folder.name}}</span>
       </button>
     </li>
   </ul><!--/dropdown-->
