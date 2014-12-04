@@ -12,15 +12,19 @@ var ReadCtrl = function($scope, $location, email, invitation, outbox, pgp, keych
     // scope state
     //
 
-    // set default value so that the popover height is correct on init
-    $scope.keyId = 'No key found.';
-
     $scope.state.read = {
         open: false,
         toggle: function(to) {
             this.open = to;
         }
     };
+
+    $scope.$on('read', function(e, state) {
+        $scope.state.read.toggle(state);
+    });
+
+    // set default value so that the popover height is correct on init
+    $scope.keyId = 'No key found.';
 
     //
     // url/history handling

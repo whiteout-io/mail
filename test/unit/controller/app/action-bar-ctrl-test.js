@@ -2,26 +2,22 @@
 
 var Email = require('../../../../src/js/email/email'),
     Dialog = require('../../../../src/js/util/dialog'),
-    StatusDisplay = require('../../../../src/js/util/status-display'),
+    Status = require('../../../../src/js/util/status'),
     ActionBarCtrl = require('../../../../src/js/controller/app/action-bar');
 
 describe('Action Bar Controller unit test', function() {
-    var scope, actionBarCtrl, emailMock, dialogMock, statusDisplayMock;
+    var scope, actionBarCtrl, emailMock, dialogMock, statusMock;
 
     beforeEach(function() {
         emailMock = sinon.createStubInstance(Email);
         dialogMock = sinon.createStubInstance(Dialog);
-        statusDisplayMock = sinon.createStubInstance(StatusDisplay);
+        statusMock = sinon.createStubInstance(Status);
 
-        angular.module('actionbartest', []);
+        angular.module('actionbartest', ['woUtil']);
         angular.mock.module('actionbartest');
         angular.mock.inject(function($rootScope, $controller) {
             scope = $rootScope.$new();
-            scope.state = {
-                mailList: {
-                    updateStatus: function() {}
-                }
-            };
+            scope.state = {};
 
             scope.state.nav = {
                 currentFolder: {
@@ -35,15 +31,11 @@ describe('Action Bar Controller unit test', function() {
                 }
             };
 
-            scope.state.read = {
-                open: true
-            };
-
             actionBarCtrl = $controller(ActionBarCtrl, {
                 $scope: scope,
                 email: emailMock,
                 dialog: dialogMock,
-                statusDisplay: statusDisplayMock
+                status: statusMock
             });
         });
     });
@@ -60,8 +52,8 @@ describe('Action Bar Controller unit test', function() {
 
             scope.deleteMessage({});
 
+            expect(statusMock.setReading.withArgs(false).calledOnce).to.be.true;
             expect(emailMock.deleteMessage.calledOnce).to.be.true;
-            expect(scope.state.read.open).to.be.false;
         });
     });
 
@@ -92,8 +84,8 @@ describe('Action Bar Controller unit test', function() {
 
             scope.moveMessage({}, {});
 
+            expect(statusMock.setReading.withArgs(false).calledOnce).to.be.true;
             expect(emailMock.moveMessage.calledOnce).to.be.true;
-            expect(scope.state.read.open).to.be.false;
         });
     });
 
@@ -157,8 +149,17 @@ describe('Action Bar Controller unit test', function() {
 
             scope.markMessage({}, true);
 
+            expect(statusMock.setReading.withArgs(false).calledOnce).to.be.true;
             expect(emailMock.setFlags.calledOnce).to.be.true;
-            expect(scope.state.read.open).to.be.false;
+        });
+
+        it('should mark the selected mail and close read mode', function() {
+            emailMock.setFlags.yields();
+
+            scope.markMessage({}, true, true);
+
+            expect(statusMock.setReading.calledOnce).to.be.false;
+            expect(emailMock.setFlags.calledOnce).to.be.true;
         });
     });
 

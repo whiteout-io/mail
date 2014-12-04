@@ -11,10 +11,10 @@ var INIT_DISPLAY_LEN = 50,
     FOLDER_TYPE_INBOX = 'Inbox',
     NOTIFICATION_INBOX_TIMEOUT = 5000;
 
-var MailListCtrl = function($scope, $timeout, $location, $filter, statusDisplay, notification, email, keychain, dialog, search, dummy) {
+var MailListCtrl = function($scope, $timeout, $location, $filter, status, notification, email, keychain, dialog, search, dummy) {
 
     //
-    // Init
+    // scope state
     //
 
     $scope.state.mailList = {};
@@ -156,7 +156,7 @@ var MailListCtrl = function($scope, $timeout, $location, $filter, statusDisplay,
 
         // in development, display dummy mail objects
         if ($location.search().dev) {
-            statusDisplay.update('Last update: ', new Date());
+            status.update('Last update: ', new Date());
             currentFolder().messages = dummy.listMails();
             return;
         }
@@ -217,20 +217,20 @@ var MailListCtrl = function($scope, $timeout, $location, $filter, statusDisplay,
         if (!searchText) {
             // set display buffer to first messages
             $scope.displayMessages = currentFolder().messages.slice(0, INIT_DISPLAY_LEN);
-            statusDisplay.setSearching(false);
-            statusDisplay.update('Online');
+            status.setSearching(false);
+            status.update('Online');
             return;
         }
 
         // display searching spinner
-        statusDisplay.setSearching(true);
-        statusDisplay.update('Searching ...');
+        status.setSearching(true);
+        status.update('Searching ...');
         searchTimeout = setTimeout(function() {
             $scope.$apply(function() {
                 // filter relevant messages
                 $scope.displayMessages = search.filter(currentFolder().messages, searchText);
-                statusDisplay.setSearching(false);
-                statusDisplay.update('Matches in this folder');
+                status.setSearching(false);
+                status.update('Matches in this folder');
             });
         }, 500);
     };
@@ -242,10 +242,10 @@ var MailListCtrl = function($scope, $timeout, $location, $filter, statusDisplay,
         // wait one cycle for the status display controllers to init
         $timeout(function() {
             if (isOnline) {
-                statusDisplay.update('Online');
+                status.update('Online');
                 openCurrentFolder();
             } else {
-                statusDisplay.update('Offline mode');
+                status.update('Offline mode');
             }
         });
     }, true);

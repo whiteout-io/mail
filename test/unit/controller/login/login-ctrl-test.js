@@ -119,7 +119,7 @@ describe('Login Controller unit test', function() {
         expect(dialogMock.error.calledOnce).to.be.true;
     });
 
-    it('should redirect to /desktop', function() {
+    it('should redirect to /account', function() {
         authMock.init.yields();
         authMock.getEmailAddress.yields(null, {
             emailAddress: emailAddress
@@ -133,7 +133,7 @@ describe('Login Controller unit test', function() {
 
         createController();
 
-        expect(goToStub.withArgs('/desktop').calledOnce).to.be.true;
+        expect(goToStub.withArgs('/account').calledOnce).to.be.true;
     });
 
     it('should fail for keychain.requestPrivateKeyDownload', function() {

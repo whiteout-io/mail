@@ -152,7 +152,7 @@ describe('Login Private Key Download Controller unit test', function() {
             scope.decryptAndStorePrivateKeyLocally();
         });
 
-        it('should goto /desktop on emailDao.unlock success', function(done) {
+        it('should goto /account on emailDao.unlock success', function(done) {
             keychainMock.decryptAndStorePrivateKeyLocally.yields(null, {
                 encryptedKey: 'keyArmored'
             });
@@ -160,7 +160,7 @@ describe('Login Private Key Download Controller unit test', function() {
             authMock.storeCredentials.yields();
 
             scope.goTo = function(location) {
-                expect(location).to.equal('/desktop');
+                expect(location).to.equal('/account');
                 expect(keychainMock.decryptAndStorePrivateKeyLocally.calledOnce).to.be.true;
                 expect(emailDaoMock.unlock.calledOnce).to.be.true;
                 done();
@@ -173,10 +173,10 @@ describe('Login Private Key Download Controller unit test', function() {
     describe('goTo', function() {
         it('should work', function() {
             sinon.stub(location, 'path', function(path) {
-                expect(path).to.equal('/desktop');
+                expect(path).to.equal('/account');
             });
 
-            scope.goTo('/desktop');
+            scope.goTo('/account');
         });
     });
 });
