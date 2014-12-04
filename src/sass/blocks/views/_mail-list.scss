@@ -290,7 +290,8 @@
 
         // Modifiers
 
-        &:hover {
+        &:hover,
+        &.wo-touch-active {
             background-color: rgba($color-main, 0.15);
         }
         &--unread {
