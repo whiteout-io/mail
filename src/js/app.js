@@ -35,8 +35,7 @@ var axe = require('axe-logger'),
     WriteCtrl = require('./controller/app/write'),
     NavigationCtrl = require('./controller/app/navigation'),
     ActionBarCtrl = require('./controller/app/action-bar'),
-    StatusDisplayCtrl = require('./controller/app/status-display'),
-    backButtonUtil = require('./util/backbutton-handler');
+    StatusDisplayCtrl = require('./controller/app/status-display');
 
 // include angular modules
 require('./app-config');
@@ -109,24 +108,11 @@ app.config(function($routeProvider, $animateProvider) {
         templateUrl: 'tpl/login-privatekey-download.html',
         controller: LoginPrivateKeyDownloadCtrl
     });
-
-    //
-    // main app routes
-    //
-
-    var accountRoute = {
+    $routeProvider.when('/account', {
         templateUrl: 'tpl/desktop.html',
-        controller: NavigationCtrl
-    };
-
-    $routeProvider.when('/account', accountRoute);
-    $routeProvider.when('/account/:folderIndex', accountRoute);
-    $routeProvider.when('/account/:folderIndex/:uid', accountRoute);
-
-    //
-    // Default route
-    //
-
+        controller: NavigationCtrl,
+        reloadOnSearch: false // don't reload controllers in main app when query params change
+    });
     $routeProvider.otherwise({
         redirectTo: '/login'
     });
@@ -138,10 +124,6 @@ app.config(function($routeProvider, $animateProvider) {
 app.run(function($rootScope) {
     // global state... inherited to all child scopes
     $rootScope.state = {};
-
-    // attach the back button handler to the root scope
-    backButtonUtil.attachHandler($rootScope);
-
     // attach fastclick
     FastClick.attach(document.body);
 });

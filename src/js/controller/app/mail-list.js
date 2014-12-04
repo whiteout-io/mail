@@ -1,17 +1,17 @@
 'use strict';
 
-var searchTimeout, firstSelect;
+var searchTimeout;
 
 //
 // Constants
 //
 
-var INIT_DISPLAY_LEN = 20,
+var INIT_DISPLAY_LEN = 50,
     SCROLL_DISPLAY_LEN = 10,
     FOLDER_TYPE_INBOX = 'Inbox',
     NOTIFICATION_INBOX_TIMEOUT = 5000;
 
-var MailListCtrl = function($scope, $timeout, $location, $routeParams, $filter, statusDisplay, notification, email, keychain, dialog, search, dummy) {
+var MailListCtrl = function($scope, $timeout, $location, $filter, statusDisplay, notification, email, keychain, dialog, search, dummy) {
 
     //
     // Init
@@ -23,6 +23,30 @@ var MailListCtrl = function($scope, $timeout, $location, $routeParams, $filter, 
      * Gathers unread notifications to be cancelled later
      */
     $scope.pendingNotifications = [];
+
+    //
+    // url/history handling
+    //
+
+    /**
+     * Set the route to a message which will go to read mode
+     */
+    $scope.navigate = function(message) {
+        $location.search('uid', message.uid);
+    };
+
+    $scope.loc = $location;
+    $scope.$watch('(loc.search()).uid', function(uid) {
+        if (typeof uid === 'undefined') {
+            // no uid specified in url... select no message
+            $scope.select();
+            return;
+        }
+        // select the message specified by the uid in the url
+        $scope.select(_.findWhere(currentFolder().messages, {
+            uid: typeof uid === 'string' ? parseInt(uid, 10) : uid
+        }));
+    });
 
     //
     // scope functions
@@ -50,10 +74,6 @@ var MailListCtrl = function($scope, $timeout, $location, $routeParams, $filter, 
         });
     };
 
-    $scope.navigate = function(message) {
-        $location.path('/account/' + $routeParams.folderIndex + '/' + message.uid);
-    };
-
     /**
      * Called when clicking on an message list item
      */
@@ -66,11 +86,10 @@ var MailListCtrl = function($scope, $timeout, $location, $routeParams, $filter, 
 
         $scope.state.mailList.selected = message;
 
-        if (!firstSelect) {
-            // only toggle to read view on 2nd select in mobile mode
-            $scope.state.read.toggle(true);
+        if ($location.search().dev) {
+            // stop here in dev mode
+            return;
         }
-        firstSelect = false;
 
         keychain.refreshKeyForUserId({
             userId: message.from[0].address
@@ -101,11 +120,6 @@ var MailListCtrl = function($scope, $timeout, $location, $routeParams, $filter, 
             $scope.state.actionBar.markMessage(message, false, true);
         }
     };
-
-    var selectedMessage = _.findWhere(currentFolder().messages, {
-        uid: $routeParams.uid
-    });
-    $scope.select(selectedMessage);
 
     $scope.flag = function(message, flagged) {
         $scope.state.actionBar.flagMessage(message, flagged);
@@ -141,7 +155,7 @@ var MailListCtrl = function($scope, $timeout, $location, $routeParams, $filter, 
         $scope.searchText = undefined;
 
         // in development, display dummy mail objects
-        if ($routeParams.dev) {
+        if ($location.search().dev) {
             statusDisplay.update('Last update: ', new Date());
             currentFolder().messages = dummy.listMails();
             return;
@@ -157,15 +171,9 @@ var MailListCtrl = function($scope, $timeout, $location, $routeParams, $filter, 
         }
 
         // sort message by uid
-        currentFolder().messages.sort(byUidDescending);
+        messages.sort(byUidDescending);
         // set display buffer to first messages
-        $scope.displayMessages = currentFolder().messages.slice(0, INIT_DISPLAY_LEN);
-
-        // Shows the next message based on the uid of the currently selected element
-        if (currentFolder().messages.indexOf(currentMessage()) === -1) {
-            firstSelect = true; // reset first selection
-            $scope.navigate($scope.displayMessages[0]);
-        }
+        $scope.displayMessages = messages.slice(0, INIT_DISPLAY_LEN);
     });
 
     /**
@@ -300,16 +308,12 @@ var MailListCtrl = function($scope, $timeout, $location, $routeParams, $filter, 
             title: title,
             message: message,
             onClick: function() {
-                // force toggle into read mode when notification is clicked
-                firstSelect = false;
-
                 // remove from pending notificatiosn
                 var index = $scope.pendingNotifications.indexOf(note);
                 if (index !== -1) {
                     $scope.pendingNotifications.splice(index, 1);
                 }
-
-                // mark message as read
+                // open the message
                 $scope.navigate(_.findWhere(currentFolder().messages, {
                     uid: unreadMsgs[0].uid
                 }));

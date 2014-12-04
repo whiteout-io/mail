@@ -4,9 +4,13 @@
 // Controller
 //
 
-var ReadCtrl = function($scope, email, invitation, outbox, pgp, keychain, appConfig, download, auth, dialog) {
+var ReadCtrl = function($scope, $location, email, invitation, outbox, pgp, keychain, appConfig, download, auth, dialog) {
 
     var str = appConfig.string;
+
+    //
+    // scope state
+    //
 
     // set default value so that the popover height is correct on init
     $scope.keyId = 'No key found.';
@@ -18,7 +22,32 @@ var ReadCtrl = function($scope, email, invitation, outbox, pgp, keychain, appCon
         }
     };
 
+    //
+    // url/history handling
+    //
+
+    // read state url watcher
+    $scope.loc = $location;
+    $scope.$watch('(loc.search()).uid', function(uid) {
+        // synchronize the url to the scope state
+        $scope.state.read.toggle(!!uid);
+    });
+    $scope.$watch('state.read.open', function(value) {
+        // close read mode by navigating to folder view
+        if (!value) {
+            $location.search('uid', null);
+        }
+    });
+
+    //
+    // scope functions
+    //
+
     $scope.getKeyId = function(address) {
+        if ($location.search().dev || !address) {
+            return;
+        }
+
         $scope.keyId = 'Searching...';
         keychain.getReceiverPublicKey(address, function(err, pubkey) {
             if (err) {
@@ -41,7 +70,7 @@ var ReadCtrl = function($scope, email, invitation, outbox, pgp, keychain, appCon
     };
 
     $scope.$watch('state.mailList.selected', function(mail) {
-        if (!mail) {
+        if ($location.search().dev || !mail) {
             return;
         }
 

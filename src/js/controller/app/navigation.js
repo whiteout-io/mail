@@ -1,7 +1,5 @@
 'use strict';
 
-var backBtnHandler = require('../../util/backbutton-handler');
-
 //
 // Constants
 //
@@ -13,21 +11,17 @@ var NOTIFICATION_SENT_TIMEOUT = 2000;
 // Controller
 //
 
-var NavigationCtrl = function($scope, $routeParams, $location, account, email, outbox, notification, appConfig, dialog, dummy) {
-    if (!$routeParams.dev && !account.isLoggedIn()) {
+var NavigationCtrl = function($scope, $location, account, email, outbox, notification, appConfig, dialog, dummy) {
+    if (!$location.search().dev && !account.isLoggedIn()) {
         $location.path('/'); // init app
-        return;
-    } else if (!$routeParams.folderIndex) {
-        $location.path('/account/0'); // navigate to default account's inbox by default
         return;
     }
 
-    var folderIndex = $routeParams.folderIndex,
-        str = appConfig.string,
+    var str = appConfig.string,
         config = appConfig.config;
 
     //
-    // scope functions
+    // scope state
     //
 
     $scope.state.nav = {
@@ -36,6 +30,36 @@ var NavigationCtrl = function($scope, $routeParams, $location, account, email, o
             this.open = to;
         }
     };
+
+    //
+    // url/history handling
+    //
+
+    $scope.loc = $location;
+
+    // nav open/close state url watcher
+    $scope.$watch('(loc.search()).nav', function(open) {
+        // synchronize the url to the scope state
+        $scope.state.nav.toggle(!!open);
+    });
+    $scope.$watch('state.nav.open', function(value) {
+        // synchronize the scope state to the url
+        $location.search('nav', value ? true : null);
+    });
+
+    // lightbox state url watcher
+    $scope.$watch('(loc.search()).lightbox', function(value) {
+        // synchronize the url to the scope state
+        $scope.state.lightbox = (value) ? value : undefined;
+    });
+    $scope.$watch('state.lightbox', function(value) {
+        // synchronize the scope state to the url
+        $location.search('lightbox', value ? value : null);
+    });
+
+    //
+    // scope functions
+    //
 
     $scope.openFolder = function(folder) {
         $scope.state.nav.currentFolder = folder;
@@ -76,16 +100,22 @@ var NavigationCtrl = function($scope, $routeParams, $location, account, email, o
     // Start
     //
 
-    // handle back button
-    backBtnHandler.start();
     // init folders
     initializeFolders();
 
-    // select current folder on init
-    if ($scope.account.folders && $scope.account.folders.length > folderIndex) {
-        // navigate to the selected folder index
-        $scope.openFolder($scope.account.folders[folderIndex]);
-    }
+    // folder index url watcher
+    $scope.$watch('(loc.search()).folder', function(folderIndex) {
+        if (typeof folderIndex === 'undefined') {
+            $location.search('folder', 0); // navigate to inbox by default
+            return;
+        }
+        // select current folder
+        folderIndex = typeof folderIndex === 'string' ? parseInt(folderIndex, 10) : folderIndex;
+        if ($scope.account.folders && $scope.account.folders.length > folderIndex) {
+            // navigate to the selected folder index
+            $scope.openFolder($scope.account.folders[folderIndex]);
+        }
+    });
 
     // connect imap/smtp clients on first startup
     account.onConnect(function(err) {
@@ -107,7 +137,7 @@ var NavigationCtrl = function($scope, $routeParams, $location, account, email, o
 
     function initializeFolders() {
         // create dummy folder in dev environment only
-        if ($routeParams.dev) {
+        if ($location.search().dev) {
             $scope.$root.account = {};
             $scope.account.folders = dummy.listFolders();
             return;

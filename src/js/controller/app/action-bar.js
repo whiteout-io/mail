@@ -15,7 +15,7 @@ var ActionBarCtrl = function($scope, email, dialog, statusDisplay) {
         }
 
         // close read state
-        $scope.state.read.open = false;
+        $scope.state.read.toggle(false);
 
         statusDisplay.update('Moving message...');
 
@@ -76,7 +76,7 @@ var ActionBarCtrl = function($scope, email, dialog, statusDisplay) {
         }
 
         // close read state
-        $scope.state.read.open = false;
+        $scope.state.read.toggle(false);
 
         statusDisplay.update('Deleting message...');
 
@@ -122,7 +122,7 @@ var ActionBarCtrl = function($scope, email, dialog, statusDisplay) {
 
         // close read state
         if (!keepOpen) {
-            $scope.state.read.open = false;
+            $scope.state.read.toggle(false);
         }
 
         var originalState = message.unread;
