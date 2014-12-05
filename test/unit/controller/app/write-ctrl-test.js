@@ -6,11 +6,12 @@ var WriteCtrl = require('../../../../src/js/controller/app/write'),
     Keychain = require('../../../../src/js/service/keychain'),
     Auth = require('../../../../src/js/service/auth'),
     PGP = require('../../../../src/js/crypto/pgp'),
+    Status = require('../../../../src/js/util/status'),
     Dialog = require('../../../../src/js/util/dialog');
 
 describe('Write controller unit test', function() {
     var ctrl, scope,
-        authMock, pgpMock, dialogMock, emailMock, keychainMock, outboxMock,
+        authMock, pgpMock, dialogMock, emailMock, keychainMock, outboxMock, statusMock,
         emailAddress, realname;
 
     beforeEach(function() {
@@ -21,6 +22,7 @@ describe('Write controller unit test', function() {
         outboxMock = sinon.createStubInstance(Outbox);
         emailMock = sinon.createStubInstance(Email);
         keychainMock = sinon.createStubInstance(Keychain);
+        statusMock = sinon.createStubInstance(Status);
 
         emailAddress = 'fred@foo.com';
         realname = 'Fred Foo';
@@ -39,7 +41,8 @@ describe('Write controller unit test', function() {
                 pgp: pgpMock,
                 email: emailMock,
                 outbox: outboxMock,
-                dialog: dialogMock
+                dialog: dialogMock,
+                status: statusMock
             });
         });
     });
@@ -343,6 +346,7 @@ describe('Write controller unit test', function() {
 
             scope.sendToOutbox();
 
+            expect(statusMock.setReading.withArgs(false).calledOnce).to.be.true;
             expect(outboxMock.put.calledOnce).to.be.true;
             expect(emailMock.setFlags.calledOnce).to.be.true;
             expect(scope.state.lightbox).to.be.undefined;

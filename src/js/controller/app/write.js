@@ -6,7 +6,7 @@ var util = require('crypto-lib').util;
 // Controller
 //
 
-var WriteCtrl = function($scope, $filter, $q, appConfig, auth, keychain, pgp, email, outbox, dialog, axe) {
+var WriteCtrl = function($scope, $window, $filter, $q, appConfig, auth, keychain, pgp, email, outbox, dialog, axe, status) {
 
     var str = appConfig.string;
     var cfg = appConfig.config;
@@ -341,6 +341,10 @@ var WriteCtrl = function($scope, $filter, $q, appConfig, auth, keychain, pgp, em
 
         // close the writer
         $scope.state.writer.close();
+        // close read mode after reply
+        if ($scope.replyTo) {
+            status.setReading(false);
+        }
 
         // persist the email to disk for later sending
         outbox.put(message, function(err) {
