@@ -6,6 +6,10 @@ var AccountCtrl = function($scope, auth, keychain, pgp, appConfig, download, dia
         return;
     }
 
+    //
+    // scope state
+    //
+
     $scope.state.account = {
         toggle: function(to) {
             $scope.state.lightbox = (to) ? 'account' : undefined;
@@ -46,6 +50,7 @@ var AccountCtrl = function($scope, auth, keychain, pgp, appConfig, download, dia
             });
         });
     };
+
 };
 
 module.exports = AccountCtrl;

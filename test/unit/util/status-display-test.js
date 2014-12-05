@@ -1,14 +1,14 @@
 'use strict';
 
-describe('Status Display Service unit test', function() {
-    var statusDisplay, logInfoStub, rootScope, broadcastSpy;
+describe('Status Service unit test', function() {
+    var status, logInfoStub, rootScope, broadcastSpy;
 
     beforeEach(function() {
-        angular.module('statusDisplay-test', ['woUtil']);
-        angular.mock.module('statusDisplay-test');
+        angular.module('status-test', ['woUtil']);
+        angular.mock.module('status-test');
         angular.mock.inject(function($injector, axe) {
             logInfoStub = sinon.stub(axe, 'info');
-            statusDisplay = $injector.get('statusDisplay');
+            status = $injector.get('status');
             rootScope = $injector.get('$rootScope');
             broadcastSpy = sinon.spy(rootScope, '$broadcast');
         });
@@ -23,7 +23,7 @@ describe('Status Display Service unit test', function() {
             var message = 'Tada!',
                 time = new Date();
 
-            statusDisplay.update(message, time);
+            status.update(message, time);
 
             expect(broadcastSpy.withArgs('status', message, time).calledOnce).to.be.true;
             expect(logInfoStub.withArgs('status display', message).calledOnce).to.be.true;
@@ -32,9 +32,17 @@ describe('Status Display Service unit test', function() {
 
     describe('setSearching', function() {
         it('should work', function() {
-            statusDisplay.setSearching(true);
+            status.setSearching(true);
 
             expect(broadcastSpy.withArgs('searching', true).calledOnce).to.be.true;
+        });
+    });
+
+    describe('setReading', function() {
+        it('should work', function() {
+            status.setReading(true);
+
+            expect(broadcastSpy.withArgs('read', true).calledOnce).to.be.true;
         });
     });
 

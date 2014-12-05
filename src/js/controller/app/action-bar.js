@@ -2,7 +2,11 @@
 
 var JUNK_FOLDER_TYPE = 'Junk';
 
-var ActionBarCtrl = function($scope, email, dialog, statusDisplay) {
+var ActionBarCtrl = function($scope, email, dialog, status) {
+
+    //
+    // scope functions
+    //
 
     /**
      * Move a single message from the currently selected folder to another folder
@@ -15,9 +19,9 @@ var ActionBarCtrl = function($scope, email, dialog, statusDisplay) {
         }
 
         // close read state
-        $scope.state.read.open = false;
-
-        statusDisplay.update('Moving message...');
+        status.setReading(false);
+        // show message
+        status.update('Moving message...');
 
         email.moveMessage({
             folder: currentFolder(),
@@ -28,14 +32,14 @@ var ActionBarCtrl = function($scope, email, dialog, statusDisplay) {
                 // show errors where appropriate
                 if (err.code === 42) {
                     $scope.select(message);
-                    statusDisplay.update('Unable to move message in offline mode!');
+                    status.update('Unable to move message in offline mode!');
                     return;
                 }
-                statusDisplay.update('Error during move!');
+                status.update('Error during move!');
                 dialog.error(err);
                 return;
             }
-            statusDisplay.update('Message moved.');
+            status.update('Message moved.');
             $scope.$apply();
         });
     };
@@ -76,9 +80,8 @@ var ActionBarCtrl = function($scope, email, dialog, statusDisplay) {
         }
 
         // close read state
-        $scope.state.read.open = false;
-
-        statusDisplay.update('Deleting message...');
+        status.setReading(false);
+        status.update('Deleting message...');
 
         email.deleteMessage({
             folder: currentFolder(),
@@ -88,14 +91,14 @@ var ActionBarCtrl = function($scope, email, dialog, statusDisplay) {
                 // show errors where appropriate
                 if (err.code === 42) {
                     $scope.select(message);
-                    statusDisplay.update('Unable to delete message in offline mode!');
+                    status.update('Unable to delete message in offline mode!');
                     return;
                 }
-                statusDisplay.update('Error during delete!');
+                status.update('Error during delete!');
                 dialog.error(err);
                 return;
             }
-            statusDisplay.update('Message deleted.');
+            status.update('Message deleted.');
             $scope.$apply();
         });
     };
@@ -118,11 +121,11 @@ var ActionBarCtrl = function($scope, email, dialog, statusDisplay) {
             return;
         }
 
-        statusDisplay.update('Updating unread flag...');
+        status.update('Updating unread flag...');
 
         // close read state
         if (!keepOpen) {
-            $scope.state.read.open = false;
+            status.setReading(false);
         }
 
         var originalState = message.unread;
@@ -134,17 +137,17 @@ var ActionBarCtrl = function($scope, email, dialog, statusDisplay) {
             if (err && err.code === 42) {
                 // offline, restore
                 message.unread = originalState;
-                statusDisplay.update('Unable to mark message in offline mode!');
+                status.update('Unable to mark message in offline mode!');
                 return;
             }
 
             if (err) {
-                statusDisplay.update('Error on sync!');
+                status.update('Error on sync!');
                 dialog.error(err);
                 return;
             }
 
-            statusDisplay.update('Online');
+            status.update('Online');
             $scope.$apply();
         });
     };
@@ -169,7 +172,7 @@ var ActionBarCtrl = function($scope, email, dialog, statusDisplay) {
             return;
         }
 
-        statusDisplay.update(flagged ? 'Adding star to message...' : 'Removing star from message');
+        status.update(flagged ? 'Adding star to message...' : 'Removing star from message');
 
         var originalState = message.flagged;
         message.flagged = flagged;
@@ -180,17 +183,17 @@ var ActionBarCtrl = function($scope, email, dialog, statusDisplay) {
             if (err && err.code === 42) {
                 // offline, restore
                 message.unread = originalState;
-                statusDisplay.update('Unable to ' + (flagged ? 'add star to' : 'remove star from') + ' message in offline mode!');
+                status.update('Unable to ' + (flagged ? 'add star to' : 'remove star from') + ' message in offline mode!');
                 return;
             }
 
             if (err) {
-                statusDisplay.update('Error on sync!');
+                status.update('Error on sync!');
                 dialog.error(err);
                 return;
             }
 
-            statusDisplay.update('Online');
+            status.update('Online');
             $scope.$apply();
         });
     };

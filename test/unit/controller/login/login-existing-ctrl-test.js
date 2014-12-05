@@ -60,7 +60,7 @@ describe('Login (existing user) Controller unit test', function() {
             expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
             expect(emailDaoMock.unlock.calledOnce).to.be.true;
             expect(pathSpy.calledOnce).to.be.true;
-            expect(pathSpy.calledWith('/desktop')).to.be.true;
+            expect(pathSpy.calledWith('/account')).to.be.true;
         });
 
         it('should not work when keypair unavailable', function() {

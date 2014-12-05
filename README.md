@@ -48,7 +48,7 @@ For development you can start a connect dev server:
 
     grunt dev
 
-Then visit [http://localhost:8580/dist/#/desktop?dev=true](http://localhost:8580/dist/#/desktop?dev=true) for front-end code or [http://localhost:8580/test/unit/](http://localhost:8580/test/unit/) to test JavaScript changes. You can also start a watch task so you don't have rebuild everytime you make a change:
+Then visit [http://localhost:8580/dist/#/account?dev=true](http://localhost:8580/dist/#/account?dev=true) for front-end code or [http://localhost:8580/test/unit/](http://localhost:8580/test/unit/) to test JavaScript changes. You can also start a watch task so you don't have rebuild everytime you make a change:
 
     grunt watch
 

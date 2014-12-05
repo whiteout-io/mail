@@ -26,26 +26,6 @@ if (!Function.prototype.bind) {
     };
 }
 
-// a warm round of applause for phantomjs for missing events
-(function() {
-    if (!window.CustomEvent) {
-        var CustomEvent = function(event, params) {
-            params = params || {
-                bubbles: false,
-                cancelable: false,
-                detail: undefined
-            };
-            var evt = document.createEvent('CustomEvent');
-            evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
-            return evt;
-        };
-
-        CustomEvent.prototype = window.Event.prototype;
-
-        window.CustomEvent = CustomEvent;
-    }
-})();
-
 //
 // Test setup
 //

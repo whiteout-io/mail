@@ -2,6 +2,10 @@
 
 var AboutCtrl = function($scope, appConfig) {
 
+    //
+    // scope state
+    //
+
     $scope.state.about = {
         toggle: function(to) {
             $scope.state.lightbox = (to) ? 'about' : undefined;
@@ -15,9 +19,6 @@ var AboutCtrl = function($scope, appConfig) {
     $scope.version = appConfig.config.appVersion + ' (beta)';
     $scope.date = new Date();
 
-    //
-    // scope functions
-    //
 };
 
 module.exports = AboutCtrl;

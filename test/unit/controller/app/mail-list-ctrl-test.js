@@ -3,34 +3,15 @@
 var MailListCtrl = require('../../../../src/js/controller/app/mail-list'),
     EmailDAO = require('../../../../src/js/email/email'),
     KeychainDAO = require('../../../../src/js/service/keychain'),
-    StatusDisplay = require('../../../../src/js/util/status-display'),
+    Status = require('../../../../src/js/util/status'),
     Dialog = require('../../../../src/js/util/dialog'),
     Search = require('../../../../src/js/email/search');
 
 describe('Mail List controller unit test', function() {
-    var scope, ctrl, statusDisplayMock, notificationMock, emailMock, keychainMock, dialogMock, searchMock,
-        emailAddress, emails,
-        hasChrome, hasSocket, hasRuntime, hasIdentity;
+    var scope, ctrl, statusMock, notificationMock, emailMock, keychainMock, dialogMock, searchMock,
+        emailAddress, emails, location;
 
     beforeEach(function() {
-        hasChrome = !!window.chrome;
-        hasSocket = !!window.chrome.socket;
-        hasIdentity = !!window.chrome.identity;
-        if (!hasChrome) {
-            window.chrome = {};
-        }
-        if (!hasSocket) {
-            window.chrome.socket = {};
-        }
-        if (!hasRuntime) {
-            window.chrome.runtime = {
-                getURL: function() {}
-            };
-        }
-        if (!hasIdentity) {
-            window.chrome.identity = {};
-        }
-
         emails = [{
             unread: true
         }, {
@@ -46,7 +27,7 @@ describe('Mail List controller unit test', function() {
             close: function() {}
         };
 
-        statusDisplayMock = sinon.createStubInstance(StatusDisplay);
+        statusMock = sinon.createStubInstance(Status);
         emailMock = sinon.createStubInstance(EmailDAO);
         keychainMock = sinon.createStubInstance(KeychainDAO);
         dialogMock = sinon.createStubInstance(Dialog);
@@ -54,19 +35,16 @@ describe('Mail List controller unit test', function() {
 
         angular.module('maillisttest', ['woEmail', 'woServices', 'woUtil']);
         angular.mock.module('maillisttest');
-        angular.mock.inject(function($rootScope, $controller) {
+        angular.mock.inject(function($rootScope, $controller, $location) {
             scope = $rootScope.$new();
-            scope.state = {
-                read: {
-                    toggle: function() {}
-                }
-            };
+            location = $location;
+            scope.state = {};
 
             scope.loadVisibleBodies = function() {};
             ctrl = $controller(MailListCtrl, {
                 $scope: scope,
-                $routeParams: {},
-                statusDisplay: statusDisplayMock,
+                $location: location,
+                status: statusMock,
                 notification: notificationMock,
                 email: emailMock,
                 keychain: keychainMock,
@@ -76,20 +54,7 @@ describe('Mail List controller unit test', function() {
         });
     });
 
-    afterEach(function() {
-        if (!hasSocket) {
-            delete window.chrome.socket;
-        }
-        if (!hasRuntime) {
-            delete window.chrome.runtime;
-        }
-        if (!hasChrome) {
-            delete window.chrome;
-        }
-        if (!hasIdentity) {
-            delete window.chrome.identity;
-        }
-    });
+    afterEach(function() {});
 
     describe('displayMore', function() {
         beforeEach(function() {
@@ -132,21 +97,21 @@ describe('Mail List controller unit test', function() {
 
         it('should show initial message on empty', function() {
             scope.displaySearchResults();
-            expect(statusDisplayMock.setSearching.withArgs(false).calledOnce).to.be.true;
-            expect(statusDisplayMock.update.withArgs('Online').calledOnce).to.be.true;
+            expect(statusMock.setSearching.withArgs(false).calledOnce).to.be.true;
+            expect(statusMock.update.withArgs('Online').calledOnce).to.be.true;
             expect(scope.displayMessages.length).to.equal(2);
         });
         it('should show initial message on empty', function() {
             searchMock.filter.returns(['a']);
 
             scope.displaySearchResults('query');
-            expect(statusDisplayMock.setSearching.withArgs(true).calledOnce).to.be.true;
-            expect(statusDisplayMock.update.withArgs('Searching ...').calledOnce).to.be.true;
+            expect(statusMock.setSearching.withArgs(true).calledOnce).to.be.true;
+            expect(statusMock.update.withArgs('Searching ...').calledOnce).to.be.true;
             clock.tick(500);
 
             expect(scope.displayMessages).to.deep.equal(['a']);
-            expect(statusDisplayMock.setSearching.withArgs(false).calledOnce).to.be.true;
-            expect(statusDisplayMock.update.withArgs('Matches in this folder').calledOnce).to.be.true;
+            expect(statusMock.setSearching.withArgs(false).calledOnce).to.be.true;
+            expect(statusMock.update.withArgs('Matches in this folder').calledOnce).to.be.true;
         });
     });
 
@@ -160,10 +125,12 @@ describe('Mail List controller unit test', function() {
     describe('push notification', function() {
         beforeEach(function() {
             scope._stopWatchTask();
+            sinon.stub(scope, 'navigate');
         });
 
         afterEach(function() {
             notificationMock.create.restore();
+            scope.navigate.restore();
         });
 
         it('should succeed for single mail', function(done) {
@@ -181,7 +148,7 @@ describe('Mail List controller unit test', function() {
                 expect(opts.message).to.equal(mail.subject);
 
                 opts.onClick();
-                expect(scope.state.mailList.selected).to.equal(mail);
+                expect(scope.navigate.withArgs(mail).calledOnce).to.be.true;
                 done();
             });
 
@@ -224,7 +191,7 @@ describe('Mail List controller unit test', function() {
                 expect(opts.message).to.equal(mails[0].subject + '\n' + mails[1].subject);
 
                 opts.onClick();
-                expect(scope.state.mailList.selected).to.equal(mails[0]);
+                expect(scope.navigate.withArgs(mails[0]).calledOnce).to.be.true;
                 done();
             });
 
@@ -358,7 +325,7 @@ describe('Mail List controller unit test', function() {
         }));
         it('should output date only if date is not today', angular.mock.inject(function($filter) {
             var yesterday = new Date();
-            yesterday.setTime(yesterday.getTime() - 24*60*60*1000);
+            yesterday.setTime(yesterday.getTime() - 24 * 60 * 60 * 1000);
 
             var expected = $filter('date')(yesterday, 'mediumDate');
             expect(scope.formatDate(yesterday)).to.equal(expected);

@@ -100,7 +100,7 @@ var LoginPrivateKeyDownloadCtrl = function($scope, $location, $routeParams, auth
                         return;
                     }
 
-                    $scope.goTo('/desktop');
+                    $scope.goTo('/account');
                 });
             });
         });

@@ -1,13 +1,13 @@
 'use strict';
 
 var ngModule = angular.module('woUtil');
-ngModule.service('statusDisplay', StatusDisplay);
-module.exports = StatusDisplay;
+ngModule.service('status', Status);
+module.exports = Status;
 
 /**
  * A central service to display status updates to the user
  */
-function StatusDisplay($rootScope, axe) {
+function Status($rootScope, axe) {
     this._rootScope = $rootScope;
     this._axe = axe;
 }
@@ -17,7 +17,7 @@ function StatusDisplay($rootScope, axe) {
  * @param  {String} text     The status message that is to be displayed to the user
  * @param  {Date} time		The time of the last update
  */
-StatusDisplay.prototype.update = function(text, time) {
+Status.prototype.update = function(text, time) {
     this._axe.info('status display', text);
     this._rootScope.$broadcast('status', text, time);
 };
@@ -26,6 +26,14 @@ StatusDisplay.prototype.update = function(text, time) {
  * Update the searching status to show a spinner while searching
  * @param {Boolean} state	If the spinner should be displayed or not
  */
-StatusDisplay.prototype.setSearching = function(state) {
+Status.prototype.setSearching = function(state) {
     this._rootScope.$broadcast('searching', state);
+};
+
+/**
+ * Update the reading status to communicate between controllers, if we're in read mode.
+ * @param {Boolean} state   If the reade mode should be open or not
+ */
+Status.prototype.setReading = function(state) {
+    this._rootScope.$broadcast('read', state);
 };

@@ -4,6 +4,10 @@ var util = require('crypto-lib').util;
 
 var PrivateKeyUploadCtrl = function($scope, keychain, pgp, dialog, auth) {
 
+    //
+    // scope state
+    //
+
     $scope.state.privateKeyUpload = {
         toggle: function(to) {
             // open lightbox
@@ -32,6 +36,10 @@ var PrivateKeyUploadCtrl = function($scope, keychain, pgp, dialog, auth) {
             });
         }
     };
+
+    //
+    // scope functions
+    //
 
     $scope.checkServerForKey = function(callback) {
         var keyParams = pgp.getKeyParams();
