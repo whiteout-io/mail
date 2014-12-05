@@ -35,6 +35,14 @@ var NavigationCtrl = function($scope, $location, account, email, outbox, notific
     // url/history handling
     //
 
+    /**
+     * Close read mode and go to folder
+     */
+    $scope.navigate = function(folderIndex) {
+        $location.search('uid', null);
+        $location.search('folder', folderIndex);
+    };
+
     $scope.loc = $location;
 
     // nav open/close state url watcher

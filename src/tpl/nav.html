@@ -7,7 +7,7 @@
   <ul class="nav__folders">
     <li ng-repeat="folder in account.folders" ng-if="folder.wellknown" ng-hide="folder.type === 'Outbox' && folder.count < 1"
       class="nav__folder" ng-class="{'nav__folder--open': state.nav.currentFolder === folder}">
-      <a href="#/account?folder={{$index}}">
+      <a href="#" wo-touch="$event.preventDefault(); navigate($index)">
         <svg ng-if="folder.type === 'Inbox'" role="presentation">
           <use xlink:href="#icon-inbox" />
         </svg>
@@ -38,7 +38,7 @@
   <ul class="nav__folders">
     <li ng-repeat="folder in account.folders" ng-if="!folder.wellknown"
       class="nav__folder" ng-class="{'nav__folder--open': state.nav.currentFolder === folder}">
-      <a href="#/account?folder={{$index}}">
+      <a href="#" wo-touch="$event.preventDefault(); navigate($index)">
         <svg role="presentation"><use xlink:href="#icon-folder" /></svg>
         {{folder.name}}
         <span ng-show="folder.count > 0" class="nav__counter">{{folder.count}}</span>
