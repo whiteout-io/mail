@@ -172,6 +172,10 @@ var MailListCtrl = function($scope, $timeout, $location, $filter, status, notifi
 
         // sort message by uid
         messages.sort(byUidDescending);
+        // Unselect message if it has been deleted from the messages array
+        if (messages.indexOf(currentMessage()) === -1) {
+            $scope.select();
+        }
         // set display buffer to first messages
         $scope.displayMessages = messages.slice(0, INIT_DISPLAY_LEN);
     });
@@ -285,7 +289,7 @@ var MailListCtrl = function($scope, $timeout, $location, $filter, status, notifi
     // Notification API
     //
 
-    (email || {}).onIncomingMessage = function(msgs) {
+    email.onIncomingMessage = function(msgs) {
         var note, title, message, unreadMsgs;
 
         unreadMsgs = msgs.filter(function(msg) {
