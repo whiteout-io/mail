@@ -37,7 +37,7 @@ We take the privacy of your data very seriously. Here are some of the technical 
 
 ### Testing
 
-You can download a prebuilt bundle under [releases](https://github.com/whiteout-io/mail-html5/releases) or build your own from source (requires [node.js](http://nodejs.org/download/), [grunt](http://gruntjs.com/getting-started#installing-the-cli), Ruby and [sass](http://sass-lang.com/install)):
+You can download a prebuilt bundle under [releases](https://github.com/whiteout-io/mail-html5/releases) or build your own from source (requires [node.js](http://nodejs.org/download/), [grunt](http://gruntjs.com/getting-started#installing-the-cli), [libfontconfig1](http://packages.ubuntu.com/search?searchon=contents&keywords=libfontconfig.so.1&mode=exactfilename&suite=trusty&arch=any), Ruby and [sass](http://sass-lang.com/install)):
 
     npm install && npm test
 
