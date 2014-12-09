@@ -1,7 +1,7 @@
 {
     "name": "Whiteout Mail",
     "description": "Simple and elegant email client with integrated end-to-end encryption. Keeping your emails safe has never been so easy.",
-    "version": "0.17.1.0",
+    "version": "0.20.0.0",
     "launch_path": "/index.html",
     "icons": {
         "128": "/img/icon-128.png"
