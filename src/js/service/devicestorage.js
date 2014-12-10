@@ -3,13 +3,13 @@
 var ngModule = angular.module('woServices');
 
 // expose an instance with the static dbName 'app-config' to store configuration data
-ngModule.factory('appConfigStore', function(appConfigLawnchair) {
-    return new DeviceStorage(appConfigLawnchair);
+ngModule.factory('appConfigStore', function(appConfigLawnchair, $q) {
+    return new DeviceStorage(appConfigLawnchair, $q);
 });
 
 // expose a singleton instance of DeviceStorage called 'accountStore' to persist user data
-ngModule.factory('accountStore', function(accountLawnchair) {
-    return new DeviceStorage(accountLawnchair);
+ngModule.factory('accountStore', function(accountLawnchair, $q) {
+    return new DeviceStorage(accountLawnchair, $q);
 });
 
 module.exports = DeviceStorage;
@@ -21,57 +21,65 @@ module.exports = DeviceStorage;
 /**
  * High level storage api that handles all persistence of a user's data on the device.
  */
-function DeviceStorage(lawnchairDAO) {
+function DeviceStorage(lawnchairDAO, $q) {
     this._lawnchairDAO = lawnchairDAO;
+    this._q = $q;
 }
 
 /**
  * Initialize the lawnchair database
  * @param  {String}   dbName   The name of the database
+ * @return {Promise}
  */
-DeviceStorage.prototype.init = function(dbName, callback) {
-    this._lawnchairDAO.init(dbName, callback);
+DeviceStorage.prototype.init = function(dbName) {
+    return this._lawnchairDAO.init(dbName);
 };
 
 /**
  * Stores a list of encrypted items in the object store
  * @param list [Array] The list of items to be persisted
  * @param type [String] The type of item to be persisted e.g. 'email'
+ * @return {Promise}
  */
-DeviceStorage.prototype.storeList = function(list, type, callback) {
-    var key, items = [];
+DeviceStorage.prototype.storeList = function(list, type) {
+    var self = this;
+    return self._q(function(resolve) {
+        var key, items = [];
+        list = list || [];
 
-    // nothing to store
-    if (!list || list.length === 0) {
-        callback();
-        return;
-    }
-    // validate type
-    if (!type) {
-        callback({
-            errMsg: 'Type is not set!'
+        // validate type
+        if (!type) {
+            throw new Error('Type is not set!');
+        }
+
+        // format items for batch storing in dao
+        list.forEach(function(i) {
+            key = createKey(i, type);
+
+            items.push({
+                key: key,
+                object: i
+            });
         });
-        return;
-    }
 
-    // format items for batch storing in dao
-    list.forEach(function(i) {
-        key = createKey(i, type);
+        resolve(items);
 
-        items.push({
-            key: key,
-            object: i
-        });
+    }).then(function(items) {
+        // nothing to store
+        if (items.length === 0) {
+            return;
+        }
+
+        return self._lawnchairDAO.batch(items);
     });
-
-    this._lawnchairDAO.batch(items, callback);
 };
 
 /**
- *  Deletes items of a certain type from storage
+ * Deletes items of a certain type from storage
+ * @return {Promise}
  */
-DeviceStorage.prototype.removeList = function(type, callback) {
-    this._lawnchairDAO.removeList(type, callback);
+DeviceStorage.prototype.removeList = function(type) {
+    return this._lawnchairDAO.removeList(type);
 };
 
 /**
@@ -79,17 +87,19 @@ DeviceStorage.prototype.removeList = function(type, callback) {
  * @param type [String] The type of item e.g. 'email'
  * @param offset [Number] The offset of items to fetch (0 is the last stored item)
  * @param num [Number] The number of items to fetch (null means fetch all)
+ * @return {Promise}
  */
-DeviceStorage.prototype.listItems = function(type, offset, num, callback) {
+DeviceStorage.prototype.listItems = function(type, offset, num) {
     // fetch all items of a certain type from the data-store
-    this._lawnchairDAO.list(type, offset, num, callback);
+    return this._lawnchairDAO.list(type, offset, num);
 };
 
 /**
  * Clear the whole device data-store
+ * @return {Promise}
  */
-DeviceStorage.prototype.clear = function(callback) {
-    this._lawnchairDAO.clear(callback);
+DeviceStorage.prototype.clear = function() {
+    return this._lawnchairDAO.clear();
 };
 
 //

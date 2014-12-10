@@ -23,9 +23,7 @@ describe('Invitation DAO unit tests', function() {
 
     describe('invite', function() {
         it('should invite the recipient', function(done) {
-            restDaoStub.put.returns(new Promise(function(res) {
-                res();
-            }));
+            restDaoStub.put.returns(resolves());
 
             invitationDao.invite({
                 recipient: alice,
@@ -37,7 +35,7 @@ describe('Invitation DAO unit tests', function() {
         });
 
         it('should not work for http error', function(done) {
-            restDaoStub.put.throws(new Error());
+            restDaoStub.put.returns(rejects(new Error()));
 
             invitationDao.invite({
                 recipient: alice,

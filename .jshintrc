@@ -22,6 +22,8 @@
         "inject",
         "Promise",
         "qMock",
+        "resolves",
+        "rejects",
         "self",
         "importScripts",
         "console",
