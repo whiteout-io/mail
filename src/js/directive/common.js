@@ -1,6 +1,6 @@
 'use strict';
 
-var ngModule = angular.module('woDirectives', []);
+var ngModule = angular.module('woDirectives');
 
 ngModule.directive('woTouch', function($parse) {
     var className = 'wo-touch-active';
@@ -331,5 +331,3 @@ ngModule.directive('woInputCode', function() {
         }
     };
 });
-
-module.exports = ngModule;

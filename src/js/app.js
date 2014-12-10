@@ -14,32 +14,11 @@ if (typeof window.applicationCache !== 'undefined') {
     };
 }
 
-var axe = require('axe-logger'),
-    AddAccountCtrl = require('./controller/login/add-account'),
-    CreateAccountCtrl = require('./controller/login/create-account'),
-    ValidatePhoneCtrl = require('./controller/login/validate-phone'),
-    LoginCtrl = require('./controller/login/login'),
-    LoginInitialCtrl = require('./controller/login/login-initial'),
-    LoginNewDeviceCtrl = require('./controller/login/login-new-device'),
-    LoginExistingCtrl = require('./controller/login/login-existing'),
-    LoginPrivateKeyDownloadCtrl = require('./controller/login/login-privatekey-download'),
-    LoginSetCredentialsCtrl = require('./controller/login/login-set-credentials'),
-    DialogCtrl = require('./controller/app/dialog'),
-    AccountCtrl = require('./controller/app/account'),
-    SetPassphraseCtrl = require('./controller/app/set-passphrase'),
-    PrivateKeyUploadCtrl = require('./controller/app/privatekey-upload'),
-    ContactsCtrl = require('./controller/app/contacts'),
-    AboutCtrl = require('./controller/app/about'),
-    MailListCtrl = require('./controller/app/mail-list'),
-    ReadCtrl = require('./controller/app/read'),
-    WriteCtrl = require('./controller/app/write'),
-    NavigationCtrl = require('./controller/app/navigation'),
-    ActionBarCtrl = require('./controller/app/action-bar'),
-    StatusDisplayCtrl = require('./controller/app/status-display');
+var axe = require('axe-logger');
 
 // include angular modules
 require('./app-config');
-require('./directive/common');
+require('./directive');
 require('./util');
 require('./crypto');
 require('./service');
@@ -56,12 +35,6 @@ var app = angular.module('mail', [
     'woCrypto',
     'woServices',
     'woEmail',
-    'navigation',
-    'mail-list',
-    'write',
-    'read',
-    'contacts',
-    'login-new-device',
     'infinite-scroll'
 ]);
 
@@ -69,43 +42,43 @@ var app = angular.module('mail', [
 app.config(function($routeProvider, $animateProvider) {
     $routeProvider.when('/login', {
         templateUrl: 'tpl/login.html',
-        controller: LoginCtrl
+        controller: require('./controller/login/login')
     });
     $routeProvider.when('/add-account', {
         templateUrl: 'tpl/add-account.html',
-        controller: AddAccountCtrl
+        controller: require('./controller/login/add-account')
     });
     $routeProvider.when('/create-account', {
         templateUrl: 'tpl/create-account.html',
-        controller: CreateAccountCtrl
+        controller: require('./controller/login/create-account')
     });
     $routeProvider.when('/validate-phone', {
         templateUrl: 'tpl/validate-phone.html',
-        controller: ValidatePhoneCtrl
+        controller: require('./controller/login/validate-phone')
     });
     $routeProvider.when('/login-set-credentials', {
         templateUrl: 'tpl/login-set-credentials.html',
-        controller: LoginSetCredentialsCtrl
+        controller: require('./controller/login/login-set-credentials')
     });
     $routeProvider.when('/login-existing', {
         templateUrl: 'tpl/login-existing.html',
-        controller: LoginExistingCtrl
+        controller: require('./controller/login/login-existing')
     });
     $routeProvider.when('/login-initial', {
         templateUrl: 'tpl/login-initial.html',
-        controller: LoginInitialCtrl
+        controller: require('./controller/login/login-initial')
     });
     $routeProvider.when('/login-new-device', {
         templateUrl: 'tpl/login-new-device.html',
-        controller: LoginNewDeviceCtrl
+        controller: require('./controller/login/login-new-device')
     });
     $routeProvider.when('/login-privatekey-download', {
         templateUrl: 'tpl/login-privatekey-download.html',
-        controller: LoginPrivateKeyDownloadCtrl
+        controller: require('./controller/login/login-privatekey-download')
     });
     $routeProvider.when('/account', {
         templateUrl: 'tpl/desktop.html',
-        controller: NavigationCtrl,
+        controller: require('./controller/app/navigation'),
         reloadOnSearch: false // don't reload controllers in main app when query params change
     });
     $routeProvider.otherwise({
@@ -124,17 +97,17 @@ app.run(function($rootScope) {
 });
 
 // inject controllers from ng-included view templates
-app.controller('ReadCtrl', ReadCtrl);
-app.controller('WriteCtrl', WriteCtrl);
-app.controller('MailListCtrl', MailListCtrl);
-app.controller('AccountCtrl', AccountCtrl);
-app.controller('SetPassphraseCtrl', SetPassphraseCtrl);
-app.controller('PrivateKeyUploadCtrl', PrivateKeyUploadCtrl);
-app.controller('ContactsCtrl', ContactsCtrl);
-app.controller('AboutCtrl', AboutCtrl);
-app.controller('DialogCtrl', DialogCtrl);
-app.controller('ActionBarCtrl', ActionBarCtrl);
-app.controller('StatusDisplayCtrl', StatusDisplayCtrl);
+app.controller('ReadCtrl', require('./controller/app/read'));
+app.controller('WriteCtrl', require('./controller/app/write'));
+app.controller('MailListCtrl', require('./controller/app/mail-list'));
+app.controller('AccountCtrl', require('./controller/app/account'));
+app.controller('SetPassphraseCtrl', require('./controller/app/set-passphrase'));
+app.controller('PrivateKeyUploadCtrl', require('./controller/app/privatekey-upload'));
+app.controller('ContactsCtrl', require('./controller/app/contacts'));
+app.controller('AboutCtrl', require('./controller/app/about'));
+app.controller('DialogCtrl', require('./controller/app/dialog'));
+app.controller('ActionBarCtrl', require('./controller/app/action-bar'));
+app.controller('StatusDisplayCtrl', require('./controller/app/status-display'));
 
 //
 // Manual angular bootstraping
