@@ -21,7 +21,7 @@ LawnchairDAO.prototype.init = function(dbName) {
     var self = this;
     return self._q(function(resolve, reject) {
         if (!dbName) {
-            reject(new Error('Lawnchair DB name must be specified!'));
+            throw new Error('Lawnchair DB name must be specified!');
         }
 
         self._db = new Lawnchair({
@@ -44,8 +44,7 @@ LawnchairDAO.prototype.persist = function(key, object) {
     var self = this;
     return self._q(function(resolve, reject) {
         if (!key || !object) {
-            reject(new Error('Key and Object must be set!'));
-            return;
+            throw new Error('Key and Object must be set!');
         }
 
         self._db.save({
@@ -70,17 +69,15 @@ LawnchairDAO.prototype.batch = function(list) {
     var self = this;
     return self._q(function(resolve, reject) {
         if (!(list instanceof Array)) {
-            reject(new Error('Input must be of type Array!'));
-            return;
+            throw new Error('Input must be of type Array!');
         }
 
         self._db.batch(list, function(res) {
             if (!res) {
                 reject(new Error('Persisting batch failed!'));
-                return;
+            } else {
+                resolve();
             }
-
-            resolve();
         });
     });
 };
@@ -91,10 +88,9 @@ LawnchairDAO.prototype.batch = function(list) {
  */
 LawnchairDAO.prototype.read = function(key) {
     var self = this;
-    return self._q(function(resolve, reject) {
+    return self._q(function(resolve) {
         if (!key) {
-            reject(new Error('Key must be specified!'));
-            return;
+            throw new Error('Key must be specified!');
         }
 
         self._db.get(key, function(o) {
@@ -116,7 +112,7 @@ LawnchairDAO.prototype.read = function(key) {
  */
 LawnchairDAO.prototype.list = function(type, offset, num) {
     var self = this;
-    return self._q(function(resolve, reject) {
+    return self._q(function(resolve) {
         var i, from, to,
             matchingKeys = [],
             intervalKeys = [],
@@ -124,8 +120,7 @@ LawnchairDAO.prototype.list = function(type, offset, num) {
 
         // validate input
         if (!type || typeof offset === 'undefined' || typeof num === 'undefined') {
-            reject(new Error('Args not is not set!'));
-            return;
+            throw new Error('Args not is not set!');
         }
 
         // get all keys
@@ -193,14 +188,13 @@ LawnchairDAO.prototype.remove = function(key) {
  */
 LawnchairDAO.prototype.removeList = function(type) {
     var self = this;
-    return self._q(function(resolve, reject) {
+    return self._q(function(resolve) {
         var matchingKeys = [],
             after;
 
         // validate type
         if (!type) {
-            reject(new Error('Type is not set!'));
-            return;
+            throw new Error('Type is not set!');
         }
 
         // get all keys
