@@ -1,8 +1,7 @@
 'use strict';
 
 var RestDAO = require('../../../src/js/service/rest'),
-    InvitationDAO = require('../../../src/js/service/invitation'),
-    appConfig = require('../../../src/js/app-config');
+    InvitationDAO = require('../../../src/js/service/invitation');
 
 describe('Invitation DAO unit tests', function() {
     var restDaoStub, invitationDao,
@@ -12,94 +11,80 @@ describe('Invitation DAO unit tests', function() {
 
     beforeEach(function() {
         restDaoStub = sinon.createStubInstance(RestDAO);
-        invitationDao = new InvitationDAO(restDaoStub, appConfig);
+        invitationDao = new InvitationDAO(restDaoStub, window.qMock);
     });
 
     describe('initialization', function() {
         it('should wire up correctly', function() {
             expect(invitationDao._restDao).to.equal(restDaoStub);
             expect(invitationDao.invite).to.exist;
-            expect(InvitationDAO.INVITE_MISSING).to.equal(1);
-            expect(InvitationDAO.INVITE_PENDING).to.equal(2);
-            expect(InvitationDAO.INVITE_SUCCESS).to.equal(4);
         });
     });
 
     describe('invite', function() {
         it('should invite the recipient', function(done) {
-            restDaoStub.put.yieldsAsync(null, undefined, 201);
+            restDaoStub.put.returns(new Promise(function(res) {
+                res();
+            }));
 
             invitationDao.invite({
                 recipient: alice,
                 sender: bob
-            }, function(err, status) {
-                expect(err).to.not.exist;
-                expect(status).to.equal(InvitationDAO.INVITE_SUCCESS);
+            }).then(function() {
                 expect(restDaoStub.put.calledWith({}, expectedUri)).to.be.true;
                 done();
             });
         });
 
-        it('should point out already invited recipient', function(done) {
-            restDaoStub.put.yieldsAsync(null, undefined, 304);
-
-            invitationDao.invite({
-                recipient: alice,
-                sender: bob
-            }, function(err, status) {
-                expect(err).to.not.exist;
-                expect(status).to.equal(InvitationDAO.INVITE_PENDING);
-                done();
-            });
-        });
-
         it('should not work for http error', function(done) {
-            restDaoStub.put.yieldsAsync({
-                errMsg: 'jawollja.'
-            });
+            restDaoStub.put.throws(new Error());
 
             invitationDao.invite({
                 recipient: alice,
                 sender: bob
-            }, function(err, status) {
+            }).catch(function(err) {
                 expect(err).to.exist;
-                expect(status).to.not.exist;
                 done();
             });
         });
 
-        it('should not work for unexpected response', function(done) {
-            restDaoStub.put.yieldsAsync(null, undefined, 1337);
-
+        it('should report erroneous usage', function(done) {
             invitationDao.invite({
-                recipient: alice,
                 sender: bob
-            }, function(err, status) {
+            }, expectError);
+
+            invitationDao.invite('asd').catch(expectError);
+
+            function expectError(err) {
                 expect(err).to.exist;
-                expect(status).to.not.exist;
                 done();
-            });
+            }
         });
 
-        it('should report erroneous usage', function() {
-            invitationDao.invite({
-                sender: bob
-            }, expectError);
-
+        it('should report erroneous usage', function(done) {
             invitationDao.invite({
                 recipient: alice,
             }, expectError);
 
+            invitationDao.invite('asd').catch(expectError);
+
+            function expectError(err) {
+                expect(err).to.exist;
+                done();
+            }
+        });
+
+        it('should report erroneous usage', function(done) {
             invitationDao.invite({
                 recipient: 123,
                 sender: 123
             }, expectError);
 
-            invitationDao.invite('asd', expectError);
+            invitationDao.invite('asd').catch(expectError);
 
-            function expectError(err, status) {
+            function expectError(err) {
                 expect(err).to.exist;
-                expect(status).to.not.exist;
+                done();
             }
         });
     });

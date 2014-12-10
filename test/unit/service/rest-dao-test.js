@@ -7,7 +7,7 @@ describe('Rest DAO unit tests', function() {
     var restDao, xhrMock, requests;
 
     beforeEach(function() {
-        restDao = new RestDAO();
+        restDao = new RestDAO(window.qMock);
         xhrMock = sinon.useFakeXMLHttpRequest();
         requests = [];
 
@@ -23,7 +23,7 @@ describe('Rest DAO unit tests', function() {
     describe('setBaseUri', function() {
         it('should accept base uri', function() {
             var baseUri = 'http://custom.com';
-            restDao = new RestDAO();
+            restDao = new RestDAO(window.qMock);
             expect(restDao._baseUri).to.not.exist;
             restDao.setBaseUri(baseUri);
             expect(restDao._baseUri).to.equal(baseUri);
@@ -31,15 +31,14 @@ describe('Rest DAO unit tests', function() {
     });
 
     describe('get', function() {
-        it('should work with json as default type', function() {
+        it('should work with json as default type', function(done) {
             restDao.get({
                 uri: '/asdf'
-            }, function(err, data, status) {
-                expect(err).to.not.exist;
+            }).then(function(data) {
                 expect(data.foo).to.equal('bar');
                 var req = requests[0];
                 expect(req.requestHeaders.Accept).to.equal('application/json');
-                expect(status).to.equal(200);
+                done();
             });
 
             expect(requests.length).to.equal(1);
@@ -48,16 +47,15 @@ describe('Rest DAO unit tests', function() {
             }, '{"foo": "bar"}');
         });
 
-        it('should work with jsonz', function() {
+        it('should work with jsonz', function(done) {
             restDao.get({
                 uri: '/asdf',
                 type: 'json'
-            }, function(err, data, status) {
-                expect(err).to.not.exist;
+            }).then(function(data) {
                 expect(data.foo).to.equal('bar');
                 var req = requests[0];
                 expect(req.requestHeaders.Accept).to.equal('application/json');
-                expect(status).to.equal(200);
+                done();
             });
 
             expect(requests.length).to.equal(1);
@@ -66,16 +64,15 @@ describe('Rest DAO unit tests', function() {
             }, '{"foo": "bar"}');
         });
 
-        it('should work with plain text', function() {
+        it('should work with plain text', function(done) {
             restDao.get({
                 uri: '/asdf',
                 type: 'text'
-            }, function(err, data, status) {
-                expect(err).to.not.exist;
+            }).then(function(data) {
                 expect(data).to.equal('foobar!');
                 var req = requests[0];
                 expect(req.requestHeaders.Accept).to.equal('text/plain');
-                expect(status).to.equal(200);
+                done();
             });
 
             expect(requests.length).to.equal(1);
@@ -84,16 +81,15 @@ describe('Rest DAO unit tests', function() {
             }, 'foobar!');
         });
 
-        it('should work with xml', function() {
+        it('should work with xml', function(done) {
             restDao.get({
                 uri: '/asdf',
                 type: 'xml'
-            }, function(err, data, status) {
-                expect(err).to.not.exist;
+            }).then(function(data) {
                 expect(data).to.equal('<foo>bar</foo>');
                 var req = requests[0];
                 expect(req.requestHeaders.Accept).to.equal('application/xml');
-                expect(status).to.equal(200);
+                done();
             });
 
             expect(requests.length).to.equal(1);
@@ -102,32 +98,29 @@ describe('Rest DAO unit tests', function() {
             }, '<foo>bar</foo>');
         });
 
-        it('should fail for missing uri parameter', function() {
-            restDao.get({}, function(err, data) {
-                expect(err).to.exist;
+        it('should fail for missing uri parameter', function(done) {
+            restDao.get({}).catch(function(err) {
                 expect(err.code).to.equal(400);
-                expect(data).to.not.exist;
+                done();
             });
         });
 
-        it('should fail for unhandled data type', function() {
+        it('should fail for unhandled data type', function(done) {
             restDao.get({
                 uri: '/asdf',
                 type: 'snafu'
-            }, function(err, data) {
-                expect(err).to.exist;
+            }).catch(function(err) {
                 expect(err.code).to.equal(400);
-                expect(data).to.not.exist;
+                done();
             });
         });
 
-        it('should fail for server error', function() {
+        it('should fail for server error', function(done) {
             restDao.get({
                 uri: '/asdf'
-            }, function(err, data) {
-                expect(err).to.exist;
+            }).catch(function(err) {
                 expect(err.code).to.equal(500);
-                expect(data).to.not.exist;
+                done();
             });
 
             expect(requests.length).to.equal(1);
@@ -138,10 +131,10 @@ describe('Rest DAO unit tests', function() {
     });
 
     describe('post', function() {
-        it('should fail', function() {
-            restDao.post('/asdf', {}, function(err) {
-                expect(err).to.exist;
+        it('should fail', function(done) {
+            restDao.post('/asdf', {}).catch(function(err) {
                 expect(err.code).to.equal(500);
+                done();
             });
 
             expect(requests.length).to.equal(1);
@@ -150,11 +143,10 @@ describe('Rest DAO unit tests', function() {
             }, 'Internal error');
         });
 
-        it('should work', function() {
-            restDao.post('/asdf', {}, function(err, res, status) {
-                expect(err).to.not.exist;
+        it('should work', function(done) {
+            restDao.post('/asdf', {}).then(function(res) {
                 expect(res).to.equal('');
-                expect(status).to.equal(201);
+                done();
             });
 
             expect(requests.length).to.equal(1);
@@ -163,10 +155,10 @@ describe('Rest DAO unit tests', function() {
     });
 
     describe('put', function() {
-        it('should fail', function() {
-            restDao.put('/asdf', {}, function(err) {
-                expect(err).to.exist;
+        it('should fail', function(done) {
+            restDao.put('/asdf', {}).catch(function(err) {
                 expect(err.code).to.equal(500);
+                done();
             });
 
             expect(requests.length).to.equal(1);
@@ -175,11 +167,10 @@ describe('Rest DAO unit tests', function() {
             }, 'Internal error');
         });
 
-        it('should work', function() {
-            restDao.put('/asdf', {}, function(err, res, status) {
-                expect(err).to.not.exist;
+        it('should work', function(done) {
+            restDao.put('/asdf', {}).then(function(res) {
                 expect(res).to.equal('');
-                expect(status).to.equal(201);
+                done();
             });
 
             expect(requests.length).to.equal(1);
@@ -188,10 +179,10 @@ describe('Rest DAO unit tests', function() {
     });
 
     describe('remove', function() {
-        it('should fail', function() {
-            restDao.remove('/asdf', function(err) {
-                expect(err).to.exist;
+        it('should fail', function(done) {
+            restDao.remove('/asdf').catch(function(err) {
                 expect(err.code).to.equal(500);
+                done();
             });
 
             expect(requests.length).to.equal(1);
@@ -200,11 +191,10 @@ describe('Rest DAO unit tests', function() {
             }, 'Internal error');
         });
 
-        it('should work', function() {
-            restDao.remove('/asdf', function(err, res, status) {
-                expect(err).to.not.exist;
+        it('should work', function(done) {
+            restDao.remove('/asdf').then(function(res) {
                 expect(res).to.equal('');
-                expect(status).to.equal(200);
+                done();
             });
 
             expect(requests.length).to.equal(1);

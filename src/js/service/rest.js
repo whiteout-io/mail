@@ -98,15 +98,15 @@ RestDAO.prototype.remove = function(uri) {
 //
 
 RestDAO.prototype._processRequest = function(options) {
-    return this._q(function(resolve, reject) {
+    var self = this;
+    return self._q(function(resolve, reject) {
         var xhr, format;
 
         if (typeof options.uri === 'undefined') {
-            reject({
+            throw {
                 code: 400,
                 message: 'Bad Request! URI is a mandatory parameter.'
-            });
-            return;
+            };
         }
 
         options.type = options.type || 'json';
@@ -118,15 +118,14 @@ RestDAO.prototype._processRequest = function(options) {
         } else if (options.type === 'text') {
             format = 'text/plain';
         } else {
-            reject({
+            throw {
                 code: 400,
                 message: 'Bad Request! Unhandled data type.'
-            });
-            return;
+            };
         }
 
         xhr = new XMLHttpRequest();
-        xhr.open(options.method, this._baseUri + options.uri);
+        xhr.open(options.method, self._baseUri + options.uri);
         xhr.setRequestHeader('Accept', format);
         xhr.setRequestHeader('Content-Type', format);
 
@@ -140,7 +139,7 @@ RestDAO.prototype._processRequest = function(options) {
                     res = xhr.responseText;
                 }
 
-                resolve(res, xhr.status);
+                resolve(res);
                 return;
             }
 
