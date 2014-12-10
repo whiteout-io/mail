@@ -1,6 +1,6 @@
 'use strict';
 
-// Check if a new ApaCache is available on page load.
+// Check if a new AppCache is available on page load.
 if (typeof window.applicationCache !== 'undefined') {
     window.onload = function() {
         window.applicationCache.onupdateready = function() {
