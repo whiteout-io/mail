@@ -26,7 +26,8 @@ var SMTP_DB_KEY = 'smtp';
  * auth.getCredentials(...); // called to gather all the information to connect to IMAP/SMTP,
  *                              username, password / oauth token, IMAP/SMTP server host names, ...
  */
-function Auth(appConfigStore, oauth, pgp) {
+function Auth($q, appConfigStore, oauth, pgp) {
+    this._q = $q;
     this._appConfigStore = appConfigStore;
     this._oauth = oauth;
     this._pgp = pgp;
@@ -158,75 +159,38 @@ Auth.prototype.setCredentials = function(options) {
     this.imap = options.imap; // host, port, secure, ca
 };
 
-Auth.prototype.storeCredentials = function(callback) {
+Auth.prototype.storeCredentials = function() {
     var self = this;
-
-    if (!self.credentialsDirty) {
-        return callback();
-    }
-
-    // persist the config
-    self._appConfigStore.storeList([self.smtp], SMTP_DB_KEY, function(err) {
-        if (err) {
-            return callback(err);
+    return self._q(function(resolve) {
+        if (!self.credentialsDirty) {
+            resolve();
+            return;
         }
 
-        self._appConfigStore.storeList([self.imap], IMAP_DB_KEY, function(err) {
-            if (err) {
-                return callback(err);
+        // persist the config
+        var storeSmtp = self._appConfigStore.storeList([self.smtp], SMTP_DB_KEY);
+        var storeImap = self._appConfigStore.storeList([self.imap], IMAP_DB_KEY);
+        var storeEmailAddress = self._appConfigStore.storeList([self.emailAddress], EMAIL_ADDR_DB_KEY);
+        var storeUsername = self._appConfigStore.storeList([self.username], USERNAME_DB_KEY);
+        var storeRealname = self._appConfigStore.storeList([self.realname], REALNAME_DB_KEY);
+        var storePassword = self._q(function(resolve) {
+            if (!self.password) {
+                resolve();
+                return;
             }
 
-            self._appConfigStore.storeList([self.emailAddress], EMAIL_ADDR_DB_KEY, function(err) {
-                if (err) {
-                    return callback(err);
-                }
-
-                self._appConfigStore.storeList([self.username], USERNAME_DB_KEY, function(err) {
-                    if (err) {
-                        return callback(err);
-                    }
-
-                    self._appConfigStore.storeList([self.realname], REALNAME_DB_KEY, function(err) {
-                        if (err) {
-                            return callback(err);
-                        }
-
-                        if (!self.password) {
-                            self.credentialsDirty = false;
-                            return callback();
-                        }
-
-                        if (self.passwordNeedsDecryption) {
-                            // password is not decrypted yet, so no need to re-encrypt it before storing...
-                            self._appConfigStore.storeList([self.password], PASSWD_DB_KEY, function(err) {
-                                if (err) {
-                                    return callback(err);
-                                }
-
-                                self.credentialsDirty = false;
-                                callback();
-                            });
-                            return;
-                        }
-
-                        self._pgp.encrypt(self.password, undefined, function(err, ciphertext) {
-                            if (err) {
-                                return callback(err);
-                            }
-
-                            self._appConfigStore.storeList([ciphertext], PASSWD_DB_KEY, function(err) {
-                                if (err) {
-                                    return callback(err);
-                                }
-
-                                self.credentialsDirty = false;
-                                callback();
-                            });
-                        });
-                    });
-                });
+            if (self.passwordNeedsDecryption) {
+                // password is not decrypted yet, so no need to re-encrypt it before storing...
+                return self._appConfigStore.storeList([self.password], PASSWD_DB_KEY).then(resolve);
+            }
+            return self._pgp.encrypt(self.password, undefined).then(function(ciphertext) {
+                return self._appConfigStore.storeList([ciphertext], PASSWD_DB_KEY).then(resolve);
             });
         });
+
+        Promise.all([storeSmtp, storeImap, storeEmailAddress, storeUsername, storeRealname, storePassword]).then(resolve);
+    }).then(function() {
+        self.credentialsDirty = false;
     });
 };
 
