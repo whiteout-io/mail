@@ -44,3 +44,11 @@ require('../src/js/util');
 require('../src/js/crypto');
 require('../src/js/service');
 require('../src/js/email');
+
+//
+// Global mocks
+//
+
+window.qMock = function(res, rej) {
+    return new Promise(res, rej);
+};

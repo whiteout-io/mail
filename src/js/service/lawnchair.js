@@ -15,23 +15,30 @@ function LawnchairDAO($q) {
 /**
  * Initialize the lawnchair database
  * @param  {String}   dbName   The name of the database
+ * @return {Promise}
  */
-LawnchairDAO.prototype.init = function(dbName, callback) {
+LawnchairDAO.prototype.init = function(dbName) {
     var self = this;
+    return self._q(function(resolve, reject) {
+        if (!dbName) {
+            reject(new Error('Lawnchair DB name must be specified!'));
+        }
 
-    if (!dbName) {
-        return callback(new Error('Lawnchair DB name must be specified!'));
-    }
-
-    self._db = new Lawnchair({
-        name: dbName
-    }, function(success) {
-        callback(success ? undefined : new Error('Lawnchair initialization ' + dbName + ' failed!'));
+        self._db = new Lawnchair({
+            name: dbName
+        }, function(success) {
+            if (success) {
+                resolve();
+            } else {
+                reject(new Error('Lawnchair initialization ' + dbName + ' failed!'));
+            }
+        });
     });
 };
 
 /**
  * Create or update an object
+ * @return {Promise}
  */
 LawnchairDAO.prototype.persist = function(key, object) {
     var self = this;
@@ -57,6 +64,7 @@ LawnchairDAO.prototype.persist = function(key, object) {
 
 /**
  * Persist a bunch of items at once
+ * @return {Promise}
  */
 LawnchairDAO.prototype.batch = function(list) {
     var self = this;
@@ -79,6 +87,7 @@ LawnchairDAO.prototype.batch = function(list) {
 
 /**
  * Read a single item by its key
+ * @return {Promise}
  */
 LawnchairDAO.prototype.read = function(key) {
     var self = this;
@@ -103,6 +112,7 @@ LawnchairDAO.prototype.read = function(key) {
  * @param type [String] The type of item e.g. 'email'
  * @param offset [Number] The offset of items to fetch (0 is the last stored item)
  * @param num [Number] The number of items to fetch (null means fetch all)
+ * @return {Promise}
  */
 LawnchairDAO.prototype.list = function(type, offset, num) {
     var self = this;
@@ -162,6 +172,7 @@ LawnchairDAO.prototype.list = function(type, offset, num) {
 
 /**
  * Removes an object liter from local storage by its key (delete)
+ * @return {Promise}
  */
 LawnchairDAO.prototype.remove = function(key) {
     var self = this;
@@ -178,6 +189,7 @@ LawnchairDAO.prototype.remove = function(key) {
 
 /**
  * Removes an object liter from local storage by its key (delete)
+ * @return {Promise}
  */
 LawnchairDAO.prototype.removeList = function(type) {
     var self = this;
@@ -216,6 +228,7 @@ LawnchairDAO.prototype.removeList = function(type) {
 
 /**
  * Clears the whole local storage cache
+ * @return {Promise}
  */
 LawnchairDAO.prototype.clear = function() {
     var self = this;

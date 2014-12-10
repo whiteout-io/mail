@@ -43,7 +43,8 @@
             "forge",
             "Lawnchair",
             "_",
-            "openpgp"
+            "openpgp",
+            "qMock"
 	],
 
 	"globals": {

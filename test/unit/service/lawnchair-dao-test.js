@@ -21,9 +21,8 @@ describe('Lawnchair DAO unit tests', function() {
     var lawnchairDao;
 
     beforeEach(function(done) {
-        lawnchairDao = new LawnchairDAO();
-        lawnchairDao.init(dbName, function(err) {
-            expect(err).to.not.exist;
+        lawnchairDao = new LawnchairDAO(qMock);
+        lawnchairDao.init(dbName).then(function() {
             expect(lawnchairDao._db).to.exist;
             done();
         });
