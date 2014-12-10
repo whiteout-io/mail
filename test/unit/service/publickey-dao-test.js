@@ -1,8 +1,7 @@
 'use strict';
 
 var RestDAO = require('../../../src/js/service/rest'),
-    PublicKeyDAO = require('../../../src/js/service/publickey'),
-    appConfig = require('../../../src/js/app-config');
+    PublicKeyDAO = require('../../../src/js/service/publickey');
 
 describe('Public Key DAO unit tests', function() {
 
@@ -10,32 +9,29 @@ describe('Public Key DAO unit tests', function() {
 
     beforeEach(function() {
         restDaoStub = sinon.createStubInstance(RestDAO);
-        pubkeyDao = new PublicKeyDAO(restDaoStub, appConfig);
+        pubkeyDao = new PublicKeyDAO(restDaoStub);
     });
 
     afterEach(function() {});
 
     describe('get', function() {
         it('should fail', function(done) {
-            restDaoStub.get.yields(42);
+            restDaoStub.get.returns(rejects(42));
 
-            pubkeyDao.get('id', function(err, key) {
+            pubkeyDao.get('id').catch(function(err) {
                 expect(err).to.exist;
-                expect(key).to.not.exist;
                 expect(restDaoStub.get.calledOnce).to.be.true;
                 done();
             });
         });
 
         it('should work', function(done) {
-            restDaoStub.get.yields(null, {
+            restDaoStub.get.returns(resolves({
                 _id: '12345',
                 publicKey: 'asdf'
-            });
+            }));
 
-            pubkeyDao.get('id', function(err, key) {
-                expect(err).to.not.exist;
-                expect(key).to.exist;
+            pubkeyDao.get('id').then(function(key) {
                 expect(key._id).to.exist;
                 expect(key.publicKey).to.exist;
                 expect(restDaoStub.get.calledOnce).to.be.true;
@@ -46,31 +42,27 @@ describe('Public Key DAO unit tests', function() {
 
     describe('verify', function() {
         it('should fail', function(done) {
-            restDaoStub.get.yields(42);
+            restDaoStub.get.returns(rejects(42));
 
-            pubkeyDao.verify('id', function(err) {
+            pubkeyDao.verify('id').catch(function(err) {
                 expect(err).to.exist;
                 done();
             });
         });
 
         it('should not error for 400', function(done) {
-            restDaoStub.get.yields({
+            restDaoStub.get.returns(rejects({
                 code: 400
-            });
+            }));
 
-            pubkeyDao.verify('id', function(err) {
-                expect(err).to.not.exist;
-                done();
-            });
+            pubkeyDao.verify('id').then(done);
         });
 
         it('should work', function(done) {
             var uuid = 'c621e328-8548-40a1-8309-adf1955e98a9';
-            restDaoStub.get.yields(null);
+            restDaoStub.get.returns(resolves());
 
-            pubkeyDao.verify(uuid, function(err) {
-                expect(err).to.not.exist;
+            pubkeyDao.verify(uuid).then(function() {
                 expect(restDaoStub.get.calledWith(sinon.match(function(arg) {
                     return arg.uri === '/verify/' + uuid && arg.type === 'text';
                 }))).to.be.true;
@@ -81,23 +73,21 @@ describe('Public Key DAO unit tests', function() {
 
     describe('get by userId', function() {
         it('should fail', function(done) {
-            restDaoStub.get.yields(42);
+            restDaoStub.get.returns(rejects(42));
 
-            pubkeyDao.getByUserId('userId', function(err, key) {
+            pubkeyDao.getByUserId('userId').catch(function(err) {
                 expect(err).to.exist;
-                expect(key).to.not.exist;
                 expect(restDaoStub.get.calledOnce).to.be.true;
                 done();
             });
         });
 
         it('should react to 404', function(done) {
-            restDaoStub.get.yields({
+            restDaoStub.get.returns(resolves({
                 code: 404
-            });
+            }));
 
-            pubkeyDao.getByUserId('userId', function(err, key) {
-                expect(err).to.not.exist;
+            pubkeyDao.getByUserId('userId').then(function(key) {
                 expect(key).to.not.exist;
                 expect(restDaoStub.get.calledOnce).to.be.true;
                 done();
@@ -105,10 +95,9 @@ describe('Public Key DAO unit tests', function() {
         });
 
         it('should return empty array', function(done) {
-            restDaoStub.get.yields(null, []);
+            restDaoStub.get.returns(resolves([]));
 
-            pubkeyDao.getByUserId('userId', function(err, key) {
-                expect(err).to.not.exist;
+            pubkeyDao.getByUserId('userId').then(function(key) {
                 expect(key).to.not.exist;
                 expect(restDaoStub.get.calledOnce).to.be.true;
                 done();
@@ -116,14 +105,12 @@ describe('Public Key DAO unit tests', function() {
         });
 
         it('should work', function(done) {
-            restDaoStub.get.yields(null, [{
+            restDaoStub.get.returns(resolves([{
                 _id: '12345',
                 publicKey: 'asdf'
-            }]);
+            }]));
 
-            pubkeyDao.getByUserId('userId', function(err, key) {
-                expect(err).to.not.exist;
-                expect(key).to.exist;
+            pubkeyDao.getByUserId('userId').then(function(key) {
                 expect(key._id).to.exist;
                 expect(key.publicKey).to.exist;
                 expect(restDaoStub.get.calledOnce).to.be.true;
@@ -134,13 +121,12 @@ describe('Public Key DAO unit tests', function() {
 
     describe('put', function() {
         it('should fail', function(done) {
-            restDaoStub.put.yields();
+            restDaoStub.put.returns(resolves());
 
             pubkeyDao.put({
                 _id: '12345',
                 publicKey: 'asdf'
-            }, function(err) {
-                expect(err).to.not.exist;
+            }).then(function() {
                 expect(restDaoStub.put.calledOnce).to.be.true;
                 done();
             });
@@ -149,10 +135,9 @@ describe('Public Key DAO unit tests', function() {
 
     describe('remove', function() {
         it('should fail', function(done) {
-            restDaoStub.remove.yields();
+            restDaoStub.remove.returns(resolves());
 
-            pubkeyDao.remove('12345', function(err) {
-                expect(err).to.not.exist;
+            pubkeyDao.remove('12345').then(function(err) {
                 expect(restDaoStub.remove.calledOnce).to.be.true;
                 done();
             });
