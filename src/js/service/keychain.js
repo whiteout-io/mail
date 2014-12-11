@@ -54,8 +54,8 @@ Keychain.prototype.requestPermissionForKeyUpdate = function(params, callback) {
  * @param {String} uuid The uuid to verify the key
  * @param {Function} callback(error) Callback with an optional error object when the verification is done. If the was an error, the error object contains the information for it.
  */
-Keychain.prototype.verifyPublicKey = function(uuid, callback) {
-    this._publicKeyDao.verify(uuid, callback);
+Keychain.prototype.verifyPublicKey = function(uuid) {
+    return this._publicKeyDao.verify(uuid);
 };
 
 /**
@@ -901,43 +901,26 @@ Keychain.prototype.putUserKeyPair = function(keypair, callback) {
 // Helper functions
 //
 
-Keychain.prototype.lookupPublicKey = function(id, callback) {
+Keychain.prototype.lookupPublicKey = function(id) {
     var self = this;
 
     if (!id) {
-        callback({
-            errMsg: 'ID must be set for public key query!'
+        return new Promise(function() {
+            throw new Error('ID must be set for public key query!');
         });
-        return;
     }
 
     // lookup in local storage
-    self._lawnchairDAO.read(DB_PUBLICKEY + '_' + id, function(err, pubkey) {
-        if (err) {
-            callback(err);
-            return;
-        }
-
+    return self._lawnchairDAO.read(DB_PUBLICKEY + '_' + id).then(function(pubkey) {
         if (pubkey) {
-            callback(null, pubkey);
-            return;
+            return pubkey;
         }
 
         // fetch from cloud storage
-        self._publicKeyDao.get(id, function(err, cloudPubkey) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
+        return self._publicKeyDao.get(id).then(function(cloudPubkey) {
             // cache public key in cache
-            self.saveLocalPublicKey(cloudPubkey, function(err) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-
-                callback(null, cloudPubkey);
+            return self.saveLocalPublicKey(cloudPubkey).then(function() {
+                return cloudPubkey;
             });
         });
     });
@@ -946,28 +929,28 @@ Keychain.prototype.lookupPublicKey = function(id, callback) {
 /**
  * List all the locally stored public keys
  */
-Keychain.prototype.listLocalPublicKeys = function(callback) {
+Keychain.prototype.listLocalPublicKeys = function() {
     // search local keyring for public key
-    this._lawnchairDAO.list(DB_PUBLICKEY, 0, null, callback);
+    return this._lawnchairDAO.list(DB_PUBLICKEY, 0, null);
 };
 
-Keychain.prototype.removeLocalPublicKey = function(id, callback) {
-    this._lawnchairDAO.remove(DB_PUBLICKEY + '_' + id, callback);
+Keychain.prototype.removeLocalPublicKey = function(id) {
+    return this._lawnchairDAO.remove(DB_PUBLICKEY + '_' + id);
 };
 
-Keychain.prototype.lookupPrivateKey = function(id, callback) {
+Keychain.prototype.lookupPrivateKey = function(id) {
     // lookup in local storage
-    this._lawnchairDAO.read(DB_PRIVATEKEY + '_' + id, callback);
+    return this._lawnchairDAO.read(DB_PRIVATEKEY + '_' + id);
 };
 
-Keychain.prototype.saveLocalPublicKey = function(pubkey, callback) {
+Keychain.prototype.saveLocalPublicKey = function(pubkey) {
     // persist public key (email, _id)
     var pkLookupKey = DB_PUBLICKEY + '_' + pubkey._id;
-    this._lawnchairDAO.persist(pkLookupKey, pubkey, callback);
+    return this._lawnchairDAO.persist(pkLookupKey, pubkey);
 };
 
-Keychain.prototype.saveLocalPrivateKey = function(privkey, callback) {
+Keychain.prototype.saveLocalPrivateKey = function(privkey) {
     // persist private key (email, _id)
     var prkLookupKey = DB_PRIVATEKEY + '_' + privkey._id;
-    this._lawnchairDAO.persist(prkLookupKey, privkey, callback);
+    return this._lawnchairDAO.persist(prkLookupKey, privkey);
 };
