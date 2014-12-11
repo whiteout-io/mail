@@ -1,8 +1,12 @@
 'use strict';
 
-// Check if a new AppCache is available on page load.
+//
+// AppCache
+//
+
 if (typeof window.applicationCache !== 'undefined') {
     window.onload = function() {
+        // Check if a new AppCache is available on page load.
         window.applicationCache.onupdateready = function() {
             if (window.applicationCache.status === window.applicationCache.UPDATEREADY) {
                 // Browser downloaded a new app cache
@@ -13,6 +17,10 @@ if (typeof window.applicationCache !== 'undefined') {
         };
     };
 }
+
+//
+// Angular app config
+//
 
 var axe = require('axe-logger');
 
