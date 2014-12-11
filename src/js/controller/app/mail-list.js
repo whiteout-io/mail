@@ -37,14 +37,16 @@ var MailListCtrl = function($scope, $timeout, $location, $filter, status, notifi
 
     $scope.loc = $location;
     $scope.$watch('(loc.search()).uid', function(uid) {
-        if (typeof uid === 'undefined') {
-            // no uid specified in url... select no message
+        uid = parseInt(uid, 10);
+        if (isNaN(uid)) {
+            // no (or nonsensical) uid specified in url... select no message
             $scope.select();
             return;
         }
+
         // select the message specified by the uid in the url
         $scope.select(_.findWhere(currentFolder().messages, {
-            uid: typeof uid === 'string' ? parseInt(uid, 10) : uid
+            uid: uid
         }));
     });
 

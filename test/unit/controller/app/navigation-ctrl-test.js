@@ -57,7 +57,6 @@ describe('Navigation Controller unit test', function() {
             expect(scope.state).to.exist;
             expect(scope.state.lightbox).to.be.undefined;
             expect(scope.account.folders).to.not.be.empty;
-            expect(scope.openFolder).to.exist;
         });
     });
 
@@ -67,16 +66,6 @@ describe('Navigation Controller unit test', function() {
             scope.state.nav.toggle(true);
             expect(scope.state.nav.open).to.be.true;
             scope.state.nav.toggle(false);
-            expect(scope.state.nav.open).to.be.false;
-        });
-    });
-
-    describe('open folder', function() {
-        it('should work', function() {
-            scope.state.nav.open = true;
-
-            scope.openFolder('asd');
-            expect(scope.state.nav.currentFolder).to.equal('asd');
             expect(scope.state.nav.open).to.be.false;
         });
     });

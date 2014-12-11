@@ -1847,7 +1847,8 @@ describe('Email DAO unit tests', function() {
                     modseq: '123'
                 }];
                 imapClientStub.login.yieldsAsync();
-                imapClientStub.listenForChanges.yieldsAsync();
+                imapClientStub.selectMailbox.yields();
+                imapClientStub.listenForChanges.yields();
                 initFoldersStub.yieldsAsync();
 
                 dao.onConnect({
@@ -1858,6 +1859,7 @@ describe('Email DAO unit tests', function() {
                     expect(err).to.not.exist;
                     expect(dao.ignoreUploadOnSent).to.be.false;
                     expect(imapClientStub.login.calledOnce).to.be.true;
+                    expect(imapClientStub.selectMailbox.calledOnce).to.be.true;
                     expect(initFoldersStub.calledOnce).to.be.true;
                     expect(imapClientStub.mailboxCache).to.deep.equal({
                         'INBOX': {

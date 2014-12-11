@@ -137,9 +137,11 @@ Account.prototype.isOnline = function() {
 /**
  * Event that is called when the user agent goes online. This create new instances of the imap-client and pgp-mailer and connects to the mail server.
  */
-Account.prototype.onConnect = function() {
+Account.prototype.onConnect = function(callback) {
     var self = this;
     var config = self._appConfig.config;
+    
+    callback = callback || self._dialog.error;
 
     if (!self.isOnline() || !self._emailDao || !self._emailDao._account) {
         // prevent connection infinite loop
@@ -148,7 +150,7 @@ Account.prototype.onConnect = function() {
 
     self._auth.getCredentials(function(err, credentials) {
         if (err) {
-            self._dialog.error(err);
+            callback(err);
             return;
         }
 
@@ -176,7 +178,7 @@ Account.prototype.onConnect = function() {
             imapClient: imapClient,
             pgpMailer: pgpMailer,
             ignoreUploadOnSent: self._emailDao.checkIgnoreUploadOnSent(credentials.imap.host)
-        }, self._dialog.error);
+        }, callback);
     }
 
     function onConnectionError(error) {
