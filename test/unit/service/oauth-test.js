@@ -9,7 +9,7 @@ describe('OAuth unit tests', function() {
 
     beforeEach(function() {
         googleApiStub = sinon.createStubInstance(RestDAO);
-        oauth = new OAuth(qMock, googleApiStub);
+        oauth = new OAuth(googleApiStub);
 
         window.chrome = window.chrome || {};
 

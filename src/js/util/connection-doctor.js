@@ -15,8 +15,7 @@ var TCPSocket = require('tcp-socket'),
  *
  * @constructor
  */
-function ConnectionDoctor($q, appConfig) {
-    this._q = $q;
+function ConnectionDoctor(appConfig) {
     this._appConfig = appConfig;
     this._workerPath = appConfig.config.workerPath + '/tcp-socket-tls-worker.min.js';
 }
@@ -86,7 +85,7 @@ ConnectionDoctor.prototype.configure = function(credentials) {
  */
 ConnectionDoctor.prototype.check = function() {
     var self = this;
-    return self._q(function(resolve) {
+    return new Promise(function(resolve) {
         if (!self.credentials) {
             throw new Error('You need to configure() the connection doctor first!');
         } else {
@@ -115,7 +114,7 @@ ConnectionDoctor.prototype.check = function() {
  */
 ConnectionDoctor.prototype._checkOnline = function() {
     var self = this;
-    return self._q(function(resolve) {
+    return new Promise(function(resolve) {
         if (navigator.onLine) {
             resolve();
         } else {
@@ -133,7 +132,7 @@ ConnectionDoctor.prototype._checkOnline = function() {
  */
 ConnectionDoctor.prototype._checkReachable = function(options) {
     var self = this;
-    return self._q(function(resolve, reject) {
+    return new Promise(function(resolve, reject) {
         var socket,
             error, // remember the error message
             timeout, // remember the timeout object
@@ -198,7 +197,7 @@ ConnectionDoctor.prototype._checkReachable = function(options) {
  */
 ConnectionDoctor.prototype._checkImap = function() {
     var self = this;
-    return self._q(function(resolve, reject) {
+    return new Promise(function(resolve, reject) {
         var loggedIn = false,
             host = self.credentials.imap.host + ':' + self.credentials.imap.port,
             str = self._appConfig.string;
@@ -248,7 +247,7 @@ ConnectionDoctor.prototype._checkImap = function() {
  */
 ConnectionDoctor.prototype._checkSmtp = function() {
     var self = this;
-    return self._q(function(resolve, reject) {
+    return new Promise(function(resolve, reject) {
         var host = self.credentials.smtp.host + ':' + self.credentials.smtp.port,
             errored = false, // tracks if we need to invoke the callback at onclose or not
             str = self._appConfig.string;

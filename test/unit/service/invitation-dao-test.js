@@ -11,7 +11,7 @@ describe('Invitation DAO unit tests', function() {
 
     beforeEach(function() {
         restDaoStub = sinon.createStubInstance(RestDAO);
-        invitationDao = new InvitationDAO(restDaoStub, window.qMock);
+        invitationDao = new InvitationDAO(restDaoStub);
     });
 
     describe('initialization', function() {

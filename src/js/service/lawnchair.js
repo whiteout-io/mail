@@ -8,9 +8,7 @@ module.exports = LawnchairDAO;
 /**
  * Handles generic caching of JSON objects in a lawnchair adapter
  */
-function LawnchairDAO($q) {
-    this._q = $q;
-}
+function LawnchairDAO() {}
 
 /**
  * Initialize the lawnchair database
@@ -19,7 +17,7 @@ function LawnchairDAO($q) {
  */
 LawnchairDAO.prototype.init = function(dbName) {
     var self = this;
-    return self._q(function(resolve, reject) {
+    return new Promise(function(resolve, reject) {
         if (!dbName) {
             throw new Error('Lawnchair DB name must be specified!');
         }
@@ -42,7 +40,7 @@ LawnchairDAO.prototype.init = function(dbName) {
  */
 LawnchairDAO.prototype.persist = function(key, object) {
     var self = this;
-    return self._q(function(resolve, reject) {
+    return new Promise(function(resolve, reject) {
         if (!key || !object) {
             throw new Error('Key and Object must be set!');
         }
@@ -67,7 +65,7 @@ LawnchairDAO.prototype.persist = function(key, object) {
  */
 LawnchairDAO.prototype.batch = function(list) {
     var self = this;
-    return self._q(function(resolve, reject) {
+    return new Promise(function(resolve, reject) {
         if (!(list instanceof Array)) {
             throw new Error('Input must be of type Array!');
         }
@@ -88,7 +86,7 @@ LawnchairDAO.prototype.batch = function(list) {
  */
 LawnchairDAO.prototype.read = function(key) {
     var self = this;
-    return self._q(function(resolve) {
+    return new Promise(function(resolve) {
         if (!key) {
             throw new Error('Key must be specified!');
         }
@@ -112,7 +110,7 @@ LawnchairDAO.prototype.read = function(key) {
  */
 LawnchairDAO.prototype.list = function(type, offset, num) {
     var self = this;
-    return self._q(function(resolve) {
+    return new Promise(function(resolve) {
         var i, from, to,
             matchingKeys = [],
             intervalKeys = [],
@@ -171,7 +169,7 @@ LawnchairDAO.prototype.list = function(type, offset, num) {
  */
 LawnchairDAO.prototype.remove = function(key) {
     var self = this;
-    return self._q(function(resolve, reject) {
+    return new Promise(function(resolve, reject) {
         self._db.remove(key, function(err) {
             if (err) {
                 reject(err);
@@ -188,7 +186,7 @@ LawnchairDAO.prototype.remove = function(key) {
  */
 LawnchairDAO.prototype.removeList = function(type) {
     var self = this;
-    return self._q(function(resolve) {
+    return new Promise(function(resolve) {
         var matchingKeys = [],
             after;
 
@@ -226,7 +224,7 @@ LawnchairDAO.prototype.removeList = function(type) {
  */
 LawnchairDAO.prototype.clear = function() {
     var self = this;
-    return self._q(function(resolve, reject) {
+    return new Promise(function(resolve, reject) {
         self._db.nuke(function(err) {
             if (err) {
                 reject(err);

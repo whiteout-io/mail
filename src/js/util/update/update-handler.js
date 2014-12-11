@@ -15,8 +15,7 @@ var axe = require('axe-logger'),
 /**
  * Handles database migration
  */
-function UpdateHandler($q, appConfigStore, accountStore, auth, dialog) {
-    this._q = $q;
+function UpdateHandler(appConfigStore, accountStore, auth, dialog) {
     this._appConfigStorage = appConfigStore;
     this._userStorage = accountStore;
     this._updateScripts = [updateV1, updateV2, updateV3, updateV4, updateV5];
@@ -51,7 +50,7 @@ UpdateHandler.prototype.update = function() {
  */
 UpdateHandler.prototype._applyUpdate = function(options) {
     var self = this;
-    return self._q(function(resolve, reject) {
+    return new Promise(function(resolve, reject) {
         var scriptOptions,
             queue = [];
 

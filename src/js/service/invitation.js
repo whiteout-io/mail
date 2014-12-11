@@ -8,9 +8,8 @@ module.exports = Invitation;
  * The Invitation is a high level Data Access Object that access the invitation service REST endpoint.
  * @param {Object} restDao The REST Data Access Object abstraction
  */
-function Invitation(invitationRestDao, $q) {
+function Invitation(invitationRestDao) {
     this._restDao = invitationRestDao;
-    this._q = $q;
 }
 
 //
@@ -25,7 +24,7 @@ function Invitation(invitationRestDao, $q) {
  */
 Invitation.prototype.invite = function(options) {
     var self = this;
-    return self._q(function(resolve) {
+    return new Promise(function(resolve) {
         if (typeof options !== 'object' || typeof options.recipient !== 'string' || typeof options.sender !== 'string') {
             throw new Error('erroneous usage of api: incorrect parameters!');
         }

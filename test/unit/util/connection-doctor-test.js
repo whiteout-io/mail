@@ -52,7 +52,7 @@ describe('Connection Doctor', function() {
         //
         // Setup SUT
         //
-        doctor = new ConnectionDoctor(qMock, appConfig);
+        doctor = new ConnectionDoctor(appConfig);
         doctor.configure(credentials);
         doctor._imap = imapStub;
         doctor._smtp = smtpStub;

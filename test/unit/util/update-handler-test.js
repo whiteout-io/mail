@@ -17,7 +17,7 @@ describe('UpdateHandler', function() {
         userStorageStub = sinon.createStubInstance(DeviceStorageDAO);
         authStub = sinon.createStubInstance(Auth);
         dialogStub = sinon.createStubInstance(Dialog);
-        updateHandler = new UpdateHandler(qMock, appConfigStorageStub, userStorageStub, authStub, dialogStub);
+        updateHandler = new UpdateHandler(appConfigStorageStub, userStorageStub, authStub, dialogStub);
     });
 
     afterEach(function() {

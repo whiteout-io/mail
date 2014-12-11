@@ -4,8 +4,7 @@ var ngModule = angular.module('woServices');
 ngModule.service('oauth', OAuth);
 module.exports = OAuth;
 
-function OAuth($q, oauthRestDao) {
-    this._q = $q;
+function OAuth(oauthRestDao) {
     this._googleApi = oauthRestDao;
 }
 
@@ -22,7 +21,7 @@ OAuth.prototype.isSupported = function() {
  * @param  {String}   emailAddress  The user's email address (optional)
  */
 OAuth.prototype.getOAuthToken = function(emailAddress) {
-    return this._q(function(resolve, reject) {
+    return new Promise(function(resolve, reject) {
         var idOptions = {
             interactive: true
         };
@@ -59,7 +58,7 @@ OAuth.prototype.getOAuthToken = function(emailAddress) {
  */
 OAuth.prototype.refreshToken = function(options) {
     var self = this;
-    return self._q(function(resolve) {
+    return new Promise(function(resolve) {
         if (!options.oldToken) {
             throw new Error('oldToken option not set!');
         }
@@ -80,7 +79,7 @@ OAuth.prototype.refreshToken = function(options) {
  */
 OAuth.prototype.queryEmailAddress = function(token) {
     var self = this;
-    return self._q(function(resolve) {
+    return new Promise(function(resolve) {
         if (!token) {
             throw new Error('Invalid OAuth token!');
         }

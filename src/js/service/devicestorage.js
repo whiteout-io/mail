@@ -3,13 +3,13 @@
 var ngModule = angular.module('woServices');
 
 // expose an instance with the static dbName 'app-config' to store configuration data
-ngModule.factory('appConfigStore', function(appConfigLawnchair, $q) {
-    return new DeviceStorage(appConfigLawnchair, $q);
+ngModule.factory('appConfigStore', function(appConfigLawnchair) {
+    return new DeviceStorage(appConfigLawnchair);
 });
 
 // expose a singleton instance of DeviceStorage called 'accountStore' to persist user data
-ngModule.factory('accountStore', function(accountLawnchair, $q) {
-    return new DeviceStorage(accountLawnchair, $q);
+ngModule.factory('accountStore', function(accountLawnchair) {
+    return new DeviceStorage(accountLawnchair);
 });
 
 module.exports = DeviceStorage;
@@ -21,9 +21,8 @@ module.exports = DeviceStorage;
 /**
  * High level storage api that handles all persistence of a user's data on the device.
  */
-function DeviceStorage(lawnchairDAO, $q) {
+function DeviceStorage(lawnchairDAO) {
     this._lawnchairDAO = lawnchairDAO;
-    this._q = $q;
 }
 
 /**
@@ -43,7 +42,7 @@ DeviceStorage.prototype.init = function(dbName) {
  */
 DeviceStorage.prototype.storeList = function(list, type) {
     var self = this;
-    return self._q(function(resolve) {
+    return new Promise(function(resolve) {
         var key, items = [];
         list = list || [];
 

@@ -39,9 +39,7 @@ ngModule.factory('oauthRestDao', function() {
 
 module.exports = RestDAO;
 
-function RestDAO($q) {
-    this._q = $q;
-}
+function RestDAO() {}
 
 /**
  * Set the REST DAO's base url
@@ -99,7 +97,7 @@ RestDAO.prototype.remove = function(uri) {
 
 RestDAO.prototype._processRequest = function(options) {
     var self = this;
-    return self._q(function(resolve, reject) {
+    return new Promise(function(resolve, reject) {
         var xhr, format;
 
         if (typeof options.uri === 'undefined') {

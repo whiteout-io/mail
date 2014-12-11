@@ -11,7 +11,7 @@ describe('Device Storage DAO unit tests', function() {
 
     beforeEach(function() {
         lawnchairDaoStub = sinon.createStubInstance(LawnchairDAO);
-        storageDao = new DeviceStorageDAO(lawnchairDaoStub, window.qMock);
+        storageDao = new DeviceStorageDAO(lawnchairDaoStub);
     });
 
     afterEach(function() {});

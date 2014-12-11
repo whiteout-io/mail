@@ -21,7 +21,6 @@
         "$",
         "inject",
         "Promise",
-        "qMock",
         "resolves",
         "rejects",
         "self",

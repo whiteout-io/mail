@@ -23,7 +23,7 @@ describe('Rest DAO unit tests', function() {
     describe('setBaseUri', function() {
         it('should accept base uri', function() {
             var baseUri = 'http://custom.com';
-            restDao = new RestDAO(window.qMock);
+            restDao = new RestDAO();
             expect(restDao._baseUri).to.not.exist;
             restDao.setBaseUri(baseUri);
             expect(restDao._baseUri).to.equal(baseUri);
