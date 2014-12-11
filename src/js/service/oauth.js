@@ -4,7 +4,8 @@ var ngModule = angular.module('woServices');
 ngModule.service('oauth', OAuth);
 module.exports = OAuth;
 
-function OAuth(oauthRestDao) {
+function OAuth($q, oauthRestDao) {
+    this._q = $q;
     this._googleApi = oauthRestDao;
 }
 
@@ -20,33 +21,33 @@ OAuth.prototype.isSupported = function() {
  * Request an OAuth token from chrome for gmail users
  * @param  {String}   emailAddress  The user's email address (optional)
  */
-OAuth.prototype.getOAuthToken = function(emailAddress, callback) {
-    var idOptions = {
-        interactive: true
-    };
+OAuth.prototype.getOAuthToken = function(emailAddress) {
+    return this._q(function(resolve, reject) {
+        var idOptions = {
+            interactive: true
+        };
 
-    // check which runtime the app is running under
-    chrome.runtime.getPlatformInfo(function(platformInfo) {
-        if (chrome.runtime.lastError || !platformInfo) {
-            callback(new Error('Error getting chrome platform info!'));
-            return;
-        }
-
-        if (emailAddress && platformInfo.os.indexOf('android') !== -1) {
-            // set accountHint so that native Android account picker does not show up each time
-            idOptions.accountHint = emailAddress;
-        }
-
-        // get OAuth Token from chrome
-        chrome.identity.getAuthToken(idOptions, function(token) {
-            if (chrome.runtime.lastError || !token) {
-                callback({
-                    errMsg: 'Error fetching an OAuth token for the user!'
-                });
+        // check which runtime the app is running under
+        chrome.runtime.getPlatformInfo(function(platformInfo) {
+            if (chrome.runtime.lastError || !platformInfo) {
+                reject(new Error('Error getting chrome platform info!'));
                 return;
             }
 
-            callback(null, token);
+            if (emailAddress && platformInfo.os.indexOf('android') !== -1) {
+                // set accountHint so that native Android account picker does not show up each time
+                idOptions.accountHint = emailAddress;
+            }
+
+            // get OAuth Token from chrome
+            chrome.identity.getAuthToken(idOptions, function(token) {
+                if (chrome.runtime.lastError || !token) {
+                    reject(new Error('Error fetching an OAuth token for the user!'));
+                    return;
+                }
+
+                resolve(token);
+            });
         });
     });
 };
@@ -56,20 +57,20 @@ OAuth.prototype.getOAuthToken = function(emailAddress, callback) {
  * @param  {String}   options.oldToken      The old token to be removed
  * @param  {String}   options.emailAddress  The user's email address (optional)
  */
-OAuth.prototype.refreshToken = function(options, callback) {
+OAuth.prototype.refreshToken = function(options) {
     var self = this;
+    return self._q(function(resolve) {
+        if (!options.oldToken) {
+            throw new Error('oldToken option not set!');
+        }
 
-    if (!options.oldToken) {
-        callback(new Error('oldToken option not set!'));
-        return;
-    }
-
-    // remove cached token
-    chrome.identity.removeCachedAuthToken({
-        token: options.oldToken
-    }, function() {
-        // get a new token
-        self.getOAuthToken(options.emailAddress, callback);
+        // remove cached token
+        chrome.identity.removeCachedAuthToken({
+            token: options.oldToken
+        }, function() {
+            // get a new token
+            self.getOAuthToken(options.emailAddress).then(resolve);
+        });
     });
 };
 
@@ -77,25 +78,26 @@ OAuth.prototype.refreshToken = function(options, callback) {
  * Get email address from google api
  * @param  {String}   token    The oauth token
  */
-OAuth.prototype.queryEmailAddress = function(token, callback) {
-    if (!token) {
-        callback({
-            errMsg: 'Invalid OAuth token!'
-        });
-        return;
-    }
-
-    // fetch gmail user's email address from the Google Authorization Server
-    this._googleApi.get({
-        uri: '/oauth2/v3/userinfo?access_token=' + token
-    }, function(err, info) {
-        if (err || !info || !info.email) {
-            callback({
-                errMsg: 'Error looking up email address on google api!'
-            });
-            return;
+OAuth.prototype.queryEmailAddress = function(token) {
+    var self = this;
+    return self._q(function(resolve) {
+        if (!token) {
+            throw new Error('Invalid OAuth token!');
         }
 
-        callback(null, info.email);
+        resolve();
+
+    }).then(function() {
+        // fetch gmail user's email address from the Google Authorization Server
+        return self._googleApi.get({
+            uri: '/oauth2/v3/userinfo?access_token=' + token
+        });
+
+    }).then(function(info) {
+        if (!info || !info.email) {
+            throw new Error('Error looking up email address on google api!');
+        }
+
+        return info.email;
     });
 };
