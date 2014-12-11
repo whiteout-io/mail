@@ -16,19 +16,20 @@ function PrivateKey(privateKeyRestDao) {
  * Request registration of a new device by fetching registration session key.
  * @param  {String}   options.userId      The user's email address
  * @param  {String}   options.deviceName  The device's memorable name
- * @param  {Function} callback(error, regSessionKey)
  * @return {Object} {encryptedRegSessionKey:[base64]}
  */
-PrivateKey.prototype.requestDeviceRegistration = function(options, callback) {
-    var uri;
+PrivateKey.prototype.requestDeviceRegistration = function(options) {
+    var self = this;
+    return new Promise(function(resolve) {
+        if (!options.userId || !options.deviceName) {
+            throw new Error('Incomplete arguments!');
+        }
+        resolve();
 
-    if (!options.userId || !options.deviceName) {
-        callback(new Error('Incomplete arguments!'));
-        return;
-    }
-
-    uri = '/device/user/' + options.userId + '/devicename/' + options.deviceName;
-    this._restDao.post(undefined, uri, callback);
+    }).then(function() {
+        var uri = '/device/user/' + options.userId + '/devicename/' + options.deviceName;
+        return self._restDao.post(undefined, uri);
+    });
 };
 
 /**
@@ -37,18 +38,19 @@ PrivateKey.prototype.requestDeviceRegistration = function(options, callback) {
  * @param  {String}   options.deviceName            The device's memorable name
  * @param  {String}   options.encryptedDeviceSecret The base64 encoded encrypted device secret
  * @param  {String}   options.iv                    The iv used for encryption
- * @param  {Function} callback(error)
  */
-PrivateKey.prototype.uploadDeviceSecret = function(options, callback) {
-    var uri;
+PrivateKey.prototype.uploadDeviceSecret = function(options) {
+    var self = this;
+    return new Promise(function(resolve) {
+        if (!options.userId || !options.deviceName || !options.encryptedDeviceSecret || !options.iv) {
+            throw new Error('Incomplete arguments!');
+        }
+        resolve();
 
-    if (!options.userId || !options.deviceName || !options.encryptedDeviceSecret || !options.iv) {
-        callback(new Error('Incomplete arguments!'));
-        return;
-    }
-
-    uri = '/device/user/' + options.userId + '/devicename/' + options.deviceName;
-    this._restDao.put(options, uri, callback);
+    }).then(function() {
+        var uri = '/device/user/' + options.userId + '/devicename/' + options.deviceName;
+        return self._restDao.put(options, uri);
+    });
 };
 
 //
@@ -58,19 +60,20 @@ PrivateKey.prototype.uploadDeviceSecret = function(options, callback) {
 /**
  * Request authSessionKeys required for upload the encrypted private PGP key.
  * @param  {String}   options.userId    The user's email address
- * @param  {Function} callback(error, authSessionKey)
  * @return {Object} {sessionId, encryptedAuthSessionKey:[base64 encoded], encryptedChallenge:[base64 encoded]}
  */
-PrivateKey.prototype.requestAuthSessionKey = function(options, callback) {
-    var uri;
+PrivateKey.prototype.requestAuthSessionKey = function(options) {
+    var self = this;
+    return new Promise(function(resolve) {
+        if (!options.userId) {
+            throw new Error('Incomplete arguments!');
+        }
+        resolve();
 
-    if (!options.userId) {
-        callback(new Error('Incomplete arguments!'));
-        return;
-    }
-
-    uri = '/auth/user/' + options.userId;
-    this._restDao.post(undefined, uri, callback);
+    }).then(function() {
+        var uri = '/auth/user/' + options.userId;
+        return self._restDao.post(undefined, uri);
+    });
 };
 
 /**
@@ -79,18 +82,19 @@ PrivateKey.prototype.requestAuthSessionKey = function(options, callback) {
  * @param  {String}   options.encryptedChallenge        The server's base64 encoded challenge encrypted using the authSessionKey
  * @param  {String}   options.encryptedDeviceSecret     The server's base64 encoded deviceSecret encrypted using the authSessionKey
  * @param  {String}   options.iv                        The iv used for encryption
- * @param  {Function} callback(error)
  */
-PrivateKey.prototype.verifyAuthentication = function(options, callback) {
-    var uri;
+PrivateKey.prototype.verifyAuthentication = function(options) {
+    var self = this;
+    return new Promise(function(resolve) {
+        if (!options.userId || !options.sessionId || !options.encryptedChallenge || !options.encryptedDeviceSecret || !options.iv) {
+            throw new Error('Incomplete arguments!');
+        }
+        resolve();
 
-    if (!options.userId || !options.sessionId || !options.encryptedChallenge || !options.encryptedDeviceSecret || !options.iv) {
-        callback(new Error('Incomplete arguments!'));
-        return;
-    }
-
-    uri = '/auth/user/' + options.userId + '/session/' + options.sessionId;
-    this._restDao.put(options, uri, callback);
+    }).then(function() {
+        var uri = '/auth/user/' + options.userId + '/session/' + options.sessionId;
+        return self._restDao.put(options, uri);
+    });
 };
 
 /**
@@ -99,48 +103,50 @@ PrivateKey.prototype.verifyAuthentication = function(options, callback) {
  * @param  {String}   options.userId                The user's email address
  * @param  {String}   options.encryptedPrivateKey   The base64 encoded encrypted private PGP key
  * @param  {String}   options.sessionId             The session id
- * @param  {Function} callback(error)
  */
-PrivateKey.prototype.upload = function(options, callback) {
-    var uri;
+PrivateKey.prototype.upload = function(options) {
+    var self = this;
+    return new Promise(function(resolve) {
+        if (!options._id || !options.userId || !options.encryptedPrivateKey || !options.sessionId || !options.salt || !options.iv) {
+            throw new Error('Incomplete arguments!');
+        }
+        resolve();
 
-    if (!options._id || !options.userId || !options.encryptedPrivateKey || !options.sessionId || !options.salt || !options.iv) {
-        callback(new Error('Incomplete arguments!'));
-        return;
-    }
-
-    uri = '/privatekey/user/' + options.userId + '/session/' + options.sessionId;
-    this._restDao.post(options, uri, callback);
+    }).then(function() {
+        var uri = '/privatekey/user/' + options.userId + '/session/' + options.sessionId;
+        return self._restDao.post(options, uri);
+    });
 };
 
 /**
  * Query if an encrypted private PGP key exists on the server without initializing the recovery procedure.
  * @param  {String}   options.userId    The user's email address
  * @param  {String}   options.keyId     The private PGP key id
- * @param  {Function} callback(error, found)
  * @return {Boolean} whether the key was found on the server or not.
  */
-PrivateKey.prototype.hasPrivateKey = function(options, callback) {
-    if (!options.userId || !options.keyId) {
-        callback(new Error('Incomplete arguments!'));
-        return;
-    }
+PrivateKey.prototype.hasPrivateKey = function(options) {
+    var self = this;
+    return new Promise(function(resolve) {
+        if (!options.userId || !options.keyId) {
+            throw new Error('Incomplete arguments!');
+        }
+        resolve();
 
-    this._restDao.get({
-        uri: '/privatekey/user/' + options.userId + '/key/' + options.keyId + '?ignoreRecovery=true',
-    }, function(err) {
+    }).then(function() {
+        return self._restDao.get({
+            uri: '/privatekey/user/' + options.userId + '/key/' + options.keyId + '?ignoreRecovery=true',
+        });
+
+    }).then(function() {
+        return true;
+
+    }).catch(function(err) {
         // 404: there is no encrypted private key on the server
-        if (err && err.code !== 200) {
-            callback(null, false);
-            return;
+        if (err.code && err.code !== 200) {
+            return false;
         }
 
-        if (err) {
-            callback(err);
-            return;
-        }
-
-        callback(null, true);
+        throw err;
     });
 };
 
@@ -148,30 +154,31 @@ PrivateKey.prototype.hasPrivateKey = function(options, callback) {
  * Request download for the encrypted private PGP key.
  * @param  {String}   options.userId    The user's email address
  * @param  {String}   options.keyId     The private PGP key id
- * @param  {Function} callback(error, found)
  * @return {Boolean} whether the key was found on the server or not.
  */
-PrivateKey.prototype.requestDownload = function(options, callback) {
-    if (!options.userId || !options.keyId) {
-        callback(new Error('Incomplete arguments!'));
-        return;
-    }
+PrivateKey.prototype.requestDownload = function(options) {
+    var self = this;
+    return new Promise(function(resolve) {
+        if (!options.userId || !options.keyId) {
+            throw new Error('Incomplete arguments!');
+        }
+        resolve();
 
-    this._restDao.get({
-        uri: '/privatekey/user/' + options.userId + '/key/' + options.keyId
-    }, function(err) {
+    }).then(function() {
+        return self._restDao.get({
+            uri: '/privatekey/user/' + options.userId + '/key/' + options.keyId
+        });
+
+    }).then(function() {
+        return true;
+
+    }).catch(function(err) {
         // 404: there is no encrypted private key on the server
-        if (err && err.code !== 200) {
-            callback(null, false);
-            return;
+        if (err.code && err.code !== 200) {
+            return false;
         }
 
-        if (err) {
-            callback(err);
-            return;
-        }
-
-        callback(null, true);
+        throw err;
     });
 };
 
@@ -180,19 +187,19 @@ PrivateKey.prototype.requestDownload = function(options, callback) {
  * @param  {String}   options.userId The user's email address
  * @param  {String}   options.keyId The private key id
  * @param  {String}   options.recoveryToken The token proving the user own the email account
- * @param  {Function} callback(error, encryptedPrivateKey)
  * @return {Object} {_id:[hex encoded capital 16 char key id], encryptedPrivateKey:[base64 encoded], encryptedUserId: [base64 encoded]}
  */
-PrivateKey.prototype.download = function(options, callback) {
-    var uri;
+PrivateKey.prototype.download = function(options) {
+    var self = this;
+    return new Promise(function(resolve) {
+        if (!options.userId || !options.keyId || !options.recoveryToken) {
+            throw new Error('Incomplete arguments!');
+        }
+        resolve();
 
-    if (!options.userId || !options.keyId || !options.recoveryToken) {
-        callback(new Error('Incomplete arguments!'));
-        return;
-    }
-
-    uri = '/privatekey/user/' + options.userId + '/key/' + options.keyId + '/recovery/' + options.recoveryToken;
-    this._restDao.get({
-        uri: uri
-    }, callback);
+    }).then(function() {
+        return self._restDao.get({
+            uri: '/privatekey/user/' + options.userId + '/key/' + options.keyId + '/recovery/' + options.recoveryToken
+        });
+    });
 };

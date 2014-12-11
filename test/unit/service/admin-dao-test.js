@@ -23,7 +23,7 @@ describe('Admin DAO unit tests', function() {
                 emailAddress: emailAddress
             };
 
-            adminDao.createUser(opt, function(err) {
+            adminDao.createUser(opt).catch(function(err) {
                 expect(err).to.exist;
                 done();
             });
@@ -36,11 +36,11 @@ describe('Admin DAO unit tests', function() {
                 phone: '12345'
             };
 
-            restDaoStub.post.withArgs(opt, '/user').yields({
+            restDaoStub.post.withArgs(opt, '/user').returns(rejects({
                 code: 409
-            });
+            }));
 
-            adminDao.createUser(opt, function(err) {
+            adminDao.createUser(opt).catch(function(err) {
                 expect(err.message).to.contain('already taken');
                 expect(restDaoStub.post.calledOnce).to.be.true;
                 done();
@@ -54,9 +54,9 @@ describe('Admin DAO unit tests', function() {
                 phone: '12345'
             };
 
-            restDaoStub.post.withArgs(opt, '/user').yields(new Error());
+            restDaoStub.post.withArgs(opt, '/user').returns(rejects(new Error()));
 
-            adminDao.createUser(opt, function(err) {
+            adminDao.createUser(opt).catch(function(err) {
                 expect(err).to.exist;
                 expect(restDaoStub.post.calledOnce).to.be.true;
                 done();
@@ -70,10 +70,9 @@ describe('Admin DAO unit tests', function() {
                 phone: '12345'
             };
 
-            restDaoStub.post.withArgs(opt, '/user').yields();
+            restDaoStub.post.withArgs(opt, '/user').returns(resolves());
 
-            adminDao.createUser(opt, function(err) {
-                expect(err).to.not.exist;
+            adminDao.createUser(opt).then(function() {
                 expect(restDaoStub.post.calledOnce).to.be.true;
                 done();
             });
@@ -86,7 +85,7 @@ describe('Admin DAO unit tests', function() {
                 emailAddress: emailAddress
             };
 
-            adminDao.validateUser(opt, function(err) {
+            adminDao.validateUser(opt).catch(function(err) {
                 expect(err).to.exist;
                 done();
             });
@@ -98,9 +97,9 @@ describe('Admin DAO unit tests', function() {
                 token: 'H45Z6D'
             };
 
-            restDaoStub.post.withArgs(opt, '/user/validate').yields(new Error());
+            restDaoStub.post.withArgs(opt, '/user/validate').returns(rejects(new Error()));
 
-            adminDao.validateUser(opt, function(err) {
+            adminDao.validateUser(opt).catch(function(err) {
                 expect(err).to.exist;
                 expect(restDaoStub.post.calledOnce).to.be.true;
                 done();
@@ -113,10 +112,9 @@ describe('Admin DAO unit tests', function() {
                 token: 'H45Z6D'
             };
 
-            restDaoStub.post.withArgs(opt, '/user/validate').yields();
+            restDaoStub.post.withArgs(opt, '/user/validate').returns(resolves());
 
-            adminDao.validateUser(opt, function(err) {
-                expect(err).to.not.exist;
+            adminDao.validateUser(opt).then(function() {
                 expect(restDaoStub.post.calledOnce).to.be.true;
                 done();
             });
@@ -128,12 +126,11 @@ describe('Admin DAO unit tests', function() {
                 token: 'H45Z6D'
             };
 
-            restDaoStub.post.withArgs(opt, '/user/validate').yields({
+            restDaoStub.post.withArgs(opt, '/user/validate').returns(rejects({
                 code: 202
-            });
+            }));
 
-            adminDao.validateUser(opt, function(err) {
-                expect(err).to.not.exist;
+            adminDao.validateUser(opt).then(function() {
                 expect(restDaoStub.post.calledOnce).to.be.true;
                 done();
             });
