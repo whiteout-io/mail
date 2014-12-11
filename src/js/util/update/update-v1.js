@@ -7,20 +7,15 @@
  * every non-prefixed mail in the IMAP folders would be nuked due to the implementation
  * of the delta sync.
  */
-function updateV1(options, callback) {
+function updateV1(options) {
     var emailDbType = 'email_',
         versionDbType = 'dbVersion',
         postUpdateDbVersion = 1;
 
     // remove the emails
-    options.userStorage.removeList(emailDbType, function(err) {
-        if (err) {
-            callback(err);
-            return;
-        }
-
+    return options.userStorage.removeList(emailDbType).then(function() {
         // update the database version to postUpdateDbVersion
-        options.appConfigStorage.storeList([postUpdateDbVersion], versionDbType, callback);
+        return options.appConfigStorage.storeList([postUpdateDbVersion], versionDbType);
     });
 }
 
