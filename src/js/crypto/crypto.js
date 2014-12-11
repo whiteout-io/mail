@@ -13,27 +13,22 @@ var aes = require('crypto-lib').aes,
  * High level crypto api that invokes native crypto (if available) and
  * gracefully degrades to JS crypto (if unavailable)
  */
-function Crypto() {}
+function Crypto($q) {
+    this._q = $q;
+}
 
 /**
  * Encrypt plaintext using AES-GCM.
  * @param  {String}   plaintext The input string in UTF-16
  * @param  {String}   key The base64 encoded key
  * @param  {String}   iv The base64 encoded IV
- * @param  {Function} callback(error, ciphertext)
  * @return {String} The base64 encoded ciphertext
  */
-Crypto.prototype.encrypt = function(plaintext, key, iv, callback) {
-    var ct;
-
-    try {
-        ct = aes.encrypt(plaintext, key, iv);
-    } catch (err) {
-        callback(err);
-        return;
-    }
-
-    callback(null, ct);
+Crypto.prototype.encrypt = function(plaintext, key, iv) {
+    return this._q(function(resolve) {
+        var ct = aes.encrypt(plaintext, key, iv);
+        resolve(ct);
+    });
 };
 
 /**
@@ -41,34 +36,26 @@ Crypto.prototype.encrypt = function(plaintext, key, iv, callback) {
  * @param  {String}   ciphertext The base64 encoded ciphertext
  * @param  {String}   key The base64 encoded key
  * @param  {String}   iv The base64 encoded IV
- * @param  {Function} callback(error, plaintext)
  * @return {String} The decrypted plaintext in UTF-16
  */
-Crypto.prototype.decrypt = function(ciphertext, key, iv, callback) {
-    var pt;
-
-    try {
-        pt = aes.decrypt(ciphertext, key, iv);
-    } catch (err) {
-        callback(err);
-        return;
-    }
-
-    callback(null, pt);
+Crypto.prototype.decrypt = function(ciphertext, key, iv) {
+    return this._q(function(resolve) {
+        var pt = aes.decrypt(ciphertext, key, iv);
+        resolve(pt);
+    });
 };
 
 /**
  * Do PBKDF2 key derivation in a WebWorker thread
  */
-Crypto.prototype.deriveKey = function(password, salt, keySize, callback) {
-    startWorker({
+Crypto.prototype.deriveKey = function(password, salt, keySize) {
+    return this.startWorker({
         script: config.workerPath + '/pbkdf2-worker.min.js',
         args: {
             password: password,
             salt: salt,
             keySize: keySize
         },
-        callback: callback,
         noWorker: function() {
             return pbkdf2.getKey(password, salt, keySize);
         }
@@ -79,43 +66,33 @@ Crypto.prototype.deriveKey = function(password, salt, keySize, callback) {
 // helper functions
 //
 
-function startWorker(options) {
-    // check for WebWorker support
-    if (window.Worker) {
-        // init webworker thread
-        var worker = new Worker(options.script);
-        worker.onmessage = function(e) {
-            if (e.data.err) {
-                options.callback(e.data.err);
-                return;
-            }
-            // return result from the worker
-            options.callback(null, e.data);
-        };
-        worker.onerror = function(e) {
-            // show error message in logger
-            axe.error('Error handling web worker: Line ' + e.lineno + ' in ' + e.filename + ': ' + e.message);
-            // return error
-            options.callback({
-                errMsg: (e.message) ? e.message : e
-            });
+Crypto.prototype.startWorker = function(options) {
+    return this._q(function(resolve, reject) {
+        // check for WebWorker support
+        if (window.Worker) {
+            // init webworker thread
+            var worker = new Worker(options.script);
+            worker.onmessage = function(e) {
+                // return result from the worker
+                if (e.data.err) {
+                    reject(e.data.err);
+                } else {
+                    resolve(e.data);
+                }
+            };
+            worker.onerror = function(e) {
+                // show error message in logger
+                axe.error('Error handling web worker: Line ' + e.lineno + ' in ' + e.filename + ': ' + e.message);
+                // return error
+                reject(e);
+            };
+            // send data to the worker
+            worker.postMessage(options.args);
             return;
-        };
-        // send data to the worker
-        worker.postMessage(options.args);
-        return;
-    }
+        }
 
-    // no WebWorker support... do synchronous call
-    var result;
-    try {
-        result = options.noWorker();
-    } catch (e) {
-        // return error
-        options.callback({
-            errMsg: (e.message) ? e.message : e
-        });
-        return;
-    }
-    options.callback(null, result);
-}
+        // no WebWorker support... do synchronous call
+        var result = options.noWorker();
+        resolve(result);
+    });
+};

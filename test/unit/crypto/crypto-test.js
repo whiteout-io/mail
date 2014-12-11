@@ -13,7 +13,7 @@ describe('Crypto unit tests', function() {
         ivSize = config.symIvSize;
 
     beforeEach(function() {
-        crypto = new Crypto();
+        crypto = new Crypto(qMock);
     });
 
     afterEach(function() {});
@@ -24,16 +24,14 @@ describe('Crypto unit tests', function() {
             var key = util.random(keySize);
             var iv = util.random(ivSize);
 
-            crypto.encrypt(plaintext, key, iv, function(err, ciphertext) {
-                expect(err).to.not.exist;
+            crypto.encrypt(plaintext, key, iv).then(function(ciphertext) {
                 expect(ciphertext).to.exist;
 
-                crypto.decrypt(ciphertext, key, iv, function(err, decrypted) {
-                    expect(err).to.not.exist;
-                    expect(decrypted).to.equal(plaintext);
+                return crypto.decrypt(ciphertext, key, iv);
+            }).then(function(decrypted) {
+                expect(decrypted).to.equal(plaintext);
 
-                    done();
-                });
+                done();
             });
         });
     });
@@ -42,14 +40,11 @@ describe('Crypto unit tests', function() {
         it('should work', function(done) {
             var salt = util.random(keySize);
 
-            crypto.deriveKey(password, salt, keySize, function(err, key) {
-                expect(err).to.not.exist;
+            crypto.deriveKey(password, salt, keySize).then(function(key) {
                 expect(util.base642Str(key).length * 8).to.equal(keySize);
-
                 done();
             });
         });
-
     });
 
 });
