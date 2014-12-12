@@ -61,11 +61,9 @@ var NavigationCtrl = function($scope, $location, account, email, outbox, notific
         }
 
         // navigate to folder[folderIndex]
-        if ($scope.account.folders && $scope.account.folders.length > folderIndex) {
-            // navigate to the selected folder index
-            $scope.state.nav.currentFolder = $scope.account.folders[folderIndex];
-            $scope.state.nav.toggle(false);
-        }
+        // navigate to the selected folder index
+        $scope.state.nav.currentFolder = $scope.account.folders[folderIndex];
+        $scope.state.nav.toggle(false);
     });
 
     // nav open/close state url watcher
@@ -137,7 +135,7 @@ var NavigationCtrl = function($scope, $location, account, email, outbox, notific
 
         // select inbox if not yet selected
         if (!$scope.state.nav.currentFolder) {
-            $location.search('folder', 0);
+            $scope.navigate(0);
         }
     });
 
