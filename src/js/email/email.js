@@ -1197,18 +1197,32 @@ Email.prototype.onConnect = function(options, callback) {
             // set status to online after setting cache to prevent race condition
             self._account.online = true;
 
-            // set up the imap client to listen for changes in the inbox
+            // by default, select the inbox (if there is one) after connecting the imap client. 
+            // this avoids race conditions between the listening imap connection and the one where the work is done
             var inbox = _.findWhere(self._account.folders, {
                 type: FOLDER_TYPE_INBOX
             });
 
             if (!inbox) {
+                // if there is no inbox, that's ok, too
                 return callback();
             }
 
-            self._imapClient.listenForChanges({
-                path: inbox.path
-            }, callback);
+            self.openFolder({
+                folder: inbox
+            }, function(err) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                // set up the imap client to listen for changes in the inbox
+                self._imapClient.listenForChanges({
+                    path: inbox.path
+                }, function() {});
+
+                callback();
+            });
         });
     });
 };

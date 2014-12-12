@@ -35,15 +35,36 @@ var NavigationCtrl = function($scope, $location, account, email, outbox, notific
     // url/history handling
     //
 
+    $scope.loc = $location;
+
     /**
      * Close read mode and go to folder
      */
     $scope.navigate = function(folderIndex) {
-        $location.search('uid', null);
-        $location.search('folder', folderIndex);
+        $location.search('uid', null); // close the read mode
+        $location.search('folder', folderIndex); // open the n-th folder
     };
 
-    $scope.loc = $location;
+    // folder index url watcher
+    $scope.$watch('(loc.search()).folder', function(folderIndex) {
+        if (!$scope.account.folders || !$scope.account.folders.length) {
+            // there's no folder to navigate to
+            return;
+        }
+
+        // normalize folder index to [0 ; $scope.account.folders.length - 1]
+        folderIndex = parseInt(folderIndex, 10);
+        if (isNaN(folderIndex) || folderIndex < 0 || folderIndex > ($scope.account.folders.length - 1)) {
+            // array index out of bounds or nonsensical data
+            $location.search('folder', 0);
+            return;
+        }
+
+        // navigate to folder[folderIndex]
+        // navigate to the selected folder index
+        $scope.state.nav.currentFolder = $scope.account.folders[folderIndex];
+        $scope.state.nav.toggle(false);
+    });
 
     // nav open/close state url watcher
     $scope.$watch('(loc.search()).nav', function(open) {
@@ -69,11 +90,6 @@ var NavigationCtrl = function($scope, $location, account, email, outbox, notific
     // scope functions
     //
 
-    $scope.openFolder = function(folder) {
-        $scope.state.nav.currentFolder = folder;
-        $scope.state.nav.toggle(false);
-    };
-
     $scope.onOutboxUpdate = function(err, count) {
         if (err) {
             dialog.error(err);
@@ -85,7 +101,6 @@ var NavigationCtrl = function($scope, $location, account, email, outbox, notific
             type: config.outboxMailboxType
         });
         ob.count = count;
-        $scope.$apply();
 
         email.refreshFolder({
             folder: ob
@@ -111,20 +126,6 @@ var NavigationCtrl = function($scope, $location, account, email, outbox, notific
     // init folders
     initializeFolders();
 
-    // folder index url watcher
-    $scope.$watch('(loc.search()).folder', function(folderIndex) {
-        if (typeof folderIndex === 'undefined') {
-            $location.search('folder', 0); // navigate to inbox by default
-            return;
-        }
-        // select current folder
-        folderIndex = typeof folderIndex === 'string' ? parseInt(folderIndex, 10) : folderIndex;
-        if ($scope.account.folders && $scope.account.folders.length > folderIndex) {
-            // navigate to the selected folder index
-            $scope.openFolder($scope.account.folders[folderIndex]);
-        }
-    });
-
     // connect imap/smtp clients on first startup
     account.onConnect(function(err) {
         if (err) {
@@ -134,8 +135,7 @@ var NavigationCtrl = function($scope, $location, account, email, outbox, notific
 
         // select inbox if not yet selected
         if (!$scope.state.nav.currentFolder) {
-            $scope.openFolder($scope.account.folders[0]);
-            $scope.$apply();
+            $scope.navigate(0);
         }
     });
 
@@ -155,17 +155,16 @@ var NavigationCtrl = function($scope, $location, account, email, outbox, notific
         $scope.$root.account = account.list()[0];
 
         // set notificatio handler for sent messages
-        outbox.onSent = sentNotification;
+        outbox.onSent = function(message) {
+            notification.create({
+                title: 'Message sent',
+                message: message.subject,
+                timeout: NOTIFICATION_SENT_TIMEOUT
+            }, function() {});
+        };
+
         // start checking outbox periodically
         outbox.startChecking($scope.onOutboxUpdate);
-    }
-
-    function sentNotification(message) {
-        notification.create({
-            title: 'Message sent',
-            message: message.subject,
-            timeout: NOTIFICATION_SENT_TIMEOUT
-        }, function() {});
     }
 };
 
