@@ -13,7 +13,7 @@ describe('Crypto unit tests', function() {
         ivSize = config.symIvSize;
 
     beforeEach(function() {
-        crypto = new Crypto(qMock);
+        crypto = new Crypto();
     });
 
     afterEach(function() {});

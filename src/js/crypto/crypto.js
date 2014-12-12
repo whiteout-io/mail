@@ -13,9 +13,7 @@ var aes = require('crypto-lib').aes,
  * High level crypto api that invokes native crypto (if available) and
  * gracefully degrades to JS crypto (if unavailable)
  */
-function Crypto($q) {
-    this._q = $q;
-}
+function Crypto() {}
 
 /**
  * Encrypt plaintext using AES-GCM.
@@ -25,7 +23,7 @@ function Crypto($q) {
  * @return {String} The base64 encoded ciphertext
  */
 Crypto.prototype.encrypt = function(plaintext, key, iv) {
-    return this._q(function(resolve) {
+    return new Promise(function(resolve) {
         var ct = aes.encrypt(plaintext, key, iv);
         resolve(ct);
     });
@@ -39,7 +37,7 @@ Crypto.prototype.encrypt = function(plaintext, key, iv) {
  * @return {String} The decrypted plaintext in UTF-16
  */
 Crypto.prototype.decrypt = function(ciphertext, key, iv) {
-    return this._q(function(resolve) {
+    return new Promise(function(resolve) {
         var pt = aes.decrypt(ciphertext, key, iv);
         resolve(pt);
     });
@@ -67,7 +65,7 @@ Crypto.prototype.deriveKey = function(password, salt, keySize) {
 //
 
 Crypto.prototype.startWorker = function(options) {
-    return this._q(function(resolve, reject) {
+    return new Promise(function(resolve, reject) {
         // check for WebWorker support
         if (window.Worker) {
             // init webworker thread

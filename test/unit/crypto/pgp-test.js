@@ -39,7 +39,7 @@ describe('PGP Crypto Api unit tests', function() {
         '-----END PGP PRIVATE KEY BLOCK-----\r\n';
 
     beforeEach(function() {
-        pgp = new PGP(qMock);
+        pgp = new PGP();
     });
 
     afterEach(function() {});

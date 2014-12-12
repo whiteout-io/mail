@@ -10,9 +10,7 @@ var util = openpgp.util,
 /**
  * High level crypto api that handles all calls to OpenPGP.js
  */
-function PGP($q) {
-    this._q = $q;
-
+function PGP() {
     openpgp.config.prefer_hash_algorithm = openpgp.enums.hash.sha256;
     openpgp.initWorker(config.workerPath + '/openpgp.worker.min.js');
 }
@@ -22,7 +20,7 @@ function PGP($q) {
  * @return {Promise}
  */
 PGP.prototype.generateKeys = function(options) {
-    return this._q(function(resolve) {
+    return new Promise(function(resolve) {
         var userId, passphrase;
 
         if (!util.emailRegEx.test(options.emailAddress) || !options.keySize) {
@@ -156,7 +154,7 @@ PGP.prototype.extractPublicKey = function(privateKeyArmored) {
  */
 PGP.prototype.importKeys = function(options) {
     var self = this;
-    return self._q(function(resolve) {
+    return new Promise(function(resolve) {
         var pubKeyId, privKeyId;
 
         // check options
@@ -202,7 +200,7 @@ PGP.prototype.importKeys = function(options) {
  */
 PGP.prototype.exportKeys = function() {
     var self = this;
-    return self._q(function(resolve) {
+    return new Promise(function(resolve) {
         if (!self._publicKey || !self._privateKey) {
             throw new Error('Could not export keys!');
         }
@@ -220,7 +218,7 @@ PGP.prototype.exportKeys = function() {
  * @return {Promise}
  */
 PGP.prototype.changePassphrase = function(options) {
-    return this._q(function(resolve) {
+    return new Promise(function(resolve) {
         var privKey, packets, newPassphrase, newKeyArmored;
 
         // set undefined instead of empty string as passphrase
@@ -273,7 +271,7 @@ PGP.prototype.changePassphrase = function(options) {
  */
 PGP.prototype.encrypt = function(plaintext, publicKeysArmored) {
     var self = this;
-    return self._q(function(resolve) {
+    return new Promise(function(resolve) {
         var publicKeys;
 
         // check keys
@@ -313,7 +311,7 @@ PGP.prototype.encrypt = function(plaintext, publicKeysArmored) {
  */
 PGP.prototype.decrypt = function(ciphertext, publicKeyArmored) {
     var self = this;
-    return self._q(function(resolve) {
+    return new Promise(function(resolve) {
         var publicKeys, message;
 
         // check keys
@@ -359,7 +357,7 @@ PGP.prototype.decrypt = function(ciphertext, publicKeyArmored) {
  */
 PGP.prototype.verifyClearSignedMessage = function(clearSignedText, publicKeyArmored) {
     var self = this;
-    return self._q(function(resolve) {
+    return new Promise(function(resolve) {
         var publicKeys, message;
 
         // check keys
@@ -401,7 +399,7 @@ PGP.prototype.verifyClearSignedMessage = function(clearSignedText, publicKeyArmo
  */
 PGP.prototype.verifySignedMessage = function(message, pgpSignature, publicKeyArmored) {
     var self = this;
-    return self._q(function(resolve) {
+    return new Promise(function(resolve) {
         var publicKeys, signatures;
 
         // check keys
