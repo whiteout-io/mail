@@ -59,11 +59,7 @@ Then visit [http://localhost:8580/dist/#/account?dev=true](http://localhost:8580
 
 ## Deploying Web App & Selfhosting
 
-The App can be used either as a Chrome Packaged App or just by hosting it on your own trusted web server. You can build the app from source or download a rebuilt version.
-
-### Download prebuild version
-
-Just download the most recent `*_webmail.zip` file under [releases](https://github.com/whiteout-io/mail-html5/releases)
+The App can be used either as a Chrome Packaged App or just by hosting it on your own trusted web server. You can build the app from source.
 
 ### Build from source
 
