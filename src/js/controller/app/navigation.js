@@ -113,7 +113,7 @@ var NavigationCtrl = function($scope, $location, account, email, outbox, notific
             message: str.logoutMessage,
             callback: function(confirm) {
                 if (confirm) {
-                    account.logout();
+                    account.logout().catch(dialog.error);
                 }
             }
         });

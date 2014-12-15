@@ -310,9 +310,10 @@ Auth.prototype._loadCredentials = function() {
 /**
  * Handles certificate updates and errors by notifying the user.
  * @param  {String}   component      Either imap or smtp
+ * @param  {Function} callback       The error handler
  * @param  {[type]}   pemEncodedCert The PEM encoded SSL certificate
  */
-Auth.prototype.handleCertificateUpdate = function(component, onConnect, pemEncodedCert) {
+Auth.prototype.handleCertificateUpdate = function(component, onConnect, callback, pemEncodedCert) {
     var self = this;
 
     axe.debug('new ssl certificate received: ' + pemEncodedCert);
@@ -321,7 +322,8 @@ Auth.prototype.handleCertificateUpdate = function(component, onConnect, pemEncod
         // no previous ssl cert, trust on first use
         self[component].ca = pemEncodedCert;
         self.credentialsDirty = true;
-        return self.storeCredentials();
+        self.storeCredentials().then(callback).catch(callback);
+        return;
     }
 
     if (self[component].ca === pemEncodedCert) {
@@ -330,26 +332,24 @@ Auth.prototype.handleCertificateUpdate = function(component, onConnect, pemEncod
     }
 
     // previous ssl cert known, does not match: query user and certificate
-    return new Promise(function() {
-        throw {
-            title: str.updateCertificateTitle,
-            message: str.updateCertificateMessage.replace('{0}', self[component].host),
-            positiveBtnStr: str.updateCertificatePosBtn,
-            negativeBtnStr: str.updateCertificateNegBtn,
-            showNegativeBtn: true,
-            faqLink: str.certificateFaqLink,
-            callback: function(granted) {
-                if (!granted) {
-                    return;
-                }
-
-                self[component].ca = pemEncodedCert;
-                self.credentialsDirty = true;
-                return self.storeCredentials().then(function() {
-                    return onConnect();
-                });
+    callback({
+        title: str.updateCertificateTitle,
+        message: str.updateCertificateMessage.replace('{0}', self[component].host),
+        positiveBtnStr: str.updateCertificatePosBtn,
+        negativeBtnStr: str.updateCertificateNegBtn,
+        showNegativeBtn: true,
+        faqLink: str.certificateFaqLink,
+        callback: function(granted) {
+            if (!granted) {
+                return;
             }
-        };
+
+            self[component].ca = pemEncodedCert;
+            self.credentialsDirty = true;
+            self.storeCredentials().then(function() {
+                onConnect(callback);
+            }).catch(callback);
+        }
     });
 };
 

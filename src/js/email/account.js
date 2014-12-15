@@ -41,7 +41,7 @@ Account.prototype.list = function() {
 /**
  * Fire up the database, retrieve the available keys for the user and initialize the email data access object
  */
-Account.prototype.init = function(options, callback) {
+Account.prototype.init = function(options) {
     var self = this;
 
     // account information for the email dao
@@ -53,68 +53,43 @@ Account.prototype.init = function(options, callback) {
 
     // Pre-Flight check: don't even start to initialize stuff if the email address is not valid
     if (!util.validateEmailAddress(options.emailAddress)) {
-        return callback(new Error('The user email address is invalid!'));
+        return new Promise(function() {
+            throw new Error('The user email address is invalid!');
+        });
     }
-
-    prepareDatabase();
 
     // Pre-Flight check: initialize and prepare user's local database
-    function prepareDatabase() {
-        self._accountStore.init(options.emailAddress, function(err) {
-            if (err) {
-                return callback(err);
-            }
+    return self._accountStore.init(options.emailAddress).then(function() {
+        // Migrate the databases if necessary
+        return self._updateHandler.update().catch(function(err) {
+            throw new Error('Updating the internal database failed. Please reinstall the app! Reason: ' + err.message);
+        });
 
-            // Migrate the databases if necessary
-            self._updateHandler.update(function(err) {
-                if (err) {
-                    return callback(new Error('Updating the internal database failed. Please reinstall the app! Reason: ' + err.message));
-                }
+    }).then(function() {
+        // retrieve keypair fom devicestorage/cloud, refresh public key if signup was incomplete before
+        return self._keychain.getUserKeyPair(options.emailAddress);
 
-                prepareKeys();
+    }).then(function(keys) {
+        // this is either a first start on a new device, OR a subsequent start without completing the signup,
+        // since we can't differenciate those cases here, do a public key refresh because it might be outdated
+        if (keys && keys.publicKey && !keys.privateKey) {
+            return self._keychain.refreshKeyForUserId({
+                userId: options.emailAddress,
+                overridePermission: true
+            }).then(function(publicKey) {
+                return {
+                    publicKey: publicKey
+                };
             });
+        }
+        // either signup was complete or no pubkey is available, so we're good here.
+        return keys;
 
-        });
-    }
-
-    // retrieve keypair fom devicestorage/cloud, refresh public key if signup was incomplete before
-    function prepareKeys() {
-        self._keychain.getUserKeyPair(options.emailAddress, function(err, keys) {
-            if (err) {
-                return callback(err);
-            }
-
-            // this is either a first start on a new device, OR a subsequent start without completing the signup,
-            // since we can't differenciate those cases here, do a public key refresh because it might be outdated
-            if (keys && keys.publicKey && !keys.privateKey) {
-                self._keychain.refreshKeyForUserId({
-                    userId: options.emailAddress,
-                    overridePermission: true
-                }, function(err, publicKey) {
-                    if (err) {
-                        return callback(err);
-                    }
-
-                    initEmailDao({
-                        publicKey: publicKey
-                    });
-                });
-                return;
-            }
-
-            // either signup was complete or no pubkey is available, so we're good here.
-            initEmailDao(keys);
-        });
-    }
-
-    function initEmailDao(keys) {
-        self._emailDao.init({
+    }).then(function(keys) {
+        // init the email data access object
+        return self._emailDao.init({
             account: account
-        }, function(err) {
-            if (err) {
-                return callback(err);
-            }
-
+        }).then(function() {
             // Handle offline and online gracefully ... arm dom event
             window.addEventListener('online', self.onConnect.bind(self));
             window.addEventListener('offline', self.onDisconnect.bind(self));
@@ -122,9 +97,9 @@ Account.prototype.init = function(options, callback) {
             // add account object to the accounts array for the ng controllers
             self._accounts.push(account);
 
-            callback(null, keys);
+            return keys;
         });
-    }
+    });
 };
 
 /**
@@ -140,7 +115,7 @@ Account.prototype.isOnline = function() {
 Account.prototype.onConnect = function(callback) {
     var self = this;
     var config = self._appConfig.config;
-    
+
     callback = callback || self._dialog.error;
 
     if (!self.isOnline() || !self._emailDao || !self._emailDao._account) {
@@ -148,16 +123,8 @@ Account.prototype.onConnect = function(callback) {
         return;
     }
 
-    self._auth.getCredentials(function(err, credentials) {
-        if (err) {
-            callback(err);
-            return;
-        }
-
-        initClients(credentials);
-    });
-
-    function initClients(credentials) {
+    // init imap/smtp clients
+    self._auth.getCredentials().then(function(credentials) {
         // add the maximum update batch size for imap folders to the imap configuration
         credentials.imap.maxUpdateSize = config.imapUpdateBatchSize;
 
@@ -170,16 +137,16 @@ Account.prototype.onConnect = function(callback) {
         pgpMailer.onError = onConnectionError;
 
         // certificate update handling
-        imapClient.onCert = self._auth.handleCertificateUpdate.bind(self._auth, 'imap', self.onConnect.bind(self)).catch(self._dialog.error);
-        pgpMailer.onCert = self._auth.handleCertificateUpdate.bind(self._auth, 'smtp', self.onConnect.bind(self)).catch(self._dialog.error);
+        imapClient.onCert = self._auth.handleCertificateUpdate.bind(self._auth, 'imap', self.onConnect.bind(self), self._dialog.error);
+        pgpMailer.onCert = self._auth.handleCertificateUpdate.bind(self._auth, 'smtp', self.onConnect.bind(self), self._dialog.error);
 
         // connect to clients
-        self._emailDao.onConnect({
+        return self._emailDao.onConnect({
             imapClient: imapClient,
             pgpMailer: pgpMailer,
             ignoreUploadOnSent: self._emailDao.checkIgnoreUploadOnSent(credentials.imap.host)
-        }, callback);
-    }
+        });
+    }).then(callback).catch(callback);
 
     function onConnectionError(error) {
         axe.debug('Connection error. Attempting reconnect in ' + config.reconnectInterval + ' ms. Error: ' + (error.errMsg || error.message) + (error.stack ? ('\n' + error.stack) : ''));
@@ -203,7 +170,7 @@ Account.prototype.onConnect = function(callback) {
  * Event handler that is called when the user agent goes offline.
  */
 Account.prototype.onDisconnect = function() {
-    this._emailDao.onDisconnect();
+    return this._emailDao.onDisconnect();
 };
 
 /**
@@ -211,28 +178,18 @@ Account.prototype.onDisconnect = function() {
  */
 Account.prototype.logout = function() {
     var self = this;
-
     // clear app config store
-    self._auth.logout(function(err) {
-        if (err) {
-            self._dialog.error(err);
-            return;
-        }
-
+    return self._auth.logout().then(function() {
         // delete instance of imap-client and pgp-mailer
-        self._emailDao.onDisconnect(function(err) {
-            if (err) {
-                self._dialog.error(err);
-                return;
-            }
+        return self._emailDao.onDisconnect();
 
-            if (typeof window.chrome !== 'undefined' && chrome.runtime && chrome.runtime.reload) {
-                // reload chrome app
-                chrome.runtime.reload();
-            } else {
-                // navigate to login
-                window.location.href = '/';
-            }
-        });
+    }).then(function() {
+        if (typeof window.chrome !== 'undefined' && chrome.runtime && chrome.runtime.reload) {
+            // reload chrome app
+            chrome.runtime.reload();
+        } else {
+            // navigate to login
+            window.location.href = '/';
+        }
     });
 };

@@ -311,7 +311,8 @@ describe('Auth unit tests', function() {
                 expect(storeCredentialsStub.callCount).to.equal(1);
                 done();
             }
-            auth.handleCertificateUpdate('imap', onConnectDummy, callback, dummyCert).then(callback);
+
+            auth.handleCertificateUpdate('imap', onConnectDummy, callback, dummyCert);
         });
 
         it('should work for stored cert', function() {
@@ -320,7 +321,10 @@ describe('Auth unit tests', function() {
             };
             storeCredentialsStub.returns(resolves());
 
-            auth.handleCertificateUpdate('imap', onConnectDummy, dummyCert);
+            function callback() {}
+
+            auth.handleCertificateUpdate('imap', onConnectDummy, callback, dummyCert);
+
             expect(storeCredentialsStub.callCount).to.equal(0);
         });
 
@@ -337,7 +341,8 @@ describe('Auth unit tests', function() {
                 expect(storeCredentialsStub.callCount).to.equal(0);
                 done();
             }
-            auth.handleCertificateUpdate('imap', onConnectDummy, dummyCert).catch(callback);
+
+            auth.handleCertificateUpdate('imap', onConnectDummy, callback, dummyCert);
         });
 
         it('should work for updated cert', function(done) {
@@ -351,14 +356,18 @@ describe('Auth unit tests', function() {
                     expect(err).to.exist;
                     expect(err.message).to.exist;
                     expect(storeCredentialsStub.callCount).to.equal(0);
-                    err.callback(true).then(function() {
-                        expect(storeCredentialsStub.callCount).to.equal(1);
-                        done();
-                    });
+                    err.callback(true);
+                } else {
+                    expect(storeCredentialsStub.callCount).to.equal(1);
+                    done();
                 }
             }
 
-            auth.handleCertificateUpdate('imap', onConnectDummy, dummyCert).catch(callback);
+            function onConnect(cb) {
+                cb();
+            }
+
+            auth.handleCertificateUpdate('imap', onConnect, callback, dummyCert);
         });
     });
 
