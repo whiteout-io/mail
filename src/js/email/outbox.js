@@ -56,8 +56,9 @@ Outbox.prototype.stopChecking = function() {
  * Put a email dto in the outbox for sending when ready
  * @param  {Object}   mail     The Email DTO
  * @param  {Function} callback Invoked when the object was encrypted and persisted to disk
+ * @returns {Promise}
  */
-Outbox.prototype.put = function(mail, callback) {
+Outbox.prototype.put = function(mail) {
     var self = this,
         allReaders = mail.from.concat(mail.to.concat(mail.cc.concat(mail.bcc))); // all the users that should be able to read the mail
 
@@ -66,67 +67,46 @@ Outbox.prototype.put = function(mail, callback) {
 
     // do not encrypt mails with a bcc recipient, due to a possible privacy leak
     if (mail.bcc.length > 0) {
-        storeAndForward(mail);
-        return;
+        return storeAndForward(mail);
     }
 
-    checkRecipients(allReaders);
+    return checkRecipients(allReaders).then(checkEncrypt);
 
     // check if there are unregistered recipients
     function checkRecipients(recipients) {
-        var after = _.after(recipients.length, function() {
-            checkEncrypt();
-        });
-
-        // find out if there are unregistered users
+        var pubkeyJobs = [];
         recipients.forEach(function(recipient) {
-            self._keychain.getReceiverPublicKey(recipient.address, function(err, key) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-
+            var promise = self._keychain.getReceiverPublicKey(recipient.address).then(function(key) {
                 // if a public key is available, add the recipient's key to the armored public keys,
                 // otherwise remember the recipient as unregistered for later sending
                 if (key) {
                     mail.publicKeysArmored.push(key.publicKey);
                 }
-
-                after();
             });
+            pubkeyJobs.push(promise);
         });
+
+        return Promise.all(pubkeyJobs);
     }
 
     function checkEncrypt() {
         // only encrypt if all recipients have public keys
         if (mail.publicKeysArmored.length < allReaders.length) {
-            storeAndForward(mail);
-            return;
+            return storeAndForward(mail);
         }
 
         // encrypts the body and attachments and persists the mail object
-        self._emailDao.encrypt({
+        return self._emailDao.encrypt({
             mail: mail,
             publicKeysArmored: mail.publicKeysArmored
-        }, function(err) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            storeAndForward(mail);
+        }).then(function() {
+            return storeAndForward(mail);
         });
     }
 
     function storeAndForward(mail) {
         // store in outbox
-        self._devicestorage.storeList([mail], outboxDb, function(err) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            callback();
+        return self._devicestorage.storeList([mail], outboxDb).then(function() {
             // don't wait for next round
             self._processOutbox(self._onUpdate);
         });
@@ -149,83 +129,63 @@ Outbox.prototype._processOutbox = function(callback) {
     self._outboxBusy = true;
 
     // get pending mails from the outbox
-    self._devicestorage.listItems(outboxDb, 0, null, function(err, pendingMails) {
-        // error, we're done here
-        if (err) {
-            self._outboxBusy = false;
-            callback(err);
+    self._devicestorage.listItems(outboxDb, 0, null).then(function(pendingMails) {
+        // if we're not online, don't even bother sending mails.
+        if (!self._emailDao._account.online || _.isEmpty(pendingMails)) {
+            unsentMails = pendingMails.length;
             return;
         }
 
-        // if we're not online, don't even bother sending mails.
-        if (!self._emailDao._account.online || _.isEmpty(pendingMails)) {
-            self._outboxBusy = false;
-            callback(null, pendingMails.length);
-            return;
-        }
+        var sendJobs = [];
+        // send pending mails if possible
+        pendingMails.forEach(function(mail) {
+            sendJobs.push(send(mail));
+        });
 
         // we're done after all the mails have been handled
         // update the outbox count...
-        var after = _.after(pendingMails.length, function() {
-            self._outboxBusy = false;
-            callback(null, unsentMails);
-        });
+        return Promise.all(sendJobs);
 
-        // send pending mails if possible
-        pendingMails.forEach(function(mail) {
-            send(mail, after);
-        });
+    }).then(function() {
+        self._outboxBusy = false;
+        callback(null, unsentMails);
+
+    }).catch(function(err) {
+        self._outboxBusy = false;
+        callback(err);
     });
 
     // send the message
-    function send(mail, done) {
-
+    function send(mail) {
         // check is email is to be sent encrypted or as plaintex
         if (mail.encrypted === true) {
             // email was already encrypted before persisting in outbox, tell pgpmailer to send encrypted and not encrypt again
-            self._emailDao.sendEncrypted({
+            return self._emailDao.sendEncrypted({
                 email: mail
-            }, onSend);
+            }).then(onSend).catch(sendFailed);
         } else {
             // send email as plaintext
-            self._emailDao.sendPlaintext({
+            return self._emailDao.sendPlaintext({
                 email: mail
-            }, onSend);
+            }).then(onSend).catch(sendFailed);
         }
 
-        function onSend(err) {
-            if (err) {
-                self._outboxBusy = false;
-                if (err.code === 42) {
-                    // offline try again later
-                    done();
-                } else {
-                    self._outboxBusy = false;
-                    callback(err);
-                }
-                return;
-            }
-
-            // remove the pending mail from the storage
-            removeFromStorage(mail, done);
-
+        function onSend() {
             // fire sent notification
             if (typeof self.onSent === 'function') {
                 self.onSent(mail);
             }
-        }
-    }
 
-    // removes the mail object from disk after successfully sending it
-    function removeFromStorage(mail, done) {
-        self._devicestorage.removeList(outboxDb + '_' + mail.uid, function(err) {
-            if (err) {
-                self._outboxBusy = false;
-                callback(err);
+            // removes the mail object from disk after successfully sending it
+            return self._devicestorage.removeList(outboxDb + '_' + mail.uid);
+        }
+
+        function sendFailed(err) {
+            if (err.code === 42) {
+                // offline. resolve promise and try again later
                 return;
             }
-
-            done();
-        });
+            throw err;
+        }
     }
 };
