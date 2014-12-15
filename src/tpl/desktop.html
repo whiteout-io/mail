@@ -1,5 +1,8 @@
 <div class="app" ng-class="{'app--show-aside': state.nav.open}">
-  <aside class="app__aside" ng-include="'tpl/nav.html'"></aside>
+  <aside class="app__aside">
+    <div class="app__aside-scroll" ng-include="'tpl/nav.html'"></div>
+    <footer class="nav-footer" ng-include="'tpl/status-display.html'"></footer>
+  </aside>
   <div class="app__container" ng-click="state.nav.toggle(false)">
     <header class="app__header" ng-include="'tpl/action-bar.html'"></header>
     <main class="app__main">
