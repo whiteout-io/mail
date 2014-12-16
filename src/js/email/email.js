@@ -134,7 +134,7 @@ Email.prototype.unlock = function(options) {
     }).then(setPrivateKey);
 
     function handleExistingKeypair(keypair) {
-        return new Promise(function() {
+        return new Promise(function(resolve) {
             var privKeyParams = self._pgp.getKeyParams(keypair.privateKey.encryptedKey);
             var pubKeyParams = self._pgp.getKeyParams(keypair.publicKey.publicKey);
 
@@ -154,6 +154,7 @@ Email.prototype.unlock = function(options) {
             if (!matchingPrivUserId || !matchingPubUserId || keypair.privateKey.userId !== self._account.emailAddress || keypair.publicKey.userId !== self._account.emailAddress) {
                 throw new Error('User IDs dont match!');
             }
+            resolve();
 
         }).then(function() {
             // import existing key pair into crypto module
@@ -189,7 +190,7 @@ Email.prototype.openFolder = function(options) {
             return;
         }
 
-        this._imapClient.selectMailbox({
+        self._imapClient.selectMailbox({
             path: options.folder.path
         }, function(err) {
             if (err) {
@@ -293,6 +294,10 @@ Email.prototype.fetchMessages = function(options) {
                 var promise = handleVerification(verificationMessage).then(function() {
                     // if verification worked, we remove the mail from the list.
                     messages.splice(messages.indexOf(verificationMessage), 1);
+                }).catch(function() {
+                    // if it was NOT a valid verification mail, do nothing
+                    // if an error occurred and the mail was a valid verification mail,
+                    // keep the mail in the list so the user can see it and verify manually
                 });
                 jobs.push(promise);
             });
@@ -808,7 +813,7 @@ Email.prototype.decryptBody = function(options) {
 
     }).then(function(pt) {
         if (!pt.decrypted) {
-            throw new Error('An error occurred during decryption.');
+            throw new Error('Error decrypting message.');
         }
 
         // if the decryption worked and signatures are present, everything's fine.
@@ -829,9 +834,22 @@ Email.prototype.decryptBody = function(options) {
         // parse the decrypted raw content in the mailparser
         return self._parse({
             bodyParts: [encryptedNode]
-        });
+        }).then(handleRaw);
 
-    }).then(function(root) {
+    }).then(function() {
+        self.done(); // stop the spinner
+        message.decryptingBody = false;
+        return message;
+
+    }).catch(function(err) {
+        self.done(); // stop the spinner
+        message.decryptingBody = false;
+        message.body = err.message; // display error msg in body
+        message.decrypted = true;
+        return message;
+    });
+
+    function handleRaw(root) {
         if (message.signed) {
             // message had a signature in the ciphertext, so we're done here
             return setBody(root);
@@ -854,20 +872,9 @@ Email.prototype.decryptBody = function(options) {
         return self._checkSignatures(message).then(function(signaturesValid) {
             message.signed = typeof signaturesValid !== 'undefined';
             message.signaturesValid = signaturesValid;
-            setBody(root);
+            return setBody(root);
         });
-
-    }).then(function(res) {
-        self.done(); // stop the spinner
-        message.decryptingBody = false;
-        return res;
-
-    }).catch(function(err) {
-        self.done(); // stop the spinner
-        message.decryptingBody = false;
-        message.body = err.message; // display error msg in body
-        message.decrypted = true;
-    });
+    }
 
     function setBody(root) {
         // we have successfully interpreted the descrypted message,
@@ -879,8 +886,8 @@ Email.prototype.decryptBody = function(options) {
             return attmt.mimeType === "application/pgp-signature";
         });
         inlineExternalImages(message);
-
         message.decrypted = true;
+        return message;
     }
 };
 
@@ -890,45 +897,35 @@ Email.prototype.decryptBody = function(options) {
  * @param {Object} options.email The message to be sent
  */
 Email.prototype.sendEncrypted = function(options) {
-    var self = this;
-    self.busy();
-    return new Promise(function(resolve) {
-        self.checkOnline();
-        resolve();
-
-    }).then(function() {
-        // mime encode, sign, encrypt and send email via smtp
-        return self._send({
-            encrypt: true,
-            smtpclient: options.smtpclient, // filled solely in the integration test, undefined in normal usage
-            mail: options.email,
-            publicKeysArmored: options.email.publicKeysArmored
-        });
-
-    }).then(function(rfcText) {
-        // try to upload to sent, but we don't actually care if the upload failed or not
-        // this should not negatively impact the process of sending
-        return self._uploadToSent({
-            message: rfcText
-        });
-
-    }).then(done).catch(done);
-
-    function done(err) {
-        self.done(); // stop the spinner
-        if (err) {
-            throw err;
-        }
-    }
+    // mime encode, sign, encrypt and send email via smtp
+    return this._sendGeneric({
+        encrypt: true,
+        smtpclient: options.smtpclient, // filled solely in the integration test, undefined in normal usage
+        mail: options.email,
+        publicKeysArmored: options.email.publicKeysArmored
+    });
 };
 
 /**
  * Sends a signed message in the plain
  *
  * @param {Object} options.email The message to be sent
- * @param {Function} callback(error) Invoked when the message was sent, or an error occurred
  */
 Email.prototype.sendPlaintext = function(options) {
+    // add suffix to plaintext mail
+    options.email.body += str.signature + config.cloudUrl + '/' + this._account.emailAddress;
+    // mime encode, sign and send email via smtp
+    return this._sendGeneric({
+        smtpclient: options.smtpclient, // filled solely in the integration test, undefined in normal usage
+        mail: options.email
+    });
+};
+
+/**
+ * This funtion wraps error handling for sending via pgpMailer and uploading to imap.
+ * @param {Object} options.email The message to be sent
+ */
+Email.prototype._sendGeneric = function(options) {
     var self = this;
     self.busy();
     return new Promise(function(resolve) {
@@ -936,21 +933,14 @@ Email.prototype.sendPlaintext = function(options) {
         resolve();
 
     }).then(function() {
-        // add suffix to plaintext mail
-        options.email.body += str.signature + config.cloudUrl + '/' + self._account.emailAddress;
-
-        // mime encode, sign and send email via smtp
-        return self._send({
-            smtpclient: options.smtpclient, // filled solely in the integration test, undefined in normal usage
-            mail: options.email
-        });
+        return self._mailerSend(options);
 
     }).then(function(rfcText) {
         // try to upload to sent, but we don't actually care if the upload failed or not
         // this should not negatively impact the process of sending
         return self._uploadToSent({
             message: rfcText
-        });
+        }).catch(function() {});
 
     }).then(done).catch(done);
 
@@ -1232,7 +1222,7 @@ Email.prototype._initFoldersFromImap = function() {
     self.busy(); // start the spinner
 
     // fetch list from imap server
-    return listWellknownFolder.then(function(wellKnownFolders) {
+    return listWellknownFolder().then(function(wellKnownFolders) {
         var foldersChanged = false, // indicates if we need to persist anything to disk
             imapFolders = []; // aggregate all the imap folders
 
@@ -1398,7 +1388,9 @@ Email.prototype._initMessagesFromDisk = function() {
         }));
     });
 
-    return Promise.all(jobs);
+    return Promise.all(jobs).then(function() {
+        return; // don't return promise array
+    });
 };
 
 Email.prototype.busy = function() {
@@ -1433,7 +1425,7 @@ Email.prototype._imapMark = function(options) {
         self.checkOnline();
 
         options.path = options.folder.path;
-        this._imapClient.updateFlags(options, function(err) {
+        self._imapClient.updateFlags(options, function(err) {
             if (err) {
                 reject(err);
             } else {
@@ -1453,36 +1445,41 @@ Email.prototype._imapMark = function(options) {
  */
 Email.prototype._imapDeleteMessage = function(options) {
     var self = this;
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
         self.checkOnline();
+        resolve();
 
+    }).then(function() {
         var trash = _.findWhere(self._account.folders, {
             type: FOLDER_TYPE_TRASH
         });
 
         // there's no known trash folder to move the mail to or we're in the trash folder, so we can purge the message
         if (!trash || options.folder === trash) {
-            self._imapClient.deleteMessage({
-                path: options.folder.path,
-                uid: options.uid
-            }, done);
-            return;
+            return imapDelete();
         }
 
-        self._imapMoveMessage({
+        return self._imapMoveMessage({
             folder: options.folder,
             destination: trash,
             uid: options.uid
-        }, done);
-
-        function done(err) {
-            if (err) {
-                reject(err);
-            } else {
-                resolve();
-            }
-        }
+        });
     });
+
+    function imapDelete() {
+        return new Promise(function(resolve, reject) {
+            self._imapClient.deleteMessage({
+                path: options.folder.path,
+                uid: options.uid
+            }, function(err) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    }
 };
 
 /**
@@ -1657,6 +1654,7 @@ Email.prototype._localDeleteMessage = function(options) {
  * @return {Promise}
  */
 Email.prototype._parse = function(options) {
+    var self = this;
     return new Promise(function(resolve, reject) {
         self._mailreader.parse(options, function(err, root) {
             if (err) {
@@ -1673,15 +1671,15 @@ Email.prototype._parse = function(options) {
  * @param  {Object} options The options to be passed to the pgpMailer
  * @return {Promise}
  */
-Email.prototype._send = function(options) {
+Email.prototype._mailerSend = function(options) {
     var self = this;
     return new Promise(function(resolve, reject) {
         self._pgpMailer.send(options, function(err, rfcText) {
             if (err) {
                 reject(err);
-                return;
+            } else {
+                resolve(rfcText);
             }
-            resolve(rfcText);
         });
     });
 };
@@ -1694,9 +1692,11 @@ Email.prototype._send = function(options) {
  */
 Email.prototype._uploadToSent = function(options) {
     var self = this;
-    return new Promise(function(resolve, reject) {
-        self.busy();
+    self.busy();
+    return new Promise(function(resolve) {
+        resolve();
 
+    }).then(function() {
         // upload the sent message to the sent folder if necessary
         var sentFolder = _.findWhere(self._account.folders, {
             type: FOLDER_TYPE_SENT
@@ -1704,23 +1704,20 @@ Email.prototype._uploadToSent = function(options) {
 
         // return for wrong usage
         if (self.ignoreUploadOnSent || !sentFolder || !options.message) {
-            self.done();
-            resolve();
             return;
         }
 
         // upload
-        self._imapUploadMessage({
+        return self._imapUploadMessage({
             folder: sentFolder,
             message: options.message
-        }, function(err) {
-            self.done();
-            if (err) {
-                reject(err);
-            } else {
-                resolve();
-            }
         });
+
+    }).then(function() {
+        self.done();
+    }).catch(function(err) {
+        self.done();
+        throw err;
     });
 };
 
@@ -1728,7 +1725,7 @@ Email.prototype._uploadToSent = function(options) {
  * Check if the client is online and throw an error if this is not the case.
  */
 Email.prototype.checkOnline = function() {
-    if (!self._account.online) {
+    if (!this._account.online) {
         var err = new Error('Client is currently offline!');
         err.code = 42;
         throw err;
