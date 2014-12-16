@@ -1,6 +1,6 @@
 'use strict';
 
-var LoginExistingCtrl = function($scope, $location, $routeParams, email, auth, pgp, keychain) {
+var LoginExistingCtrl = function($scope, $location, $routeParams, $q, email, auth, pgp, keychain) {
     !$routeParams.dev && !auth.isInitialized() && $location.path('/'); // init app
 
     $scope.incorrect = false;
@@ -11,31 +11,28 @@ var LoginExistingCtrl = function($scope, $location, $routeParams, email, auth, p
             return;
         }
 
-        $scope.busy = true;
-        $scope.errMsg = undefined; // reset error msg
-        $scope.incorrect = false;
+        var userId = auth.emailAddress,
+            keypair;
 
-        unlockCrypto();
-    };
+        return $q(function(resolve) {
+            $scope.busy = true;
+            $scope.errMsg = undefined; // reset error msg
+            $scope.incorrect = false;
+            resolve();
 
-    function unlockCrypto() {
-        var userId = auth.emailAddress;
-        // check if user already has a public key on the key server
-        keychain.getUserKeyPair(userId, function(err, keypair) {
-            if (err) {
-                $scope.displayError(err);
-                return;
-            }
+        }).then(function() {
+            // check if user already has a public key on the key server
+            return keychain.getUserKeyPair(userId);
 
-            keypair = keypair || {};
+        }).then(function(keys) {
+            keypair = keys || {};
 
             // extract public key from private key block if missing in key file
             if (!$scope.key.publicKeyArmored || $scope.key.publicKeyArmored.indexOf('-----BEGIN PGP PUBLIC KEY BLOCK-----') < 0) {
                 try {
                     $scope.key.publicKeyArmored = pgp.extractPublicKey($scope.key.privateKeyArmored);
                 } catch (e) {
-                    $scope.displayError(new Error('Error reading PGP key!'));
-                    return;
+                    throw new Error('Error reading PGP key!');
                 }
             }
 
@@ -45,8 +42,7 @@ var LoginExistingCtrl = function($scope, $location, $routeParams, email, auth, p
                 privKeyParams = pgp.getKeyParams($scope.key.privateKeyArmored);
                 pubKeyParams = pgp.getKeyParams($scope.key.publicKeyArmored);
             } catch (e) {
-                $scope.displayError(new Error('Error reading key params!'));
-                return;
+                throw new Error('Error reading key paramaters!');
             }
 
             // set parsed private key
@@ -68,43 +64,33 @@ var LoginExistingCtrl = function($scope, $location, $routeParams, email, auth, p
             }
 
             // import and validate keypair
-            email.unlock({
+            return email.unlock({
                 keypair: keypair,
                 passphrase: $scope.passphrase
-            }, function(err) {
-                if (err) {
-                    $scope.incorrect = true;
-                    $scope.displayError(err);
-                    return;
-                }
-
-                keychain.putUserKeyPair(keypair, onUnlock);
+            }).catch(function(err) {
+                $scope.incorrect = true;
+                throw err;
             });
-        });
-    }
 
-    function onUnlock(err) {
-        if (err) {
-            $scope.displayError(err);
-            return;
-        }
+        }).then(function() {
+            // perist keys locally
+            return keychain.putUserKeyPair(keypair);
 
-        auth.storeCredentials(function(err) {
-            if (err) {
-                $scope.displayError(err);
-                return;
-            }
+        }).then(function() {
+            // persist credentials locally
+            return auth.storeCredentials();
 
+        }).then(function() {
+            // go to main account screen
             $location.path('/account');
-            $scope.$apply();
-        });
-    }
 
-    $scope.displayError = function(err) {
+        }).catch(displayError);
+    };
+
+    function displayError(err) {
         $scope.busy = false;
         $scope.errMsg = err.errMsg || err.message;
-        $scope.$apply();
-    };
+    }
 };
 
 module.exports = LoginExistingCtrl;

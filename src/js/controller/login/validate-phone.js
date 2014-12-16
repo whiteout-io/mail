@@ -1,6 +1,6 @@
 'use strict';
 
-var ValidatePhoneCtrl = function($scope, $location, $routeParams, mailConfig, auth, admin) {
+var ValidatePhoneCtrl = function($scope, $location, $routeParams, $q, mailConfig, auth, admin) {
     !$routeParams.dev && !auth.isInitialized() && $location.path('/'); // init app
 
     $scope.validateUser = function() {
@@ -9,23 +9,25 @@ var ValidatePhoneCtrl = function($scope, $location, $routeParams, mailConfig, au
             return;
         }
 
-        $scope.busy = true;
-        $scope.errMsg = undefined; // reset error msg
+        return $q(function(resolve) {
+            $scope.busy = true;
+            $scope.errMsg = undefined; // reset error msg
+            resolve();
 
-        // verify user to REST api
-        admin.validateUser({
-            emailAddress: auth.emailAddress,
-            token: $scope.token.toUpperCase()
-        }, function(err) {
-            if (err) {
-                $scope.busy = false;
-                $scope.errMsg = err.errMsg || err.message;
-                $scope.$apply();
-                return;
-            }
+        }).then(function() {
+            // verify user to REST api
+            return admin.validateUser({
+                emailAddress: auth.emailAddress,
+                token: $scope.token.toUpperCase()
+            });
 
+        }).then(function() {
             // proceed to login
             $scope.login();
+
+        }).catch(function(err) {
+            $scope.busy = false;
+            $scope.errMsg = err.errMsg || err.message;
         });
     };
 

@@ -1,6 +1,6 @@
 'use strict';
 
-var LoginInitialCtrl = function($scope, $location, $routeParams, newsletter, email, auth) {
+var LoginInitialCtrl = function($scope, $location, $routeParams, $q, newsletter, email, auth) {
     !$routeParams.dev && !auth.isInitialized() && $location.path('/'); // init app
 
     var emailAddress = auth.emailAddress;
@@ -51,24 +51,23 @@ var LoginInitialCtrl = function($scope, $location, $routeParams, newsletter, ema
         // go to set keygen screen
         $scope.setState(states.PROCESSING);
 
-        email.unlock({
-            passphrase: undefined // generate key without passphrase
-        }, function(err) {
-            if (err) {
-                displayError(err);
-                return;
-            }
-
-            auth.storeCredentials(function(err) {
-                if (err) {
-                    displayError(err);
-                    return;
-                }
-
-                $location.path('/account');
-                $scope.$apply();
+        return $q(function(resolve) {
+            resolve();
+        }).then(function() {
+            // generate key without passphrase
+            return email.unlock({
+                passphrase: undefined
             });
-        });
+
+        }).then(function() {
+            // persist credentials locally
+            return auth.storeCredentials();
+
+        }).then(function() {
+            // go to main account screen
+            $location.path('/account');
+
+        }).catch(displayError);
     };
 
     $scope.setState = function(state) {
@@ -78,7 +77,6 @@ var LoginInitialCtrl = function($scope, $location, $routeParams, newsletter, ema
     function displayError(err) {
         $scope.setState(states.IDLE);
         $scope.errMsg = err.errMsg || err.message;
-        $scope.$apply();
     }
 };
 
