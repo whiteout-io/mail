@@ -192,11 +192,11 @@ Email.prototype.openFolder = function(options) {
 
         self._imapClient.selectMailbox({
             path: options.folder.path
-        }, function(err) {
+        }, function(err, folder) {
             if (err) {
                 reject(err);
             } else {
-                resolve();
+                resolve(folder);
             }
         });
     });
