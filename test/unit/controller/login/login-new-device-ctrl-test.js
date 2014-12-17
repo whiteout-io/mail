@@ -35,6 +35,7 @@ describe('Login (new device) Controller unit test', function() {
             ctrl = $controller(LoginNewDeviceCtrl, {
                 $scope: scope,
                 $routeParams: {},
+                $q: window.qMock,
                 email: emailMock,
                 auth: authMock,
                 pgp: pgpMock,
@@ -53,7 +54,7 @@ describe('Login (new device) Controller unit test', function() {
     });
 
     describe('confirm passphrase', function() {
-        it('should unlock crypto with a public key on the server', function() {
+        it('should unlock crypto with a public key on the server', function(done) {
             scope.passphrase = passphrase;
             scope.key = {
                 privateKeyArmored: 'b'
@@ -64,20 +65,21 @@ describe('Login (new device) Controller unit test', function() {
                 userIds: []
             });
 
-            keychainMock.getUserKeyPair.withArgs(emailAddress).yields(null, {
+            keychainMock.getUserKeyPair.withArgs(emailAddress).returns(resolves({
                 _id: keyId,
                 publicKey: 'a'
+            }));
+            emailMock.unlock.withArgs(sinon.match.any, passphrase).returns(resolves());
+            keychainMock.putUserKeyPair.returns(resolves());
+
+            scope.confirmPassphrase().then(function() {
+                expect(emailMock.unlock.calledOnce).to.be.true;
+                expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
+                done();
             });
-            emailMock.unlock.withArgs(sinon.match.any, passphrase).yields();
-            keychainMock.putUserKeyPair.yields();
-
-            scope.confirmPassphrase();
-
-            expect(emailMock.unlock.calledOnce).to.be.true;
-            expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
         });
 
-        it('should unlock crypto with no key on the server', function() {
+        it('should unlock crypto with no key on the server', function(done) {
             scope.passphrase = passphrase;
             scope.key = {
                 privateKeyArmored: 'b',
@@ -89,17 +91,18 @@ describe('Login (new device) Controller unit test', function() {
                 userIds: []
             });
 
-            keychainMock.getUserKeyPair.withArgs(emailAddress).yields();
-            emailMock.unlock.withArgs(sinon.match.any, passphrase).yields();
-            keychainMock.putUserKeyPair.yields();
+            keychainMock.getUserKeyPair.withArgs(emailAddress).returns(resolves());
+            emailMock.unlock.withArgs(sinon.match.any, passphrase).returns(resolves());
+            keychainMock.putUserKeyPair.returns(resolves());
 
-            scope.confirmPassphrase();
-
-            expect(emailMock.unlock.calledOnce).to.be.true;
-            expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
+            scope.confirmPassphrase().then(function() {
+                expect(emailMock.unlock.calledOnce).to.be.true;
+                expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
+                done();
+            });
         });
 
-        it('should not work when keypair upload fails', function() {
+        it('should not work when keypair upload fails', function(done) {
             scope.passphrase = passphrase;
             scope.key = {
                 privateKeyArmored: 'b'
@@ -110,24 +113,25 @@ describe('Login (new device) Controller unit test', function() {
                 userIds: []
             });
 
-            keychainMock.getUserKeyPair.withArgs(emailAddress).yields(null, {
+            keychainMock.getUserKeyPair.withArgs(emailAddress).returns(resolves({
                 _id: keyId,
                 publicKey: 'a'
-            });
-            emailMock.unlock.yields();
-            keychainMock.putUserKeyPair.yields({
+            }));
+            emailMock.unlock.returns(resolves());
+            keychainMock.putUserKeyPair.returns(rejects({
                 errMsg: 'yo mamma.'
+            }));
+
+            scope.confirmPassphrase().then(function() {
+                expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
+                expect(emailMock.unlock.calledOnce).to.be.true;
+                expect(keychainMock.putUserKeyPair.calledOnce).to.be.true;
+                expect(scope.errMsg).to.equal('yo mamma.');
+                done();
             });
-
-            scope.confirmPassphrase();
-
-            expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
-            expect(emailMock.unlock.calledOnce).to.be.true;
-            expect(keychainMock.putUserKeyPair.calledOnce).to.be.true;
-            expect(scope.errMsg).to.equal('yo mamma.');
         });
 
-        it('should not work when unlock fails', function() {
+        it('should not work when unlock fails', function(done) {
             scope.passphrase = passphrase;
             scope.key = {
                 privateKeyArmored: 'b'
@@ -138,36 +142,38 @@ describe('Login (new device) Controller unit test', function() {
                 userIds: []
             });
 
-            keychainMock.getUserKeyPair.withArgs(emailAddress).yields(null, {
+            keychainMock.getUserKeyPair.withArgs(emailAddress).returns(resolves({
                 _id: keyId,
                 publicKey: 'a'
-            });
-            emailMock.unlock.yields({
+            }));
+            emailMock.unlock.returns(rejects({
                 errMsg: 'yo mamma.'
+            }));
+
+            scope.confirmPassphrase().then(function() {
+                expect(scope.incorrect).to.be.true;
+                expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
+                expect(emailMock.unlock.calledOnce).to.be.true;
+                expect(scope.errMsg).to.equal('yo mamma.');
+                done();
             });
-
-            scope.confirmPassphrase();
-
-            expect(scope.incorrect).to.be.true;
-            expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
-            expect(emailMock.unlock.calledOnce).to.be.true;
-            expect(scope.errMsg).to.equal('yo mamma.');
         });
 
-        it('should not work when keypair retrieval', function() {
+        it('should not work when keypair retrieval', function(done) {
             scope.passphrase = passphrase;
             scope.key = {
                 privateKeyArmored: 'b'
             };
 
-            keychainMock.getUserKeyPair.withArgs(emailAddress).yields({
+            keychainMock.getUserKeyPair.withArgs(emailAddress).returns(rejects({
                 errMsg: 'yo mamma.'
+            }));
+
+            scope.confirmPassphrase().then(function() {
+                expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
+                expect(scope.errMsg).to.equal('yo mamma.');
+                done();
             });
-
-            scope.confirmPassphrase();
-
-            expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
-            expect(scope.errMsg).to.equal('yo mamma.');
         });
     });
 });

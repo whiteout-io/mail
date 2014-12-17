@@ -49,6 +49,10 @@ require('../src/js/email');
 // Global mocks
 //
 
+window.qMock = function(res, rej) {
+    return new Promise(res, rej);
+};
+
 window.resolves = function(val) {
     return new Promise(function(res) {
         res(val);

@@ -51,7 +51,7 @@ var AddAccountCtrl = function($scope, $location, $routeParams, $timeout, $q, mai
             callback: function(granted) {
                 if (granted) {
                     // query oauth token
-                    getOAuthToken();
+                    return getOAuthToken();
                 } else {
                     // use normal user/password login
                     $scope.setCredentials();
@@ -61,7 +61,7 @@ var AddAccountCtrl = function($scope, $location, $routeParams, $timeout, $q, mai
 
         function getOAuthToken() {
             // fetches the email address from the chrome identity api
-            auth.getOAuthToken().then(function() {
+            return auth.getOAuthToken().then(function() {
                 // continue to setting credentials
                 return $scope.setCredentials();
 

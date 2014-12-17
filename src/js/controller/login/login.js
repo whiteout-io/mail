@@ -1,30 +1,33 @@
 'use strict';
 
-var LoginCtrl = function($scope, $timeout, $location, updateHandler, account, auth, email, keychain, dialog) {
+var LoginCtrl = function($scope, $timeout, $location, updateHandler, account, auth, email, keychain, dialog, appConfig) {
 
-    // check for app update
-    updateHandler.checkForUpdate();
+    //
+    // Scope functions
+    //
 
-    // initialize the user account
-    auth.init().then(function() {
-        // get email address
-        return auth.getEmailAddress();
+    $scope.init = function() {
+        // initialize the user account
+        return auth.init().then(function() {
+            // get email address
+            return auth.getEmailAddress();
 
-    }).then(function(info) {
-        // check if account needs to be selected
-        if (!info.emailAddress) {
-            return $scope.goTo('/add-account');
-        }
+        }).then(function(info) {
+            // check if account needs to be selected
+            if (!info.emailAddress) {
+                return $scope.goTo('/add-account');
+            }
 
-        // initiate the account by initializing the email dao and user storage
-        return account.init({
-            emailAddress: info.emailAddress,
-            realname: info.realname
-        }).then(function(availableKeys) {
-            return redirect(availableKeys);
-        });
+            // initiate the account by initializing the email dao and user storage
+            return account.init({
+                emailAddress: info.emailAddress,
+                realname: info.realname
+            }).then(function(availableKeys) {
+                return redirect(availableKeys);
+            });
 
-    }).catch(dialog.error);
+        }).catch(dialog.error);
+    };
 
     function redirect(availableKeys) {
         if (availableKeys && availableKeys.publicKey && availableKeys.privateKey) {
@@ -32,15 +35,16 @@ var LoginCtrl = function($scope, $timeout, $location, updateHandler, account, au
             return email.unlock({
                 keypair: availableKeys,
                 passphrase: undefined
-            }).then(function() {
-                // no passphrase set... go to main screen
-                return auth.storeCredentials().then(function() {
-                    return $scope.goTo('/account');
-                });
-
             }).catch(function() {
                 // passphrase set... ask for passphrase
                 return $scope.goTo('/login-existing');
+
+            }).then(function() {
+                // no passphrase set... go to main screen
+                return auth.storeCredentials();
+
+            }).then(function() {
+                return $scope.goTo('/account');
             });
 
         } else if (availableKeys && availableKeys.publicKey && !availableKeys.privateKey) {
@@ -69,6 +73,19 @@ var LoginCtrl = function($scope, $timeout, $location, updateHandler, account, au
             $location.path(location);
         });
     };
+
+    //
+    // Start the app
+    //
+
+    // check for app update
+    updateHandler.checkForUpdate();
+
+    // init the app
+    if (!appConfig.preventAutoStart) {
+        $scope.init();
+    }
+
 };
 
 module.exports = LoginCtrl;

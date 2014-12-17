@@ -116,16 +116,17 @@ describe('Add Account Controller unit test', function() {
             setCredentialsStub.restore();
         });
 
-        it('should use oauth', function() {
+        it('should use oauth', function(done) {
             dialogStub.confirm = function(options) {
-                options.callback(true);
+                options.callback(true).then(function() {
+                    expect(setCredentialsStub.calledOnce).to.be.true;
+                    expect(authStub.getOAuthToken.calledOnce).to.be.true;
+                    done();
+                });
             };
-            authStub.getOAuthToken.yields();
+            authStub.getOAuthToken.returns(resolves());
 
             scope.oauthPossible();
-
-            expect(setCredentialsStub.calledOnce).to.be.true;
-            expect(authStub.getOAuthToken.calledOnce).to.be.true;
         });
 
         it('should not use oauth', function() {
@@ -139,25 +140,29 @@ describe('Add Account Controller unit test', function() {
             expect(authStub.getOAuthToken.called).to.be.false;
         });
 
-        it('should not forward to login when oauth fails', function() {
+        it('should not forward to login when oauth fails', function(done) {
+            dialogStub.error = function(err) {
+                expect(err).to.exist;
+                expect(setCredentialsStub.called).to.be.false;
+                done();
+            };
+
             dialogStub.confirm = function(options) {
                 options.callback(true);
             };
-            authStub.getOAuthToken.yields(new Error());
+            authStub.getOAuthToken.returns(rejects(new Error()));
 
             scope.oauthPossible();
-
-            expect(dialogStub.error.calledOnce).to.be.true;
-            expect(setCredentialsStub.called).to.be.false;
         });
     });
 
     describe('setCredentials', function() {
-        it('should work', function() {
-            scope.setCredentials();
+        it('should work', inject(function($timeout) {
+            scope.setCredentials().then();
+            $timeout.flush();
 
             expect(location.path.calledWith('/login-set-credentials')).to.be.true;
-        });
+        }));
     });
 
 });
