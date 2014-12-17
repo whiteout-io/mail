@@ -44,15 +44,15 @@ var LoginInitialCtrl = function($scope, $location, $routeParams, $q, newsletter,
             return;
         }
 
-        $scope.errMsg = undefined;
-
         // sing up to newsletter
         newsletter.signup(emailAddress, $scope.newsletter);
         // go to set keygen screen
         $scope.setState(states.PROCESSING);
 
         return $q(function(resolve) {
+            $scope.errMsg = undefined;
             resolve();
+
         }).then(function() {
             // generate key without passphrase
             return email.unlock({

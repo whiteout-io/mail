@@ -1,6 +1,6 @@
 'use strict';
 
-var AddAccountCtrl = function($scope, $location, $routeParams, mailConfig, auth, dialog) {
+var AddAccountCtrl = function($scope, $location, $routeParams, $timeout, $q, mailConfig, auth, dialog) {
     !$routeParams.dev && !auth.isInitialized() && $location.path('/'); // init app
 
     $scope.getAccountSettings = function() {
@@ -9,10 +9,15 @@ var AddAccountCtrl = function($scope, $location, $routeParams, mailConfig, auth,
             return;
         }
 
-        $scope.busy = true;
-        $scope.errMsg = undefined; // reset error msg
+        return $q(function(resolve) {
+            $scope.busy = true;
+            $scope.errMsg = undefined; // reset error msg
+            resolve();
 
-        return mailConfig.get($scope.emailAddress).then(function(config) {
+        }).then(function() {
+            return mailConfig.get($scope.emailAddress);
+
+        }).then(function(config) {
             $scope.busy = false;
             $scope.state.login = {
                 mailConfig: config,
@@ -22,10 +27,10 @@ var AddAccountCtrl = function($scope, $location, $routeParams, mailConfig, auth,
             var hostname = config.imap.hostname;
             if (auth.useOAuth(hostname)) {
                 // check for oauth support
-                $scope.oauthPossible();
+                return $scope.oauthPossible();
             } else {
                 // use standard password login
-                $scope.setCredentials();
+                return $scope.setCredentials();
             }
 
         }).catch(function() {
@@ -36,7 +41,7 @@ var AddAccountCtrl = function($scope, $location, $routeParams, mailConfig, auth,
 
     $scope.oauthPossible = function() {
         // ask user to use the platform's native OAuth api
-        dialog.confirm({
+        return dialog.confirm({
             title: 'Google Account Login',
             message: 'You are signing into a Google account. Would you like to sign in with Google or just continue with a password login?',
             positiveBtnStr: 'Google sign in',
@@ -50,25 +55,24 @@ var AddAccountCtrl = function($scope, $location, $routeParams, mailConfig, auth,
                 } else {
                     // use normal user/password login
                     $scope.setCredentials();
-                    $scope.$apply();
                 }
             }
         });
 
         function getOAuthToken() {
             // fetches the email address from the chrome identity api
-            auth.getOAuthToken(function(err) {
-                if (err) {
-                    return dialog.error(err);
-                }
-                $scope.setCredentials();
-                $scope.$apply();
-            });
+            auth.getOAuthToken().then(function() {
+                // continue to setting credentials
+                return $scope.setCredentials();
+
+            }).catch(dialog.error);
         }
     };
 
     $scope.setCredentials = function() {
-        $location.path('/login-set-credentials');
+        return $timeout(function() {
+            $location.path('/login-set-credentials');
+        });
     };
 };
 

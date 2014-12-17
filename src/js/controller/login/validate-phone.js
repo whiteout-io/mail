@@ -23,7 +23,7 @@ var ValidatePhoneCtrl = function($scope, $location, $routeParams, $q, mailConfig
 
         }).then(function() {
             // proceed to login
-            $scope.login();
+            return $scope.login();
 
         }).catch(function(err) {
             $scope.busy = false;
@@ -56,8 +56,7 @@ var ValidatePhoneCtrl = function($scope, $location, $routeParams, $q, mailConfig
             $location.path('/login');
 
         }).catch(function() {
-            $scope.busy = false;
-            $scope.errMsg = 'Error fetching IMAP settings!';
+            throw new Error('Error fetching IMAP settings!');
         });
     };
 };

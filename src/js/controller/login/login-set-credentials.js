@@ -4,7 +4,7 @@ var ENCRYPTION_METHOD_NONE = 0;
 var ENCRYPTION_METHOD_STARTTLS = 1;
 var ENCRYPTION_METHOD_TLS = 2;
 
-var SetCredentialsCtrl = function($scope, $location, $routeParams, auth, connectionDoctor) {
+var SetCredentialsCtrl = function($scope, $location, $routeParams, $q, auth, connectionDoctor) {
     !$routeParams.dev && !auth.isInitialized() && $location.path('/'); // init app
 
     //
@@ -82,19 +82,23 @@ var SetCredentialsCtrl = function($scope, $location, $routeParams, auth, connect
         connectionDoctor.configure(credentials);
 
         // run connection doctor test suite
-        $scope.busy = true;
-        connectionDoctor.check(function(err) {
-            if (err) {
-                // display the error in the settings UI
-                $scope.connectionError = err;
-            } else {
-                // persists the credentials and forwards to /login
-                auth.setCredentials(credentials);
-                $location.path('/login');
-            }
+        return $q(function(resolve) {
+            $scope.busy = true;
+            resolve();
 
+        }).then(function() {
+            return connectionDoctor.check();
+
+        }).then(function() {
+            // persists the credentials and forwards to /login
+            auth.setCredentials(credentials);
             $scope.busy = false;
-            $scope.$apply();
+            $location.path('/login');
+
+        }).catch(function(err) {
+            // display the error in the settings UI
+            $scope.connectionError = err;
+            $scope.busy = false;
         });
     };
 };
