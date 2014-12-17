@@ -1,0 +1,8 @@
+---
+title: Styleguide
+---
+
+{{#compose  src="src/img/icons/*.svg"}}
+    <svg role="presentation"><use xlink:href="#icon-{{stripFileExtension @filename}}" /></svg>
+    {{@filename}}
+{{/compose}}

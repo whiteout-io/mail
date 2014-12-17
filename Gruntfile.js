@@ -453,6 +453,27 @@ module.exports = function(grunt) {
             }
         },
 
+        // Styleguide
+
+        assemble: {
+            options: {
+                assets: '../',
+                layoutdir: 'src/styleguide/layouts',
+                layout: 'default.hbs',
+                partials: ['src/styleguide/blocks/**/*.hbs'],
+                helpers: [
+                    'handlebars-helper-compose',
+                    'src/styleguide/helpers/**/*.js'
+                ],
+                flatten: true
+            },
+            styleguide: {
+                files: [{
+                    'dist/styleguide/': ['src/styleguide/*.hbs']
+                }]
+            }
+        },
+
         // Development
 
         connect: {
@@ -610,6 +631,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-svgstore');
     grunt.loadNpmTasks('grunt-shell');
     grunt.loadNpmTasks('grunt-angular-templates');
+    grunt.loadNpmTasks('assemble');
 
     // Build tasks
     grunt.registerTask('dist-css', ['sass', 'autoprefixer', 'csso']);
