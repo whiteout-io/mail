@@ -32,19 +32,23 @@ var LoginCtrl = function($scope, $timeout, $location, updateHandler, account, au
     function redirect(availableKeys) {
         if (availableKeys && availableKeys.publicKey && availableKeys.privateKey) {
             // public and private key available, try empty passphrase
+            var passphraseIncorrect;
             return email.unlock({
                 keypair: availableKeys,
                 passphrase: undefined
             }).catch(function() {
+                passphraseIncorrect = true;
                 // passphrase set... ask for passphrase
                 return $scope.goTo('/login-existing');
 
             }).then(function() {
+                if (passphraseIncorrect) {
+                    return;
+                }
                 // no passphrase set... go to main screen
-                return auth.storeCredentials();
-
-            }).then(function() {
-                return $scope.goTo('/account');
+                return auth.storeCredentials().then(function() {
+                    return $scope.goTo('/account');
+                });
             });
 
         } else if (availableKeys && availableKeys.publicKey && !availableKeys.privateKey) {
