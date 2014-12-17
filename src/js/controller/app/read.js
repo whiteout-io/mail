@@ -4,7 +4,7 @@
 // Controller
 //
 
-var ReadCtrl = function($scope, $location, email, invitation, outbox, pgp, keychain, appConfig, download, auth, dialog) {
+var ReadCtrl = function($scope, $location, $q, email, invitation, outbox, pgp, keychain, appConfig, download, auth, dialog) {
 
     var str = appConfig.string;
 
@@ -52,25 +52,24 @@ var ReadCtrl = function($scope, $location, email, invitation, outbox, pgp, keych
             return;
         }
 
-        $scope.keyId = 'Searching...';
-        keychain.getReceiverPublicKey(address, function(err, pubkey) {
-            if (err) {
-                dialog.error(err);
-                return;
-            }
+        return $q(function(resolve) {
+            $scope.keyId = 'Searching...';
+            resolve();
 
+        }).then(function() {
+            return keychain.getReceiverPublicKey(address);
+
+        }).then(function(pubkey) {
             if (!pubkey) {
                 $scope.keyId = 'User has no key. Click to invite.';
-                $scope.$apply();
                 return;
             }
 
             var fpr = pgp.getFingerprint(pubkey.publicKey);
             var formatted = fpr.slice(32);
-
             $scope.keyId = 'PGP key: ' + formatted;
-            $scope.$apply();
-        });
+
+        }).catch(dialog.error);
     };
 
     $scope.$watch('state.mailList.selected', function(mail) {
@@ -89,24 +88,20 @@ var ReadCtrl = function($scope, $location, email, invitation, outbox, pgp, keych
     function checkPublicKey(user) {
         user.secure = undefined;
 
-        if (!keychain) {
-            return;
-        }
+        return $q(function(resolve) {
+            resolve();
 
-        keychain.getReceiverPublicKey(user.address, function(err, pubkey) {
-            if (err) {
-                dialog.error(err);
-                return;
-            }
+        }).then(function() {
+            return keychain.getReceiverPublicKey(user.address);
 
-            if (pubkey && pubkey.publicKey) {
+        }).then(function(pubkey) {
+            if (pubkey.publicKey) {
                 user.secure = true;
             } else {
                 user.secure = false;
             }
 
-            $scope.$apply();
-        });
+        }).catch(dialog.error);
     }
 
     $scope.download = function(attachment) {
@@ -122,11 +117,18 @@ var ReadCtrl = function($scope, $location, email, invitation, outbox, pgp, keych
 
         var folder = $scope.state.nav.currentFolder;
         var message = $scope.state.mailList.selected;
-        email.getAttachment({
-            folder: folder,
-            uid: message.uid,
-            attachment: attachment
-        }, dialog.error);
+
+        return $q(function(resolve) {
+            resolve();
+
+        }).then(function() {
+            return email.getAttachment({
+                folder: folder,
+                uid: message.uid,
+                attachment: attachment
+            });
+
+        }).catch(dialog.error);
     };
 
     $scope.invite = function(user) {
@@ -135,20 +137,20 @@ var ReadCtrl = function($scope, $location, email, invitation, outbox, pgp, keych
             return;
         }
 
-        $scope.keyId = 'Sending invitation...';
-
         var sender = auth.emailAddress,
             recipient = user.address;
 
-        invitation.invite({
-            recipient: recipient,
-            sender: sender
-        }, function(err) {
-            if (err) {
-                dialog.error(err);
-                return;
-            }
+        return $q(function(resolve) {
+            $scope.keyId = 'Sending invitation...';
+            resolve();
 
+        }).then(function() {
+            return invitation.invite({
+                recipient: recipient,
+                sender: sender
+            });
+
+        }).then(function() {
             var invitationMail = {
                 from: [{
                     address: sender
@@ -161,10 +163,10 @@ var ReadCtrl = function($scope, $location, email, invitation, outbox, pgp, keych
                 subject: str.invitationSubject,
                 body: str.invitationMessage
             };
-
             // send invitation mail
-            outbox.put(invitationMail, dialog.error);
-        });
+            return outbox.put(invitationMail);
+
+        }).catch(dialog.error);
     };
 };
 

@@ -218,34 +218,31 @@ var WriteCtrl = function($scope, $window, $filter, $q, appConfig, auth, keychain
             return;
         }
 
-        // keychain is undefined in local dev environment
-        if (keychain) {
-            // check if to address is contained in known public keys
-            // when we write an email, we always need to work with the latest keys available
-            keychain.refreshKeyForUserId({
+        // check if to address is contained in known public keys
+        // when we write an email, we always need to work with the latest keys available
+        return $q(function(resolve) {
+            resolve();
+
+        }).then(function() {
+            return keychain.refreshKeyForUserId({
                 userId: recipient.address
-            }, function(err, key) {
-                if (err) {
-                    dialog.error(err);
-                    return;
-                }
-
-                if (key) {
-                    // compare again since model could have changed during the roundtrip
-                    var matchingUserId = _.findWhere(key.userIds, {
-                        emailAddress: recipient.address
-                    });
-                    // compare either primary userId or (if available) multiple IDs
-                    if (key.userId === recipient.address || matchingUserId) {
-                        recipient.key = key;
-                        recipient.secure = true;
-                    }
-                }
-
-                $scope.checkSendStatus();
-                $scope.$digest();
             });
-        }
+
+        }).then(function(key) {
+            if (key) {
+                // compare again since model could have changed during the roundtrip
+                var matchingUserId = _.findWhere(key.userIds, {
+                    emailAddress: recipient.address
+                });
+                // compare either primary userId or (if available) multiple IDs
+                if (key.userId === recipient.address || matchingUserId) {
+                    recipient.key = key;
+                    recipient.secure = true;
+                }
+            }
+            $scope.checkSendStatus();
+
+        }).catch(dialog.error);
     };
 
     /**
@@ -347,12 +344,13 @@ var WriteCtrl = function($scope, $window, $filter, $q, appConfig, auth, keychain
         }
 
         // persist the email to disk for later sending
-        outbox.put(message, function(err) {
-            if (err) {
-                dialog.error(err);
-                return;
-            }
+        return $q(function(resolve) {
+            resolve();
 
+        }).then(function() {
+            return outbox.put(message);
+
+        }).then(function() {
             // if we need to synchronize replyTo.answered = true to imap,
             // let's do that. otherwise, we're done
             if (!$scope.replyTo || $scope.replyTo.answered) {
@@ -360,20 +358,16 @@ var WriteCtrl = function($scope, $window, $filter, $q, appConfig, auth, keychain
             }
 
             $scope.replyTo.answered = true;
-            email.setFlags({
+            return email.setFlags({
                 folder: currentFolder(),
                 message: $scope.replyTo
-            }, function(err) {
-                if (err && err.code !== 42) {
-                    dialog.error(err);
-                    return;
-                }
-
-                // offline or no error, let's apply the ui changes
-                $scope.$apply();
             });
-        });
 
+        }).catch(function(err) {
+            if (err.code !== 42) {
+                dialog.error(err);
+            }
+        });
     };
 
     //
@@ -389,37 +383,29 @@ var WriteCtrl = function($scope, $window, $filter, $q, appConfig, auth, keychain
     };
 
     $scope.lookupAddressBook = function(query) {
-        var deferred = $q.defer();
+        return $q(function(resolve) {
+            resolve();
 
-        if (!$scope.addressBookCache) {
+        }).then(function() {
+            if ($scope.addressBookCache) {
+                return;
+            }
             // populate address book cache
-            keychain.listLocalPublicKeys(function(err, keys) {
-                if (err) {
-                    dialog.error(err);
-                    return;
-                }
-
+            return keychain.listLocalPublicKeys().then(function(keys) {
                 $scope.addressBookCache = keys.map(function(key) {
                     return {
                         address: key.userId
                     };
                 });
-                filter();
             });
 
-        } else {
-            filter();
-        }
-
-        // query address book cache
-        function filter() {
-            var addresses = $scope.addressBookCache.filter(function(i) {
+        }).then(function() {
+            // filter the address book cache
+            return $scope.addressBookCache.filter(function(i) {
                 return i.address.indexOf(query) !== -1;
             });
-            deferred.resolve(addresses);
-        }
 
-        return deferred.promise;
+        }).catch(dialog.error);
     };
 
     //

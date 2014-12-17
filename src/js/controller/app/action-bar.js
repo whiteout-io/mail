@@ -2,7 +2,7 @@
 
 var JUNK_FOLDER_TYPE = 'Junk';
 
-var ActionBarCtrl = function($scope, email, dialog, status) {
+var ActionBarCtrl = function($scope, $q, email, dialog, status) {
 
     //
     // scope functions
@@ -23,24 +23,28 @@ var ActionBarCtrl = function($scope, email, dialog, status) {
         // show message
         status.update('Moving message...');
 
-        email.moveMessage({
-            folder: currentFolder(),
-            destination: destination,
-            message: message
-        }, function(err) {
-            if (err) {
-                // show errors where appropriate
-                if (err.code === 42) {
-                    $scope.select(message);
-                    status.update('Unable to move message in offline mode!');
-                    return;
-                }
-                status.update('Error during move!');
-                dialog.error(err);
+        return $q(function(resolve) {
+            resolve();
+
+        }).then(function() {
+            return email.moveMessage({
+                folder: currentFolder(),
+                destination: destination,
+                message: message
+            });
+
+        }).then(function() {
+            status.update('Online');
+
+        }).catch(function(err) {
+            // show errors where appropriate
+            if (err.code === 42) {
+                $scope.select(message);
+                status.update('Unable to move message in offline mode!');
                 return;
             }
-            status.update('Message moved.');
-            $scope.$apply();
+            status.update('Error during move!');
+            return dialog.error(err);
         });
     };
 
@@ -83,23 +87,27 @@ var ActionBarCtrl = function($scope, email, dialog, status) {
         status.setReading(false);
         status.update('Deleting message...');
 
-        email.deleteMessage({
-            folder: currentFolder(),
-            message: message
-        }, function(err) {
-            if (err) {
-                // show errors where appropriate
-                if (err.code === 42) {
-                    $scope.select(message);
-                    status.update('Unable to delete message in offline mode!');
-                    return;
-                }
-                status.update('Error during delete!');
-                dialog.error(err);
+        return $q(function(resolve) {
+            resolve();
+
+        }).then(function() {
+            return email.deleteMessage({
+                folder: currentFolder(),
+                message: message
+            });
+
+        }).then(function() {
+            status.update('Online');
+
+        }).catch(function(err) {
+            // show errors where appropriate
+            if (err.code === 42) {
+                $scope.select(message);
+                status.update('Unable to delete message in offline mode!');
                 return;
             }
-            status.update('Message deleted.');
-            $scope.$apply();
+            status.update('Error during delete!');
+            return dialog.error(err);
         });
     };
 
@@ -130,25 +138,29 @@ var ActionBarCtrl = function($scope, email, dialog, status) {
 
         var originalState = message.unread;
         message.unread = unread;
-        email.setFlags({
-            folder: currentFolder(),
-            message: message
-        }, function(err) {
-            if (err && err.code === 42) {
+
+        return $q(function(resolve) {
+            resolve();
+
+        }).then(function() {
+            return email.setFlags({
+                folder: currentFolder(),
+                message: message
+            });
+
+        }).then(function() {
+            status.update('Online');
+
+        }).catch(function(err) {
+            if (err.code === 42) {
                 // offline, restore
                 message.unread = originalState;
                 status.update('Unable to mark message in offline mode!');
                 return;
             }
 
-            if (err) {
-                status.update('Error on sync!');
-                dialog.error(err);
-                return;
-            }
-
-            status.update('Online');
-            $scope.$apply();
+            status.update('Error on sync!');
+            return dialog.error(err);
         });
     };
 
@@ -176,25 +188,29 @@ var ActionBarCtrl = function($scope, email, dialog, status) {
 
         var originalState = message.flagged;
         message.flagged = flagged;
-        email.setFlags({
-            folder: currentFolder(),
-            message: message
-        }, function(err) {
-            if (err && err.code === 42) {
+
+        return $q(function(resolve) {
+            resolve();
+
+        }).then(function() {
+            return email.setFlags({
+                folder: currentFolder(),
+                message: message
+            });
+
+        }).then(function() {
+            status.update('Online');
+
+        }).catch(function(err) {
+            if (err.code === 42) {
                 // offline, restore
                 message.unread = originalState;
                 status.update('Unable to ' + (flagged ? 'add star to' : 'remove star from') + ' message in offline mode!');
                 return;
             }
 
-            if (err) {
-                status.update('Error on sync!');
-                dialog.error(err);
-                return;
-            }
-
-            status.update('Online');
-            $scope.$apply();
+            status.update('Error on sync!');
+            return dialog.error(err);
         });
     };
 
@@ -208,11 +224,26 @@ var ActionBarCtrl = function($scope, email, dialog, status) {
         });
     };
 
+    /**
+     * This method is called when the user changes the searchText
+     */
+    $scope.displaySearchResults = function(searchText) {
+        $scope.$root.$broadcast('search', searchText);
+    };
+
+    //
+    // scope state
+    //
+
     // share local scope functions with root state
     $scope.state.actionBar = {
         markMessage: $scope.markMessage,
         flagMessage: $scope.flagMessage
     };
+
+    //
+    // Helper functions
+    //
 
     function currentFolder() {
         return $scope.state.nav.currentFolder;
@@ -223,13 +254,6 @@ var ActionBarCtrl = function($scope, email, dialog, status) {
             return message.checked;
         });
     }
-
-    /**
-     * This method is called when the user changes the searchText
-     */
-    $scope.displaySearchResults = function(searchText) {
-        $scope.$root.$broadcast('search', searchText);
-    };
 };
 
 module.exports = ActionBarCtrl;
