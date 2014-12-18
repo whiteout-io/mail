@@ -497,10 +497,14 @@ module.exports = function(grunt) {
         watch: {
             css: {
                 files: ['src/sass/**/*.scss'],
-                tasks: ['dist-css', 'manifest']
+                tasks: ['dist-css', 'dist-styleguide', 'manifest']
+            },
+            styleguide: {
+                files: ['src/styleguide/**/*.hbs', 'src/styleguide/**/*.js'],
+                tasks: ['dist-styleguide']
             },
             jsApp: {
-                files: ['src/js/**/*.js', 'src/**/*.html'],
+                files: ['src/js/**/*.js', 'src/*.html', 'src/tpl/**/*.html'],
                 tasks: ['dist-js-app']
             },
             jsUnitTest: {
@@ -513,14 +517,14 @@ module.exports = function(grunt) {
             },
             icons: {
                 files: ['src/index.html', 'src/img/icons/*.svg', '!src/img/icons/all.svg'],
-                tasks: ['svgmin', 'svgstore', 'string-replace', 'manifest']
+                tasks: ['svgmin', 'svgstore', 'string-replace', 'dist-styleguide', 'manifest']
             },
             lib: {
                 files: ['src/lib/**/*.js'],
                 tasks: ['copy:lib', 'manifest']
             },
             app: {
-                files: ['src/*.js', 'src/**/*.html', 'src/**/*.json', 'src/manifest.*', 'src/img/**/*', 'src/font/**/*'],
+                files: ['src/*.js', 'src/*.html', 'src/tpl/**/*.html', 'src/**/*.json', 'src/manifest.*', 'src/img/**/*', 'src/font/**/*'],
                 tasks: ['copy:app', 'copy:tpl', 'copy:img', 'copy:font', 'manifest-dev', 'manifest']
             }
         },
@@ -662,7 +666,8 @@ module.exports = function(grunt) {
     ]);
     grunt.registerTask('dist-copy', ['copy']);
     grunt.registerTask('dist-assets', ['svgmin', 'svgstore', 'string-replace']);
-    grunt.registerTask('dist', ['clean:dist', 'shell', 'dist-css', 'dist-js', 'dist-assets', 'dist-copy', 'manifest']);
+    grunt.registerTask('dist-styleguide', ['assemble:styleguide']);
+    grunt.registerTask('dist', ['clean:dist', 'shell', 'dist-css', 'dist-js', 'dist-assets', 'dist-copy', 'dist-styleguide', 'manifest']);
 
     // Test/Dev tasks
     grunt.registerTask('dev', ['connect:dev']);
