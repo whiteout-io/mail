@@ -52,6 +52,9 @@ var PrivateKeyUploadCtrl = function($scope, $q, keychain, pgp, dialog, auth) {
                 keyId: keyParams._id
             });
 
+        }).then(function(privateKeySynced) {
+            return privateKeySynced ? privateKeySynced : undefined;
+
         }).catch(dialog.error);
     };
 

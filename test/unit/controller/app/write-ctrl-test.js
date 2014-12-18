@@ -36,6 +36,7 @@ describe('Write controller unit test', function() {
             scope.state = {};
             ctrl = $controller(WriteCtrl, {
                 $scope: scope,
+                $q: window.qMock,
                 auth: authMock,
                 keychain: keychainMock,
                 pgp: pgpMock,
@@ -183,24 +184,25 @@ describe('Write controller unit test', function() {
             expect(keychainMock.getReceiverPublicKey.called).to.be.false;
         });
 
-        it('should not work for error in keychain', function() {
+        it('should not work for error in keychain', function(done) {
             var recipient = {
                 address: 'asds@example.com'
             };
 
             keychainMock.refreshKeyForUserId.withArgs({
                 userId: recipient.address
-            }).yields({
+            }).returns(rejects({
                 errMsg: '404 not found yadda yadda'
+            }));
+
+            scope.verify(recipient).then(function() {
+                expect(dialogMock.error.calledOnce).to.be.true;
+                expect(recipient.key).to.be.undefined;
+                expect(recipient.secure).to.be.false;
+                expect(scope.checkSendStatus.callCount).to.equal(1);
+                expect(keychainMock.refreshKeyForUserId.calledOnce).to.be.true;
+                done();
             });
-
-            scope.verify(recipient);
-
-            expect(dialogMock.error.calledOnce).to.be.true;
-            expect(recipient.key).to.be.undefined;
-            expect(recipient.secure).to.be.false;
-            expect(scope.checkSendStatus.callCount).to.equal(1);
-            expect(keychainMock.refreshKeyForUserId.calledOnce).to.be.true;
         });
 
         it('should work for main userId', function(done) {
@@ -210,11 +212,11 @@ describe('Write controller unit test', function() {
 
             keychainMock.refreshKeyForUserId.withArgs({
                 userId: recipient.address
-            }).yields(null, {
+            }).returns(resolves({
                 userId: 'asdf@example.com'
-            });
+            }));
 
-            scope.$digest = function() {
+            scope.verify(recipient).then(function() {
                 expect(recipient.key).to.deep.equal({
                     userId: 'asdf@example.com'
                 });
@@ -222,9 +224,7 @@ describe('Write controller unit test', function() {
                 expect(scope.checkSendStatus.callCount).to.equal(2);
                 expect(keychainMock.refreshKeyForUserId.calledOnce).to.be.true;
                 done();
-            };
-
-            scope.verify(recipient);
+            });
         });
 
         it('should work for secondary userId', function(done) {
@@ -240,17 +240,15 @@ describe('Write controller unit test', function() {
 
             keychainMock.refreshKeyForUserId.withArgs({
                 userId: recipient.address
-            }).yields(null, key);
+            }).returns(resolves(key));
 
-            scope.$digest = function() {
+            scope.verify(recipient).then(function() {
                 expect(recipient.key).to.deep.equal(key);
                 expect(recipient.secure).to.be.true;
                 expect(scope.checkSendStatus.callCount).to.equal(2);
                 expect(keychainMock.refreshKeyForUserId.calledOnce).to.be.true;
                 done();
-            };
-
-            scope.verify(recipient);
+            });
         });
     });
 
@@ -311,7 +309,7 @@ describe('Write controller unit test', function() {
     });
 
     describe('send to outbox', function() {
-        it('should work', function() {
+        it('should work', function(done) {
             scope.to = [{
                 address: 'pity@dafool'
             }];
@@ -341,25 +339,26 @@ describe('Write controller unit test', function() {
                 expect(mail.sentDate).to.exist;
 
                 return true;
-            })).yields();
-            emailMock.setFlags.yields();
+            })).returns(resolves());
+            emailMock.setFlags.returns(resolves());
 
-            scope.sendToOutbox();
-
-            expect(statusMock.setReading.withArgs(false).calledOnce).to.be.true;
-            expect(outboxMock.put.calledOnce).to.be.true;
-            expect(emailMock.setFlags.calledOnce).to.be.true;
-            expect(scope.state.lightbox).to.be.undefined;
-            expect(scope.replyTo.answered).to.be.true;
+            scope.sendToOutbox().then(function() {
+                expect(statusMock.setReading.withArgs(false).calledOnce).to.be.true;
+                expect(outboxMock.put.calledOnce).to.be.true;
+                expect(emailMock.setFlags.calledOnce).to.be.true;
+                expect(scope.state.lightbox).to.be.undefined;
+                expect(scope.replyTo.answered).to.be.true;
+                done();
+            });
         });
     });
 
     describe('lookupAddressBook', function() {
         it('should work', function(done) {
-            keychainMock.listLocalPublicKeys.yields(null, [{
+            keychainMock.listLocalPublicKeys.returns(resolves([{
                 userId: 'test@asdf.com',
                 publicKey: 'KEY'
-            }]);
+            }]));
 
             var result = scope.lookupAddressBook('test');
 
@@ -369,7 +368,6 @@ describe('Write controller unit test', function() {
                 }]);
                 done();
             });
-            scope.$digest();
         });
 
         it('should work with cache', function(done) {
@@ -387,7 +385,6 @@ describe('Write controller unit test', function() {
                 }]);
                 done();
             });
-            scope.$digest();
         });
     });
 

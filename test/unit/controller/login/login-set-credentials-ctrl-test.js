@@ -40,6 +40,7 @@ describe('Login (Set Credentials) Controller unit test', function() {
             setCredentialsCtrl = $controller(SetCredentialsCtrl, {
                 $scope: scope,
                 $routeParams: {},
+                $q: window.qMock,
                 auth: auth,
                 connectionDoctor: doctor
             });
@@ -49,7 +50,7 @@ describe('Login (Set Credentials) Controller unit test', function() {
     afterEach(function() {});
 
     describe('set credentials', function() {
-        it('should work', function() {
+        it('should work', function(done) {
             scope.emailAddress = 'emailemailemailemail';
             scope.password = 'passwdpasswdpasswdpasswd';
             scope.smtpHost = 'hosthosthost';
@@ -80,14 +81,16 @@ describe('Login (Set Credentials) Controller unit test', function() {
                 }
             };
 
-            doctor.check.yields(); // synchronous yields!
+            doctor.check.returns(resolves()); // synchronous yields!
 
-            scope.test();
+            scope.test().then(function() {
+                expect(doctor.check.calledOnce).to.be.true;
+                expect(doctor.configure.calledOnce).to.be.true;
+                expect(doctor.configure.calledWith(expectedCredentials)).to.be.true;
+                expect(auth.setCredentials.calledOnce).to.be.true;
+                done();
+            });
 
-            expect(doctor.check.calledOnce).to.be.true;
-            expect(doctor.configure.calledOnce).to.be.true;
-            expect(doctor.configure.calledWith(expectedCredentials)).to.be.true;
-            expect(auth.setCredentials.calledOnce).to.be.true;
         });
     });
 });

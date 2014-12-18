@@ -34,6 +34,7 @@ describe('Validate Phone Controller unit test', function() {
                 $location: location,
                 $scope: scope,
                 $routeParams: {},
+                $q: window.qMock,
                 mailConfig: mailConfigMock,
                 auth: authStub,
                 admin: adminStub
@@ -59,55 +60,53 @@ describe('Validate Phone Controller unit test', function() {
         it('should fail to error creating user', function(done) {
             scope.form.$invalid = false;
             scope.token = 'asfd';
-            adminStub.validateUser.yieldsAsync(new Error('asdf'));
+            adminStub.validateUser.returns(rejects(new Error('asdf')));
 
-            scope.$apply = function() {
+            scope.validateUser().then(function() {
                 expect(scope.busy).to.be.false;
                 expect(scope.errMsg).to.equal('asdf');
                 expect(adminStub.validateUser.calledOnce).to.be.true;
                 done();
-            };
+            });
 
-            scope.validateUser();
             expect(scope.busy).to.be.true;
         });
 
         it('should work', function(done) {
             scope.form.$invalid = false;
             scope.token = 'asfd';
-            adminStub.validateUser.yieldsAsync();
+            adminStub.validateUser.returns(resolves());
 
-            scope.login = function() {
+            scope.login = function() {};
+
+            scope.validateUser().then(function() {
                 expect(scope.busy).to.be.true;
                 expect(scope.errMsg).to.be.undefined;
                 expect(adminStub.validateUser.calledOnce).to.be.true;
                 done();
-            };
+            });
 
-            scope.validateUser();
             expect(scope.busy).to.be.true;
         });
     });
 
     describe('login', function() {
-        it('should work', inject(function($q, $rootScope) {
+        it('should work', function(done) {
             scope.form.$invalid = false;
             authStub.setCredentials.returns();
 
-            var deferred = $q.defer();
-            sinon.stub(mailConfigMock, 'get').returns(deferred.promise);
-            deferred.resolve({
+            sinon.stub(mailConfigMock, 'get').returns(resolves({
                 imap: {},
                 smtp: {}
+            }));
+
+            scope.login().then(function() {
+                expect(mailConfigMock.get.calledOnce).to.be.true;
+                expect(authStub.setCredentials.calledOnce).to.be.true;
+                expect(location.path.calledWith('/login')).to.be.true;
+                done();
             });
-
-            scope.login();
-
-            $rootScope.$apply();
-            expect(mailConfigMock.get.calledOnce).to.be.true;
-            expect(authStub.setCredentials.calledOnce).to.be.true;
-            expect(location.path.calledWith('/login')).to.be.true;
-        }));
+        });
     });
 
 });

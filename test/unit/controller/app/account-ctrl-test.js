@@ -43,6 +43,7 @@ describe('Account Controller unit test', function() {
             scope.state = {};
             accountCtrl = $controller(AccountCtrl, {
                 $scope: scope,
+                $q: window.qMock,
                 auth: authStub,
                 keychain: keychainStub,
                 pgp: pgpStub,
@@ -63,8 +64,8 @@ describe('Account Controller unit test', function() {
         });
     });
     describe('export to key file', function() {
-        it('should work', function() {
-            keychainStub.getUserKeyPair.withArgs(emailAddress).yields(null, {
+        it('should work', function(done) {
+            keychainStub.getUserKeyPair.withArgs(emailAddress).returns(resolves({
                 publicKey: {
                     _id: dummyKeyId,
                     publicKey: 'a'
@@ -72,24 +73,26 @@ describe('Account Controller unit test', function() {
                 privateKey: {
                     encryptedKey: 'b'
                 }
-            });
+            }));
             downloadStub.createDownload.withArgs(sinon.match(function(arg) {
                 return arg.content === 'a\r\nb' && arg.filename === 'whiteout_mail_' + emailAddress + '_' + expectedKeyId + '.asc' && arg.contentType === 'text/plain';
             })).returns();
 
-            scope.exportKeyFile();
-
-            expect(scope.state.lightbox).to.equal(undefined);
-            expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
-            expect(downloadStub.createDownload.calledOnce).to.be.true;
+            scope.exportKeyFile().then(function() {
+                expect(scope.state.lightbox).to.equal(undefined);
+                expect(keychainStub.getUserKeyPair.calledOnce).to.be.true;
+                expect(downloadStub.createDownload.calledOnce).to.be.true;
+                done();
+            });
         });
 
-        it('should not work when key export failed', function() {
-            keychainStub.getUserKeyPair.yields(new Error());
+        it('should not work when key export failed', function(done) {
+            keychainStub.getUserKeyPair.returns(rejects(new Error()));
 
-            scope.exportKeyFile();
-
-            expect(dialogStub.error.calledOnce).to.be.true;
+            scope.exportKeyFile().then(function() {
+                expect(dialogStub.error.calledOnce).to.be.true;
+                done();
+            });
         });
     });
 });

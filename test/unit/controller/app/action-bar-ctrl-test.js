@@ -33,6 +33,7 @@ describe('Action Bar Controller unit test', function() {
 
             actionBarCtrl = $controller(ActionBarCtrl, {
                 $scope: scope,
+                $q: window.qMock,
                 email: emailMock,
                 dialog: dialogMock,
                 status: statusMock
@@ -47,13 +48,14 @@ describe('Action Bar Controller unit test', function() {
             scope.deleteMessage();
         });
 
-        it('should delete the selected mail', function() {
-            emailMock.deleteMessage.yields();
+        it('should delete the selected mail', function(done) {
+            emailMock.deleteMessage.returns(resolves());
 
-            scope.deleteMessage({});
-
-            expect(statusMock.setReading.withArgs(false).calledOnce).to.be.true;
-            expect(emailMock.deleteMessage.calledOnce).to.be.true;
+            scope.deleteMessage({}).then(function() {
+                expect(statusMock.setReading.withArgs(false).calledOnce).to.be.true;
+                expect(emailMock.deleteMessage.calledOnce).to.be.true;
+                done();
+            });
         });
     });
 
@@ -79,13 +81,14 @@ describe('Action Bar Controller unit test', function() {
             scope.moveMessage();
         });
 
-        it('should move the selected mail', function() {
-            emailMock.moveMessage.yields();
+        it('should move the selected mail', function(done) {
+            emailMock.moveMessage.returns(resolves());
 
-            scope.moveMessage({}, {});
-
-            expect(statusMock.setReading.withArgs(false).calledOnce).to.be.true;
-            expect(emailMock.moveMessage.calledOnce).to.be.true;
+            scope.moveMessage({}, {}).then(function() {
+                expect(statusMock.setReading.withArgs(false).calledOnce).to.be.true;
+                expect(emailMock.moveMessage.calledOnce).to.be.true;
+                done();
+            });
         });
     });
 
@@ -144,22 +147,24 @@ describe('Action Bar Controller unit test', function() {
             }, true);
         });
 
-        it('should mark the selected mail', function() {
-            emailMock.setFlags.yields();
+        it('should mark the selected mail', function(done) {
+            emailMock.setFlags.returns(resolves());
 
-            scope.markMessage({}, true);
-
-            expect(statusMock.setReading.withArgs(false).calledOnce).to.be.true;
-            expect(emailMock.setFlags.calledOnce).to.be.true;
+            scope.markMessage({}, true).then(function() {
+                expect(statusMock.setReading.withArgs(false).calledOnce).to.be.true;
+                expect(emailMock.setFlags.calledOnce).to.be.true;
+                done();
+            });
         });
 
-        it('should mark the selected mail and close read mode', function() {
-            emailMock.setFlags.yields();
+        it('should mark the selected mail and close read mode', function(done) {
+            emailMock.setFlags.returns(resolves());
 
-            scope.markMessage({}, true, true);
-
-            expect(statusMock.setReading.calledOnce).to.be.false;
-            expect(emailMock.setFlags.calledOnce).to.be.true;
+            scope.markMessage({}, true, true).then(function() {
+                expect(statusMock.setReading.calledOnce).to.be.false;
+                expect(emailMock.setFlags.calledOnce).to.be.true;
+                done();
+            });
         });
     });
 
@@ -196,11 +201,11 @@ describe('Action Bar Controller unit test', function() {
         });
 
         it('should flag the selected mail', function() {
-            emailMock.setFlags.yields();
+            emailMock.setFlags.returns(resolves());
 
-            scope.flagMessage({}, true);
-
-            expect(emailMock.setFlags.calledOnce).to.be.true;
+            scope.flagMessage({}, true).then(function() {
+                expect(emailMock.setFlags.calledOnce).to.be.true;
+            });
         });
     });
 

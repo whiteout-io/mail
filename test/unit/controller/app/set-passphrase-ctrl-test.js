@@ -40,6 +40,7 @@ describe('Set Passphrase Controller unit test', function() {
             scope.state = {};
             setPassphraseCtrl = $controller(SetPassphraseCtrl, {
                 $scope: scope,
+                $q: window.qMock,
                 pgp: pgpStub,
                 keychain: keychainStub,
                 dialog: dialogStub
@@ -49,31 +50,32 @@ describe('Set Passphrase Controller unit test', function() {
 
     afterEach(function() {});
 
-    describe('setPassphrase', function() {
+    describe('setPassphrase', function(done) {
         it('should work', function() {
             scope.oldPassphrase = 'old';
             scope.newPassphrase = 'new';
 
-            keychainStub.lookupPrivateKey.withArgs(dummyKeyId).yields(null, {
+            keychainStub.lookupPrivateKey.withArgs(dummyKeyId).returns(resolves({
                 encryptedKey: 'encrypted'
-            });
+            }));
 
             pgpStub.changePassphrase.withArgs({
                 privateKeyArmored: 'encrypted',
                 oldPassphrase: 'old',
                 newPassphrase: 'new'
-            }).yields(null, 'newArmoredKey');
+            }).returns(resolves('newArmoredKey'));
 
             keychainStub.saveLocalPrivateKey.withArgs({
                 _id: dummyKeyId,
                 userId: emailAddress,
                 userIds: [],
                 encryptedKey: 'newArmoredKey'
-            }).yields();
+            }).returns(resolves());
 
-            scope.setPassphrase();
-
-            expect(dialogStub.info.calledOnce).to.be.true;
+            scope.setPassphrase().then(function() {
+                expect(dialogStub.info.calledOnce).to.be.true;
+                done();
+            });
         });
     });
 

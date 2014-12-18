@@ -11,8 +11,7 @@ var Keychain = require('../../../../src/js/service/keychain'),
     Download = require('../../../../src/js/util/download');
 
 describe('Read Controller unit test', function() {
-    var scope, ctrl, keychainMock, invitationMock, emailMock, pgpMock, outboxMock, dialogMock, authMock, downloadMock,
-        emailAddress = 'sender@example.com';
+    var scope, ctrl, keychainMock, invitationMock, emailMock, pgpMock, outboxMock, dialogMock, authMock, downloadMock;
 
     beforeEach(function() {
         keychainMock = sinon.createStubInstance(Keychain);
@@ -31,6 +30,7 @@ describe('Read Controller unit test', function() {
             scope.state = {};
             ctrl = $controller(ReadCtrl, {
                 $scope: scope,
+                $q: window.qMock,
                 email: emailMock,
                 invitation: invitationMock,
                 outbox: outboxMock,
@@ -66,33 +66,37 @@ describe('Read Controller unit test', function() {
     describe('getKeyId', function() {
         var address = 'asfd@asdf.com';
 
-        it('should show searching on error', function() {
+        it('should show searching on error', function(done) {
             expect(scope.keyId).to.equal('No key found.');
-            keychainMock.getReceiverPublicKey.yields(42);
+            keychainMock.getReceiverPublicKey.returns(rejects(42));
 
-            scope.getKeyId(address);
-
-            expect(dialogMock.error.calledOnce).to.be.true;
-            expect(scope.keyId).to.equal('Searching...');
-        });
-
-        it('should allow invitation on empty key', function() {
-            keychainMock.getReceiverPublicKey.yields();
-
-            scope.getKeyId(address);
-
-            expect(scope.keyId).to.equal('User has no key. Click to invite.');
-        });
-
-        it('should show searching on error', function() {
-            keychainMock.getReceiverPublicKey.yields(null, {
-                publicKey: 'PUBLIC KEY'
+            scope.getKeyId(address).then(function() {
+                expect(dialogMock.error.calledOnce).to.be.true;
+                expect(scope.keyId).to.equal('Searching...');
+                done();
             });
+        });
+
+        it('should allow invitation on empty key', function(done) {
+            keychainMock.getReceiverPublicKey.returns(resolves());
+
+            scope.getKeyId(address).then(function() {
+                expect(scope.keyId).to.equal('User has no key. Click to invite.');
+                done();
+            });
+        });
+
+        it('should show searching on error', function(done) {
+            keychainMock.getReceiverPublicKey.returns(resolves({
+                publicKey: 'PUBLIC KEY'
+            }));
 
             pgpMock.getFingerprint.returns('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX');
 
-            scope.getKeyId(address);
-            expect(scope.keyId).to.equal('PGP key: XXXXXXXX');
+            scope.getKeyId(address).then(function() {
+                expect(scope.keyId).to.equal('PGP key: XXXXXXXX');
+                done();
+            });
         });
     });
 
@@ -108,36 +112,39 @@ describe('Read Controller unit test', function() {
             expect(scope.keyId).to.equal('No key found.');
         });
 
-        it('should show error on invitation dao invite error', function() {
-            invitationMock.invite.yields(42);
+        it('should show error on invitation dao invite error', function(done) {
+            invitationMock.invite.returns(rejects(42));
 
             scope.invite({
                 address: 'asdf@asdf.de'
+            }).then(function() {
+                expect(dialogMock.error.calledOnce).to.be.true;
+                done();
             });
-
-            expect(dialogMock.error.calledOnce).to.be.true;
         });
 
-        it('should show error on outbox put error', function() {
-            invitationMock.invite.yields();
-            outboxMock.put.yields(42);
+        it('should show error on outbox put error', function(done) {
+            invitationMock.invite.returns(resolves());
+            outboxMock.put.returns(rejects(42));
 
             scope.invite({
                 address: 'asdf@asdf.de'
+            }).then(function() {
+                expect(dialogMock.error.calledOnce).to.be.true;
+                done();
             });
-
-            expect(dialogMock.error.calledOnce).to.be.true;
         });
 
-        it('should work', function() {
-            invitationMock.invite.yields();
-            outboxMock.put.yields();
+        it('should work', function(done) {
+            invitationMock.invite.returns(resolves());
+            outboxMock.put.returns(resolves());
 
             scope.invite({
                 address: 'asdf@asdf.de'
+            }).then(function() {
+                expect(dialogMock.error.calledOnce).to.be.false;
+                done();
             });
-
-            expect(dialogMock.error.calledOnce).to.be.true;
         });
     });
 

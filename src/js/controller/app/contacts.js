@@ -85,7 +85,6 @@ var ContactsCtrl = function($scope, $q, keychain, pgp, dialog) {
             return $scope.listKeys();
         }).catch(dialog.error);
     };
-
 };
 
 module.exports = ContactsCtrl;
