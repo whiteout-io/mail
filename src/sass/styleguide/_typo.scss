@@ -1,0 +1,42 @@
+// Styleguide typography
+
+.sg-typo-title {
+    text-transform: uppercase;
+    font-weight: normal;
+    text-align: center;
+    font-size: $font-size-bigger;
+    color: $color-main;
+    margin: 0 0 20px;
+
+    @include respond-to(md) {
+        font-size: $font-size-huge;
+    }
+}
+
+.sg-typo-section-title {
+    font-size: $font-size-bigger;
+    font-weight: normal;
+    color: $color-text;
+    margin: 0 0 20px;
+
+    @include respond-to(md) {
+        font-size: $font-size-huge;
+    }
+}
+
+.sg-typo-description-title {
+    font-size: $font-size-big;
+    font-weight: bold;
+    color: $color-text;
+    margin: 0;
+}
+
+.sg-typo-code {
+    font-family: monospace;
+    font-weight: bold;
+    border-radius: 0.2em;
+    font-size: $font-size-small;
+    background: $color-bg-dark;
+    color: $color-text;
+    padding: 0.1em 0.3em;
+}

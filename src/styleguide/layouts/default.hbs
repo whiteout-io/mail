@@ -1,3 +1,8 @@
+---
+version: foobar
+currentDate: <%= new Date() %>
+---
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,6 +10,9 @@
     <title>{{ title }} | Whiteout Mail</title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+
+    <link rel="stylesheet" media="all" href="{{assets}}/css/all.min.css" type="text/css">
+    <link rel="stylesheet" media="all" href="{{assets}}/styleguide/css/styleguide.min.css" type="text/css">
 </head>
 <body>
 
@@ -13,7 +21,27 @@
         {{glob "src/img/icons/all.svg"}}
     </div>
 
-    {{> body}}
+    <div class="sg-layout">
+        <header class="sg-layout__header">
+            <img src="{{assets}}/img/whiteout_logo.svg" alt="whiteout.io">
+            <h1 class="sg-typo-title">{{ title }}</h1>
+        </header>
+        <main class="sg-layout__main">
+            {{> body}}
+        </main>
+        <footer class="sg-layout__footer">
+          <nav>
+            <ul>
+              <li><a href="https://whiteout.io/imprint.html" target="_blank">Imprint</a></li>
+              <li><a href="https://whiteout.io/privacy-service.html" target="_blank">Privacy</a></li>
+              <li><a href="https://whiteout.io/terms.html" target="_blank">Terms</a></li>
+              <li><a href="https://github.com/whiteout-io/mail-html5/blob/master/README.md#license" target="_blank">License</a></li>
+              <li>Version: {{manifest.version}}</li>
+            </ul>
+          </nav>
+          &copy; {{formatDate currentDate "%Y"}} Whiteout Networks GmbH
+        </footer>
+    </div>
 
 </body>
 </html>

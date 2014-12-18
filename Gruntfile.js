@@ -97,6 +97,11 @@ module.exports = function(grunt) {
                     'src/css/read-sandbox.css': 'src/sass/read-sandbox.scss',
                     'src/css/all.css': 'src/sass/all.scss'
                 }
+            },
+            styleguide: {
+                files: {
+                    'src/css/styleguide.css': 'src/sass/styleguide.scss'
+                }
             }
         },
         autoprefixer: {
@@ -108,6 +113,11 @@ module.exports = function(grunt) {
                     'src/css/read-sandbox.css': 'src/css/read-sandbox.css',
                     'src/css/all.css': 'src/css/all.css'
                 }
+            },
+            styleguide: {
+                files: {
+                    'src/css/styleguide.css': 'src/css/styleguide.css'
+                }
             }
         },
         csso: {
@@ -118,6 +128,11 @@ module.exports = function(grunt) {
                 files: {
                     'dist/css/read-sandbox.min.css': 'src/css/read-sandbox.css',
                     'dist/css/all.min.css': 'src/css/all.css'
+                }
+            },
+            styleguide: {
+                files: {
+                    'dist/styleguide/css/styleguide.min.css': 'src/css/styleguide.css'
                 }
             }
         },
@@ -457,13 +472,16 @@ module.exports = function(grunt) {
 
         assemble: {
             options: {
-                assets: '../',
+                assets: 'dist',
                 layoutdir: 'src/styleguide/layouts',
                 layout: 'default.hbs',
                 partials: ['src/styleguide/blocks/**/*.hbs'],
                 helpers: [
                     'handlebars-helper-compose',
                     'src/styleguide/helpers/**/*.js'
+                ],
+                data: [
+                    'dist/manifest.json'
                 ],
                 flatten: true
             },
@@ -497,7 +515,7 @@ module.exports = function(grunt) {
         watch: {
             css: {
                 files: ['src/sass/**/*.scss'],
-                tasks: ['dist-css', 'dist-styleguide', 'manifest']
+                tasks: ['dist-css', 'manifest', 'dist-styleguide']
             },
             styleguide: {
                 files: ['src/styleguide/**/*.hbs', 'src/styleguide/**/*.js'],
@@ -638,7 +656,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('assemble');
 
     // Build tasks
-    grunt.registerTask('dist-css', ['sass', 'autoprefixer', 'csso']);
+    grunt.registerTask('dist-css', ['sass:dist', 'autoprefixer:dist', 'csso:dist']);
     grunt.registerTask('dist-js', ['browserify', 'exorcise', 'ngtemplates', 'concat', 'uglify']);
     grunt.registerTask('dist-js-app', [
         'browserify:app',
@@ -666,8 +684,9 @@ module.exports = function(grunt) {
     ]);
     grunt.registerTask('dist-copy', ['copy']);
     grunt.registerTask('dist-assets', ['svgmin', 'svgstore', 'string-replace']);
-    grunt.registerTask('dist-styleguide', ['assemble:styleguide']);
-    grunt.registerTask('dist', ['clean:dist', 'shell', 'dist-css', 'dist-js', 'dist-assets', 'dist-copy', 'dist-styleguide', 'manifest']);
+    grunt.registerTask('dist-styleguide', ['sass:styleguide', 'autoprefixer:styleguide', 'csso:styleguide', 'assemble:styleguide']);
+    // generate styleguide after manifest to forward version number to styleguide
+    grunt.registerTask('dist', ['clean:dist', 'shell', 'dist-css', 'dist-js', 'dist-assets', 'dist-copy', 'manifest', 'dist-styleguide']);
 
     // Test/Dev tasks
     grunt.registerTask('dev', ['connect:dev']);

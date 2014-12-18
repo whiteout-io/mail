@@ -1,0 +1,20 @@
+.sg-icon-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    & > li {
+        display: inline-block;
+        padding: 0 10px;
+        margin-bottom: 20px;
+        text-align: center;
+        color: $color-text-light;
+        width: 10em;
+        & > svg {
+            display: block;
+            margin: 0 auto 10px;
+            width: 2em;
+            height: 2em;
+            fill: $color-text;
+        }
+    }
+}
