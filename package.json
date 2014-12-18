@@ -61,7 +61,7 @@
     "grunt-string-replace": "~1.0.0",
     "grunt-svgmin": "~1.0.0",
     "grunt-svgstore": "~0.3.4",
-    "imap-client": "~0.8.0",
+    "imap-client": "https://github.com/whiteout-io/imap-client/tarball/dev/select-mailbox",
     "jquery": "~2.1.1",
     "mailreader": "~0.4.0",
     "mocha": "^1.21.4",
