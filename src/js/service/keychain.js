@@ -64,40 +64,30 @@ Keychain.prototype.verifyPublicKey = function(uuid) {
  * @return [PublicKeyCollection] The requiested public keys
  */
 Keychain.prototype.getPublicKeys = function(ids) {
-    var self = this;
-    return new Promise(function(resolve, reject) {
-        var after, already, pubkeys = [];
+    var self = this,
+        jobs = [],
+        pubkeys = [];
 
-        // return empty array if key ids are emtpy
-        if (ids.length < 1) {
-            resolve(pubkeys);
-            return;
-        }
+    ids.forEach(function(i) {
+        // lookup locally and in storage
+        var promise = self.lookupPublicKey(i._id).then(function(pubkey) {
+            if (!pubkey) {
+                throw new Error('Error looking up public key!');
+            }
 
-        after = _.after(ids.length, function() {
-            resolve(pubkeys);
+            // check if public key with that id has already been fetched
+            var already = _.findWhere(pubkeys, {
+                _id: i._id
+            });
+            if (!already) {
+                pubkeys.push(pubkey);
+            }
         });
+        jobs.push(promise);
+    });
 
-        _.each(ids, function(i) {
-            // lookup locally and in storage
-            self.lookupPublicKey(i._id).then(function(pubkey) {
-                if (!pubkey) {
-                    reject(new Error('Error looking up public key!'));
-                    return;
-                }
-
-                // check if public key with that id has already been fetched
-                already = null;
-                already = _.findWhere(pubkeys, {
-                    _id: i._id
-                });
-                if (!already) {
-                    pubkeys.push(pubkey);
-                }
-
-                after(); // asynchronously iterate through objects
-            }).catch(reject);
-        });
+    return Promise.all(jobs).then(function() {
+        return pubkeys;
     });
 };
 

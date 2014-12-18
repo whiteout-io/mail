@@ -95,7 +95,7 @@ var ReadCtrl = function($scope, $location, $q, email, invitation, outbox, pgp, k
             return keychain.getReceiverPublicKey(user.address);
 
         }).then(function(pubkey) {
-            if (pubkey.publicKey) {
+            if (pubkey && pubkey.publicKey) {
                 user.secure = true;
             } else {
                 user.secure = false;
