@@ -19,6 +19,19 @@
         width: $aside-width;
         background: $color-main;
         color: $color-main-text;
+
+        @include respond-to(smaller-lg) {
+            transform: translateX(-100%);
+        }
+        @include respond-to(lg) {
+            width: $aside-width-lg;
+            background: $color-bg;
+            color: $color-text;
+        }
+    }
+    &__aside-scroll {
+        height: 100%;
+        width: 100%;
         overflow: auto;
         -webkit-overflow-scrolling: touch;
         @include scrollbar(main);
@@ -28,13 +41,7 @@
             display: none;
         }
 
-        @include respond-to(smaller-lg) {
-            transform: translateX(-100%);
-        }
         @include respond-to(lg) {
-            width: $aside-width-lg;
-            background: $color-bg;
-            color: $color-text;
             @include scrollbar(base);
         }
     }

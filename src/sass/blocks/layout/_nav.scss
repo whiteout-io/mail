@@ -1,13 +1,14 @@
 // Main Navigation Menu
 
 .nav {
-    $nav-padding-left: 8px;
+    $nav-entry-indentation: 8px;
+    $nav-padding-sm: 15px;
     $nav-padding-h: 10px;
     $footer-height: 30px;
 
     min-height: 100%;
     position: relative;
-    padding: $nav-padding-h + 5px;
+    padding: $nav-padding-sm;
     background: $color-main;
     color: $color-main-text;
 
@@ -78,7 +79,7 @@
         font-weight: bold;
     }
     &__secondary {
-        margin: 30px 0 15px;
+        margin: 30px 0 0;
         border-top: 1px solid $color-main-text;
         padding: 15px 0 0;
         list-style: none;
@@ -108,12 +109,10 @@
             }
         }
     }
-    & > footer {
-        display: none;
-    }
 
     @include respond-to(lg) {
-        padding: $nav-padding-h;
+        padding-left: $nav-padding-h;
+        padding-right: $nav-padding-h;
         padding-top: 27px; // magic number to valign logo with action bar
         padding-bottom: $footer-height;
         background: $color-bg;
@@ -141,7 +140,7 @@
         }
         &__folder {
             font-size: $font-size-base;
-            padding-left: $nav-padding-left;
+            padding-left: $nav-entry-indentation;
             padding-right: 20px;
             margin-bottom: 16px;
             a {
@@ -170,11 +169,11 @@
             }
         }
         &__secondary {
+            margin-bottom: 15px;
             border-top-color: $color-border-light;
             & > li {
                 font-size: $font-size-small;
-                padding-left: $nav-padding-left;
-                padding-right: 5px;
+                padding-left: $nav-entry-indentation;
                 a {
                     color: $color-text-light;
                     & > svg {
@@ -183,24 +182,32 @@
                 }
             }
         }
-        & > footer {
-            display: block;
-            position: absolute;
-            bottom: 0;
-            left: $nav-padding-h;
-            right: $nav-padding-h;
-            height: $footer-height;
-            border-top: 1px solid $color-border-light;
-            font-size: $font-size-smaller;
-            line-height: $footer-height - 4px;
-            color: $color-text-light;
-            svg {
-                display: inline-block;
-                height: 1.5em;
-                width: 1.5em;
-                padding-right: 0.5em;
-                fill: $color-text-light;
-                vertical-align: middle;
+    }
+
+    @at-root {
+        .nav-footer {
+            display: none;
+
+            @include respond-to(lg) {
+                display: block;
+                position: absolute;
+                bottom: 0;
+                left: $nav-padding-h;
+                right: $nav-padding-h;
+                height: $footer-height;
+                border-top: 1px solid $color-border-light;
+                background: $color-bg;
+                font-size: $font-size-smaller;
+                line-height: $footer-height - 4px;
+                color: $color-text-light;
+                svg {
+                    display: inline-block;
+                    height: 1.5em;
+                    width: 1.5em;
+                    padding-right: 0.5em;
+                    fill: $color-text-light;
+                    vertical-align: middle;
+                }
             }
         }
     }
