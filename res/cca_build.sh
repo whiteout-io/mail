@@ -16,4 +16,4 @@ cd $DIR/Whiteout
 cca prepare
 
 # cp signing config
-cp ../../../res/ant.properties ./platforms/android/
+cp ../../../res/android-release-keys.properties .

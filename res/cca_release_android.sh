@@ -4,6 +4,8 @@
 cd `dirname $0`
 cd ..
 
-cd release/cca/Whiteout
+DIR=release/cca
 
-./platforms/android/cordova/build --release
+#prepare
+cd $DIR/Whiteout
+cca build android --release
