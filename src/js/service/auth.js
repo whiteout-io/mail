@@ -76,9 +76,13 @@ Auth.prototype.getCredentials = function() {
 
         if (self.passwordNeedsDecryption) {
             // decrypt password
-            return self._pgp.decrypt(self.password, undefined).then(function(cleartext) {
+            return self._pgp.decrypt(self.password, undefined).then(function(pt) {
+                if (!pt.signaturesValid) {
+                    throw new Error('Verifying PGP signature of encrypted password failed!');
+                }
+
                 self.passwordNeedsDecryption = false;
-                self.password = cleartext;
+                self.password = pt.decrypted;
             }).then(done);
         }
 

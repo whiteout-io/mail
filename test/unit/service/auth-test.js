@@ -74,7 +74,10 @@ describe('Auth unit tests', function() {
             storageStub.listItems.withArgs(REALNAME_DB_KEY, 0, null).returns(resolves([realname]));
             storageStub.listItems.withArgs(IMAP_DB_KEY, 0, null).returns(resolves([imap]));
             storageStub.listItems.withArgs(SMTP_DB_KEY, 0, null).returns(resolves([smtp]));
-            pgpStub.decrypt.withArgs(encryptedPassword, undefined).returns(resolves(password));
+            pgpStub.decrypt.withArgs(encryptedPassword, undefined).returns(resolves({
+                decrypted: password,
+                signaturesValid: true
+            }));
 
             auth.getCredentials().then(function(cred) {
                 expect(auth.emailAddress).to.equal(emailAddress);
