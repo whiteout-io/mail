@@ -29,14 +29,14 @@
 
     "android": {
         "icons": {
-            "36": "icon-36-android.png",
-            "48": "icon-48-android.png",
-            "60": "icon-60-android.png",
-            "72": "icon-72-android.png",
-            "78": "icon-78-android.png",
-            "96": "icon-96-android.png",
-            "144": "icon-144-android.png",
-            "192": "icon-192-android.png"
+            "36": "img/icon-36-android.png",
+            "48": "img/icon-48-android.png",
+            "60": "img/icon-60-android.png",
+            "72": "img/icon-72-android.png",
+            "78": "img/icon-78-android.png",
+            "96": "img/icon-96-android.png",
+            "144": "img/icon-144-android.png",
+            "192": "img/icon-192-android.png"
         },
     }
 }
