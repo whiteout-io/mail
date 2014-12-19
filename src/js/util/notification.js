@@ -58,5 +58,7 @@ Notif.prototype.create = function(options) {
 };
 
 Notif.prototype.close = function(notification) {
-    notification.close();
+    if (notification) {
+        notification.close();
+    }
 };
