@@ -40,6 +40,7 @@ var DialogCtrl = function($scope, dialog) {
         $scope.positiveBtnStr = options.positiveBtnStr || 'Ok';
         $scope.negativeBtnStr = options.negativeBtnStr || 'Cancel';
         $scope.showNegativeBtn = options.showNegativeBtn || false;
+        $scope.showBugReporter = false;
         $scope.callback = options.callback;
     }
 
