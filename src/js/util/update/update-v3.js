@@ -6,20 +6,15 @@
  * In database version 3, we introduced new flags to the messages, also
  * the outbox uses artificial uids
  */
-function update(options, callback) {
+function update(options) {
     var emailDbType = 'email_',
         versionDbType = 'dbVersion',
         postUpdateDbVersion = 3;
 
     // remove the emails
-    options.userStorage.removeList(emailDbType, function(err) {
-        if (err) {
-            callback(err);
-            return;
-        }
-
+    return options.userStorage.removeList(emailDbType).then(function() {
         // update the database version to postUpdateDbVersion
-        options.appConfigStorage.storeList([postUpdateDbVersion], versionDbType, callback);
+        return options.appConfigStorage.storeList([postUpdateDbVersion], versionDbType);
     });
 }
 

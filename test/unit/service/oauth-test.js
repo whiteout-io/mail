@@ -56,15 +56,14 @@ describe('OAuth unit tests', function() {
         it('should work', function() {
             removeCachedStub.withArgs({
                 token: 'oldToken'
-            }).yields();
+            }).returns(resolves());
 
-            getOAuthTokenStub.withArgs(testEmail).yields();
+            getOAuthTokenStub.withArgs(testEmail).returns(resolves());
 
             oauth.refreshToken({
                 oldToken: 'oldToken',
                 emailAddress: testEmail
-            }, function(err) {
-                expect(err).to.not.exist;
+            }).then(function() {
                 expect(removeCachedStub.calledOnce).to.be.true;
                 expect(getOAuthTokenStub.calledOnce).to.be.true;
             });
@@ -73,14 +72,13 @@ describe('OAuth unit tests', function() {
         it('should work without email', function() {
             removeCachedStub.withArgs({
                 token: 'oldToken'
-            }).yields();
+            }).returns(resolves());
 
-            getOAuthTokenStub.withArgs(undefined).yields();
+            getOAuthTokenStub.withArgs(undefined).returns(resolves());
 
             oauth.refreshToken({
                 oldToken: 'oldToken',
-            }, function(err) {
-                expect(err).to.not.exist;
+            }).then(function() {
                 expect(removeCachedStub.calledOnce).to.be.true;
                 expect(getOAuthTokenStub.calledOnce).to.be.true;
                 expect(getOAuthTokenStub.calledWith(undefined)).to.be.true;
@@ -90,7 +88,7 @@ describe('OAuth unit tests', function() {
         it('should fail without all options', function() {
             oauth.refreshToken({
                 emailAddress: testEmail
-            }, function(err) {
+            }).catch(function(err) {
                 expect(err).to.exist;
                 expect(removeCachedStub.called).to.be.false;
                 expect(getOAuthTokenStub.called).to.be.false;
@@ -107,8 +105,7 @@ describe('OAuth unit tests', function() {
                 interactive: true
             }).yields('token');
 
-            oauth.getOAuthToken(undefined, function(err, token) {
-                expect(err).to.not.exist;
+            oauth.getOAuthToken(undefined).then(function(token) {
                 expect(token).to.equal('token');
                 done();
             });
@@ -123,8 +120,7 @@ describe('OAuth unit tests', function() {
                 accountHint: testEmail
             }).yields('token');
 
-            oauth.getOAuthToken(testEmail, function(err, token) {
-                expect(err).to.not.exist;
+            oauth.getOAuthToken(testEmail).then(function(token) {
                 expect(token).to.equal('token');
                 done();
             });
@@ -138,8 +134,7 @@ describe('OAuth unit tests', function() {
                 interactive: true
             }).yields('token');
 
-            oauth.getOAuthToken(testEmail, function(err, token) {
-                expect(err).to.not.exist;
+            oauth.getOAuthToken(testEmail).then(function(token) {
                 expect(token).to.equal('token');
                 done();
             });
@@ -151,9 +146,8 @@ describe('OAuth unit tests', function() {
             });
             identityStub.yields();
 
-            oauth.getOAuthToken(testEmail, function(err, token) {
+            oauth.getOAuthToken(testEmail).catch(function(err) {
                 expect(err).to.exist;
-                expect(token).to.not.exist;
                 done();
             });
         });
@@ -163,21 +157,19 @@ describe('OAuth unit tests', function() {
         it('should work', function(done) {
             googleApiStub.get.withArgs({
                 uri: '/oauth2/v3/userinfo?access_token=token'
-            }).yields(null, {
+            }).returns(resolves({
                 email: 'asdf@example.com'
-            });
+            }));
 
-            oauth.queryEmailAddress('token', function(err, emailAddress) {
-                expect(err).to.not.exist;
+            oauth.queryEmailAddress('token').then(function(emailAddress) {
                 expect(emailAddress).to.equal('asdf@example.com');
                 done();
             });
         });
 
         it('should fail due to invalid token', function(done) {
-            oauth.queryEmailAddress('', function(err, emailAddress) {
+            oauth.queryEmailAddress('').catch(function(err) {
                 expect(err).to.exist;
-                expect(emailAddress).to.not.exist;
                 done();
             });
         });
@@ -187,9 +179,8 @@ describe('OAuth unit tests', function() {
                 uri: '/oauth2/v3/userinfo?access_token=token'
             }).yields(new Error());
 
-            oauth.queryEmailAddress('token', function(err, emailAddress) {
+            oauth.queryEmailAddress('token').catch(function(err) {
                 expect(err).to.exist;
-                expect(emailAddress).to.not.exist;
                 done();
             });
         });

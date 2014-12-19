@@ -5,7 +5,7 @@ var OutboxBO = require('../../../src/js/email/outbox'),
     EmailDAO = require('../../../src/js/email/email'),
     DeviceStorageDAO = require('../../../src/js/service/devicestorage');
 
-describe('Outbox Business Object unit test', function() {
+describe('Outbox unit test', function() {
     var outbox, emailDaoStub, devicestorageStub, keychainStub,
         dummyUser = 'spiderpig@springfield.com';
 
@@ -42,6 +42,13 @@ describe('Outbox Business Object unit test', function() {
     });
 
     describe('put', function() {
+        beforeEach(function() {
+            sinon.stub(outbox, '_processOutbox');
+        });
+        afterEach(function() {
+            outbox._processOutbox.restore();
+        });
+
         it('should not encrypt and store a mail', function(done) {
             var mail, senderKey, receiverKey;
 
@@ -67,15 +74,13 @@ describe('Outbox Business Object unit test', function() {
                 bcc: []
             };
 
-            keychainStub.getReceiverPublicKey.withArgs(mail.from[0].address).yieldsAsync(null, senderKey);
-            keychainStub.getReceiverPublicKey.withArgs(mail.to[0].address).yieldsAsync(null, receiverKey);
-            keychainStub.getReceiverPublicKey.withArgs(mail.to[1].address).yieldsAsync();
+            keychainStub.getReceiverPublicKey.withArgs(mail.from[0].address).returns(resolves(senderKey));
+            keychainStub.getReceiverPublicKey.withArgs(mail.to[0].address).returns(resolves(receiverKey));
+            keychainStub.getReceiverPublicKey.withArgs(mail.to[1].address).returns(resolves());
 
-            devicestorageStub.storeList.withArgs([mail]).yieldsAsync();
+            devicestorageStub.storeList.withArgs([mail]).returns(resolves());
 
-            outbox.put(mail, function(error) {
-                expect(error).to.not.exist;
-
+            outbox.put(mail).then(function() {
                 expect(mail.publicKeysArmored.length).to.equal(2);
                 expect(emailDaoStub.encrypt.called).to.be.false;
                 expect(devicestorageStub.storeList.calledOnce).to.be.true;
@@ -103,11 +108,9 @@ describe('Outbox Business Object unit test', function() {
                 }]
             };
 
-            devicestorageStub.storeList.withArgs([mail]).yieldsAsync();
+            devicestorageStub.storeList.withArgs([mail]).returns(resolves());
 
-            outbox.put(mail, function(error) {
-                expect(error).to.not.exist;
-
+            outbox.put(mail).then(function() {
                 expect(mail.publicKeysArmored.length).to.equal(0);
                 expect(keychainStub.getReceiverPublicKey.called).to.be.false;
                 expect(emailDaoStub.encrypt.called).to.be.false;
@@ -142,20 +145,18 @@ describe('Outbox Business Object unit test', function() {
                 bcc: []
             };
 
-            keychainStub.getReceiverPublicKey.withArgs(mail.from[0].address).yieldsAsync(null, senderKey);
-            keychainStub.getReceiverPublicKey.withArgs(mail.to[0].address).yieldsAsync(null, receiverKey);
-            keychainStub.getReceiverPublicKey.withArgs(mail.to[1].address).yieldsAsync(null, receiverKey);
+            keychainStub.getReceiverPublicKey.withArgs(mail.from[0].address).returns(resolves(senderKey));
+            keychainStub.getReceiverPublicKey.withArgs(mail.to[0].address).returns(resolves(receiverKey));
+            keychainStub.getReceiverPublicKey.withArgs(mail.to[1].address).returns(resolves(receiverKey));
 
             emailDaoStub.encrypt.withArgs({
                 mail: mail,
                 publicKeysArmored: [senderKey.publicKey, receiverKey.publicKey, receiverKey.publicKey]
-            }).yieldsAsync();
+            }).returns(resolves());
 
-            devicestorageStub.storeList.withArgs([mail]).yieldsAsync();
+            devicestorageStub.storeList.withArgs([mail]).returns(resolves());
 
-            outbox.put(mail, function(error) {
-                expect(error).to.not.exist;
-
+            outbox.put(mail).then(function() {
                 expect(mail.publicKeysArmored.length).to.equal(3);
                 expect(emailDaoStub.encrypt.calledOnce).to.be.true;
                 expect(devicestorageStub.storeList.calledOnce).to.be.true;
@@ -230,19 +231,19 @@ describe('Outbox Business Object unit test', function() {
 
             dummyMails = [member, invited, notinvited, newlyjoined];
 
-            devicestorageStub.listItems.yieldsAsync(null, dummyMails);
+            devicestorageStub.listItems.returns(resolves(dummyMails));
 
-            emailDaoStub.sendPlaintext.yieldsAsync();
+            emailDaoStub.sendPlaintext.returns(resolves());
 
             emailDaoStub.sendEncrypted.withArgs({
                 email: newlyjoined
-            }).yieldsAsync();
+            }).returns(resolves());
 
             emailDaoStub.sendEncrypted.withArgs({
                 email: member
-            }).yieldsAsync();
+            }).returns(resolves());
 
-            devicestorageStub.removeList.yieldsAsync();
+            devicestorageStub.removeList.returns(resolves());
 
             function onOutboxUpdate(err, count) {
                 expect(err).to.not.exist;
@@ -263,7 +264,7 @@ describe('Outbox Business Object unit test', function() {
 
         it('should not process outbox in offline mode', function(done) {
             emailDaoStub._account.online = false;
-            devicestorageStub.listItems.yieldsAsync(null, [{}]);
+            devicestorageStub.listItems.returns(resolves([{}]));
 
             outbox._processOutbox(function(err, count) {
                 expect(err).to.not.exist;

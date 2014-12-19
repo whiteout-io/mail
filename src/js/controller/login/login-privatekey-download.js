@@ -1,6 +1,6 @@
 'use strict';
 
-var LoginPrivateKeyDownloadCtrl = function($scope, $location, $routeParams, auth, email, keychain) {
+var LoginPrivateKeyDownloadCtrl = function($scope, $location, $routeParams, $q, auth, email, keychain) {
     !$routeParams.dev && !auth.isInitialized() && $location.path('/'); // init app
 
     $scope.step = 1;
@@ -15,42 +15,32 @@ var LoginPrivateKeyDownloadCtrl = function($scope, $location, $routeParams, auth
             return;
         }
 
-        $scope.busy = true;
-        $scope.errMsg = undefined;
-
-        $scope.verifyRecoveryToken(function() {
-            $scope.busy = false;
-            $scope.errMsg = undefined;
-            $scope.step++;
-            $scope.$apply();
-        });
-    };
-
-    $scope.verifyRecoveryToken = function(callback) {
         var userId = auth.emailAddress;
-        keychain.getUserKeyPair(userId, function(err, keypair) {
-            if (err) {
-                displayError(err);
-                return;
-            }
 
+        return $q(function(resolve) {
+            $scope.busy = true;
+            $scope.errMsg = undefined;
+            resolve();
+
+        }).then(function() {
+            // get public key id for reference
+            return keychain.getUserKeyPair(userId);
+
+        }).then(function(keypair) {
             // remember for storage later
             $scope.cachedKeypair = keypair;
-
-            keychain.downloadPrivateKey({
+            return keychain.downloadPrivateKey({
                 userId: userId,
                 keyId: keypair.publicKey._id,
                 recoveryToken: $scope.recoveryToken.toUpperCase()
-            }, function(err, encryptedPrivateKey) {
-                if (err) {
-                    displayError(err);
-                    return;
-                }
-
-                $scope.encryptedPrivateKey = encryptedPrivateKey;
-                callback();
             });
-        });
+
+        }).then(function(encryptedPrivateKey) {
+            $scope.encryptedPrivateKey = encryptedPrivateKey;
+            $scope.busy = false;
+            $scope.step++;
+
+        }).catch(displayError);
     };
 
     //
@@ -63,47 +53,39 @@ var LoginPrivateKeyDownloadCtrl = function($scope, $location, $routeParams, auth
             return;
         }
 
-        $scope.busy = true;
-        $scope.errMsg = undefined;
-
-        $scope.decryptAndStorePrivateKeyLocally();
-    };
-
-    $scope.decryptAndStorePrivateKeyLocally = function() {
         var options = $scope.encryptedPrivateKey;
         options.code = $scope.code.toUpperCase();
 
-        keychain.decryptAndStorePrivateKeyLocally(options, function(err, privateKey) {
-            if (err) {
-                displayError(err);
-                return;
-            }
+        return $q(function(resolve) {
+            $scope.busy = true;
+            $scope.errMsg = undefined;
+            resolve();
 
+        }).then(function() {
+            return keychain.decryptAndStorePrivateKeyLocally(options);
+
+        }).then(function(privateKey) {
             // add private key to cached keypair object
             $scope.cachedKeypair.privateKey = privateKey;
-
             // try empty passphrase
-            email.unlock({
+            return email.unlock({
                 keypair: $scope.cachedKeypair,
                 passphrase: undefined
-            }, function(err) {
-                if (err) {
-                    // go to passphrase login screen
-                    $scope.goTo('/login-existing');
-                    return;
-                }
-
-                // passphrase is corrent ... go to main app
-                auth.storeCredentials(function(err) {
-                    if (err) {
-                        displayError(err);
-                        return;
-                    }
-
-                    $scope.goTo('/account');
-                });
+            }).catch(function(err) {
+                // passphrase incorrct ... go to passphrase login screen
+                $scope.goTo('/login-existing');
+                throw err;
             });
-        });
+
+        }).then(function() {
+            // passphrase is corrent ...
+            return auth.storeCredentials();
+
+        }).then(function() {
+            // continue to main app
+            $scope.goTo('/account');
+
+        }).catch(displayError);
     };
 
     //
@@ -112,14 +94,12 @@ var LoginPrivateKeyDownloadCtrl = function($scope, $location, $routeParams, auth
 
     $scope.goTo = function(location) {
         $location.path(location);
-        $scope.$apply();
     };
 
     function displayError(err) {
         $scope.busy = false;
         $scope.incorrect = true;
         $scope.errMsg = err.errMsg || err.message;
-        $scope.$apply();
     }
 };
 

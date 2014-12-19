@@ -41,6 +41,7 @@ describe('Navigation Controller unit test', function() {
             ctrl = $controller(NavigationCtrl, {
                 $scope: scope,
                 $routeParams: {},
+                $q: window.qMock,
                 account: accountMock,
                 email: emailDaoMock,
                 outbox: outboxBoMock,

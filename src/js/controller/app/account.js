@@ -1,6 +1,6 @@
 'use strict';
 
-var AccountCtrl = function($scope, auth, keychain, pgp, appConfig, download, dialog) {
+var AccountCtrl = function($scope, $q, auth, keychain, pgp, appConfig, download, dialog) {
     var userId = auth.emailAddress;
     if (!userId) {
         return;
@@ -34,12 +34,13 @@ var AccountCtrl = function($scope, auth, keychain, pgp, appConfig, download, dia
     //
 
     $scope.exportKeyFile = function() {
-        keychain.getUserKeyPair(userId, function(err, keys) {
-            if (err) {
-                dialog.error(err);
-                return;
-            }
+        return $q(function(resolve) {
+            resolve();
 
+        }).then(function() {
+            return keychain.getUserKeyPair(userId);
+
+        }).then(function(keys) {
             var keyId = keys.publicKey._id;
             var file = 'whiteout_mail_' + userId + '_' + keyId.substring(8, keyId.length);
 
@@ -48,7 +49,8 @@ var AccountCtrl = function($scope, auth, keychain, pgp, appConfig, download, dia
                 filename: file + '.asc',
                 contentType: 'text/plain'
             });
-        });
+
+        }).catch(dialog.error);
     };
 
 };

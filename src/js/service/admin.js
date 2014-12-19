@@ -13,27 +13,24 @@ function Admin(adminRestDao) {
  * @param  {String}   options.emailAddress  The desired email address
  * @param  {String}   options.password      The password to be used for the account.
  * @param  {String}   options.phone         The user's mobile phone number (required for verification and password reset).
- * @param  {Function} callback(error)
  */
-Admin.prototype.createUser = function(options, callback) {
-    var uri;
+Admin.prototype.createUser = function(options) {
+    var self = this;
+    return new Promise(function(resolve) {
+        if (!options.emailAddress || !options.password || !options.phone) {
+            throw new Error('Incomplete arguments!');
+        }
+        resolve();
 
-    if (!options.emailAddress || !options.password || !options.phone) {
-        callback(new Error('Incomplete arguments!'));
-        return;
-    }
+    }).then(function() {
+        return self._restDao.post(options, '/user');
 
-    uri = '/user';
-    this._restDao.post(options, uri, function(err) {
+    }).catch(function(err) {
         if (err && err.code === 409) {
-            callback(new Error('User name is already taken!'));
-            return;
-        } else if (err) {
-            callback(new Error('Error creating new user!'));
-            return;
+            throw new Error('User name is already taken!');
         }
 
-        callback();
+        throw new Error('Error creating new user!');
     });
 };
 
@@ -41,23 +38,25 @@ Admin.prototype.createUser = function(options, callback) {
  * Verify a user's phone number by confirming a token to the server.
  * @param  {String}   options.emailAddress  The desired email address
  * @param  {String}   options.token         The validation token.
- * @param  {Function} callback(error)
  */
-Admin.prototype.validateUser = function(options, callback) {
-    var uri;
-
-    if (!options.emailAddress || !options.token) {
-        callback(new Error('Incomplete arguments!'));
-        return;
-    }
-
-    uri = '/user/validate';
-    this._restDao.post(options, uri, function(err) {
-        if (!err || (err && err.code === 202)) {
-            // success
-            callback();
-        } else {
-            callback(new Error('Validation failed!'));
+Admin.prototype.validateUser = function(options) {
+    var self = this;
+    return new Promise(function(resolve) {
+        if (!options.emailAddress || !options.token) {
+            throw new Error('Incomplete arguments!');
         }
+        resolve();
+
+    }).then(function() {
+        var uri = '/user/validate';
+        return self._restDao.post(options, uri);
+
+    }).catch(function(err) {
+        if (err && err.code === 202) {
+            // success
+            return;
+        }
+
+        throw new Error('Validation failed!');
     });
 };

@@ -19,23 +19,21 @@ describe('Private Key DAO unit tests', function() {
 
     describe('requestDeviceRegistration', function() {
         it('should fail due to invalid args', function(done) {
-            privkeyDao.requestDeviceRegistration({}, function(err, sessionKey) {
+            privkeyDao.requestDeviceRegistration({}).catch(function(err) {
                 expect(err).to.exist;
-                expect(sessionKey).to.not.exist;
                 done();
             });
         });
 
         it('should work', function(done) {
-            restDaoStub.post.yields(null, {
+            restDaoStub.post.returns(resolves({
                 encryptedRegSessionKey: 'asdf'
-            });
+            }));
 
             privkeyDao.requestDeviceRegistration({
                 userId: emailAddress,
                 deviceName: deviceName
-            }, function(err, sessionKey) {
-                expect(err).to.not.exist;
+            }).then(function(sessionKey) {
                 expect(sessionKey).to.exist;
                 done();
             });
@@ -44,50 +42,44 @@ describe('Private Key DAO unit tests', function() {
 
     describe('uploadDeviceSecret', function() {
         it('should fail due to invalid args', function(done) {
-            privkeyDao.uploadDeviceSecret({}, function(err) {
+            privkeyDao.uploadDeviceSecret({}).catch(function(err) {
                 expect(err).to.exist;
                 done();
             });
         });
 
         it('should work', function(done) {
-            restDaoStub.put.yields();
+            restDaoStub.put.returns(resolves());
 
             privkeyDao.uploadDeviceSecret({
                 userId: emailAddress,
                 deviceName: deviceName,
                 encryptedDeviceSecret: 'asdf',
                 iv: 'iv'
-            }, function(err) {
-                expect(err).to.not.exist;
-                done();
-            });
+            }).then(done);
         });
     });
 
     describe('requestAuthSessionKey', function() {
         it('should fail due to invalid args', function(done) {
-            privkeyDao.requestAuthSessionKey({}, function(err) {
+            privkeyDao.requestAuthSessionKey({}).catch(function(err) {
                 expect(err).to.exist;
                 done();
             });
         });
 
         it('should work', function(done) {
-            restDaoStub.post.withArgs(undefined, '/auth/user/' + emailAddress).yields();
+            restDaoStub.post.withArgs(undefined, '/auth/user/' + emailAddress).returns(resolves());
 
             privkeyDao.requestAuthSessionKey({
                 userId: emailAddress
-            }, function(err) {
-                expect(err).to.not.exist;
-                done();
-            });
+            }).then(done);
         });
     });
 
     describe('verifyAuthentication', function() {
         it('should fail due to invalid args', function(done) {
-            privkeyDao.verifyAuthentication({}, function(err) {
+            privkeyDao.verifyAuthentication({}).catch(function(err) {
                 expect(err).to.exist;
                 done();
             });
@@ -104,18 +96,15 @@ describe('Private Key DAO unit tests', function() {
                 iv: ' iv'
             };
 
-            restDaoStub.put.withArgs(options, '/auth/user/' + emailAddress + '/session/' + sessionId).yields();
+            restDaoStub.put.withArgs(options, '/auth/user/' + emailAddress + '/session/' + sessionId).returns(resolves());
 
-            privkeyDao.verifyAuthentication(options, function(err) {
-                expect(err).to.not.exist;
-                done();
-            });
+            privkeyDao.verifyAuthentication(options).then(done);
         });
     });
 
     describe('upload', function() {
         it('should fail due to invalid args', function(done) {
-            privkeyDao.upload({}, function(err) {
+            privkeyDao.upload({}).catch(function(err) {
                 expect(err).to.exist;
                 done();
             });
@@ -131,19 +120,34 @@ describe('Private Key DAO unit tests', function() {
                 iv: 'iv'
             };
 
-            restDaoStub.post.withArgs(options, '/privatekey/user/' + emailAddress + '/session/' + options.sessionId).yields();
+            restDaoStub.post.withArgs(options, '/privatekey/user/' + emailAddress + '/session/' + options.sessionId).returns(resolves());
 
-            privkeyDao.upload(options, function(err) {
-                expect(err).to.not.exist;
-                done();
-            });
+            privkeyDao.upload(options).then(done);
         });
     });
 
     describe('requestDownload', function() {
         it('should fail due to invalid args', function(done) {
-            privkeyDao.requestDownload({}, function(err) {
+            privkeyDao.requestDownload({}).catch(function(err) {
                 expect(err).to.exist;
+                done();
+            });
+        });
+
+        it('should not find a key', function(done) {
+            var keyId = '12345';
+
+            restDaoStub.get.withArgs({
+                uri: '/privatekey/user/' + emailAddress + '/key/' + keyId
+            }).returns(rejects({
+                code: 404
+            }));
+
+            privkeyDao.requestDownload({
+                userId: emailAddress,
+                keyId: keyId
+            }).then(function(found) {
+                expect(found).to.be.false;
                 done();
             });
         });
@@ -153,13 +157,12 @@ describe('Private Key DAO unit tests', function() {
 
             restDaoStub.get.withArgs({
                 uri: '/privatekey/user/' + emailAddress + '/key/' + keyId
-            }).yields();
+            }).returns(resolves());
 
             privkeyDao.requestDownload({
                 userId: emailAddress,
                 keyId: keyId
-            }, function(err, found) {
-                expect(err).to.not.exist;
+            }).then(function(found) {
                 expect(found).to.be.true;
                 done();
             });
@@ -168,8 +171,26 @@ describe('Private Key DAO unit tests', function() {
 
     describe('hasPrivateKey', function() {
         it('should fail due to invalid args', function(done) {
-            privkeyDao.hasPrivateKey({}, function(err) {
+            privkeyDao.hasPrivateKey({}).catch(function(err) {
                 expect(err).to.exist;
+                done();
+            });
+        });
+
+        it('should not find a key', function(done) {
+            var keyId = '12345';
+
+            restDaoStub.get.withArgs({
+                uri: '/privatekey/user/' + emailAddress + '/key/' + keyId + '?ignoreRecovery=true'
+            }).returns(rejects({
+                code: 404
+            }));
+
+            privkeyDao.hasPrivateKey({
+                userId: emailAddress,
+                keyId: keyId
+            }).then(function(found) {
+                expect(found).to.be.false;
                 done();
             });
         });
@@ -179,13 +200,12 @@ describe('Private Key DAO unit tests', function() {
 
             restDaoStub.get.withArgs({
                 uri: '/privatekey/user/' + emailAddress + '/key/' + keyId + '?ignoreRecovery=true'
-            }).yields();
+            }).returns(resolves());
 
             privkeyDao.hasPrivateKey({
                 userId: emailAddress,
                 keyId: keyId
-            }, function(err, found) {
-                expect(err).to.not.exist;
+            }).then(function(found) {
                 expect(found).to.be.true;
                 done();
             });
@@ -194,7 +214,7 @@ describe('Private Key DAO unit tests', function() {
 
     describe('download', function() {
         it('should fail due to invalid args', function(done) {
-            privkeyDao.download({}, function(err) {
+            privkeyDao.download({}).catch(function(err) {
                 expect(err).to.exist;
                 done();
             });
@@ -207,16 +227,13 @@ describe('Private Key DAO unit tests', function() {
 
             restDaoStub.get.withArgs({
                 uri: '/privatekey/user/' + emailAddress + '/key/' + key._id + '/recovery/token'
-            }).yields();
+            }).returns(resolves());
 
             privkeyDao.download({
                 userId: emailAddress,
                 keyId: key._id,
                 recoveryToken: 'token'
-            }, function(err) {
-                expect(err).to.not.exist;
-                done();
-            });
+            }).then(done);
         });
     });
 

@@ -6,20 +6,15 @@
  * In database version 2, the stored email objects have to be purged, because the
  * new data model stores information about the email structure in the property 'bodyParts'.
  */
-function updateV2(options, callback) {
+function updateV2(options) {
     var emailDbType = 'email_',
         versionDbType = 'dbVersion',
         postUpdateDbVersion = 2;
 
     // remove the emails
-    options.userStorage.removeList(emailDbType, function(err) {
-        if (err) {
-            callback(err);
-            return;
-        }
-
+    return options.userStorage.removeList(emailDbType).then(function() {
         // update the database version to postUpdateDbVersion
-        options.appConfigStorage.storeList([postUpdateDbVersion], versionDbType, callback);
+        return options.appConfigStorage.storeList([postUpdateDbVersion], versionDbType);
     });
 }
 

@@ -44,3 +44,23 @@ require('../src/js/util');
 require('../src/js/crypto');
 require('../src/js/service');
 require('../src/js/email');
+
+//
+// Global mocks
+//
+
+window.qMock = function(res, rej) {
+    return new Promise(res, rej);
+};
+
+window.resolves = function(val) {
+    return new Promise(function(res) {
+        res(val);
+    });
+};
+
+window.rejects = function(val) {
+    return new Promise(function(res, rej) {
+        rej(val);
+    });
+};

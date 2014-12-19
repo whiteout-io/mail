@@ -17,21 +17,22 @@ describe('Device Storage DAO unit tests', function() {
     afterEach(function() {});
 
     describe('init', function() {
-        it('should work', function() {
-            lawnchairDaoStub.init.yields();
+        it('should work', function(done) {
+            lawnchairDaoStub.init.returns(resolves());
 
-            storageDao.init(testUser, function(err) {
-                expect(err).to.not.exist;
+            storageDao.init(testUser).then(function() {
                 expect(lawnchairDaoStub.init.calledOnce).to.be.true;
+                done();
             });
         });
 
-        it('should fail', function() {
-            lawnchairDaoStub.init.yields(new Error());
+        it('should fail', function(done) {
+            lawnchairDaoStub.init.returns(rejects(new Error()));
 
-            storageDao.init(testUser, function(err) {
+            storageDao.init(testUser).catch(function(err) {
                 expect(err).to.exist;
                 expect(lawnchairDaoStub.init.calledOnce).to.be.true;
+                done();
             });
         });
     });
@@ -40,7 +41,7 @@ describe('Device Storage DAO unit tests', function() {
         it('should fail', function(done) {
             var list = [{}];
 
-            storageDao.storeList(list, '', function(err) {
+            storageDao.storeList(list, '').catch(function(err) {
                 expect(err).to.exist;
                 done();
             });
@@ -49,21 +50,17 @@ describe('Device Storage DAO unit tests', function() {
         it('should work with empty list', function(done) {
             var list = [];
 
-            storageDao.storeList(list, 'email', function(err) {
-                expect(err).to.not.exist;
-                done();
-            });
+            storageDao.storeList(list, 'email').then(done);
         });
 
         it('should work', function(done) {
-            lawnchairDaoStub.batch.yields();
+            lawnchairDaoStub.batch.returns(resolves());
 
             var list = [{
                 foo: 'bar'
             }];
 
-            storageDao.storeList(list, 'email', function(err) {
-                expect(err).to.not.exist;
+            storageDao.storeList(list, 'email').then(function() {
                 expect(lawnchairDaoStub.batch.calledOnce).to.be.true;
                 done();
             });
@@ -72,10 +69,9 @@ describe('Device Storage DAO unit tests', function() {
 
     describe('remove list', function() {
         it('should work', function(done) {
-            lawnchairDaoStub.removeList.yields();
+            lawnchairDaoStub.removeList.returns(resolves());
 
-            storageDao.removeList('email', function(err) {
-                expect(err).to.not.exist;
+            storageDao.removeList('email').then(function() {
                 expect(lawnchairDaoStub.removeList.calledOnce).to.be.true;
                 done();
             });
@@ -84,10 +80,9 @@ describe('Device Storage DAO unit tests', function() {
 
     describe('list items', function() {
         it('should work', function(done) {
-            lawnchairDaoStub.list.yields();
+            lawnchairDaoStub.list.returns(resolves());
 
-            storageDao.listItems('email', 0, null, function(err) {
-                expect(err).to.not.exist;
+            storageDao.listItems('email', 0, null).then(function() {
                 expect(lawnchairDaoStub.list.calledOnce).to.be.true;
                 done();
             });
@@ -96,10 +91,9 @@ describe('Device Storage DAO unit tests', function() {
 
     describe('clear', function() {
         it('should work', function(done) {
-            lawnchairDaoStub.clear.yields();
+            lawnchairDaoStub.clear.returns(resolves());
 
-            storageDao.clear(function(err) {
-                expect(err).to.not.exist;
+            storageDao.clear().then(function() {
                 expect(lawnchairDaoStub.clear.calledOnce).to.be.true;
                 done();
             });

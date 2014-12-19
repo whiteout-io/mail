@@ -64,15 +64,14 @@ describe('Connection Doctor', function() {
 
     describe('#_checkOnline', function() {
         it('should check if browser is online', function(done) {
-            doctor._checkOnline(function(error) {
-                if (navigator.onLine) {
-                    expect(error).to.not.exist;
-                } else {
-                    expect(error).to.exist;
-                    expect(error.code).to.equal(ConnectionDoctor.OFFLINE);
-                }
-                done();
-            });
+            if (navigator.onLine) {
+                doctor._checkOnline().then(done);
+            } else {
+                doctor._checkOnline().catch(function(err) {
+                    expect(err.code).to.equal(ConnectionDoctor.OFFLINE);
+                    done();
+                });
+            }
         });
     });
 
@@ -80,8 +79,7 @@ describe('Connection Doctor', function() {
         it('should be able to reach the host w/o cert', function(done) {
             credentials.imap.ca = undefined;
 
-            doctor._checkReachable(credentials.imap, function(error) {
-                expect(error).to.not.exist;
+            doctor._checkReachable(credentials.imap).then(function() {
                 expect(TCPSocket.open.calledOnce).to.be.true;
                 expect(TCPSocket.open.calledWith(credentials.imap.host, credentials.imap.port, {
                     binaryType: 'arraybuffer',
@@ -105,8 +103,7 @@ describe('Connection Doctor', function() {
                 }
             });
 
-            doctor._checkReachable(credentials.imap, function(error) {
-                expect(error).to.not.exist;
+            doctor._checkReachable(credentials.imap).then(function() {
                 expect(TCPSocket.open.calledOnce).to.be.true;
                 expect(TCPSocket.open.calledWith(credentials.imap.host, credentials.imap.port, {
                     binaryType: 'arraybuffer',
@@ -122,8 +119,7 @@ describe('Connection Doctor', function() {
         });
 
         it('should fail w/ wrong cert', function(done) {
-            doctor._checkReachable(credentials.imap, function(error) {
-                expect(error).to.exist;
+            doctor._checkReachable(credentials.imap).catch(function(error) {
                 expect(error.code).to.equal(ConnectionDoctor.TLS_WRONG_CERT);
                 expect(TCPSocket.open.calledOnce).to.be.true;
                 expect(TCPSocket.open.calledWith(credentials.imap.host, credentials.imap.port, {
@@ -142,8 +138,7 @@ describe('Connection Doctor', function() {
         });
 
         it('should fail w/ host unreachable', function(done) {
-            doctor._checkReachable(credentials.imap, function(error) {
-                expect(error).to.exist;
+            doctor._checkReachable(credentials.imap).catch(function(error) {
                 expect(error.code).to.equal(ConnectionDoctor.HOST_UNREACHABLE);
                 expect(TCPSocket.open.calledOnce).to.be.true;
 
@@ -160,8 +155,7 @@ describe('Connection Doctor', function() {
             var origTimeout = cfg.connDocTimeout; // remember timeout from the config to reset it on done
             cfg.connDocTimeout = 20; // set to 20ms for the test
 
-            doctor._checkReachable(credentials.imap, function(error) {
-                expect(error).to.exist;
+            doctor._checkReachable(credentials.imap).catch(function(error) {
                 expect(error.code).to.equal(ConnectionDoctor.HOST_TIMEOUT);
                 expect(TCPSocket.open.calledOnce).to.be.true;
                 cfg.connDocTimeout = origTimeout;
@@ -179,8 +173,7 @@ describe('Connection Doctor', function() {
             });
             imapStub.logout.yieldsAsync();
 
-            doctor._checkImap(function(error) {
-                expect(error).to.not.exist;
+            doctor._checkImap().then(function() {
                 expect(imapStub.login.calledOnce).to.be.true;
                 expect(imapStub.listWellKnownFolders.calledOnce).to.be.true;
                 expect(imapStub.logout.calledOnce).to.be.true;
@@ -195,8 +188,7 @@ describe('Connection Doctor', function() {
                 Inbox: [{}]
             });
 
-            doctor._checkImap(function(error) {
-                expect(error).to.exist;
+            doctor._checkImap().catch(function(error) {
                 expect(error.code).to.equal(ConnectionDoctor.GENERIC_ERROR);
                 expect(error.underlyingError).to.exist;
                 expect(imapStub.login.calledOnce).to.be.true;
@@ -218,8 +210,7 @@ describe('Connection Doctor', function() {
                 Inbox: []
             });
 
-            doctor._checkImap(function(error) {
-                expect(error).to.exist;
+            doctor._checkImap().catch(function(error) {
                 expect(error.code).to.equal(ConnectionDoctor.NO_INBOX);
                 expect(imapStub.login.calledOnce).to.be.true;
                 expect(imapStub.listWellKnownFolders.calledOnce).to.be.true;
@@ -233,8 +224,7 @@ describe('Connection Doctor', function() {
             imapStub.login.yieldsAsync();
             imapStub.listWellKnownFolders.yieldsAsync(new Error());
 
-            doctor._checkImap(function(error) {
-                expect(error).to.exist;
+            doctor._checkImap().catch(function(error) {
                 expect(error.code).to.equal(ConnectionDoctor.GENERIC_ERROR);
                 expect(error.underlyingError).to.exist;
                 expect(imapStub.login.calledOnce).to.be.true;
@@ -246,8 +236,7 @@ describe('Connection Doctor', function() {
         });
 
         it('should fail w/ auth rejected', function(done) {
-            doctor._checkImap(function(error) {
-                expect(error).to.exist;
+            doctor._checkImap().catch(function(error) {
                 expect(error.code).to.equal(ConnectionDoctor.AUTH_REJECTED);
                 expect(error.underlyingError).to.exist;
                 expect(imapStub.login.calledOnce).to.be.true;
@@ -266,8 +255,7 @@ describe('Connection Doctor', function() {
 
     describe('#_checkSmtp', function() {
         it('should perform SMTP login, logout', function(done) {
-            doctor._checkSmtp(function(error) {
-                expect(error).to.not.exist;
+            doctor._checkSmtp().then(function() {
                 expect(smtpStub.connect.calledOnce).to.be.true;
                 expect(smtpStub.quit.calledOnce).to.be.true;
 
@@ -279,8 +267,7 @@ describe('Connection Doctor', function() {
         });
 
         it('should fail w/ auth rejected', function(done) {
-            doctor._checkSmtp(function(error) {
-                expect(error).to.exist;
+            doctor._checkSmtp().catch(function(error) {
                 expect(error.code).to.equal(ConnectionDoctor.AUTH_REJECTED);
                 expect(error.underlyingError).to.exist;
                 expect(smtpStub.connect.calledOnce).to.be.true;
@@ -302,14 +289,13 @@ describe('Connection Doctor', function() {
         });
 
         it('should perform all tests', function(done) {
-            doctor._checkOnline.yieldsAsync();
-            doctor._checkReachable.withArgs(credentials.imap).yieldsAsync();
-            doctor._checkReachable.withArgs(credentials.smtp).yieldsAsync();
-            doctor._checkImap.yieldsAsync();
-            doctor._checkSmtp.yieldsAsync();
+            doctor._checkOnline.returns(resolves());
+            doctor._checkReachable.withArgs(credentials.imap).returns(resolves());
+            doctor._checkReachable.withArgs(credentials.smtp).returns(resolves());
+            doctor._checkImap.returns(resolves());
+            doctor._checkSmtp.returns(resolves());
 
-            doctor.check(function(err) {
-                expect(err).to.not.exist;
+            doctor.check().then(function() {
                 expect(doctor._checkOnline.calledOnce).to.be.true;
                 expect(doctor._checkReachable.calledTwice).to.be.true;
                 expect(doctor._checkImap.calledOnce).to.be.true;
@@ -320,13 +306,13 @@ describe('Connection Doctor', function() {
         });
 
         it('should fail for smtp', function(done) {
-            doctor._checkOnline.yieldsAsync();
-            doctor._checkReachable.withArgs(credentials.imap).yieldsAsync();
-            doctor._checkReachable.withArgs(credentials.smtp).yieldsAsync();
-            doctor._checkImap.yieldsAsync();
-            doctor._checkSmtp.yieldsAsync(new Error());
+            doctor._checkOnline.returns(resolves());
+            doctor._checkReachable.withArgs(credentials.imap).returns(resolves());
+            doctor._checkReachable.withArgs(credentials.smtp).returns(resolves());
+            doctor._checkImap.returns(resolves());
+            doctor._checkSmtp.returns(rejects(new Error()));
 
-            doctor.check(function(err) {
+            doctor.check().catch(function(err) {
                 expect(err).to.exist;
                 expect(doctor._checkOnline.calledOnce).to.be.true;
                 expect(doctor._checkReachable.calledTwice).to.be.true;
@@ -338,12 +324,12 @@ describe('Connection Doctor', function() {
         });
 
         it('should fail for imap', function(done) {
-            doctor._checkOnline.yieldsAsync();
-            doctor._checkReachable.withArgs(credentials.imap).yieldsAsync();
-            doctor._checkReachable.withArgs(credentials.smtp).yieldsAsync();
-            doctor._checkImap.yieldsAsync(new Error());
+            doctor._checkOnline.returns(resolves());
+            doctor._checkReachable.withArgs(credentials.imap).returns(resolves());
+            doctor._checkReachable.withArgs(credentials.smtp).returns(resolves());
+            doctor._checkImap.returns(rejects(new Error()));
 
-            doctor.check(function(err) {
+            doctor.check().catch(function(err) {
                 expect(err).to.exist;
                 expect(doctor._checkOnline.calledOnce).to.be.true;
                 expect(doctor._checkReachable.calledTwice).to.be.true;
@@ -355,11 +341,11 @@ describe('Connection Doctor', function() {
         });
 
         it('should fail for smtp reachability', function(done) {
-            doctor._checkOnline.yieldsAsync();
-            doctor._checkReachable.withArgs(credentials.imap).yieldsAsync();
-            doctor._checkReachable.withArgs(credentials.smtp).yieldsAsync(new Error());
+            doctor._checkOnline.returns(resolves());
+            doctor._checkReachable.withArgs(credentials.imap).returns(resolves());
+            doctor._checkReachable.withArgs(credentials.smtp).returns(rejects(new Error()));
 
-            doctor.check(function(err) {
+            doctor.check().catch(function(err) {
                 expect(err).to.exist;
                 expect(doctor._checkOnline.calledOnce).to.be.true;
                 expect(doctor._checkReachable.calledTwice).to.be.true;
@@ -371,10 +357,10 @@ describe('Connection Doctor', function() {
         });
 
         it('should fail for imap reachability', function(done) {
-            doctor._checkOnline.yieldsAsync();
-            doctor._checkReachable.withArgs(credentials.imap).yieldsAsync(new Error());
+            doctor._checkOnline.returns(resolves());
+            doctor._checkReachable.withArgs(credentials.imap).returns(rejects(new Error()));
 
-            doctor.check(function(err) {
+            doctor.check().catch(function(err) {
                 expect(err).to.exist;
                 expect(doctor._checkOnline.calledOnce).to.be.true;
                 expect(doctor._checkReachable.calledOnce).to.be.true;
@@ -386,9 +372,9 @@ describe('Connection Doctor', function() {
         });
 
         it('should fail for offline', function(done) {
-            doctor._checkOnline.yieldsAsync(new Error());
+            doctor._checkOnline.returns(rejects(new Error()));
 
-            doctor.check(function(err) {
+            doctor.check().catch(function(err) {
                 expect(err).to.exist;
                 expect(doctor._checkOnline.calledOnce).to.be.true;
                 expect(doctor._checkReachable.called).to.be.false;
@@ -402,7 +388,7 @@ describe('Connection Doctor', function() {
         it('should fail w/o config', function(done) {
             doctor.credentials = doctor._imap = doctor._smtp = undefined;
 
-            doctor.check(function(err) {
+            doctor.check().catch(function(err) {
                 expect(err).to.exist;
                 expect(doctor._checkOnline.called).to.be.false;
                 expect(doctor._checkReachable.called).to.be.false;

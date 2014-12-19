@@ -44,6 +44,7 @@ describe('Mail List controller unit test', function() {
             ctrl = $controller(MailListCtrl, {
                 $scope: scope,
                 $location: location,
+                $q: window.qMock,
                 status: statusMock,
                 notification: notificationMock,
                 email: emailMock,
@@ -207,15 +208,17 @@ describe('Mail List controller unit test', function() {
     });
 
     describe('getBody', function() {
-        it('should get the mail content', function() {
+        it('should get the mail content', function(done) {
             scope.state.nav = {
                 currentFolder: {
                     type: 'asd',
                 }
             };
 
-            scope.getBody();
-            expect(emailMock.getBody.calledOnce).to.be.true;
+            scope.getBody().then(function() {
+                expect(emailMock.getBody.calledOnce).to.be.true;
+                done();
+            });
         });
     });
 
@@ -245,7 +248,7 @@ describe('Mail List controller unit test', function() {
     });
 
     describe('select', function() {
-        it('should decrypt, focus mark an unread mail as read', function() {
+        it('should decrypt, focus mark an unread mail as read', function(done) {
             scope.pendingNotifications = ['asd'];
             sinon.stub(notificationMock, 'close');
 
@@ -272,20 +275,21 @@ describe('Mail List controller unit test', function() {
 
             keychainMock.refreshKeyForUserId.withArgs({
                 userId: mail.from[0].address
-            }).yields();
+            }).returns(resolves());
 
-            scope.select(mail);
+            scope.select(mail).then(function() {
+                expect(emailMock.decryptBody.calledOnce).to.be.true;
+                expect(keychainMock.refreshKeyForUserId.calledOnce).to.be.true;
+                expect(scope.state.mailList.selected).to.equal(mail);
+                expect(notificationMock.close.calledWith('asd')).to.be.true;
+                expect(notificationMock.close.calledOnce).to.be.true;
 
-            expect(emailMock.decryptBody.calledOnce).to.be.true;
-            expect(keychainMock.refreshKeyForUserId.calledOnce).to.be.true;
-            expect(scope.state.mailList.selected).to.equal(mail);
-            expect(notificationMock.close.calledWith('asd')).to.be.true;
-            expect(notificationMock.close.calledOnce).to.be.true;
-
-            notificationMock.close.restore();
+                notificationMock.close.restore();
+                done();
+            });
         });
 
-        it('should decrypt and focus a read mail', function() {
+        it('should decrypt and focus a read mail', function(done) {
             var mail = {
                 from: [{
                     address: 'asd'
@@ -307,13 +311,14 @@ describe('Mail List controller unit test', function() {
 
             keychainMock.refreshKeyForUserId.withArgs({
                 userId: mail.from[0].address
-            }).yields();
+            }).returns(resolves());
 
-            scope.select(mail);
-
-            expect(emailMock.decryptBody.calledOnce).to.be.true;
-            expect(keychainMock.refreshKeyForUserId.calledOnce).to.be.true;
-            expect(scope.state.mailList.selected).to.equal(mail);
+            scope.select(mail).then(function() {
+                expect(emailMock.decryptBody.calledOnce).to.be.true;
+                expect(keychainMock.refreshKeyForUserId.calledOnce).to.be.true;
+                expect(scope.state.mailList.selected).to.equal(mail);
+                done();
+            });
         });
     });
 

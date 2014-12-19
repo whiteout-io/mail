@@ -23,6 +23,7 @@ describe('Private Key Upload Controller unit test', function() {
             ctrl = $controller(PrivateKeyUploadCtrl, {
                 $location: location,
                 $scope: scope,
+                $q: window.qMock,
                 keychain: keychainMock,
                 pgp: pgpStub,
                 dialog: dialogStub,
@@ -41,14 +42,15 @@ describe('Private Key Upload Controller unit test', function() {
             _id: 'keyId',
         };
 
-        it('should fail', function() {
+        it('should fail', function(done) {
             pgpStub.getKeyParams.returns(keyParams);
-            keychainMock.hasPrivateKey.yields(42);
+            keychainMock.hasPrivateKey.returns(rejects(42));
 
-            scope.checkServerForKey();
-
-            expect(dialogStub.error.calledOnce).to.be.true;
-            expect(keychainMock.hasPrivateKey.calledOnce).to.be.true;
+            scope.checkServerForKey().then(function() {
+                expect(dialogStub.error.calledOnce).to.be.true;
+                expect(keychainMock.hasPrivateKey.calledOnce).to.be.true;
+                done();
+            });
         });
 
         it('should return true', function(done) {
@@ -56,9 +58,9 @@ describe('Private Key Upload Controller unit test', function() {
             keychainMock.hasPrivateKey.withArgs({
                 userId: keyParams.userId,
                 keyId: keyParams._id
-            }).yields(null, true);
+            }).returns(resolves(true));
 
-            scope.checkServerForKey(function(privateKeySynced) {
+            scope.checkServerForKey().then(function(privateKeySynced) {
                 expect(privateKeySynced).to.be.true;
                 done();
             });
@@ -69,9 +71,9 @@ describe('Private Key Upload Controller unit test', function() {
             keychainMock.hasPrivateKey.withArgs({
                 userId: keyParams.userId,
                 keyId: keyParams._id
-            }).yields(null, false);
+            }).returns(resolves(false));
 
-            scope.checkServerForKey(function(privateKeySynced) {
+            scope.checkServerForKey().then(function(privateKeySynced) {
                 expect(privateKeySynced).to.be.undefined;
                 done();
             });
@@ -110,27 +112,27 @@ describe('Private Key Upload Controller unit test', function() {
 
     describe('setDeviceName', function() {
         it('should work', function(done) {
-            keychainMock.setDeviceName.yields();
-            scope.setDeviceName(done);
+            keychainMock.setDeviceName.returns(resolves());
+            scope.setDeviceName().then(done);
         });
     });
 
     describe('encryptAndUploadKey', function() {
-        it('should fail due to keychain.registerDevice', function() {
-            keychainMock.registerDevice.yields(42);
+        it('should fail due to keychain.registerDevice', function(done) {
+            keychainMock.registerDevice.returns(rejects(42));
 
-            scope.encryptAndUploadKey();
-
-            expect(dialogStub.error.calledOnce).to.be.true;
-            expect(keychainMock.registerDevice.calledOnce).to.be.true;
+            scope.encryptAndUploadKey().then(function() {
+                expect(dialogStub.error.calledOnce).to.be.true;
+                expect(keychainMock.registerDevice.calledOnce).to.be.true;
+                done();
+            });
         });
 
         it('should work', function(done) {
-            keychainMock.registerDevice.yields();
-            keychainMock.uploadPrivateKey.yields();
+            keychainMock.registerDevice.returns(resolves());
+            keychainMock.uploadPrivateKey.returns(resolves());
 
-            scope.encryptAndUploadKey(function(err) {
-                expect(err).to.not.exist;
+            scope.encryptAndUploadKey().then(function() {
                 expect(keychainMock.registerDevice.calledOnce).to.be.true;
                 expect(keychainMock.uploadPrivateKey.calledOnce).to.be.true;
                 done();
@@ -185,36 +187,39 @@ describe('Private Key Upload Controller unit test', function() {
             expect(scope.step).to.equal(2);
         });
 
-        it('should fail for 3 due to error in setDeviceName', function() {
+        it('should fail for 3 due to error in setDeviceName', function(done) {
             scope.step = 3;
-            setDeviceNameStub.yields(42);
+            setDeviceNameStub.returns(rejects(42));
 
-            scope.goForward();
-
-            expect(dialogStub.error.calledOnce).to.be.true;
-            expect(scope.step).to.equal(3);
+            scope.goForward().then(function() {
+                expect(dialogStub.error.calledOnce).to.be.true;
+                expect(scope.step).to.equal(3);
+                done();
+            });
         });
 
-        it('should fail for 3 due to error in encryptAndUploadKey', function() {
+        it('should fail for 3 due to error in encryptAndUploadKey', function(done) {
             scope.step = 3;
-            setDeviceNameStub.yields();
-            encryptAndUploadKeyStub.yields(42);
+            setDeviceNameStub.returns(resolves());
+            encryptAndUploadKeyStub.returns(rejects(42));
 
-            scope.goForward();
-
-            expect(dialogStub.error.calledOnce).to.be.true;
-            expect(scope.step).to.equal(4);
+            scope.goForward().then(function() {
+                expect(dialogStub.error.calledOnce).to.be.true;
+                expect(scope.step).to.equal(4);
+                done();
+            });
         });
 
-        it('should work for 3', function() {
+        it('should work for 3', function(done) {
             scope.step = 3;
-            setDeviceNameStub.yields();
-            encryptAndUploadKeyStub.yields();
+            setDeviceNameStub.returns(resolves());
+            encryptAndUploadKeyStub.returns(resolves());
 
-            scope.goForward();
-
-            expect(dialogStub.info.calledOnce).to.be.true;
-            expect(scope.step).to.equal(4);
+            scope.goForward().then(function() {
+                expect(dialogStub.info.calledOnce).to.be.true;
+                expect(scope.step).to.equal(4);
+                done();
+            });
         });
     });
 });

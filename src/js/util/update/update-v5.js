@@ -16,14 +16,9 @@ var POST_UPDATE_DB_VERSION = 5;
  * Due to an overlooked issue, there may be multiple folders, e.g. for sent mails.
  * This removes the "duplicate" folders.
  */
-function update(options, callback) {
-
+function update(options) {
     // remove the emails
-    options.userStorage.listItems(FOLDER_DB_TYPE, 0, null, function(err, stored) {
-        if (err) {
-            return callback(err);
-        }
-
+    return options.userStorage.listItems(FOLDER_DB_TYPE, 0, null).then(function(stored) {
         var folders = stored[0] || [];
         [FOLDER_TYPE_INBOX, FOLDER_TYPE_SENT, FOLDER_TYPE_DRAFTS, FOLDER_TYPE_TRASH].forEach(function(mbxType) {
             var foldersForType = folders.filter(function(mbx) {
@@ -39,15 +34,11 @@ function update(options, callback) {
                 folders.splice(folders.indexOf(foldersForType[i]), 1);
             }
         });
+        return options.userStorage.storeList([folders], FOLDER_DB_TYPE);
 
-        options.userStorage.storeList([folders], FOLDER_DB_TYPE, function(err) {
-            if (err) {
-                return callback(err);
-            }
-
-            // update the database version to POST_UPDATE_DB_VERSION
-            options.appConfigStorage.storeList([POST_UPDATE_DB_VERSION], VERSION_DB_TYPE, callback);
-        });
+    }).then(function() {
+        // update the database version to POST_UPDATE_DB_VERSION
+        return options.appConfigStorage.storeList([POST_UPDATE_DB_VERSION], VERSION_DB_TYPE);
     });
 }
 

@@ -30,6 +30,7 @@ describe('Login (initial user) Controller unit test', function() {
             ctrl = $controller(LoginInitialCtrl, {
                 $scope: scope,
                 $routeParams: {},
+                $q: window.qMock,
                 newsletter: newsletter,
                 email: emailMock,
                 auth: authMock
@@ -74,36 +75,38 @@ describe('Login (initial user) Controller unit test', function() {
             expect(newsletterStub.called).to.be.false;
         });
 
-        it('should fail due to error in emailDao.unlock', function() {
+        it('should fail due to error in emailDao.unlock', function(done) {
             scope.agree = true;
 
             emailMock.unlock.withArgs({
                 passphrase: undefined
-            }).yields(new Error('asdf'));
-            authMock.storeCredentials.yields();
+            }).returns(rejects(new Error('asdf')));
+            authMock.storeCredentials.returns(resolves());
 
-            scope.generateKey();
-
-            expect(scope.errMsg).to.exist;
-            expect(scope.state.ui).to.equal(1);
-            expect(newsletterStub.called).to.be.true;
+            scope.generateKey().then(function() {
+                expect(scope.errMsg).to.exist;
+                expect(scope.state.ui).to.equal(1);
+                expect(newsletterStub.called).to.be.true;
+                done();
+            });
         });
 
-        it('should unlock crypto', function() {
+        it('should unlock crypto', function(done) {
             scope.agree = true;
 
             emailMock.unlock.withArgs({
                 passphrase: undefined
-            }).yields();
-            authMock.storeCredentials.yields();
+            }).returns(resolves());
+            authMock.storeCredentials.returns(resolves());
 
-            scope.generateKey();
-
-            expect(scope.errMsg).to.not.exist;
-            expect(scope.state.ui).to.equal(2);
-            expect(newsletterStub.called).to.be.true;
-            expect(location.$$path).to.equal('/account');
-            expect(emailMock.unlock.calledOnce).to.be.true;
+            scope.generateKey().then(function() {
+                expect(scope.errMsg).to.not.exist;
+                expect(scope.state.ui).to.equal(2);
+                expect(newsletterStub.called).to.be.true;
+                expect(location.$$path).to.equal('/account');
+                expect(emailMock.unlock.calledOnce).to.be.true;
+                done();
+            });
         });
     });
 });

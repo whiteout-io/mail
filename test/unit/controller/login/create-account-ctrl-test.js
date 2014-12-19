@@ -29,6 +29,7 @@ describe('Create Account Controller unit test', function() {
                 $location: location,
                 $scope: scope,
                 $routeParams: {},
+                $q: window.qMock,
                 auth: authStub,
                 admin: adminStub
             });
@@ -54,16 +55,15 @@ describe('Create Account Controller unit test', function() {
             scope.form.$invalid = false;
             scope.betaCode = 'asfd';
             scope.phone = '12345';
-            adminStub.createUser.yieldsAsync(new Error('asdf'));
+            adminStub.createUser.returns(rejects(new Error('asdf')));
 
-            scope.$apply = function() {
+            scope.createWhiteoutAccount().then(function() {
                 expect(scope.busy).to.be.false;
                 expect(scope.errMsg).to.equal('asdf');
                 expect(adminStub.createUser.calledOnce).to.be.true;
                 done();
-            };
+            });
 
-            scope.createWhiteoutAccount();
             expect(scope.busy).to.be.true;
         });
 
@@ -71,16 +71,15 @@ describe('Create Account Controller unit test', function() {
             scope.form.$invalid = false;
             scope.betaCode = 'asfd';
             scope.phone = '12345';
-            adminStub.createUser.yieldsAsync();
+            adminStub.createUser.returns(resolves());
 
-            scope.$apply = function() {
+            scope.createWhiteoutAccount().then(function() {
                 expect(scope.busy).to.be.false;
                 expect(scope.errMsg).to.be.undefined;
                 expect(adminStub.createUser.calledOnce).to.be.true;
                 done();
-            };
+            });
 
-            scope.createWhiteoutAccount();
             expect(scope.busy).to.be.true;
         });
     });

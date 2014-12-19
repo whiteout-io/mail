@@ -4,15 +4,13 @@ var ngModule = angular.module('woServices');
 ngModule.service('newsletter', Newsletter);
 module.exports = Newsletter;
 
-function Newsletter($q) {
-    this._q = $q;
-}
+function Newsletter() {}
 
 /**
  * Sign up to the whiteout newsletter
  */
 Newsletter.prototype.signup = function(emailAddress, agree) {
-    return this._q(function(resolve, reject) {
+    return new Promise(function(resolve, reject) {
         // validate email address
         if (emailAddress.indexOf('@') < 0) {
             reject(new Error('Invalid email address!'));

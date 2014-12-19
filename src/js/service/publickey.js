@@ -11,95 +11,75 @@ function PublicKey(publicKeyRestDao) {
 /**
  * Verify the public key behind the given uuid
  */
-PublicKey.prototype.verify = function(uuid, callback) {
-    var uri = '/verify/' + uuid;
-
-    this._restDao.get({
-        uri: uri,
+PublicKey.prototype.verify = function(uuid) {
+    return this._restDao.get({
+        uri: '/verify/' + uuid,
         type: 'text'
-    }, function(err, res, status) {
-        if (err && err.code === 400) {
+    }).catch(function(err) {
+        if (err.code === 400) {
             // there was an attempt to verify a non-existing public key
-            callback();
             return;
         }
 
-        callback(err, res, status);
+        throw err;
     });
 };
 
 /**
  * Find the user's corresponding public key
  */
-PublicKey.prototype.get = function(keyId, callback) {
-    var uri = '/publickey/key/' + keyId;
-
-    this._restDao.get({
-        uri: uri
-    }, function(err, key) {
-        if (err && err.code === 404) {
-            callback();
+PublicKey.prototype.get = function(keyId) {
+    return this._restDao.get({
+        uri: '/publickey/key/' + keyId
+    }).catch(function(err) {
+        if (err.code === 404) {
             return;
         }
 
-        if (err) {
-            callback(err);
-            return;
-        }
-
-        callback(null, (key && key._id) ? key : undefined);
+        throw err;
     });
 };
 
 /**
  * Find the user's corresponding public key by email
  */
-PublicKey.prototype.getByUserId = function(userId, callback) {
-    var uri = '/publickey/user/' + userId;
-
-    this._restDao.get({
-        uri: uri
-    }, function(err, keys) {
-        // not found
-        if (err && err.code === 404) {
-            callback();
-            return;
-        }
-
-        if (err) {
-            callback(err);
-            return;
-        }
-
+PublicKey.prototype.getByUserId = function(userId) {
+    return this._restDao.get({
+        uri: '/publickey/user/' + userId
+    }).then(function(keys) {
         if (!keys || keys.length < 1) {
             // 'No public key for that user!'
-            callback();
             return;
         }
 
         if (keys.length > 1) {
-            callback({
-                errMsg: 'That user has multiple public keys!'
-            });
+            throw new Error('That user has multiple public keys!');
+        }
+
+        return keys[0];
+
+    }).catch(function(err) {
+        // not found
+        if (err.code === 404) {
             return;
         }
 
-        callback(null, keys[0]);
+        throw err;
     });
 };
 
 /**
  * Persist the user's publc key
  */
-PublicKey.prototype.put = function(pubkey, callback) {
+PublicKey.prototype.put = function(pubkey) {
     var uri = '/publickey/user/' + pubkey.userId + '/key/' + pubkey._id;
-    this._restDao.put(pubkey, uri, callback);
+    return this._restDao.put(pubkey, uri);
 };
 
 /**
  * Delete the public key from the cloud storage service
  */
-PublicKey.prototype.remove = function(keyId, callback) {
+PublicKey.prototype.remove = function(keyId) {
     var uri = '/publickey/key/' + keyId;
-    this._restDao.remove(uri, callback);
+    return this._restDao.remove(uri);
 };

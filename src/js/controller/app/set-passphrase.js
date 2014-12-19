@@ -1,6 +1,6 @@
 'use strict';
 
-var SetPassphraseCtrl = function($scope, pgp, keychain, dialog) {
+var SetPassphraseCtrl = function($scope, $q, pgp, keychain, dialog) {
 
     //
     // scope variables
@@ -76,52 +76,44 @@ var SetPassphraseCtrl = function($scope, pgp, keychain, dialog) {
 
     $scope.setPassphrase = function() {
         var keyId = pgp.getKeyParams()._id;
-        keychain.lookupPrivateKey(keyId, function(err, savedKey) {
-            if (err) {
-                dialog.error(err);
-                return;
-            }
 
-            pgp.changePassphrase({
+        return $q(function(resolve) {
+            resolve();
+
+        }).then(function() {
+            return keychain.lookupPrivateKey(keyId);
+
+        }).then(function(savedKey) {
+            // change passphrase
+            return pgp.changePassphrase({
                 privateKeyArmored: savedKey.encryptedKey,
                 oldPassphrase: $scope.oldPassphrase,
                 newPassphrase: $scope.newPassphrase
-            }, onPassphraseChanged);
-        });
+            }).catch(function(err) {
+                err.showBugReporter = false;
+                throw err;
+            });
+
+        }).then(function(newPrivateKeyArmored) {
+            // persist new armored key
+            var keyParams = pgp.getKeyParams(newPrivateKeyArmored);
+            var privateKey = {
+                _id: keyParams._id,
+                userId: keyParams.userId,
+                userIds: keyParams.userIds,
+                encryptedKey: newPrivateKeyArmored
+            };
+            return keychain.saveLocalPrivateKey(privateKey);
+
+        }).then(function() {
+            $scope.state.setPassphrase.toggle(false);
+            return dialog.info({
+                title: 'Success',
+                message: 'Passphrase change complete.'
+            });
+
+        }).catch(dialog.error);
     };
-
-    function onPassphraseChanged(err, newPrivateKeyArmored) {
-        if (err) {
-            err.showBugReporter = false;
-            dialog.error(err);
-            return;
-        }
-
-        // persist new armored key
-        var keyParams = pgp.getKeyParams(newPrivateKeyArmored);
-        var privateKey = {
-            _id: keyParams._id,
-            userId: keyParams.userId,
-            userIds: keyParams.userIds,
-            encryptedKey: newPrivateKeyArmored
-        };
-
-        keychain.saveLocalPrivateKey(privateKey, onKeyPersisted);
-    }
-
-    function onKeyPersisted(err) {
-        if (err) {
-            dialog.error(err);
-            return;
-        }
-
-        $scope.state.setPassphrase.toggle(false);
-        $scope.$apply();
-        dialog.info({
-            title: 'Success',
-            message: 'Passphrase change complete.'
-        });
-    }
 };
 
 module.exports = SetPassphraseCtrl;

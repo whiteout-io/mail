@@ -4,7 +4,7 @@
 // Controller
 //
 
-var ContactsCtrl = function($scope, keychain, pgp, dialog) {
+var ContactsCtrl = function($scope, $q, keychain, pgp, dialog) {
 
     //
     // scope state
@@ -13,7 +13,7 @@ var ContactsCtrl = function($scope, keychain, pgp, dialog) {
     $scope.state.contacts = {
         toggle: function(to) {
             $scope.state.lightbox = (to) ? 'contacts' : undefined;
-            $scope.listKeys();
+            return $scope.listKeys();
         }
     };
 
@@ -22,22 +22,21 @@ var ContactsCtrl = function($scope, keychain, pgp, dialog) {
     //
 
     $scope.listKeys = function() {
-        keychain.listLocalPublicKeys(function(err, keys) {
-            if (err) {
-                dialog.error(err);
-                return;
-            }
+        return $q(function(resolve) {
+            resolve();
 
-            keys.forEach(addParams);
+        }).then(function() {
+            return keychain.listLocalPublicKeys();
 
-            $scope.keys = keys;
-            $scope.$apply();
-
-            function addParams(key) {
+        }).then(function(keys) {
+            // add params to key objects
+            keys.forEach(function(key) {
                 var params = pgp.getKeyParams(key.publicKey);
                 _.extend(key, params);
-            }
-        });
+            });
+            $scope.keys = keys;
+
+        }).catch(dialog.error);
     };
 
     $scope.getFingerprint = function(key) {
@@ -74,29 +73,18 @@ var ContactsCtrl = function($scope, keychain, pgp, dialog) {
             imported: true // mark manually imported keys
         };
 
-        keychain.saveLocalPublicKey(pubkey, function(err) {
-            if (err) {
-                dialog.error(err);
-                return;
-            }
-
+        return keychain.saveLocalPublicKey(pubkey).then(function() {
             // update displayed keys
-            $scope.listKeys();
-        });
+            return $scope.listKeys();
+        }).catch(dialog.error);
     };
 
     $scope.removeKey = function(key) {
-        keychain.removeLocalPublicKey(key._id, function(err) {
-            if (err) {
-                dialog.error(err);
-                return;
-            }
-
+        return keychain.removeLocalPublicKey(key._id).then(function() {
             // update displayed keys
-            $scope.listKeys();
-        });
+            return $scope.listKeys();
+        }).catch(dialog.error);
     };
-
 };
 
 module.exports = ContactsCtrl;

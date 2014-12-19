@@ -28,6 +28,7 @@ describe('Login (existing user) Controller unit test', function() {
             ctrl = $controller(LoginExistingCtrl, {
                 $scope: scope,
                 $routeParams: {},
+                $q: window.qMock,
                 email: emailDaoMock,
                 auth: authMock,
                 keychain: keychainMock
@@ -44,32 +45,35 @@ describe('Login (existing user) Controller unit test', function() {
     });
 
     describe('confirm passphrase', function() {
-        it('should unlock crypto and start', function() {
+        it('should unlock crypto and start', function(done) {
             var keypair = {},
                 pathSpy = sinon.spy(location, 'path');
             scope.passphrase = passphrase;
-            keychainMock.getUserKeyPair.withArgs(emailAddress).yields(null, keypair);
+            keychainMock.getUserKeyPair.withArgs(emailAddress).returns(resolves(keypair));
             emailDaoMock.unlock.withArgs({
                 keypair: keypair,
                 passphrase: passphrase
-            }).yields();
-            authMock.storeCredentials.yields();
+            }).returns(resolves());
+            authMock.storeCredentials.returns(resolves());
 
-            scope.confirmPassphrase();
-
-            expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
-            expect(emailDaoMock.unlock.calledOnce).to.be.true;
-            expect(pathSpy.calledOnce).to.be.true;
-            expect(pathSpy.calledWith('/account')).to.be.true;
+            scope.confirmPassphrase().then(function() {
+                expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
+                expect(emailDaoMock.unlock.calledOnce).to.be.true;
+                expect(pathSpy.calledOnce).to.be.true;
+                expect(pathSpy.calledWith('/account')).to.be.true;
+                done();
+            });
         });
 
-        it('should not work when keypair unavailable', function() {
+        it('should not work when keypair unavailable', function(done) {
             scope.passphrase = passphrase;
-            keychainMock.getUserKeyPair.withArgs(emailAddress).yields(new Error('asd'));
+            keychainMock.getUserKeyPair.withArgs(emailAddress).returns(rejects(new Error('asd')));
 
-            scope.confirmPassphrase();
-            expect(scope.errMsg).to.exist;
-            expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
+            scope.confirmPassphrase().then(function() {
+                expect(scope.errMsg).to.exist;
+                expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
+                done();
+            });
         });
     });
 });

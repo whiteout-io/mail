@@ -58,55 +58,45 @@ describe('Account Service unit test', function() {
             account.init({
                 emailAddress: dummyUser.replace('@'),
                 realname: realname
-            }, onInit);
-
-            function onInit(err, keys) {
+            }).catch(function onInit(err) {
                 expect(err).to.exist;
-                expect(keys).to.not.exist;
-            }
+            });
         });
 
         it('should fail for _accountStore.init', function() {
-            devicestorageStub.init.yields(new Error('asdf'));
+            devicestorageStub.init.returns(rejects(new Error('asdf')));
 
             account.init({
                 emailAddress: dummyUser,
                 realname: realname
-            }, onInit);
-
-            function onInit(err, keys) {
+            }).catch(function onInit(err) {
                 expect(err.message).to.match(/asdf/);
-                expect(keys).to.not.exist;
-            }
+            });
         });
 
         it('should fail for _updateHandler.update', function() {
-            updateHandlerStub.update.yields(new Error('asdf'));
+            devicestorageStub.init.returns(resolves());
+            updateHandlerStub.update.returns(rejects(new Error('asdf')));
 
             account.init({
                 emailAddress: dummyUser,
                 realname: realname
-            }, onInit);
-
-            function onInit(err, keys) {
+            }).catch(function onInit(err) {
                 expect(err.message).to.match(/Updating/);
-                expect(keys).to.not.exist;
-            }
+            });
         });
 
         it('should fail for _keychain.getUserKeyPair', function() {
-            updateHandlerStub.update.yields();
-            keychainStub.getUserKeyPair.yields(new Error('asdf'));
+            devicestorageStub.init.returns(resolves());
+            updateHandlerStub.update.returns(resolves());
+            keychainStub.getUserKeyPair.returns(rejects(new Error('asdf')));
 
             account.init({
                 emailAddress: dummyUser,
                 realname: realname
-            }, onInit);
-
-            function onInit(err, keys) {
+            }).catch(function(err) {
                 expect(err.message).to.match(/asdf/);
-                expect(keys).to.not.exist;
-            }
+            });
         });
 
         it('should fail for _keychain.refreshKeyForUserId', function() {
@@ -114,19 +104,17 @@ describe('Account Service unit test', function() {
                 publicKey: 'publicKey'
             };
 
-            updateHandlerStub.update.yields();
-            keychainStub.getUserKeyPair.yields(null, storedKeys);
-            keychainStub.refreshKeyForUserId.yields(new Error('asdf'));
+            devicestorageStub.init.returns(resolves());
+            updateHandlerStub.update.returns(resolves());
+            keychainStub.getUserKeyPair.returns(resolves(storedKeys));
+            keychainStub.refreshKeyForUserId.returns(rejects(new Error('asdf')));
 
             account.init({
                 emailAddress: dummyUser,
                 realname: realname
-            }, onInit);
-
-            function onInit(err, keys) {
+            }).catch(function(err) {
                 expect(err.message).to.match(/asdf/);
-                expect(keys).to.not.exist;
-            }
+            });
         });
 
         it('should fail for _emailDao.init after _keychain.refreshKeyForUserId', function() {
@@ -134,20 +122,18 @@ describe('Account Service unit test', function() {
                 publicKey: 'publicKey'
             };
 
-            updateHandlerStub.update.yields();
-            keychainStub.getUserKeyPair.yields(null, storedKeys);
-            keychainStub.refreshKeyForUserId.yields(null, storedKeys);
-            emailStub.init.yields(new Error('asdf'));
+            devicestorageStub.init.returns(resolves());
+            updateHandlerStub.update.returns(resolves());
+            keychainStub.getUserKeyPair.returns(resolves(storedKeys));
+            keychainStub.refreshKeyForUserId.returns(resolves(storedKeys));
+            emailStub.init.returns(rejects(new Error('asdf')));
 
             account.init({
                 emailAddress: dummyUser,
                 realname: realname
-            }, onInit);
-
-            function onInit(err, keys) {
+            }).catch(function(err) {
                 expect(err.message).to.match(/asdf/);
-                expect(keys).to.not.exist;
-            }
+            });
         });
 
         it('should fail for _emailDao.init', function() {
@@ -156,19 +142,17 @@ describe('Account Service unit test', function() {
                 privateKey: 'privateKey'
             };
 
-            updateHandlerStub.update.yields();
-            keychainStub.getUserKeyPair.yields(null, storedKeys);
-            emailStub.init.yields(new Error('asdf'));
+            devicestorageStub.init.returns(resolves());
+            updateHandlerStub.update.returns(resolves());
+            keychainStub.getUserKeyPair.returns(resolves(storedKeys));
+            emailStub.init.returns(rejects(new Error('asdf')));
 
             account.init({
                 emailAddress: dummyUser,
                 realname: realname
-            }, onInit);
-
-            function onInit(err, keys) {
+            }).catch(function(err) {
                 expect(err.message).to.match(/asdf/);
-                expect(keys).to.not.exist;
-            }
+            });
         });
 
         it('should work after _keychain.refreshKeyForUserId', function() {
@@ -176,20 +160,20 @@ describe('Account Service unit test', function() {
                 publicKey: 'publicKey'
             };
 
-            updateHandlerStub.update.yields();
-            keychainStub.getUserKeyPair.yields(null, storedKeys);
-            keychainStub.refreshKeyForUserId.yields(null, 'publicKey');
-            emailStub.init.yields();
+            devicestorageStub.init.returns(resolves());
+            updateHandlerStub.update.returns(resolves());
+            keychainStub.getUserKeyPair.returns(resolves(storedKeys));
+            keychainStub.refreshKeyForUserId.returns(resolves('publicKey'));
+            emailStub.init.returns(resolves());
 
             account.init({
                 emailAddress: dummyUser,
                 realname: realname
-            }, onInit);
-
-            function onInit(err, keys) {
-                expect(err).to.not.exist;
+            }, function onInit(keys) {
                 expect(keys).to.deep.equal(storedKeys);
-            }
+                expect(keychainStub.refreshKeyForUserId.calledOnce).to.be.true;
+                expect(emailStub.init.calledOnce).to.be.true;
+            });
         });
 
         it('should work', function() {
@@ -198,19 +182,20 @@ describe('Account Service unit test', function() {
                 privateKey: 'privateKey'
             };
 
-            updateHandlerStub.update.yields();
-            keychainStub.getUserKeyPair.yields(null, storedKeys);
-            emailStub.init.yields();
+            devicestorageStub.init.returns(resolves());
+            updateHandlerStub.update.returns(resolves());
+            keychainStub.getUserKeyPair.returns(resolves(storedKeys));
+            emailStub.init.returns(resolves());
 
             account.init({
                 emailAddress: dummyUser,
                 realname: realname
-            }, onInit);
-
-            function onInit(err, keys) {
-                expect(err).to.not.exist;
+            }, function onInit(keys) {
                 expect(keys).to.equal(storedKeys);
-            }
+                expect(keychainStub.refreshKeyForUserId.called).to.be.false;
+                expect(emailStub.init.calledOnce).to.be.true;
+                expect(account._accounts.length).to.equal(1);
+            });
         });
     });
 
@@ -227,48 +212,66 @@ describe('Account Service unit test', function() {
             account.isOnline.restore();
         });
 
-        it('should fail due to _auth.getCredentials', function() {
-            authStub.getCredentials.yields(new Error('asdf'));
+        it('should fail due to _auth.getCredentials', function(done) {
+            authStub.getCredentials.returns(rejects(new Error('asdf')));
+
+            dialogStub.error = function(err) {
+                expect(err.message).to.match(/asdf/);
+                done();
+            };
 
             account.onConnect();
-
-            expect(dialogStub.error.calledOnce).to.be.true;
         });
 
-        it('should work', function() {
-            authStub.getCredentials.yields(null, credentials);
-            emailStub.onConnect.yields();
+        it('should fail due to _auth.getCredentials', function(done) {
+            authStub.getCredentials.returns(rejects(new Error('asdf')));
 
-            account.onConnect();
+            account.onConnect(function(err) {
+                expect(err.message).to.match(/asdf/);
+                expect(dialogStub.error.called).to.be.false;
+                done();
+            });
+        });
 
-            expect(emailStub.onConnect.calledOnce).to.be.true;
-            expect(dialogStub.error.calledOnce).to.be.true;
+        it('should work', function(done) {
+            authStub.getCredentials.returns(resolves(credentials));
+            authStub.handleCertificateUpdate.returns(resolves());
+            emailStub.onConnect.returns(resolves());
+
+            account.onConnect(function(err) {
+                expect(err).to.not.exist;
+                expect(dialogStub.error.called).to.be.false;
+                expect(emailStub.onConnect.calledOnce).to.be.true;
+                done();
+            });
         });
     });
 
     describe('onDisconnect', function() {
-        it('should work', function() {
-            account.onDisconnect();
-            expect(emailStub.onDisconnect.calledOnce).to.be.true;
+        it('should work', function(done) {
+            emailStub.onDisconnect.returns(resolves());
+            account.onDisconnect().then(done);
         });
     });
 
     describe('logout', function() {
-        it('should fail due to _auth.logout', function() {
-            authStub.logout.yields(new Error());
+        it('should fail due to _auth.logout', function(done) {
+            authStub.logout.returns(rejects(new Error('asdf')));
 
-            account.logout();
-
-            expect(dialogStub.error.calledOnce).to.be.true;
+            account.logout().catch(function(err) {
+                expect(err.message).to.match(/asdf/);
+                done();
+            });
         });
 
-        it('should fail due to _emailDao.onDisconnect', function() {
-            authStub.logout.yields();
-            emailStub.onDisconnect.yields(new Error());
+        it('should fail due to _emailDao.onDisconnect', function(done) {
+            authStub.logout.returns(resolves());
+            emailStub.onDisconnect.returns(rejects(new Error('asdf')));
 
-            account.logout();
-
-            expect(dialogStub.error.calledOnce).to.be.true;
+            account.logout().catch(function(err) {
+                expect(err.message).to.match(/asdf/);
+                done();
+            });
         });
     });
 

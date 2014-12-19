@@ -50,9 +50,8 @@ describe('PGP Crypto Api unit tests', function() {
                 emailAddress: 'whiteout.test@t-onlinede',
                 keySize: keySize,
                 passphrase: passphrase
-            }, function(err, keys) {
-                expect(err).to.exist;
-                expect(keys).to.not.exist;
+            }).catch(function(err) {
+                expect(err.message).to.match(/options/);
                 done();
             });
         });
@@ -61,76 +60,69 @@ describe('PGP Crypto Api unit tests', function() {
                 emailAddress: 'whiteout.testt-online.de',
                 keySize: keySize,
                 passphrase: passphrase
-            }, function(err, keys) {
-                expect(err).to.exist;
-                expect(keys).to.not.exist;
+            }).catch(function(err) {
+                expect(err.message).to.match(/options/);
                 done();
             });
         });
         it('should work with passphrase', function(done) {
+            var keyObject;
+
             pgp.generateKeys({
                 emailAddress: user,
                 keySize: keySize,
                 passphrase: passphrase
-            }, function(err, keys) {
-                expect(err).to.not.exist;
+            }).then(function(keys) {
                 expect(keys.keyId).to.exist;
                 expect(keys.privateKeyArmored).to.exist;
                 expect(keys.publicKeyArmored).to.exist;
+                keyObject = keys;
 
                 // test encrypt/decrypt
-                pgp.importKeys({
+                return pgp.importKeys({
                     passphrase: passphrase,
                     privateKeyArmored: keys.privateKeyArmored,
                     publicKeyArmored: keys.publicKeyArmored
-                }, function(err) {
-                    expect(err).to.not.exist;
-
-                    pgp.encrypt('secret', [keys.publicKeyArmored], function(err, ct) {
-                        expect(err).to.not.exist;
-                        expect(ct).to.exist;
-
-                        pgp.decrypt(ct, keys.publicKeyArmored, function(err, pt, signValid) {
-                            expect(err).to.not.exist;
-                            expect(pt).to.equal('secret');
-                            expect(signValid).to.be.true;
-                            done();
-                        });
-                    });
                 });
+            }).then(function() {
+                return pgp.encrypt('secret', [keyObject.publicKeyArmored]);
+            }).then(function(ct) {
+                expect(ct).to.exist;
+                return pgp.decrypt(ct, keyObject.publicKeyArmored);
+            }).then(function(pt) {
+                expect(pt.decrypted).to.equal('secret');
+                expect(pt.signaturesValid).to.be.true;
+                done();
             });
         });
         it('should work without passphrase', function(done) {
+            var keyObject;
+
             pgp.generateKeys({
                 emailAddress: user,
                 keySize: keySize,
                 passphrase: ''
-            }, function(err, keys) {
-                expect(err).to.not.exist;
+            }).then(function(keys) {
                 expect(keys.keyId).to.exist;
                 expect(keys.privateKeyArmored).to.exist;
                 expect(keys.publicKeyArmored).to.exist;
+                keyObject = keys;
 
                 // test encrypt/decrypt
-                pgp.importKeys({
-                    passphrase: undefined,
+                return pgp.importKeys({
+                    passphrase: passphrase,
                     privateKeyArmored: keys.privateKeyArmored,
                     publicKeyArmored: keys.publicKeyArmored
-                }, function(err) {
-                    expect(err).to.not.exist;
-
-                    pgp.encrypt('secret', [keys.publicKeyArmored], function(err, ct) {
-                        expect(err).to.not.exist;
-                        expect(ct).to.exist;
-
-                        pgp.decrypt(ct, keys.publicKeyArmored, function(err, pt, signValid) {
-                            expect(err).to.not.exist;
-                            expect(pt).to.equal('secret');
-                            expect(signValid).to.be.true;
-                            done();
-                        });
-                    });
                 });
+            }).then(function() {
+                return pgp.encrypt('secret', [keyObject.publicKeyArmored]);
+            }).then(function(ct) {
+                expect(ct).to.exist;
+                return pgp.decrypt(ct, keyObject.publicKeyArmored);
+            }).then(function(pt) {
+                expect(pt.decrypted).to.equal('secret');
+                expect(pt.signaturesValid).to.be.true;
+                done();
             });
         });
     });
@@ -141,15 +133,13 @@ describe('PGP Crypto Api unit tests', function() {
                 passphrase: 'asd',
                 privateKeyArmored: privkey,
                 publicKeyArmored: pubkey
-            }, function(err) {
+            }).catch(function(err) {
                 expect(err).to.exist;
                 expect(err.message).to.equal('Incorrect passphrase!');
-
-                pgp.exportKeys(function(err, keys) {
-                    expect(err).to.exist;
-                    expect(keys).to.not.exist;
-                    done();
-                });
+                return pgp.exportKeys();
+            }).catch(function(err) {
+                expect(err).to.exist;
+                done();
             });
         });
         it('should work', function(done) {
@@ -157,16 +147,13 @@ describe('PGP Crypto Api unit tests', function() {
                 passphrase: passphrase,
                 privateKeyArmored: privkey,
                 publicKeyArmored: pubkey
-            }, function(err) {
-                expect(err).to.not.exist;
-
-                pgp.exportKeys(function(err, keys) {
-                    expect(err).to.not.exist;
-                    expect(keys.keyId).to.equal(keyId);
-                    expect(keys.privateKeyArmored.replace(/\r/g, '')).to.equal(privkey.replace(/\r/g, ''));
-                    expect(keys.publicKeyArmored.replace(/\r/g, '')).to.equal(pubkey.replace(/\r/g, ''));
-                    done();
-                });
+            }).then(function() {
+                return pgp.exportKeys();
+            }).then(function(keys) {
+                expect(keys.keyId).to.equal(keyId);
+                expect(keys.privateKeyArmored.replace(/\r/g, '')).to.equal(privkey.replace(/\r/g, ''));
+                expect(keys.publicKeyArmored.replace(/\r/g, '')).to.equal(pubkey.replace(/\r/g, ''));
+                done();
             });
         });
     });
@@ -177,47 +164,38 @@ describe('PGP Crypto Api unit tests', function() {
                 privateKeyArmored: privkey,
                 oldPassphrase: passphrase,
                 newPassphrase: 'yxcv'
-            }, function(err, reEncryptedKey) {
-                expect(err).to.not.exist;
+            }).then(function(reEncryptedKey) {
                 expect(reEncryptedKey).to.exist;
 
-                pgp.importKeys({
+                return pgp.importKeys({
                     passphrase: 'yxcv',
                     privateKeyArmored: reEncryptedKey,
                     publicKeyArmored: pubkey
-                }, function(err) {
-                    expect(err).to.not.exist;
-                    done();
                 });
-            });
+            }).then(done);
         });
         it('should work with empty passphrase', function(done) {
             pgp.changePassphrase({
                 privateKeyArmored: privkey,
                 oldPassphrase: passphrase,
                 newPassphrase: undefined
-            }, function(err, reEncryptedKey) {
-                expect(err).to.not.exist;
+            }).then(function(reEncryptedKey) {
                 expect(reEncryptedKey).to.exist;
 
-                pgp.importKeys({
+                return pgp.importKeys({
                     passphrase: undefined,
                     privateKeyArmored: reEncryptedKey,
                     publicKeyArmored: pubkey
-                }, function(err) {
-                    expect(err).to.not.exist;
-                    done();
                 });
-            });
+            }).then(done);
         });
         it('should fail when passphrases are equal', function(done) {
             pgp.changePassphrase({
                 privateKeyArmored: privkey,
                 oldPassphrase: passphrase,
                 newPassphrase: passphrase
-            }, function(err, reEncryptedKey) {
+            }).catch(function(err) {
                 expect(err).to.exist;
-                expect(reEncryptedKey).to.not.exist;
                 done();
             });
         });
@@ -226,9 +204,8 @@ describe('PGP Crypto Api unit tests', function() {
                 privateKeyArmored: privkey,
                 oldPassphrase: 'asd',
                 newPassphrase: 'yxcv'
-            }, function(err, reEncryptedKey) {
+            }).catch(function(err) {
                 expect(err).to.exist;
-                expect(reEncryptedKey).to.not.exist;
                 done();
             });
         });
@@ -247,10 +224,7 @@ describe('PGP Crypto Api unit tests', function() {
                 passphrase: passphrase,
                 privateKeyArmored: privkey,
                 publicKeyArmored: pubkey
-            }, function(err) {
-                expect(err).to.not.exist;
-                done();
-            });
+            }).then(done);
         });
 
         describe('Get KeyId', function() {
@@ -311,22 +285,19 @@ describe('PGP Crypto Api unit tests', function() {
             it('should fail', function(done) {
                 var input = null;
 
-                pgp.encrypt(input, [pubkey], function(err, ct) {
+                pgp.encrypt(input, [pubkey]).catch(function(err) {
                     expect(err).to.exist;
-                    expect(ct).to.not.exist;
                     done();
                 });
             });
             it('should work', function(done) {
-                pgp.encrypt(message, [pubkey], function(err, ct) {
-                    expect(err).to.not.exist;
+                pgp.encrypt(message, [pubkey]).then(function(ct) {
                     expect(ct).to.exist;
                     done();
                 });
             });
             it('should encrypt to myself if public keys are empty', function(done) {
-                pgp.encrypt(message, undefined, function(err, ct) {
-                    expect(err).to.not.exist;
+                pgp.encrypt(message, undefined).then(function(ct) {
                     expect(ct).to.exist;
                     done();
                 });
@@ -337,8 +308,7 @@ describe('PGP Crypto Api unit tests', function() {
             var ciphertext;
 
             beforeEach(function(done) {
-                pgp.encrypt(message, [pubkey], function(err, ct) {
-                    expect(err).to.not.exist;
+                pgp.encrypt(message, [pubkey]).then(function(ct) {
                     expect(ct).to.exist;
                     ciphertext = ct;
                     done();
@@ -348,45 +318,40 @@ describe('PGP Crypto Api unit tests', function() {
             it('should fail', function(done) {
                 var input = 'asdfa\rsdf';
 
-                pgp.decrypt(input, pubkey, function(err, pt) {
+                pgp.decrypt(input, pubkey).catch(function(err) {
                     expect(err).to.exist;
-                    expect(pt).to.not.exist;
                     done();
                 });
             });
             it('should work', function(done) {
-                pgp.decrypt(ciphertext, pubkey, function(err, pt, signValid) {
-                    expect(err).to.not.exist;
-                    expect(pt).to.equal(message);
-                    expect(signValid).to.be.true;
+                pgp.decrypt(ciphertext, pubkey).then(function(pt) {
+                    expect(pt.decrypted).to.equal(message);
+                    expect(pt.signaturesValid).to.be.true;
                     done();
                 });
             });
             it('should work without signature', function(done) {
                 openpgp.encryptMessage([pgp._publicKey], message).then(function(ct) {
-                    pgp.decrypt(ct, undefined, function(err, pt, signValid) {
-                        expect(err).to.not.exist;
-                        expect(pt).to.equal(message);
-                        expect(signValid).to.be.undefined;
-                        done();
-                    });
+                    return pgp.decrypt(ct, undefined);
+                }).then(function(pt) {
+                    expect(pt.decrypted).to.equal(message);
+                    expect(pt.signaturesValid).to.be.undefined;
+                    done();
                 });
             });
             it('should fail to verify if public keys are empty', function(done) {
                 // setup another public key so that signature verification fails
                 pgp._publicKey = openpgp.key.readArmored(wrongPubkey).keys[0];
-                pgp.decrypt(ciphertext, undefined, function(err, pt, signValid) {
-                    expect(err).to.not.exist;
-                    expect(pt).to.equal(message);
-                    expect(signValid).to.be.null;
+                pgp.decrypt(ciphertext, undefined).then(function(pt) {
+                    expect(pt.decrypted).to.equal(message);
+                    expect(pt.signaturesValid).to.be.null;
                     done();
                 });
             });
             it('should decrypt but signValid should be null for wrong public key', function(done) {
-                pgp.decrypt(ciphertext, wrongPubkey, function(err, pt, signValid) {
-                    expect(err).to.not.exist;
-                    expect(pt).to.equal(message);
-                    expect(signValid).to.be.null;
+                pgp.decrypt(ciphertext, wrongPubkey).then(function(pt) {
+                    expect(pt.decrypted).to.equal(message);
+                    expect(pt.signaturesValid).to.be.null;
                     done();
                 });
             });
@@ -403,23 +368,20 @@ describe('PGP Crypto Api unit tests', function() {
             });
 
             it('should work', function(done) {
-                pgp.verifyClearSignedMessage(clearsigned, pubkey, function(err, signaturesValid) {
-                    expect(err).to.not.exist;
+                pgp.verifyClearSignedMessage(clearsigned, pubkey).then(function(signaturesValid) {
                     expect(signaturesValid).to.be.true;
                     done();
                 });
             });
 
             it('should fail', function(done) {
-                pgp.verifyClearSignedMessage(clearsigned.replace('clearsigned', 'invalid'), pubkey, function(err, signaturesValid) {
-                    expect(err).to.not.exist;
+                pgp.verifyClearSignedMessage(clearsigned.replace('clearsigned', 'invalid'), pubkey).then(function(signaturesValid) {
                     expect(signaturesValid).to.be.false;
                     done();
                 });
             });
             it('should be null for wrong public key', function(done) {
-                pgp.verifyClearSignedMessage(clearsigned, wrongPubkey, function(err, signaturesValid) {
-                    expect(err).to.not.exist;
+                pgp.verifyClearSignedMessage(clearsigned, wrongPubkey).then(function(signaturesValid) {
                     expect(signaturesValid).to.be.null;
                     done();
                 });
@@ -439,23 +401,20 @@ describe('PGP Crypto Api unit tests', function() {
             });
 
             it('should work', function(done) {
-                pgp.verifySignedMessage(signedMessage, signature, pubkey, function(err, signaturesValid) {
-                    expect(err).to.not.exist;
+                pgp.verifySignedMessage(signedMessage, signature, pubkey).then(function(signaturesValid) {
                     expect(signaturesValid).to.be.true;
                     done();
                 });
             });
 
             it('should fail', function(done) {
-                pgp.verifySignedMessage(signedMessage.replace('signed', 'invalid'), signature, pubkey, function(err, signaturesValid) {
-                    expect(err).to.not.exist;
+                pgp.verifySignedMessage(signedMessage.replace('signed', 'invalid'), signature, pubkey).then(function(signaturesValid) {
                     expect(signaturesValid).to.be.false;
                     done();
                 });
             });
             it('should be null for wrong public key', function(done) {
-                pgp.verifySignedMessage(signedMessage, signature, wrongPubkey, function(err, signaturesValid) {
-                    expect(err).to.not.exist;
+                pgp.verifySignedMessage(signedMessage, signature, wrongPubkey).then(function(signaturesValid) {
                     expect(signaturesValid).to.be.null;
                     done();
                 });

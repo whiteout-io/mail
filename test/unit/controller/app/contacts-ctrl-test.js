@@ -20,6 +20,7 @@ describe('Contacts Controller unit test', function() {
             scope.state = {};
             contactsCtrl = $controller(ContactsCtrl, {
                 $scope: scope,
+                $q: window.qMock,
                 keychain: keychainStub,
                 pgp: pgpStub,
                 dialog: dialogStub
@@ -36,28 +37,30 @@ describe('Contacts Controller unit test', function() {
     });
 
     describe('listKeys', function() {
-        it('should fail due to error in keychain.listLocalPublicKeys', function() {
-            keychainStub.listLocalPublicKeys.yields(42);
+        it('should fail due to error in keychain.listLocalPublicKeys', function(done) {
+            keychainStub.listLocalPublicKeys.returns(rejects(42));
 
-            scope.listKeys();
-
-            expect(dialogStub.error.calledOnce).to.be.true;
+            scope.listKeys().then(function() {
+                expect(dialogStub.error.calledOnce).to.be.true;
+                done();
+            });
         });
 
-        it('should work', function() {
-            keychainStub.listLocalPublicKeys.yields(null, [{
+        it('should work', function(done) {
+            keychainStub.listLocalPublicKeys.returns(resolves([{
                 _id: '12345'
-            }]);
+            }]));
             pgpStub.getKeyParams.returns({
                 fingerprint: 'asdf'
             });
 
             expect(scope.keys).to.not.exist;
-            scope.listKeys();
-
-            expect(scope.keys.length).to.equal(1);
-            expect(scope.keys[0]._id).to.equal('12345');
-            expect(scope.keys[0].fingerprint).to.equal('asdf');
+            scope.listKeys().then(function() {
+                expect(scope.keys.length).to.equal(1);
+                expect(scope.keys[0]._id).to.equal('12345');
+                expect(scope.keys[0].fingerprint).to.equal('asdf');
+                done();
+            });
         });
     });
 
@@ -89,13 +92,13 @@ describe('Contacts Controller unit test', function() {
                 userIds: [],
                 publicKey: '-----BEGIN PGP PUBLIC KEY BLOCK-----',
                 imported: true
-            }).yields();
+            }).returns(resolves());
 
-            scope.listKeys = function() {
+            scope.listKeys = function() {};
+
+            scope.importKey(keyArmored).then(function() {
                 done();
-            };
-
-            scope.importKey(keyArmored);
+            });
         });
 
         it('should fail due to invalid armored key', function() {
@@ -115,7 +118,7 @@ describe('Contacts Controller unit test', function() {
             expect(dialogStub.error.calledOnce).to.be.true;
         });
 
-        it('should fail due to error in keychain.saveLocalPublicKey', function() {
+        it('should fail due to error in keychain.saveLocalPublicKey', function(done) {
             var keyArmored = '-----BEGIN PGP PUBLIC KEY BLOCK-----';
 
             pgpStub.getKeyParams.returns({
@@ -123,11 +126,12 @@ describe('Contacts Controller unit test', function() {
                 userId: 'max@example.com'
             });
 
-            keychainStub.saveLocalPublicKey.yields(42);
+            keychainStub.saveLocalPublicKey.returns(rejects(42));
 
-            scope.importKey(keyArmored);
-
-            expect(dialogStub.error.calledOnce).to.be.true;
+            scope.importKey(keyArmored).then(function() {
+                expect(dialogStub.error.calledOnce).to.be.true;
+                done();
+            });
         });
     });
 
@@ -137,25 +141,26 @@ describe('Contacts Controller unit test', function() {
                 _id: '12345'
             };
 
-            keychainStub.removeLocalPublicKey.withArgs('12345').yields();
+            keychainStub.removeLocalPublicKey.withArgs('12345').returns(resolves());
 
-            scope.listKeys = function() {
+            scope.listKeys = function() {};
+
+            scope.removeKey(key).then(function() {
                 done();
-            };
-
-            scope.removeKey(key);
+            });
         });
 
-        it('should fail due to error in keychain.removeLocalPublicKey', function() {
+        it('should fail due to error in keychain.removeLocalPublicKey', function(done) {
             var key = {
                 _id: '12345'
             };
 
-            keychainStub.removeLocalPublicKey.withArgs('12345').yields(42);
+            keychainStub.removeLocalPublicKey.withArgs('12345').returns(rejects(42));
 
-            scope.removeKey(key);
-
-            expect(dialogStub.error.calledOnce).to.be.true;
+            scope.removeKey(key).then(function() {
+                expect(dialogStub.error.calledOnce).to.be.true;
+                done();
+            });
         });
     });
 });

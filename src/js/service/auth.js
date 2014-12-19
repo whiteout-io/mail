@@ -30,17 +30,17 @@ function Auth(appConfigStore, oauth, pgp) {
     this._appConfigStore = appConfigStore;
     this._oauth = oauth;
     this._pgp = pgp;
+
+    this._initialized = false;
 }
 
 /**
  * Initialize the service
  */
-Auth.prototype.init = function(callback) {
+Auth.prototype.init = function() {
     var self = this;
-
-    self._appConfigStore.init(APP_CONFIG_DB_NAME, function(error) {
-        self._initialized = !error;
-        callback(error);
+    return self._appConfigStore.init(APP_CONFIG_DB_NAME).then(function() {
+        self._initialized = true;
     });
 };
 
@@ -57,84 +57,66 @@ Auth.prototype.isInitialized = function() {
  * 2 a) ... in an oauth setting, retrieves a fresh oauth token from the Chrome Identity API.
  * 2 b) ... in a user/passwd setting, does not need to do additional work.
  * 3) Loads the intermediate certs from the configuration.
- *
- * @param {Function} callback(err, credentials)
  */
-Auth.prototype.getCredentials = function(callback) {
+Auth.prototype.getCredentials = function() {
     var self = this;
 
     if (!self.emailAddress) {
         // we're not yet initialized, so let's load our stuff from disk
-        self._loadCredentials(function(err) {
-            if (err) {
-                return callback(err);
-            }
-
-            chooseLogin();
-        });
-        return;
+        return self._loadCredentials().then(chooseLogin);
     }
 
-    chooseLogin();
+    return chooseLogin();
 
     function chooseLogin() {
         if (self.useOAuth(self.imap.host) && !self.password) {
             // oauth login
-            self.getOAuthToken(function(err) {
-                if (err) {
-                    return callback(err);
-                }
-
-                done();
-            });
-            return;
+            return self.getOAuthToken().then(done);
         }
 
         if (self.passwordNeedsDecryption) {
             // decrypt password
-            self._pgp.decrypt(self.password, undefined, function(err, cleartext) {
-                if (err) {
-                    return callback(err);
+            return self._pgp.decrypt(self.password, undefined).then(function(pt) {
+                if (!pt.signaturesValid) {
+                    throw new Error('Verifying PGP signature of encrypted password failed!');
                 }
 
                 self.passwordNeedsDecryption = false;
-                self.password = cleartext;
-
-                done();
-            });
-            return;
+                self.password = pt.decrypted;
+            }).then(done);
         }
 
-        done();
+        return done();
     }
 
     function done() {
-        var credentials = {
-            imap: {
-                secure: self.imap.secure,
-                port: self.imap.port,
-                host: self.imap.host,
-                ca: self.imap.ca,
-                auth: {
-                    user: self.username,
-                    xoauth2: self.oauthToken, // password or oauthToken is undefined
-                    pass: self.password
+        return new Promise(function(resolve) {
+            var credentials = {
+                imap: {
+                    secure: self.imap.secure,
+                    port: self.imap.port,
+                    host: self.imap.host,
+                    ca: self.imap.ca,
+                    auth: {
+                        user: self.username,
+                        xoauth2: self.oauthToken, // password or oauthToken is undefined
+                        pass: self.password
+                    }
+                },
+                smtp: {
+                    secure: self.smtp.secure,
+                    port: self.smtp.port,
+                    host: self.smtp.host,
+                    ca: self.smtp.ca,
+                    auth: {
+                        user: self.username,
+                        xoauth2: self.oauthToken,
+                        pass: self.password // password or oauthToken is undefined
+                    }
                 }
-            },
-            smtp: {
-                secure: self.smtp.secure,
-                port: self.smtp.port,
-                host: self.smtp.host,
-                ca: self.smtp.ca,
-                auth: {
-                    user: self.username,
-                    xoauth2: self.oauthToken,
-                    pass: self.password // password or oauthToken is undefined
-                }
-            }
-        };
-
-        callback(null, credentials);
+            };
+            resolve(credentials);
+        });
     }
 };
 
@@ -158,100 +140,69 @@ Auth.prototype.setCredentials = function(options) {
     this.imap = options.imap; // host, port, secure, ca
 };
 
-Auth.prototype.storeCredentials = function(callback) {
+Auth.prototype.storeCredentials = function() {
     var self = this;
 
     if (!self.credentialsDirty) {
-        return callback();
+        // nothing to store if credentials not dirty
+        return new Promise(function(resolve) {
+            resolve();
+        });
     }
 
     // persist the config
-    self._appConfigStore.storeList([self.smtp], SMTP_DB_KEY, function(err) {
-        if (err) {
-            return callback(err);
+    var storeSmtp = self._appConfigStore.storeList([self.smtp], SMTP_DB_KEY);
+    var storeImap = self._appConfigStore.storeList([self.imap], IMAP_DB_KEY);
+    var storeEmailAddress = self._appConfigStore.storeList([self.emailAddress], EMAIL_ADDR_DB_KEY);
+    var storeUsername = self._appConfigStore.storeList([self.username], USERNAME_DB_KEY);
+    var storeRealname = self._appConfigStore.storeList([self.realname], REALNAME_DB_KEY);
+    var storePassword = new Promise(function(resolve) {
+        if (!self.password) {
+            resolve();
+            return;
         }
 
-        self._appConfigStore.storeList([self.imap], IMAP_DB_KEY, function(err) {
-            if (err) {
-                return callback(err);
-            }
-
-            self._appConfigStore.storeList([self.emailAddress], EMAIL_ADDR_DB_KEY, function(err) {
-                if (err) {
-                    return callback(err);
-                }
-
-                self._appConfigStore.storeList([self.username], USERNAME_DB_KEY, function(err) {
-                    if (err) {
-                        return callback(err);
-                    }
-
-                    self._appConfigStore.storeList([self.realname], REALNAME_DB_KEY, function(err) {
-                        if (err) {
-                            return callback(err);
-                        }
-
-                        if (!self.password) {
-                            self.credentialsDirty = false;
-                            return callback();
-                        }
-
-                        if (self.passwordNeedsDecryption) {
-                            // password is not decrypted yet, so no need to re-encrypt it before storing...
-                            self._appConfigStore.storeList([self.password], PASSWD_DB_KEY, function(err) {
-                                if (err) {
-                                    return callback(err);
-                                }
-
-                                self.credentialsDirty = false;
-                                callback();
-                            });
-                            return;
-                        }
-
-                        self._pgp.encrypt(self.password, undefined, function(err, ciphertext) {
-                            if (err) {
-                                return callback(err);
-                            }
-
-                            self._appConfigStore.storeList([ciphertext], PASSWD_DB_KEY, function(err) {
-                                if (err) {
-                                    return callback(err);
-                                }
-
-                                self.credentialsDirty = false;
-                                callback();
-                            });
-                        });
-                    });
-                });
-            });
+        if (self.passwordNeedsDecryption) {
+            // password is not decrypted yet, so no need to re-encrypt it before storing...
+            return self._appConfigStore.storeList([self.password], PASSWD_DB_KEY).then(resolve);
+        }
+        return self._pgp.encrypt(self.password, undefined).then(function(ciphertext) {
+            return self._appConfigStore.storeList([ciphertext], PASSWD_DB_KEY).then(resolve);
         });
+    });
+
+    return Promise.all([
+        storeSmtp,
+        storeImap,
+        storeEmailAddress,
+        storeUsername,
+        storeRealname,
+        storePassword
+    ]).then(function() {
+        self.credentialsDirty = false;
     });
 };
 
 /**
  * Returns the email address. Loads it from disk, if necessary
  */
-Auth.prototype.getEmailAddress = function(callback) {
+Auth.prototype.getEmailAddress = function() {
     var self = this;
 
     if (self.emailAddress) {
-        return callback(null, {
-            emailAddress: self.emailAddress,
-            realname: self.realname
+        return new Promise(function(resolve) {
+            resolve({
+                emailAddress: self.emailAddress,
+                realname: self.realname
+            });
         });
     }
 
-    self._loadCredentials(function(err) {
-        if (err) {
-            return callback(err);
-        }
-
-        callback(null, {
+    return self._loadCredentials().then(function() {
+        return {
             emailAddress: self.emailAddress,
             realname: self.realname
-        });
+        };
     });
 };
 
@@ -286,40 +237,31 @@ Auth.prototype.useOAuth = function(hostname) {
  *    is android only, since the desktop chrome will query the user that is logged into chrome
  * 3) fetch the email address for the oauth token from the chrome identity api
  */
-Auth.prototype.getOAuthToken = function(callback) {
+Auth.prototype.getOAuthToken = function() {
     var self = this;
 
     if (self.oauthToken) {
         // removed cached token and get a new one
-        self._oauth.refreshToken({
+        return self._oauth.refreshToken({
             emailAddress: self.emailAddress,
             oldToken: self.oauthToken
-        }, onToken);
+        }).then(onToken);
     } else {
         // get a fresh oauth token
-        self._oauth.getOAuthToken(self.emailAddress, onToken);
+        return self._oauth.getOAuthToken(self.emailAddress).then(onToken);
     }
 
-    function onToken(err, oauthToken) {
-        if (err) {
-            return callback(err);
-        }
-
+    function onToken(oauthToken) {
         // shortcut if the email address is already known
         if (self.emailAddress) {
             self.oauthToken = oauthToken;
-            return callback();
+            return;
         }
 
         // query the email address
-        self._oauth.queryEmailAddress(oauthToken, function(err, emailAddress) {
-            if (err) {
-                return callback(err);
-            }
-
+        return self._oauth.queryEmailAddress(oauthToken).then(function(emailAddress) {
             self.oauthToken = oauthToken;
             self.emailAddress = emailAddress;
-            callback();
         });
     }
 };
@@ -327,67 +269,44 @@ Auth.prototype.getOAuthToken = function(callback) {
 /**
  * Loads email address, password, ... from disk and sets them on `this`
  */
-Auth.prototype._loadCredentials = function(callback) {
+Auth.prototype._loadCredentials = function() {
     var self = this;
 
     if (self.initialized) {
-        callback();
+        return new Promise(function(resolve) {
+            resolve();
+        });
     }
 
-    loadFromDB(SMTP_DB_KEY, function(err, smtp) {
-        if (err) {
-            return callback(err);
-        }
+    return loadFromDB(SMTP_DB_KEY).then(function(smtp) {
+        self.smtp = smtp;
+        return loadFromDB(IMAP_DB_KEY);
 
+    }).then(function(imap) {
+        self.imap = imap;
+        return loadFromDB(USERNAME_DB_KEY);
 
-        loadFromDB(IMAP_DB_KEY, function(err, imap) {
-            if (err) {
-                return callback(err);
-            }
+    }).then(function(username) {
+        self.username = username;
+        return loadFromDB(REALNAME_DB_KEY);
 
+    }).then(function(realname) {
+        self.realname = realname;
+        return loadFromDB(EMAIL_ADDR_DB_KEY);
 
-            loadFromDB(USERNAME_DB_KEY, function(err, username) {
-                if (err) {
-                    return callback(err);
-                }
+    }).then(function(emailAddress) {
+        self.emailAddress = emailAddress;
+        return loadFromDB(PASSWD_DB_KEY);
 
-
-                loadFromDB(REALNAME_DB_KEY, function(err, realname) {
-                    if (err) {
-                        return callback(err);
-                    }
-
-
-                    loadFromDB(EMAIL_ADDR_DB_KEY, function(err, emailAddress) {
-                        if (err) {
-                            return callback(err);
-                        }
-
-                        loadFromDB(PASSWD_DB_KEY, function(err, password) {
-                            if (err) {
-                                return callback(err);
-                            }
-
-                            self.emailAddress = emailAddress;
-                            self.password = password;
-                            self.passwordNeedsDecryption = !!password;
-                            self.username = username;
-                            self.realname = realname;
-                            self.smtp = smtp;
-                            self.imap = imap;
-                            self.initialized = true;
-
-                            callback();
-                        });
-                    });
-                });
-            });
-        });
+    }).then(function(password) {
+        self.password = password;
+        self.passwordNeedsDecryption = !!password;
+        self.initialized = true;
     });
 
-    function loadFromDB(key, callback) {
-        self._appConfigStore.listItems(key, 0, null, function(err, cachedItems) {
-            callback(err, (!err && cachedItems && cachedItems[0]));
+    function loadFromDB(key) {
+        return self._appConfigStore.listItems(key, 0, null).then(function(cachedItems) {
+            return cachedItems && cachedItems[0];
         });
     }
 };
@@ -407,7 +326,7 @@ Auth.prototype.handleCertificateUpdate = function(component, onConnect, callback
         // no previous ssl cert, trust on first use
         self[component].ca = pemEncodedCert;
         self.credentialsDirty = true;
-        self.storeCredentials(callback);
+        self.storeCredentials().then(callback).catch(callback);
         return;
     }
 
@@ -431,14 +350,9 @@ Auth.prototype.handleCertificateUpdate = function(component, onConnect, callback
 
             self[component].ca = pemEncodedCert;
             self.credentialsDirty = true;
-            self.storeCredentials(function(err) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-
+            self.storeCredentials().then(function() {
                 onConnect(callback);
-            });
+            }).catch(callback);
         }
     });
 };
@@ -446,22 +360,15 @@ Auth.prototype.handleCertificateUpdate = function(component, onConnect, callback
 /**
  * Logout of the app by clearing the app config store and in memory credentials
  */
-Auth.prototype.logout = function(callback) {
+Auth.prototype.logout = function() {
     var self = this;
 
     // clear app config db
-    self._appConfigStore.clear(function(err) {
-        if (err) {
-            callback(err);
-            return;
-        }
-
+    return self._appConfigStore.clear().then(function() {
         // clear in memory cache
         self.setCredentials({});
         self.initialized = undefined;
         self.credentialsDirty = undefined;
         self.passwordNeedsDecryption = undefined;
-
-        callback();
     });
 };

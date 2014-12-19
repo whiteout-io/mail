@@ -11,7 +11,7 @@ var INIT_DISPLAY_LEN = 50,
     FOLDER_TYPE_INBOX = 'Inbox',
     NOTIFICATION_INBOX_TIMEOUT = 5000;
 
-var MailListCtrl = function($scope, $timeout, $location, $filter, status, notification, email, keychain, dialog, search, dummy) {
+var MailListCtrl = function($scope, $timeout, $location, $filter, $q, status, notification, email, keychain, dialog, search, dummy) {
 
     //
     // scope state
@@ -55,23 +55,26 @@ var MailListCtrl = function($scope, $timeout, $location, $filter, status, notifi
     //
 
     $scope.getBody = function(message) {
-        email.getBody({
-            folder: currentFolder(),
-            message: message
-        }, function(err) {
-            if (err && err.code !== 42) {
-                dialog.error(err);
-                return;
-            }
+        return $q(function(resolve) {
+            resolve();
 
-            // display fetched body
-            $scope.$digest();
+        }).then(function() {
+            return email.getBody({
+                folder: currentFolder(),
+                message: message
+            });
 
+        }).then(function() {
             // automatically decrypt if it's the selected message
             if (message === currentMessage()) {
-                email.decryptBody({
+                return email.decryptBody({
                     message: message
-                }, dialog.error);
+                });
+            }
+
+        }).catch(function(err) {
+            if (err.code !== 42) {
+                dialog.error(err);
             }
         });
     };
@@ -93,19 +96,20 @@ var MailListCtrl = function($scope, $timeout, $location, $filter, status, notifi
             return;
         }
 
-        keychain.refreshKeyForUserId({
-            userId: message.from[0].address
-        }, onKeyRefreshed);
+        return $q(function(resolve) {
+            resolve();
 
-        function onKeyRefreshed(err) {
-            if (err) {
-                dialog.error(err);
-            }
+        }).then(function() {
+            return keychain.refreshKeyForUserId({
+                userId: message.from[0].address
+            });
 
-            email.decryptBody({
+        }).then(function() {
+            return email.decryptBody({
                 message: message
-            }, dialog.error);
+            });
 
+        }).then(function() {
             // if the message is unread, please sync the new state.
             // otherweise forget about it.
             if (!message.unread) {
@@ -119,12 +123,13 @@ var MailListCtrl = function($scope, $timeout, $location, $filter, status, notifi
                 }
             }
 
-            $scope.state.actionBar.markMessage(message, false, true);
-        }
+            return $scope.state.actionBar.markMessage(message, false, true);
+
+        }).catch(dialog.error);
     };
 
     $scope.flag = function(message, flagged) {
-        $scope.state.actionBar.flagMessage(message, flagged);
+        return $scope.state.actionBar.flagMessage(message, flagged);
     };
 
     /**
@@ -164,7 +169,7 @@ var MailListCtrl = function($scope, $timeout, $location, $filter, status, notifi
         }
 
         // display and select first
-        openCurrentFolder();
+        return openCurrentFolder();
     });
 
     $scope.watchMessages = $scope.$watchCollection('state.nav.currentFolder.messages', function(messages) {
@@ -246,10 +251,10 @@ var MailListCtrl = function($scope, $timeout, $location, $filter, status, notifi
      */
     $scope.watchOnline = $scope.$watch('account.online', function(isOnline) {
         // wait one cycle for the status display controllers to init
-        $timeout(function() {
+        return $timeout(function() {
             if (isOnline) {
                 status.update('Online');
-                openCurrentFolder();
+                return openCurrentFolder();
             } else {
                 status.update('Offline mode');
             }
@@ -265,18 +270,24 @@ var MailListCtrl = function($scope, $timeout, $location, $filter, status, notifi
             return;
         }
 
-        email.openFolder({
-            folder: currentFolder()
-        }, function(error) {
+        return $q(function(resolve) {
+            resolve();
+
+        }).then(function() {
+            return email.openFolder({
+                folder: currentFolder()
+            }).catch(function(err) {
+                // don't display err for offline case
+                if (err.code !== 42) {
+                    throw err;
+                }
+            });
+
+        }).then(function() {
             // dont wait until scroll to load visible mail bodies
             $scope.loadVisibleBodies();
 
-            // don't display error for offline case
-            if (error && error.code === 42) {
-                return;
-            }
-            dialog.error(error);
-        });
+        }).catch(dialog.error);
     }
 
     function currentFolder() {

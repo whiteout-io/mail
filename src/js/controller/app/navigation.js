@@ -11,7 +11,7 @@ var NOTIFICATION_SENT_TIMEOUT = 2000;
 // Controller
 //
 
-var NavigationCtrl = function($scope, $location, account, email, outbox, notification, appConfig, dialog, dummy) {
+var NavigationCtrl = function($scope, $location, $q, account, email, outbox, notification, appConfig, dialog, dummy) {
     if (!$location.search().dev && !account.isLoggedIn()) {
         $location.path('/'); // init app
         return;
@@ -102,18 +102,24 @@ var NavigationCtrl = function($scope, $location, account, email, outbox, notific
         });
         ob.count = count;
 
-        email.refreshFolder({
-            folder: ob
-        }, dialog.error);
+        return $q(function(resolve) {
+            resolve();
+
+        }).then(function() {
+            return email.refreshFolder({
+                folder: ob
+            });
+
+        }).catch(dialog.error);
     };
 
     $scope.logout = function() {
-        dialog.confirm({
+        return dialog.confirm({
             title: str.logoutTitle,
             message: str.logoutMessage,
             callback: function(confirm) {
                 if (confirm) {
-                    account.logout();
+                    account.logout().catch(dialog.error);
                 }
             }
         });

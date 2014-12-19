@@ -1,91 +1,74 @@
 'use strict';
 
-var LoginCtrl = function($scope, $timeout, $location, updateHandler, account, auth, email, keychain, dialog) {
+var LoginCtrl = function($scope, $timeout, $location, updateHandler, account, auth, email, keychain, dialog, appConfig) {
 
-    // check for app update
-    updateHandler.checkForUpdate();
-    // initialize the user account
-    initializeUser();
+    //
+    // Scope functions
+    //
 
-    function initializeUser() {
-        // init the auth modules
-        auth.init(function(err) {
-            if (err) {
-                return dialog.error(err);
+    $scope.init = function() {
+        // initialize the user account
+        return auth.init().then(function() {
+            // get email address
+            return auth.getEmailAddress();
+
+        }).then(function(info) {
+            // check if account needs to be selected
+            if (!info.emailAddress) {
+                return $scope.goTo('/add-account');
             }
 
-            // get OAuth token from chrome
-            auth.getEmailAddress(function(err, info) {
-                if (err) {
-                    dialog.error(err);
-                    return;
-                }
-
-                // check if account needs to be selected
-                if (!info.emailAddress) {
-                    $scope.goTo('/add-account');
-                    return;
-                }
-
-                // initiate the account by initializing the email dao and user storage
-                account.init({
-                    emailAddress: info.emailAddress,
-                    realname: info.realname
-                }, function(err, availableKeys) {
-                    if (err) {
-                        dialog.error(err);
-                        return;
-                    }
-
-                    redirect(availableKeys);
-                });
+            // initiate the account by initializing the email dao and user storage
+            return account.init({
+                emailAddress: info.emailAddress,
+                realname: info.realname
+            }).then(function(availableKeys) {
+                return redirect(availableKeys);
             });
-        });
-    }
+
+        }).catch(dialog.error);
+    };
 
     function redirect(availableKeys) {
         if (availableKeys && availableKeys.publicKey && availableKeys.privateKey) {
             // public and private key available, try empty passphrase
-            email.unlock({
+            var passphraseIncorrect;
+            return email.unlock({
                 keypair: availableKeys,
                 passphrase: undefined
-            }, function(err) {
-                if (err) {
-                    $scope.goTo('/login-existing');
+            }).catch(function() {
+                passphraseIncorrect = true;
+                // passphrase set... ask for passphrase
+                return $scope.goTo('/login-existing');
+
+            }).then(function() {
+                if (passphraseIncorrect) {
                     return;
                 }
-
-                auth.storeCredentials(function(err) {
-                    if (err) {
-                        return dialog.error(err);
-                    }
-
-                    $scope.goTo('/account');
+                // no passphrase set... go to main screen
+                return auth.storeCredentials().then(function() {
+                    return $scope.goTo('/account');
                 });
             });
+
         } else if (availableKeys && availableKeys.publicKey && !availableKeys.privateKey) {
             // check if private key is synced
-            keychain.requestPrivateKeyDownload({
+            return keychain.requestPrivateKeyDownload({
                 userId: availableKeys.publicKey.userId,
                 keyId: availableKeys.publicKey._id,
-            }, function(err, privateKeySynced) {
-                if (err) {
-                    dialog.error(err);
-                    return;
-                }
-
+            }).then(function(privateKeySynced) {
                 if (privateKeySynced) {
                     // private key is synced, proceed to download
-                    $scope.goTo('/login-privatekey-download');
-                    return;
+                    return $scope.goTo('/login-privatekey-download');
+                } else {
+                    // no private key, import key file
+                    return $scope.goTo('/login-new-device');
                 }
-
-                // no private key, import key file
-                $scope.goTo('/login-new-device');
             });
+
         } else {
             // no public key available, start onboarding process
-            $scope.goTo('/login-initial');
+            return $scope.goTo('/login-initial');
         }
     }
 
@@ -94,6 +77,19 @@ var LoginCtrl = function($scope, $timeout, $location, updateHandler, account, au
             $location.path(location);
         });
     };
+
+    //
+    // Start the app
+    //
+
+    // check for app update
+    updateHandler.checkForUpdate();
+
+    // init the app
+    if (!appConfig.preventAutoStart) {
+        $scope.init();
+    }
+
 };
 
 module.exports = LoginCtrl;

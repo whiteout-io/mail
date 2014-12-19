@@ -2,7 +2,7 @@
 
 var util = require('crypto-lib').util;
 
-var PrivateKeyUploadCtrl = function($scope, keychain, pgp, dialog, auth) {
+var PrivateKeyUploadCtrl = function($scope, $q, keychain, pgp, dialog, auth) {
 
     //
     // scope state
@@ -19,16 +19,15 @@ var PrivateKeyUploadCtrl = function($scope, keychain, pgp, dialog, auth) {
             // show syncing status
             $scope.step = 4;
             // check if key is already synced
-            $scope.checkServerForKey(function(privateKeySynced) {
+            return $scope.checkServerForKey().then(function(privateKeySynced) {
                 if (privateKeySynced) {
                     // close lightbox
                     $scope.state.lightbox = undefined;
                     // show message
-                    dialog.info({
+                    return dialog.info({
                         title: 'Info',
                         message: 'Your PGP key has already been synced.'
                     });
-                    return;
                 }
 
                 // show sync ui if key is not synced
@@ -41,24 +40,22 @@ var PrivateKeyUploadCtrl = function($scope, keychain, pgp, dialog, auth) {
     // scope functions
     //
 
-    $scope.checkServerForKey = function(callback) {
+    $scope.checkServerForKey = function() {
         var keyParams = pgp.getKeyParams();
-        keychain.hasPrivateKey({
-            userId: keyParams.userId,
-            keyId: keyParams._id
-        }, function(err, privateKeySynced) {
-            if (err) {
-                dialog.error(err);
-                return;
-            }
 
-            if (privateKeySynced) {
-                callback(privateKeySynced);
-                return;
-            }
+        return $q(function(resolve) {
+            resolve();
 
-            callback();
-        });
+        }).then(function() {
+            return keychain.hasPrivateKey({
+                userId: keyParams.userId,
+                keyId: keyParams._id
+            });
+
+        }).then(function(privateKeySynced) {
+            return privateKeySynced ? privateKeySynced : undefined;
+
+        }).catch(dialog.error);
     };
 
     $scope.displayUploadUi = function() {
@@ -82,29 +79,37 @@ var PrivateKeyUploadCtrl = function($scope, keychain, pgp, dialog, auth) {
         return true;
     };
 
-    $scope.setDeviceName = function(callback) {
-        keychain.setDeviceName($scope.deviceName, callback);
+    $scope.setDeviceName = function() {
+        return $q(function(resolve) {
+            resolve();
+
+        }).then(function() {
+            return keychain.setDeviceName($scope.deviceName);
+        });
     };
 
-    $scope.encryptAndUploadKey = function(callback) {
+    $scope.encryptAndUploadKey = function() {
         var userId = auth.emailAddress;
         var code = $scope.code;
 
         // register device to keychain service
-        keychain.registerDevice({
-            userId: userId
-        }, function(err) {
-            if (err) {
-                dialog.error(err);
-                return;
-            }
+        return $q(function(resolve) {
+            resolve();
 
+        }).then(function() {
+            // register the device
+            return keychain.registerDevice({
+                userId: userId
+            });
+
+        }).then(function() {
             // encrypt private PGP key using code and upload
-            keychain.uploadPrivateKey({
+            return keychain.uploadPrivateKey({
                 userId: userId,
                 code: code
-            }, callback);
-        });
+            });
+
+        }).catch(dialog.error);
     };
 
     $scope.goBack = function() {
@@ -126,32 +131,22 @@ var PrivateKeyUploadCtrl = function($scope, keychain, pgp, dialog, auth) {
 
         if ($scope.step === 3) {
             // set device name to local storage
-            $scope.setDeviceName(function(err) {
-                if (err) {
-                    dialog.error(err);
-                    return;
-                }
-
+            return $scope.setDeviceName().then(function() {
                 // show spinner
                 $scope.step++;
-                $scope.$apply();
-
                 // init key sync
-                $scope.encryptAndUploadKey(function(err) {
-                    if (err) {
-                        dialog.error(err);
-                        return;
-                    }
+                return $scope.encryptAndUploadKey();
 
-                    // close sync dialog
-                    $scope.state.privateKeyUpload.toggle(false);
-                    // show success message
-                    dialog.info({
-                        title: 'Success',
-                        message: 'Whiteout Keychain setup successful!'
-                    });
+            }).then(function() {
+                // close sync dialog
+                $scope.state.privateKeyUpload.toggle(false);
+                // show success message
+                dialog.info({
+                    title: 'Success',
+                    message: 'Whiteout Keychain setup successful!'
                 });
-            });
+
+            }).catch(dialog.error);
         }
     };
 

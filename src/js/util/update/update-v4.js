@@ -7,7 +7,7 @@
  * indexeddb. only gmail was allowed as a mail service provider before,
  * so let's add this...
  */
-function update(options, callback) {
+function update(options) {
     var VERSION_DB_TYPE = 'dbVersion',
         EMAIL_ADDR_DB_KEY = 'emailaddress',
         USERNAME_DB_KEY = 'username',
@@ -29,77 +29,45 @@ function update(options, callback) {
         };
 
     // load the email address (if existing)
-    loadFromDB(EMAIL_ADDR_DB_KEY, function(err, emailAddress) {
-        if (err) {
-            return callback(err);
+    var emailAddress;
+    return loadFromDB(EMAIL_ADDR_DB_KEY).then(function(address) {
+        emailAddress = address;
+        // load the provider (if existing)
+        return loadFromDB(PROVIDER_DB_KEY);
+
+    }).then(function(provider) {
+        // if there is an email address without a provider, we need to add the missing provider entry
+        // for any other situation, we're good.
+        if (!(emailAddress && !provider)) {
+            // update the database version to POST_UPDATE_DB_VERSION
+            return options.appConfigStorage.storeList([POST_UPDATE_DB_VERSION], VERSION_DB_TYPE);
         }
 
-        // load the provider (if existing)
-        loadFromDB(PROVIDER_DB_KEY, function(err, provider) {
-            if (err) {
-                return callback(err);
-            }
+        // add the missing provider key
+        var storeProvider = options.appConfigStorage.storeList(['gmail'], PROVIDER_DB_KEY);
+        // add the missing user name key
+        var storeAdress = options.appConfigStorage.storeList([emailAddress], USERNAME_DB_KEY);
+        // add the missing imap host info key
+        var storeImap = options.appConfigStorage.storeList([imap], IMAP_DB_KEY);
+        // add the missing empty real name
+        var storeEmptyName = options.appConfigStorage.storeList([''], REALNAME_DB_KEY);
+        // add the missing smtp host info key
+        var storeSmtp = options.appConfigStorage.storeList([smtp], SMTP_DB_KEY);
 
-            // if there is an email address without a provider, we need to add the missing provider entry
-            // for any other situation, we're good.
+        return Promise.all([storeProvider, storeAdress, storeImap, storeEmptyName, storeSmtp]).then(function() {
+            // reload the credentials
+            options.auth.initialized = false;
+            return options.auth._loadCredentials();
 
-            if (!(emailAddress && !provider)) {
-                // update the database version to POST_UPDATE_DB_VERSION
-                return options.appConfigStorage.storeList([POST_UPDATE_DB_VERSION], VERSION_DB_TYPE, callback);
-            }
-
-            // add the missing provider key
-            options.appConfigStorage.storeList(['gmail'], PROVIDER_DB_KEY, function(err) {
-                if (err) {
-                    return callback(err);
-                }
-
-                // add the missing user name key
-                options.appConfigStorage.storeList([emailAddress], USERNAME_DB_KEY, function(err) {
-                    if (err) {
-                        return callback(err);
-                    }
-
-                    // add the missing imap host info key
-                    options.appConfigStorage.storeList([imap], IMAP_DB_KEY, function(err) {
-                        if (err) {
-                            return callback(err);
-                        }
-
-                        // add the missing empty real name
-                        options.appConfigStorage.storeList([''], REALNAME_DB_KEY, function(err) {
-                            if (err) {
-                                return callback(err);
-                            }
-
-                            // add the missing smtp host info key
-                            options.appConfigStorage.storeList([smtp], SMTP_DB_KEY, function(err) {
-                                if (err) {
-                                    return callback(err);
-                                }
-
-                                // reload the credentials
-                                options.auth.initialized = false;
-                                options.auth._loadCredentials(function(err) {
-                                    if (err) {
-                                        return callback(err);
-                                    }
-
-
-                                    // update the database version to POST_UPDATE_DB_VERSION
-                                    options.appConfigStorage.storeList([POST_UPDATE_DB_VERSION], VERSION_DB_TYPE, callback);
-                                });
-                            });
-                        });
-                    });
-                });
-            });
+        }).then(function() {
+            // update the database version to POST_UPDATE_DB_VERSION
+            return options.appConfigStorage.storeList([POST_UPDATE_DB_VERSION], VERSION_DB_TYPE);
         });
     });
 
-    function loadFromDB(key, callback) {
-        options.appConfigStorage.listItems(key, 0, null, function(err, cachedItems) {
-            callback(err, (!err && cachedItems && cachedItems[0]));
+    function loadFromDB(key) {
+        return options.appConfigStorage.listItems(key, 0, null).then(function(cachedItems) {
+            return cachedItems && cachedItems[0];
         });
     }
 }

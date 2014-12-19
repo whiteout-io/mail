@@ -43,9 +43,9 @@ describe('Keychain DAO unit tests', function() {
     describe('verify public key', function() {
         it('should verify public key', function(done) {
             var uuid = 'asdfasdfasdfasdf';
-            pubkeyDaoStub.verify.yields();
+            pubkeyDaoStub.verify.returns(resolves());
 
-            keychainDao.verifyPublicKey(uuid, function() {
+            keychainDao.verifyPublicKey(uuid).then(function() {
                 expect(pubkeyDaoStub.verify.calledWith(uuid)).to.be.true;
                 done();
             });
@@ -54,9 +54,9 @@ describe('Keychain DAO unit tests', function() {
 
     describe('listLocalPublicKeys', function() {
         it('should work', function(done) {
-            lawnchairDaoStub.list.withArgs('publickey', 0, null).yields();
+            lawnchairDaoStub.list.withArgs('publickey', 0, null).returns(resolves());
 
-            keychainDao.listLocalPublicKeys(function() {
+            keychainDao.listLocalPublicKeys().then(function() {
                 expect(lawnchairDaoStub.list.callCount).to.equal(1);
                 done();
             });
@@ -67,9 +67,9 @@ describe('Keychain DAO unit tests', function() {
         it('should work', function(done) {
             var id = 'asdf';
 
-            lawnchairDaoStub.remove.withArgs('publickey_' + id).yields();
+            lawnchairDaoStub.remove.withArgs('publickey_' + id).returns(resolves());
 
-            keychainDao.removeLocalPublicKey(id, function() {
+            keychainDao.removeLocalPublicKey(id).then(function() {
                 expect(lawnchairDaoStub.remove.callCount).to.equal(1);
                 done();
             });
@@ -99,12 +99,11 @@ describe('Keychain DAO unit tests', function() {
         });
 
         it('should not find a key', function(done) {
-            getPubKeyStub.yields();
+            getPubKeyStub.returns(resolves());
 
             keychainDao.refreshKeyForUserId({
                 userId: testUser
-            }, function(err, key) {
-                expect(err).to.not.exist;
+            }).then(function(key) {
                 expect(key).to.not.exist;
 
                 done();
@@ -112,39 +111,36 @@ describe('Keychain DAO unit tests', function() {
         });
 
         it('should not update the key when up to date', function(done) {
-            getPubKeyStub.yields(null, oldKey);
-            pubkeyDaoStub.get.withArgs(oldKey._id).yields(null, oldKey);
+            getPubKeyStub.returns(resolves(oldKey));
+            pubkeyDaoStub.get.withArgs(oldKey._id).returns(resolves(oldKey));
 
             keychainDao.refreshKeyForUserId({
                 userId: testUser
-            }, function(err, key) {
-                expect(err).to.not.exist;
+            }).then(function(key) {
                 expect(key).to.to.equal(oldKey);
 
                 expect(getPubKeyStub.calledOnce).to.be.true;
                 expect(pubkeyDaoStub.get.calledOnce).to.be.true;
-
 
                 done();
             });
         });
 
         it('should update key', function(done) {
-            getPubKeyStub.yields(null, oldKey);
-            pubkeyDaoStub.get.withArgs(oldKey._id).yields();
-            pubkeyDaoStub.getByUserId.withArgs(testUser).yields(null, newKey);
+            getPubKeyStub.returns(resolves(oldKey));
+            pubkeyDaoStub.get.withArgs(oldKey._id).returns(resolves());
+            pubkeyDaoStub.getByUserId.withArgs(testUser).returns(resolves(newKey));
             keychainDao.requestPermissionForKeyUpdate = function(opts, cb) {
                 expect(opts.userId).to.equal(testUser);
                 expect(opts.newKey).to.equal(newKey);
                 cb(true);
             };
-            lawnchairDaoStub.remove.withArgs('publickey_' + oldKey._id).yields();
-            lawnchairDaoStub.persist.withArgs('publickey_' + newKey._id, newKey).yields();
+            lawnchairDaoStub.remove.withArgs('publickey_' + oldKey._id).returns(resolves());
+            lawnchairDaoStub.persist.withArgs('publickey_' + newKey._id, newKey).returns(resolves());
 
             keychainDao.refreshKeyForUserId({
                 userId: testUser
-            }, function(err, key) {
-                expect(err).to.not.exist;
+            }).then(function(key) {
                 expect(key).to.equal(newKey);
 
                 expect(getPubKeyStub.calledOnce).to.be.true;
@@ -158,17 +154,16 @@ describe('Keychain DAO unit tests', function() {
         });
 
         it('should update key without approval', function(done) {
-            getPubKeyStub.yields(null, oldKey);
-            pubkeyDaoStub.get.withArgs(oldKey._id).yields();
-            pubkeyDaoStub.getByUserId.withArgs(testUser).yields(null, newKey);
-            lawnchairDaoStub.remove.withArgs('publickey_' + oldKey._id).yields();
-            lawnchairDaoStub.persist.withArgs('publickey_' + newKey._id, newKey).yields();
+            getPubKeyStub.returns(resolves(oldKey));
+            pubkeyDaoStub.get.withArgs(oldKey._id).returns(resolves());
+            pubkeyDaoStub.getByUserId.withArgs(testUser).returns(resolves(newKey));
+            lawnchairDaoStub.remove.withArgs('publickey_' + oldKey._id).returns(resolves());
+            lawnchairDaoStub.persist.withArgs('publickey_' + newKey._id, newKey).returns(resolves());
 
             keychainDao.refreshKeyForUserId({
                 userId: testUser,
                 overridePermission: true
-            }, function(err, key) {
-                expect(err).to.not.exist;
+            }).then(function(key) {
                 expect(key).to.equal(newKey);
 
                 expect(getPubKeyStub.calledOnce).to.be.true;
@@ -182,20 +177,19 @@ describe('Keychain DAO unit tests', function() {
         });
 
         it('should remove key', function(done) {
-            getPubKeyStub.yields(null, oldKey);
-            pubkeyDaoStub.get.withArgs(oldKey._id).yields();
-            pubkeyDaoStub.getByUserId.withArgs(testUser).yields();
+            getPubKeyStub.returns(resolves(oldKey));
+            pubkeyDaoStub.get.withArgs(oldKey._id).returns(resolves());
+            pubkeyDaoStub.getByUserId.withArgs(testUser).returns(resolves());
             keychainDao.requestPermissionForKeyUpdate = function(opts, cb) {
                 expect(opts.userId).to.equal(testUser);
                 expect(opts.newKey).to.not.exist;
                 cb(true);
             };
-            lawnchairDaoStub.remove.withArgs('publickey_' + oldKey._id).yields();
+            lawnchairDaoStub.remove.withArgs('publickey_' + oldKey._id).returns(resolves());
 
             keychainDao.refreshKeyForUserId({
                 userId: testUser
-            }, function(err, key) {
-                expect(err).to.not.exist;
+            }).then(function(key) {
                 expect(key).to.not.exist;
 
                 expect(getPubKeyStub.calledOnce).to.be.true;
@@ -209,16 +203,15 @@ describe('Keychain DAO unit tests', function() {
         });
 
         it('should go offline while fetching new key', function(done) {
-            getPubKeyStub.yields(null, oldKey);
-            pubkeyDaoStub.get.withArgs(oldKey._id).yields();
-            pubkeyDaoStub.getByUserId.withArgs(testUser).yields({
+            getPubKeyStub.returns(resolves(oldKey));
+            pubkeyDaoStub.get.withArgs(oldKey._id).returns(resolves());
+            pubkeyDaoStub.getByUserId.withArgs(testUser).returns(rejects({
                 code: 42
-            });
+            }));
 
             keychainDao.refreshKeyForUserId({
                 userId: testUser
-            }, function(err, key) {
-                expect(err).to.not.exist;
+            }).then(function(key) {
                 expect(key).to.to.equal(oldKey);
 
                 expect(getPubKeyStub.calledOnce).to.be.true;
@@ -232,9 +225,9 @@ describe('Keychain DAO unit tests', function() {
         });
 
         it('should not remove old key on user rejection', function(done) {
-            getPubKeyStub.yields(null, oldKey);
-            pubkeyDaoStub.get.withArgs(oldKey._id).yields();
-            pubkeyDaoStub.getByUserId.withArgs(testUser).yields(null, newKey);
+            getPubKeyStub.returns(resolves(oldKey));
+            pubkeyDaoStub.get.withArgs(oldKey._id).returns(resolves());
+            pubkeyDaoStub.getByUserId.withArgs(testUser).returns(resolves(newKey));
             keychainDao.requestPermissionForKeyUpdate = function(opts, cb) {
                 expect(opts.userId).to.equal(testUser);
                 expect(opts.newKey).to.exist;
@@ -243,8 +236,7 @@ describe('Keychain DAO unit tests', function() {
 
             keychainDao.refreshKeyForUserId({
                 userId: testUser
-            }, function(err, key) {
-                expect(err).to.not.exist;
+            }).then(function(key) {
                 expect(key).to.equal(oldKey);
 
                 expect(getPubKeyStub.calledOnce).to.be.true;
@@ -258,12 +250,11 @@ describe('Keychain DAO unit tests', function() {
         });
 
         it('should not remove manually imported key', function(done) {
-            getPubKeyStub.yields(null, importedKey);
+            getPubKeyStub.returns(resolves(importedKey));
 
             keychainDao.refreshKeyForUserId({
                 userId: testUser
-            }, function(err, key) {
-                expect(err).to.not.exist;
+            }).then(function(key) {
                 expect(key).to.equal(importedKey);
 
                 expect(getPubKeyStub.calledOnce).to.be.true;
@@ -274,15 +265,14 @@ describe('Keychain DAO unit tests', function() {
         });
 
         it('should update not the key when offline', function(done) {
-            getPubKeyStub.yields(null, oldKey);
-            pubkeyDaoStub.get.withArgs(oldKey._id).yields({
+            getPubKeyStub.returns(resolves(oldKey));
+            pubkeyDaoStub.get.withArgs(oldKey._id).returns(rejects({
                 code: 42
-            });
+            }));
 
             keychainDao.refreshKeyForUserId({
                 userId: testUser
-            }, function(err, key) {
-                expect(err).to.not.exist;
+            }).then(function(key) {
                 expect(key).to.to.equal(oldKey);
 
                 expect(getPubKeyStub.calledOnce).to.be.true;
@@ -296,22 +286,21 @@ describe('Keychain DAO unit tests', function() {
         });
 
         it('should error while persisting new key', function(done) {
-            getPubKeyStub.yields(null, oldKey);
-            pubkeyDaoStub.get.withArgs(oldKey._id).yields();
-            pubkeyDaoStub.getByUserId.withArgs(testUser).yields(null, newKey);
+            getPubKeyStub.returns(resolves(oldKey));
+            pubkeyDaoStub.get.withArgs(oldKey._id).returns(resolves());
+            pubkeyDaoStub.getByUserId.withArgs(testUser).returns(resolves(newKey));
             keychainDao.requestPermissionForKeyUpdate = function(opts, cb) {
                 expect(opts.userId).to.equal(testUser);
                 expect(opts.newKey).to.equal(newKey);
                 cb(true);
             };
-            lawnchairDaoStub.remove.withArgs('publickey_' + oldKey._id).yields();
-            lawnchairDaoStub.persist.yields({});
+            lawnchairDaoStub.remove.withArgs('publickey_' + oldKey._id).returns(resolves());
+            lawnchairDaoStub.persist.returns(rejects({}));
 
             keychainDao.refreshKeyForUserId({
                 userId: testUser
-            }, function(err, key) {
+            }).catch(function(err) {
                 expect(err).to.exist;
-                expect(key).to.not.exist;
 
                 expect(getPubKeyStub.calledOnce).to.be.true;
                 expect(pubkeyDaoStub.get.calledOnce).to.be.true;
@@ -324,20 +313,19 @@ describe('Keychain DAO unit tests', function() {
         });
 
         it('should error while deleting old key', function(done) {
-            getPubKeyStub.yields(null, oldKey);
-            pubkeyDaoStub.get.withArgs(oldKey._id).yields();
-            pubkeyDaoStub.getByUserId.withArgs(testUser).yields();
+            getPubKeyStub.returns(resolves(oldKey));
+            pubkeyDaoStub.get.withArgs(oldKey._id).returns(resolves());
+            pubkeyDaoStub.getByUserId.withArgs(testUser).returns(resolves());
             keychainDao.requestPermissionForKeyUpdate = function(opts, cb) {
                 expect(opts.userId).to.equal(testUser);
                 cb(true);
             };
-            lawnchairDaoStub.remove.yields({});
+            lawnchairDaoStub.remove.returns(rejects({}));
 
             keychainDao.refreshKeyForUserId({
                 userId: testUser
-            }, function(err, key) {
+            }).catch(function(err) {
                 expect(err).to.exist;
-                expect(key).to.not.exist;
 
                 expect(getPubKeyStub.calledOnce).to.be.true;
                 expect(pubkeyDaoStub.get.calledOnce).to.be.true;
@@ -350,22 +338,21 @@ describe('Keychain DAO unit tests', function() {
         });
 
         it('should error while persisting new key', function(done) {
-            getPubKeyStub.yields(null, oldKey);
-            pubkeyDaoStub.get.withArgs(oldKey._id).yields();
-            pubkeyDaoStub.getByUserId.withArgs(testUser).yields(null, newKey);
+            getPubKeyStub.returns(resolves(oldKey));
+            pubkeyDaoStub.get.withArgs(oldKey._id).returns(resolves());
+            pubkeyDaoStub.getByUserId.withArgs(testUser).returns(resolves(newKey));
             keychainDao.requestPermissionForKeyUpdate = function(opts, cb) {
                 expect(opts.userId).to.equal(testUser);
                 expect(opts.newKey).to.equal(newKey);
                 cb(true);
             };
-            lawnchairDaoStub.remove.withArgs('publickey_' + oldKey._id).yields();
-            lawnchairDaoStub.persist.yields({});
+            lawnchairDaoStub.remove.withArgs('publickey_' + oldKey._id).returns(resolves());
+            lawnchairDaoStub.persist.returns(rejects({}));
 
             keychainDao.refreshKeyForUserId({
                 userId: testUser
-            }, function(err, key) {
+            }).catch(function(err) {
                 expect(err).to.exist;
-                expect(key).to.not.exist;
 
                 expect(getPubKeyStub.calledOnce).to.be.true;
                 expect(pubkeyDaoStub.get.calledOnce).to.be.true;
@@ -378,14 +365,13 @@ describe('Keychain DAO unit tests', function() {
         });
 
         it('should error when get failed', function(done) {
-            getPubKeyStub.yields(null, oldKey);
-            pubkeyDaoStub.get.withArgs(oldKey._id).yields({});
+            getPubKeyStub.returns(resolves(oldKey));
+            pubkeyDaoStub.get.withArgs(oldKey._id).returns(rejects({}));
 
             keychainDao.refreshKeyForUserId({
                 userId: testUser
-            }, function(err, key) {
+            }).catch(function(err) {
                 expect(err).to.exist;
-                expect(key).to.not.exist;
 
                 done();
             });
@@ -394,32 +380,29 @@ describe('Keychain DAO unit tests', function() {
 
     describe('lookup public key', function() {
         it('should fail', function(done) {
-            keychainDao.lookupPublicKey(undefined, function(err, key) {
+            keychainDao.lookupPublicKey(undefined).catch(function(err) {
                 expect(err).to.exist;
-                expect(key).to.not.exist;
                 done();
             });
         });
 
         it('should fail', function(done) {
-            lawnchairDaoStub.read.yields(42);
+            lawnchairDaoStub.read.returns(rejects(42));
 
-            keychainDao.lookupPublicKey('12345', function(err, key) {
+            keychainDao.lookupPublicKey('12345').catch(function(err) {
                 expect(err).to.exist;
-                expect(key).to.not.exist;
                 expect(lawnchairDaoStub.read.calledOnce).to.be.true;
                 done();
             });
         });
 
         it('should work from local storage', function(done) {
-            lawnchairDaoStub.read.yields(null, {
+            lawnchairDaoStub.read.returns(resolves({
                 _id: '12345',
                 publicKey: 'asdf'
-            });
+            }));
 
-            keychainDao.lookupPublicKey('12345', function(err, key) {
-                expect(err).to.not.exist;
+            keychainDao.lookupPublicKey('12345').then(function(key) {
                 expect(key).to.exist;
                 expect(lawnchairDaoStub.read.calledOnce).to.be.true;
                 done();
@@ -427,15 +410,14 @@ describe('Keychain DAO unit tests', function() {
         });
 
         it('should work from cloud', function(done) {
-            lawnchairDaoStub.read.yields();
-            pubkeyDaoStub.get.yields(null, {
+            lawnchairDaoStub.read.returns(resolves());
+            pubkeyDaoStub.get.returns(resolves({
                 _id: '12345',
                 publicKey: 'asdf'
-            });
-            lawnchairDaoStub.persist.yields();
+            }));
+            lawnchairDaoStub.persist.returns(resolves());
 
-            keychainDao.lookupPublicKey('12345', function(err, key) {
-                expect(err).to.not.exist;
+            keychainDao.lookupPublicKey('12345').then(function(key) {
                 expect(key).to.exist;
                 expect(key._id).to.equal('12345');
                 expect(lawnchairDaoStub.read.calledOnce).to.be.true;
@@ -448,38 +430,35 @@ describe('Keychain DAO unit tests', function() {
 
     describe('get public keys by id', function() {
         it('should fail', function(done) {
-            keychainDao.getPublicKeys([], function(err, keys) {
-                expect(err).to.not.exist;
+            keychainDao.getPublicKeys([]).then(function(keys) {
                 expect(keys.length).to.equal(0);
                 done();
             });
         });
 
         it('should fail', function(done) {
-            lawnchairDaoStub.read.yields(42);
+            lawnchairDaoStub.read.returns(rejects(42));
 
             var ids = [{
                 _id: '12345'
             }];
-            keychainDao.getPublicKeys(ids, function(err, keys) {
+            keychainDao.getPublicKeys(ids).catch(function(err) {
                 expect(err).to.exist;
-                expect(keys).to.not.exist;
                 expect(lawnchairDaoStub.read.calledOnce).to.be.true;
                 done();
             });
         });
 
         it('should work from local storage', function(done) {
-            lawnchairDaoStub.read.yields(null, {
+            lawnchairDaoStub.read.returns(resolves({
                 _id: '12345',
                 publicKey: 'asdf'
-            });
+            }));
 
             var ids = [{
                 _id: '12345'
             }];
-            keychainDao.getPublicKeys(ids, function(err, keys) {
-                expect(err).to.not.exist;
+            keychainDao.getPublicKeys(ids).then(function(keys) {
                 expect(keys.length).to.equal(1);
                 expect(keys[0]._id).to.equal('12345');
                 expect(lawnchairDaoStub.read.calledOnce).to.be.true;
@@ -490,25 +469,23 @@ describe('Keychain DAO unit tests', function() {
 
     describe('get receiver public key', function() {
         it('should fail due to error in lawnchair list', function(done) {
-            lawnchairDaoStub.list.yields(42);
+            lawnchairDaoStub.list.returns(rejects(42));
 
-            keychainDao.getReceiverPublicKey(testUser, function(err, key) {
+            keychainDao.getReceiverPublicKey(testUser).catch(function(err) {
                 expect(err).to.exist;
-                expect(key).to.not.exist;
                 expect(lawnchairDaoStub.list.calledOnce).to.be.true;
                 done();
             });
         });
 
         it('should work from lawnchair list', function(done) {
-            lawnchairDaoStub.list.yields(null, [{
+            lawnchairDaoStub.list.returns(resolves([{
                 _id: '12345',
                 userId: testUser,
                 publicKey: 'asdf'
-            }]);
+            }]));
 
-            keychainDao.getReceiverPublicKey(testUser, function(err, key) {
-                expect(err).to.not.exist;
+            keychainDao.getReceiverPublicKey(testUser).then(function(key) {
                 expect(key).to.exist;
                 expect(key._id).to.equal('12345');
                 expect(lawnchairDaoStub.list.calledOnce).to.be.true;
@@ -517,17 +494,16 @@ describe('Keychain DAO unit tests', function() {
         });
 
         it('should work for keys with secondary userIds', function(done) {
-            lawnchairDaoStub.list.yields(null, [{
+            lawnchairDaoStub.list.returns(resolves([{
                 _id: '12345',
                 userId: 'not testUser',
                 userIds: [{
                     emailAddress: testUser
                 }],
                 publicKey: 'asdf'
-            }]);
+            }]));
 
-            keychainDao.getReceiverPublicKey(testUser, function(err, key) {
-                expect(err).to.not.exist;
+            keychainDao.getReceiverPublicKey(testUser).then(function(key) {
                 expect(key).to.exist;
                 expect(key._id).to.equal('12345');
                 expect(lawnchairDaoStub.list.calledOnce).to.be.true;
@@ -536,12 +512,11 @@ describe('Keychain DAO unit tests', function() {
         });
 
         it('should fail due to error in pubkey dao', function(done) {
-            lawnchairDaoStub.list.yields(null, []);
-            pubkeyDaoStub.getByUserId.yields({});
+            lawnchairDaoStub.list.returns(resolves([]));
+            pubkeyDaoStub.getByUserId.returns(rejects({}));
 
-            keychainDao.getReceiverPublicKey(testUser, function(err, key) {
+            keychainDao.getReceiverPublicKey(testUser).catch(function(err) {
                 expect(err).to.exist;
-                expect(key).to.not.exist;
                 expect(lawnchairDaoStub.list.calledOnce).to.be.true;
                 expect(pubkeyDaoStub.getByUserId.calledOnce).to.be.true;
                 done();
@@ -549,11 +524,10 @@ describe('Keychain DAO unit tests', function() {
         });
 
         it('should work from pubkey dao with empty result', function(done) {
-            lawnchairDaoStub.list.yields(null, []);
-            pubkeyDaoStub.getByUserId.yields();
+            lawnchairDaoStub.list.returns(resolves([]));
+            pubkeyDaoStub.getByUserId.returns(resolves());
 
-            keychainDao.getReceiverPublicKey(testUser, function(err, key) {
-                expect(err).to.not.exist;
+            keychainDao.getReceiverPublicKey(testUser).then(function(key) {
                 expect(key).to.not.exist;
                 expect(lawnchairDaoStub.list.calledOnce).to.be.true;
                 expect(pubkeyDaoStub.getByUserId.calledOnce).to.be.true;
@@ -562,15 +536,14 @@ describe('Keychain DAO unit tests', function() {
         });
 
         it('should work from pubkey dao', function(done) {
-            lawnchairDaoStub.list.yields(null, []);
-            pubkeyDaoStub.getByUserId.yields(null, {
+            lawnchairDaoStub.list.returns(resolves([]));
+            pubkeyDaoStub.getByUserId.returns(resolves({
                 _id: '12345',
                 publicKey: 'asdf'
-            });
-            lawnchairDaoStub.persist.yields();
+            }));
+            lawnchairDaoStub.persist.returns(resolves());
 
-            keychainDao.getReceiverPublicKey(testUser, function(err, key) {
-                expect(err).to.not.exist;
+            keychainDao.getReceiverPublicKey(testUser).then(function(key) {
                 expect(key).to.exist;
                 expect(key._id).to.equal('12345');
                 expect(lawnchairDaoStub.list.calledOnce).to.be.true;
@@ -583,19 +556,18 @@ describe('Keychain DAO unit tests', function() {
 
     describe('get user key pair', function() {
         it('should work if local keys are already present', function(done) {
-            lawnchairDaoStub.list.yields(null, [{
+            lawnchairDaoStub.list.returns(resolves([{
                 _id: '12345',
                 userId: testUser,
                 publicKey: 'asdf'
-            }]);
-            lawnchairDaoStub.read.yields(null, {
+            }]));
+            lawnchairDaoStub.read.returns(resolves({
                 _id: '12345',
                 publicKey: 'asdf',
                 encryptedKey: 'qwer'
-            });
+            }));
 
-            keychainDao.getUserKeyPair(testUser, function(err, keys) {
-                expect(err).to.not.exist;
+            keychainDao.getUserKeyPair(testUser).then(function(keys) {
                 expect(keys).to.exist;
                 expect(keys.publicKey).to.exist;
                 expect(keys.privateKey).to.exist;
@@ -606,11 +578,10 @@ describe('Keychain DAO unit tests', function() {
         });
 
         it('should work if local keys are not already present', function(done) {
-            lawnchairDaoStub.list.yields();
-            pubkeyDaoStub.getByUserId.yields();
+            lawnchairDaoStub.list.returns(resolves());
+            pubkeyDaoStub.getByUserId.returns(resolves());
 
-            keychainDao.getUserKeyPair(testUser, function(err, keys) {
-                expect(err).to.not.exist;
+            keychainDao.getUserKeyPair(testUser).then(function(keys) {
                 expect(keys).to.not.exist;
                 expect(lawnchairDaoStub.list.calledOnce).to.be.true;
                 expect(pubkeyDaoStub.getByUserId.calledOnce).to.be.true;
@@ -619,19 +590,18 @@ describe('Keychain DAO unit tests', function() {
         });
 
         it('should work if local keys are not already present', function(done) {
-            lawnchairDaoStub.list.yields();
-            pubkeyDaoStub.getByUserId.yields(null, {
+            lawnchairDaoStub.list.returns(resolves());
+            pubkeyDaoStub.getByUserId.returns(resolves({
                 _id: '12345',
                 publicKey: 'asdf'
-            });
-            lawnchairDaoStub.read.yields(null, {
+            }));
+            lawnchairDaoStub.read.returns(resolves({
                 _id: '12345',
                 publicKey: 'asdf',
                 encryptedKey: 'qwer'
-            });
+            }));
 
-            keychainDao.getUserKeyPair(testUser, function(err, keys) {
-                expect(err).to.not.exist;
+            keychainDao.getUserKeyPair(testUser).then(function(keys) {
                 expect(keys).to.exist;
                 expect(keys.publicKey).to.exist;
                 expect(keys.privateKey).to.exist;
@@ -644,38 +614,35 @@ describe('Keychain DAO unit tests', function() {
 
     describe('setDeviceName', function() {
         it('should work', function(done) {
-            lawnchairDaoStub.persist.yields();
+            lawnchairDaoStub.persist.returns(resolves());
 
-            keychainDao.setDeviceName('iPhone', done);
+            keychainDao.setDeviceName('iPhone').then(done);
         });
     });
 
     describe('getDeviceName', function() {
         it('should fail when device name is not set', function(done) {
-            lawnchairDaoStub.read.withArgs('devicename').yields();
+            lawnchairDaoStub.read.withArgs('devicename').returns(resolves());
 
-            keychainDao.getDeviceName(function(err, deviceName) {
+            keychainDao.getDeviceName().catch(function(err) {
                 expect(err.message).to.equal('Device name not set!');
-                expect(deviceName).to.not.exist;
                 done();
             });
         });
 
         it('should fail due to error when reading device name', function(done) {
-            lawnchairDaoStub.read.withArgs('devicename').yields(42);
+            lawnchairDaoStub.read.withArgs('devicename').returns(rejects(42));
 
-            keychainDao.getDeviceName(function(err, deviceName) {
+            keychainDao.getDeviceName().catch(function(err) {
                 expect(err).to.equal(42);
-                expect(deviceName).to.not.exist;
                 done();
             });
         });
 
         it('should work', function(done) {
-            lawnchairDaoStub.read.withArgs('devicename').yields(null, 'iPhone');
+            lawnchairDaoStub.read.withArgs('devicename').returns(resolves('iPhone'));
 
-            keychainDao.getDeviceName(function(err, deviceName) {
-                expect(err).to.not.exist;
+            keychainDao.getDeviceName().then(function(deviceName) {
                 expect(deviceName).to.equal('iPhone');
                 done();
             });
@@ -684,46 +651,42 @@ describe('Keychain DAO unit tests', function() {
 
     describe('getDeviceSecret', function() {
         it('should fail due to error when reading device secret', function(done) {
-            lawnchairDaoStub.read.withArgs('devicename').yields(null, 'iPhone');
-            lawnchairDaoStub.read.withArgs('devicesecret').yields(42);
+            lawnchairDaoStub.read.withArgs('devicename').returns(resolves('iPhone'));
+            lawnchairDaoStub.read.withArgs('devicesecret').returns(rejects(42));
 
-            keychainDao.getDeviceSecret(function(err, deviceSecret) {
+            keychainDao.getDeviceSecret().catch(function(err) {
                 expect(err).to.equal(42);
-                expect(deviceSecret).to.not.exist;
                 done();
             });
         });
 
         it('should fail due to error when storing device secret', function(done) {
-            lawnchairDaoStub.read.withArgs('devicename').yields(null, 'iPhone');
-            lawnchairDaoStub.read.withArgs('devicesecret').yields();
-            lawnchairDaoStub.persist.withArgs('devicesecret').yields(42);
+            lawnchairDaoStub.read.withArgs('devicename').returns(resolves('iPhone'));
+            lawnchairDaoStub.read.withArgs('devicesecret').returns(resolves());
+            lawnchairDaoStub.persist.withArgs('devicesecret').returns(rejects(42));
 
-            keychainDao.getDeviceSecret(function(err, deviceSecret) {
+            keychainDao.getDeviceSecret().catch(function(err) {
                 expect(err).to.equal(42);
-                expect(deviceSecret).to.not.exist;
                 done();
             });
         });
 
         it('should work when device secret is not set', function(done) {
-            lawnchairDaoStub.read.withArgs('devicename').yields(null, 'iPhone');
-            lawnchairDaoStub.read.withArgs('devicesecret').yields();
-            lawnchairDaoStub.persist.withArgs('devicesecret').yields();
+            lawnchairDaoStub.read.withArgs('devicename').returns(resolves('iPhone'));
+            lawnchairDaoStub.read.withArgs('devicesecret').returns(resolves());
+            lawnchairDaoStub.persist.withArgs('devicesecret').returns(resolves());
 
-            keychainDao.getDeviceSecret(function(err, deviceSecret) {
-                expect(err).to.not.exist;
+            keychainDao.getDeviceSecret().then(function(deviceSecret) {
                 expect(deviceSecret).to.exist;
                 done();
             });
         });
 
         it('should work when device secret is set', function(done) {
-            lawnchairDaoStub.read.withArgs('devicename').yields(null, 'iPhone');
-            lawnchairDaoStub.read.withArgs('devicesecret').yields(null, 'secret');
+            lawnchairDaoStub.read.withArgs('devicename').returns(resolves('iPhone'));
+            lawnchairDaoStub.read.withArgs('devicesecret').returns(resolves('secret'));
 
-            keychainDao.getDeviceSecret(function(err, deviceSecret) {
-                expect(err).to.not.exist;
+            keychainDao.getDeviceSecret().then(function(deviceSecret) {
                 expect(deviceSecret).to.equal('secret');
                 done();
             });
@@ -745,180 +708,188 @@ describe('Keychain DAO unit tests', function() {
         });
 
         it('should fail when reading devicename', function(done) {
-            getDeviceNameStub.yields(42);
+            getDeviceNameStub.returns(rejects(42));
 
-            keychainDao.registerDevice({}, function(err) {
+            keychainDao.registerDevice({}).catch(function(err) {
                 expect(err).to.equal(42);
                 done();
             });
         });
 
         it('should fail in requestDeviceRegistration', function(done) {
-            getDeviceNameStub.yields(null, 'iPhone');
+            getDeviceNameStub.returns(resolves('iPhone'));
 
             privkeyDaoStub.requestDeviceRegistration.withArgs({
                 userId: testUser,
                 deviceName: 'iPhone'
-            }).yields(42);
+            }).returns(rejects(42));
 
             keychainDao.registerDevice({
                 userId: testUser
-            }, function(err) {
+            }).catch(function(err) {
                 expect(err).to.equal(42);
                 done();
             });
         });
 
         it('should fail due to invalid requestDeviceRegistration return value', function(done) {
-            getDeviceNameStub.yields(null, 'iPhone');
+            getDeviceNameStub.returns(resolves('iPhone'));
 
             privkeyDaoStub.requestDeviceRegistration.withArgs({
                 userId: testUser,
                 deviceName: 'iPhone'
-            }).yields(null, {});
+            }).returns(resolves({}));
 
             keychainDao.registerDevice({
                 userId: testUser
-            }, function(err) {
+            }).catch(function(err) {
                 expect(err.message).to.equal('Invalid format for session key!');
                 done();
             });
         });
 
         it('should fail in lookupPublicKey', function(done) {
-            getDeviceNameStub.yields(null, 'iPhone');
+            getDeviceNameStub.returns(resolves('iPhone'));
 
             privkeyDaoStub.requestDeviceRegistration.withArgs({
                 userId: testUser,
                 deviceName: 'iPhone'
-            }).yields(null, {
+            }).returns(resolves({
                 encryptedRegSessionKey: 'asdf'
-            });
+            }));
 
-            lookupPublicKeyStub.yields(42);
+            lookupPublicKeyStub.returns(rejects(42));
 
             keychainDao.registerDevice({
                 userId: testUser
-            }, function(err) {
+            }).catch(function(err) {
                 expect(err).to.equal(42);
                 done();
             });
         });
 
         it('should fail when server public key not found', function(done) {
-            getDeviceNameStub.yields(null, 'iPhone');
+            getDeviceNameStub.returns(resolves('iPhone'));
 
             privkeyDaoStub.requestDeviceRegistration.withArgs({
                 userId: testUser,
                 deviceName: 'iPhone'
-            }).yields(null, {
+            }).returns(resolves({
                 encryptedRegSessionKey: 'asdf'
-            });
+            }));
 
-            lookupPublicKeyStub.yields();
+            lookupPublicKeyStub.returns(resolves());
 
             keychainDao.registerDevice({
                 userId: testUser
-            }, function(err) {
+            }).catch(function(err) {
                 expect(err).to.exist;
                 done();
             });
         });
 
         it('should fail in decrypt', function(done) {
-            getDeviceNameStub.yields(null, 'iPhone');
+            getDeviceNameStub.returns(resolves('iPhone'));
 
             privkeyDaoStub.requestDeviceRegistration.withArgs({
                 userId: testUser,
                 deviceName: 'iPhone'
-            }).yields(null, {
+            }).returns(resolves({
                 encryptedRegSessionKey: 'asdf'
-            });
+            }));
 
-            lookupPublicKeyStub.yields(null, {
+            lookupPublicKeyStub.returns(resolves({
                 publicKey: 'pubkey'
-            });
-            pgpStub.decrypt.withArgs('asdf', 'pubkey').yields(42);
+            }));
+            pgpStub.decrypt.withArgs('asdf', 'pubkey').returns(rejects(42));
 
             keychainDao.registerDevice({
                 userId: testUser
-            }, function(err) {
+            }).catch(function(err) {
                 expect(err).to.equal(42);
                 done();
             });
         });
 
         it('should fail in getDeviceSecret', function(done) {
-            getDeviceNameStub.yields(null, 'iPhone');
+            getDeviceNameStub.returns(resolves('iPhone'));
 
             privkeyDaoStub.requestDeviceRegistration.withArgs({
                 userId: testUser,
                 deviceName: 'iPhone'
-            }).yields(null, {
+            }).returns(resolves({
                 encryptedRegSessionKey: 'asdf'
-            });
+            }));
 
-            lookupPublicKeyStub.yields(null, {
+            lookupPublicKeyStub.returns(resolves({
                 publicKey: 'pubkey'
-            });
-            pgpStub.decrypt.withArgs('asdf', 'pubkey').yields(null, 'decrypted', true, true);
-            getDeviceSecretStub.yields(42);
+            }));
+            pgpStub.decrypt.withArgs('asdf', 'pubkey').returns(resolves({
+                decrypted: 'decrypted',
+                signaturesValid: true
+            }));
+            getDeviceSecretStub.returns(rejects(42));
 
             keychainDao.registerDevice({
                 userId: testUser
-            }, function(err) {
+            }).catch(function(err) {
                 expect(err).to.equal(42);
                 done();
             });
         });
 
         it('should fail in encrypt', function(done) {
-            getDeviceNameStub.yields(null, 'iPhone');
+            getDeviceNameStub.returns(resolves('iPhone'));
 
             privkeyDaoStub.requestDeviceRegistration.withArgs({
                 userId: testUser,
                 deviceName: 'iPhone'
-            }).yields(null, {
+            }).returns(resolves({
                 encryptedRegSessionKey: 'asdf'
-            });
+            }));
 
-            lookupPublicKeyStub.yields(null, {
+            lookupPublicKeyStub.returns(resolves({
                 publicKey: 'pubkey'
-            });
-            pgpStub.decrypt.withArgs('asdf', 'pubkey').yields(null, 'decrypted', true, true);
-            getDeviceSecretStub.yields(null, 'secret');
-            cryptoStub.encrypt.withArgs('secret', 'decrypted').yields(42);
+            }));
+            pgpStub.decrypt.withArgs('asdf', 'pubkey').returns(resolves({
+                decrypted: 'decrypted',
+                signaturesValid: true
+            }));
+            getDeviceSecretStub.returns(resolves('secret'));
+            cryptoStub.encrypt.withArgs('secret', 'decrypted').returns(rejects(42));
 
             keychainDao.registerDevice({
                 userId: testUser
-            }, function(err) {
+            }).catch(function(err) {
                 expect(err).to.equal(42);
                 done();
             });
         });
 
         it('should work', function(done) {
-            getDeviceNameStub.yields(null, 'iPhone');
+            getDeviceNameStub.returns(resolves('iPhone'));
 
             privkeyDaoStub.requestDeviceRegistration.withArgs({
                 userId: testUser,
                 deviceName: 'iPhone'
-            }).yields(null, {
+            }).returns(resolves({
                 encryptedRegSessionKey: 'asdf'
-            });
+            }));
 
-            lookupPublicKeyStub.yields(null, {
+            lookupPublicKeyStub.returns(resolves({
                 publicKey: 'pubkey'
-            });
-            pgpStub.decrypt.withArgs('asdf', 'pubkey').yields(null, 'decrypted', true, true);
-            getDeviceSecretStub.yields(null, 'secret');
-            cryptoStub.encrypt.withArgs('secret', 'decrypted').yields(null, 'encryptedDeviceSecret');
-            privkeyDaoStub.uploadDeviceSecret.yields();
+            }));
+            pgpStub.decrypt.withArgs('asdf', 'pubkey').returns(resolves({
+                decrypted: 'decrypted',
+                signaturesValid: true
+            }));
+            getDeviceSecretStub.returns(resolves('secret'));
+            cryptoStub.encrypt.withArgs('secret', 'decrypted').returns(resolves('encryptedDeviceSecret'));
+            privkeyDaoStub.uploadDeviceSecret.returns(resolves());
 
             keychainDao.registerDevice({
                 userId: testUser
-            }, function(err) {
-                expect(err).not.exist;
+            }).then(function() {
                 expect(privkeyDaoStub.uploadDeviceSecret.calledOnce).to.be.true;
                 done();
             });
@@ -940,166 +911,170 @@ describe('Keychain DAO unit tests', function() {
         it('should fail due to privkeyDao.requestAuthSessionKey', function(done) {
             privkeyDaoStub.requestAuthSessionKey.withArgs({
                 userId: testUser
-            }).yields(42);
+            }).returns(rejects(42));
 
-            keychainDao._authenticateToPrivateKeyServer(testUser, function(err, authSessionKey) {
+            keychainDao._authenticateToPrivateKeyServer(testUser).catch(function(err) {
                 expect(err).to.equal(42);
-                expect(authSessionKey).to.not.exist;
                 done();
             });
         });
 
         it('should fail due to privkeyDao.requestAuthSessionKey response', function(done) {
-            privkeyDaoStub.requestAuthSessionKey.yields(null, {});
+            privkeyDaoStub.requestAuthSessionKey.returns(resolves({}));
 
-            keychainDao._authenticateToPrivateKeyServer(testUser, function(err, authSessionKey) {
+            keychainDao._authenticateToPrivateKeyServer(testUser).catch(function(err) {
                 expect(err).to.exist;
-                expect(authSessionKey).to.not.exist;
                 done();
             });
         });
 
         it('should fail due to lookupPublicKey', function(done) {
-            privkeyDaoStub.requestAuthSessionKey.yields(null, {
+            privkeyDaoStub.requestAuthSessionKey.returns(resolves({
                 encryptedAuthSessionKey: 'encryptedAuthSessionKey',
                 encryptedChallenge: 'encryptedChallenge',
                 sessionId: 'sessionId'
-            });
+            }));
 
-            lookupPublicKeyStub.yields(42);
+            lookupPublicKeyStub.returns(rejects(42));
 
-            keychainDao._authenticateToPrivateKeyServer(testUser, function(err, authSessionKey) {
+            keychainDao._authenticateToPrivateKeyServer(testUser).catch(function(err) {
                 expect(err).to.exist;
-                expect(authSessionKey).to.not.exist;
                 done();
             });
         });
 
         it('should fail due to pgp.decrypt', function(done) {
-            privkeyDaoStub.requestAuthSessionKey.yields(null, {
+            privkeyDaoStub.requestAuthSessionKey.returns(resolves({
                 encryptedAuthSessionKey: 'encryptedAuthSessionKey',
                 encryptedChallenge: 'encryptedChallenge',
                 sessionId: 'sessionId'
-            });
+            }));
 
-            lookupPublicKeyStub.yields(null, {
+            lookupPublicKeyStub.returns(resolves({
                 publickKey: 'publicKey'
-            });
+            }));
 
-            pgpStub.decrypt.yields(42);
+            pgpStub.decrypt.returns(rejects(42));
 
-            keychainDao._authenticateToPrivateKeyServer(testUser, function(err, authSessionKey) {
+            keychainDao._authenticateToPrivateKeyServer(testUser).catch(function(err) {
                 expect(err).to.exist;
-                expect(authSessionKey).to.not.exist;
                 done();
             });
         });
 
         it('should fail due to getDeviceSecret', function(done) {
-            privkeyDaoStub.requestAuthSessionKey.yields(null, {
+            privkeyDaoStub.requestAuthSessionKey.returns(resolves({
                 encryptedAuthSessionKey: 'encryptedAuthSessionKey',
                 encryptedChallenge: 'encryptedChallenge',
                 sessionId: 'sessionId'
-            });
+            }));
 
-            lookupPublicKeyStub.yields(null, {
+            lookupPublicKeyStub.returns(resolves({
                 publickKey: 'publicKey'
-            });
+            }));
 
-            pgpStub.decrypt.yields(null, 'decryptedStuff');
-            getDeviceSecretStub.yields(42);
+            pgpStub.decrypt.returns(resolves({
+                decrypted: 'decryptedStuff'
+            }));
+            getDeviceSecretStub.returns(rejects(42));
 
-            keychainDao._authenticateToPrivateKeyServer(testUser, function(err, authSessionKey) {
+            keychainDao._authenticateToPrivateKeyServer(testUser).catch(function(err) {
                 expect(err).to.exist;
-                expect(authSessionKey).to.not.exist;
                 done();
             });
         });
 
         it('should fail due to crypto.encrypt', function(done) {
-            privkeyDaoStub.requestAuthSessionKey.yields(null, {
+            privkeyDaoStub.requestAuthSessionKey.returns(resolves({
                 encryptedAuthSessionKey: 'encryptedAuthSessionKey',
                 encryptedChallenge: 'encryptedChallenge',
                 sessionId: 'sessionId'
-            });
+            }));
 
-            lookupPublicKeyStub.yields(null, {
+            lookupPublicKeyStub.returns(resolves({
                 publickKey: 'publicKey'
-            });
+            }));
 
-            pgpStub.decrypt.yields(null, 'decryptedStuff');
-            getDeviceSecretStub.yields(null, 'deviceSecret');
-            cryptoStub.encrypt.yields(42);
+            pgpStub.decrypt.returns(resolves({
+                decrypted: 'decryptedStuff'
+            }));
+            getDeviceSecretStub.returns(resolves('deviceSecret'));
+            cryptoStub.encrypt.returns(rejects(42));
 
-            keychainDao._authenticateToPrivateKeyServer(testUser, function(err, authSessionKey) {
+            keychainDao._authenticateToPrivateKeyServer(testUser).catch(function(err) {
                 expect(err).to.exist;
-                expect(authSessionKey).to.not.exist;
                 done();
             });
         });
 
         it('should fail due to privkeyDao.verifyAuthentication', function(done) {
-            privkeyDaoStub.requestAuthSessionKey.yields(null, {
+            privkeyDaoStub.requestAuthSessionKey.returns(resolves({
                 encryptedAuthSessionKey: 'encryptedAuthSessionKey',
                 encryptedChallenge: 'encryptedChallenge',
                 sessionId: 'sessionId'
-            });
+            }));
 
-            lookupPublicKeyStub.yields(null, {
+            lookupPublicKeyStub.returns(resolves({
                 publickKey: 'publicKey'
-            });
+            }));
 
-            pgpStub.decrypt.yields(null, 'decryptedStuff', true, true);
-            getDeviceSecretStub.yields(null, 'deviceSecret');
-            cryptoStub.encrypt.yields(null, 'encryptedStuff');
-            privkeyDaoStub.verifyAuthentication.yields(42);
+            pgpStub.decrypt.returns(resolves({
+                decrypted: 'decryptedStuff',
+                signaturesValid: true
+            }));
+            getDeviceSecretStub.returns(resolves('deviceSecret'));
+            cryptoStub.encrypt.returns(resolves('encryptedStuff'));
+            privkeyDaoStub.verifyAuthentication.returns(rejects(42));
 
-            keychainDao._authenticateToPrivateKeyServer(testUser, function(err, authSessionKey) {
+            keychainDao._authenticateToPrivateKeyServer(testUser).catch(function(err) {
                 expect(err).to.exist;
-                expect(authSessionKey).to.not.exist;
                 done();
             });
         });
 
         it('should fail due to server public key nto found', function(done) {
-            privkeyDaoStub.requestAuthSessionKey.yields(null, {
+            privkeyDaoStub.requestAuthSessionKey.returns(resolves({
                 encryptedAuthSessionKey: 'encryptedAuthSessionKey',
                 encryptedChallenge: 'encryptedChallenge',
                 sessionId: 'sessionId'
-            });
+            }));
 
-            lookupPublicKeyStub.yields();
+            lookupPublicKeyStub.returns(resolves());
 
-            pgpStub.decrypt.yields(null, 'decryptedStuff', true, true);
-            getDeviceSecretStub.yields(null, 'deviceSecret');
-            cryptoStub.encrypt.yields(null, 'encryptedStuff');
-            privkeyDaoStub.verifyAuthentication.yields();
+            pgpStub.decrypt.returns(resolves({
+                decrypted: 'decryptedStuff',
+                signaturesValid: true
+            }));
+            getDeviceSecretStub.returns(resolves('deviceSecret'));
+            cryptoStub.encrypt.returns(resolves('encryptedStuff'));
+            privkeyDaoStub.verifyAuthentication.returns(resolves());
 
-            keychainDao._authenticateToPrivateKeyServer(testUser, function(err, authSessionKey) {
+            keychainDao._authenticateToPrivateKeyServer(testUser).catch(function(err) {
                 expect(err).to.exist;
-                expect(authSessionKey).to.not.exist;
                 done();
             });
         });
 
         it('should work', function(done) {
-            privkeyDaoStub.requestAuthSessionKey.yields(null, {
+            privkeyDaoStub.requestAuthSessionKey.returns(resolves({
                 encryptedAuthSessionKey: 'encryptedAuthSessionKey',
                 encryptedChallenge: 'encryptedChallenge',
                 sessionId: 'sessionId'
-            });
+            }));
 
-            lookupPublicKeyStub.yields(null, {
+            lookupPublicKeyStub.returns(resolves({
                 publicKey: 'publicKey'
-            });
+            }));
 
-            pgpStub.decrypt.yields(null, 'decryptedStuff', true, true);
-            getDeviceSecretStub.yields(null, 'deviceSecret');
-            cryptoStub.encrypt.yields(null, 'encryptedStuff');
-            privkeyDaoStub.verifyAuthentication.yields();
+            pgpStub.decrypt.returns(resolves({
+                decrypted: 'decryptedStuff',
+                signaturesValid: true
+            }));
+            getDeviceSecretStub.returns(resolves('deviceSecret'));
+            cryptoStub.encrypt.returns(resolves('encryptedStuff'));
+            privkeyDaoStub.verifyAuthentication.returns(resolves());
 
-            keychainDao._authenticateToPrivateKeyServer(testUser, function(err, authSessionKey) {
-                expect(err).to.not.exist;
+            keychainDao._authenticateToPrivateKeyServer(testUser).then(function(authSessionKey) {
                 expect(authSessionKey).to.deep.equal({
                     sessionKey: 'decryptedStuff',
                     sessionId: 'sessionId'
@@ -1122,19 +1097,19 @@ describe('Keychain DAO unit tests', function() {
         });
 
         it('should fail due to missing args', function(done) {
-            keychainDao.uploadPrivateKey({}, function(err) {
+            keychainDao.uploadPrivateKey({}).catch(function(err) {
                 expect(err).to.exist;
                 done();
             });
         });
 
         it('should fail due to error in derive key', function(done) {
-            cryptoStub.deriveKey.yields(42);
+            cryptoStub.deriveKey.returns(rejects(42));
 
             keychainDao.uploadPrivateKey({
                 code: 'code',
                 userId: testUser
-            }, function(err) {
+            }).catch(function(err) {
                 expect(err).to.exist;
                 expect(cryptoStub.deriveKey.calledOnce).to.be.true;
                 done();
@@ -1142,13 +1117,13 @@ describe('Keychain DAO unit tests', function() {
         });
 
         it('should fail due to error in getUserKeyPair', function(done) {
-            cryptoStub.deriveKey.yields(null, 'derivedKey');
-            getUserKeyPairStub.yields(42);
+            cryptoStub.deriveKey.returns(resolves('derivedKey'));
+            getUserKeyPairStub.returns(rejects(42));
 
             keychainDao.uploadPrivateKey({
                 code: 'code',
                 userId: testUser
-            }, function(err) {
+            }).catch(function(err) {
                 expect(err).to.exist;
                 expect(cryptoStub.deriveKey.calledOnce).to.be.true;
                 expect(getUserKeyPairStub.calledOnce).to.be.true;
@@ -1157,19 +1132,19 @@ describe('Keychain DAO unit tests', function() {
         });
 
         it('should fail due to error in crypto.encrypt', function(done) {
-            cryptoStub.deriveKey.yields(null, 'derivedKey');
-            getUserKeyPairStub.yields(null, {
+            cryptoStub.deriveKey.returns(resolves('derivedKey'));
+            getUserKeyPairStub.returns(resolves({
                 privateKey: {
                     _id: 'pgpKeyId',
                     encryptedKey: 'pgpKey'
                 }
-            });
-            cryptoStub.encrypt.yields(42);
+            }));
+            cryptoStub.encrypt.returns(rejects(42));
 
             keychainDao.uploadPrivateKey({
                 code: 'code',
                 userId: testUser
-            }, function(err) {
+            }).catch(function(err) {
                 expect(err).to.exist;
                 expect(cryptoStub.deriveKey.calledOnce).to.be.true;
                 expect(getUserKeyPairStub.calledOnce).to.be.true;
@@ -1179,20 +1154,20 @@ describe('Keychain DAO unit tests', function() {
         });
 
         it('should fail due to error in _authenticateToPrivateKeyServer', function(done) {
-            cryptoStub.deriveKey.yields(null, 'derivedKey');
-            getUserKeyPairStub.yields(null, {
+            cryptoStub.deriveKey.returns(resolves('derivedKey'));
+            getUserKeyPairStub.returns(resolves({
                 privateKey: {
                     _id: 'pgpKeyId',
                     encryptedKey: 'pgpKey'
                 }
-            });
-            cryptoStub.encrypt.yields(null, 'encryptedPgpKey');
-            _authenticateToPrivateKeyServerStub.yields(42);
+            }));
+            cryptoStub.encrypt.returns(resolves('encryptedPgpKey'));
+            _authenticateToPrivateKeyServerStub.returns(rejects(42));
 
             keychainDao.uploadPrivateKey({
                 code: 'code',
                 userId: testUser
-            }, function(err) {
+            }).catch(function(err) {
                 expect(err).to.exist;
                 expect(cryptoStub.deriveKey.calledOnce).to.be.true;
                 expect(getUserKeyPairStub.calledOnce).to.be.true;
@@ -1203,24 +1178,24 @@ describe('Keychain DAO unit tests', function() {
         });
 
         it('should fail due to error in cryptoStub.encrypt', function(done) {
-            cryptoStub.deriveKey.yields(null, 'derivedKey');
-            getUserKeyPairStub.yields(null, {
+            cryptoStub.deriveKey.returns(resolves('derivedKey'));
+            getUserKeyPairStub.returns(resolves({
                 privateKey: {
                     _id: 'pgpKeyId',
                     encryptedKey: 'pgpKey'
                 }
-            });
-            cryptoStub.encrypt.withArgs('pgpKey').yields(null, 'encryptedPgpKey');
-            _authenticateToPrivateKeyServerStub.yields(null, {
+            }));
+            cryptoStub.encrypt.withArgs('pgpKey').returns(resolves('encryptedPgpKey'));
+            _authenticateToPrivateKeyServerStub.returns(resolves({
                 sessionId: 'sessionId',
                 sessionKey: 'sessionKey'
-            });
-            cryptoStub.encrypt.withArgs('encryptedPgpKey').yields(42);
+            }));
+            cryptoStub.encrypt.withArgs('encryptedPgpKey').returns(rejects(42));
 
             keychainDao.uploadPrivateKey({
                 code: 'code',
                 userId: testUser
-            }, function(err) {
+            }).catch(function(err) {
                 expect(err).to.exist;
                 expect(cryptoStub.deriveKey.calledOnce).to.be.true;
                 expect(getUserKeyPairStub.calledOnce).to.be.true;
@@ -1231,26 +1206,25 @@ describe('Keychain DAO unit tests', function() {
         });
 
         it('should work', function(done) {
-            cryptoStub.deriveKey.yields(null, 'derivedKey');
-            getUserKeyPairStub.yields(null, {
+            cryptoStub.deriveKey.returns(resolves('derivedKey'));
+            getUserKeyPairStub.returns(resolves({
                 privateKey: {
                     _id: 'pgpKeyId',
                     encryptedKey: 'pgpKey'
                 }
-            });
-            cryptoStub.encrypt.withArgs('pgpKey').yields(null, 'encryptedPgpKey');
-            _authenticateToPrivateKeyServerStub.yields(null, {
+            }));
+            cryptoStub.encrypt.withArgs('pgpKey').returns(resolves('encryptedPgpKey'));
+            _authenticateToPrivateKeyServerStub.returns(resolves({
                 sessionId: 'sessionId',
                 sessionKey: 'sessionKey'
-            });
-            cryptoStub.encrypt.withArgs('encryptedPgpKey').yields(null, 'doubleEncryptedPgpKey');
-            privkeyDaoStub.upload.yields();
+            }));
+            cryptoStub.encrypt.withArgs('encryptedPgpKey').returns(resolves('doubleEncryptedPgpKey'));
+            privkeyDaoStub.upload.returns(resolves());
 
             keychainDao.uploadPrivateKey({
                 code: 'code',
                 userId: testUser
-            }, function(err) {
-                expect(err).to.not.exist;
+            }).then(function() {
                 expect(cryptoStub.deriveKey.calledOnce).to.be.true;
                 expect(getUserKeyPairStub.calledOnce).to.be.true;
                 expect(cryptoStub.encrypt.calledTwice).to.be.true;
@@ -1268,8 +1242,8 @@ describe('Keychain DAO unit tests', function() {
                 keyId: 'someId'
             };
 
-            privkeyDaoStub.requestDownload.withArgs(options).yields();
-            keychainDao.requestPrivateKeyDownload(options, done);
+            privkeyDaoStub.requestDownload.withArgs(options).returns(resolves());
+            keychainDao.requestPrivateKeyDownload(options).then(done);
         });
     });
 
@@ -1280,8 +1254,8 @@ describe('Keychain DAO unit tests', function() {
                 keyId: 'someId'
             };
 
-            privkeyDaoStub.hasPrivateKey.withArgs(options).yields();
-            keychainDao.hasPrivateKey(options, done);
+            privkeyDaoStub.hasPrivateKey.withArgs(options).returns(resolves());
+            keychainDao.hasPrivateKey(options).then(done);
         });
     });
 
@@ -1291,8 +1265,8 @@ describe('Keychain DAO unit tests', function() {
                 recoveryToken: 'token'
             };
 
-            privkeyDaoStub.download.withArgs(options).yields();
-            keychainDao.downloadPrivateKey(options, done);
+            privkeyDaoStub.download.withArgs(options).returns(resolves());
+            keychainDao.downloadPrivateKey(options).then(done);
         });
     });
 
@@ -1316,16 +1290,16 @@ describe('Keychain DAO unit tests', function() {
         });
 
         it('should fail due to invlaid args', function(done) {
-            keychainDao.decryptAndStorePrivateKeyLocally({}, function(err) {
+            keychainDao.decryptAndStorePrivateKeyLocally({}).catch(function(err) {
                 expect(err).to.exist;
                 done();
             });
         });
 
         it('should fail due to crypto.deriveKey', function(done) {
-            cryptoStub.deriveKey.yields(42);
+            cryptoStub.deriveKey.returns(rejects(42));
 
-            keychainDao.decryptAndStorePrivateKeyLocally(testData, function(err) {
+            keychainDao.decryptAndStorePrivateKeyLocally(testData).catch(function(err) {
                 expect(err).to.exist;
                 expect(cryptoStub.deriveKey.calledOnce).to.be.true;
                 done();
@@ -1333,10 +1307,10 @@ describe('Keychain DAO unit tests', function() {
         });
 
         it('should fail due to crypto.decrypt', function(done) {
-            cryptoStub.deriveKey.yields(null, 'derivedKey');
-            cryptoStub.decrypt.yields(42);
+            cryptoStub.deriveKey.returns(resolves('derivedKey'));
+            cryptoStub.decrypt.returns(rejects(42));
 
-            keychainDao.decryptAndStorePrivateKeyLocally(testData, function(err) {
+            keychainDao.decryptAndStorePrivateKeyLocally(testData).catch(function(err) {
                 expect(err).to.exist;
                 expect(cryptoStub.deriveKey.calledOnce).to.be.true;
                 expect(cryptoStub.decrypt.calledOnce).to.be.true;
@@ -1345,11 +1319,11 @@ describe('Keychain DAO unit tests', function() {
         });
 
         it('should fail due to pgp.getKeyParams', function(done) {
-            cryptoStub.deriveKey.yields(null, 'derivedKey');
-            cryptoStub.decrypt.yields(null, 'privateKeyArmored');
-            pgpStub.getKeyParams.throws(new Error());
+            cryptoStub.deriveKey.returns(resolves('derivedKey'));
+            cryptoStub.decrypt.returns(resolves('privateKeyArmored'));
+            pgpStub.getKeyParams.returns(rejects(new Error()));
 
-            keychainDao.decryptAndStorePrivateKeyLocally(testData, function(err) {
+            keychainDao.decryptAndStorePrivateKeyLocally(testData).catch(function(err) {
                 expect(err).to.exist;
                 expect(cryptoStub.deriveKey.calledOnce).to.be.true;
                 expect(cryptoStub.decrypt.calledOnce).to.be.true;
@@ -1359,12 +1333,12 @@ describe('Keychain DAO unit tests', function() {
         });
 
         it('should fail due to saveLocalPrivateKey', function(done) {
-            cryptoStub.deriveKey.yields(null, 'derivedKey');
-            cryptoStub.decrypt.yields(null, 'privateKeyArmored');
+            cryptoStub.deriveKey.returns(resolves('derivedKey'));
+            cryptoStub.decrypt.returns(resolves('privateKeyArmored'));
             pgpStub.getKeyParams.returns(testData);
-            saveLocalPrivateKeyStub.yields(42);
+            saveLocalPrivateKeyStub.returns(rejects(42));
 
-            keychainDao.decryptAndStorePrivateKeyLocally(testData, function(err) {
+            keychainDao.decryptAndStorePrivateKeyLocally(testData).catch(function(err) {
                 expect(err).to.exist;
                 expect(cryptoStub.deriveKey.calledOnce).to.be.true;
                 expect(cryptoStub.decrypt.calledOnce).to.be.true;
@@ -1375,13 +1349,12 @@ describe('Keychain DAO unit tests', function() {
         });
 
         it('should work', function(done) {
-            cryptoStub.deriveKey.yields(null, 'derivedKey');
-            cryptoStub.decrypt.yields(null, 'privateKeyArmored');
+            cryptoStub.deriveKey.returns(resolves('derivedKey'));
+            cryptoStub.decrypt.returns(resolves('privateKeyArmored'));
             pgpStub.getKeyParams.returns(testData);
-            saveLocalPrivateKeyStub.yields();
+            saveLocalPrivateKeyStub.returns(resolves());
 
-            keychainDao.decryptAndStorePrivateKeyLocally(testData, function(err, keyObject) {
-                expect(err).to.not.exist;
+            keychainDao.decryptAndStorePrivateKeyLocally(testData).then(function(keyObject) {
                 expect(keyObject).to.deep.equal({
                     _id: 'keyId',
                     userId: testUser,
@@ -1411,7 +1384,7 @@ describe('Keychain DAO unit tests', function() {
                 }
             };
 
-            keychainDao.putUserKeyPair(keypair, function(err) {
+            keychainDao.putUserKeyPair(keypair).catch(function(err) {
                 expect(err).to.exist;
                 done();
             });
@@ -1431,11 +1404,10 @@ describe('Keychain DAO unit tests', function() {
                 }
             };
 
-            lawnchairDaoStub.persist.yields();
-            pubkeyDaoStub.put.yields();
+            lawnchairDaoStub.persist.returns(resolves());
+            pubkeyDaoStub.put.returns(resolves());
 
-            keychainDao.putUserKeyPair(keypair, function(err) {
-                expect(err).to.not.exist;
+            keychainDao.putUserKeyPair(keypair).then(function() {
                 expect(lawnchairDaoStub.persist.calledTwice).to.be.true;
                 expect(pubkeyDaoStub.put.calledOnce).to.be.true;
                 done();

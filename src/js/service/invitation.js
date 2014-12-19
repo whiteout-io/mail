@@ -13,14 +13,6 @@ function Invitation(invitationRestDao) {
 }
 
 //
-// Constants
-//
-
-Invitation.INVITE_MISSING = 1;
-Invitation.INVITE_PENDING = 2;
-Invitation.INVITE_SUCCESS = 4;
-
-//
 // API
 //
 
@@ -28,35 +20,18 @@ Invitation.INVITE_SUCCESS = 4;
  * Notes an invite for the recipient by the sender in the invitation web service
  * @param {String} options.recipient User ID of the recipient
  * @param {String} options.sender User ID of the sender
- * @param {Function} callback(error, status) Returns information if the invitation worked (INVITE_SUCCESS), if an invitation is already pendin (INVITE_PENDING), or information if an error occurred.
+ * @return {Promise}
  */
-Invitation.prototype.invite = function(options, callback) {
-    if (typeof options !== 'object' || typeof options.recipient !== 'string' || typeof options.recipient !== 'string') {
-        callback({
-            errMsg: 'erroneous usage of api: incorrect parameters!'
-        });
-        return;
-    }
-
-    var uri = '/invitation/recipient/' + options.recipient + '/sender/' + options.sender;
-    this._restDao.put({}, uri, completed);
-
-    function completed(error, res, status) {
-        if (error) {
-            callback(error);
-            return;
+Invitation.prototype.invite = function(options) {
+    var self = this;
+    return new Promise(function(resolve) {
+        if (typeof options !== 'object' || typeof options.recipient !== 'string' || typeof options.sender !== 'string') {
+            throw new Error('erroneous usage of api: incorrect parameters!');
         }
+        resolve();
 
-        if (status === 201) {
-            callback(null, Invitation.INVITE_SUCCESS);
-            return;
-        } else if (status === 304) {
-            callback(null, Invitation.INVITE_PENDING);
-            return;
-        }
-
-        callback({
-            errMsg: 'unexpected invitation state'
-        });
-    }
+    }).then(function() {
+        var uri = '/invitation/recipient/' + options.recipient + '/sender/' + options.sender;
+        return self._restDao.put({}, uri);
+    });
 };

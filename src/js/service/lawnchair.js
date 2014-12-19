@@ -13,87 +13,91 @@ function LawnchairDAO() {}
 /**
  * Initialize the lawnchair database
  * @param  {String}   dbName   The name of the database
+ * @return {Promise}
  */
-LawnchairDAO.prototype.init = function(dbName, callback) {
+LawnchairDAO.prototype.init = function(dbName) {
     var self = this;
+    return new Promise(function(resolve, reject) {
+        if (!dbName) {
+            throw new Error('Lawnchair DB name must be specified!');
+        }
 
-    if (!dbName) {
-        return callback(new Error('Lawnchair DB name must be specified!'));
-    }
-
-    self._db = new Lawnchair({
-        name: dbName
-    }, function(success) {
-        callback(success ? undefined : new Error('Lawnchair initialization ' + dbName + ' failed!'));
+        self._db = new Lawnchair({
+            name: dbName
+        }, function(success) {
+            if (success) {
+                resolve();
+            } else {
+                reject(new Error('Lawnchair initialization ' + dbName + ' failed!'));
+            }
+        });
     });
 };
 
 /**
  * Create or update an object
+ * @return {Promise}
  */
-LawnchairDAO.prototype.persist = function(key, object, callback) {
-    if (!key || !object) {
-        callback({
-            errMsg: 'Key and Object must be set!'
-        });
-        return;
-    }
-
-    this._db.save({
-        key: key,
-        object: object
-    }, function(persisted) {
-        if (persisted.key !== key) {
-            callback({
-                errMsg: 'Persisting failed!'
-            });
-            return;
+LawnchairDAO.prototype.persist = function(key, object) {
+    var self = this;
+    return new Promise(function(resolve, reject) {
+        if (!key || !object) {
+            throw new Error('Key and Object must be set!');
         }
 
-        callback();
+        self._db.save({
+            key: key,
+            object: object
+        }, function(persisted) {
+            if (persisted.key !== key) {
+                reject(new Error('Persisting failed!'));
+                return;
+            }
+
+            resolve();
+        });
     });
 };
 
 /**
  * Persist a bunch of items at once
+ * @return {Promise}
  */
-LawnchairDAO.prototype.batch = function(list, callback) {
-    if (!(list instanceof Array)) {
-        callback({
-            errMsg: 'Input must be of type Array!'
-        });
-        return;
-    }
-
-    this._db.batch(list, function(res) {
-        if (!res) {
-            callback({
-                errMsg: 'Persisting batch failed!'
-            });
-            return;
+LawnchairDAO.prototype.batch = function(list) {
+    var self = this;
+    return new Promise(function(resolve, reject) {
+        if (!(list instanceof Array)) {
+            throw new Error('Input must be of type Array!');
         }
 
-        callback();
+        self._db.batch(list, function(res) {
+            if (!res) {
+                reject(new Error('Persisting batch failed!'));
+            } else {
+                resolve();
+            }
+        });
     });
 };
 
 /**
  * Read a single item by its key
+ * @return {Promise}
  */
-LawnchairDAO.prototype.read = function(key, callback) {
-    if (!key) {
-        callback({
-            errMsg: 'Key must be specified!'
-        });
-        return;
-    }
-
-    this._db.get(key, function(o) {
-        if (o) {
-            callback(null, o.object);
-        } else {
-            callback();
+LawnchairDAO.prototype.read = function(key) {
+    var self = this;
+    return new Promise(function(resolve) {
+        if (!key) {
+            throw new Error('Key must be specified!');
         }
+
+        self._db.get(key, function(o) {
+            if (o) {
+                resolve(o.object);
+            } else {
+                resolve();
+            }
+        });
     });
 };
 
@@ -102,113 +106,131 @@ LawnchairDAO.prototype.read = function(key, callback) {
  * @param type [String] The type of item e.g. 'email'
  * @param offset [Number] The offset of items to fetch (0 is the last stored item)
  * @param num [Number] The number of items to fetch (null means fetch all)
+ * @return {Promise}
  */
-LawnchairDAO.prototype.list = function(type, offset, num, callback) {
-    var self = this,
-        i, from, to,
-        matchingKeys = [],
-        intervalKeys = [],
-        list = [];
+LawnchairDAO.prototype.list = function(type, offset, num) {
+    var self = this;
+    return new Promise(function(resolve) {
+        var i, from, to,
+            matchingKeys = [],
+            intervalKeys = [],
+            list = [];
 
-    // validate input
-    if (!type || typeof offset === 'undefined' || typeof num === 'undefined') {
-        callback({
-            errMsg: 'Args not is not set!'
-        });
-        return;
-    }
-
-    // get all keys
-    self._db.keys(function(keys) {
-
-        // check if key begins with type
-        keys.forEach(function(key) {
-            if (key.indexOf(type) === 0) {
-                matchingKeys.push(key);
-            }
-        });
-
-        // sort keys
-        matchingKeys.sort();
-
-        // set window of items to fetch
-        // if num is null, list all items
-        from = (num) ? matchingKeys.length - offset - num : 0;
-        to = matchingKeys.length - 1 - offset;
-        // filter items within requested interval
-        for (i = 0; i < matchingKeys.length; i++) {
-            if (i >= from && i <= to) {
-                intervalKeys.push(matchingKeys[i]);
-            }
+        // validate input
+        if (!type || typeof offset === 'undefined' || typeof num === 'undefined') {
+            throw new Error('Args not is not set!');
         }
 
-        // return if there are no matching keys
-        if (intervalKeys.length === 0) {
-            callback(null, list);
-            return;
-        }
-
-        // fetch all items from data-store with matching key
-        self._db.get(intervalKeys, function(intervalList) {
-            intervalList.forEach(function(item) {
-                list.push(item.object);
+        // get all keys
+        self._db.keys(function(keys) {
+            // check if key begins with type
+            keys.forEach(function(key) {
+                if (key.indexOf(type) === 0) {
+                    matchingKeys.push(key);
+                }
             });
 
-            // return only the interval between offset and num
-            callback(null, list);
-        });
+            // sort keys
+            matchingKeys.sort();
 
+            // set window of items to fetch
+            // if num is null, list all items
+            from = (num) ? matchingKeys.length - offset - num : 0;
+            to = matchingKeys.length - 1 - offset;
+            // filter items within requested interval
+            for (i = 0; i < matchingKeys.length; i++) {
+                if (i >= from && i <= to) {
+                    intervalKeys.push(matchingKeys[i]);
+                }
+            }
+
+            // return if there are no matching keys
+            if (intervalKeys.length === 0) {
+                resolve(list);
+                return;
+            }
+
+            // fetch all items from data-store with matching key
+            self._db.get(intervalKeys, function(intervalList) {
+                intervalList.forEach(function(item) {
+                    list.push(item.object);
+                });
+
+                // return only the interval between offset and num
+                resolve(list);
+            });
+        });
     });
 };
 
 /**
  * Removes an object liter from local storage by its key (delete)
+ * @return {Promise}
  */
-LawnchairDAO.prototype.remove = function(key, callback) {
-    this._db.remove(key, callback);
+LawnchairDAO.prototype.remove = function(key) {
+    var self = this;
+    return new Promise(function(resolve, reject) {
+        self._db.remove(key, function(err) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve();
+            }
+        });
+    });
 };
 
 /**
  * Removes an object liter from local storage by its key (delete)
+ * @return {Promise}
  */
-LawnchairDAO.prototype.removeList = function(type, callback) {
-    var self = this,
-        matchingKeys = [],
-        after;
+LawnchairDAO.prototype.removeList = function(type) {
+    var self = this;
+    return new Promise(function(resolve) {
+        var matchingKeys = [],
+            after;
 
-    // validate type
-    if (!type) {
-        callback({
-            errMsg: 'Type is not set!'
-        });
-        return;
-    }
-
-    // get all keys
-    self._db.keys(function(keys) {
-        // check if key begins with type
-        keys.forEach(function(key) {
-            if (key.indexOf(type) === 0) {
-                matchingKeys.push(key);
-            }
-        });
-
-        if (matchingKeys.length < 1) {
-            callback();
-            return;
+        // validate type
+        if (!type) {
+            throw new Error('Type is not set!');
         }
 
-        // remove all matching keys
-        after = _.after(matchingKeys.length, callback);
-        _.each(matchingKeys, function(key) {
-            self._db.remove(key, after);
+        // get all keys
+        self._db.keys(function(keys) {
+            // check if key begins with type
+            keys.forEach(function(key) {
+                if (key.indexOf(type) === 0) {
+                    matchingKeys.push(key);
+                }
+            });
+
+            if (matchingKeys.length < 1) {
+                resolve();
+                return;
+            }
+
+            // remove all matching keys
+            after = _.after(matchingKeys.length, resolve);
+            _.each(matchingKeys, function(key) {
+                self._db.remove(key, after);
+            });
         });
     });
 };
 
 /**
  * Clears the whole local storage cache
+ * @return {Promise}
  */
-LawnchairDAO.prototype.clear = function(callback) {
-    this._db.nuke(callback);
+LawnchairDAO.prototype.clear = function() {
+    var self = this;
+    return new Promise(function(resolve, reject) {
+        self._db.nuke(function(err) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve();
+            }
+        });
+    });
 };
