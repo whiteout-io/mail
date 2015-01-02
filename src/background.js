@@ -10,9 +10,10 @@ chrome.app.runtime.onLaunched.addListener(function() {
 
         // open chrome app in new window
         chrome.app.window.create('index.html', {
-            'bounds': {
-                'width': 1280,
-                'height': 800
+            id: '0',
+            innerBounds: {
+                width: 1280,
+                height: 800
             }
         });
     });
