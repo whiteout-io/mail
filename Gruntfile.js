@@ -400,7 +400,7 @@ module.exports = function(grunt) {
             icons: {
                 files: [{
                     expand: true,
-                    src: ['img/icons/*.svg','!img/icons/all.svg'],
+                    src: ['img/icons/*.svg', '!img/icons/all.svg'],
                     cwd: 'src/',
                     dest: 'compile/'
                 }]
@@ -527,7 +527,32 @@ module.exports = function(grunt) {
                         'js/mailreader-parser-worker.browserified.js',
                         'js/mailreader-parser-worker.min.js.map',
                         'js/tcp-socket-tls-worker.browserified.js',
-                        'js/tcp-socket-tls-worker.min.js.map'
+                        'js/tcp-socket-tls-worker.min.js.map',
+                        'img/icon-100-ios.png',
+                        'img/icon-114-ios.png',
+                        'img/icon-120-ios.png',
+                        'img/icon-128-chrome.png',
+                        'img/icon-144-android.png',
+                        'img/icon-144-ios.png',
+                        'img/icon-152-ios.png',
+                        'img/icon-180-ios.png',
+                        'img/icon-192-android.png',
+                        'img/icon-29-ios.png',
+                        'img/icon-36-android.png',
+                        'img/icon-40-ios.png',
+                        'img/icon-48-android.png',
+                        'img/icon-50-ios.png',
+                        'img/icon-57-ios.png',
+                        'img/icon-58-ios.png',
+                        'img/icon-60-android.png',
+                        'img/icon-60-ios.png',
+                        'img/icon-72-android.png',
+                        'img/icon-72-ios.png',
+                        'img/icon-76-ios.png',
+                        'img/icon-78-android.png',
+                        'img/icon-80-ios.png',
+                        'img/icon-87-ios.png',
+                        'img/icon-96-android.png'
                     ],
                     master: ['index.html']
                 },
