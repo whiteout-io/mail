@@ -41,7 +41,7 @@ You can download a prebuilt bundle under [releases](https://github.com/whiteout-
 
     npm install && npm test
 
-This will download all dependencies, run the tests and build the Chrome Packaged App bundle **DEV.zip** which can be installed under [chrome://extensions](chrome://extensions) in developer mode.
+This will download all dependencies, run the tests and build the Chrome Packaged App bundle **release/whiteout-mail_DEV.zip** which can be installed under [chrome://extensions](chrome://extensions) in developer mode.
 
 ### Development
 For development you can start a connect dev server:
