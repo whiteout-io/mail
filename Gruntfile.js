@@ -400,7 +400,7 @@ module.exports = function(grunt) {
             icons: {
                 files: [{
                     expand: true,
-                    src: ['img/icons/*.svg'],
+                    src: ['img/icons/*.svg','!img/icons/all.svg'],
                     cwd: 'src/',
                     dest: 'compile/'
                 }]
