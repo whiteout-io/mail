@@ -100,6 +100,12 @@ var NavigationCtrl = function($scope, $location, $q, account, email, outbox, not
         var ob = _.findWhere($scope.account.folders, {
             type: config.outboxMailboxType
         });
+
+        if (!ob) {
+            // the outbox folder has not been initialized yet
+            return;
+        }
+
         ob.count = count;
 
         return $q(function(resolve) {
