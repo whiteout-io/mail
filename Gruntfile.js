@@ -552,7 +552,17 @@ module.exports = function(grunt) {
                         'img/icon-78-android.png',
                         'img/icon-80-ios.png',
                         'img/icon-87-ios.png',
-                        'img/icon-96-android.png'
+                        'img/icon-96-android.png',
+                        'img/Default-568h@2x~iphone.png',
+                        'img/Default-667h.png',
+                        'img/Default-736h.png',
+                        'img/Default-Landscape-736h.png',
+                        'img/Default-Landscape@2x~ipad.png',
+                        'img/Default-Landscape~ipad.png',
+                        'img/Default-Portrait@2x~ipad.png',
+                        'img/Default-Portrait~ipad.png',
+                        'img/Default@2x~iphone.png',
+                        'img/Default~iphone.png'
                     ],
                     master: ['index.html']
                 },
