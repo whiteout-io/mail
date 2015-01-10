@@ -46,9 +46,15 @@ sed -i "" 's/StatusBarStyle" value="lightcontent"/StatusBarStyle" value="darkcon
 echo "Copying splash screens"
 cp ../../../src/img/Default* "platforms/ios/$PROJNAME/Resources/splash"
 
+# fixing missing/wrong icons
+echo "Fixing wrong/missing iOS icons"
+cp ../../../src/img/icon-60-ios.png "platforms/ios/$PROJNAME/Resources/icons/icon-60.png"
+cp ../../../src/img/icon-180-ios.png "platforms/ios/$PROJNAME/Resources/icons/icon-60@3x.png"
+cp ../../../src/img/icon-87-ios.png "platforms/ios/$PROJNAME/Resources/icons/icon-small@3x.png"
+cp ../../../src/img/icon-120-ios.png "platforms/ios/$PROJNAME/Resources/icons/icon-40@3x.png"
+
 # print reminder for manual work in xcode
 echo ""
 echo "### Reminder for manual steps required for iOS release"
 echo "### Change deployment target to iOS 8.1"
-echo "### Use icon set"
-echo "### Use correct 60px icon"
+echo "### Add retina icons to build, migrate to icon set, fix splash screens config"
