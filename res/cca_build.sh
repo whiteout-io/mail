@@ -23,17 +23,32 @@ cca create $DIR/Whiteout --link-to=dist/manifest.json
 cd $DIR/Whiteout
 cca prepare
 
+# 
+# post-build tweaks
+# 
+
+echo ""
+echo "## Running post-build tweaks"
+
 # cp signing config
+echo "Copy Android signing config"
 cp ../../../res/android-release-keys.properties .
 
-# change ios status bar in cordova settings
 # status bar should not overlay the web view
+echo "Tweaking iOS status bar to not overlay the web view"
 sed -i "" 's/StatusBarOverlaysWebView" value="true"/StatusBarOverlaysWebView" value="false"/' "platforms/ios/$PROJNAME/config.xml"
+
 # status bar should use dark font on light background
+echo "Tweaking iOS status bar to use dark font on light background"
 sed -i "" 's/StatusBarStyle" value="lightcontent"/StatusBarStyle" value="darkcontent"/' "platforms/ios/$PROJNAME/config.xml"
 
+# copy splash screens
+echo "Copying splash screens"
+cp ../../../src/img/Default* "platforms/ios/$PROJNAME/Resources/splash"
+
 # print reminder for manual work in xcode
-echo '### Reminder for manual steps required for iOS release'
-echo '### Change deployment target to iOS 8.1'
-echo '### Use icon set'
-echo '### Use correct 60px icon'
+echo ""
+echo "### Reminder for manual steps required for iOS release"
+echo "### Change deployment target to iOS 8.1"
+echo "### Use icon set"
+echo "### Use correct 60px icon"
