@@ -136,6 +136,10 @@ var MailListCtrl = function($scope, $timeout, $location, $filter, $q, status, no
      * Date formatting
      */
     $scope.formatDate = function(date) {
+        if (typeof date === 'string') {
+            date = new Date(date);
+        }
+
         var now = new Date();
 
         // return time if mail is from today
