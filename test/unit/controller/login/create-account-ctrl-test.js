@@ -51,10 +51,27 @@ describe('Create Account Controller unit test', function() {
             expect(adminStub.createUser.called).to.be.false;
         });
 
+        it('should fail due to invalid phone number', function(done) {
+            scope.form.$invalid = false;
+            scope.betaCode = 'asfd';
+            scope.region = 'DE';
+            scope.dial = '0';
+
+            scope.createWhiteoutAccount().then(function() {
+                expect(scope.busy).to.be.false;
+                expect(scope.errMsg).to.match(/phone/);
+                expect(adminStub.createUser.calledOnce).to.be.false;
+                done();
+            });
+
+            expect(scope.busy).to.be.true;
+        });
+
         it('should fail to error creating user', function(done) {
             scope.form.$invalid = false;
             scope.betaCode = 'asfd';
-            scope.phone = '12345';
+            scope.region = 'DE';
+            scope.dial = '0160 12345678';
             adminStub.createUser.returns(rejects(new Error('asdf')));
 
             scope.createWhiteoutAccount().then(function() {
@@ -70,7 +87,8 @@ describe('Create Account Controller unit test', function() {
         it('should work', function(done) {
             scope.form.$invalid = false;
             scope.betaCode = 'asfd';
-            scope.phone = '12345';
+            scope.region = 'DE';
+            scope.dial = '0160 12345678';
             adminStub.createUser.returns(resolves());
 
             scope.createWhiteoutAccount().then(function() {
