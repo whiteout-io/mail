@@ -294,6 +294,13 @@ var MailListCtrl = function($scope, $timeout, $location, $filter, $q, status, no
         }).catch(dialog.error);
     }
 
+    $scope.$on('read', function(e, state) {
+        if (!state) {
+            // load bodies after closing read mode
+            $scope.loadVisibleBodies();
+        }
+    });
+
     function currentFolder() {
         return $scope.state.nav && $scope.state.nav.currentFolder;
     }

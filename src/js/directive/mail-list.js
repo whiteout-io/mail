@@ -2,7 +2,7 @@
 
 var ngModule = angular.module('woDirectives');
 
-ngModule.directive('listScroll', function() {
+ngModule.directive('listScroll', function($timeout) {
     return {
         link: function(scope, elm, attrs) {
             var model = attrs.listScroll,
@@ -12,7 +12,7 @@ ngModule.directive('listScroll', function() {
             /*
              * iterates over the mails in the mail list and loads their bodies if they are visible in the viewport
              */
-            scope.loadVisibleBodies = function() {
+            function loadVisibleBodies() {
                 var listBorder = listEl.getBoundingClientRect(),
                     top = listBorder.top,
                     bottom = listBorder.bottom,
@@ -53,6 +53,13 @@ ngModule.directive('listScroll', function() {
                         break;
                     }
                 }
+            }
+
+            scope.loadVisibleBodies = function() {
+                // wait for next tick so that scope is digested and synced to DOM
+                $timeout(function() {
+                    loadVisibleBodies();
+                });
             };
 
             // load body when scrolling

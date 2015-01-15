@@ -6,7 +6,7 @@
 
   <div class="read__folder-toolbar">
     <div class="toolbar">
-      <a class="toolbar__label" href="#" wo-touch="$event.preventDefault(); state.read.toggle(false)">
+      <a class="toolbar__label" href="#" wo-touch="$event.preventDefault(); close()">
         <svg><use xlink:href="#icon-back" /><title>Back</title></svg>
         {{state.nav.currentFolder.wellknown ? state.nav.currentFolder.type : state.nav.currentFolder.name}}
       </a>
@@ -51,7 +51,7 @@
 
       {{state.mailList.selected.subject ? state.mailList.selected.subject : 'No subject'}}
     </h2>
-    <h2 class="read__subject-md" wo-touch="state.read.toggle(false)">
+    <h2 class="read__subject-md" wo-touch="close()">
       <svg><use xlink:href="#icon-back" /><title>Back</title></svg>
       {{state.mailList.selected.subject ? state.mailList.selected.subject : 'No subject'}}
     </h2>
