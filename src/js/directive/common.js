@@ -173,6 +173,16 @@ ngModule.directive('woClickFileInput', function() {
     };
 });
 
+ngModule.directive('woFingerprint', function($timeout) {
+    return function(scope, elm) {
+        return $timeout(function() {
+            // add space after every fourth char to make pgp fingerprint more readable
+            var fingerprint = elm.text().replace(/(\w{4})/g, '$1 ').trim();
+            elm.text(fingerprint);
+        });
+    };
+});
+
 ngModule.directive('woInputCode', function() {
     var BLOCK_SIZE = 4;
     var NUM_BLOCKS = 6;
