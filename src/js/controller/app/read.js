@@ -4,7 +4,7 @@
 // Controller
 //
 
-var ReadCtrl = function($scope, $location, $q, email, invitation, outbox, pgp, keychain, appConfig, download, auth, dialog) {
+var ReadCtrl = function($scope, $location, $q, email, invitation, outbox, pgp, keychain, appConfig, download, auth, dialog, status) {
 
     var str = appConfig.string;
 
@@ -46,6 +46,13 @@ var ReadCtrl = function($scope, $location, $q, email, invitation, outbox, pgp, k
     //
     // scope functions
     //
+
+    /**
+     * Close read mode and return to mail-list
+     */
+    $scope.close = function() {
+        status.setReading(false);
+    };
 
     $scope.getKeyId = function(address) {
         if ($location.search().dev || !address) {
