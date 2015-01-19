@@ -27,7 +27,7 @@
           <use xlink:href="#icon-star" />
         </svg>
         {{folder.type === 'Flagged' ? 'Starred' : folder.type}}
-        <span ng-show="folder.count > 0" class="nav__counter">{{folder.count}}</span>
+        <span ng-show="folder.count > 0 && folder.type !== 'Sent'" class="nav__counter">{{folder.count}}</span>
       </a>
       <!--<button class="btn-icon-very-light">
         <svg><use xlink:href="#icon-dropdown" /><title>More</title></svg>
