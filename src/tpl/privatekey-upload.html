@@ -26,7 +26,7 @@
         <p class="typo-paragraph">Please confirm the keychain code you have written down.</p>
         <form class="form">
           <input type="text" class="input-text" ng-model="inputCode" wo-input-code wo-focus-me="step === 2"
-              required pattern="([a-zA-Z0-9\-]*)" placeholder="0000-0000-0000-0000-0000-0000">
+            required pattern="([a-zA-Z0-9\-]*)" placeholder="0000-0000-0000-0000-0000-0000">
         </form>
       </div>
 
@@ -38,7 +38,7 @@
       </div>
 
       <div ng-show="step === 4">
-        <div class="spinner-block spinner-block--standalone" ng-show="busy">
+        <div class="spinner-block spinner-block--standalone">
           <span class="spinner spinner--big"></span>
         </div>
       </div>
