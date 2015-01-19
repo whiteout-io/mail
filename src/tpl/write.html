@@ -8,8 +8,9 @@
   <div class="lightbox__content write">
 
     <header class="write__header">
-      <div class="mail-addresses" focus-input="state.lightbox === 'write' && writerTitle !== 'Reply'"
-         focus-input-on-click>
+      <div class="mail-addresses"
+        focus-input="state.lightbox === 'write' && writerTitle !== 'Reply'"
+        focus-input-on-click>
         <div class="mail-addresses__more">
           <button wo-touch="showCC = true;" ng-hide="showCC">Cc</button>
           <button wo-touch="showBCC = true;" ng-hide="showBCC">Bcc</button>
@@ -23,7 +24,6 @@
         </tags-input>
       </div>
       <div class="mail-addresses" ng-show="showCC === true"
-         focus-input="state.lightbox === 'write' && writerTitle !== 'Reply'"
          focus-input-on-click>
         <label>Cc:</label>
         <tags-input class="tags-input" ng-model="cc" type="email" tabindex="1" add-on-space="true" add-on-enter="true" enable-editing-last-tag="true"
@@ -34,7 +34,6 @@
         </tags-input>
       </div>
       <div class="mail-addresses" ng-show="showBCC === true"
-         focus-input="state.lightbox === 'write' && writerTitle !== 'Reply'"
          focus-input-on-click>
         <label>Bcc:</label>
         <tags-input class="tags-input" ng-model="bcc" type="email" tabindex="1" add-on-space="true" add-on-enter="true" enable-editing-last-tag="true"
