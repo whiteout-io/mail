@@ -21,14 +21,15 @@ function PGP() {
  */
 PGP.prototype.generateKeys = function(options) {
     return new Promise(function(resolve) {
-        var userId, passphrase;
+        var userId, name, passphrase;
 
         if (!util.emailRegEx.test(options.emailAddress) || !options.keySize) {
             throw new Error('Crypto init failed. Not all options set!');
         }
 
         // generate keypair
-        userId = 'Whiteout User <' + options.emailAddress + '>';
+        name = options.realname ? options.realname.replace(/[&\/\\#,+()$~%.'":*?<>{}]/g, '').trim() + ' ' : '';
+        userId = name + '<' + options.emailAddress + '>';
         passphrase = (options.passphrase) ? options.passphrase : undefined;
 
         resolve({

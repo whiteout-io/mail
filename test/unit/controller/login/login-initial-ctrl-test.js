@@ -65,6 +65,10 @@ describe('Login (initial user) Controller unit test', function() {
     });
 
     describe('generate key', function() {
+        beforeEach(function() {
+            authMock.realname = 'Hans Dampf';
+        });
+
         it('should not continue if terms are not accepted', function() {
             scope.agree = undefined;
 
@@ -79,7 +83,8 @@ describe('Login (initial user) Controller unit test', function() {
             scope.agree = true;
 
             emailMock.unlock.withArgs({
-                passphrase: undefined
+                passphrase: undefined,
+                realname: authMock.realname
             }).returns(rejects(new Error('asdf')));
             authMock.storeCredentials.returns(resolves());
 
@@ -95,7 +100,8 @@ describe('Login (initial user) Controller unit test', function() {
             scope.agree = true;
 
             emailMock.unlock.withArgs({
-                passphrase: undefined
+                passphrase: undefined,
+                realname: authMock.realname
             }).returns(resolves());
             authMock.storeCredentials.returns(resolves());
 

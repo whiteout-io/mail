@@ -103,6 +103,7 @@ Email.prototype.unlock = function(options) {
     // no keypair for is stored for the user... generate a new one
     return self._pgp.generateKeys({
         emailAddress: self._account.emailAddress,
+        realname: options.realname,
         keySize: self._account.asymKeySize,
         passphrase: options.passphrase
     }).then(function(keypair) {

@@ -199,9 +199,11 @@ describe('Email DAO unit tests', function() {
                 publicKeyArmored: mockKeyPair.publicKey.publicKey,
                 privateKeyArmored: mockKeyPair.privateKey.encryptedKey
             };
+            var name = 'Hans Dampf';
 
             pgpStub.generateKeys.withArgs({
                 emailAddress: emailAddress,
+                realname: name,
                 keySize: asymKeySize,
                 passphrase: passphrase
             }).returns(resolves(keypair));
@@ -214,6 +216,7 @@ describe('Email DAO unit tests', function() {
             keychainStub.putUserKeyPair.withArgs().returns(resolves());
 
             dao.unlock({
+                realname: name,
                 passphrase: passphrase
             }).then(function() {
                 expect(pgpStub.generateKeys.calledOnce).to.be.true;
