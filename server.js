@@ -109,60 +109,50 @@ app.use(express.static(__dirname + '/dist'));
 // Socket.io proxy
 //
 
-// TODO:test origin constraint
-//io.origins(config.server.inboundOrigins.join(' '));
-
 io.on('connection', function(socket) {
-
-    log.info('io', 'New connection [%s]', socket.conn.id);
-
-    var idCounter = 0;
+    log.info('io', 'New connection [%s] from %s', socket.conn.id, socket.conn.remoteAddress);
 
     socket.on('open', function(data, fn) {
-        var socketId = ++idCounter;
-        var tcp;
-
         if (!development && config.server.outboundPorts.indexOf(data.port) < 0) {
-            log.warn('io', 'Open request to %s:%s was rejected, closing [%s:%s]', data.host, data.port, socket.conn.id, socketId);
+            log.info('io', 'Open request to %s:%s was rejected, closing [%s]', data.host, data.port, socket.conn.id);
             socket.disconnect();
             return;
         }
 
-        log.verbose('io', 'Open request to %s:%s [%s:%s]', data.host, data.port, socket.conn.id, socketId);
-
-        tcp = net.connect(data.port, data.host, function() {
-            log.verbose('io', 'Opened tcp connection to %s:%s [%s:%s]', data.host, data.port, socket.conn.id, socketId);
+        log.verbose('io', 'Open request to %s:%s [%s]', data.host, data.port, socket.conn.id);
+        var tcp = net.connect(data.port, data.host, function() {
+            log.verbose('io', 'Opened tcp connection to %s:%s [%s]', data.host, data.port, socket.conn.id);
 
             tcp.on('data', function(chunk) {
-                log.silly('io', 'Received %s bytes from %s:%s [%s:%s]', chunk.length, data.host, data.port, socket.conn.id, socketId);
-                socket.emit('data-' + socketId, chunk);
+                log.silly('io', 'Received %s bytes from %s:%s [%s]', chunk.length, data.host, data.port, socket.conn.id);
+                socket.emit('data', chunk);
             });
 
             tcp.on('error', function(err) {
-                log.verbose('io', 'Error for %s:%s [%s:%s]: %s', data.host, data.port, socket.conn.id, socketId, err.message);
-                socket.emit('error-' + socketId, err.message);
+                log.verbose('io', 'Error for %s:%s [%s]: %s', data.host, data.port, socket.conn.id, err.message);
+                socket.emit('error', err.message);
             });
 
             tcp.on('end', function() {
-                socket.emit('end-' + socketId);
+                socket.emit('end');
             });
 
             tcp.on('close', function() {
-                log.verbose('io', 'Closed tcp connection to %s:%s [%s:%s]', data.host, data.port, socket.conn.id, socketId);
-                socket.emit('close-' + socketId);
+                log.verbose('io', 'Closed tcp connection to %s:%s [%s]', data.host, data.port, socket.conn.id);
+                socket.emit('close');
 
-                socket.removeAllListeners('data-' + socketId);
-                socket.removeAllListeners('end-' + socketId);
+                socket.removeAllListeners('data');
+                socket.removeAllListeners('end');
             });
 
-            socket.on('data-' + socketId, function(chunk, fn) {
+            socket.on('data', function(chunk, fn) {
                 if (!chunk || !chunk.length) {
                     if (typeof fn === 'function') {
                         fn();
                     }
                     return;
                 }
-                log.silly('io', 'Sending %s bytes to %s:%s [%s:%s]', chunk.length, data.host, data.port, socket.conn.id, socketId);
+                log.silly('io', 'Sending %s bytes to %s:%s [%s]', chunk.length, data.host, data.port, socket.conn.id);
                 tcp.write(chunk, function() {
                     if (typeof fn === 'function') {
                         fn();
@@ -170,24 +160,21 @@ io.on('connection', function(socket) {
                 });
             });
 
-            socket.on('end-' + socketId, function() {
-                log.verbose('io', 'Received request to close connection to %s:%s [%s:%s]', data.host, data.port, socket.conn.id, socketId);
+            socket.on('end', function() {
+                log.verbose('io', 'Received request to close connection to %s:%s [%s]', data.host, data.port, socket.conn.id);
                 tcp.end();
             });
 
             if (typeof fn === 'function') {
-                fn(socketId);
+                fn(os.hostname());
             }
+
+            socket.on('disconnect', function() {
+                log.verbose('io', 'Closed connection [%s], closing connection to %s:%s ', socket.conn.id, data.host, data.port);
+                tcp.end();
+                socket.removeAllListeners();
+            });
         });
-    });
-
-    socket.on('disconnect', function() {
-        log.info('io', 'Closed connection [%s]', socket.conn.id);
-        socket.removeAllListeners();
-    });
-
-    socket.on('hostname', function(fn) {
-        fn(os.hostname());
     });
 });
 
