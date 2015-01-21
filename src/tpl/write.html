@@ -41,6 +41,18 @@
         </tags-input>
       </div>
 
+      <div class="write__invite" ng-show="showInvite">
+        <p>
+          <svg role="presentation"><use xlink:href="#icon-decrypted"/></svg>
+          <strong>Key not found!</strong>
+          <span class="u-hidden-sm">Invite user to encrypt.</span>
+        </p>
+        <button class="btn btn--light" wo-touch="invite()" title="Invite to Whiteout Mail">
+          <svg role="presentation"><use xlink:href="#icon-add_contact"/></svg>
+          Invite
+        </button>
+      </div>
+
       <div class="write__subject">
         <input class="input-text" ng-model="subject" spellcheck="true" tabindex="2" placeholder="Subject" ng-change="updatePreview()">
         <input id="attachment-input" type="file" multiple attachment-input>
@@ -61,10 +73,10 @@
     </header>
 
     <textarea class="write__body" ng-model="body" spellcheck="true" wo-focus-me="state.lightbox === 'write' && writerTitle === 'Reply'" tabindex="3"></textarea>
+  </div><!--/write-->
 
-  </div>
   <footer class="lightbox__controls">
     <button wo-touch="sendToOutbox()" class="btn" ng-class="{'btn--invalid': sendBtnSecure === false}"
       ng-disabled="!okToSend" tabindex="4">{{sendBtnText || 'Send'}}</button>
   </footer>
-</div>
+</div><!--/lightbox__body-->

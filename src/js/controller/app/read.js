@@ -6,8 +6,6 @@
 
 var ReadCtrl = function($scope, $location, $q, email, invitation, outbox, pgp, keychain, appConfig, download, auth, dialog, status) {
 
-    var str = appConfig.string;
-
     //
     // scope state
     //
@@ -158,18 +156,10 @@ var ReadCtrl = function($scope, $location, $q, email, invitation, outbox, pgp, k
             });
 
         }).then(function() {
-            var invitationMail = {
-                from: [{
-                    address: sender
-                }],
-                to: [{
-                    address: recipient
-                }],
-                cc: [],
-                bcc: [],
-                subject: str.invitationSubject,
-                body: str.invitationMessage
-            };
+            var invitationMail = invitation.createMail({
+                sender: sender,
+                recipient: recipient
+            });
             // send invitation mail
             return outbox.put(invitationMail);
 

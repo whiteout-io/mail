@@ -49,6 +49,24 @@ describe('Outbox unit test', function() {
             outbox._processOutbox.restore();
         });
 
+        it('should throw error for message without recipients', function(done) {
+            var mail = {
+                from: [{
+                    name: 'member',
+                    address: 'member@whiteout.io'
+                }],
+                to: [],
+                cc: [],
+                bcc: []
+            };
+
+            outbox.put(mail).catch(function(err) {
+                expect(err).to.exist;
+                expect(keychainStub.getReceiverPublicKey.called).to.be.false;
+                done();
+            });
+        });
+
         it('should not encrypt and store a mail', function(done) {
             var mail, senderKey, receiverKey;
 
