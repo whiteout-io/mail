@@ -14,7 +14,7 @@ var ImapClient = require('imap-client'),
 describe('Email DAO integration tests', function() {
     this.timeout(100000);
 
-    var accountService, emailDao, imapClient, imapMessages, imapFolders, imapServer, smtpServer, smtpClient, userStorage, auth,
+    var accountService, emailDao, imapClient, pgpMailer, imapMessages, imapFolders, imapServer, smtpServer, smtpClient, userStorage, auth,
         mockKeyPair, inbox, spam;
 
     var testAccount = {
@@ -209,6 +209,7 @@ describe('Email DAO integration tests', function() {
         });
 
         function initAccountService() {
+
             // create imap/smtp clients with stubbed tcp sockets
             imapClient = new ImapClient({
                 auth: {
@@ -231,24 +232,9 @@ describe('Email DAO integration tests', function() {
                     user: testAccount.user,
                     xoauth2: testAccount.xoauth2
                 },
-                secure: true,
-                ca: ['random string'],
-                onError: console.error
+                secure: true
             });
-
             smtpClient._TCPSocket = smtpServer.createTCPSocket();
-
-            // stub the onConnect function to inject the test imap/smtp clients
-            sinon.stub(accountService, 'onConnect', function(cb) {
-                accountService._emailDao.onConnect({
-                    imapClient: imapClient,
-                    pgpMailer: new PgpMailer({
-                        tls: {
-                            ca: 'random string'
-                        }
-                    }, accountService._pgpbuilder)
-                }).then(cb).catch(cb);
-            });
 
             // clear the local database before each test
             var cleanup = new DeviceStorageDAO(new LawnchairDAO());
@@ -260,11 +246,21 @@ describe('Email DAO integration tests', function() {
                 userStorage = accountService._accountStore;
                 auth = accountService._auth;
 
+                auth.setCredentials({
+                    emailAddress: testAccount.user,
+                    password: 'asd',
+                    smtp: {}, // host and port don't matter here since we're using
+                    imap: {} // a preconfigured smtpclient with mocked tcp sockets
+                });
+
                 auth.init().then(function() {
                     accountService.init({
                         emailAddress: testAccount.user
                     }).then(function() {
                         emailDao = accountService._emailDao;
+
+                        // retrieve the pgpbuilder from the emaildao and initialize the pgpmailer with the existing pgpbuilder
+                        pgpMailer = new PgpMailer({}, emailDao._pgpbuilder);
 
                         // stub rest request to key server
                         sinon.stub(emailDao._keychain._publicKeyDao, 'get').returns(resolves(mockKeyPair.publicKey));
@@ -297,9 +293,7 @@ describe('Email DAO integration tests', function() {
                             passphrase: testAccount.pass,
                             keypair: mockKeyPair
                         }).then(function() {
-                            accountService.onConnect(function(err) {
-                                expect(err).to.not.exist;
-                            });
+                            accountService._emailDao.onConnect(imapClient);
                         });
                     });
                 });
@@ -310,7 +304,6 @@ describe('Email DAO integration tests', function() {
     afterEach(function(done) {
         openpgp.initWorker.restore();
         mailreader.startWorker.restore();
-        accountService.onConnect.restore();
 
         imapClient.stopListeningForChanges(function() {
             imapClient.logout(function() {
@@ -701,7 +694,7 @@ describe('Email DAO integration tests', function() {
                     subject: 'plaintext test',
                     body: 'hello world!'
                 }
-            }).then(function() {
+            }, pgpMailer).then(function() {
                 expect(smtpServer.onmail.callCount).to.equal(1);
                 done();
             });
@@ -726,7 +719,7 @@ describe('Email DAO integration tests', function() {
                     body: 'hello world!',
                     publicKeysArmored: [mockKeyPair.publicKey.publicKey]
                 }
-            }).then(function() {
+            }, pgpMailer).then(function() {
                 expect(smtpServer.onmail.callCount).to.equal(1);
                 done();
             });
@@ -771,7 +764,41 @@ describe('Email DAO integration tests', function() {
                     subject: 'plaintext test',
                     body: expectedBody
                 }
-            }).then(function() {});
+            }, pgpMailer).then(function() {});
+        });
+
+        it('should send & receive a signed encrypted message', function(done) {
+            var expectedBody = "asdasdasdasdasdasdasdasdasdasdasdasd asdasdasdasdasdasdasdasdasdasdasdasd";
+
+            emailDao.onIncomingMessage = function(messages) {
+                emailDao.getBody({
+                    folder: inbox,
+                    message: messages[0]
+                }).then(function(message) {
+                    return emailDao.decryptBody({
+                        message: message
+                    });
+                }).then(function(message) {
+                    expect(message.encrypted).to.be.true;
+                    expect(message.signed).to.be.true;
+                    expect(message.signaturesValid).to.be.true;
+                    expect(message.attachments.length).to.equal(0);
+                    expect(message.body).to.equal(expectedBody);
+                    done();
+                });
+            };
+
+            emailDao.sendEncrypted({
+                smtpclient: smtpClient,
+
+                email: {
+                    from: [testAccount.user],
+                    to: [testAccount.user],
+                    subject: 'plaintext test',
+                    body: expectedBody,
+                    publicKeysArmored: [mockKeyPair.publicKey.publicKey]
+                }
+            }, pgpMailer).then(function() {});
         });
     });
 });

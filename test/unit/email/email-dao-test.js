@@ -9,6 +9,8 @@ var mailreader = require('mailreader'),
     KeychainDAO = require('../../../src/js/service/keychain'),
     PGP = require('../../../src/js/crypto/pgp'),
     DeviceStorageDAO = require('../../../src/js/service/devicestorage'),
+    appConfig = require('../../../src/js/app-config'),
+    Auth = require('../../../src/js/service/auth'),
     Dialog = require('../../../src/js/util/dialog');
 
 
@@ -20,7 +22,7 @@ describe('Email DAO unit tests', function() {
     var dao;
 
     // mocks
-    var keychainStub, imapClientStub, pgpMailerStub, pgpBuilderStub, pgpStub, devicestorageStub, parseStub, dialogStub;
+    var keychainStub, imapClientStub, pgpMailerStub, pgpBuilderStub, pgpStub, devicestorageStub, parseStub, dialogStub, authStub;
 
     // config
     var emailAddress, passphrase, asymKeySize, account;
@@ -118,11 +120,12 @@ describe('Email DAO unit tests', function() {
         parseStub = sinon.stub(mailreader, 'parse');
         devicestorageStub = sinon.createStubInstance(DeviceStorageDAO);
         dialogStub = sinon.createStubInstance(Dialog);
+        authStub = sinon.createStubInstance(Auth);
 
         //
         // setup the SUT
         //
-        dao = new EmailDAO(keychainStub, pgpStub, devicestorageStub, pgpBuilderStub, mailreader, dialogStub);
+        dao = new EmailDAO(keychainStub, pgpStub, devicestorageStub, pgpBuilderStub, mailreader, dialogStub, appConfig, authStub);
         dao._account = account;
         dao._pgpMailer = pgpMailerStub;
         dao._imapClient = imapClientStub;
@@ -1616,11 +1619,23 @@ describe('Email DAO unit tests', function() {
     });
 
     describe('#sendEncrypted', function() {
-        var publicKeys = ["PUBLIC KEY"],
+        var credentials,
+            publicKeys,
+            dummyMail,
+            msg;
+
+        beforeEach(function() {
+            credentials = {
+                smtp: {
+                    host: 'foo.io'
+                }
+            };
+            publicKeys = ["PUBLIC KEY"];
             dummyMail = {
                 publicKeysArmored: publicKeys
-            },
+            };
             msg = 'wow. such message. much rfc2822.';
+        });
 
         it('should send encrypted and upload to sent', function(done) {
             imapClientStub.uploadMessage.withArgs({
@@ -1628,6 +1643,7 @@ describe('Email DAO unit tests', function() {
                 message: msg
             }).yields();
 
+            authStub.getCredentials.returns(resolves(credentials));
             pgpMailerStub.send.withArgs({
                 encrypt: true,
                 mail: dummyMail,
@@ -1637,17 +1653,20 @@ describe('Email DAO unit tests', function() {
 
             dao.sendEncrypted({
                 email: dummyMail
-            }).then(function() {
+            }, pgpMailerStub).then(function() {
+                expect(authStub.getCredentials.calledOnce).to.be.true;
                 expect(pgpMailerStub.send.calledOnce).to.be.true;
                 expect(imapClientStub.uploadMessage.calledOnce).to.be.true;
+                expect(dao.ignoreUploadOnSent).to.be.false;
 
                 done();
             });
         });
 
         it('should send encrypted and not upload to sent', function(done) {
-            dao.ignoreUploadOnSent = true;
+            credentials.smtp.host = 'smtp.gmail.com';
 
+            authStub.getCredentials.returns(resolves(credentials));
             pgpMailerStub.send.withArgs({
                 encrypt: true,
                 mail: dummyMail,
@@ -1657,9 +1676,11 @@ describe('Email DAO unit tests', function() {
 
             dao.sendEncrypted({
                 email: dummyMail
-            }).then(function() {
+            }, pgpMailerStub).then(function() {
+                expect(authStub.getCredentials.calledOnce).to.be.true;
                 expect(pgpMailerStub.send.calledOnce).to.be.true;
                 expect(imapClientStub.uploadMessage.called).to.be.false;
+                expect(dao.ignoreUploadOnSent).to.be.true;
 
                 done();
             });
@@ -1668,12 +1689,14 @@ describe('Email DAO unit tests', function() {
         it('should send encrypted and ignore error on upload', function(done) {
             imapClientStub.uploadMessage.yields(new Error());
             pgpMailerStub.send.yieldsAsync(null, msg);
+            authStub.getCredentials.returns(resolves(credentials));
 
             dao.sendEncrypted({
                 email: dummyMail
-            }).then(function() {
+            }, pgpMailerStub).then(function() {
                 expect(pgpMailerStub.send.calledOnce).to.be.true;
                 expect(imapClientStub.uploadMessage.calledOnce).to.be.true;
+                expect(authStub.getCredentials.calledOnce).to.be.true;
 
                 done();
             });
@@ -1681,12 +1704,14 @@ describe('Email DAO unit tests', function() {
 
         it('should not send when pgpmailer fails', function(done) {
             pgpMailerStub.send.yieldsAsync({});
+            authStub.getCredentials.returns(resolves(credentials));
 
             dao.sendEncrypted({
                 email: dummyMail
-            }).catch(function(err) {
+            }, pgpMailerStub).catch(function(err) {
                 expect(err).to.exist;
 
+                expect(authStub.getCredentials.calledOnce).to.be.true;
                 expect(pgpMailerStub.send.calledOnce).to.be.true;
                 expect(imapClientStub.uploadMessage.called).to.be.false;
 
@@ -1699,8 +1724,9 @@ describe('Email DAO unit tests', function() {
 
             dao.sendEncrypted({
                 email: dummyMail
-            }).catch(function(err) {
+            }, pgpMailerStub).catch(function(err) {
                 expect(err.code).to.equal(42);
+                expect(authStub.getCredentials.called).to.be.false;
                 expect(pgpMailerStub.send.called).to.be.false;
                 expect(imapClientStub.uploadMessage.called).to.be.false;
                 done();
@@ -1710,14 +1736,26 @@ describe('Email DAO unit tests', function() {
     });
 
     describe('#sendPlaintext', function() {
-        var dummyMail = {};
-        var msg = 'wow. such message. much rfc2822.';
+        var credentials,
+            dummyMail,
+            msg;
+
+        beforeEach(function() {
+            credentials = {
+                smtp: {
+                    host: 'foo.io'
+                }
+            };
+            dummyMail = {};
+            msg = 'wow. such message. much rfc2822.';
+        });
 
         it('should send in the plain and upload to sent', function(done) {
             pgpMailerStub.send.withArgs({
                 smtpclient: undefined,
                 mail: dummyMail
             }).yieldsAsync(null, msg);
+            authStub.getCredentials.returns(resolves(credentials));
 
             imapClientStub.uploadMessage.withArgs({
                 path: sentFolder.path,
@@ -1726,7 +1764,8 @@ describe('Email DAO unit tests', function() {
 
             dao.sendPlaintext({
                 email: dummyMail
-            }).then(function() {
+            }, pgpMailerStub).then(function() {
+                expect(authStub.getCredentials.calledOnce).to.be.true;
                 expect(pgpMailerStub.send.calledOnce).to.be.true;
                 expect(imapClientStub.uploadMessage.calledOnce).to.be.true;
                 done();
@@ -1735,15 +1774,18 @@ describe('Email DAO unit tests', function() {
 
         it('should send in the plain and not upload to sent', function(done) {
             dao.ignoreUploadOnSent = true;
+            credentials.smtp.host = 'smtp.gmail.com';
 
             pgpMailerStub.send.withArgs({
                 smtpclient: undefined,
                 mail: dummyMail
             }).yieldsAsync(null, msg);
+            authStub.getCredentials.returns(resolves(credentials));
 
             dao.sendPlaintext({
                 email: dummyMail
-            }).then(function() {
+            }, pgpMailerStub).then(function() {
+                expect(authStub.getCredentials.calledOnce).to.be.true;
                 expect(pgpMailerStub.send.calledOnce).to.be.true;
                 expect(imapClientStub.uploadMessage.called).to.be.false;
                 done();
@@ -1753,10 +1795,12 @@ describe('Email DAO unit tests', function() {
         it('should send  and ignore error on upload', function(done) {
             imapClientStub.uploadMessage.yields(new Error());
             pgpMailerStub.send.yieldsAsync(null, msg);
+            authStub.getCredentials.returns(resolves(credentials));
 
-            dao.sendEncrypted({
+            dao.sendPlaintext({
                 email: dummyMail
-            }).then(function() {
+            }, pgpMailerStub).then(function() {
+                expect(authStub.getCredentials.calledOnce).to.be.true;
                 expect(pgpMailerStub.send.calledOnce).to.be.true;
                 expect(imapClientStub.uploadMessage.calledOnce).to.be.true;
 
@@ -1766,11 +1810,13 @@ describe('Email DAO unit tests', function() {
 
         it('should not send due to error', function(done) {
             pgpMailerStub.send.yieldsAsync({});
+            authStub.getCredentials.returns(resolves(credentials));
 
             dao.sendPlaintext({
                 email: dummyMail
-            }).catch(function(err) {
+            }, pgpMailerStub).catch(function(err) {
                 expect(err).to.exist;
+                expect(authStub.getCredentials.calledOnce).to.be.true;
                 expect(pgpMailerStub.send.calledOnce).to.be.true;
                 expect(imapClientStub.uploadMessage.called).to.be.false;
                 done();
@@ -1782,8 +1828,9 @@ describe('Email DAO unit tests', function() {
 
             dao.sendPlaintext({
                 email: dummyMail
-            }).catch(function(err) {
+            }, pgpMailerStub).catch(function(err) {
                 expect(err.code).to.equal(42);
+                expect(authStub.getCredentials.called).to.be.false;
                 expect(pgpMailerStub.send.called).to.be.false;
                 expect(imapClientStub.uploadMessage.called).to.be.false;
                 done();
@@ -1805,12 +1852,15 @@ describe('Email DAO unit tests', function() {
     describe('event handlers', function() {
 
         describe('#onConnect', function() {
-            var initFoldersStub;
+            var initFoldersStub, credentials;
 
             beforeEach(function() {
                 initFoldersStub = sinon.stub(dao, '_initFoldersFromImap');
                 delete dao._imapClient;
-                delete dao._pgpMailer;
+
+                credentials = {
+                    imap: {}
+                };
             });
 
             it('should connect', function(done) {
@@ -1818,16 +1868,13 @@ describe('Email DAO unit tests', function() {
                     uid: 123,
                     modseq: '123'
                 }];
+                authStub.getCredentials.returns(resolves(credentials));
                 imapClientStub.login.yieldsAsync();
                 imapClientStub.selectMailbox.yields();
                 imapClientStub.listenForChanges.yields();
                 initFoldersStub.returns(resolves());
 
-                dao.onConnect({
-                    imapClient: imapClientStub,
-                    pgpMailer: pgpMailerStub
-                }).then(function() {
-                    expect(dao.ignoreUploadOnSent).to.be.false;
+                dao.onConnect(imapClientStub).then(function() {
                     expect(imapClientStub.login.calledOnce).to.be.true;
                     expect(imapClientStub.selectMailbox.calledOnce).to.be.true;
                     expect(initFoldersStub.calledOnce).to.be.true;

@@ -11,7 +11,7 @@ var Account = require('../../../src/js/email/account'),
     Dialog = require('../../../src/js/util/dialog');
 
 describe('Account Service unit test', function() {
-    var account, authStub, outboxStub, emailStub, devicestorageStub, keychainStub, updateHandlerStub, pgpbuilderStub, dialogStub,
+    var account, authStub, outboxStub, emailStub, devicestorageStub, keychainStub, updateHandlerStub, dialogStub,
         realname = 'John Doe',
         dummyUser = 'spiderpig@springfield.com';
 
@@ -25,9 +25,8 @@ describe('Account Service unit test', function() {
         outboxStub = sinon.createStubInstance(Outbox);
         keychainStub = sinon.createStubInstance(Keychain);
         updateHandlerStub = sinon.createStubInstance(UpdateHandler);
-        pgpbuilderStub = {};
         dialogStub = sinon.createStubInstance(Dialog);
-        account = new Account(appConfig, authStub, devicestorageStub, emailStub, outboxStub, keychainStub, updateHandlerStub, pgpbuilderStub, dialogStub);
+        account = new Account(appConfig, authStub, devicestorageStub, emailStub, outboxStub, keychainStub, updateHandlerStub, dialogStub);
     });
 
     afterEach(function() {});
@@ -200,47 +199,15 @@ describe('Account Service unit test', function() {
     });
 
     describe('onConnect', function() {
-        var credentials = {
-            imap: {},
-            smtp: {}
-        };
         beforeEach(function() {
             emailStub._account = {};
-            sinon.stub(account, 'isOnline').returns(true);
-        });
-        afterEach(function() {
-            account.isOnline.restore();
-        });
-
-        it('should fail due to _auth.getCredentials', function(done) {
-            authStub.getCredentials.returns(rejects(new Error('asdf')));
-
-            dialogStub.error = function(err) {
-                expect(err.message).to.match(/asdf/);
-                done();
-            };
-
-            account.onConnect();
-        });
-
-        it('should fail due to _auth.getCredentials', function(done) {
-            authStub.getCredentials.returns(rejects(new Error('asdf')));
-
-            account.onConnect(function(err) {
-                expect(err.message).to.match(/asdf/);
-                expect(dialogStub.error.called).to.be.false;
-                done();
-            });
         });
 
         it('should work', function(done) {
-            authStub.getCredentials.returns(resolves(credentials));
-            authStub.handleCertificateUpdate.returns(resolves());
             emailStub.onConnect.returns(resolves());
 
             account.onConnect(function(err) {
                 expect(err).to.not.exist;
-                expect(dialogStub.error.called).to.be.false;
                 expect(emailStub.onConnect.calledOnce).to.be.true;
                 done();
             });

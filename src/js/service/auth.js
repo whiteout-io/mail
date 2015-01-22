@@ -240,16 +240,8 @@ Auth.prototype.useOAuth = function(hostname) {
 Auth.prototype.getOAuthToken = function() {
     var self = this;
 
-    if (self.oauthToken) {
-        // removed cached token and get a new one
-        return self._oauth.refreshToken({
-            emailAddress: self.emailAddress,
-            oldToken: self.oauthToken
-        }).then(onToken);
-    } else {
-        // get a fresh oauth token
-        return self._oauth.getOAuthToken(self.emailAddress).then(onToken);
-    }
+    // get a fresh oauth token
+    return self._oauth.getOAuthToken(self.emailAddress).then(onToken);
 
     function onToken(oauthToken) {
         // shortcut if the email address is already known
@@ -317,7 +309,7 @@ Auth.prototype._loadCredentials = function() {
  * @param  {Function} callback       The error handler
  * @param  {[type]}   pemEncodedCert The PEM encoded SSL certificate
  */
-Auth.prototype.handleCertificateUpdate = function(component, onConnect, callback, pemEncodedCert) {
+Auth.prototype.handleCertificateUpdate = function(component, reconnectCallback, callback, pemEncodedCert) {
     var self = this;
 
     axe.debug('new ssl certificate received: ' + pemEncodedCert);
@@ -351,7 +343,7 @@ Auth.prototype.handleCertificateUpdate = function(component, onConnect, callback
             self[component].ca = pemEncodedCert;
             self.credentialsDirty = true;
             self.storeCredentials().then(function() {
-                onConnect(callback);
+                reconnectCallback(callback);
             }).catch(callback);
         }
     });

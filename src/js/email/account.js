@@ -4,12 +4,9 @@ var ngModule = angular.module('woEmail');
 ngModule.service('account', Account);
 module.exports = Account;
 
-var axe = require('axe-logger'),
-    util = require('crypto-lib').util,
-    PgpMailer = require('pgpmailer'),
-    ImapClient = require('imap-client');
+var util = require('crypto-lib').util;
 
-function Account(appConfig, auth, accountStore, email, outbox, keychain, updateHandler, pgpbuilder, dialog) {
+function Account(appConfig, auth, accountStore, email, outbox, keychain, updateHandler, dialog) {
     this._appConfig = appConfig;
     this._auth = auth;
     this._accountStore = accountStore;
@@ -17,7 +14,6 @@ function Account(appConfig, auth, accountStore, email, outbox, keychain, updateH
     this._outbox = outbox;
     this._keychain = keychain;
     this._updateHandler = updateHandler;
-    this._pgpbuilder = pgpbuilder;
     this._dialog = dialog;
     this._accounts = []; // init accounts list
 }
@@ -103,67 +99,15 @@ Account.prototype.init = function(options) {
 };
 
 /**
- * Check if the user agent is online.
- */
-Account.prototype.isOnline = function() {
-    return navigator.onLine;
-};
-
-/**
  * Event that is called when the user agent goes online. This create new instances of the imap-client and pgp-mailer and connects to the mail server.
  */
 Account.prototype.onConnect = function(callback) {
-    var self = this;
-    var config = self._appConfig.config;
-
-    callback = callback || self._dialog.error;
-
-    if (!self.isOnline() || !self._emailDao || !self._emailDao._account) {
+    if (!this._emailDao || !this._emailDao._account) {
         // prevent connection infinite loop
         return;
     }
 
-    // init imap/smtp clients
-    self._auth.getCredentials().then(function(credentials) {
-        // add the maximum update batch size for imap folders to the imap configuration
-        credentials.imap.maxUpdateSize = config.imapUpdateBatchSize;
-
-        // tls socket worker path for multithreaded tls in non-native tls environments
-        credentials.imap.tlsWorkerPath = credentials.smtp.tlsWorkerPath = config.workerPath + '/tcp-socket-tls-worker.min.js';
-
-        var pgpMailer = new PgpMailer(credentials.smtp, self._pgpbuilder);
-        var imapClient = new ImapClient(credentials.imap);
-        imapClient.onError = onConnectionError;
-        pgpMailer.onError = onConnectionError;
-
-        // certificate update handling
-        imapClient.onCert = self._auth.handleCertificateUpdate.bind(self._auth, 'imap', self.onConnect.bind(self), self._dialog.error);
-        pgpMailer.onCert = self._auth.handleCertificateUpdate.bind(self._auth, 'smtp', self.onConnect.bind(self), self._dialog.error);
-
-        // connect to clients
-        return self._emailDao.onConnect({
-            imapClient: imapClient,
-            pgpMailer: pgpMailer,
-            ignoreUploadOnSent: self._emailDao.checkIgnoreUploadOnSent(credentials.imap.host)
-        });
-    }).then(callback).catch(callback);
-
-    function onConnectionError(error) {
-        axe.debug('Connection error. Attempting reconnect in ' + config.reconnectInterval + ' ms. Error: ' + (error.errMsg || error.message) + (error.stack ? ('\n' + error.stack) : ''));
-
-        setTimeout(function() {
-            axe.debug('Reconnecting...');
-            // re-init client modules on error
-            self.onConnect(function(err) {
-                if (err) {
-                    axe.error('Reconnect attempt failed! ' + (err.errMsg || err.message) + (err.stack ? ('\n' + err.stack) : ''));
-                    return;
-                }
-
-                axe.debug('Reconnect attempt complete.');
-            });
-        }, config.reconnectInterval);
-    }
+    this._emailDao.onConnect().then(callback).catch(callback);
 };
 
 /**
