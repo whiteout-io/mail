@@ -65,11 +65,12 @@ describe('PGP Crypto Api unit tests', function() {
                 done();
             });
         });
-        it('should work with passphrase', function(done) {
+        it('should work without realname', function(done) {
             var keyObject;
 
             pgp.generateKeys({
                 emailAddress: user,
+                realname: undefined,
                 keySize: keySize,
                 passphrase: passphrase
             }).then(function(keys) {
@@ -95,11 +96,45 @@ describe('PGP Crypto Api unit tests', function() {
                 done();
             });
         });
+        it('should work with passphrase', function(done) {
+            var keyObject;
+
+            pgp.generateKeys({
+                emailAddress: user,
+                realname: 'Jon Doe <%$# ',
+                keySize: keySize,
+                passphrase: passphrase
+            }).then(function(keys) {
+                expect(keys.keyId).to.exist;
+                expect(keys.privateKeyArmored).to.exist;
+                expect(keys.publicKeyArmored).to.exist;
+                keyObject = keys;
+
+                // test encrypt/decrypt
+                return pgp.importKeys({
+                    passphrase: passphrase,
+                    privateKeyArmored: keys.privateKeyArmored,
+                    publicKeyArmored: keys.publicKeyArmored
+                });
+            }).then(function() {
+                expect(pgp.getKeyParams().userIds[0].name).to.equal('Jon Doe');
+
+                return pgp.encrypt('secret', [keyObject.publicKeyArmored]);
+            }).then(function(ct) {
+                expect(ct).to.exist;
+                return pgp.decrypt(ct, keyObject.publicKeyArmored);
+            }).then(function(pt) {
+                expect(pt.decrypted).to.equal('secret');
+                expect(pt.signaturesValid).to.be.true;
+                done();
+            });
+        });
         it('should work without passphrase', function(done) {
             var keyObject;
 
             pgp.generateKeys({
                 emailAddress: user,
+                realname: 'Jon Doe',
                 keySize: keySize,
                 passphrase: ''
             }).then(function(keys) {
@@ -115,6 +150,8 @@ describe('PGP Crypto Api unit tests', function() {
                     publicKeyArmored: keys.publicKeyArmored
                 });
             }).then(function() {
+                expect(pgp.getKeyParams().userIds[0].name).to.equal('Jon Doe');
+
                 return pgp.encrypt('secret', [keyObject.publicKeyArmored]);
             }).then(function(ct) {
                 expect(ct).to.exist;

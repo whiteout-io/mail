@@ -56,6 +56,7 @@ var LoginInitialCtrl = function($scope, $location, $routeParams, $q, newsletter,
         }).then(function() {
             // generate key without passphrase
             return email.unlock({
+                realname: auth.realname,
                 passphrase: undefined
             });
 
