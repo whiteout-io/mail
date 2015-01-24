@@ -1,0 +1,43 @@
+---
+title: Form layout
+description: >
+  Basic form layout with multicolumn support.
+---
+
+<form class="form">
+  <p class="form__error-message">Error message</p>
+  <p class="form__password-strong-message">Password strong message</p>
+  <div class="form__row">
+    <input class="input-text" type="text">
+  </div>
+  <div class="form__row form__row--multi">
+    <div class="form__col">
+      <input class="input-text" type="text">
+    </div>
+    <div class="form__col">
+      <input class="input-text" type="text">
+    </div>
+  </div>
+  <div class="form__row form__row--multi">
+    <div class="form__col form__col--2">
+      <input class="input-text" type="text">
+    </div>
+    <div class="form__col">
+      <input class="input-text" type="text">
+    </div>
+  </div>
+  <div class="form__row form__row--multi">
+    <div class="form__col">
+      <input class="input-text" type="text">
+    </div>
+    <div class="form__col form__col--2">
+      <input class="input-text" type="text">
+    </div>
+  </div>
+  <div class="spinner-block">
+    <span class="spinner spinner--big"></span>
+  </div>
+  <div class="form__row">
+    <button class="btn" type="submit">Submit</button>
+   </div>
+</form>
