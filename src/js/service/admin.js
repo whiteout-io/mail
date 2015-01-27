@@ -30,7 +30,7 @@ Admin.prototype.createUser = function(options) {
             throw new Error('User name is already taken!');
         }
 
-        throw new Error('Error creating new user!');
+        throw new Error('Error creating new user! Reason: ' + err.message);
     });
 };
 
@@ -57,6 +57,6 @@ Admin.prototype.validateUser = function(options) {
             return;
         }
 
-        throw new Error('Validation failed!');
+        throw new Error('Validation failed! Reason: ' + err.message);
     });
 };
