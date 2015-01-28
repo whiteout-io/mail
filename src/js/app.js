@@ -111,6 +111,7 @@ app.controller('MailListCtrl', require('./controller/app/mail-list'));
 app.controller('AccountCtrl', require('./controller/app/account'));
 app.controller('SetPassphraseCtrl', require('./controller/app/set-passphrase'));
 app.controller('PrivateKeyUploadCtrl', require('./controller/app/privatekey-upload'));
+app.controller('PublicKeyImportCtrl', require('./controller/app/publickey-import'));
 app.controller('ContactsCtrl', require('./controller/app/contacts'));
 app.controller('AboutCtrl', require('./controller/app/about'));
 app.controller('DialogCtrl', require('./controller/app/dialog'));

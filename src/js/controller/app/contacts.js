@@ -4,7 +4,7 @@
 // Controller
 //
 
-var ContactsCtrl = function($scope, $q, keychain, pgp, dialog) {
+var ContactsCtrl = function($scope, $q, keychain, pgp, dialog, appConfig) {
 
     //
     // scope state
@@ -13,9 +13,12 @@ var ContactsCtrl = function($scope, $q, keychain, pgp, dialog) {
     $scope.state.contacts = {
         toggle: function(to) {
             $scope.state.lightbox = (to) ? 'contacts' : undefined;
+            $scope.searchText = undefined;
             return $scope.listKeys();
         }
     };
+
+    $scope.whiteoutKeyServer = appConfig.config.cloudUrl.replace(/http[s]?:\/\//, ''); // display key server hostname
 
     //
     // scope functions
@@ -33,6 +36,7 @@ var ContactsCtrl = function($scope, $q, keychain, pgp, dialog) {
             keys.forEach(function(key) {
                 var params = pgp.getKeyParams(key.publicKey);
                 _.extend(key, params);
+                key.fullUserId = key.userIds[0].name + ' <' + key.userIds[0].emailAddress + '>';
             });
             $scope.keys = keys;
 
@@ -44,39 +48,6 @@ var ContactsCtrl = function($scope, $q, keychain, pgp, dialog) {
         var formatted = fpr.slice(0, 4) + ' ' + fpr.slice(4, 8) + ' ' + fpr.slice(8, 12) + ' ' + fpr.slice(12, 16) + ' ' + fpr.slice(16, 20) + ' ... ' + fpr.slice(20, 24) + ' ' + fpr.slice(24, 28) + ' ' + fpr.slice(28, 32) + ' ' + fpr.slice(32, 36) + ' ' + fpr.slice(36);
 
         $scope.fingerprint = formatted;
-    };
-
-    $scope.importKey = function(publicKeyArmored) {
-        var keyParams, pubkey;
-
-        // verifiy public key string
-        if (publicKeyArmored.indexOf('-----BEGIN PGP PUBLIC KEY BLOCK-----') < 0) {
-            dialog.error({
-                showBugReporter: false,
-                message: 'Invalid public key!'
-            });
-            return;
-        }
-
-        try {
-            keyParams = pgp.getKeyParams(publicKeyArmored);
-        } catch (e) {
-            dialog.error(new Error('Error reading public key params!'));
-            return;
-        }
-
-        pubkey = {
-            _id: keyParams._id,
-            userId: keyParams.userId,
-            userIds: keyParams.userIds,
-            publicKey: publicKeyArmored,
-            imported: true // mark manually imported keys
-        };
-
-        return keychain.saveLocalPublicKey(pubkey).then(function() {
-            // update displayed keys
-            return $scope.listKeys();
-        }).catch(dialog.error);
     };
 
     $scope.removeKey = function(key) {

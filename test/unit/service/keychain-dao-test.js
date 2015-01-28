@@ -112,7 +112,7 @@ describe('Keychain DAO unit tests', function() {
 
         it('should not update the key when up to date', function(done) {
             getPubKeyStub.returns(resolves(oldKey));
-            pubkeyDaoStub.get.withArgs(oldKey._id).returns(resolves(oldKey));
+            pubkeyDaoStub.getByUserId.withArgs(testUser).returns(resolves(oldKey));
 
             keychainDao.refreshKeyForUserId({
                 userId: testUser
@@ -120,7 +120,7 @@ describe('Keychain DAO unit tests', function() {
                 expect(key).to.to.equal(oldKey);
 
                 expect(getPubKeyStub.calledOnce).to.be.true;
-                expect(pubkeyDaoStub.get.calledOnce).to.be.true;
+                expect(pubkeyDaoStub.getByUserId.calledOnce).to.be.true;
 
                 done();
             });
@@ -128,7 +128,6 @@ describe('Keychain DAO unit tests', function() {
 
         it('should update key', function(done) {
             getPubKeyStub.returns(resolves(oldKey));
-            pubkeyDaoStub.get.withArgs(oldKey._id).returns(resolves());
             pubkeyDaoStub.getByUserId.withArgs(testUser).returns(resolves(newKey));
             keychainDao.requestPermissionForKeyUpdate = function(opts, cb) {
                 expect(opts.userId).to.equal(testUser);
@@ -144,7 +143,6 @@ describe('Keychain DAO unit tests', function() {
                 expect(key).to.equal(newKey);
 
                 expect(getPubKeyStub.calledOnce).to.be.true;
-                expect(pubkeyDaoStub.get.calledOnce).to.be.true;
                 expect(pubkeyDaoStub.getByUserId.calledOnce).to.be.true;
                 expect(lawnchairDaoStub.remove.calledOnce).to.be.true;
                 expect(lawnchairDaoStub.persist.calledOnce).to.be.true;
@@ -155,7 +153,6 @@ describe('Keychain DAO unit tests', function() {
 
         it('should update key without approval', function(done) {
             getPubKeyStub.returns(resolves(oldKey));
-            pubkeyDaoStub.get.withArgs(oldKey._id).returns(resolves());
             pubkeyDaoStub.getByUserId.withArgs(testUser).returns(resolves(newKey));
             lawnchairDaoStub.remove.withArgs('publickey_' + oldKey._id).returns(resolves());
             lawnchairDaoStub.persist.withArgs('publickey_' + newKey._id, newKey).returns(resolves());
@@ -167,7 +164,6 @@ describe('Keychain DAO unit tests', function() {
                 expect(key).to.equal(newKey);
 
                 expect(getPubKeyStub.calledOnce).to.be.true;
-                expect(pubkeyDaoStub.get.calledOnce).to.be.true;
                 expect(pubkeyDaoStub.getByUserId.calledOnce).to.be.true;
                 expect(lawnchairDaoStub.remove.calledOnce).to.be.true;
                 expect(lawnchairDaoStub.persist.calledOnce).to.be.true;
@@ -178,7 +174,7 @@ describe('Keychain DAO unit tests', function() {
 
         it('should remove key', function(done) {
             getPubKeyStub.returns(resolves(oldKey));
-            pubkeyDaoStub.get.withArgs(oldKey._id).returns(resolves());
+            pubkeyDaoStub.getByUserId.withArgs(testUser).returns(resolves());
             pubkeyDaoStub.getByUserId.withArgs(testUser).returns(resolves());
             keychainDao.requestPermissionForKeyUpdate = function(opts, cb) {
                 expect(opts.userId).to.equal(testUser);
@@ -193,7 +189,6 @@ describe('Keychain DAO unit tests', function() {
                 expect(key).to.not.exist;
 
                 expect(getPubKeyStub.calledOnce).to.be.true;
-                expect(pubkeyDaoStub.get.calledOnce).to.be.true;
                 expect(pubkeyDaoStub.getByUserId.calledOnce).to.be.true;
                 expect(lawnchairDaoStub.remove.calledOnce).to.be.true;
                 expect(lawnchairDaoStub.persist.called).to.be.false;
@@ -204,7 +199,7 @@ describe('Keychain DAO unit tests', function() {
 
         it('should go offline while fetching new key', function(done) {
             getPubKeyStub.returns(resolves(oldKey));
-            pubkeyDaoStub.get.withArgs(oldKey._id).returns(resolves());
+            pubkeyDaoStub.getByUserId.withArgs(testUser).returns(resolves());
             pubkeyDaoStub.getByUserId.withArgs(testUser).returns(rejects({
                 code: 42
             }));
@@ -215,7 +210,6 @@ describe('Keychain DAO unit tests', function() {
                 expect(key).to.to.equal(oldKey);
 
                 expect(getPubKeyStub.calledOnce).to.be.true;
-                expect(pubkeyDaoStub.get.calledOnce).to.be.true;
                 expect(pubkeyDaoStub.getByUserId.calledOnce).to.be.true;
                 expect(lawnchairDaoStub.remove.called).to.be.false;
                 expect(lawnchairDaoStub.persist.called).to.be.false;
@@ -226,7 +220,7 @@ describe('Keychain DAO unit tests', function() {
 
         it('should not remove old key on user rejection', function(done) {
             getPubKeyStub.returns(resolves(oldKey));
-            pubkeyDaoStub.get.withArgs(oldKey._id).returns(resolves());
+            pubkeyDaoStub.getByUserId.withArgs(testUser).returns(resolves());
             pubkeyDaoStub.getByUserId.withArgs(testUser).returns(resolves(newKey));
             keychainDao.requestPermissionForKeyUpdate = function(opts, cb) {
                 expect(opts.userId).to.equal(testUser);
@@ -240,7 +234,6 @@ describe('Keychain DAO unit tests', function() {
                 expect(key).to.equal(oldKey);
 
                 expect(getPubKeyStub.calledOnce).to.be.true;
-                expect(pubkeyDaoStub.get.calledOnce).to.be.true;
                 expect(pubkeyDaoStub.getByUserId.calledOnce).to.be.true;
                 expect(lawnchairDaoStub.remove.called).to.be.false;
                 expect(lawnchairDaoStub.persist.called).to.be.false;
@@ -266,7 +259,7 @@ describe('Keychain DAO unit tests', function() {
 
         it('should update not the key when offline', function(done) {
             getPubKeyStub.returns(resolves(oldKey));
-            pubkeyDaoStub.get.withArgs(oldKey._id).returns(rejects({
+            pubkeyDaoStub.getByUserId.withArgs(testUser).returns(rejects({
                 code: 42
             }));
 
@@ -276,8 +269,7 @@ describe('Keychain DAO unit tests', function() {
                 expect(key).to.to.equal(oldKey);
 
                 expect(getPubKeyStub.calledOnce).to.be.true;
-                expect(pubkeyDaoStub.get.calledOnce).to.be.true;
-                expect(pubkeyDaoStub.getByUserId.called).to.be.false;
+                expect(pubkeyDaoStub.getByUserId.calledOnce).to.be.true;
                 expect(lawnchairDaoStub.remove.called).to.be.false;
                 expect(lawnchairDaoStub.persist.called).to.be.false;
 
@@ -287,7 +279,7 @@ describe('Keychain DAO unit tests', function() {
 
         it('should error while persisting new key', function(done) {
             getPubKeyStub.returns(resolves(oldKey));
-            pubkeyDaoStub.get.withArgs(oldKey._id).returns(resolves());
+            pubkeyDaoStub.getByUserId.withArgs(testUser).returns(resolves());
             pubkeyDaoStub.getByUserId.withArgs(testUser).returns(resolves(newKey));
             keychainDao.requestPermissionForKeyUpdate = function(opts, cb) {
                 expect(opts.userId).to.equal(testUser);
@@ -303,7 +295,6 @@ describe('Keychain DAO unit tests', function() {
                 expect(err).to.exist;
 
                 expect(getPubKeyStub.calledOnce).to.be.true;
-                expect(pubkeyDaoStub.get.calledOnce).to.be.true;
                 expect(pubkeyDaoStub.getByUserId.calledOnce).to.be.true;
                 expect(lawnchairDaoStub.remove.calledOnce).to.be.true;
                 expect(lawnchairDaoStub.persist.calledOnce).to.be.true;
@@ -314,7 +305,7 @@ describe('Keychain DAO unit tests', function() {
 
         it('should error while deleting old key', function(done) {
             getPubKeyStub.returns(resolves(oldKey));
-            pubkeyDaoStub.get.withArgs(oldKey._id).returns(resolves());
+            pubkeyDaoStub.getByUserId.withArgs(testUser).returns(resolves());
             pubkeyDaoStub.getByUserId.withArgs(testUser).returns(resolves());
             keychainDao.requestPermissionForKeyUpdate = function(opts, cb) {
                 expect(opts.userId).to.equal(testUser);
@@ -328,7 +319,6 @@ describe('Keychain DAO unit tests', function() {
                 expect(err).to.exist;
 
                 expect(getPubKeyStub.calledOnce).to.be.true;
-                expect(pubkeyDaoStub.get.calledOnce).to.be.true;
                 expect(lawnchairDaoStub.remove.calledOnce).to.be.true;
                 expect(pubkeyDaoStub.getByUserId.calledOnce).to.be.true;
                 expect(lawnchairDaoStub.persist.called).to.be.false;
@@ -339,7 +329,7 @@ describe('Keychain DAO unit tests', function() {
 
         it('should error while persisting new key', function(done) {
             getPubKeyStub.returns(resolves(oldKey));
-            pubkeyDaoStub.get.withArgs(oldKey._id).returns(resolves());
+            pubkeyDaoStub.getByUserId.withArgs(testUser).returns(resolves());
             pubkeyDaoStub.getByUserId.withArgs(testUser).returns(resolves(newKey));
             keychainDao.requestPermissionForKeyUpdate = function(opts, cb) {
                 expect(opts.userId).to.equal(testUser);
@@ -355,7 +345,6 @@ describe('Keychain DAO unit tests', function() {
                 expect(err).to.exist;
 
                 expect(getPubKeyStub.calledOnce).to.be.true;
-                expect(pubkeyDaoStub.get.calledOnce).to.be.true;
                 expect(pubkeyDaoStub.getByUserId.calledOnce).to.be.true;
                 expect(lawnchairDaoStub.remove.calledOnce).to.be.true;
                 expect(lawnchairDaoStub.persist.calledOnce).to.be.true;
@@ -366,7 +355,7 @@ describe('Keychain DAO unit tests', function() {
 
         it('should error when get failed', function(done) {
             getPubKeyStub.returns(resolves(oldKey));
-            pubkeyDaoStub.get.withArgs(oldKey._id).returns(rejects({}));
+            pubkeyDaoStub.getByUserId.withArgs(testUser).returns(rejects({}));
 
             keychainDao.refreshKeyForUserId({
                 userId: testUser
@@ -497,11 +486,13 @@ describe('Keychain DAO unit tests', function() {
             lawnchairDaoStub.list.returns(resolves([{
                 _id: '12345',
                 userId: 'not testUser',
-                userIds: [{
-                    emailAddress: testUser
-                }],
                 publicKey: 'asdf'
             }]));
+            pgpStub.getKeyParams.returns({
+                userIds: [{
+                    emailAddress: testUser
+                }]
+            });
 
             keychainDao.getReceiverPublicKey(testUser).then(function(key) {
                 expect(key).to.exist;

@@ -1,0 +1,27 @@
+<div class="lightbox__body" ng-controller="PublicKeyImportCtrl">
+  <header class="lightbox__header">
+    <h2>Import PGP keys</h2>
+    <button class="lightbox__close" wo-touch="state.publickeyImport.toggle(false)" data-action="lightbox-close">
+      <svg><use xlink:href="#icon-close" /><title>Close</title></svg>
+    </button>
+  </header>
+
+  <div class="lightbox__content">
+    <div class="u-gap-bottom">
+      <p class="typo-paragraph">You can import public keys via copy/paste or as .asc files. Use the lookup function to search by name or email address on the key server. <i>Most keys are fetched automatically while reading and writing messages so most users won't need to import keys manually.</i></p>
+    </div>
+
+    <div class="u-gap-bottom">
+      <textarea class="textarea" placeholder="Paste PUBLIC PGP KEY BLOCK here..." ng-model="pastedKey" ng-change="importKey(pastedKey)"></textarea>
+    </div>
+
+    <form class="form-input-with-button u-gap-bottom">
+      <input class="input-text" type="text" placeholder="Lookup on {{hkpUrl}} by name or email address" ng-model="searchText">
+      <button class="btn" type="submit" ng-click="lookupKey(searchText)">Lookup</button>
+    </form>
+
+    <div class="form__row">
+      <input class="input-file" type="file" multiple keyfile-input>
+    </div>
+  </div>
+</div>

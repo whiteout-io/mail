@@ -51,7 +51,11 @@ describe('Contacts Controller unit test', function() {
                 _id: '12345'
             }]));
             pgpStub.getKeyParams.returns({
-                fingerprint: 'asdf'
+                fingerprint: 'asdf',
+                userIds: [{
+                    name: 'Firstname Lastname',
+                    emailAddress: 'first.last@example.com'
+                }]
             });
 
             expect(scope.keys).to.not.exist;
@@ -59,6 +63,7 @@ describe('Contacts Controller unit test', function() {
                 expect(scope.keys.length).to.equal(1);
                 expect(scope.keys[0]._id).to.equal('12345');
                 expect(scope.keys[0].fingerprint).to.equal('asdf');
+                expect(scope.keys[0].fullUserId).to.equal('Firstname Lastname <first.last@example.com>');
                 done();
             });
         });
@@ -73,65 +78,6 @@ describe('Contacts Controller unit test', function() {
             scope.getFingerprint(key);
 
             expect(scope.fingerprint).to.equal('YYYY YYYY YYYY YYYY YYYY ... YYYY YYYY YYYY YYYY YYYY');
-        });
-    });
-
-    describe('importKey', function() {
-        it('should work', function(done) {
-            var keyArmored = '-----BEGIN PGP PUBLIC KEY BLOCK-----';
-
-            pgpStub.getKeyParams.returns({
-                _id: '12345',
-                userId: 'max@example.com',
-                userIds: []
-            });
-
-            keychainStub.saveLocalPublicKey.withArgs({
-                _id: '12345',
-                userId: 'max@example.com',
-                userIds: [],
-                publicKey: '-----BEGIN PGP PUBLIC KEY BLOCK-----',
-                imported: true
-            }).returns(resolves());
-
-            scope.listKeys = function() {};
-
-            scope.importKey(keyArmored).then(function() {
-                done();
-            });
-        });
-
-        it('should fail due to invalid armored key', function() {
-            var keyArmored = '-----BEGIN PGP PRIVATE KEY BLOCK-----';
-
-            scope.importKey(keyArmored);
-
-            expect(dialogStub.error.calledOnce).to.be.true;
-        });
-
-        it('should fail due to error in pgp.getKeyParams', function() {
-            var keyArmored = '-----BEGIN PGP PUBLIC KEY BLOCK-----';
-            pgpStub.getKeyParams.throws(new Error('WAT'));
-
-            scope.importKey(keyArmored);
-
-            expect(dialogStub.error.calledOnce).to.be.true;
-        });
-
-        it('should fail due to error in keychain.saveLocalPublicKey', function(done) {
-            var keyArmored = '-----BEGIN PGP PUBLIC KEY BLOCK-----';
-
-            pgpStub.getKeyParams.returns({
-                _id: '12345',
-                userId: 'max@example.com'
-            });
-
-            keychainStub.saveLocalPublicKey.returns(rejects(42));
-
-            scope.importKey(keyArmored).then(function() {
-                expect(dialogStub.error.calledOnce).to.be.true;
-                done();
-            });
         });
     });
 
