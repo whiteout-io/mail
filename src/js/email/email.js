@@ -5,7 +5,10 @@ ngModule.service('email', Email);
 module.exports = Email;
 
 var config = require('../app-config').config,
-    str = require('../app-config').string;
+    str = require('../app-config').string,
+    axe = require('axe-logger'),
+    PgpMailer = require('pgpmailer'),
+    ImapClient = require('imap-client');
 
 //
 //
@@ -50,13 +53,15 @@ var MSG_PART_TYPE_HTML = 'html';
  * @param {Object} pgpbuilder Generates and encrypts MIME and SMTP messages
  * @param {Object} mailreader Parses MIME messages received from IMAP
  */
-function Email(keychain, pgp, accountStore, pgpbuilder, mailreader, dialog) {
+function Email(keychain, pgp, accountStore, pgpbuilder, mailreader, dialog, appConfig, auth) {
     this._keychain = keychain;
     this._pgp = pgp;
     this._devicestorage = accountStore;
     this._pgpbuilder = pgpbuilder;
     this._mailreader = mailreader;
     this._dialog = dialog;
+    this._appConfig = appConfig;
+    this._auth = auth;
 }
 
 
@@ -896,37 +901,40 @@ Email.prototype.decryptBody = function(options) {
  * Encrypted (if necessary) and sends a message with a predefined clear text greeting.
  *
  * @param {Object} options.email The message to be sent
+ * @param {Object} mailer an instance of the pgpmailer to be used for testing purposes only
  */
-Email.prototype.sendEncrypted = function(options) {
+Email.prototype.sendEncrypted = function(options, mailer) {
     // mime encode, sign, encrypt and send email via smtp
     return this._sendGeneric({
         encrypt: true,
         smtpclient: options.smtpclient, // filled solely in the integration test, undefined in normal usage
         mail: options.email,
         publicKeysArmored: options.email.publicKeysArmored
-    });
+    }, mailer);
 };
 
 /**
  * Sends a signed message in the plain
  *
  * @param {Object} options.email The message to be sent
+ * @param {Object} mailer an instance of the pgpmailer to be used for testing purposes only
  */
-Email.prototype.sendPlaintext = function(options) {
+Email.prototype.sendPlaintext = function(options, mailer) {
     // add suffix to plaintext mail
     options.email.body += str.signature + config.cloudUrl + '/' + this._account.emailAddress;
     // mime encode, sign and send email via smtp
     return this._sendGeneric({
         smtpclient: options.smtpclient, // filled solely in the integration test, undefined in normal usage
         mail: options.email
-    });
+    }, mailer);
 };
 
 /**
  * This funtion wraps error handling for sending via pgpMailer and uploading to imap.
  * @param {Object} options.email The message to be sent
+ * @param {Object} mailer an instance of the pgpmailer to be used for testing purposes only
  */
-Email.prototype._sendGeneric = function(options) {
+Email.prototype._sendGeneric = function(options, mailer) {
     var self = this;
     self.busy();
     return new Promise(function(resolve) {
@@ -934,8 +942,33 @@ Email.prototype._sendGeneric = function(options) {
         resolve();
 
     }).then(function() {
-        return self._mailerSend(options);
+        // get the smtp credentials
+        return self._auth.getCredentials();
 
+    }).then(function(credentials) {
+        // gmail does not require you to upload to the sent items folder after successful sending, whereas most other providers do
+        self.ignoreUploadOnSent = self.checkIgnoreUploadOnSent(credentials.smtp.host);
+
+        // tls socket worker path for multithreaded tls in non-native tls environments
+        credentials.smtp.tlsWorkerPath = config.workerPath + '/tcp-socket-tls-worker.min.js';
+
+        // create a new pgpmailer
+        self._pgpMailer = (mailer || new PgpMailer(credentials.smtp, self._pgpbuilder));
+
+        // certificate update retriggers sending after cert update is persisted
+        self._pgpMailer.onCert = self._auth.handleCertificateUpdate.bind(self._auth, 'smtp', self._sendGeneric.bind(self, options), self._dialog.error);
+    }).then(function() {
+
+        // send the email
+        return new Promise(function(resolve, reject) {
+            self._pgpMailer.send(options, function(err, rfcText) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(rfcText);
+                }
+            });
+        });
     }).then(function(rfcText) {
         // try to upload to sent, but we don't actually care if the upload failed or not
         // this should not negatively impact the process of sending
@@ -987,29 +1020,45 @@ Email.prototype.encrypt = function(options) {
  * given instance of the imap client. If the connection attempt was successful, it will
  * update the locally available folders with the newly received IMAP folder listing.
  *
- * @param {Object} options.imapClient The IMAP client used to receive messages
- * @param {Object} options.pgpMailer The SMTP client used to send messages
+ * @param {Object} imap an instance of the imap-client to be used for testing purposes only
  */
-Email.prototype.onConnect = function(options) {
+Email.prototype.onConnect = function(imap) {
     var self = this;
 
     self._account.loggingIn = true;
 
-    self._imapClient = options.imapClient;
-    self._pgpMailer = options.pgpMailer;
+    // init imap/smtp clients
+    return self._auth.getCredentials().then(function(credentials) {
+        // add the maximum update batch size for imap folders to the imap configuration
+        credentials.imap.maxUpdateSize = config.imapUpdateBatchSize;
 
-    // gmail does not require you to upload to the sent items folder after successful sending, whereas most other providers do
-    self.ignoreUploadOnSent = !!options.ignoreUploadOnSent;
+        // tls socket worker path for multithreaded tls in non-native tls environments
+        credentials.imap.tlsWorkerPath = config.workerPath + '/tcp-socket-tls-worker.min.js';
 
-    return imapLogin().then(function() {
+        self._imapClient = (imap || new ImapClient(credentials.imap));
+
+        self._imapClient.onError = onConnectionError; // connection error handling
+        self._imapClient.onCert = self._auth.handleCertificateUpdate.bind(self._auth, 'imap', self.onConnect.bind(self), self._dialog.error); // certificate update handling
+        self._imapClient.onSyncUpdate = self._onSyncUpdate.bind(self); // attach sync update handler
+
+    }).then(function() {
+        // imap login
+        return new Promise(function(resolve, reject) {
+            self._imapClient.login(function(err) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+
+    }).then(function() {
         self._account.loggingIn = false;
         // init folders
         return self._initFoldersFromImap();
 
     }).then(function() {
-        // attach sync update handler
-        self._imapClient.onSyncUpdate = self._onSyncUpdate.bind(self);
-
         // fill the imap mailboxCache with information we have locally available:
         // - highest locally available moseq (NB! JavaScript can't handle 64 bit uints, so modseq values are strings)
         // - list of locally available uids
@@ -1071,16 +1120,20 @@ Email.prototype.onConnect = function(options) {
         });
     });
 
-    function imapLogin() {
-        return new Promise(function(resolve, reject) {
-            self._imapClient.login(function(err) {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve();
-                }
-            });
-        });
+    function onConnectionError(error) {
+        axe.debug('IMAP connection error, disconnected. Reason: ' + error.message + (error.stack ? ('\n' + error.stack) : ''));
+
+        if (!self.isOnline()) {
+            return;
+        }
+
+        axe.debug('Attempting reconnect in ' + config.reconnectInterval / 1000 + ' seconds.');
+
+        setTimeout(function() {
+            axe.debug('Reconnecting the IMAP stack');
+            // re-init client modules on error
+            self.onConnect().catch(self._dialog.error);
+        }, config.reconnectInterval);
     }
 };
 
@@ -1668,24 +1721,6 @@ Email.prototype._parse = function(options) {
 };
 
 /**
- * Send email via smtp
- * @param  {Object} options The options to be passed to the pgpMailer
- * @return {Promise}
- */
-Email.prototype._mailerSend = function(options) {
-    var self = this;
-    return new Promise(function(resolve, reject) {
-        self._pgpMailer.send(options, function(err, rfcText) {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(rfcText);
-            }
-        });
-    });
-};
-
-/**
  * Uploads a message to the sent folder, if necessary.
  * Calls back immediately if ignoreUploadOnSent == true or not sent folder was found.
  *
@@ -1757,6 +1792,13 @@ Email.prototype.checkIgnoreUploadOnSent = function(hostname) {
     return false;
 };
 
+
+/**
+ * Check if the user agent is online.
+ */
+Email.prototype.isOnline = function() {
+    return navigator.onLine;
+};
 
 //
 //
