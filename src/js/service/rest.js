@@ -101,10 +101,7 @@ RestDAO.prototype._processRequest = function(options) {
         var xhr, format;
 
         if (typeof options.uri === 'undefined') {
-            throw {
-                code: 400,
-                message: 'Bad Request! URI is a mandatory parameter.'
-            };
+            throw createError(400, 'Bad Request! URI is a mandatory parameter.');
         }
 
         options.type = options.type || 'json';
@@ -116,10 +113,7 @@ RestDAO.prototype._processRequest = function(options) {
         } else if (options.type === 'text') {
             format = 'text/plain';
         } else {
-            throw {
-                code: 400,
-                message: 'Bad Request! Unhandled data type.'
-            };
+            throw createError(400, 'Bad Request! Unhandled data type.');
         }
 
         xhr = new XMLHttpRequest();
@@ -130,30 +124,34 @@ RestDAO.prototype._processRequest = function(options) {
         xhr.onload = function() {
             var res;
 
-            if (xhr.readyState === 4 && (xhr.status === 200 || xhr.status === 201 || xhr.status === 304)) {
-                if (options.type === 'json') {
-                    res = xhr.responseText ? JSON.parse(xhr.responseText) : xhr.responseText;
-                } else {
+            if (options.type === 'json') {
+                try {
+                    res = JSON.parse(xhr.responseText);
+                } catch(e) {
                     res = xhr.responseText;
                 }
+            } else {
+                res = xhr.responseText;
+            }
 
+            if (xhr.readyState === 4 && (xhr.status === 200 || xhr.status === 201 || xhr.status === 304)) {
                 resolve(res);
                 return;
             }
 
-            reject({
-                code: xhr.status,
-                message: xhr.statusText
-            });
+            reject(createError(xhr.status, (res && res.error) || xhr.statusText));
         };
 
         xhr.onerror = function() {
-            reject({
-                code: 42,
-                message: 'Error calling ' + options.method + ' on ' + options.uri
-            });
+            reject(createError(42, 'Error calling ' + options.method + ' on ' + options.uri));
         };
 
         xhr.send(options.payload ? JSON.stringify(options.payload) : undefined);
     });
 };
+
+function createError(code, message) {
+    var error = new Error(message);
+    error.code = code;
+    return error;
+}
