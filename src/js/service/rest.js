@@ -62,11 +62,12 @@ RestDAO.prototype.get = function(options) {
 /**
  * POST (create) request
  */
-RestDAO.prototype.post = function(item, uri) {
+RestDAO.prototype.post = function(item, uri, type) {
     return this._processRequest({
         method: 'POST',
         payload: item,
-        uri: uri
+        uri: uri,
+        type: type
     });
 };
 
@@ -98,27 +99,32 @@ RestDAO.prototype.remove = function(uri) {
 RestDAO.prototype._processRequest = function(options) {
     var self = this;
     return new Promise(function(resolve, reject) {
-        var xhr, format;
+        var xhr, format, accept, payload;
 
         if (typeof options.uri === 'undefined') {
             throw createError(400, 'Bad Request! URI is a mandatory parameter.');
         }
 
         options.type = options.type || 'json';
+        payload = options.payload;
 
         if (options.type === 'json') {
             format = 'application/json';
+            payload = payload ? JSON.stringify(payload) : undefined;
         } else if (options.type === 'xml') {
             format = 'application/xml';
         } else if (options.type === 'text') {
             format = 'text/plain';
+        } else if (options.type === 'form') {
+            format = 'application/x-www-form-urlencoded; charset=UTF-8';
+            accept = 'text/html; charset=UTF-8';
         } else {
             throw createError(400, 'Bad Request! Unhandled data type.');
         }
 
         xhr = new XMLHttpRequest();
         xhr.open(options.method, self._baseUri + options.uri);
-        xhr.setRequestHeader('Accept', format);
+        xhr.setRequestHeader('Accept', accept || format);
         xhr.setRequestHeader('Content-Type', format);
 
         xhr.onload = function() {
@@ -146,7 +152,7 @@ RestDAO.prototype._processRequest = function(options) {
             reject(createError(42, 'Error calling ' + options.method + ' on ' + options.uri));
         };
 
-        xhr.send(options.payload ? JSON.stringify(options.payload) : undefined);
+        xhr.send(payload);
     });
 };
 

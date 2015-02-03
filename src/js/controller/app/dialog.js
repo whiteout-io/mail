@@ -37,6 +37,7 @@ var DialogCtrl = function($scope, dialog) {
         $scope.title = options.title;
         $scope.message = options.errMsg || options.message;
         $scope.faqLink = options.faqLink;
+        $scope.faqLinkTitle = options.faqLinkTitle || 'Learn more';
         $scope.positiveBtnStr = options.positiveBtnStr || 'Ok';
         $scope.negativeBtnStr = options.negativeBtnStr || 'Cancel';
         $scope.showNegativeBtn = options.showNegativeBtn || false;

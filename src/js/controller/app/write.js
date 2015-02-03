@@ -206,6 +206,14 @@ var WriteCtrl = function($scope, $window, $filter, $q, appConfig, auth, keychain
             return;
         }
 
+        if (recipient.address) {
+            // display only email address after autocomplete
+            recipient.displayId = recipient.address;
+        } else {
+            // set address after manual input
+            recipient.address = recipient.displayId;
+        }
+
         // set display to insecure while fetching keys
         recipient.key = undefined;
         recipient.secure = false;
@@ -231,11 +239,12 @@ var WriteCtrl = function($scope, $window, $filter, $q, appConfig, auth, keychain
         }).then(function(key) {
             if (key) {
                 // compare again since model could have changed during the roundtrip
-                var matchingUserId = _.findWhere(key.userIds, {
+                var userIds = pgp.getKeyParams(key.publicKey).userIds;
+                var matchingUserId = _.findWhere(userIds, {
                     emailAddress: recipient.address
                 });
                 // compare either primary userId or (if available) multiple IDs
-                if (key.userId === recipient.address || matchingUserId) {
+                if (matchingUserId) {
                     recipient.key = key;
                     recipient.secure = true;
                 }
@@ -264,7 +273,10 @@ var WriteCtrl = function($scope, $window, $filter, $q, appConfig, auth, keychain
         function check(recipient) {
             // validate address
             if (!util.validateEmailAddress(recipient.address)) {
-                return;
+                return dialog.info({
+                    title: 'Warning',
+                    message: 'Invalid recipient address!'
+                });
             }
             numReceivers++;
             if (!recipient.secure) {
@@ -393,8 +405,10 @@ var WriteCtrl = function($scope, $window, $filter, $q, appConfig, auth, keychain
             // populate address book cache
             return keychain.listLocalPublicKeys().then(function(keys) {
                 $scope.addressBookCache = keys.map(function(key) {
+                    var name = pgp.getKeyParams(key.publicKey).userIds[0].name;
                     return {
-                        address: key.userId
+                        address: key.userId,
+                        displayId: name + ' - ' + key.userId
                     };
                 });
             });
@@ -402,7 +416,7 @@ var WriteCtrl = function($scope, $window, $filter, $q, appConfig, auth, keychain
         }).then(function() {
             // filter the address book cache
             return $scope.addressBookCache.filter(function(i) {
-                return i.address.indexOf(query) !== -1;
+                return i.displayId.toLowerCase().indexOf(query.toLowerCase()) !== -1;
             });
 
         }).catch(dialog.error);

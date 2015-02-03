@@ -117,13 +117,13 @@ Keychain.prototype.refreshKeyForUserId = function(options) {
 
     // checks if the user's key has been revoked by looking up the key id
     function checkKeyExists(localKey) {
-        return self._publicKeyDao.get(localKey._id).then(function(cloudKey) {
+        return self._publicKeyDao.getByUserId(userId).then(function(cloudKey) {
             if (cloudKey && cloudKey._id === localKey._id) {
                 // the key is present on the server, all is well
                 return localKey;
             }
             // the key has changed, update the key
-            return updateKey(localKey);
+            return updateKey(localKey, cloudKey);
 
         }).catch(function(err) {
             if (err && err.code === 42) {
@@ -134,24 +134,14 @@ Keychain.prototype.refreshKeyForUserId = function(options) {
         });
     }
 
-    function updateKey(localKey) {
-        // look for an updated key for the user id
-        return self._publicKeyDao.getByUserId(userId).then(function(newKey) {
-            // the public key has changed, we need to ask for permission to update the key
-            if (overridePermission) {
-                // don't query the user, update the public key right away
-                return permissionGranted(localKey, newKey);
-            } else {
-                return requestPermission(localKey, newKey);
-            }
-
-        }).catch(function(err) {
-            // offline?
-            if (err && err.code === 42) {
-                return localKey;
-            }
-            throw err;
-        });
+    function updateKey(localKey, newKey) {
+        // the public key has changed, we need to ask for permission to update the key
+        if (overridePermission) {
+            // don't query the user, update the public key right away
+            return permissionGranted(localKey, newKey);
+        } else {
+            return requestPermission(localKey, newKey);
+        }
     }
 
     function requestPermission(localKey, newKey) {
@@ -196,6 +186,7 @@ Keychain.prototype.getReceiverPublicKey = function(userId) {
 
     // search local keyring for public key
     return self._lawnchairDAO.list(DB_PUBLICKEY, 0, null).then(function(allPubkeys) {
+        var userIds;
         // query primary email address
         var pubkey = _.findWhere(allPubkeys, {
             userId: userId
@@ -203,7 +194,8 @@ Keychain.prototype.getReceiverPublicKey = function(userId) {
         // query mutliple userIds (for imported public keys)
         if (!pubkey) {
             for (var i = 0, match; i < allPubkeys.length; i++) {
-                match = _.findWhere(allPubkeys[i].userIds, {
+                userIds = self._pgp.getKeyParams(allPubkeys[i].publicKey).userIds;
+                match = _.findWhere(userIds, {
                     emailAddress: userId
                 });
                 if (match) {

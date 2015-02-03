@@ -215,6 +215,11 @@ describe('Write controller unit test', function() {
             }).returns(resolves({
                 userId: 'asdf@example.com'
             }));
+            pgpMock.getKeyParams.returns({
+                userIds: [{
+                    emailAddress: recipient.address
+                }]
+            });
 
             scope.verify(recipient).then(function() {
                 expect(recipient.key).to.deep.equal({
@@ -232,15 +237,17 @@ describe('Write controller unit test', function() {
                 address: 'asdf@example.com'
             };
             var key = {
-                userId: 'qwer@example.com',
-                userIds: [{
-                    emailAddress: 'asdf@example.com'
-                }]
+                userId: 'qwertz@example.com'
             };
 
             keychainMock.refreshKeyForUserId.withArgs({
                 userId: recipient.address
             }).returns(resolves(key));
+            pgpMock.getKeyParams.returns({
+                userIds: [{
+                    emailAddress: recipient.address
+                }]
+            });
 
             scope.verify(recipient).then(function() {
                 expect(recipient.key).to.deep.equal(key);
@@ -359,12 +366,18 @@ describe('Write controller unit test', function() {
                 userId: 'test@asdf.com',
                 publicKey: 'KEY'
             }]));
+            pgpMock.getKeyParams.returns({
+                userIds: [{
+                    name: 'Bob'
+                }]
+            });
 
             var result = scope.lookupAddressBook('test');
 
             result.then(function(response) {
                 expect(response).to.deep.equal([{
-                    address: 'test@asdf.com'
+                    address: 'test@asdf.com',
+                    displayId: 'Bob - test@asdf.com'
                 }]);
                 done();
             });
@@ -372,17 +385,17 @@ describe('Write controller unit test', function() {
 
         it('should work with cache', function(done) {
             scope.addressBookCache = [{
-                address: 'test@asdf.com'
+                address: 'test@asdf.com',
+                displayId: 'Bob - test@asdf.com'
             }, {
-                address: 'tes@asdf.com'
+                address: 'tes@asdf.com',
+                displayId: 'Bob - tes@asdf.com'
             }];
 
             var result = scope.lookupAddressBook('test');
 
             result.then(function(response) {
-                expect(response).to.deep.equal([{
-                    address: 'test@asdf.com'
-                }]);
+                expect(response).to.deep.equal([scope.addressBookCache[0]]);
                 done();
             });
         });

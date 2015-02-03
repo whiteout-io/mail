@@ -6,10 +6,9 @@
     </button>
   </header>
   <div class="lightbox__content">
-    <input class="u-hide-visually" id="keyfile-input" type="file" multiple accept=".asc" keyfile-input>
     <div class="form-input-with-button u-gap-bottom">
-      <input class="input-text" type="text" placeholder="Search..." ng-model="searchText">
-      <button class="btn" ng-class="{'btn--invalid': sendBtnSecure === false}" wo-click-file-input="#keyfile-input">Import keys</button>
+      <input class="input-text" type="text" placeholder="Filter..." ng-model="searchText">
+      <button class="btn" wo-touch="state.contacts.toggle(false); state.publickeyImport.toggle(true)">Import keys</button>
     </div>
 
     <p class="typo-paragraph u-text-center" ng-show="!keys.length">
@@ -17,7 +16,7 @@
     </p>
 
     <ul class="contacts">
-      <li class="contacts__contact" ng-repeat="key in keys | orderBy:'userId' | filter:searchText"
+      <li class="contacts__contact" ng-repeat="key in keys | orderBy:'fullUserId' | filter:searchText"
         ng-class="{ 'contacts__contact--open': key.open }">
         <div class="contacts__delete">
           <button class="btn-icon-very-light" wo-touch="removeKey(key)">
@@ -25,7 +24,7 @@
           </button>
         </div>
 
-        <h3 class="contacts__title" wo-touch="key.open = !key.open">{{key.userId}}</h3>
+        <h3 class="contacts__title" wo-touch="key.open = !key.open">{{key.fullUserId}}</h3>
         <p class="contacts__short-description">
           {{key._id.slice(8)}}
         </p>
@@ -38,6 +37,9 @@
 
           <dt>Created</dt>
           <dd>{{key.created | date:'mediumDate'}}</dd>
+
+          <dt>Source</dt>
+          <dd>{{key.imported ? 'Imported' : key.source || whiteoutKeyServer}}</dd>
         </dl>
       </li>
     </ul>

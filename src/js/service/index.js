@@ -9,6 +9,7 @@ require('./newsletter');
 require('./oauth');
 require('./privatekey');
 require('./publickey');
+require('./hkp');
 require('./admin');
 require('./lawnchair');
 require('./devicestorage');
