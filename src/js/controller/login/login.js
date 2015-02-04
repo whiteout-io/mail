@@ -51,7 +51,7 @@ var LoginCtrl = function($scope, $timeout, $location, updateHandler, account, au
                 });
             });
 
-        } else if (availableKeys && availableKeys.publicKey && !availableKeys.privateKey) {
+        } else if (availableKeys && availableKeys.publicKey && !availableKeys.publicKey.source && !availableKeys.privateKey) {
             // check if private key is synced
             return keychain.requestPrivateKeyDownload({
                 userId: availableKeys.publicKey.userId,
