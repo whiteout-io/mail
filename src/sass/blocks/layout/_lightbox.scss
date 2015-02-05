@@ -8,6 +8,8 @@
     z-index: 1000;
     background: $color-grey-dark-alpha;
     overflow: auto;
+    // allow scrolling on iOS
+    -webkit-overflow-scrolling: touch;
     text-align: center;
 
     @include respond-to(md) {
