@@ -44,7 +44,8 @@
 
           <div class="form__row">
             <input type="text" class="input-text" ng-model="code" wo-input-code wo-focus-me="step === 2"
-              required pattern="([a-zA-Z0-9\-]*)" placeholder="0000-0000-0000-0000-0000-0000">
+              required pattern="([a-zA-Z0-9\-]*)" placeholder="0000-0000-0000-0000-0000-0000"
+              autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
           </div>
           <div class="spinner-block" ng-show="busy">
             <span class="spinner spinner--big"></span>

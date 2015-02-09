@@ -26,7 +26,8 @@
         <p class="typo-paragraph">Please confirm the keychain code you have written down.</p>
         <form class="form">
           <input type="text" class="input-text" ng-model="inputCode" wo-input-code wo-focus-me="step === 2"
-            required pattern="([a-zA-Z0-9\-]*)" placeholder="0000-0000-0000-0000-0000-0000">
+            required pattern="([a-zA-Z0-9\-]*)" placeholder="0000-0000-0000-0000-0000-0000"
+            autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
         </form>
       </div>
 
