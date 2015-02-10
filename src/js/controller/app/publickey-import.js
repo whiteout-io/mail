@@ -20,7 +20,7 @@ var PublickeyImportCtrl = function($scope, $q, keychain, pgp, hkp, dialog, appCo
     // scope variables
     //
 
-    $scope.hkpUrl = appConfig.config.hkpUrl.replace('https://', '');
+    $scope.hkpUrl = appConfig.config.hkpUrl.replace(/http[s]?:\/\//, '');
 
     //
     // scope functions
