@@ -86,7 +86,7 @@ describe('Login Controller unit test', function() {
         authMock.getEmailAddress.returns(resolves({}));
 
         scope.init().then(function() {
-            expect(goToStub.calledWith('/add-account')).to.be.true;
+            expect(goToStub.withArgs('/add-account').called).to.be.true;
             expect(goToStub.calledOnce).to.be.true;
             done();
         });
@@ -104,7 +104,7 @@ describe('Login Controller unit test', function() {
         emailMock.unlock.returns(rejects(new Error()));
 
         scope.init().then(function() {
-            expect(goToStub.calledWith('/login-existing')).to.be.true;
+            expect(goToStub.withArgs('/login-existing').called).to.be.true;
             expect(goToStub.calledOnce).to.be.true;
             expect(authMock.storeCredentials.called).to.be.false;
             done();
@@ -142,7 +142,7 @@ describe('Login Controller unit test', function() {
         authMock.storeCredentials.returns(resolves());
 
         scope.init().then(function() {
-            expect(goToStub.calledWith('/account')).to.be.true;
+            expect(goToStub.withArgs('/account').called).to.be.true;
             expect(goToStub.calledOnce).to.be.true;
             done();
         });
@@ -175,7 +175,7 @@ describe('Login Controller unit test', function() {
         keychainMock.requestPrivateKeyDownload.returns(resolves(true));
 
         scope.init().then(function() {
-            expect(goToStub.calledWith('/login-privatekey-download')).to.be.true;
+            expect(goToStub.withArgs('/login-privatekey-download').called).to.be.true;
             expect(goToStub.calledOnce).to.be.true;
             done();
         });
@@ -192,25 +192,7 @@ describe('Login Controller unit test', function() {
         keychainMock.requestPrivateKeyDownload.returns(resolves());
 
         scope.init().then(function() {
-            expect(goToStub.calledWith('/login-new-device')).to.be.true;
-            expect(goToStub.calledOnce).to.be.true;
-            done();
-        });
-    });
-
-    it('should redirect to /login-new-device', function(done) {
-        authMock.init.returns(resolves());
-        authMock.getEmailAddress.returns(resolves({
-            emailAddress: emailAddress
-        }));
-        accountMock.init.returns(resolves({
-            publicKey: {
-                source: 'foo'
-            }
-        }));
-
-        scope.init().then(function() {
-            expect(goToStub.calledWith('/login-initial')).to.be.true;
+            expect(goToStub.withArgs('/login-new-device').called).to.be.true;
             expect(goToStub.calledOnce).to.be.true;
             done();
         });
@@ -224,7 +206,7 @@ describe('Login Controller unit test', function() {
         accountMock.init.returns(resolves({}));
 
         scope.init().then(function() {
-            expect(goToStub.calledWith('/login-initial')).to.be.true;
+            expect(goToStub.withArgs('/login-initial').called).to.be.true;
             expect(goToStub.calledOnce).to.be.true;
             done();
         });
