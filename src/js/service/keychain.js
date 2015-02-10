@@ -58,40 +58,6 @@ Keychain.prototype.verifyPublicKey = function(uuid) {
 };
 
 /**
- * Get an array of public keys by looking in local storage and
- * fetching missing keys from the cloud service.
- * @param ids [Array] the key ids as [{_id, userId}]
- * @return [PublicKeyCollection] The requiested public keys
- */
-Keychain.prototype.getPublicKeys = function(ids) {
-    var self = this,
-        jobs = [],
-        pubkeys = [];
-
-    ids.forEach(function(i) {
-        // lookup locally and in storage
-        var promise = self.lookupPublicKey(i._id).then(function(pubkey) {
-            if (!pubkey) {
-                throw new Error('Error looking up public key!');
-            }
-
-            // check if public key with that id has already been fetched
-            var already = _.findWhere(pubkeys, {
-                _id: i._id
-            });
-            if (!already) {
-                pubkeys.push(pubkey);
-            }
-        });
-        jobs.push(promise);
-    });
-
-    return Promise.all(jobs).then(function() {
-        return pubkeys;
-    });
-};
-
-/**
  * Checks for public key updates of a given user id
  * @param {String} options.userId The user id (email address) for which to check the key
  * @param {String} options.overridePermission (optional) Indicates if the update should happen automatically (true) or with the user being queried (false). Defaults to false
@@ -191,7 +157,7 @@ Keychain.prototype.getReceiverPublicKey = function(userId) {
         var pubkey = _.findWhere(allPubkeys, {
             userId: userId
         });
-        // query mutliple userIds (for imported public keys)
+        // query mutliple userIds
         if (!pubkey) {
             for (var i = 0, match; i < allPubkeys.length; i++) {
                 userIds = self._pgp.getKeyParams(allPubkeys[i].publicKey).userIds;
@@ -636,7 +602,7 @@ Keychain.prototype.getUserKeyPair = function(userId) {
             userId: userId
         });
 
-        if (pubkey && pubkey._id) {
+        if (pubkey && pubkey._id && !pubkey.source) {
             // that user's public key is already in local storage...
             // sync keypair to the cloud
             return syncKeypair(pubkey._id);
@@ -645,13 +611,13 @@ Keychain.prototype.getUserKeyPair = function(userId) {
         // no public key by that user id in storage
         // find from cloud by email address
         return self._publicKeyDao.getByUserId(userId).then(function(cloudPubkey) {
-            if (cloudPubkey && cloudPubkey._id) {
+            if (cloudPubkey && cloudPubkey._id && !cloudPubkey.source) {
                 // there is a public key for that user already in the cloud...
                 // sync keypair to local storage
                 return syncKeypair(cloudPubkey._id);
             }
 
-            // continue without keypair... generate in crypto.js
+            // continue without keypair... generate or import new keypair
         });
     });
 
@@ -660,10 +626,12 @@ Keychain.prototype.getUserKeyPair = function(userId) {
         // persist key pair in local storage
         return self.lookupPublicKey(keypairId).then(function(pub) {
             savedPubkey = pub;
+
             // persist private key in local storage
-            return self.lookupPrivateKey(keypairId).then(function(priv) {
-                savedPrivkey = priv;
-            });
+            return self.lookupPrivateKey(keypairId);
+
+        }).then(function(priv) {
+            savedPrivkey = priv;
 
         }).then(function() {
             var keys = {};

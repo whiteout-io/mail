@@ -417,45 +417,6 @@ describe('Keychain DAO unit tests', function() {
         });
     });
 
-    describe('get public keys by id', function() {
-        it('should fail', function(done) {
-            keychainDao.getPublicKeys([]).then(function(keys) {
-                expect(keys.length).to.equal(0);
-                done();
-            });
-        });
-
-        it('should fail', function(done) {
-            lawnchairDaoStub.read.returns(rejects(42));
-
-            var ids = [{
-                _id: '12345'
-            }];
-            keychainDao.getPublicKeys(ids).catch(function(err) {
-                expect(err).to.exist;
-                expect(lawnchairDaoStub.read.calledOnce).to.be.true;
-                done();
-            });
-        });
-
-        it('should work from local storage', function(done) {
-            lawnchairDaoStub.read.returns(resolves({
-                _id: '12345',
-                publicKey: 'asdf'
-            }));
-
-            var ids = [{
-                _id: '12345'
-            }];
-            keychainDao.getPublicKeys(ids).then(function(keys) {
-                expect(keys.length).to.equal(1);
-                expect(keys[0]._id).to.equal('12345');
-                expect(lawnchairDaoStub.read.calledOnce).to.be.true;
-                done();
-            });
-        });
-    });
-
     describe('get receiver public key', function() {
         it('should fail due to error in lawnchair list', function(done) {
             lawnchairDaoStub.list.returns(rejects(42));
@@ -598,6 +559,40 @@ describe('Keychain DAO unit tests', function() {
                 expect(keys.privateKey).to.exist;
                 expect(lawnchairDaoStub.list.calledOnce).to.be.true;
                 expect(lawnchairDaoStub.read.calledTwice).to.be.true;
+                expect(pubkeyDaoStub.getByUserId.calledOnce).to.be.true;
+                done();
+            });
+        });
+
+        it('should work if local key is from a source other than the whiteout key server', function(done) {
+            lawnchairDaoStub.list.returns(resolves([{
+                _id: '12345',
+                userId: testUser,
+                publicKey: 'asdf',
+                source: 'pgp.mit.edu'
+            }]));
+            pubkeyDaoStub.getByUserId.returns(resolves());
+
+            keychainDao.getUserKeyPair(testUser).then(function(keys) {
+                expect(keys).to.not.exist;
+                expect(lawnchairDaoStub.list.calledOnce).to.be.true;
+                expect(lawnchairDaoStub.read.called).to.be.false;
+                expect(pubkeyDaoStub.getByUserId.calledOnce).to.be.true;
+                done();
+            });
+        });
+
+        it('should work if cloud public key is from a source other than the whiteout key server', function(done) {
+            lawnchairDaoStub.list.returns(resolves());
+            pubkeyDaoStub.getByUserId.returns(resolves({
+                _id: '12345',
+                publicKey: 'asdf',
+                source: 'pgp.mit.edu'
+            }));
+
+            keychainDao.getUserKeyPair(testUser).then(function(keys) {
+                expect(keys).to.not.exist;
+                expect(pubkeyDaoStub.getByUserId.calledOnce).to.be.true;
                 done();
             });
         });
