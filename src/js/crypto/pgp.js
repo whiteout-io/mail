@@ -28,8 +28,8 @@ PGP.prototype.generateKeys = function(options) {
         }
 
         // generate keypair
-        name = options.realname ? options.realname.replace(/[&\/\\#,+()$~%.'":*?<>{}]/g, '').trim() + ' ' : '';
-        userId = name + '<' + options.emailAddress + '>';
+        name = options.realname ? options.realname.replace(/[&\/\\#,+()$~%.'":*?<>{}]/g, '').trim() : '';
+        userId = name + ' <' + options.emailAddress + '>';
         passphrase = (options.passphrase) ? options.passphrase : undefined;
 
         resolve({
