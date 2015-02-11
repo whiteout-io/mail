@@ -196,8 +196,10 @@ describe('PGP Crypto Api unit tests', function() {
                 return pgp.exportKeys();
             }).then(function(keys) {
                 expect(keys.keyId).to.equal(keyId);
-                expect(keys.privateKeyArmored.replace(/\r/g, '')).to.equal(privkey.replace(/\r/g, ''));
-                expect(keys.publicKeyArmored.replace(/\r/g, '')).to.equal(pubkey.replace(/\r/g, ''));
+                expect(keys.privateKeyArmored).to.match(/Comment: Whiteout Mail - https:\/\/whiteout.io/);
+                expect(keys.privateKeyArmored).to.match(/Version: OpenPGP.js v/);
+                expect(keys.publicKeyArmored).to.match(/Comment: Whiteout Mail - https:\/\/whiteout.io/);
+                expect(keys.publicKeyArmored).to.match(/Version: OpenPGP.js v/);
                 done();
             });
         });
