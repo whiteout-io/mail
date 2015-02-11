@@ -86,6 +86,10 @@ describe('PGP Crypto Api unit tests', function() {
                     publicKeyArmored: keys.publicKeyArmored
                 });
             }).then(function() {
+                var keyParams = pgp.getKeyParams();
+                expect(keyParams.userIds[0].name).to.equal('');
+                expect(keyParams.userIds[0].emailAddress).to.equal(user);
+
                 return pgp.encrypt('secret', [keyObject.publicKeyArmored]);
             }).then(function(ct) {
                 expect(ct).to.exist;
@@ -117,7 +121,9 @@ describe('PGP Crypto Api unit tests', function() {
                     publicKeyArmored: keys.publicKeyArmored
                 });
             }).then(function() {
-                expect(pgp.getKeyParams().userIds[0].name).to.equal('Jon Doe');
+                var keyParams = pgp.getKeyParams();
+                expect(keyParams.userIds[0].name).to.equal('Jon Doe');
+                expect(keyParams.userIds[0].emailAddress).to.equal(user);
 
                 return pgp.encrypt('secret', [keyObject.publicKeyArmored]);
             }).then(function(ct) {
@@ -150,7 +156,9 @@ describe('PGP Crypto Api unit tests', function() {
                     publicKeyArmored: keys.publicKeyArmored
                 });
             }).then(function() {
-                expect(pgp.getKeyParams().userIds[0].name).to.equal('Jon Doe');
+                var keyParams = pgp.getKeyParams();
+                expect(keyParams.userIds[0].name).to.equal('Jon Doe');
+                expect(keyParams.userIds[0].emailAddress).to.equal(user);
 
                 return pgp.encrypt('secret', [keyObject.publicKeyArmored]);
             }).then(function(ct) {

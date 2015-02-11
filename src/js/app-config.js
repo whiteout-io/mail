@@ -13,7 +13,7 @@ module.exports = appCfg;
  */
 appCfg.config = {
     cloudUrl: 'https://keys.whiteout.io',
-    hkpUrl: 'https://pgp.mit.edu',
+    hkpUrl: 'http://keyserver.ubuntu.com',
     privkeyServerUrl: 'https://keychain.whiteout.io',
     adminUrl: 'https://admin-node.whiteout.io',
     settingsUrl: 'https://settings.whiteout.io/autodiscovery/',
