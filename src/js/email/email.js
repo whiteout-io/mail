@@ -188,23 +188,16 @@ Email.prototype.unlock = function(options) {
  */
 Email.prototype.openFolder = function(options) {
     var self = this;
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
         self.checkOnline();
+        resolve();
 
-        if (options.folder.path === config.outboxMailboxPath) {
-            resolve();
-            return;
+    }).then(function() {
+        if (options.folder.path !== config.outboxMailboxPath) {
+            return self._imapClient.selectMailbox({
+                path: options.folder.path
+            });
         }
-
-        self._imapClient.selectMailbox({
-            path: options.folder.path
-        }, function(err, folder) {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(folder);
-            }
-        });
     });
 };
 /**
@@ -960,15 +953,7 @@ Email.prototype._sendGeneric = function(options, mailer) {
     }).then(function() {
 
         // send the email
-        return new Promise(function(resolve, reject) {
-            self._pgpMailer.send(options, function(err, rfcText) {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(rfcText);
-                }
-            });
-        });
+        return self._pgpMailer.send(options);
     }).then(function(rfcText) {
         // try to upload to sent, but we don't actually care if the upload failed or not
         // this should not negatively impact the process of sending
@@ -990,20 +975,14 @@ Email.prototype._sendGeneric = function(options, mailer) {
  * Signs and encrypts a message
  *
  * @param {Object} options.email The message to be encrypted
- * @param {Function} callback(error, message) Invoked when the message was encrypted, or an error occurred
+ * @param {Function} callback(message) Invoked when the message was encrypted, or an error occurred
  */
 Email.prototype.encrypt = function(options) {
     var self = this;
     self.busy();
-    return new Promise(function(resolve, reject) {
-        self._pgpbuilder.encrypt(options, function(err, message) {
-            self.done();
-            if (err) {
-                reject(err);
-            } else {
-                resolve(message);
-            }
-        });
+    return self._pgpbuilder.encrypt(options).then(function(message) {
+        self.done();
+        return message;
     });
 };
 
@@ -1043,15 +1022,7 @@ Email.prototype.onConnect = function(imap) {
 
     }).then(function() {
         // imap login
-        return new Promise(function(resolve, reject) {
-            self._imapClient.login(function(err) {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve();
-                }
-            });
-        });
+        return self._imapClient.login();
 
     }).then(function() {
         self._account.loggingIn = false;
@@ -1185,7 +1156,7 @@ Email.prototype._onSyncUpdate = function(options) {
             folder: folder,
             firstUid: Math.min.apply(null, options.list),
             lastUid: Math.max.apply(null, options.list)
-        }, self._dialog.error);
+        }).then(self._dialog.error).catch(self._dialog.error);
     } else if (options.type === SYNC_TYPE_DELETED) {
         // messages have been deleted, remove from local storage and memory
         options.list.forEach(function(uid) {
@@ -1201,7 +1172,7 @@ Email.prototype._onSyncUpdate = function(options) {
                 folder: folder,
                 message: message,
                 localOnly: true
-            }, self._dialog.error);
+            }).then(self._dialog.error).catch(self._dialog.error);
         });
     } else if (options.type === SYNC_TYPE_MSGS) {
         // NB! several possible reasons why this could be called.
@@ -1228,7 +1199,7 @@ Email.prototype._onSyncUpdate = function(options) {
                 folder: folder,
                 message: message,
                 localOnly: true
-            }, self._dialog.error);
+            }).then(self._dialog.error).catch(self._dialog.error);
         });
     }
 };
@@ -1276,7 +1247,7 @@ Email.prototype._initFoldersFromImap = function() {
     self.busy(); // start the spinner
 
     // fetch list from imap server
-    return listWellknownFolder().then(function(wellKnownFolders) {
+    return self._imapClient.listWellKnownFolders().then(function(wellKnownFolders) {
         var foldersChanged = false, // indicates if we need to persist anything to disk
             imapFolders = []; // aggregate all the imap folders
 
@@ -1409,18 +1380,6 @@ Email.prototype._initFoldersFromImap = function() {
         self.done(); // stop the spinner
         throw err;
     });
-
-    function listWellknownFolder() {
-        return new Promise(function(resolve, reject) {
-            self._imapClient.listWellKnownFolders(function(err, wellKnownFolders) {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(wellKnownFolders);
-                }
-            });
-        });
-    }
 };
 
 /**
@@ -1475,17 +1434,13 @@ Email.prototype.done = function() {
  */
 Email.prototype._imapMark = function(options) {
     var self = this;
-    return new Promise(function(resolve, reject) {
-        self.checkOnline();
 
+    return new Promise(function(resolve) {
+        self.checkOnline();
+        resolve();
+    }).then(function() {
         options.path = options.folder.path;
-        self._imapClient.updateFlags(options, function(err) {
-            if (err) {
-                reject(err);
-            } else {
-                resolve();
-            }
-        });
+        return self._imapClient.updateFlags(options);
     });
 };
 
@@ -1510,7 +1465,10 @@ Email.prototype._imapDeleteMessage = function(options) {
 
         // there's no known trash folder to move the mail to or we're in the trash folder, so we can purge the message
         if (!trash || options.folder === trash) {
-            return imapDelete();
+            return self._imapClient.deleteMessage({
+                path: options.folder.path,
+                uid: options.uid
+            });
         }
 
         return self._imapMoveMessage({
@@ -1519,21 +1477,6 @@ Email.prototype._imapDeleteMessage = function(options) {
             uid: options.uid
         });
     });
-
-    function imapDelete() {
-        return new Promise(function(resolve, reject) {
-            self._imapClient.deleteMessage({
-                path: options.folder.path,
-                uid: options.uid
-            }, function(err) {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve();
-                }
-            });
-        });
-    }
 };
 
 /**
@@ -1546,19 +1489,14 @@ Email.prototype._imapDeleteMessage = function(options) {
  */
 Email.prototype._imapMoveMessage = function(options) {
     var self = this;
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
         self.checkOnline();
-
-        self._imapClient.moveMessage({
+        resolve();
+    }).then(function() {
+        return self._imapClient.moveMessage({
             path: options.folder.path,
             destination: options.destination.path,
             uid: options.uid
-        }, function(err) {
-            if (err) {
-                reject(err);
-            } else {
-                resolve();
-            }
         });
     });
 };
@@ -1575,17 +1513,12 @@ Email.prototype._imapMoveMessage = function(options) {
  */
 Email.prototype._imapListMessages = function(options) {
     var self = this;
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
         self.checkOnline();
-
+        resolve();
+    }).then(function() {
         options.path = options.folder.path;
-        self._imapClient.listMessages(options, function(err, messages) {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(messages);
-            }
-        });
+        return self._imapClient.listMessages(options);
     });
 };
 
@@ -1597,17 +1530,10 @@ Email.prototype._imapListMessages = function(options) {
  */
 Email.prototype._imapUploadMessage = function(options) {
     var self = this;
-    return new Promise(function(resolve, reject) {
-        self._imapClient.uploadMessage({
-            path: options.folder.path,
-            message: options.message
-        }, function(err) {
-            if (err) {
-                reject(err);
-            } else {
-                resolve();
-            }
-        });
+
+    return self._imapClient.uploadMessage({
+        path: options.folder.path,
+        message: options.message
     });
 };
 
@@ -1619,26 +1545,14 @@ Email.prototype._imapUploadMessage = function(options) {
  */
 Email.prototype._getBodyParts = function(options) {
     var self = this;
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
         self.checkOnline();
-
+        resolve();
+    }).then(function() {
         options.path = options.folder.path;
-        self._imapClient.getBodyParts(options, function(err) {
-            if (err) {
-                reject(err);
-                return;
-            }
-
-            // interpret the raw content of the email
-            self._mailreader.parse(options, function(err, message) {
-                if (err) {
-                    reject(err);
-                    return;
-                }
-
-                resolve(message);
-            });
-        });
+        return self._imapClient.getBodyParts(options);
+    }).then(function() {
+        return self._parse(options);
     });
 };
 

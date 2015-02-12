@@ -305,11 +305,11 @@ describe('Email DAO integration tests', function() {
         openpgp.initWorker.restore();
         mailreader.startWorker.restore();
 
-        imapClient.stopListeningForChanges(function() {
-            imapClient.logout(function() {
-                userStorage.clear().then(done);
-            });
-        });
+        imapClient.stopListeningForChanges().then(function() {
+            return imapClient.logout();
+        }).then(function() {
+            return userStorage.clear();
+        }).then(done);
     });
 
     describe('IMAP Integration Tests', function() {
