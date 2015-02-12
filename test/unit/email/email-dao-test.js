@@ -733,6 +733,32 @@ describe('Email DAO unit tests', function() {
             });
         });
 
+        it('should not explode when message has been deleted during imap roundtrip', function(done) {
+            imapMark.withArgs({
+                folder: inboxFolder,
+                uid: message.uid,
+                unread: message.unread,
+                answered: message.answered,
+                flagged: message.flagged
+            }).returns(resolves());
+
+            localListStub.withArgs({
+                folder: inboxFolder,
+                uid: message.uid
+            }).returns(resolves([]));
+
+            dao.setFlags({
+                folder: inboxFolder,
+                message: message
+            }).then(function() {
+                expect(imapMark.calledOnce).to.be.true;
+                expect(localListStub.calledOnce).to.be.true;
+                expect(localStoreStub.called).to.be.false;
+
+                done();
+            });
+        });
+
         it('should set flags for outbox for disk, memory', function(done) {
             localListStub.withArgs({
                 folder: outboxFolder,

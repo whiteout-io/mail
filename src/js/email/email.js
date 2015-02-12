@@ -492,6 +492,12 @@ Email.prototype.setFlags = function(options) {
         }).then(function(storedMessages) {
             // set the flags
             var storedMessage = storedMessages[0];
+
+            if (!storedMessage) {
+                // the message has been deleted in the meantime
+                return;
+            }
+
             storedMessage.unread = options.message.unread;
             storedMessage.flagged = options.message.flagged;
             storedMessage.answered = options.message.answered;
