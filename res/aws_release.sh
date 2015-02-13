@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# abort if tests fail
+set -e
+
 # go to root
 cd `dirname $0`
 cd ..
@@ -19,6 +22,7 @@ git merge $2 --no-edit
 rm -rf node_modules/
 npm cache clear
 npm install
+npm test
 grunt release-$1 --release=$3
 
 # install only production dependencies
