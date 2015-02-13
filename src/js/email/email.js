@@ -609,11 +609,14 @@ Email.prototype.getBody = function(options) {
         folder: folder,
         uid: message.uid
     }).then(function(localMessages) {
-        if (localMessages.length === 0) {
-            return;
-        }
-
         localMessage = localMessages[0];
+
+        if (!localMessage) {
+            // the message has been deleted in the meantime
+            var error = new Error('Can not get the contents of this message. It has already been deleted!');
+            error.hide = true;
+            throw error;
+        }
 
         // treat attachment and non-attachment body parts separately:
         // we need to fetch the content for non-attachment body parts (encrypted, signed, text, html, resources referenced from the html)
@@ -730,6 +733,10 @@ Email.prototype.getBody = function(options) {
     }).catch(function(err) {
         self.done();
         message.loadingBody = false;
+        if (err.hide) {
+            // ignore errors with err.hide
+            return message;
+        }
         throw err;
     });
 
@@ -1558,6 +1565,14 @@ Email.prototype._getBodyParts = function(options) {
         options.path = options.folder.path;
         return self._imapClient.getBodyParts(options);
     }).then(function() {
+        if (options.bodyParts.filter(function(bodyPart) {
+                return !(bodyPart.raw || bodyPart.content);
+            }).length) {
+            var error = new Error('Can not get the contents of this message. It has already been deleted!');
+            error.hide = true;
+            throw error;
+        }
+
         return self._parse(options);
     });
 };

@@ -1250,6 +1250,80 @@ describe('Email DAO unit tests', function() {
             expect(message.loadingBody).to.be.true;
         });
 
+        it('should not error when message is deleted from imap', function(done) {
+            var error = new Error('Can not get the contents of this message. It has already been deleted!');
+            error.hide = true;
+
+            var message = {
+                uid: uid,
+                encrypted: true,
+                bodyParts: [{
+                    type: 'text'
+                }]
+            };
+
+            localListStub.withArgs({
+                folder: inboxFolder,
+                uid: uid
+            }).returns(resolves([message]));
+
+            localStoreStub.withArgs({
+                folder: inboxFolder,
+                emails: [message]
+            }).returns(resolves());
+
+            imapGetStub.withArgs({
+                folder: inboxFolder,
+                uid: message.uid,
+                bodyParts: message.bodyParts
+            }).returns(rejects(error));
+
+
+            dao.getBody({
+                message: message,
+                folder: inboxFolder
+            }).then(function(msg) {
+                expect(msg).to.equal(message);
+                expect(msg.body).to.not.exist;
+                expect(msg.loadingBody).to.be.false;
+
+                expect(localListStub.calledOnce).to.be.true;
+                expect(imapGetStub.calledOnce).to.be.true;
+                expect(localStoreStub.called).to.be.false;
+
+                done();
+            });
+            expect(message.loadingBody).to.be.true;
+        });
+
+        it('should not error when message has already been removed from memory', function(done) {
+            var message = {
+                uid: uid,
+                encrypted: true,
+                bodyParts: [{
+                    type: 'text'
+                }]
+            };
+
+            localListStub.returns(resolves([]));
+
+            dao.getBody({
+                message: message,
+                folder: inboxFolder
+            }).then(function(msg) {
+                expect(msg).to.equal(message);
+                expect(msg.body).to.not.exist;
+                expect(msg.loadingBody).to.be.false;
+
+                expect(localListStub.calledOnce).to.be.true;
+                expect(imapGetStub.called).to.be.false;
+                expect(localStoreStub.called).to.be.false;
+
+                done();
+            });
+            expect(message.loadingBody).to.be.true;
+        });
+
         it('fail to stream from imap due to error when persisting', function(done) {
             var message = {
                 uid: uid,
@@ -2393,23 +2467,72 @@ describe('Email DAO unit tests', function() {
 
         describe('#_getBodyParts', function() {
             it('should get bodyParts', function(done) {
+                var bp = [{
+                    type: 'text',
+                    content: 'bender is great! bender is great!'
+                }];
+
                 imapClientStub.getBodyParts.withArgs({
                     folder: inboxFolder,
                     path: inboxFolder.path,
                     uid: 123,
-                    bodyParts: []
-                }).returns(resolves({}));
+                    bodyParts: bp
+                }).returns(resolves(bp));
                 parseStub.yieldsAsync(null, []);
 
                 dao._getBodyParts({
                     folder: inboxFolder,
                     uid: 123,
-                    bodyParts: []
+                    bodyParts: bp
                 }).then(function(parts) {
                     expect(parts).to.exist;
 
                     expect(imapClientStub.getBodyParts.calledOnce).to.be.true;
                     expect(parseStub.calledOnce).to.be.true;
+
+                    done();
+                });
+            });
+
+            it('should fail when deleted on IMAP', function(done) {
+                var bp = [{
+                    type: 'text'
+                }];
+
+                imapClientStub.getBodyParts.withArgs({
+                    folder: inboxFolder,
+                    path: inboxFolder.path,
+                    uid: 123,
+                    bodyParts: bp
+                }).returns(resolves());
+                parseStub.yieldsAsync(null, []);
+
+                dao._getBodyParts({
+                    folder: inboxFolder,
+                    uid: 123,
+                    bodyParts: bp
+                }).catch(function(err) {
+                    expect(err).to.exist;
+
+                    expect(imapClientStub.getBodyParts.calledOnce).to.be.true;
+                    expect(parseStub.called).to.be.false;
+
+                    done();
+                });
+            });
+
+            it('should fail when getBody fails', function(done) {
+                imapClientStub.getBodyParts.returns(rejects({}));
+
+                dao._getBodyParts({
+                    folder: inboxFolder,
+                    uid: 123,
+                    bodyParts: []
+                }).catch(function(err) {
+                    expect(err).to.exist;
+
+                    expect(imapClientStub.getBodyParts.calledOnce).to.be.true;
+                    expect(parseStub.called).to.be.false;
 
                     done();
                 });
