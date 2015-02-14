@@ -17,7 +17,19 @@ appCfg.config = {
     privkeyServerUrl: 'https://keychain.whiteout.io',
     adminUrl: 'https://admin-node.whiteout.io',
     settingsUrl: 'https://settings.whiteout.io/autodiscovery/',
-    wmailDomain: 'wmail.io',
+    mailServer: {
+        domain: 'wmail.io',
+        imap: {
+            hostname: 'imap.wmail.io',
+            port: 993,
+            secure: true
+        },
+        smtp: {
+            hostname: 'smtp.wmail.io',
+            port: 465,
+            secure: true
+        }
+    },
     oauthDomains: [/\.gmail\.com$/, /\.googlemail\.com$/],
     ignoreUploadOnSentDomains: [/\.gmail\.com$/, /\.googlemail\.com$/],
     serverPrivateKeyId: 'EE342F0DDBB0F3BE',
