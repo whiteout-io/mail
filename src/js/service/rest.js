@@ -5,7 +5,7 @@ var ngModule = angular.module('woServices');
 // rest dao for use in the public key service
 ngModule.factory('publicKeyRestDao', function(appConfig) {
     var dao = new RestDAO();
-    dao.setBaseUri(appConfig.config.cloudUrl);
+    dao.setBaseUri(appConfig.config.keyServerUrl);
     return dao;
 });
 
@@ -19,7 +19,7 @@ ngModule.factory('privateKeyRestDao', function(appConfig) {
 // rest dao for use in the invitation service
 ngModule.factory('invitationRestDao', function(appConfig) {
     var dao = new RestDAO();
-    dao.setBaseUri(appConfig.config.cloudUrl);
+    dao.setBaseUri(appConfig.config.keyServerUrl);
     return dao;
 });
 
@@ -133,7 +133,7 @@ RestDAO.prototype._processRequest = function(options) {
             if (options.type === 'json') {
                 try {
                     res = JSON.parse(xhr.responseText);
-                } catch(e) {
+                } catch (e) {
                     res = xhr.responseText;
                 }
             } else {

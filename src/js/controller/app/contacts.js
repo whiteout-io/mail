@@ -18,7 +18,7 @@ var ContactsCtrl = function($scope, $q, keychain, pgp, dialog, appConfig) {
         }
     };
 
-    $scope.whiteoutKeyServer = appConfig.config.cloudUrl.replace(/http[s]?:\/\//, ''); // display key server hostname
+    $scope.whiteoutKeyServer = appConfig.config.keyServerUrl.replace(/http[s]?:\/\//, ''); // display key server hostname
 
     //
     // scope functions

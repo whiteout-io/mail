@@ -347,7 +347,7 @@ Email.prototype.fetchMessages = function(options) {
             bodyParts: message.bodyParts
         }).then(function(parsedBodyParts) {
             var body = _.pluck(filterBodyParts(parsedBodyParts, MSG_PART_TYPE_TEXT), MSG_PART_ATTR_CONTENT).join('\n'),
-                verificationUrlPrefix = config.cloudUrl + config.verificationUrl,
+                verificationUrlPrefix = config.keyServerUrl + config.verificationUrl,
                 uuid = body.split(verificationUrlPrefix).pop().substr(0, config.verificationUuidLength),
                 uuidRegex = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/;
 
@@ -927,7 +927,7 @@ Email.prototype.sendEncrypted = function(options, mailer) {
  */
 Email.prototype.sendPlaintext = function(options, mailer) {
     // add suffix to plaintext mail
-    options.email.body += str.signature + config.cloudUrl + '/' + this._account.emailAddress;
+    options.email.body += str.signature + config.keyServerUrl + '/' + this._account.emailAddress;
     // mime encode, sign and send email via smtp
     return this._sendGeneric({
         smtpclient: options.smtpclient, // filled solely in the integration test, undefined in normal usage
