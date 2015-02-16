@@ -167,11 +167,11 @@ describe('Connection Doctor', function() {
 
     describe('#_checkImap', function() {
         it('should perform IMAP login, list folders, logout', function(done) {
-            imapStub.login.yieldsAsync();
-            imapStub.listWellKnownFolders.yieldsAsync(null, {
+            imapStub.login.returns(resolves());
+            imapStub.listWellKnownFolders.returns(resolves({
                 Inbox: [{}]
-            });
-            imapStub.logout.yieldsAsync();
+            }));
+            imapStub.logout.returns(resolves());
 
             doctor._checkImap().then(function() {
                 expect(imapStub.login.calledOnce).to.be.true;
@@ -183,10 +183,11 @@ describe('Connection Doctor', function() {
         });
 
         it('should fail w/ generic error on logout', function(done) {
-            imapStub.login.yieldsAsync();
-            imapStub.listWellKnownFolders.yieldsAsync(null, {
+            imapStub.login.returns(resolves());
+            imapStub.listWellKnownFolders.returns(resolves({
                 Inbox: [{}]
-            });
+            }));
+            imapStub.logout.returns(rejects(new Error()));
 
             doctor._checkImap().catch(function(error) {
                 expect(error.code).to.equal(ConnectionDoctor.GENERIC_ERROR);
@@ -197,18 +198,13 @@ describe('Connection Doctor', function() {
 
                 done();
             });
-
-            setTimeout(function() {
-                // this error is thrown while we're waiting for the logout
-                imapStub.onError(new Error());
-            }, 50);
         });
 
         it('should fail w/ generic error on inbox missing', function(done) {
-            imapStub.login.yieldsAsync();
-            imapStub.listWellKnownFolders.yieldsAsync(null, {
+            imapStub.login.returns(resolves());
+            imapStub.listWellKnownFolders.returns(resolves({
                 Inbox: []
-            });
+            }));
 
             doctor._checkImap().catch(function(error) {
                 expect(error.code).to.equal(ConnectionDoctor.NO_INBOX);
@@ -221,8 +217,8 @@ describe('Connection Doctor', function() {
         });
 
         it('should fail w/ generic error on listing folders fails', function(done) {
-            imapStub.login.yieldsAsync();
-            imapStub.listWellKnownFolders.yieldsAsync(new Error());
+            imapStub.login.returns(resolves());
+            imapStub.listWellKnownFolders.returns(rejects(new Error()));
 
             doctor._checkImap().catch(function(error) {
                 expect(error.code).to.equal(ConnectionDoctor.GENERIC_ERROR);
@@ -236,6 +232,12 @@ describe('Connection Doctor', function() {
         });
 
         it('should fail w/ auth rejected', function(done) {
+            imapStub.login.returns(new Promise(function() {
+                setTimeout(function() {
+                    imapStub.onError(new Error());
+                }, 0);
+            }));
+
             doctor._checkImap().catch(function(error) {
                 expect(error.code).to.equal(ConnectionDoctor.AUTH_REJECTED);
                 expect(error.underlyingError).to.exist;
@@ -245,11 +247,6 @@ describe('Connection Doctor', function() {
 
                 done();
             });
-
-            setTimeout(function() {
-                // this error is thrown while we're waiting for the login
-                imapStub.onError(new Error());
-            }, 50);
         });
     });
 

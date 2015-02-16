@@ -218,25 +218,21 @@ ConnectionDoctor.prototype._checkImap = function() {
             }
         };
 
-        self._imap.login(function() {
+        self._imap.login().then(function() {
             loggedIn = true;
+            return self._imap.listWellKnownFolders();
+        }).then(function(wellKnownFolders) {
+            if (wellKnownFolders.Inbox.length === 0) {
+                // the client needs at least an inbox folder to work properly
+                reject(createError(NO_INBOX, str.connDocNoInbox.replace('{0}', host)));
+                return;
+            }
 
-            self._imap.listWellKnownFolders(function(error, wellKnownFolders) {
-                if (error) {
-                    reject(createError(GENERIC_ERROR, str.connDocGenericError.replace('{0}', host).replace('{1}', error.message), error));
-                    return;
-                }
-
-                if (wellKnownFolders.Inbox.length === 0) {
-                    // the client needs at least an inbox folder to work properly
-                    reject(createError(NO_INBOX, str.connDocNoInbox.replace('{0}', host)));
-                    return;
-                }
-
-                self._imap.logout(function() {
-                    resolve();
-                });
-            });
+            return self._imap.logout();
+        }).then(function(){
+            resolve();
+        }).catch(function(error) {
+            reject(createError(GENERIC_ERROR, str.connDocGenericError.replace('{0}', host).replace('{1}', error.message), error));
         });
     });
 };

@@ -28,7 +28,7 @@
       <li class="mail-list-entry"
         ng-class="{'mail-list-entry--active': email === state.mailList.selected, 'mail-list-entry--unread': email.unread, 'mail-list-entry--attachment': email.attachments !== undefined && email.attachments.length > 0}"
         wo-touch="navigate(email)"
-        ng-repeat="email in displayMessages">
+        ng-repeat="email in displayMessages track by email.uid">
         <ul class="mail-list-entry__flags">
           <li class="mail-list-entry__flags-unread"></li>
           <li class="mail-list-entry__flags-checked" wo-touch="$event.stopPropagation()">
