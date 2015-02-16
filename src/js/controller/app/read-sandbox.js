@@ -156,7 +156,7 @@ function renderNodes(root) {
             var lines = node.split('\n');
             for (i = 0; i < lines.length; i++) {
                 // replace all urls with anchors
-                lines[i] = lines[i].replace(/(https?:\/\/[^\s]+)/g, createArchor);
+                lines[i] = lines[i].replace(/(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)/g, createArchor);
                 // wrap line into an element for easier styling
                 html += '<div class="line';
                 if (isLineEmpty(lines[i])) {
