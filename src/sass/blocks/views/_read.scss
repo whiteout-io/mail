@@ -2,10 +2,11 @@
     $padding-horizontal: 15px;
     $padding-vertical: 10px;
 
-    display: flex;
-    flex-direction: column;
     height: 100%;
     width: 100%;
+    overflow: auto;
+    // allow scrolling on iOS
+    -webkit-overflow-scrolling: touch;
 
     // Toolbars
 
@@ -27,7 +28,6 @@
     // Header components
 
     &__header {
-        flex-shrink: 0;
         margin-bottom: 1em;
         padding: $padding-vertical $padding-horizontal 0;
 
@@ -103,7 +103,6 @@
     // Content components
 
     &__signature-status {
-        flex-shrink: 0;
         margin-top: 0;
         margin-bottom: 0.5em;
         text-align: center;
@@ -111,7 +110,6 @@
         padding: 0 $padding-horizontal;
     }
     &__display-images {
-        flex-shrink: 0;
         margin-bottom: 0.5em;
         text-align: center;
         padding: 0 $padding-horizontal;
@@ -134,15 +132,9 @@
     }
     &__body {
         flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-        // allow scrolling on iOS
-        overflow: auto;
-        -webkit-overflow-scrolling: touch;
         padding: 0 $padding-horizontal $padding-vertical;
 
         iframe {
-            flex-grow: 1;
             border: none;
             width: 100%;
         }

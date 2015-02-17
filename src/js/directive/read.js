@@ -58,7 +58,25 @@ ngModule.directive('frameLoad', function($timeout, $window) {
 			}
 		});
 
-		$window.addEventListener('resize', scaleToFit);
+		elm.iFrameResize({
+			//log: true, // Enable console logging
+			enablePublicMethods: true, // Enable methods within iframe hosted page
+			resizedCallback: function(e) { // Callback fn when resize is received
+				console.log('iframe resized...');
+				console.log(e);
+			},
+			messageCallback: function(e) { // Callback fn when message is received
+				if (e.message.type === 'email') {
+					scope.state.writer.write({
+						from: [{
+							address: e.message.address
+						}]
+					});
+				}
+			}
+		});
+
+		//$window.addEventListener('resize', scaleToFit);
 
 		iframe.onload = function() {
 			// set listeners
@@ -79,7 +97,7 @@ ngModule.directive('frameLoad', function($timeout, $window) {
 				text: body
 			}, '*');
 
-			$timeout(scaleToFit, 0);
+			//$timeout(scaleToFit, 0);
 		}
 
 		function displayHtml(html) {
@@ -108,7 +126,7 @@ ngModule.directive('frameLoad', function($timeout, $window) {
 				};
 			}
 
-			$timeout(scaleToFit, 0);
+			//$timeout(scaleToFit, 0);
 		}
 
 		// transform scale iframe (necessary on iOS) to fit container width

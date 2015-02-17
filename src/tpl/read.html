@@ -119,9 +119,7 @@
   <!-- Render html body in sandboxed iframe -->
   <div class="read__body"
     ng-show="state.mailList.selected && (!state.mailList.selected.encrypted && (state.mailList.selected.body || state.mailList.selected.html)) || (state.mailList.selected.encrypted && state.mailList.selected.decrypted)">
-    <iframe sandbox="allow-popups allow-scripts" src="tpl/read-sandbox.html"
-      frame-load>
-    </iframe>
+    <iframe sandbox="allow-popups allow-scripts" src="tpl/read-sandbox.html" scrolling="no" frame-load></iframe>
   </div><!--/read__body-->
 
   <div class="read__action-toolbar" ng-controller="ActionBarCtrl">
