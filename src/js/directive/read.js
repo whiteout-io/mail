@@ -62,6 +62,7 @@ ngModule.directive('frameLoad', function($timeout, $window) {
             //log: true, // Enable console logging
             enablePublicMethods: true, // Enable methods within iframe hosted page
             resizedCallback: function(e) { // Callback fn when resize is received
+                $timeout(scaleToFit, 0);
                 console.log('iframe resized...');
                 console.log(e);
             },
@@ -97,7 +98,7 @@ ngModule.directive('frameLoad', function($timeout, $window) {
                 text: body
             }, '*');
 
-            //$timeout(scaleToFit, 0);
+            $timeout(scaleToFit, 0);
         }
 
         function displayHtml(html) {
@@ -126,7 +127,7 @@ ngModule.directive('frameLoad', function($timeout, $window) {
                 };
             }
 
-            //$timeout(scaleToFit, 0);
+            $timeout(scaleToFit, 0);
         }
 
         // transform scale iframe (necessary on iOS) to fit container width
