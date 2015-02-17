@@ -6,7 +6,8 @@ window.onmessage = function(e) {
 
     if (e.data.html) {
         // display html mail body
-        html = '<div class="scale-body">' + e.data.html + '</div>';
+        //html = '<div class="scale-body">' + e.data.html + '</div>';
+        html = e.data.html;
     } else if (e.data.text) {
         // diplay text mail body by with colored conversation nodes
         html = renderNodes(parseConversation(e.data.text));
@@ -26,10 +27,39 @@ window.onmessage = function(e) {
 
     document.body.innerHTML = html;
 
-    scaleToFit();
+    attachClickHandlers();
+
+    //scaleToFit();
 };
 
-window.addEventListener('resize', scaleToFit);
+//window.addEventListener('resize', scaleToFit);
+
+
+/**
+ * Send a message to the main window when email address is clicked
+ */
+function attachClickHandlers() {
+    var elements = document.getElementsByTagName('a');
+    for (var i = 0, len = elements.length; i < len; i++) {
+        elements[i].onclick = handle;
+    }
+
+    function handle(e) {
+        var text = e.target.textContent || e.target.innerText;
+        if (checkEmailAddress(text)) {
+            e.preventDefault();
+            window.parentIFrame.sendMessage({
+                type: 'email',
+                address: text
+            });
+        }
+    }
+
+    function checkEmailAddress(text) {
+        var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+        return re.test(text);
+    }
+}
 
 /**
  * Parse email body and generate conversation nodes

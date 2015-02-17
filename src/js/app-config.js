@@ -12,12 +12,24 @@ module.exports = appCfg;
  * Global app configurations
  */
 appCfg.config = {
-    cloudUrl: 'https://keys.whiteout.io',
+    keyServerUrl: 'https://keys.whiteout.io',
     hkpUrl: 'http://keyserver.ubuntu.com',
     privkeyServerUrl: 'https://keychain.whiteout.io',
     adminUrl: 'https://admin-node.whiteout.io',
     settingsUrl: 'https://settings.whiteout.io/autodiscovery/',
-    wmailDomain: 'wmail.io',
+    mailServer: {
+        domain: 'wmail.io',
+        imap: {
+            hostname: 'imap.wmail.io',
+            port: 993,
+            secure: true
+        },
+        smtp: {
+            hostname: 'smtp.wmail.io',
+            port: 465,
+            secure: true
+        }
+    },
     oauthDomains: [/\.gmail\.com$/, /\.googlemail\.com$/],
     ignoreUploadOnSentDomains: [/\.gmail\.com$/, /\.googlemail\.com$/],
     serverPrivateKeyId: 'EE342F0DDBB0F3BE',
@@ -56,7 +68,7 @@ function setConfigParams(manifest) {
     }
 
     // get key server base url
-    cfg.cloudUrl = getUrl('https://keys');
+    cfg.keyServerUrl = getUrl('https://keys');
     // get keychain server base url
     cfg.privkeyServerUrl = getUrl('https://keychain');
     // get the app version

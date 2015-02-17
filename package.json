@@ -62,6 +62,7 @@
     "grunt-string-replace": "~1.0.0",
     "grunt-svgmin": "~1.0.0",
     "grunt-svgstore": "~0.3.4",
+    "iframe-resizer": "^2.8.3",
     "imap-client": "~0.11.0",
     "jquery": "~2.1.1",
     "mailreader": "~0.4.0",
