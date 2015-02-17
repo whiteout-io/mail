@@ -14,8 +14,8 @@ fi
 
 # switch branch
 git checkout $2
-git branch release/$1
-git checkout release/$1
+git branch -D release/$1
+git checkout -b release/$1
 git merge $2 --no-edit
 
 # build and test

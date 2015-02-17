@@ -23,11 +23,32 @@
             display: none;
         }
     }
+    &__working {
+        position: relative;
+        flex-grow: 1;
+        padding: 0 $padding-horizontal;
+        & > div {
+            @include scut-vcenter-tt;
+            width: 100%;
+            text-align: center;
+            font-size: $font-size-bigger;
+
+            strong {
+                color: $color-text-light;
+                vertical-align: middle;
+            }
+        }
+    }
+    &__content {
+        flex-grow: 1;
+        overflow: auto;
+        // allow scrolling on iOS
+        -webkit-overflow-scrolling: touch;
+    }
 
     // Header components
 
     &__header {
-        flex-shrink: 0;
         margin-bottom: 1em;
         padding: $padding-vertical $padding-horizontal 0;
 
@@ -41,11 +62,24 @@
     }
     &__controls {
         display: none;
-        float: right;
-        margin-left: 1em;
-        .btn-icon-light {
+        position: absolute;
+        top: 0;
+        right: $scrollbar-width; // don't cover scrollbar
+        padding: $padding-vertical $padding-horizontal;
+        background-color: $color-white;
+        .btn-icon-light + .btn-icon-light {
             margin-left: 1.4em;
         }
+        @include respond-to(md) {
+            display: block;
+        }
+    }
+    &__controls__dummy {
+        display: none;
+        float: right;
+        // the size of the real controls
+        width: 242px;
+        height: 39px;
         @include respond-to(md) {
             display: block;
         }
@@ -103,7 +137,6 @@
     // Content components
 
     &__signature-status {
-        flex-shrink: 0;
         margin-top: 0;
         margin-bottom: 0.5em;
         text-align: center;
@@ -111,40 +144,17 @@
         padding: 0 $padding-horizontal;
     }
     &__display-images {
-        flex-shrink: 0;
         margin-bottom: 0.5em;
         text-align: center;
         padding: 0 $padding-horizontal;
     }
-    &__working {
-        position: relative;
-        flex-grow: 1;
-        padding: 0 $padding-horizontal;
-        & > div {
-            @include scut-vcenter-tt;
-            width: 100%;
-            text-align: center;
-            font-size: $font-size-bigger;
-
-            strong {
-                color: $color-text-light;
-                vertical-align: middle;
-            }
-        }
-    }
     &__body {
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-        // allow scrolling on iOS
-        overflow: auto;
-        -webkit-overflow-scrolling: touch;
         padding: 0 $padding-horizontal $padding-vertical;
+        overflow: hidden; // necessary due to iframe scaling via transitions
 
         iframe {
-            flex-grow: 1;
             border: none;
-            width: 100%;
+            min-width: 100%;
         }
     }
 
