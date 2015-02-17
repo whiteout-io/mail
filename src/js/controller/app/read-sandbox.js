@@ -27,7 +27,7 @@ window.onmessage = function(e) {
 
     document.body.innerHTML = html;
 
-    attackClickHandlers();
+    attachClickHandlers();
 
     //scaleToFit();
 };
@@ -38,7 +38,7 @@ window.onmessage = function(e) {
 /**
  * Send a message to the main window when email address is clicked
  */
-function attackClickHandlers() {
+function attachClickHandlers() {
     var elements = document.getElementsByTagName('a');
     for (var i = 0, len = elements.length; i < len; i++) {
         elements[i].onclick = handle;
