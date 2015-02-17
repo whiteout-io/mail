@@ -2,11 +2,10 @@
     $padding-horizontal: 15px;
     $padding-vertical: 10px;
 
+    display: flex;
+    flex-direction: column;
     height: 100%;
     width: 100%;
-    overflow: auto;
-    // allow scrolling on iOS
-    -webkit-overflow-scrolling: touch;
 
     // Toolbars
 
@@ -23,6 +22,28 @@
         @include respond-to(md) {
             display: none;
         }
+    }
+    &__working {
+        position: relative;
+        flex-grow: 1;
+        padding: 0 $padding-horizontal;
+        & > div {
+            @include scut-vcenter-tt;
+            width: 100%;
+            text-align: center;
+            font-size: $font-size-bigger;
+
+            strong {
+                color: $color-text-light;
+                vertical-align: middle;
+            }
+        }
+    }
+    &__content {
+        flex-grow: 1;
+        overflow: auto;
+        // allow scrolling on iOS
+        -webkit-overflow-scrolling: touch;
     }
 
     // Header components
@@ -114,24 +135,7 @@
         text-align: center;
         padding: 0 $padding-horizontal;
     }
-    &__working {
-        position: relative;
-        flex-grow: 1;
-        padding: 0 $padding-horizontal;
-        & > div {
-            @include scut-vcenter-tt;
-            width: 100%;
-            text-align: center;
-            font-size: $font-size-bigger;
-
-            strong {
-                color: $color-text-light;
-                vertical-align: middle;
-            }
-        }
-    }
     &__body {
-        flex-grow: 1;
         padding: 0 $padding-horizontal $padding-vertical;
 
         iframe {
