@@ -467,7 +467,7 @@ describe('Email DAO unit tests', function() {
                 bodyParts: message.bodyParts
             }).returns(resolves([{
                 type: 'text',
-                content: '' + cfg.cloudUrl + cfg.verificationUrl + validUuid
+                content: '' + cfg.keyServerUrl + cfg.verificationUrl + validUuid
             }]));
 
             keychainStub.verifyPublicKey.withArgs(validUuid).returns(resolves());
@@ -500,7 +500,7 @@ describe('Email DAO unit tests', function() {
                 bodyParts: message.bodyParts
             }).returns(resolves([{
                 type: 'text',
-                content: '' + cfg.cloudUrl + cfg.verificationUrl + corruptedUuid
+                content: '' + cfg.keyServerUrl + cfg.verificationUrl + corruptedUuid
             }]));
 
             localStoreStub.withArgs({
@@ -531,7 +531,7 @@ describe('Email DAO unit tests', function() {
                 bodyParts: message.bodyParts
             }).returns(resolves([{
                 type: 'text',
-                content: '' + cfg.cloudUrl + cfg.verificationUrl + validUuid
+                content: '' + cfg.keyServerUrl + cfg.verificationUrl + validUuid
             }]));
 
             keychainStub.verifyPublicKey.withArgs(validUuid).returns(rejects({}));

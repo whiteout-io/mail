@@ -5,6 +5,7 @@ var CreateAccountCtrl = function($scope, $location, $routeParams, $q, auth, admi
 
     // init phone region
     $scope.region = 'DE';
+    $scope.domain = '@' + appConfig.config.mailServer.domain;
 
     $scope.createWhiteoutAccount = function() {
         if ($scope.form.$invalid) {
@@ -19,7 +20,7 @@ var CreateAccountCtrl = function($scope, $location, $routeParams, $q, auth, admi
 
         }).then(function() {
             // read form values
-            var emailAddress = $scope.user + '@' + appConfig.config.wmailDomain;
+            var emailAddress = $scope.user + $scope.domain;
             var phone = PhoneNumber.Parse($scope.dial, $scope.region);
             if (!phone || !phone.internationalNumber) {
                 throw new Error('Invalid phone number!');
@@ -49,6 +50,15 @@ var CreateAccountCtrl = function($scope, $location, $routeParams, $q, auth, admi
             $scope.busy = false;
             $scope.errMsg = err.errMsg || err.message;
         });
+    };
+
+    $scope.loginToExisting = function() {
+        // set server config
+        $scope.state.login = {
+            mailConfig: appConfig.config.mailServer
+        };
+        // proceed to login
+        $location.path('/login-set-credentials');
     };
 };
 

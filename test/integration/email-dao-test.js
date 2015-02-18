@@ -751,7 +751,7 @@ describe('Email DAO integration tests', function() {
                     expect(message.signed).to.be.true;
                     expect(message.signaturesValid).to.be.true;
                     expect(message.attachments.length).to.equal(0);
-                    expect(message.body).to.equal(expectedBody + str.signature + config.cloudUrl + '/' + testAccount.user);
+                    expect(message.body).to.equal(expectedBody + str.signature + config.keyServerUrl + '/' + testAccount.user);
                     done();
                 });
             };
