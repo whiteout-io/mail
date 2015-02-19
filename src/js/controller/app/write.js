@@ -158,7 +158,7 @@ var WriteCtrl = function($scope, $window, $filter, $q, appConfig, auth, keychain
         if (forward) {
             $scope.subject = 'Fwd: ' + re.subject;
         } else {
-            $scope.subject = 'Re: ' + ((re.subject) ? re.subject.replace('Re: ', '') : '');
+            $scope.subject = re.subject ? 'Re: ' + re.subject.replace('Re: ', '') : '';
         }
 
         // fill text body

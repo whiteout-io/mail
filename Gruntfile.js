@@ -265,6 +265,7 @@ module.exports = function(grunt) {
                     'src/lib/angular/angular-animate.js',
                     'src/lib/ngtagsinput/ng-tags-input.min.js',
                     'node_modules/ng-infinite-scroll/build/ng-infinite-scroll.min.js',
+                    'node_modules/iframe-resizer/js/iframeResizer.min.js',
                     'src/lib/fastclick/fastclick.js',
                     'src/lib/lawnchair/lawnchair-git.js',
                     'src/lib/lawnchair/lawnchair-adapter-webkit-sqlite-git.js',
@@ -283,6 +284,7 @@ module.exports = function(grunt) {
             readSandbox: {
                 src: [
                     'node_modules/dompurify/purify.js',
+                    'node_modules/iframe-resizer/js/iframeResizer.contentWindow.min.js',
                     'src/js/controller/app/read-sandbox.js'
                 ],
                 dest: 'dist/js/read-sandbox.min.js'

@@ -5,22 +5,9 @@
 // Mixins
 
 @import "mixins/responsive";
-@import "mixins/scrollbar";
-
-@include scrollbar();
-
-html {
-    // use overflow auto and not scroll otherwise IE shows scrollbars always
-    overflow: auto;
-}
 
 body {
     margin: 0;
-}
-
-.scale-body {
-    // necessary to compute overflowing content width in JS
-    float: left;
 }
 
 .view-read-body {
