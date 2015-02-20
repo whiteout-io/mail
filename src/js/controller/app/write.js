@@ -6,7 +6,7 @@ var util = require('crypto-lib').util;
 // Controller
 //
 
-var WriteCtrl = function($scope, $window, $filter, $q, appConfig, auth, keychain, pgp, email, outbox, dialog, axe, status) {
+var WriteCtrl = function($scope, $window, $filter, $q, appConfig, auth, keychain, pgp, email, outbox, dialog, axe, status, invitation) {
 
     var str = appConfig.string;
     var cfg = appConfig.config;
@@ -52,6 +52,8 @@ var WriteCtrl = function($scope, $window, $filter, $q, appConfig, auth, keychain
         $scope.body = '';
         $scope.attachments = [];
         $scope.addressBookCache = undefined;
+        $scope.showInvite = undefined;
+        $scope.invited = [];
     }
 
     function reportBug() {
@@ -248,6 +250,9 @@ var WriteCtrl = function($scope, $window, $filter, $q, appConfig, auth, keychain
                     recipient.key = key;
                     recipient.secure = true;
                 }
+            } else {
+                // show invite dialog if no key found
+                $scope.showInvite = true;
             }
             $scope.checkSendStatus();
 
@@ -286,6 +291,7 @@ var WriteCtrl = function($scope, $window, $filter, $q, appConfig, auth, keychain
 
         // only allow sending if receviers exist
         if (numReceivers < 1) {
+            $scope.showInvite = false;
             return;
         }
 
@@ -299,6 +305,7 @@ var WriteCtrl = function($scope, $window, $filter, $q, appConfig, auth, keychain
             $scope.okToSend = true;
             $scope.sendBtnText = str.sendBtnSecure;
             $scope.sendBtnSecure = true;
+            $scope.showInvite = false;
         } else {
             // send plaintext
             $scope.okToSend = true;
@@ -313,6 +320,56 @@ var WriteCtrl = function($scope, $window, $filter, $q, appConfig, auth, keychain
 
     $scope.remove = function(attachment) {
         $scope.attachments.splice($scope.attachments.indexOf(attachment), 1);
+    };
+
+    /**
+     * Invite all users without a public key
+     */
+    $scope.invite = function() {
+        var sender = auth.emailAddress,
+            sendJobs = [],
+            invitees = [];
+
+        $scope.showInvite = false;
+
+        // get recipients with no keys
+        $scope.to.forEach(check);
+        $scope.cc.forEach(check);
+        $scope.bcc.forEach(check);
+
+        function check(recipient) {
+            if (util.validateEmailAddress(recipient.address) && !recipient.secure && $scope.invited.indexOf(recipient.address) === -1) {
+                invitees.push(recipient.address);
+            }
+        }
+
+        return $q(function(resolve) {
+            resolve();
+
+        }).then(function() {
+            invitees.forEach(function(recipientAddress) {
+                var invitationMail = invitation.createMail({
+                    sender: sender,
+                    recipient: recipientAddress
+                });
+                // send invitation mail
+                var promise = outbox.put(invitationMail).then(function() {
+                    return invitation.invite({
+                        recipient: recipientAddress,
+                        sender: sender
+                    });
+                });
+                sendJobs.push(promise);
+                // remember already invited users to prevent spamming
+                $scope.invited.push(recipientAddress);
+            });
+
+            return Promise.all(sendJobs);
+
+        }).catch(function(err) {
+            $scope.showInvite = true;
+            return dialog.error(err);
+        });
     };
 
     //

@@ -21,6 +21,33 @@
             margin-top: 0.5em;
         }
     }
+    &__invite {
+        position: relative;
+        margin-top: 1.3em;
+        border: 1px solid $color-red-light;
+
+        p {
+            color: $color-red-light;
+            margin: 0.7em 1em;
+
+            svg {
+                width: 1em;
+                height: 1em;
+                fill: $color-red-light;
+
+                // for better valignment
+                position: relative;
+                top: 0.15em;
+                margin-right: 0.3em;
+            }
+        }
+
+        .btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+        }
+    }
     &__subject {
         position: relative;
         margin-top: 1.3em;

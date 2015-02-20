@@ -62,6 +62,12 @@ Outbox.prototype.put = function(mail) {
     var self = this,
         allReaders = mail.from.concat(mail.to.concat(mail.cc.concat(mail.bcc))); // all the users that should be able to read the mail
 
+    if (mail.to.concat(mail.cc.concat(mail.bcc)).length === 0) {
+        return new Promise(function() {
+            throw new Error('Message has no recipients!');
+        });
+    }
+
     mail.publicKeysArmored = []; // gather the public keys
     mail.uid = mail.id = util.UUID(); // the mail needs a random id & uid for storage in the database
 

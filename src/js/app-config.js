@@ -12,6 +12,7 @@ module.exports = appCfg;
  * Global app configurations
  */
 appCfg.config = {
+    pgpComment: 'Whiteout Mail - https://whiteout.io',
     keyServerUrl: 'https://keys.whiteout.io',
     hkpUrl: 'http://keyserver.ubuntu.com',
     privkeyServerUrl: 'https://keychain.whiteout.io',

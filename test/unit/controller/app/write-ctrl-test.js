@@ -7,11 +7,12 @@ var WriteCtrl = require('../../../../src/js/controller/app/write'),
     Auth = require('../../../../src/js/service/auth'),
     PGP = require('../../../../src/js/crypto/pgp'),
     Status = require('../../../../src/js/util/status'),
-    Dialog = require('../../../../src/js/util/dialog');
+    Dialog = require('../../../../src/js/util/dialog'),
+    Invitation = require('../../../../src/js/service/invitation');
 
 describe('Write controller unit test', function() {
     var ctrl, scope,
-        authMock, pgpMock, dialogMock, emailMock, keychainMock, outboxMock, statusMock,
+        authMock, pgpMock, dialogMock, emailMock, keychainMock, outboxMock, statusMock, invitationMock,
         emailAddress, realname;
 
     beforeEach(function() {
@@ -23,6 +24,7 @@ describe('Write controller unit test', function() {
         emailMock = sinon.createStubInstance(Email);
         keychainMock = sinon.createStubInstance(Keychain);
         statusMock = sinon.createStubInstance(Status);
+        invitationMock = sinon.createStubInstance(Invitation);
 
         emailAddress = 'fred@foo.com';
         realname = 'Fred Foo';
@@ -43,7 +45,8 @@ describe('Write controller unit test', function() {
                 email: emailMock,
                 outbox: outboxMock,
                 dialog: dialogMock,
-                status: statusMock
+                status: statusMock,
+                invitation: invitationMock
             });
         });
     });
@@ -205,6 +208,25 @@ describe('Write controller unit test', function() {
             });
         });
 
+        it('should work for no key in keychain', function(done) {
+            var recipient = {
+                address: 'asds@example.com'
+            };
+
+            keychainMock.refreshKeyForUserId.withArgs({
+                userId: recipient.address
+            }).returns(resolves());
+
+            scope.verify(recipient).then(function() {
+                expect(recipient.key).to.be.undefined;
+                expect(recipient.secure).to.be.false;
+                expect(scope.showInvite).to.be.true;
+                expect(scope.checkSendStatus.callCount).to.equal(2);
+                expect(keychainMock.refreshKeyForUserId.calledOnce).to.be.true;
+                done();
+            });
+        });
+
         it('should work for main userId', function(done) {
             var recipient = {
                 address: 'asdf@example.com'
@@ -226,6 +248,7 @@ describe('Write controller unit test', function() {
                     userId: 'asdf@example.com'
                 });
                 expect(recipient.secure).to.be.true;
+                expect(scope.showInvite).to.be.undefined;
                 expect(scope.checkSendStatus.callCount).to.equal(2);
                 expect(keychainMock.refreshKeyForUserId.calledOnce).to.be.true;
                 done();
@@ -252,6 +275,7 @@ describe('Write controller unit test', function() {
             scope.verify(recipient).then(function() {
                 expect(recipient.key).to.deep.equal(key);
                 expect(recipient.secure).to.be.true;
+                expect(scope.showInvite).to.be.undefined;
                 expect(scope.checkSendStatus.callCount).to.equal(2);
                 expect(keychainMock.refreshKeyForUserId.calledOnce).to.be.true;
                 done();
@@ -272,6 +296,7 @@ describe('Write controller unit test', function() {
             expect(scope.okToSend).to.be.false;
             expect(scope.sendBtnText).to.be.undefined;
             expect(scope.sendBtnSecure).to.be.undefined;
+            expect(scope.showInvite).to.be.false;
         });
 
         it('should be able to send plaintext', function() {
@@ -312,6 +337,95 @@ describe('Write controller unit test', function() {
             expect(scope.okToSend).to.be.true;
             expect(scope.sendBtnText).to.equal('Send securely');
             expect(scope.sendBtnSecure).to.be.true;
+            expect(scope.showInvite).to.be.false;
+        });
+    });
+
+    describe('invite', function() {
+        beforeEach(function() {
+            scope.state.writer.write();
+        });
+
+        afterEach(function() {});
+
+        it('should not invite anyone', function(done) {
+            scope.invite().then(function() {
+                expect(scope.showInvite).to.be.false;
+                expect(outboxMock.put.called).to.be.false;
+                expect(invitationMock.invite.called).to.be.false;
+                done();
+            });
+        });
+
+        it('should work', function(done) {
+            scope.to = [{
+                address: 'asdf@asdf.de'
+            }, {
+                address: 'qwer@asdf.de'
+            }];
+
+            outboxMock.put.returns(resolves());
+            invitationMock.invite.returns(resolves());
+
+            scope.invite().then(function() {
+                expect(scope.showInvite).to.be.false;
+                expect(outboxMock.put.callCount).to.equal(2);
+                expect(invitationMock.invite.callCount).to.equal(2);
+                done();
+            });
+        });
+
+        it('should work for one already invited', function(done) {
+            scope.to = [{
+                address: 'asdf@asdf.de'
+            }, {
+                address: 'qwer@asdf.de'
+            }];
+            scope.invited.push('asdf@asdf.de');
+
+            outboxMock.put.returns(resolves());
+            invitationMock.invite.returns(resolves());
+
+            scope.invite().then(function() {
+                expect(scope.showInvite).to.be.false;
+                expect(outboxMock.put.callCount).to.equal(1);
+                expect(invitationMock.invite.callCount).to.equal(1);
+                done();
+            });
+        });
+
+        it('should fail due to error in outbox.put', function(done) {
+            scope.to = [{
+                address: 'asdf@asdf.de'
+            }];
+
+            outboxMock.put.returns(rejects(new Error('Peng')));
+            invitationMock.invite.returns(resolves());
+
+            scope.invite().then(function() {
+                expect(dialogMock.error.calledOnce).to.be.true;
+                expect(scope.showInvite).to.be.true;
+                expect(outboxMock.put.callCount).to.equal(1);
+                expect(invitationMock.invite.callCount).to.equal(0);
+                done();
+            });
+        });
+
+        it('should fail due to error in invitation.invite', function(done) {
+            scope.to = [{
+                address: 'asdf@asdf.de'
+            }];
+
+            outboxMock.put.returns(resolves());
+            invitationMock.invite.returns(rejects(new Error('Peng')));
+
+            scope.invite().then(function() {
+                expect(dialogMock.error.calledOnce).to.be.true;
+                expect(scope.showInvite).to.be.true;
+                expect(outboxMock.put.callCount).to.equal(1);
+                expect(invitationMock.invite.callCount).to.equal(1);
+                done();
+            });
         });
     });
 
