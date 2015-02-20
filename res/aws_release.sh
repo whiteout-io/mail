@@ -1,8 +1,5 @@
 #!/bin/sh
 
-# abort if tests fail
-set -e
-
 # go to root
 cd `dirname $0`
 cd ..
@@ -17,6 +14,9 @@ git checkout $2
 git branch -D release/$1
 git checkout -b release/$1
 git merge $2 --no-edit
+
+# abort if tests fail
+set -e
 
 # build and test
 rm -rf node_modules/
