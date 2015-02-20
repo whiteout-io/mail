@@ -3,6 +3,7 @@
 var PGP = require('../../../../src/js/crypto/pgp'),
     LoginNewDeviceCtrl = require('../../../../src/js/controller/login/login-new-device'),
     KeychainDAO = require('../../../../src/js/service/keychain'),
+    PublicKeyVerifier = require('../../../../src/js/service/publickey-verifier'),
     EmailDAO = require('../../../../src/js/email/email'),
     Auth = require('../../../../src/js/service/auth');
 
@@ -11,11 +12,14 @@ describe('Login (new device) Controller unit test', function() {
         emailAddress = 'fred@foo.com',
         passphrase = 'asd',
         keyId,
-        keychainMock;
+        location,
+        keychainMock,
+        verifierMock;
 
     beforeEach(function() {
         emailMock = sinon.createStubInstance(EmailDAO);
         authMock = sinon.createStubInstance(Auth);
+        verifierMock = sinon.createStubInstance(PublicKeyVerifier);
 
         keyId = '9FEB47936E712926';
         keychainMock = sinon.createStubInstance(KeychainDAO);
@@ -26,8 +30,10 @@ describe('Login (new device) Controller unit test', function() {
 
         angular.module('loginnewdevicetest', ['woServices']);
         angular.mock.module('loginnewdevicetest');
-        angular.mock.inject(function($rootScope, $controller) {
+        angular.mock.inject(function($rootScope, $location, $controller) {
             scope = $rootScope.$new();
+            location = $location;
+
             scope.state = {
                 ui: {}
             };
@@ -39,6 +45,7 @@ describe('Login (new device) Controller unit test', function() {
                 email: emailMock,
                 auth: authMock,
                 pgp: pgpMock,
+                publickeyVerifier: verifierMock,
                 keychain: keychainMock
             });
         });
@@ -69,12 +76,13 @@ describe('Login (new device) Controller unit test', function() {
                 _id: keyId,
                 publicKey: 'a'
             }));
-            emailMock.unlock.withArgs(sinon.match.any, passphrase).returns(resolves());
+            emailMock.unlock.returns(resolves('asd'));
             keychainMock.putUserKeyPair.returns(resolves());
 
             scope.confirmPassphrase().then(function() {
                 expect(emailMock.unlock.calledOnce).to.be.true;
                 expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
+                expect(location.$$path).to.equal('/account');
                 done();
             });
         });
@@ -92,12 +100,14 @@ describe('Login (new device) Controller unit test', function() {
             });
 
             keychainMock.getUserKeyPair.withArgs(emailAddress).returns(resolves());
-            emailMock.unlock.withArgs(sinon.match.any, passphrase).returns(resolves());
+            keychainMock.uploadPublicKey.returns(resolves());
+            emailMock.unlock.returns(resolves('asd'));
             keychainMock.putUserKeyPair.returns(resolves());
 
             scope.confirmPassphrase().then(function() {
                 expect(emailMock.unlock.calledOnce).to.be.true;
                 expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
+                expect(location.$$path).to.equal('/login-verify-public-key');
                 done();
             });
         });

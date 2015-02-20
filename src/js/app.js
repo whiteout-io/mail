@@ -68,6 +68,10 @@ app.config(function($routeProvider, $animateProvider) {
         templateUrl: 'tpl/login-set-credentials.html',
         controller: require('./controller/login/login-set-credentials')
     });
+    $routeProvider.when('/login-verify-public-key', {
+        templateUrl: 'tpl/login-verify-public-key.html',
+        controller: require('./controller/login/login-verify-public-key')
+    });
     $routeProvider.when('/login-existing', {
         templateUrl: 'tpl/login-existing.html',
         controller: require('./controller/login/login-existing')

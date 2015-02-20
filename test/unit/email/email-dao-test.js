@@ -216,7 +216,6 @@ describe('Email DAO unit tests', function() {
                 privateKeyArmored: mockKeyPair.privateKey.encryptedKey,
                 publicKeyArmored: mockKeyPair.publicKey.publicKey
             }).returns(resolves());
-            keychainStub.putUserKeyPair.withArgs().returns(resolves());
 
             dao.unlock({
                 realname: name,
@@ -224,30 +223,6 @@ describe('Email DAO unit tests', function() {
             }).then(function() {
                 expect(pgpStub.generateKeys.calledOnce).to.be.true;
                 expect(pgpStub.importKeys.calledOnce).to.be.true;
-                expect(keychainStub.putUserKeyPair.calledOnce).to.be.true;
-
-                done();
-            });
-        });
-
-        it('should fail when persisting fails', function(done) {
-            var keypair = {
-                keyId: 123,
-                publicKeyArmored: 'qwerty',
-                privateKeyArmored: 'asdfgh'
-            };
-            pgpStub.generateKeys.returns(resolves(keypair));
-            pgpStub.importKeys.withArgs().returns(resolves());
-            keychainStub.putUserKeyPair.returns(rejects({}));
-
-            dao.unlock({
-                passphrase: passphrase
-            }).catch(function(err) {
-                expect(err).to.exist;
-
-                expect(pgpStub.generateKeys.calledOnce).to.be.true;
-                expect(pgpStub.importKeys.calledOnce).to.be.true;
-                expect(keychainStub.putUserKeyPair.calledOnce).to.be.true;
 
                 done();
             });
@@ -387,7 +362,7 @@ describe('Email DAO unit tests', function() {
 
     describe('#fetchMessages', function() {
         var imapListStub, imapGetStub, imapDeleteStub, localStoreStub;
-        var opts, message, validUuid, corruptedUuid, verificationSubject;
+        var opts, message;
         var notified;
 
         beforeEach(function() {
@@ -407,9 +382,6 @@ describe('Email DAO unit tests', function() {
                 unread: true,
                 bodyParts: []
             };
-            validUuid = '9A858952-17EE-4273-9E74-D309EAFDFAFB';
-            corruptedUuid = 'OMFG_FUCKING_BASTARD_UUID_FROM_HELL!';
-            verificationSubject = "[whiteout] New public key uploaded";
 
             notified = false;
             dao.onIncomingMessage = function(newMessages) {
@@ -452,103 +424,6 @@ describe('Email DAO unit tests', function() {
                 expect(localStoreStub.calledOnce).to.be.true;
                 expect(imapListStub.calledOnce).to.be.true;
 
-                done();
-            });
-        });
-
-        it('should verify verification mails', function(done) {
-            message.subject = verificationSubject;
-
-            imapListStub.withArgs(opts).returns(resolves([message]));
-
-            imapGetStub.withArgs({
-                folder: inboxFolder,
-                uid: message.uid,
-                bodyParts: message.bodyParts
-            }).returns(resolves([{
-                type: 'text',
-                content: '' + cfg.keyServerUrl + cfg.verificationUrl + validUuid
-            }]));
-
-            keychainStub.verifyPublicKey.withArgs(validUuid).returns(resolves());
-
-            imapDeleteStub.withArgs({
-                folder: inboxFolder,
-                uid: message.uid
-            }).returns(resolves());
-
-            dao.fetchMessages(opts).then(function() {
-                expect(inboxFolder.messages).to.not.contain(message);
-                expect(notified).to.be.false;
-                expect(imapListStub.calledOnce).to.be.true;
-                expect(imapGetStub.calledOnce).to.be.true;
-                expect(keychainStub.verifyPublicKey.calledOnce).to.be.true;
-                expect(imapDeleteStub.calledOnce).to.be.true;
-                expect(localStoreStub.called).to.be.false;
-                done();
-            });
-        });
-
-        it('should not verify invalid verification mails', function(done) {
-            message.subject = verificationSubject;
-
-            imapListStub.withArgs(opts).returns(resolves([message]));
-
-            imapGetStub.withArgs({
-                folder: inboxFolder,
-                uid: message.uid,
-                bodyParts: message.bodyParts
-            }).returns(resolves([{
-                type: 'text',
-                content: '' + cfg.keyServerUrl + cfg.verificationUrl + corruptedUuid
-            }]));
-
-            localStoreStub.withArgs({
-                folder: inboxFolder,
-                emails: [message]
-            }).returns(resolves());
-
-            dao.fetchMessages(opts).then(function() {
-                expect(inboxFolder.messages).to.contain(message);
-                expect(notified).to.be.true;
-                expect(imapListStub.calledOnce).to.be.true;
-                expect(imapGetStub.calledOnce).to.be.true;
-                expect(keychainStub.verifyPublicKey.called).to.be.false;
-                expect(imapDeleteStub.called).to.be.false;
-                expect(localStoreStub.calledOnce).to.be.true;
-                done();
-            });
-        });
-
-        it('should display verification mail when verification failed', function(done) {
-            message.subject = verificationSubject;
-
-            imapListStub.withArgs(opts).returns(resolves([message]));
-
-            imapGetStub.withArgs({
-                folder: inboxFolder,
-                uid: message.uid,
-                bodyParts: message.bodyParts
-            }).returns(resolves([{
-                type: 'text',
-                content: '' + cfg.keyServerUrl + cfg.verificationUrl + validUuid
-            }]));
-
-            keychainStub.verifyPublicKey.withArgs(validUuid).returns(rejects({}));
-
-            localStoreStub.withArgs({
-                folder: inboxFolder,
-                emails: [message]
-            }).returns(resolves());
-
-            dao.fetchMessages(opts).then(function() {
-                expect(inboxFolder.messages).to.contain(message);
-                expect(notified).to.be.true;
-                expect(imapListStub.calledOnce).to.be.true;
-                expect(imapGetStub.calledOnce).to.be.true;
-                expect(keychainStub.verifyPublicKey.calledOnce).to.be.true;
-                expect(imapDeleteStub.called).to.be.false;
-                expect(localStoreStub.calledOnce).to.be.true;
                 done();
             });
         });

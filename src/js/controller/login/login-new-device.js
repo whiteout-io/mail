@@ -1,6 +1,6 @@
 'use strict';
 
-var LoginExistingCtrl = function($scope, $location, $routeParams, $q, email, auth, pgp, keychain) {
+var LoginExistingCtrl = function($scope, $location, $routeParams, $q, email, auth, pgp, keychain, publickeyVerifier) {
     !$routeParams.dev && !auth.isInitialized() && $location.path('/'); // init app
 
     $scope.incorrect = false;
@@ -12,6 +12,7 @@ var LoginExistingCtrl = function($scope, $location, $routeParams, $q, email, aut
         }
 
         var userId = auth.emailAddress,
+            pubKeyNeedsVerification = false,
             keypair;
 
         return $q(function(resolve) {
@@ -61,6 +62,7 @@ var LoginExistingCtrl = function($scope, $location, $routeParams, $q, email, aut
                     userIds: pubKeyParams.userIds,
                     publicKey: $scope.key.publicKeyArmored
                 };
+                pubKeyNeedsVerification = true; // this public key needs to be authenticated
             }
 
             // import and validate keypair
@@ -72,17 +74,21 @@ var LoginExistingCtrl = function($scope, $location, $routeParams, $q, email, aut
                 throw err;
             });
 
-        }).then(function() {
-            // perist keys locally
-            return keychain.putUserKeyPair(keypair);
+        }).then(function(keypair) {
+            if (!pubKeyNeedsVerification) {
+                // persist credentials and key and go to main account screen
+                return keychain.putUserKeyPair(keypair).then(function() {
+                    return auth.storeCredentials();
+                }).then(function() {
+                    $location.path('/account');
+                });
+            }
 
-        }).then(function() {
-            // persist credentials locally
-            return auth.storeCredentials();
-
-        }).then(function() {
-            // go to main account screen
-            $location.path('/account');
+            // go to public key verification
+            publickeyVerifier.keypair = keypair;
+            return keychain.uploadPublicKey(keypair.publicKey).then(function() {
+                $location.path('/login-verify-public-key');
+            });
 
         }).catch(displayError);
     };

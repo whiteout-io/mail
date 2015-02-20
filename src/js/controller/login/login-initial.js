@@ -1,6 +1,6 @@
 'use strict';
 
-var LoginInitialCtrl = function($scope, $location, $routeParams, $q, newsletter, email, auth) {
+var LoginInitialCtrl = function($scope, $location, $routeParams, $q, newsletter, email, auth, publickeyVerifier) {
     !$routeParams.dev && !auth.isInitialized() && $location.path('/'); // init app
 
     var emailAddress = auth.emailAddress;
@@ -60,13 +60,10 @@ var LoginInitialCtrl = function($scope, $location, $routeParams, $q, newsletter,
                 passphrase: undefined
             });
 
-        }).then(function() {
-            // persist credentials locally
-            return auth.storeCredentials();
-
-        }).then(function() {
-            // go to main account screen
-            $location.path('/account');
+        }).then(function(keypair) {
+            // go to public key verification
+            publickeyVerifier.keypair = keypair;
+            $location.path('/login-verify-public-key');
 
         }).catch(displayError);
     };
