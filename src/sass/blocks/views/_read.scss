@@ -67,7 +67,7 @@
         right: $scrollbar-width; // don't cover scrollbar
         padding: $padding-vertical $padding-horizontal;
         background-color: $color-white;
-        z-index: 9999; // places the buttons on top of the content
+        z-index: 999; // places the buttons on top of the content
         .btn-icon-light + .btn-icon-light {
             margin-left: 1.4em;
         }
