@@ -148,22 +148,6 @@ describe('Login Controller unit test', function() {
         });
     });
 
-    it('should fail for keychain.requestPrivateKeyDownload', function(done) {
-        authMock.init.returns(resolves());
-        authMock.getEmailAddress.returns(resolves({
-            emailAddress: emailAddress
-        }));
-        accountMock.init.returns(resolves({
-            publicKey: 'publicKey'
-        }));
-        keychainMock.requestPrivateKeyDownload.returns(rejects(new Error()));
-
-        scope.init().then(function() {
-            expect(dialogMock.error.calledOnce).to.be.true;
-            done();
-        });
-    });
-
     it('should redirect to /login-privatekey-download', function(done) {
         authMock.init.returns(resolves());
         authMock.getEmailAddress.returns(resolves({
@@ -172,27 +156,9 @@ describe('Login Controller unit test', function() {
         accountMock.init.returns(resolves({
             publicKey: 'publicKey'
         }));
-        keychainMock.requestPrivateKeyDownload.returns(resolves(true));
 
         scope.init().then(function() {
             expect(goToStub.withArgs('/login-privatekey-download').called).to.be.true;
-            expect(goToStub.calledOnce).to.be.true;
-            done();
-        });
-    });
-
-    it('should redirect to /login-new-device', function(done) {
-        authMock.init.returns(resolves());
-        authMock.getEmailAddress.returns(resolves({
-            emailAddress: emailAddress
-        }));
-        accountMock.init.returns(resolves({
-            publicKey: 'publicKey'
-        }));
-        keychainMock.requestPrivateKeyDownload.returns(resolves());
-
-        scope.init().then(function() {
-            expect(goToStub.withArgs('/login-new-device').called).to.be.true;
             expect(goToStub.calledOnce).to.be.true;
             done();
         });

@@ -5,10 +5,9 @@
     </header>
     <main class="page__main">
       <div ng-show="state.ui === 1">
-        <h2 class="typo-title">PGP key</h2>
+        <h2 class="typo-title">Setup encryption key</h2>
         <p class="typo-paragraph">
-          You can either import an existing PGP key or generate a new one.
-          Your private key remains on your device and is not sent to our servers.
+          Generate a new encryption key. Your key belongs to you and only you can read encrypted messages.
         </p>
 
         <form class="form" name="form">
@@ -31,13 +30,17 @@
               Stay up to date on Whiteout Networks products and important announcements.
             </label>
           </div>
+
           <div class="form__row">
             <button type="submit" ng-click="generateKey()" class="btn" tabindex="3">Generate new key</button>
           </div>
-          <div class="form__row">
-            <button type="button" ng-click="importKey()" class="btn btn--secondary">Import existing key</button>
-          </div>
         </form>
+
+        <p class="typo-paragraph">
+          <a href="#" wo-touch="$event.preventDefault(); importKey()">
+            Or import an existing PGP key
+          </a>
+        </p>
       </div>
 
       <div ng-show="state.ui === 2">

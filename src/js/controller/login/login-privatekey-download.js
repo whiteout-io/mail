@@ -1,20 +1,19 @@
 'use strict';
 
-var LoginPrivateKeyDownloadCtrl = function($scope, $location, $routeParams, $q, auth, email, keychain) {
+var LoginPrivateKeyDownloadCtrl = function($scope, $location, $routeParams, $q, auth, email, privateKey, keychain) {
     !$routeParams.dev && !auth.isInitialized() && $location.path('/'); // init app
 
-    $scope.step = 1;
-
     //
-    // Token
+    // scope functions
     //
 
-    $scope.checkToken = function() {
-        if ($scope.tokenForm.$invalid) {
-            $scope.errMsg = 'Please enter a valid recovery token!';
+    $scope.checkCode = function() {
+        if ($scope.form.$invalid) {
+            $scope.errMsg = 'Please fill out all required fields!';
             return;
         }
 
+        var cachedKeypair;
         var userId = auth.emailAddress;
 
         return $q(function(resolve) {
@@ -23,63 +22,50 @@ var LoginPrivateKeyDownloadCtrl = function($scope, $location, $routeParams, $q, 
             resolve();
 
         }).then(function() {
+            // login to imap
+            return privateKey.init();
+
+        }).then(function() {
             // get public key id for reference
             return keychain.getUserKeyPair(userId);
 
         }).then(function(keypair) {
             // remember for storage later
-            $scope.cachedKeypair = keypair;
-            return keychain.downloadPrivateKey({
+            cachedKeypair = keypair;
+            return privateKey.download({
                 userId: userId,
-                keyId: keypair.publicKey._id,
-                recoveryToken: $scope.recoveryToken.toUpperCase()
+                keyId: keypair.publicKey._id
             });
 
-        }).then(function(encryptedPrivateKey) {
-            $scope.encryptedPrivateKey = encryptedPrivateKey;
-            $scope.busy = false;
-            $scope.step++;
+        }).then(function(encryptedKey) {
+            // set decryption code
+            encryptedKey.code = $scope.code.toUpperCase();
+            // decrypt the downloaded encrypted private key
+            return privateKey.decrypt(encryptedKey);
 
-        }).catch(displayError);
-    };
-
-    //
-    // Keychain code
-    //
-
-    $scope.checkCode = function() {
-        if ($scope.codeForm.$invalid) {
-            $scope.errMsg = 'Please fill out all required fields!';
-            return;
-        }
-
-        var options = $scope.encryptedPrivateKey;
-        options.code = $scope.code.toUpperCase();
-
-        return $q(function(resolve) {
-            $scope.busy = true;
-            $scope.errMsg = undefined;
-            resolve();
+        }).then(function(privkey) {
+            // add private key to cached keypair object
+            cachedKeypair.privateKey = privkey;
+            // store the decrypted private key locally
+            return keychain.putUserKeyPair(cachedKeypair);
 
         }).then(function() {
-            return keychain.decryptAndStorePrivateKeyLocally(options);
-
-        }).then(function(privateKey) {
-            // add private key to cached keypair object
-            $scope.cachedKeypair.privateKey = privateKey;
             // try empty passphrase
             return email.unlock({
-                keypair: $scope.cachedKeypair,
+                keypair: cachedKeypair,
                 passphrase: undefined
-            }).catch(function(err) {
+            }).catch(function() {
                 // passphrase incorrct ... go to passphrase login screen
                 $scope.goTo('/login-existing');
-                throw err;
             });
 
         }).then(function() {
             // passphrase is corrent ...
             return auth.storeCredentials();
+
+        }).then(function() {
+            // logout of imap
+            return privateKey.destroy();
 
         }).then(function() {
             // continue to main app

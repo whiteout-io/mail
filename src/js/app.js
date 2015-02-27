@@ -68,6 +68,10 @@ app.config(function($routeProvider, $animateProvider) {
         templateUrl: 'tpl/login-set-credentials.html',
         controller: require('./controller/login/login-set-credentials')
     });
+    $routeProvider.when('/login-privatekey-upload', {
+        templateUrl: 'tpl/login-privatekey-upload.html',
+        controller: require('./controller/login/login-privatekey-upload')
+    });
     $routeProvider.when('/login-verify-public-key', {
         templateUrl: 'tpl/login-verify-public-key.html',
         controller: require('./controller/login/login-verify-public-key')
@@ -114,7 +118,6 @@ app.controller('WriteCtrl', require('./controller/app/write'));
 app.controller('MailListCtrl', require('./controller/app/mail-list'));
 app.controller('AccountCtrl', require('./controller/app/account'));
 app.controller('SetPassphraseCtrl', require('./controller/app/set-passphrase'));
-app.controller('PrivateKeyUploadCtrl', require('./controller/app/privatekey-upload'));
 app.controller('PublicKeyImportCtrl', require('./controller/app/publickey-import'));
 app.controller('ContactsCtrl', require('./controller/app/contacts'));
 app.controller('AboutCtrl', require('./controller/app/about'));

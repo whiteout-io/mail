@@ -32,6 +32,14 @@
         }
     }
 
+    .toolbar {
+        .toolbar__label {
+            @include respond-to(xs-only) {
+                padding-left: 0;
+            }
+        }
+    }
+
     &__main {
         flex-grow: 1;
         margin: 0 auto 20px;

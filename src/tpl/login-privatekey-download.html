@@ -5,59 +5,29 @@
     </header>
     <main class="page__main">
 
-      <div ng-show="step === 1">
-        <h2 class="typo-title">Key sync</h2>
-        <p class="typo-paragraph">We have sent you an email containing a recovery token. Please copy and paste the token below to download your key.</p>
-        <form class="form" name="tokenForm">
-          <p class="form__error-message" ng-show="errMsg">{{errMsg}}</p>
+      <h2 class="typo-title">Enter backup code</h2>
+      <p class="typo-paragraph">Please enter the backup code you wrote down during setup to read encrypted messages on this device.</p>
+      <form class="form" name="form">
+        <p class="form__error-message" ng-show="errMsg">{{errMsg}}</p>
 
-          <div class="form__row">
-            <input type="text" class="input-text input-text--big" ng-class="{'input-text--error':incorrect}"
-              size="6" maxlength="6" ng-model="recoveryToken" placeholder="Token" wo-focus-me="step === 1" pattern="([a-zA-Z0-9]*)" required>
-          </div>
-          <div class="spinner-block" ng-show="busy">
-            <span class="spinner spinner--big"></span>
-          </div>
-          <div class="form__row">
-            <button class="btn btn--big" type="submit" ng-click="checkToken()">Confirm token</button>
-          </div>
-        </form>
+        <div class="form__row">
+          <input type="text" class="input-text" ng-model="code" wo-input-code
+            required pattern="([a-zA-Z0-9\-]*)" placeholder="0000-0000-0000-0000-0000-0000"
+            autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        </div>
+        <div class="spinner-block" ng-show="busy">
+          <span class="spinner spinner--big"></span>
+        </div>
+        <div class="form__row">
+          <button class="btn btn--big" type="submit" ng-click="checkCode()">Confirm code</button>
+        </div>
+      </form>
 
-        <form class="form">
-          <fieldset class="form-fieldset">
-            <legend>Got USB?</legend>
-            <p class="typo-paragraph">
-              You can also import the key file manually if you're on a device with USB access and your key is on a flash drive.
-            </p>
-          </fieldset>
-          <div class="form__row">
-            <a class="btn btn--secondary" href="#login-new-device">Import key file</a>
-          </div>
-        </form>
-      </div>
-
-      <div ng-show="step === 2">
-        <h2 class="typo-title">Key sync</h2>
-        <p class="typo-paragraph">Please enter the keychain code you wrote down during sync setup.</p>
-        <form class="form" name="codeForm">
-          <p class="form__error-message" ng-show="errMsg">{{errMsg}}</p>
-
-          <div class="form__row">
-            <input type="text" class="input-text" ng-model="code" wo-input-code wo-focus-me="step === 2"
-              required pattern="([a-zA-Z0-9\-]*)" placeholder="0000-0000-0000-0000-0000-0000"
-              autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-          </div>
-          <div class="spinner-block" ng-show="busy">
-            <span class="spinner spinner--big"></span>
-          </div>
-          <div class="form__row">
-            <button class="btn" type="submit" ng-click="checkCode()">Complete sync</button>
-          </div>
-        </form>
-        <p class="typo-paragraph">
-          <a href="https://whiteout.io/revocation.html" title="Click here to reset your account." target="_blank">Lost your keychain code?</a>
-        </p>
-      </div>
+      <p class="typo-paragraph">
+        <a href="#login-new-device">
+          Or import PGP key as file
+        </a>
+      </p>
 
     </main>
     <div ng-include="'tpl/page-footer.html'"></div>

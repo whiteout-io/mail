@@ -61,9 +61,9 @@ var LoginInitialCtrl = function($scope, $location, $routeParams, $q, newsletter,
             });
 
         }).then(function(keypair) {
-            // go to public key verification
+            // remember keypair for storing after public key verification
             publickeyVerifier.keypair = keypair;
-            $location.path('/login-verify-public-key');
+            $location.path('/login-privatekey-upload');
 
         }).catch(displayError);
     };

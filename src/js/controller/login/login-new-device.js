@@ -5,6 +5,13 @@ var LoginExistingCtrl = function($scope, $location, $routeParams, $q, email, aut
 
     $scope.incorrect = false;
 
+    $scope.pasteKey = function(pasted) {
+        var index = pasted.indexOf('-----BEGIN PGP PRIVATE KEY BLOCK-----');
+        $scope.key = {
+            privateKeyArmored: pasted.substring(index, pasted.length).trim()
+        };
+    };
+
     $scope.confirmPassphrase = function() {
         if ($scope.form.$invalid || !$scope.key) {
             $scope.errMsg = 'Please fill out all required fields!';
@@ -84,11 +91,10 @@ var LoginExistingCtrl = function($scope, $location, $routeParams, $q, email, aut
                 });
             }
 
-            // go to public key verification
+            // remember keypair for public key verification
             publickeyVerifier.keypair = keypair;
-            return keychain.uploadPublicKey(keypair.publicKey).then(function() {
-                $location.path('/login-verify-public-key');
-            });
+            // upload private key and then go to public key verification
+            $location.path('/login-privatekey-upload');
 
         }).catch(displayError);
     };
