@@ -9,15 +9,15 @@
       <form class="form" name="form">
         <p class="form__error-message" ng-show="errMsg">{{errMsg}}</p>
         <div class="form__row">
+          <input class="input-text" type="text" ng-model="realname" placeholder="Full name (optional)" tabindex="2">
+        </div>
+        <div class="form__row">
           <div class="input-email-fixed-domain">
             <input class="input-text" ng-model="user" required type="text" tabindex="1"
               pattern='[a-zA-Z0-9\.]+' placeholder="User name"
               autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
             <span>{{domain}}</span>
           </div>
-        </div>
-        <div class="form__row">
-          <input class="input-text" type="text" ng-model="realname" placeholder="Full name (optional)" tabindex="2">
         </div>
         <div class="form__row form__row--multi">
           <div class="form__col">
