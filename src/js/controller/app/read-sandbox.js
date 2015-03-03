@@ -27,6 +27,7 @@ window.onmessage = function(e) {
     document.body.innerHTML = html;
 
     attachClickHandlers();
+    attachKeyPressHandlers();
 };
 
 /**
@@ -53,6 +54,18 @@ function attachClickHandlers() {
         var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
         return re.test(text);
     }
+}
+
+function attachKeyPressHandlers() {
+    window.onkeydown = function(e) {
+        e.preventDefault();
+        window.parentIFrame.sendMessage({
+            type: 'keydown',
+            keyCode: e.keyCode,
+            ctrlKey: e.ctrlKey,
+            metaKey: e.metaKey,
+        });
+    };
 }
 
 /**
