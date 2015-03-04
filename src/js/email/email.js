@@ -1017,6 +1017,13 @@ Email.prototype.encrypt = function(options) {
 Email.prototype.onConnect = function(imap) {
     var self = this;
 
+    if (!self.isOnline()) {
+        // don't try to connect when navigator is offline
+        return new Promise(function(resolve) {
+            resolve();
+        });
+    }
+
     self._account.loggingIn = true;
 
     // init imap/smtp clients

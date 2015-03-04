@@ -1956,6 +1956,7 @@ describe('Email DAO unit tests', function() {
 
             beforeEach(function() {
                 initFoldersStub = sinon.stub(dao, '_initFoldersFromImap');
+                sinon.stub(dao, 'isOnline');
                 delete dao._imapClient;
 
                 credentials = {
@@ -1968,6 +1969,7 @@ describe('Email DAO unit tests', function() {
                     uid: 123,
                     modseq: '123'
                 }];
+                dao.isOnline.returns(true);
                 authStub.getCredentials.returns(resolves(credentials));
                 imapClientStub.login.returns(resolves());
                 imapClientStub.selectMailbox.returns(resolves());
@@ -1986,6 +1988,16 @@ describe('Email DAO unit tests', function() {
                             highestModseq: '123'
                         }
                     });
+
+                    done();
+                });
+            });
+
+            it('should not connect when user agent is offline', function(done) {
+                dao.isOnline.returns(false);
+
+                dao.onConnect(imapClientStub).then(function() {
+                    expect(authStub.getCredentials.called).to.be.false;
 
                     done();
                 });

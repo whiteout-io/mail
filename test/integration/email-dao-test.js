@@ -293,6 +293,7 @@ describe('Email DAO integration tests', function() {
                             passphrase: testAccount.pass,
                             keypair: mockKeyPair
                         }).then(function() {
+                            sinon.stub(accountService._emailDao, 'isOnline').returns(true);
                             accountService._emailDao.onConnect(imapClient);
                         });
                     });
