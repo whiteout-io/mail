@@ -86,7 +86,7 @@ ngModule.directive('frameLoad', function($window) {
                     ev.keyCode = e.message.keyCode,
                     ev.ctrlKey = e.message.ctrlKey,
                     ev.metaKey = e.message.metaKey,
-                    window.dispatchEvent(evt);
+                    window.dispatchEvent(ev);
                 }
             }
         });
