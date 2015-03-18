@@ -31,7 +31,6 @@
     "express": "^4.8.3",
     "morgan": "^1.2.3",
     "npmlog": "^0.1.1",
-    "openpgp": "^1.0.0",
     "socket.io": "^1.0.6"
   },
   "devDependencies": {
@@ -68,6 +67,7 @@
     "mailreader": "~0.4.0",
     "mocha": "^1.21.4",
     "ng-infinite-scroll": "~1.1.2",
+    "openpgp": "^1.0.0",
     "pgpbuilder": "~0.6.0",
     "pgpmailer": "~0.9.0",
     "sinon": "~1.7.3",
