@@ -29,6 +29,10 @@ We take the privacy of your data very seriously. Here are some of the technical 
 
 * The app can also be used from any modern web browser in environments where installing an app is not possible (e.g. a locked down corporate desktop). The IMAP/SMTP TLS sessions are still terminated in the user's browser using JS crypto ([Forge](https://github.com/digitalbazaar/forge)), but the encrypted TLS payload is proxied via [socket.io](http://socket.io/), due to the lack of raw sockets in the browser. **Please keep in mind that this mode of operation is not as secure as using the signed packaged app, since users must trust the webserver to deliver the correct code. This mode will still protect user against passive attacks like wiretapping (since PGP and TLS are still applied in the user's browser), but not against active attacks from the webserver. So it's best to decide which threat model applies to you.**
 
+### Architecture
+
+![client architecture](https://whiteout.io/img/app_layers.png)
+
 ### Reporting bugs and feature requests
 
 * We will launch a bug bounty program later on for independent security researchers. If you find any security vulnerabilities, don't hesitate to contact us [security@whiteout.io](mailto:security@whiteout.io).
