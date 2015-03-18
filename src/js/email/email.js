@@ -122,7 +122,7 @@ Email.prototype.unlock = function(options) {
 
     }).then(function() {
         // persist newly generated keypair
-        var newKeypair = {
+        return {
             publicKey: {
                 _id: generatedKeypair.keyId,
                 userId: self._account.emailAddress,
@@ -134,8 +134,6 @@ Email.prototype.unlock = function(options) {
                 encryptedKey: generatedKeypair.privateKeyArmored
             }
         };
-
-        return self._keychain.putUserKeyPair(newKeypair);
 
     }).then(setPrivateKey);
 
@@ -160,6 +158,7 @@ Email.prototype.unlock = function(options) {
             if (!matchingPrivUserId || !matchingPubUserId || keypair.privateKey.userId !== self._account.emailAddress || keypair.publicKey.userId !== self._account.emailAddress) {
                 throw new Error('User IDs dont match!');
             }
+
             resolve();
 
         }).then(function() {
@@ -168,14 +167,17 @@ Email.prototype.unlock = function(options) {
                 passphrase: options.passphrase,
                 privateKeyArmored: keypair.privateKey.encryptedKey,
                 publicKeyArmored: keypair.publicKey.publicKey
+            }).then(function() {
+                return keypair;
             });
 
         }).then(setPrivateKey);
     }
 
-    function setPrivateKey() {
+    function setPrivateKey(keypair) {
         // set decrypted privateKey to pgpMailer
         self._pgpbuilder._privateKey = self._pgp._privateKey;
+        return keypair;
     }
 };
 
@@ -259,15 +261,11 @@ Email.prototype.refreshFolder = function(options) {
 /**
  * Fetches a message's headers from IMAP.
  *
- * NB! If we fetch a message whose subject line correspond's to that of a verification message,
- * we try to verify that, and if that worked, we delete the verified message from IMAP.
- *
  * @param {Object} options.folder The folder for which to fetch the message
  */
 Email.prototype.fetchMessages = function(options) {
     var self = this,
-        folder = options.folder,
-        messages;
+        folder = options.folder;
 
     self.busy();
 
@@ -279,42 +277,18 @@ Email.prototype.fetchMessages = function(options) {
         // list the messages starting from the lowest new uid to the highest new uid
         return self._imapListMessages(options);
 
-    }).then(function(msgs) {
-        messages = msgs;
-        // if there are verification messages in the synced messages, handle it
-        var verificationMessages = _.filter(messages, function(message) {
-            return message.subject === str.verificationSubject;
-        });
-
-        // if there are verification messages, continue after we've tried to verify
-        if (verificationMessages.length > 0) {
-            var jobs = [];
-            verificationMessages.forEach(function(verificationMessage) {
-                var promise = handleVerification(verificationMessage).then(function() {
-                    // if verification worked, we remove the mail from the list.
-                    messages.splice(messages.indexOf(verificationMessage), 1);
-                }).catch(function() {
-                    // if it was NOT a valid verification mail, do nothing
-                    // if an error occurred and the mail was a valid verification mail,
-                    // keep the mail in the list so the user can see it and verify manually
-                });
-                jobs.push(promise);
-            });
-            return Promise.all(jobs);
-        }
-
-    }).then(function() {
+    }).then(function(messages) {
         if (_.isEmpty(messages)) {
             // nothing to do, we're done here
             return;
         }
 
-        // persist the encrypted message to the local storage
+        // persist the messages to the local storage
         return self._localStoreMessages({
             folder: folder,
             emails: messages
         }).then(function() {
-            // this enables us to already show the attachment clip in the message list ui
+            // show the attachment clip in the message list ui
             messages.forEach(function(message) {
                 message.attachments = message.bodyParts.filter(function(bodyPart) {
                     return bodyPart.type === MSG_PART_TYPE_ATTACHMENT;
@@ -337,40 +311,6 @@ Email.prototype.fetchMessages = function(options) {
         if (err) {
             throw err;
         }
-    }
-
-    // Handles verification of public keys, deletion of messages with verified keys
-    function handleVerification(message) {
-        return self._getBodyParts({
-            folder: folder,
-            uid: message.uid,
-            bodyParts: message.bodyParts
-        }).then(function(parsedBodyParts) {
-            var body = _.pluck(filterBodyParts(parsedBodyParts, MSG_PART_TYPE_TEXT), MSG_PART_ATTR_CONTENT).join('\n'),
-                verificationUrlPrefix = config.keyServerUrl + config.verificationUrl,
-                uuid = body.split(verificationUrlPrefix).pop().substr(0, config.verificationUuidLength),
-                uuidRegex = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/;
-
-            // there's no valid uuid in the message, so forget about it
-            if (!uuidRegex.test(uuid)) {
-                throw new Error('No public key verifier found!');
-            }
-
-            // there's a valid uuid in the message, so try to verify it
-            return self._keychain.verifyPublicKey(uuid).catch(function(err) {
-                throw new Error('Verifying your public key failed: ' + err.message);
-            });
-
-        }).then(function() {
-            // public key has been verified, delete the message
-            return self._imapDeleteMessage({
-                folder: folder,
-                uid: message.uid
-            }).catch(function() {
-                // if we could successfully not delete the message or not doesn't matter.
-                // just don't show it in whiteout and keep quiet about it
-            });
-        });
     }
 };
 
@@ -1573,8 +1513,8 @@ Email.prototype._getBodyParts = function(options) {
         return self._imapClient.getBodyParts(options);
     }).then(function() {
         if (options.bodyParts.filter(function(bodyPart) {
-                return !(bodyPart.raw || bodyPart.content);
-            }).length) {
+            return !(bodyPart.raw || bodyPart.content);
+        }).length) {
             var error = new Error('Can not get the contents of this message. It has already been deleted!');
             error.hide = true;
             throw error;

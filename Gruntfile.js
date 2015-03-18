@@ -178,6 +178,7 @@ module.exports = function(grunt) {
                         'test/unit/service/newsletter-service-test.js',
                         'test/unit/service/mail-config-service-test.js',
                         'test/unit/service/invitation-dao-test.js',
+                        'test/unit/service/publickey-verifier-test.js',
                         'test/unit/email/outbox-bo-test.js',
                         'test/unit/email/email-dao-test.js',
                         'test/unit/email/account-test.js',
@@ -189,6 +190,7 @@ module.exports = function(grunt) {
                         'test/unit/controller/login/login-initial-ctrl-test.js',
                         'test/unit/controller/login/login-new-device-ctrl-test.js',
                         'test/unit/controller/login/login-privatekey-download-ctrl-test.js',
+                        'test/unit/controller/login/login-verify-public-key-ctrl-test.js',
                         'test/unit/controller/login/login-set-credentials-ctrl-test.js',
                         'test/unit/controller/login/login-ctrl-test.js',
                         'test/unit/controller/app/dialog-ctrl-test.js',
@@ -210,7 +212,8 @@ module.exports = function(grunt) {
                 files: {
                     'test/integration/index.browserified.js': [
                         'test/main.js',
-                        'test/integration/email-dao-test.js'
+                        'test/integration/email-dao-test.js',
+                        'test/integration/publickey-verifier-test.js'
                     ]
                 },
                 options: browserifyOpt

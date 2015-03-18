@@ -1356,6 +1356,29 @@ describe('Keychain DAO unit tests', function() {
         });
     });
 
+    describe('upload public key', function() {
+        it('should upload key', function(done) {
+            var keypair = {
+                publicKey: {
+                    _id: '12345',
+                    userId: testUser,
+                    publicKey: 'asdf'
+                },
+                privateKey: {
+                    _id: '12345',
+                    encryptedKey: 'qwer'
+                }
+            };
+
+            pubkeyDaoStub.put.withArgs(keypair.publicKey).returns(resolves());
+
+            keychainDao.uploadPublicKey(keypair.publicKey).then(function() {
+                expect(pubkeyDaoStub.put.calledOnce).to.be.true;
+                done();
+            });
+        });
+    });
+
     describe('put user keypair', function() {
         it('should fail', function(done) {
             var keypair = {

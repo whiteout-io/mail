@@ -659,7 +659,7 @@ Keychain.prototype.putUserKeyPair = function(keypair) {
     // validate input
     if (!keypair || !keypair.publicKey || !keypair.privateKey || !keypair.publicKey.userId || keypair.publicKey.userId !== keypair.privateKey.userId) {
         return new Promise(function() {
-            throw new Error('Incorrect input!');
+            throw new Error('Cannot put user key pair: Incorrect input!');
         });
     }
 
@@ -674,6 +674,24 @@ Keychain.prototype.putUserKeyPair = function(keypair) {
         // store private key locally
         return self.saveLocalPrivateKey(keypair.privateKey);
     });
+};
+
+/**
+ * Uploads the public key
+ * @param {Object} publicKey The user's public key
+ * @return {Promise}
+ */
+Keychain.prototype.uploadPublicKey = function(publicKey) {
+    var self = this;
+
+    // validate input
+    if (!publicKey || !publicKey.userId || !publicKey.publicKey) {
+        return new Promise(function() {
+            throw new Error('Cannot upload user key pair: Incorrect input!');
+        });
+    }
+
+    return self._publicKeyDao.put(publicKey);
 };
 
 //

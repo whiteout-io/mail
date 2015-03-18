@@ -1,17 +1,19 @@
 'use strict';
 
 var Auth = require('../../../../src/js/service/auth'),
+    PublicKeyVerifier = require('../../../../src/js/service/publickey-verifier'),
     LoginInitialCtrl = require('../../../../src/js/controller/login/login-initial'),
     Email = require('../../../../src/js/email/email');
 
 describe('Login (initial user) Controller unit test', function() {
-    var scope, ctrl, location, emailMock, authMock, newsletterStub,
+    var scope, ctrl, location, emailMock, authMock, newsletterStub, verifierMock,
         emailAddress = 'fred@foo.com',
         keyId, expectedKeyId;
 
     beforeEach(function() {
         emailMock = sinon.createStubInstance(Email);
         authMock = sinon.createStubInstance(Auth);
+        verifierMock = sinon.createStubInstance(PublicKeyVerifier);
 
         keyId = '9FEB47936E712926';
         expectedKeyId = '6E712926';
@@ -32,6 +34,7 @@ describe('Login (initial user) Controller unit test', function() {
                 $routeParams: {},
                 $q: window.qMock,
                 newsletter: newsletter,
+                publickeyVerifier: verifierMock,
                 email: emailMock,
                 auth: authMock
             });
@@ -102,14 +105,14 @@ describe('Login (initial user) Controller unit test', function() {
             emailMock.unlock.withArgs({
                 passphrase: undefined,
                 realname: authMock.realname
-            }).returns(resolves());
+            }).returns(resolves('foofoo'));
             authMock.storeCredentials.returns(resolves());
 
             scope.generateKey().then(function() {
                 expect(scope.errMsg).to.not.exist;
                 expect(scope.state.ui).to.equal(2);
                 expect(newsletterStub.called).to.be.true;
-                expect(location.$$path).to.equal('/account');
+                expect(location.$$path).to.equal('/login-verify-public-key');
                 expect(emailMock.unlock.calledOnce).to.be.true;
                 done();
             });
