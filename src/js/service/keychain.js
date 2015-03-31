@@ -147,7 +147,7 @@ Keychain.prototype.getReceiverPublicKey = function(userId) {
     var self = this;
 
     // search local keyring for public key
-    return self._lawnchairDAO.list(DB_PUBLICKEY, 0, null).then(function(allPubkeys) {
+    return self._lawnchairDAO.list(DB_PUBLICKEY).then(function(allPubkeys) {
         var userIds;
         // query primary email address
         var pubkey = _.findWhere(allPubkeys, {
@@ -209,7 +209,7 @@ Keychain.prototype.getUserKeyPair = function(userId) {
     var self = this;
 
     // search for user's public key locally
-    return self._lawnchairDAO.list(DB_PUBLICKEY, 0, null).then(function(allPubkeys) {
+    return self._lawnchairDAO.list(DB_PUBLICKEY).then(function(allPubkeys) {
         var pubkey = _.findWhere(allPubkeys, {
             userId: userId
         });
@@ -342,7 +342,7 @@ Keychain.prototype.lookupPublicKey = function(id) {
  */
 Keychain.prototype.listLocalPublicKeys = function() {
     // search local keyring for public key
-    return this._lawnchairDAO.list(DB_PUBLICKEY, 0, null);
+    return this._lawnchairDAO.list(DB_PUBLICKEY);
 };
 
 Keychain.prototype.removeLocalPublicKey = function(id) {

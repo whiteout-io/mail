@@ -52,6 +52,12 @@ var ReadCtrl = function($scope, $location, $q, email, invitation, outbox, pgp, k
         status.setReading(false);
     };
 
+    $scope.decrypt = function(message) {
+        return email.decryptBody({
+            message: message
+        });
+    };
+
     $scope.getKeyId = function(address) {
         if ($location.search().dev || !address) {
             return;

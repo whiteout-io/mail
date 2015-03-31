@@ -82,7 +82,7 @@ describe('Device Storage DAO unit tests', function() {
         it('should work', function(done) {
             lawnchairDaoStub.list.returns(resolves());
 
-            storageDao.listItems('email', 0, null).then(function() {
+            storageDao.listItems('email').then(function() {
                 expect(lawnchairDaoStub.list.calledOnce).to.be.true;
                 done();
             });

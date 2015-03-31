@@ -266,8 +266,13 @@ describe('Email DAO integration tests', function() {
                         sinon.stub(emailDao._keychain._publicKeyDao, 'get').returns(resolves(mockKeyPair.publicKey));
                         sinon.stub(emailDao._keychain._publicKeyDao, 'getByUserId').returns(resolves(mockKeyPair.publicKey));
 
-                        emailDao.onIncomingMessage = function(messages) {
-                            expect(messages.length).to.equal(imapMessages.length);
+                        emailDao.unlock({
+                            passphrase: testAccount.pass,
+                            keypair: mockKeyPair
+                        }).then(function() {
+                            sinon.stub(accountService._emailDao, 'isOnline').returns(true);
+                            return accountService._emailDao.onConnect(imapClient);
+                        }).then(function() {
                             inbox = emailDao._account.folders.filter(function(folder) {
                                 return folder.path === 'INBOX';
                             }).pop();
@@ -277,24 +282,12 @@ describe('Email DAO integration tests', function() {
                             expect(inbox).to.exist;
                             expect(spam).to.exist;
 
-                            inbox.messages.sort(function(a, b) {
-                                return a.uid - b.uid;
-                            });
-
                             // phantomjs is really slow, so setting the tcp socket timeouts to 200s will effectively disarm the timeout
                             imapClient._client.client.TIMEOUT_SOCKET_LOWER_BOUND = 999999999;
                             imapClient._listeningClient.client.TIMEOUT_SOCKET_LOWER_BOUND = 999999999;
                             smtpClient.TIMEOUT_SOCKET_LOWER_BOUND = 999999999;
 
                             done();
-                        };
-
-                        emailDao.unlock({
-                            passphrase: testAccount.pass,
-                            keypair: mockKeyPair
-                        }).then(function() {
-                            sinon.stub(accountService._emailDao, 'isOnline').returns(true);
-                            accountService._emailDao.onConnect(imapClient);
                         });
                     });
                 });
@@ -315,14 +308,18 @@ describe('Email DAO integration tests', function() {
 
     describe('IMAP Integration Tests', function() {
         beforeEach(function(done) {
-            if (emailDao._imapClient._client.selectedMailbox !== inbox.path) {
-                emailDao.openFolder({
-                    folder: inbox
-                }).then(done);
-                return;
-            }
+            setTimeout(function() {
+                inbox.messages.sort(function(a, b) {
+                    return a.uid - b.uid;
+                });
 
-            done();
+                emailDao.getBody({
+                    folder: inbox,
+                    messages: inbox.messages
+                }).then(function(messages) {
+                    expect(messages.length).to.equal(imapMessages.length);
+                }).then(done);
+            }, 200);
         });
 
         describe('basic functionality', function() {
@@ -371,24 +368,12 @@ describe('Email DAO integration tests', function() {
                 });
             });
 
-            it('should get body', function(done) {
-                emailDao.getBody({
-                    folder: inbox,
-                    message: inbox.messages[2]
-                }).then(function(message) {
-                    expect(message.body).to.equal('World 5!');
-                    done();
-                });
+            it('should get body', function() {
+                expect(inbox.messages[2].body).to.equal('World 5!');
             });
 
-            it('should insert images into html mail', function(done) {
-                emailDao.getBody({
-                    folder: inbox,
-                    message: inbox.messages[3]
-                }).then(function(message) {
-                    expect(message.html).to.equal('<html><head><meta http-equiv="Content-Type" content="text/html charset=us-ascii"></head><body style="word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;">asd<img apple-inline="yes" id="53B73BDD-69A0-4E8E-BA7B-3D2EF399C0D3" height="1" width="1" apple-width="yes" apple-height="yes" src="data:application/octet-stream;base64,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"></body></html>');
-                    done();
-                });
+            it('should insert images into html mail', function() {
+                expect(inbox.messages[3].html).to.equal('<html><head><meta http-equiv="Content-Type" content="text/html charset=us-ascii"></head><body style="word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;">asd<img apple-inline="yes" id="53B73BDD-69A0-4E8E-BA7B-3D2EF399C0D3" height="1" width="1" apple-width="yes" apple-height="yes" src="data:application/octet-stream;base64,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"></body></html>');
             });
 
             it('should set flags', function(done) {
@@ -408,268 +393,174 @@ describe('Email DAO integration tests', function() {
 
         describe('Real-world data mail parsing', function() {
             it('should parse Apple Mail (attachment - PGP/MIME): Encrypted', function(done) {
-                emailDao.getBody({
-                    folder: inbox,
-                    message: inbox.messages[4]
+                emailDao.decryptBody({
+                    message: inbox.messages[4],
+                    folder: inbox
                 }).then(function(message) {
-                    emailDao.decryptBody({
-                        message: message,
-                        folder: inbox
-                    }).then(function() {
-                        expect(message.encrypted).to.be.true;
-                        expect(message.signed).to.be.false;
-                        expect(message.signaturesValid).to.be.undefined;
-                        expect(message.attachments.length).to.equal(1);
-                        expect(message.body).to.equal('test16');
-                        done();
-                    });
+                    expect(message.encrypted).to.be.true;
+                    expect(message.signed).to.be.false;
+                    expect(message.signaturesValid).to.be.undefined;
+                    expect(message.attachments.length).to.equal(1);
+                    expect(message.body).to.equal('test16');
+                    done();
                 });
             });
 
             it('should parse Apple Mail (attachment - PGP/MIME): Encrypted and signed', function(done) {
-                emailDao.getBody({
-                    folder: inbox,
-                    message: inbox.messages[5]
+                emailDao.decryptBody({
+                    message: inbox.messages[5],
+                    folder: inbox
                 }).then(function(message) {
-                    emailDao.decryptBody({
-                        message: message,
-                        folder: inbox
-                    }).then(function() {
-                        expect(message.encrypted).to.be.true;
-                        expect(message.signed).to.be.true;
-                        expect(message.signaturesValid).to.be.true;
-                        expect(message.attachments.length).to.equal(1);
-                        expect(message.body).to.equal('test15');
-                        done();
-                    });
+                    expect(message.encrypted).to.be.true;
+                    expect(message.signed).to.be.true;
+                    expect(message.signaturesValid).to.be.true;
+                    expect(message.attachments.length).to.equal(1);
+                    expect(message.body).to.equal('test15');
+                    done();
                 });
             });
 
             it('should parse Apple Mail (no attachment): Encrypted and signed', function(done) {
-                emailDao.getBody({
-                    folder: inbox,
-                    message: inbox.messages[6]
+                emailDao.decryptBody({
+                    message: inbox.messages[6],
+                    folder: inbox
                 }).then(function(message) {
-                    emailDao.decryptBody({
-                        message: message,
-                        folder: inbox
-                    }).then(function() {
-                        expect(message.encrypted).to.be.true;
-                        expect(message.signed).to.be.true;
-                        expect(message.signaturesValid).to.be.true;
-                        expect(message.attachments.length).to.equal(0);
-                        expect(message.body).to.equal('test12');
-                        done();
-                    });
+                    expect(message.encrypted).to.be.true;
+                    expect(message.signed).to.be.true;
+                    expect(message.signaturesValid).to.be.true;
+                    expect(message.attachments.length).to.equal(0);
+                    expect(message.body).to.equal('test12');
+                    done();
                 });
             });
 
             it('should parse Apple Mail (no attachment): Encrypted', function(done) {
-                emailDao.getBody({
-                    folder: inbox,
-                    message: inbox.messages[7]
+                emailDao.decryptBody({
+                    message: inbox.messages[7],
+                    folder: inbox
                 }).then(function(message) {
-                    emailDao.decryptBody({
-                        message: message,
-                        folder: inbox
-                    }).then(function() {
-                        expect(message.encrypted).to.be.true;
-                        expect(message.signed).to.be.false;
-                        expect(message.signaturesValid).to.be.undefined;
-                        expect(message.attachments.length).to.equal(0);
-                        expect(message.body).to.equal('test13');
-                        done();
-                    });
+                    expect(message.encrypted).to.be.true;
+                    expect(message.signed).to.be.false;
+                    expect(message.signaturesValid).to.be.undefined;
+                    expect(message.attachments.length).to.equal(0);
+                    expect(message.body).to.equal('test13');
+                    done();
                 });
             });
 
-            it('should parse Apple Mail (attachment - PGP/MIME): Signed', function(done) {
-                emailDao.getBody({
-                    folder: inbox,
-                    message: inbox.messages[8]
-                }).then(function(message) {
-                    emailDao.decryptBody({
-                        message: message,
-                        folder: inbox
-                    }).then(function() {
-                        expect(message.encrypted).to.be.false;
-                        expect(message.signed).to.be.true;
-                        expect(message.signaturesValid).to.be.true;
-                        expect(message.attachments.length).to.equal(1);
-                        expect(message.body).to.equal('test17\n');
-                        done();
-                    });
-                });
+            it('should parse Apple Mail (attachment - PGP/MIME): Signed', function() {
+                expect(inbox.messages[8].encrypted).to.be.false;
+                expect(inbox.messages[8].signed).to.be.true;
+                expect(inbox.messages[8].signaturesValid).to.be.true;
+                expect(inbox.messages[8].attachments.length).to.equal(1);
+                expect(inbox.messages[8].body).to.equal('test17\n');
             });
 
-            it('should parse Apple Mail (no attachment): Signed', function(done) {
-                emailDao.getBody({
-                    folder: inbox,
-                    message: inbox.messages[9]
-                }).then(function(message) {
-                    emailDao.decryptBody({
-                        message: message,
-                        folder: inbox
-                    }).then(function() {
-                        expect(message.encrypted).to.be.false;
-                        expect(message.signed).to.be.true;
-                        expect(message.signaturesValid).to.be.true;
-                        expect(message.attachments.length).to.equal(0);
-                        expect(message.body).to.equal('test14');
-                        done();
-                    });
-                });
+            it('should parse Apple Mail (no attachment): Signed', function() {
+                expect(inbox.messages[9].encrypted).to.be.false;
+                expect(inbox.messages[9].signed).to.be.true;
+                expect(inbox.messages[9].signaturesValid).to.be.true;
+                expect(inbox.messages[9].attachments.length).to.equal(0);
+                expect(inbox.messages[9].body).to.equal('test14');
             });
 
             it('should parse Thunderbird (attachment - PGP/MIME): Encrypted', function(done) {
-                emailDao.getBody({
-                    folder: inbox,
-                    message: inbox.messages[10]
+                emailDao.decryptBody({
+                    message: inbox.messages[10],
+                    folder: inbox
                 }).then(function(message) {
-                    emailDao.decryptBody({
-                        message: message,
-                        folder: inbox
-                    }).then(function() {
-                        expect(message.encrypted).to.be.true;
-                        expect(message.signed).to.be.false;
-                        expect(message.signaturesValid).to.be.undefined;
-                        expect(message.attachments.length).to.equal(1);
-                        expect(message.body).to.equal('test10');
-                        done();
-                    });
+                    expect(message.encrypted).to.be.true;
+                    expect(message.signed).to.be.false;
+                    expect(message.signaturesValid).to.be.undefined;
+                    expect(message.attachments.length).to.equal(1);
+                    expect(message.body).to.equal('test10');
+                    done();
                 });
             });
 
             it('should parse Thunderbird (attachment - PGP/MIME): Encrypted and signed', function(done) {
-                emailDao.getBody({
-                    folder: inbox,
-                    message: inbox.messages[11]
+                emailDao.decryptBody({
+                    message: inbox.messages[11],
+                    folder: inbox
                 }).then(function(message) {
-                    emailDao.decryptBody({
-                        message: message,
-                        folder: inbox
-                    }).then(function() {
-                        expect(message.encrypted).to.be.true;
-                        expect(message.signed).to.be.true;
-                        expect(message.signaturesValid).to.be.true;
-                        expect(message.attachments.length).to.equal(1);
-                        expect(message.body).to.equal('test9');
-                        done();
-                    });
+                    expect(message.encrypted).to.be.true;
+                    expect(message.signed).to.be.true;
+                    expect(message.signaturesValid).to.be.true;
+                    expect(message.attachments.length).to.equal(1);
+                    expect(message.body).to.equal('test9');
+                    done();
                 });
             });
 
             it('should parse Thunderbird (no attachment): Encrypted and signed', function(done) {
-                emailDao.getBody({
-                    folder: inbox,
-                    message: inbox.messages[12]
+                emailDao.decryptBody({
+                    message: inbox.messages[12],
+                    folder: inbox
                 }).then(function(message) {
-                    emailDao.decryptBody({
-                        message: message,
-                        folder: inbox
-                    }).then(function() {
-                        expect(message.encrypted).to.be.true;
-                        expect(message.signed).to.be.true;
-                        expect(message.signaturesValid).to.be.true;
-                        expect(message.attachments.length).to.equal(0);
-                        expect(message.body).to.equal('test4\n');
-                        done();
-                    });
+                    expect(message.encrypted).to.be.true;
+                    expect(message.signed).to.be.true;
+                    expect(message.signaturesValid).to.be.true;
+                    expect(message.attachments.length).to.equal(0);
+                    expect(message.body).to.equal('test4\n');
+                    done();
                 });
             });
 
             it('should parse Thunderbird (no attachment): Encrypted', function(done) {
-                emailDao.getBody({
-                    folder: inbox,
-                    message: inbox.messages[13]
+                emailDao.decryptBody({
+                    message: inbox.messages[13],
+                    folder: inbox
                 }).then(function(message) {
-                    emailDao.decryptBody({
-                        message: message,
-                        folder: inbox
-                    }).then(function() {
-                        expect(message.encrypted).to.be.true;
-                        expect(message.signed).to.be.false;
-                        expect(message.signaturesValid).to.be.undefined;
-                        expect(message.attachments.length).to.equal(0);
-                        expect(message.body).to.equal('test5\n');
-                        done();
-                    });
+                    expect(message.encrypted).to.be.true;
+                    expect(message.signed).to.be.false;
+                    expect(message.signaturesValid).to.be.undefined;
+                    expect(message.attachments.length).to.equal(0);
+                    expect(message.body).to.equal('test5\n');
+                    done();
                 });
             });
 
             it('should parse Thunderbird (no attachment): plaintext reply to an encrypted message', function(done) {
-                emailDao.getBody({
-                    folder: inbox,
-                    message: inbox.messages[14]
+                emailDao.decryptBody({
+                    message: inbox.messages[14],
+                    folder: inbox
                 }).then(function(message) {
-                    emailDao.decryptBody({
-                        message: message,
-                        folder: inbox
-                    }).then(function() {
-                        expect(message.encrypted).to.be.false;
-                        expect(message.signed).to.be.false;
-                        expect(message.signaturesValid).to.be.undefined;
-                        expect(message.attachments.length).to.equal(0);
-                        expect(message.body).to.equal('test8\n\n23.06.14 21:12, safewithme kirjutas:\n> test8');
-                        done();
-                    });
+                    expect(message.encrypted).to.be.false;
+                    expect(message.signed).to.be.false;
+                    expect(message.signaturesValid).to.be.undefined;
+                    expect(message.attachments.length).to.equal(0);
+                    expect(message.body).to.equal('test8\n\n23.06.14 21:12, safewithme kirjutas:\n> test8');
+                    done();
                 });
             });
 
-            it('should parse Thunderbird (attachment - PGP/MIME): Signed', function(done) {
-                emailDao.getBody({
-                    folder: inbox,
-                    message: inbox.messages[15]
-                }).then(function(message) {
-                    emailDao.decryptBody({
-                        message: message,
-                        folder: inbox
-                    }).then(function() {
-                        expect(message.encrypted).to.be.false;
-                        expect(message.signed).to.be.true;
-                        expect(message.signaturesValid).to.be.true;
-                        expect(message.attachments.length).to.equal(1);
-                        expect(message.body).to.equal('test11');
-                        done();
-                    });
-                });
+            it('should parse Thunderbird (attachment - PGP/MIME): Signed', function() {
+                expect(inbox.messages[15].encrypted).to.be.false;
+                expect(inbox.messages[15].signed).to.be.true;
+                expect(inbox.messages[15].signaturesValid).to.be.true;
+                expect(inbox.messages[15].attachments.length).to.equal(1);
+                expect(inbox.messages[15].body).to.equal('test11');
             });
 
-            it('should parse Thunderbird (no attachment): Signed w/ PGP/INLINE', function(done) {
-                emailDao.getBody({
-                    folder: inbox,
-                    message: inbox.messages[16]
-                }).then(function(message) {
-                    emailDao.decryptBody({
-                        message: message,
-                        folder: inbox
-                    }).then(function() {
-                        expect(message.encrypted).to.be.false;
-                        expect(message.signed).to.be.true;
-                        expect(message.signaturesValid).to.be.true;
-                        expect(message.attachments.length).to.equal(0);
-                        expect(message.body).to.equal('test6');
-                        done();
-                    });
-                });
+            it('should parse Thunderbird (no attachment): Signed w/ PGP/INLINE', function() {
+                expect(inbox.messages[16].encrypted).to.be.false;
+                expect(inbox.messages[16].signed).to.be.true;
+                expect(inbox.messages[16].signaturesValid).to.be.true;
+                expect(inbox.messages[16].attachments.length).to.equal(0);
+                expect(inbox.messages[16].body).to.equal('test6');
             });
 
             it('should parse Mailvelope: encrypted (unsigned) w/PGP/INLINE', function(done) {
-                emailDao.getBody({
-                    folder: inbox,
-                    message: inbox.messages[17]
+                emailDao.decryptBody({
+                    message: inbox.messages[17],
+                    folder: inbox
                 }).then(function(message) {
-                    emailDao.decryptBody({
-                        message: message,
-                        folder: inbox
-                    }).then(function() {
-                        expect(message.encrypted).to.be.true;
-                        expect(message.signed).to.be.false;
-                        expect(message.signaturesValid).to.be.undefined;
-                        expect(message.attachments.length).to.equal(0);
-                        expect(message.body).to.equal('this is a test');
-                        done();
-                    });
+                    expect(message.encrypted).to.be.true;
+                    expect(message.signed).to.be.false;
+                    expect(message.signaturesValid).to.be.undefined;
+                    expect(message.attachments.length).to.equal(0);
+                    expect(message.body).to.equal('this is a test');
+                    done();
                 });
             });
         });
@@ -744,17 +635,12 @@ describe('Email DAO integration tests', function() {
             var expectedBody = "asdasdasdasdasdasdasdasdasdasdasdasd asdasdasdasdasdasdasdasdasdasdasdasd";
 
             emailDao.onIncomingMessage = function(messages) {
-                emailDao.getBody({
-                    folder: inbox,
-                    message: messages[0]
-                }).then(function(message) {
-                    expect(message.encrypted).to.be.false;
-                    expect(message.signed).to.be.true;
-                    expect(message.signaturesValid).to.be.true;
-                    expect(message.attachments.length).to.equal(0);
-                    expect(message.body).to.equal(expectedBody + str.signature + config.keyServerUrl + '/' + testAccount.user);
-                    done();
-                });
+                expect(messages[0].encrypted).to.be.false;
+                expect(messages[0].signed).to.be.true;
+                expect(messages[0].signaturesValid).to.be.true;
+                expect(messages[0].attachments.length).to.equal(0);
+                expect(messages[0].body).to.equal(expectedBody + str.signature + config.keyServerUrl + '/' + testAccount.user);
+                done();
             };
 
             emailDao.sendPlaintext({
@@ -772,13 +658,8 @@ describe('Email DAO integration tests', function() {
             var expectedBody = "asdasdasdasdasdasdasdasdasdasdasdasd asdasdasdasdasdasdasdasdasdasdasdasd";
 
             emailDao.onIncomingMessage = function(messages) {
-                emailDao.getBody({
-                    folder: inbox,
+                return emailDao.decryptBody({
                     message: messages[0]
-                }).then(function(message) {
-                    return emailDao.decryptBody({
-                        message: message
-                    });
                 }).then(function(message) {
                     expect(message.encrypted).to.be.true;
                     expect(message.signed).to.be.true;

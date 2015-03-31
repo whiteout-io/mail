@@ -104,60 +104,49 @@ LawnchairDAO.prototype.read = function(key) {
 /**
  * List all the items of a certain type
  * @param type [String] The type of item e.g. 'email'
- * @param offset [Number] The offset of items to fetch (0 is the last stored item)
- * @param num [Number] The number of items to fetch (null means fetch all)
  * @return {Promise}
  */
-LawnchairDAO.prototype.list = function(type, offset, num) {
+LawnchairDAO.prototype.list = function(query, exactMatchOnly) {
     var self = this;
     return new Promise(function(resolve) {
-        var i, from, to,
-            matchingKeys = [],
-            intervalKeys = [],
-            list = [];
+        var matchingKeys = [];
 
         // validate input
-        if (!type || typeof offset === 'undefined' || typeof num === 'undefined') {
+        if ((Array.isArray(query) && query.length === 0) || (!Array.isArray(query) && !query)) {
             throw new Error('Args not is not set!');
+        }
+
+        // this method operates on arrays of keys, so normalize input 'key' -> ['key']
+        if (!Array.isArray(query)) {
+            query = [query];
         }
 
         // get all keys
         self._db.keys(function(keys) {
-            // check if key begins with type
-            keys.forEach(function(key) {
-                if (key.indexOf(type) === 0) {
-                    matchingKeys.push(key);
-                }
+            // check if there are keys in the db that start with the respective query
+            matchingKeys = keys.filter(function(key) {
+                return query.filter(function(type) {
+                    if (exactMatchOnly) {
+                        return key === type;
+                    } else {
+                        return key.indexOf(type) === 0;
+                    }
+                }).length > 0;
             });
 
-            // sort keys
-            matchingKeys.sort();
-
-            // set window of items to fetch
-            // if num is null, list all items
-            from = (num) ? matchingKeys.length - offset - num : 0;
-            to = matchingKeys.length - 1 - offset;
-            // filter items within requested interval
-            for (i = 0; i < matchingKeys.length; i++) {
-                if (i >= from && i <= to) {
-                    intervalKeys.push(matchingKeys[i]);
-                }
-            }
-
-            // return if there are no matching keys
-            if (intervalKeys.length === 0) {
-                resolve(list);
+            if (matchingKeys.length === 0) {
+                // no matching keys, resolve
+                resolve([]);
                 return;
             }
 
-            // fetch all items from data-store with matching key
-            self._db.get(intervalKeys, function(intervalList) {
-                intervalList.forEach(function(item) {
-                    list.push(item.object);
+            // fetch all items from data-store with matching keys
+            self._db.get(matchingKeys, function(intervalList) {
+                var result = intervalList.map(function(item) {
+                    return item.object;
                 });
 
-                // return only the interval between offset and num
-                resolve(list);
+                resolve(result);
             });
         });
     });

@@ -83,14 +83,13 @@ DeviceStorage.prototype.removeList = function(type) {
 
 /**
  * List stored items of a given type
- * @param type [String] The type of item e.g. 'email'
- * @param offset [Number] The offset of items to fetch (0 is the last stored item)
- * @param num [Number] The number of items to fetch (null means fetch all)
+ * @param {String/Array} query The type of item e.g. 'email'
+ * @param {Boolean} exactMatchOnly Specifies if only exact matches are extracted from the DB as opposed to keys that start with the query
  * @return {Promise}
  */
-DeviceStorage.prototype.listItems = function(type, offset, num) {
-    // fetch all items of a certain type from the data-store
-    return this._lawnchairDAO.list(type, offset, num);
+DeviceStorage.prototype.listItems = function(query, exactMatchOnly) {
+    // fetch all items of a certain query from the data-store
+    return this._lawnchairDAO.list(query, exactMatchOnly);
 };
 
 /**

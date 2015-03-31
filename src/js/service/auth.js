@@ -297,7 +297,7 @@ Auth.prototype._loadCredentials = function() {
     });
 
     function loadFromDB(key) {
-        return self._appConfigStore.listItems(key, 0, null).then(function(cachedItems) {
+        return self._appConfigStore.listItems(key).then(function(cachedItems) {
             return cachedItems && cachedItems[0];
         });
     }

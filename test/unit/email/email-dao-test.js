@@ -42,49 +42,63 @@ describe('Email DAO unit tests', function() {
             name: 'Inbox',
             type: 'Inbox',
             path: 'INBOX',
-            messages: []
+            messages: [],
+            uids: [],
+            modseq: 123
         };
 
         sentFolder = {
             name: 'Sent',
             type: 'Sent',
             path: 'SENT',
-            messages: []
+            messages: [],
+            uids: [],
+            modseq: 123
         };
 
         draftsFolder = {
             name: 'Drafts',
             type: 'Drafts',
             path: 'DRAFTS',
-            messages: []
+            messages: [],
+            uids: [],
+            modseq: 123
         };
 
         outboxFolder = {
             name: 'Outbox',
             type: 'Outbox',
             path: 'OUTBOX',
-            messages: []
+            messages: [],
+            uids: [],
+            modseq: 123
         };
 
         trashFolder = {
             name: 'Trash',
             type: 'Trash',
             path: 'TRASH',
-            messages: []
+            messages: [],
+            uids: [],
+            modseq: 123
         };
 
         flaggedFolder = {
             name: 'Flagged',
             type: 'Flagged',
             path: 'FLAGGED',
-            messages: []
+            messages: [],
+            uids: [],
+            modseq: 123
         };
 
         otherFolder = {
             name: 'Other',
             type: 'Other',
             path: 'OTHER',
-            messages: []
+            messages: [],
+            uids: [],
+            modseq: 123
         };
 
         folders = [inboxFolder, outboxFolder, trashFolder, sentFolder, otherFolder];
@@ -146,20 +160,19 @@ describe('Email DAO unit tests', function() {
 
 
     describe('#init', function() {
-        var initFoldersStub;
-
         beforeEach(function() {
             delete dao._account;
-            initFoldersStub = sinon.stub(dao, '_initFoldersFromDisk');
         });
 
         it('should initialize folders', function(done) {
-            initFoldersStub.returns(resolves());
+            devicestorageStub.listItems.withArgs('folders', true).returns(resolves([
+                [inboxFolder]
+            ]));
 
             dao.init({
                 account: account
             }).then(function() {
-                expect(initFoldersStub.calledOnce).to.be.true;
+                expect(devicestorageStub.listItems.calledOnce).to.be.true;
 
                 done();
             });
@@ -301,10 +314,11 @@ describe('Email DAO unit tests', function() {
         });
     });
 
-    describe('#refreshFolder', function() {
+    describe('#refreshOutbox', function() {
         var localListStub, mail;
 
         beforeEach(function() {
+            account.folders = [outboxFolder];
             localListStub = sinon.stub(dao, '_localListMessages');
             mail = {
                 uid: 123,
@@ -314,115 +328,43 @@ describe('Email DAO unit tests', function() {
 
         it('should add messages from disk', function(done) {
             localListStub.withArgs({
-                folder: inboxFolder
+                folder: outboxFolder,
+                exactmatch: false
             }).returns(resolves([mail]));
 
-            dao.refreshFolder({
-                folder: inboxFolder
-            }).then(function() {
-                expect(inboxFolder.count).to.equal(1);
-                expect(inboxFolder.messages).to.contain(mail);
+            dao.refreshOutbox().then(function() {
+                expect(outboxFolder.count).to.equal(1);
+                expect(outboxFolder.messages).to.contain(mail);
 
                 done();
             });
         });
 
         it('should not add messages from disk', function(done) {
-            inboxFolder.messages = [mail];
+            outboxFolder.messages = [mail];
             localListStub.withArgs({
-                folder: inboxFolder
+                folder: outboxFolder,
+                exactmatch: false
             }).returns(resolves([mail]));
 
-            dao.refreshFolder({
-                folder: inboxFolder
-            }).then(function() {
-                expect(inboxFolder.count).to.equal(1);
-                expect(inboxFolder.messages).to.contain(mail);
+            dao.refreshOutbox().then(function() {
+                expect(outboxFolder.count).to.equal(1);
+                expect(outboxFolder.messages).to.contain(mail);
 
                 done();
             });
         });
 
         it('should remove messages from memory', function(done) {
-            inboxFolder.messages = [mail];
+            outboxFolder.messages = [mail];
             localListStub.withArgs({
-                folder: inboxFolder
+                folder: outboxFolder,
+                exactmatch: false
             }).returns(resolves([]));
 
-            dao.refreshFolder({
-                folder: inboxFolder
-            }).then(function() {
-                expect(inboxFolder.count).to.equal(0);
-                expect(inboxFolder.messages).to.be.empty;
-
-                done();
-            });
-        });
-    });
-
-    describe('#fetchMessages', function() {
-        var imapListStub, imapGetStub, imapDeleteStub, localStoreStub;
-        var opts, message;
-        var notified;
-
-        beforeEach(function() {
-            imapListStub = sinon.stub(dao, '_imapListMessages');
-            imapDeleteStub = sinon.stub(dao, '_imapDeleteMessage');
-            imapGetStub = sinon.stub(dao, '_getBodyParts');
-            localStoreStub = sinon.stub(dao, '_localStoreMessages');
-
-            opts = {
-                folder: inboxFolder,
-                firstUid: 123,
-                lastUid: 123
-            };
-            message = {
-                uid: 123,
-                subject: 'asdasd',
-                unread: true,
-                bodyParts: []
-            };
-
-            notified = false;
-            dao.onIncomingMessage = function(newMessages) {
-                expect(newMessages).to.contain(message);
-                notified = true;
-            };
-        });
-
-        it('should fetch message downstream', function(done) {
-            imapListStub.withArgs(opts).returns(resolves([message]));
-
-            localStoreStub.withArgs({
-                folder: inboxFolder,
-                emails: [message]
-            }).returns(resolves());
-
-            dao.fetchMessages(opts).then(function() {
-                expect(inboxFolder.messages).to.contain(message);
-                expect(notified).to.be.true;
-                expect(localStoreStub.calledOnce).to.be.true;
-                expect(imapListStub.calledOnce).to.be.true;
-
-                done();
-            });
-        });
-
-        it('should not notify for other folders', function(done) {
-            opts.folder = sentFolder;
-
-            imapListStub.withArgs(opts).returns(resolves([message]));
-
-            localStoreStub.withArgs({
-                folder: sentFolder,
-                emails: [message]
-            }).returns(resolves());
-
-            dao.fetchMessages(opts).then(function() {
-                expect(sentFolder.messages).to.contain(message);
-                expect(notified).to.be.false;
-                expect(localStoreStub.calledOnce).to.be.true;
-                expect(imapListStub.calledOnce).to.be.true;
+            dao.refreshOutbox().then(function() {
+                expect(outboxFolder.count).to.equal(0);
+                expect(outboxFolder.messages).to.be.empty;
 
                 done();
             });
@@ -794,13 +736,13 @@ describe('Email DAO unit tests', function() {
     });
 
     describe('#getBody', function() {
-        var localListStub, localStoreStub, imapGetStub, uid;
+        var localListStub, localStoreStub, fetchMessagesStub, uid;
 
         beforeEach(function() {
             uid = 12345;
             localListStub = sinon.stub(dao, '_localListMessages');
             localStoreStub = sinon.stub(dao, '_localStoreMessages');
-            imapGetStub = sinon.stub(dao, '_getBodyParts');
+            fetchMessagesStub = sinon.stub(dao, '_fetchMessages');
         });
 
         it('should not do anything if the message already has content', function() {
@@ -809,24 +751,23 @@ describe('Email DAO unit tests', function() {
             };
 
             dao.getBody({
-                message: message
+                messages: [message]
             });
 
             // should do nothing
         });
 
         it('should read an unencrypted body from the device', function(done) {
-            var message, body;
-
-            body = 'bender is great! bender is great!';
-            message = {
+            var body = 'bender is great! bender is great!';
+            var message = {
                 uid: uid
             };
 
             localListStub.withArgs({
                 folder: inboxFolder,
-                uid: uid
+                uid: [uid]
             }).returns(resolves([{
+                uid: uid,
                 bodyParts: [{
                     type: 'text',
                     content: body
@@ -834,12 +775,11 @@ describe('Email DAO unit tests', function() {
             }]));
 
             dao.getBody({
-                message: message,
+                messages: [message],
                 folder: inboxFolder
-            }).then(function(msg) {
-                expect(msg).to.equal(message);
-                expect(msg.body).to.equal(body);
-                expect(msg.loadingBody).to.be.false;
+            }).then(function() {
+                expect(message.body).to.equal(body);
+                expect(message.loadingBody).to.be.false;
 
                 expect(localListStub.calledOnce).to.be.true;
 
@@ -849,19 +789,18 @@ describe('Email DAO unit tests', function() {
         });
 
         it('should read a pgp/mime from the device', function(done) {
-            var message, ct, pt;
-
-            pt = 'bender is great!';
-            ct = '-----BEGIN PGP MESSAGE-----asdasdasd-----END PGP MESSAGE-----';
-            message = {
+            var pt = 'bender is great!';
+            var ct = '-----BEGIN PGP MESSAGE-----asdasdasd-----END PGP MESSAGE-----';
+            var message = {
                 uid: uid,
                 encrypted: true
             };
 
             localListStub.withArgs({
                 folder: inboxFolder,
-                uid: uid
+                uid: [uid]
             }).returns(resolves([{
+                uid: uid,
                 bodyParts: [{
                     type: 'text',
                     content: pt
@@ -872,12 +811,11 @@ describe('Email DAO unit tests', function() {
             }]));
 
             dao.getBody({
-                message: message,
+                messages: [message],
                 folder: inboxFolder
-            }).then(function(msg) {
-                expect(msg).to.equal(message);
-                expect(msg.body).to.equal(ct);
-                expect(msg.encrypted).to.be.true;
+            }).then(function() {
+                expect(message.body).to.equal(ct);
+                expect(message.encrypted).to.be.true;
                 expect(message.loadingBody).to.be.false;
 
                 expect(localListStub.calledOnce).to.be.true;
@@ -888,13 +826,11 @@ describe('Email DAO unit tests', function() {
         });
 
         it('should read a signed pgp/mime from the device', function(done) {
-            var message, signed, pt, signedMimeTree, signature;
-
-            pt = 'bender is great!';
-            signed = 'omg signed text';
-            signedMimeTree = 'trallalalalala';
-            signature = 'ugauga';
-            message = {
+            var pt = 'bender is great!';
+            var signed = 'omg signed text';
+            var signedMimeTree = 'trallalalalala';
+            var signature = 'ugauga';
+            var message = {
                 uid: uid,
                 signed: true,
                 from: [{
@@ -904,8 +840,9 @@ describe('Email DAO unit tests', function() {
 
             localListStub.withArgs({
                 folder: inboxFolder,
-                uid: uid
+                uid: [uid]
             }).returns(resolves([{
+                uid: uid,
                 bodyParts: [{
                     type: 'text',
                     content: pt
@@ -923,11 +860,10 @@ describe('Email DAO unit tests', function() {
             pgpStub.verifySignedMessage.withArgs(signedMimeTree, signature, mockKeyPair.publicKey.publicKey).returns(resolves(true));
 
             dao.getBody({
-                message: message,
+                messages: [message],
                 folder: inboxFolder
-            }).then(function(msg) {
-                expect(msg).to.equal(message);
-                expect(msg.body).to.equal(signed);
+            }).then(function() {
+                expect(message.body).to.equal(signed);
                 expect(message.signed).to.be.true;
                 expect(message.signaturesValid).to.be.true;
                 expect(message.loadingBody).to.be.false;
@@ -942,15 +878,14 @@ describe('Email DAO unit tests', function() {
         });
 
         it('should read a pgp/inline from the device', function(done) {
-            var message, ct, pt;
-
-            ct = '-----BEGIN PGP MESSAGE-----\nasdasdasd\n-----END PGP MESSAGE-----';
-            pt = 'bla bla yadda yadda';
-            message = {
+            var ct = '-----BEGIN PGP MESSAGE-----\nasdasdasd\n-----END PGP MESSAGE-----';
+            var pt = 'bla bla yadda yadda';
+            var message = {
                 uid: uid
             };
 
             localListStub.returns(resolves([{
+                uid: uid,
                 bodyParts: [{
                     type: 'text',
                     content: pt
@@ -964,14 +899,13 @@ describe('Email DAO unit tests', function() {
             }]));
 
             dao.getBody({
-                message: message,
+                messages: [message],
                 folder: inboxFolder
-            }).then(function(msg) {
-                expect(msg).to.equal(message);
-                expect(msg.body).to.equal(ct);
-                expect(msg.bodyParts[0].type).to.equal('encrypted');
-                expect(msg.bodyParts[0].content).to.equal(ct);
-                expect(msg.encrypted).to.be.true;
+            }).then(function() {
+                expect(message.body).to.equal(ct);
+                expect(message.bodyParts[0].type).to.equal('encrypted');
+                expect(message.bodyParts[0].content).to.equal(ct);
+                expect(message.encrypted).to.be.true;
                 expect(message.loadingBody).to.be.false;
 
                 expect(localListStub.calledOnce).to.be.true;
@@ -982,11 +916,9 @@ describe('Email DAO unit tests', function() {
         });
 
         it('should read a signed pgp/inline from the device', function(done) {
-            var message, pt, expected;
-
-            expected = 'Lorem ipsum Aliquip tempor veniam proident.\n\nafguab;igab;igubalw\n\nLorem ipsum Dolor sed irure sint in non.\n\n\n';
-            pt = '-----BEGIN PGP SIGNED MESSAGE-----\nHash: WTFHASH\n\n' + expected + '\n-----BEGIN PGP SIGNATURE----------END PGP SIGNATURE-----';
-            message = {
+            var expected = 'Lorem ipsum Aliquip tempor veniam proident.\n\nafguab;igab;igubalw\n\nLorem ipsum Dolor sed irure sint in non.\n\n\n';
+            var pt = '-----BEGIN PGP SIGNED MESSAGE-----\nHash: WTFHASH\n\n' + expected + '\n-----BEGIN PGP SIGNATURE----------END PGP SIGNATURE-----';
+            var message = {
                 uid: uid,
                 from: [{
                     address: 'asdasdasd'
@@ -994,6 +926,7 @@ describe('Email DAO unit tests', function() {
             };
 
             localListStub.returns(resolves([{
+                uid: uid,
                 bodyParts: [{
                     type: 'text',
                     content: pt
@@ -1003,11 +936,10 @@ describe('Email DAO unit tests', function() {
             pgpStub.verifyClearSignedMessage.withArgs(pt, mockKeyPair.publicKey.publicKey).returns(resolves(true));
 
             dao.getBody({
-                message: message,
+                messages: [message],
                 folder: inboxFolder
-            }).then(function(msg) {
-                expect(msg).to.equal(message);
-                expect(msg.body).to.equal(expected);
+            }).then(function() {
+                expect(message.body).to.equal(expected);
                 expect(message.signed).to.be.true;
                 expect(message.signaturesValid).to.be.true;
                 expect(message.loadingBody).to.be.false;
@@ -1021,238 +953,79 @@ describe('Email DAO unit tests', function() {
             expect(message.loadingBody).to.be.true;
         });
 
-        it('should stream from imap and set plain text body', function(done) {
-            var message, body, uid;
-
-            body = 'bender is great! bender is great!';
-            uid = 1234;
-            message = {
-                uid: uid,
-                bodyParts: [{
-                    type: 'text'
-                }]
+        it('should stream from imap and set body', function(done) {
+            var body = 'bender is great! bender is great!';
+            var uid = 1234;
+            var message = {
+                uid: uid
             };
 
             localListStub.withArgs({
                 folder: inboxFolder,
-                uid: uid
-            }).returns(resolves([message]));
+                uid: [uid]
+            }).returns(resolves([]));
 
-            localStoreStub.withArgs({
-                folder: inboxFolder,
-                emails: [message]
-            }).returns(resolves());
-
-            imapGetStub.withArgs({
-                folder: inboxFolder,
-                uid: message.uid,
-                bodyParts: message.bodyParts
+            fetchMessagesStub.withArgs({
+                messages: [message],
+                folder: inboxFolder
             }).returns(resolves([{
-                type: 'text',
-                content: body
+                uid: uid,
+                encrypted: false,
+                bodyParts: [{
+                    type: 'text',
+                    content: body
+                }]
             }]));
 
             dao.getBody({
-                message: message,
+                messages: [message],
                 folder: inboxFolder
-            }).then(function(msg) {
-                expect(msg).to.equal(message);
-                expect(msg.body).to.equal(body);
-                expect(msg.loadingBody).to.be.false;
-
-                expect(localListStub.calledOnce).to.be.true;
-                expect(imapGetStub.calledOnce).to.be.true;
-                expect(localStoreStub.calledOnce).to.be.true;
-
-                done();
-            });
-            expect(message.loadingBody).to.be.true;
-        });
-
-        it('should stream from imap and set encrypted body', function(done) {
-            var message, ct, pt;
-
-            pt = 'bender is great';
-            ct = '-----BEGIN PGP MESSAGE-----asdasdasd-----END PGP MESSAGE-----';
-            message = {
-                uid: uid,
-                encrypted: true,
-                bodyParts: [{
-                    type: 'text'
-                }, {
-                    type: 'encrypted'
-                }]
-            };
-
-            localListStub.withArgs({
-                folder: inboxFolder,
-                uid: uid
-            }).returns(resolves([message]));
-
-            localStoreStub.withArgs({
-                folder: inboxFolder,
-                emails: [message]
-            }).returns(resolves());
-
-            imapGetStub.withArgs({
-                folder: inboxFolder,
-                uid: message.uid,
-                bodyParts: message.bodyParts
-            }).returns(resolves([{
-                type: 'text',
-                content: pt
-            }, {
-                type: 'encrypted',
-                content: ct
-            }]));
-
-
-            dao.getBody({
-                message: message,
-                folder: inboxFolder
-            }).then(function(msg) {
-                expect(msg).to.equal(message);
-                expect(msg.body).to.equal(ct);
-                expect(msg.encrypted).to.be.true;
-                expect(msg.loadingBody).to.be.false;
-
-                expect(localListStub.calledOnce).to.be.true;
-                expect(imapGetStub.calledOnce).to.be.true;
-                expect(localStoreStub.calledOnce).to.be.true;
-
-                done();
-            });
-            expect(message.loadingBody).to.be.true;
-        });
-
-        it('should not error when message is deleted from imap', function(done) {
-            var error = new Error('Can not get the contents of this message. It has already been deleted!');
-            error.hide = true;
-
-            var message = {
-                uid: uid,
-                encrypted: true,
-                bodyParts: [{
-                    type: 'text'
-                }]
-            };
-
-            localListStub.withArgs({
-                folder: inboxFolder,
-                uid: uid
-            }).returns(resolves([message]));
-
-            localStoreStub.withArgs({
-                folder: inboxFolder,
-                emails: [message]
-            }).returns(resolves());
-
-            imapGetStub.withArgs({
-                folder: inboxFolder,
-                uid: message.uid,
-                bodyParts: message.bodyParts
-            }).returns(rejects(error));
-
-
-            dao.getBody({
-                message: message,
-                folder: inboxFolder
-            }).then(function(msg) {
-                expect(msg).to.equal(message);
-                expect(msg.body).to.not.exist;
-                expect(msg.loadingBody).to.be.false;
-
-                expect(localListStub.calledOnce).to.be.true;
-                expect(imapGetStub.calledOnce).to.be.true;
-                expect(localStoreStub.called).to.be.false;
-
-                done();
-            });
-            expect(message.loadingBody).to.be.true;
-        });
-
-        it('should not error when message has already been removed from memory', function(done) {
-            var message = {
-                uid: uid,
-                encrypted: true,
-                bodyParts: [{
-                    type: 'text'
-                }]
-            };
-
-            localListStub.returns(resolves([]));
-
-            dao.getBody({
-                message: message,
-                folder: inboxFolder
-            }).then(function(msg) {
-                expect(msg).to.equal(message);
-                expect(msg.body).to.not.exist;
-                expect(msg.loadingBody).to.be.false;
-
-                expect(localListStub.calledOnce).to.be.true;
-                expect(imapGetStub.called).to.be.false;
-                expect(localStoreStub.called).to.be.false;
-
-                done();
-            });
-            expect(message.loadingBody).to.be.true;
-        });
-
-        it('fail to stream from imap due to error when persisting', function(done) {
-            var message = {
-                uid: uid,
-                bodyParts: [{
-                    type: 'text'
-                }]
-            };
-
-            localListStub.returns(resolves([message]));
-            localStoreStub.returns(rejects({}));
-            imapGetStub.returns(resolves([{
-                type: 'text',
-                content: 'bender is great! bender is great!'
-            }]));
-
-            dao.getBody({
-                message: message,
-                folder: inboxFolder
-            }).catch(function(err) {
-                expect(err).to.exist;
-                expect(localListStub.calledOnce).to.be.true;
-                expect(imapGetStub.calledOnce).to.be.true;
-                expect(localStoreStub.calledOnce).to.be.true;
-
+            }).then(function() {
+                expect(message.body).to.equal(body);
                 expect(message.loadingBody).to.be.false;
 
+                expect(localListStub.calledOnce).to.be.true;
+                expect(fetchMessagesStub.calledOnce).to.be.true;
+
                 done();
             });
+            expect(message.loadingBody).to.be.true;
         });
 
-        it('fail to stream from imap due to stream error', function(done) {
+        it('should not error when message is not available in imap', function(done) {
             var message = {
                 uid: uid,
+                encrypted: true,
                 bodyParts: [{
                     type: 'text'
                 }]
             };
 
-            localListStub.returns(resolves([message]));
-            imapGetStub.returns(rejects({}));
+            localListStub.withArgs({
+                folder: inboxFolder,
+                uid: [uid]
+            }).returns(resolves());
+
+            fetchMessagesStub.withArgs({
+                messages: [message],
+                folder: inboxFolder
+            }).returns(rejects(new Error()));
+
 
             dao.getBody({
-                message: message,
+                messages: [message],
                 folder: inboxFolder
-            }).catch(function(err) {
-                expect(err).to.exist;
-                expect(localListStub.calledOnce).to.be.true;
-                expect(imapGetStub.calledOnce).to.be.true;
-                expect(localStoreStub.called).to.be.false;
-
+            }).then(function(msgs) {
+                expect(msgs).to.be.empty;
+                expect(message.body).to.not.exist;
                 expect(message.loadingBody).to.be.false;
+
+                expect(localListStub.calledOnce).to.be.true;
+                expect(fetchMessagesStub.calledOnce).to.be.true;
 
                 done();
             });
+            expect(message.loadingBody).to.be.true;
         });
     });
 
@@ -1707,7 +1480,6 @@ describe('Email DAO unit tests', function() {
                 done();
             });
         });
-
     });
 
     describe('#sendPlaintext', function() {
@@ -1830,7 +1602,7 @@ describe('Email DAO unit tests', function() {
             var initFoldersStub, credentials;
 
             beforeEach(function() {
-                initFoldersStub = sinon.stub(dao, '_initFoldersFromImap');
+                initFoldersStub = sinon.stub(dao, '_updateFolders');
                 sinon.stub(dao, 'isOnline');
                 delete dao._imapClient;
 
@@ -1840,10 +1612,8 @@ describe('Email DAO unit tests', function() {
             });
 
             it('should connect', function(done) {
-                inboxFolder.messages = [{
-                    uid: 123,
-                    modseq: '123'
-                }];
+                account.folders = [inboxFolder];
+                inboxFolder.uids = [123];
                 dao.isOnline.returns(true);
                 authStub.getCredentials.returns(resolves(credentials));
                 imapClientStub.login.returns(resolves());
@@ -1897,35 +1667,45 @@ describe('Email DAO unit tests', function() {
         });
 
         describe('#_onSyncUpdate', function() {
-            var fetchMessagesStub, deleteMessagesStub, setFlagsStub, msgs;
+            var getBodyStub, deleteMessagesStub, setFlagsStub, localStoreFoldersStub;
+            var msgs;
 
             beforeEach(function() {
                 msgs = [{
                     uid: 5,
-                    flags: ['\\Answered', '\\Seen']
+                    flags: ['\\Answered', '\\Seen'],
+                    bodyParts: []
                 }];
                 inboxFolder.messages = msgs;
-                fetchMessagesStub = sinon.stub(dao, 'fetchMessages');
+                inboxFolder.uids = [5];
+                getBodyStub = sinon.stub(dao, 'getBody');
                 deleteMessagesStub = sinon.stub(dao, 'deleteMessage');
                 setFlagsStub = sinon.stub(dao, 'setFlags');
+                localStoreFoldersStub = sinon.stub(dao, '_localStoreFolders');
             });
 
             it('should get new message', function(done) {
-                fetchMessagesStub.withArgs({
+                getBodyStub.withArgs({
                     folder: inboxFolder,
-                    firstUid: 1,
-                    lastUid: 3
+                    messages: [{
+                        uid: 7
+                    }, {
+                        uid: 8
+                    }],
+                    notifyNew: true
                 }).returns(resolves());
+
+                localStoreFoldersStub.returns(resolves());
 
                 dao._onSyncUpdate({
                     type: 'new',
                     path: inboxFolder.path,
-                    list: [1, 3]
+                    list: [1, 7, 8]
                 });
 
                 setTimeout(function() {
-                    expect(dialogStub.error.calledOnce).to.be.true;
-                    expect(fetchMessagesStub.calledOnce).to.be.true;
+                    expect(getBodyStub.calledOnce).to.be.true;
+                    expect(localStoreFoldersStub.calledOnce).to.be.true;
                     done();
                 }, 0);
             });
@@ -1944,7 +1724,6 @@ describe('Email DAO unit tests', function() {
                 });
 
                 setTimeout(function() {
-                    expect(dialogStub.error.calledOnce).to.be.true;
                     expect(deleteMessagesStub.calledOnce).to.be.true;
                     done();
                 }, 0);
@@ -1964,7 +1743,6 @@ describe('Email DAO unit tests', function() {
                 });
 
                 setTimeout(function() {
-                    expect(dialogStub.error.calledOnce).to.be.true;
                     expect(setFlagsStub.calledOnce).to.be.true;
                     done();
                 }, 0);
@@ -2054,50 +1832,15 @@ describe('Email DAO unit tests', function() {
             });
         });
 
-        describe('#_initFoldersFromDisk', function() {
+        describe('#_updateFolders', function() {
             beforeEach(function() {
-                sinon.stub(dao, 'refreshFolder');
-            });
-
-            it('should initialize from disk if offline and not refresh folder', function(done) {
-                devicestorageStub.listItems.withArgs('folders').returns(resolves([
-                    [inboxFolder]
-                ]));
-                dao.refreshFolder.withArgs({
-                    folder: inboxFolder
-                }).returns(resolves());
-
-                dao._initFoldersFromDisk().then(function() {
-                    expect(devicestorageStub.listItems.calledOnce).to.be.true;
-                    expect(dao.refreshFolder.called).to.be.false;
-                    done();
-                });
-            });
-
-            it('should initialize from disk if offline and refresh folder', function(done) {
-                delete inboxFolder.messages;
-                devicestorageStub.listItems.withArgs('folders').returns(resolves([
-                    [inboxFolder]
-                ]));
-                dao.refreshFolder.withArgs({
-                    folder: inboxFolder
-                }).returns(resolves());
-
-                dao._initFoldersFromDisk().then(function() {
-                    expect(devicestorageStub.listItems.calledOnce).to.be.true;
-                    expect(dao.refreshFolder.calledOnce).to.be.true;
-                    done();
-                });
-            });
-        });
-
-        describe('#_initFoldersFromImap', function() {
-            beforeEach(function() {
-                sinon.stub(dao, 'refreshFolder');
+                sinon.stub(dao, 'getBody');
             });
 
             it('should initialize from imap if online', function(done) {
                 account.folders = [];
+                inboxFolder.uids = [7];
+                inboxFolder.messages = undefined;
                 imapClientStub.listWellKnownFolders.returns(resolves({
                     Inbox: [inboxFolder],
                     Sent: [sentFolder],
@@ -2131,11 +1874,17 @@ describe('Email DAO unit tests', function() {
                     return true;
                 }), 'folders').returns(resolves());
 
-                dao.refreshFolder.returns(resolves());
+                dao.getBody.withArgs({
+                    folder: inboxFolder,
+                    messages: [{
+                        uid: 7
+                    }]
+                }).returns(resolves());
 
-                dao._initFoldersFromImap().then(function() {
+                dao._updateFolders().then(function() {
                     expect(imapClientStub.listWellKnownFolders.calledOnce).to.be.true;
                     expect(devicestorageStub.storeList.calledOnce).to.be.true;
+                    expect(dao.getBody.calledOnce).to.be.true;
                     done();
                 });
             });
@@ -2156,51 +1905,34 @@ describe('Email DAO unit tests', function() {
                     Other: [otherFolder]
                 }));
                 devicestorageStub.storeList.withArgs(sinon.match(function(arg) {
-                    expect(arg[0]).to.deep.equal([{
-                        name: inboxFolder.name,
-                        path: inboxFolder.path,
-                        type: inboxFolder.type,
-                        wellknown: true
-                    }, {
-                        name: sentFolder.name,
-                        path: sentFolder.path,
-                        type: sentFolder.type,
-                        wellknown: true
-                    }, {
-                        name: outboxFolder.name,
-                        path: outboxFolder.path,
-                        type: outboxFolder.type,
-                        wellknown: true
-                    }, {
-                        name: draftsFolder.name,
-                        path: draftsFolder.path,
-                        type: draftsFolder.type,
-                        wellknown: true
-                    }, {
-                        name: trashFolder.name,
-                        path: trashFolder.path,
-                        type: trashFolder.type,
-                        wellknown: true
-                    }, {
-                        name: flaggedFolder.name,
-                        path: flaggedFolder.path,
-                        type: flaggedFolder.type,
-                        wellknown: true
-                    }, {
-                        name: otherFolder.name,
-                        path: otherFolder.path,
-                        type: otherFolder.type,
-                        wellknown: false
-                    }]);
-
+                    expect(arg[0][0].name).to.deep.equal(inboxFolder.name);
+                    expect(arg[0][0].path).to.deep.equal(inboxFolder.path);
+                    expect(arg[0][0].type).to.deep.equal(inboxFolder.type);
+                    expect(arg[0][1].name).to.deep.equal(sentFolder.name);
+                    expect(arg[0][1].path).to.deep.equal(sentFolder.path);
+                    expect(arg[0][1].type).to.deep.equal(sentFolder.type);
+                    expect(arg[0][2].name).to.deep.equal(outboxFolder.name);
+                    expect(arg[0][2].path).to.deep.equal(outboxFolder.path);
+                    expect(arg[0][2].type).to.deep.equal(outboxFolder.type);
+                    expect(arg[0][3].name).to.deep.equal(draftsFolder.name);
+                    expect(arg[0][3].path).to.deep.equal(draftsFolder.path);
+                    expect(arg[0][3].type).to.deep.equal(draftsFolder.type);
+                    expect(arg[0][4].name).to.deep.equal(trashFolder.name);
+                    expect(arg[0][4].path).to.deep.equal(trashFolder.path);
+                    expect(arg[0][4].type).to.deep.equal(trashFolder.type);
+                    expect(arg[0][5].name).to.deep.equal(flaggedFolder.name);
+                    expect(arg[0][5].path).to.deep.equal(flaggedFolder.path);
+                    expect(arg[0][5].type).to.deep.equal(flaggedFolder.type);
+                    expect(arg[0][6].name).to.deep.equal(otherFolder.name);
+                    expect(arg[0][6].path).to.deep.equal(otherFolder.path);
+                    expect(arg[0][6].type).to.deep.equal(otherFolder.type);
                     return true;
                 }), 'folders').returns(resolves());
 
-                dao.refreshFolder.returns(resolves());
-
-                dao._initFoldersFromImap().then(function() {
+                dao._updateFolders().then(function() {
                     expect(imapClientStub.listWellKnownFolders.calledOnce).to.be.true;
                     expect(devicestorageStub.storeList.calledOnce).to.be.true;
+                    expect(dao.getBody.called).to.be.false;
                     done();
                 });
             });
@@ -2282,26 +2014,62 @@ describe('Email DAO unit tests', function() {
             });
         });
 
-        describe('#_imapListMessages', function() {
-            var firstUid = 1337,
-                lastUid = 1339;
+        describe('#_fetchMessages', function() {
+            var localStoreStub, localStoreFoldersStub, getBodyPartsStub;
+            var messages;
+
+            beforeEach(function() {
+                localStoreStub = sinon.stub(dao, '_localStoreMessages');
+                localStoreFoldersStub = sinon.stub(dao, '_localStoreFolders');
+                getBodyPartsStub = sinon.stub(dao, '_getBodyParts');
+                messages = [{
+                    uid: 1337,
+                    subject: 'asdasd',
+                    unread: true,
+                    modseq: '124',
+                    bodyParts: [{
+                        type: 'text'
+                    }]
+                }, {
+                    uid: 1339,
+                    subject: 'asdasd',
+                    unread: true,
+                    modseq: '124',
+                    bodyParts: [{
+                        type: 'attachment'
+                    }]
+                }];
+            });
 
             it('should list messages', function(done) {
                 imapClientStub.listMessages.withArgs({
-                    folder: inboxFolder,
                     path: inboxFolder.path,
-                    firstUid: firstUid,
-                    lastUid: lastUid
-                }).returns(resolves([]));
-
-                dao._imapListMessages({
+                    uids: [1337, 1339]
+                }).returns(resolves(messages));
+                localStoreStub.withArgs({
                     folder: inboxFolder,
-                    firstUid: firstUid,
-                    lastUid: lastUid
+                    emails: [messages[0]]
+                }).returns(resolves());
+                localStoreStub.withArgs({
+                    folder: inboxFolder,
+                    emails: [messages[1]]
+                }).returns(resolves());
+                localStoreFoldersStub.returns(resolves());
+                getBodyPartsStub.withArgs({
+                    folder: inboxFolder,
+                    uid: messages[0].uid,
+                    bodyParts: messages[0].bodyParts
+                }).returns(resolves(messages[0].bodyParts));
+
+                dao._fetchMessages({
+                    folder: inboxFolder,
+                    messages: messages
                 }).then(function(msgs) {
                     expect(msgs).to.exist;
 
                     expect(imapClientStub.listMessages.calledOnce).to.be.true;
+                    expect(localStoreStub.calledOnce).to.be.true;
+                    expect(getBodyPartsStub.calledOnce).to.be.true;
 
                     done();
                 });
@@ -2310,10 +2078,9 @@ describe('Email DAO unit tests', function() {
             it('should fail when listMessages fails', function(done) {
                 imapClientStub.listMessages.returns(rejects({}));
 
-                dao._imapListMessages({
+                dao._fetchMessages({
                     folder: inboxFolder,
-                    firstUid: firstUid,
-                    lastUid: lastUid
+                    messages: messages
                 }).catch(function(err) {
                     expect(err).to.exist;
                     expect(imapClientStub.listMessages.calledOnce).to.be.true;
@@ -2325,7 +2092,7 @@ describe('Email DAO unit tests', function() {
             it('should fail when disconnected', function(done) {
                 dao._account.online = false;
 
-                dao._imapListMessages({}).catch(function(err) {
+                dao._fetchMessages({}).catch(function(err) {
                     expect(err.code).to.equal(42);
                     done();
                 });
@@ -2456,7 +2223,7 @@ describe('Email DAO unit tests', function() {
             var uid = 123;
 
             it('should list without uid', function(done) {
-                devicestorageStub.listItems.withArgs('email_' + inboxFolder.path, 0, null).returns(resolves([{}]));
+                devicestorageStub.listItems.withArgs('email_' + inboxFolder.path, true).returns(resolves([{}]));
 
                 dao._localListMessages({
                     folder: inboxFolder
@@ -2467,7 +2234,7 @@ describe('Email DAO unit tests', function() {
             });
 
             it('should list with uid', function(done) {
-                devicestorageStub.listItems.withArgs('email_' + inboxFolder.path + '_' + uid, 0, null).returns(resolves([{}]));
+                devicestorageStub.listItems.withArgs('email_' + inboxFolder.path + '_' + uid, true).returns(resolves([{}]));
 
                 dao._localListMessages({
                     folder: inboxFolder,

@@ -54,23 +54,15 @@ var MailListCtrl = function($scope, $timeout, $location, $filter, $q, status, no
     // scope functions
     //
 
-    $scope.getBody = function(message) {
+    $scope.getBody = function(messages) {
         return $q(function(resolve) {
             resolve();
 
         }).then(function() {
             return email.getBody({
                 folder: currentFolder(),
-                message: message
+                messages: messages
             });
-
-        }).then(function() {
-            // automatically decrypt if it's the selected message
-            if (message === currentMessage()) {
-                return email.decryptBody({
-                    message: message
-                });
-            }
 
         }).catch(function(err) {
             if (err.code !== 42) {
@@ -136,6 +128,10 @@ var MailListCtrl = function($scope, $timeout, $location, $filter, $q, status, no
      * Date formatting
      */
     $scope.formatDate = function(date) {
+        if (!date) {
+            return;
+        }
+
         if (typeof date === 'string') {
             date = new Date(date);
         }

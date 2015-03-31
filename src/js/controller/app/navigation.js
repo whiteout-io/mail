@@ -112,9 +112,7 @@ var NavigationCtrl = function($scope, $location, $q, $timeout, account, email, o
             resolve();
 
         }).then(function() {
-            return email.refreshFolder({
-                folder: ob
-            });
+            return email.refreshOutbox();
 
         }).catch(dialog.error);
     };

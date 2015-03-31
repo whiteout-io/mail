@@ -18,7 +18,7 @@ var POST_UPDATE_DB_VERSION = 5;
  */
 function update(options) {
     // remove the emails
-    return options.userStorage.listItems(FOLDER_DB_TYPE, 0, null).then(function(stored) {
+    return options.userStorage.listItems(FOLDER_DB_TYPE).then(function(stored) {
         var folders = stored[0] || [];
         [FOLDER_TYPE_INBOX, FOLDER_TYPE_SENT, FOLDER_TYPE_DRAFTS, FOLDER_TYPE_TRASH].forEach(function(mbxType) {
             var foldersForType = folders.filter(function(mbx) {

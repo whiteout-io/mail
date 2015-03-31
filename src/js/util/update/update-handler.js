@@ -32,7 +32,7 @@ UpdateHandler.prototype.update = function() {
         targetVersion = cfg.dbVersion,
         versionDbType = 'dbVersion';
 
-    return self._appConfigStorage.listItems(versionDbType, 0, null).then(function(items) {
+    return self._appConfigStorage.listItems(versionDbType).then(function(items) {
         // parse the database version number
         if (items && items.length > 0) {
             currentVersion = parseInt(items[0], 10);
