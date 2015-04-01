@@ -1,18 +1,33 @@
 'use strict';
 
-var CreateAccountCtrl = function($scope, $location, $routeParams, $q, auth, admin, appConfig) {
+var CreateAccountCtrl = function($scope, $location, $routeParams, $q, auth, admin, appConfig, dialog) {
     !$routeParams.dev && !auth.isInitialized() && $location.path('/'); // init app
 
     // init phone region
     $scope.region = 'DE';
     $scope.domain = '@' + appConfig.config.mailServer.domain;
 
-    $scope.createWhiteoutAccount = function() {
+    $scope.showConfirm = function() {
         if ($scope.form.$invalid) {
             $scope.errMsg = 'Please fill out all required fields!';
             return;
         }
 
+        return dialog.confirm({
+            title: 'SMS validation',
+            message: 'Your mobile phone number will be validated via SMS. Are you sure it\'s correct?',
+            positiveBtnStr: 'Yes',
+            negativeBtnStr: 'Check again',
+            showNegativeBtn: true,
+            callback: function(granted) {
+                if (granted) {
+                    $scope.createWhiteoutAccount();
+                }
+            }
+        });
+    };
+
+    $scope.createWhiteoutAccount = function() {
         return $q(function(resolve) {
             $scope.busy = true;
             $scope.errMsg = undefined; // reset error msg
