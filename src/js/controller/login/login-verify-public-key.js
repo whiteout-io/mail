@@ -1,6 +1,6 @@
 'use strict';
 
-var RETRY_INTERVAL = 10000;
+var RETRY_INTERVAL = 5000;
 
 var PublicKeyVerifierCtrl = function($scope, $location, $q, $timeout, $interval, auth, publickeyVerifier, publicKey) {
     $scope.retries = 0;
@@ -9,11 +9,6 @@ var PublicKeyVerifierCtrl = function($scope, $location, $q, $timeout, $interval,
      * Runs a verification attempt
      */
     $scope.verify = function() {
-        if ($scope.busy) {
-            return;
-        }
-
-        $scope.busy = true;
         disarmTimeouts();
 
         return $q(function(resolve) {
@@ -34,7 +29,6 @@ var PublicKeyVerifierCtrl = function($scope, $location, $q, $timeout, $interval,
             return success();
 
         }).catch(function(error) {
-            $scope.busy = false;
             $scope.errMsg = error.message; // display error
 
             scheduleVerification(); // schedule next verification attempt

@@ -1,4 +1,4 @@
-<section class="page" ng-class="{'u-waiting-cursor': busy}">
+<section class="page u-waiting-cursor">
   <div class="page__canvas">
     <header class="page__header">
       <img src="img/whiteout_logo.svg" alt="whiteout.io">
@@ -6,30 +6,14 @@
     <main class="page__main">
       <h2 class="typo-title">Email address verification</h2>
       <p class="typo-paragraph">
-        We will now automatically verify your email address with a confirmation message we've sent you.
+        We will now automatically verify your email address with a confirmation message.
       </p>
-      <div ng-show="!busy">
-        <p class="typo-paragraph">
-          Verifying your email address in {{countdown}} seconds.
-        </p>
 
-        <form class="form" name="form">
-          <p class="form__error-message" ng-show="errMsg">{{errMsg}}</p>
-          <div class="form__row">
-            <button type="submit" ng-click="verify()" class="btn" tabindex="1">Verify now</button>
-          </div>
-        </form>
+      <p class="form__error-message" ng-show="errMsg">{{errMsg}}</p>
+
+      <div class="spinner-block spinner-block--standalone">
+        <span class="spinner spinner--big"></span>
       </div>
-
-      <div ng-show="busy">
-        <p class="typo-paragraph">
-          This could take a moment. Please be patient, you'll be forwarded to your inbox when verification is successful.
-        </p>
-        <div class="spinner-block spinner-block--standalone">
-          <span class="spinner spinner--big"></span>
-        </div>
-      </div>
-
     </main>
     <div ng-include="'tpl/page-footer.html'"></div>
   </div>
