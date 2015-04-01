@@ -22,17 +22,16 @@ var LoginPrivateKeyUploadCtrl = function($scope, $location, $routeParams, $q, au
     //
 
     $scope.encryptAndUploadKey = function() {
-        if ($scope.inputCode.toUpperCase() !== $scope.code) {
-            $scope.errMsg = 'The code does not match. Please go back and check the generated code.';
-            return;
-        }
-
-        // register device to keychain service
         return $q(function(resolve) {
             $scope.busy = true;
             $scope.errMsg = undefined;
             $scope.incorrect = false;
             resolve();
+
+        }).then(function() {
+            if ($scope.inputCode.toUpperCase() !== $scope.code) {
+                throw new Error('The code does not match. Please go back and check the generated code.');
+            }
 
         }).then(function() {
             // login to imap

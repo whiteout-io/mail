@@ -31,8 +31,11 @@
       <div ng-show="step === 2">
         <p class="typo-paragraph">Please confirm the backup code you have written down.</p>
         <form class="form">
+          <p class="form__error-message" ng-show="errMsg">{{errMsg}}</p>
+
           <div class="form__row">
-            <input type="text" class="input-text" ng-model="inputCode" wo-input-code wo-focus-me="step === 2"
+            <input type="text" class="input-text" ng-class="{'input-text--error':incorrect}"
+              ng-model="inputCode" wo-input-code wo-focus-me="step === 2"
               required pattern="([a-zA-Z0-9\-]*)" placeholder="0000-0000-0000-0000-0000-0000"
               autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
           </div>

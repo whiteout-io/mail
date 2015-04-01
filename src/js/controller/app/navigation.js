@@ -204,9 +204,12 @@ var NavigationCtrl = function($scope, $location, $q, $timeout, account, email, o
                     showNegativeBtn: true,
                     callback: function(granted) {
                         if (granted) {
-                            // send to key upload screen
-                            $timeout(function() {
-                                $location.path('/login-privatekey-upload');
+                            // logout of the current session
+                            email.onDisconnect().then(function() {
+                                // send to key upload screen
+                                $timeout(function() {
+                                    $location.path('/login-privatekey-upload');
+                                });
                             });
                         }
                     }

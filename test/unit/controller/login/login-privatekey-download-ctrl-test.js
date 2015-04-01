@@ -103,12 +103,11 @@ describe('Login Private Key Download Controller unit test', function() {
                 keyId: cachedKeypair.publicKey._id
             }).returns(resolves(encryptedPrivateKey));
             privateKeyStub.decrypt.returns(resolves(privkey));
-            emailDaoMock.unlock.returns(rejects());
+            emailDaoMock.unlock.returns(rejects(new Error()));
             authMock.storeCredentials.returns(resolves());
             privateKeyStub.destroy.returns(resolves());
 
             scope.checkCode().then(function() {
-                expect(scope.errMsg).to.not.exist;
                 expect(scope.goTo.withArgs('/login-existing').calledOnce).to.be.true;
                 done();
             });

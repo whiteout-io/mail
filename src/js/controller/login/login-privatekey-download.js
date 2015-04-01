@@ -54,9 +54,10 @@ var LoginPrivateKeyDownloadCtrl = function($scope, $location, $routeParams, $q, 
             return email.unlock({
                 keypair: cachedKeypair,
                 passphrase: undefined
-            }).catch(function() {
+            }).catch(function(err) {
                 // passphrase incorrct ... go to passphrase login screen
                 $scope.goTo('/login-existing');
+                throw err;
             });
 
         }).then(function() {

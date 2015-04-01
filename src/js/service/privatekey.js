@@ -41,7 +41,7 @@ PrivateKey.prototype.init = function() {
  * Cleanup by logging out of the imap client.
  */
 PrivateKey.prototype.destroy = function() {
-    this._imap.login();
+    this._imap.logout();
     // don't wait for logout to complete
     return new Promise(function(resolve) {
         resolve();
@@ -111,8 +111,10 @@ PrivateKey.prototype.upload = function(options) {
             path: IMAP_KEYS_FOLDER
         }).then(function() {
             self._axe.debug('Successfully created imap folder ' + IMAP_KEYS_FOLDER);
-        }).catch(function() {
-            self._axe.debug('Creating imap folder ' + IMAP_KEYS_FOLDER + ' failed. Probably already available.');
+        }).catch(function(err) {
+            var prettyErr = new Error('Creating imap folder ' + IMAP_KEYS_FOLDER + ' failed: ' + err.message);
+            self._axe.error(prettyErr);
+            throw prettyErr;
         });
     }).then(createMessage).then(function(message) {
         // upload to imap folder

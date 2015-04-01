@@ -57,8 +57,9 @@ describe('Login Private Key Upload Controller unit test', function() {
 
         it('should fail for invalid code', function() {
             scope.inputCode = 'asdf';
-            scope.encryptAndUploadKey();
-            expect(scope.errMsg).to.match(/go back and check/);
+            scope.encryptAndUploadKey().then(function() {
+                expect(scope.errMsg).to.match(/go back and check/);
+            });
         });
 
         it('should work', function(done) {

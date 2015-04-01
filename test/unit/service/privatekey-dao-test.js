@@ -35,7 +35,7 @@ describe('Private Key DAO unit tests', function() {
     describe('destroy', function() {
         it('should work', function(done) {
             privkeyDao.destroy().then(function() {
-                expect(imapClientStub.login.calledOnce).to.be.true;
+                expect(imapClientStub.logout.calledOnce).to.be.true;
                 done();
             });
         });
