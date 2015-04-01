@@ -52,19 +52,8 @@ var LoginCtrl = function($scope, $timeout, $location, updateHandler, account, au
             });
 
         } else if (availableKeys && availableKeys.publicKey && !availableKeys.privateKey) {
-            // check if private key is synced
-            return keychain.requestPrivateKeyDownload({
-                userId: availableKeys.publicKey.userId,
-                keyId: availableKeys.publicKey._id,
-            }).then(function(privateKeySynced) {
-                if (privateKeySynced) {
-                    // private key is synced, proceed to download
-                    return $scope.goTo('/login-privatekey-download');
-                } else {
-                    // no private key, import key file
-                    return $scope.goTo('/login-new-device');
-                }
-            });
+            // proceed to private key download
+            return $scope.goTo('/login-privatekey-download');
 
         } else {
             // no public key available, start onboarding process

@@ -32,8 +32,22 @@ PublickeyVerifier.prototype.configure = function() {
     });
 };
 
+PublickeyVerifier.prototype.uploadPublicKey = function() {
+    if (this.keypair) {
+        return this._keychain.uploadPublicKey(this.keypair.publicKey);
+    }
+    return new Promise(function(resolve) {
+        resolve();
+    });
+};
+
 PublickeyVerifier.prototype.persistKeypair = function() {
-    return this._keychain.putUserKeyPair(this.keypair);
+    if (this.keypair) {
+        return this._keychain.putUserKeyPair(this.keypair);
+    }
+    return new Promise(function(resolve) {
+        resolve();
+    });
 };
 
 PublickeyVerifier.prototype.verify = function() {

@@ -15,7 +15,6 @@ appCfg.config = {
     pgpComment: 'Whiteout Mail - https://whiteout.io',
     keyServerUrl: 'https://keys.whiteout.io',
     hkpUrl: 'http://keyserver.ubuntu.com',
-    privkeyServerUrl: 'https://keychain.whiteout.io',
     adminUrl: 'https://admin-node.whiteout.io',
     settingsUrl: 'https://settings.whiteout.io/autodiscovery/',
     mailServer: {
@@ -70,8 +69,6 @@ function setConfigParams(manifest) {
 
     // get key server base url
     cfg.keyServerUrl = getUrl('https://keys');
-    // get keychain server base url
-    cfg.privkeyServerUrl = getUrl('https://keychain');
     // get the app version
     cfg.appVersion = manifest.version;
 }

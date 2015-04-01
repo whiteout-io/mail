@@ -190,11 +190,11 @@ module.exports = function(grunt) {
                         'test/unit/controller/login/login-initial-ctrl-test.js',
                         'test/unit/controller/login/login-new-device-ctrl-test.js',
                         'test/unit/controller/login/login-privatekey-download-ctrl-test.js',
+                        'test/unit/controller/login/login-privatekey-upload-ctrl-test.js',
                         'test/unit/controller/login/login-verify-public-key-ctrl-test.js',
                         'test/unit/controller/login/login-set-credentials-ctrl-test.js',
                         'test/unit/controller/login/login-ctrl-test.js',
                         'test/unit/controller/app/dialog-ctrl-test.js',
-                        'test/unit/controller/app/privatekey-upload-ctrl-test.js',
                         'test/unit/controller/app/publickey-import-ctrl-test.js',
                         'test/unit/controller/app/account-ctrl-test.js',
                         'test/unit/controller/app/set-passphrase-ctrl-test.js',
@@ -677,8 +677,7 @@ module.exports = function(grunt) {
         patchManifest({
             version: version,
             deleteKey: true,
-            keyServer: 'https://keys.whiteout.io/',
-            keychainServer: 'https://keychain.whiteout.io/'
+            keyServer: 'https://keys.whiteout.io/'
         });
     });
 
@@ -699,10 +698,6 @@ module.exports = function(grunt) {
         if (options.keyServer) {
             var ksIndex = manifest.permissions.indexOf('https://keys-test.whiteout.io/');
             manifest.permissions[ksIndex] = options.keyServer;
-        }
-        if (options.keychainServer) {
-            var kcsIndex = manifest.permissions.indexOf('https://keychain-test.whiteout.io/');
-            manifest.permissions[kcsIndex] = options.keychainServer;
         }
         if (options.deleteKey) {
             delete manifest.key;

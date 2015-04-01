@@ -3,7 +3,7 @@
 var Auth = require('../../../../src/js/service/auth'),
     Dialog = require('../../../../src/js/util/dialog'),
     PublicKeyVerifier = require('../../../../src/js/service/publickey-verifier'),
-    KeychainDAO = require('../../../../src/js/service/keychain'),
+    PublicKey = require('../../../../src/js/service/publickey'),
     PublicKeyVerifierCtrl = require('../../../../src/js/controller/login/login-verify-public-key');
 
 describe('Public Key Verification Controller unit test', function() {
@@ -11,7 +11,7 @@ describe('Public Key Verification Controller unit test', function() {
     var scope, location;
 
     // Stubs & Fixture
-    var auth, verifier, dialogStub, keychain;
+    var auth, verifier, dialogStub, publicKeyStub;
     var emailAddress = 'foo@foo.com';
 
     // SUT
@@ -22,8 +22,9 @@ describe('Public Key Verification Controller unit test', function() {
         auth = sinon.createStubInstance(Auth);
         verifier = sinon.createStubInstance(PublicKeyVerifier);
         dialogStub = sinon.createStubInstance(Dialog);
-        keychain = sinon.createStubInstance(KeychainDAO);
+        publicKeyStub = sinon.createStubInstance(PublicKey);
 
+        verifier.uploadPublicKey.returns(resolves());
         auth.emailAddress = emailAddress;
 
         // setup the controller
@@ -39,7 +40,7 @@ describe('Public Key Verification Controller unit test', function() {
                 auth: auth,
                 publickeyVerifier: verifier,
                 dialog: dialogStub,
-                keychain: keychain,
+                publicKey: publicKeyStub,
                 appConfig: {
                     string: {
                         publickeyVerificationSkipTitle: 'foo',
@@ -56,14 +57,14 @@ describe('Public Key Verification Controller unit test', function() {
         it('should verify', function(done) {
             var credentials = {};
 
-            keychain.getUserKeyPair.withArgs(emailAddress).returns(resolves({}));
+            publicKeyStub.getByUserId.withArgs(emailAddress).returns(resolves());
             auth.getCredentials.returns(resolves(credentials));
             verifier.configure.withArgs(credentials).returns(resolves());
             verifier.verify.withArgs().returns(resolves());
             verifier.persistKeypair.returns(resolves());
 
             scope.verify().then(function() {
-                expect(keychain.getUserKeyPair.calledOnce).to.be.true;
+                expect(publicKeyStub.getByUserId.calledOnce).to.be.true;
                 expect(auth.getCredentials.calledOnce).to.be.true;
                 expect(verifier.configure.calledOnce).to.be.true;
                 expect(verifier.verify.calledOnce).to.be.true;
@@ -75,12 +76,12 @@ describe('Public Key Verification Controller unit test', function() {
         });
 
         it('should skip verification when key is already verified', function(done) {
-            keychain.getUserKeyPair.withArgs(emailAddress).returns(resolves({
+            publicKeyStub.getByUserId.withArgs(emailAddress).returns(resolves({
                 publicKey: {}
             }));
 
             scope.verify().then(function() {
-                expect(keychain.getUserKeyPair.calledOnce).to.be.true;
+                expect(publicKeyStub.getByUserId.calledOnce).to.be.true;
                 expect(auth.getCredentials.called).to.be.false;
                 expect(verifier.configure.called).to.be.false;
                 expect(verifier.verify.called).to.be.false;

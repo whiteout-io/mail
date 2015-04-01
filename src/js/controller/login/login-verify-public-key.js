@@ -2,7 +2,7 @@
 
 var RETRY_INTERVAL = 10000;
 
-var PublicKeyVerifierCtrl = function($scope, $location, $q, $timeout, $interval, auth, publickeyVerifier, keychain) {
+var PublicKeyVerifierCtrl = function($scope, $location, $q, $timeout, $interval, auth, publickeyVerifier, publicKey) {
     $scope.retries = 0;
 
     /**
@@ -22,10 +22,10 @@ var PublicKeyVerifierCtrl = function($scope, $location, $q, $timeout, $interval,
 
         }).then(function() {
             // pre-flight check: is there already a public key for the user?
-            return keychain.getUserKeyPair(auth.emailAddress);
+            return publicKey.getByUserId(auth.emailAddress);
 
-        }).then(function(keypair) {
-            if (!keypair || !keypair.publicKey) {
+        }).then(function(cloudPubkey) {
+            if (!cloudPubkey || (cloudPubkey && cloudPubkey.source)) {
                 // no pubkey, need to do the roundtrip
                 return verifyImap();
             }
@@ -94,7 +94,8 @@ var PublicKeyVerifierCtrl = function($scope, $location, $q, $timeout, $interval,
         clearInterval($scope.countdownDecrement);
     }
 
-    scheduleVerification();
+    // upload public key and then schedule verifcation
+    publickeyVerifier.uploadPublicKey().then(scheduleVerification);
 };
 
 module.exports = PublicKeyVerifierCtrl;

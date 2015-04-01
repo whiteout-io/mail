@@ -5,33 +5,28 @@
     </header>
     <main class="page__main">
       <h2 class="typo-title">Import PGP key</h2>
-      <p class="typo-paragraph">Please import an existing key from the file system.</p>
+      <p class="typo-paragraph">Please import an existing key. You can import a key via copy/paste or from the filesystem.</p>
 
       <form class="form" name="form">
-        <fieldset class="form-fieldset form-fieldset--standalone">
-          <legend>On a mobile device?</legend>
-          <p class="typo-paragraph">
-            If you cannot import your key via a USB stick, you can setup <em>Key sync</em>
-            on a desktop PC to securely transfer your PGP key over the Whiteout cloud.
-            <a href="https://blog.whiteout.io/2014/07/07/secure-pgp-key-sync-a-proposal/" target="_blank">Learn more</a>.
-          </p>
-        </fieldset>
-
         <p class="form__error-message" ng-show="errMsg">{{errMsg}}</p>
         <div class="form__row">
-          <input class="input-file" type="file" file-reader tabindex="1" required>
+          <textarea class="textarea" placeholder="Paste PRIVATE PGP KEY BLOCK here..." ng-model="pastedKey" ng-change="pasteKey(pastedKey)" tabindex="1"></textarea>
+        </div>
+        <div class="form__row">
+          <input class="input-file" type="file" file-reader tabindex="2">
         </div>
         <div class="form__row">
           <input class="input-text" type="password" ng-model="passphrase"
-            ng-class="{'input-text--error':incorrect}" placeholder="Passphrase" tabindex="2">
+            ng-class="{'input-text--error':incorrect}" placeholder="Passphrase" tabindex="3">
         </div>
         <div class="spinner-block" ng-show="busy">
           <span class="spinner spinner--big"></span>
         </div>
         <div class="form__row">
-          <button type="submit" ng-click="confirmPassphrase()" class="btn" tabindex="3">Import</button>
+          <button type="submit" ng-click="confirmPassphrase()" class="btn" tabindex="4">Import</button>
         </div>
       </form>
+
       <p class="typo-paragraph">
         <a href="https://whiteout.io/revocation.html" title="Click here to reset your account." target="_blank">
           Lost your keyfile or passphrase?

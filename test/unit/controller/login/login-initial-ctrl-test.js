@@ -112,7 +112,7 @@ describe('Login (initial user) Controller unit test', function() {
                 expect(scope.errMsg).to.not.exist;
                 expect(scope.state.ui).to.equal(2);
                 expect(newsletterStub.called).to.be.true;
-                expect(location.$$path).to.equal('/login-verify-public-key');
+                expect(location.$$path).to.equal('/login-privatekey-upload');
                 expect(emailMock.unlock.calledOnce).to.be.true;
                 done();
             });

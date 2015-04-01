@@ -60,6 +60,15 @@ describe('Login (new device) Controller unit test', function() {
         });
     });
 
+    describe('pasteKey', function() {
+        it('should work', function() {
+            var keyStr = '-----BEGIN PGP PRIVATE KEY BLOCK----- asdf -----END PGP PRIVATE KEY BLOCK-----';
+            scope.pasteKey(keyStr);
+
+            expect(scope.key.privateKeyArmored).to.equal(keyStr);
+        });
+    });
+
     describe('confirm passphrase', function() {
         it('should unlock crypto with a public key on the server', function(done) {
             scope.passphrase = passphrase;
@@ -107,7 +116,7 @@ describe('Login (new device) Controller unit test', function() {
             scope.confirmPassphrase().then(function() {
                 expect(emailMock.unlock.calledOnce).to.be.true;
                 expect(keychainMock.getUserKeyPair.calledOnce).to.be.true;
-                expect(location.$$path).to.equal('/login-verify-public-key');
+                expect(location.$$path).to.equal('/login-privatekey-upload');
                 done();
             });
         });

@@ -1,0 +1,54 @@
+<section class="page" ng-class="{'u-waiting-cursor': busy}">
+  <div class="page__canvas">
+    <div class="toolbar" ng-show="step > 1">
+      <a class="toolbar__label" href="#" wo-touch="$event.preventDefault(); goBack()"><svg><use xlink:href="#icon-back" /></svg> Back</a>
+    </div>
+    <header class="page__header">
+      <img src="img/whiteout_logo.svg" alt="whiteout.io">
+    </header>
+
+    <main class="page__main">
+      <h2 class="typo-title">Backup code</h2>
+
+      <div ng-show="step === 1">
+        <p class="typo-paragraph">
+          Your backup code can be used to securely backup and synchronize your encryption key between devices.
+        </p>
+        <p class="typo-paragraph">
+          <code class="typo-code">{{displayedCode}}</code>
+        </p>
+        <p class="typo-paragraph">
+          Please write down your backup code and keep it in a safe place. Whiteout Networks cannot recover a lost code.
+        </p>
+
+        <form class="form">
+          <div class="form__row">
+            <button class="btn btn--big" type="submit" ng-click="goForward()">Continue</button>
+          </div>
+        </form>
+      </div>
+
+      <div ng-show="step === 2">
+        <p class="typo-paragraph">Please confirm the backup code you have written down.</p>
+        <form class="form">
+          <p class="form__error-message" ng-show="errMsg">{{errMsg}}</p>
+
+          <div class="form__row">
+            <input type="text" class="input-text" ng-class="{'input-text--error':incorrect}"
+              ng-model="inputCode" wo-input-code wo-focus-me="step === 2"
+              required pattern="([a-zA-Z0-9\-]*)" placeholder="0000-0000-0000-0000-0000-0000"
+              autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+          </div>
+          <div class="spinner-block" ng-show="busy">
+            <span class="spinner spinner--big"></span>
+          </div>
+          <div class="form__row">
+            <button class="btn btn--big" type="submit" ng-click="encryptAndUploadKey()">Confirm code</button>
+          </div>
+        </form>
+      </div>
+
+    </main>
+    <div ng-include="'tpl/page-footer.html'"></div>
+  </div>
+</section>
