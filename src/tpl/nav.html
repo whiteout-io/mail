@@ -36,7 +36,7 @@
   </ul><!--/nav__folders-->
 
   <ul class="nav__folders">
-    <li ng-repeat="folder in account.folders" ng-if="!folder.wellknown"
+    <li ng-repeat="folder in account.folders" ng-if="!folder.wellknown && folder.name !== 'openpgp_keys'"
       class="nav__folder" ng-class="{'nav__folder--open': state.nav.currentFolder === folder}">
       <a href="#" wo-touch="$event.preventDefault(); navigate($index)">
         <svg role="presentation"><use xlink:href="#icon-folder" /></svg>
