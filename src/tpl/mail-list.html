@@ -51,8 +51,10 @@
             <svg><use xlink:href="#icon-attachment" /><title>Attachments</title></svg>
           </li>
         </ul>
-        <h3 ng-show="email.from" class="mail-list-entry__name">{{email.from[0].name || email.from[0].address}}</h3>
-        <h3 ng-hide="email.from" class="mail-list-entry__name"><span class="spinner"></span></h3>
+        <h3 class="mail-list-entry__name">
+          <span ng-show="!email.from" class="spinner"></span>
+          {{email.from[0].name || email.from[0].address}}
+        </h3>
         <div class="mail-list-entry__subject">
           <strong>{{email.from ? (email.subject || 'No subject') : ''}}</strong>
           <span>
