@@ -32,6 +32,10 @@ var MailListCtrl = function($scope, $timeout, $location, $filter, $q, status, no
      * Set the route to a message which will go to read mode
      */
     $scope.navigate = function(message) {
+        if (!message || !message.from) {
+            // early return if message has not finished loading yet
+            return;
+        }
         $location.search('uid', message.uid);
     };
 
