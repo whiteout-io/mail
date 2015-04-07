@@ -32,6 +32,10 @@ var MailListCtrl = function($scope, $timeout, $location, $filter, $q, status, no
      * Set the route to a message which will go to read mode
      */
     $scope.navigate = function(message) {
+        if (!message || !message.from) {
+            // early return if message has not finished loading yet
+            return;
+        }
         $location.search('uid', message.uid);
     };
 
@@ -54,23 +58,15 @@ var MailListCtrl = function($scope, $timeout, $location, $filter, $q, status, no
     // scope functions
     //
 
-    $scope.getBody = function(message) {
+    $scope.getBody = function(messages) {
         return $q(function(resolve) {
             resolve();
 
         }).then(function() {
             return email.getBody({
                 folder: currentFolder(),
-                message: message
+                messages: messages
             });
-
-        }).then(function() {
-            // automatically decrypt if it's the selected message
-            if (message === currentMessage()) {
-                return email.decryptBody({
-                    message: message
-                });
-            }
 
         }).catch(function(err) {
             if (err.code !== 42) {
@@ -136,6 +132,10 @@ var MailListCtrl = function($scope, $timeout, $location, $filter, $q, status, no
      * Date formatting
      */
     $scope.formatDate = function(date) {
+        if (!date) {
+            return;
+        }
+
         if (typeof date === 'string') {
             date = new Date(date);
         }

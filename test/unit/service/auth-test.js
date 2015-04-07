@@ -68,12 +68,12 @@ describe('Auth unit tests', function() {
 
     describe('#getCredentials', function() {
         it('should load credentials and retrieve credentials from cfg', function(done) {
-            storageStub.listItems.withArgs(EMAIL_ADDR_DB_KEY, 0, null).returns(resolves([emailAddress]));
-            storageStub.listItems.withArgs(PASSWD_DB_KEY, 0, null).returns(resolves([encryptedPassword]));
-            storageStub.listItems.withArgs(USERNAME_DB_KEY, 0, null).returns(resolves([username]));
-            storageStub.listItems.withArgs(REALNAME_DB_KEY, 0, null).returns(resolves([realname]));
-            storageStub.listItems.withArgs(IMAP_DB_KEY, 0, null).returns(resolves([imap]));
-            storageStub.listItems.withArgs(SMTP_DB_KEY, 0, null).returns(resolves([smtp]));
+            storageStub.listItems.withArgs(EMAIL_ADDR_DB_KEY).returns(resolves([emailAddress]));
+            storageStub.listItems.withArgs(PASSWD_DB_KEY).returns(resolves([encryptedPassword]));
+            storageStub.listItems.withArgs(USERNAME_DB_KEY).returns(resolves([username]));
+            storageStub.listItems.withArgs(REALNAME_DB_KEY).returns(resolves([realname]));
+            storageStub.listItems.withArgs(IMAP_DB_KEY).returns(resolves([imap]));
+            storageStub.listItems.withArgs(SMTP_DB_KEY).returns(resolves([smtp]));
             pgpStub.decrypt.withArgs(encryptedPassword, undefined).returns(resolves({
                 decrypted: password,
                 signaturesValid: true
@@ -236,12 +236,12 @@ describe('Auth unit tests', function() {
 
     describe('#_loadCredentials', function() {
         it('should work', function(done) {
-            storageStub.listItems.withArgs(EMAIL_ADDR_DB_KEY, 0, null).returns(resolves([emailAddress]));
-            storageStub.listItems.withArgs(PASSWD_DB_KEY, 0, null).returns(resolves([encryptedPassword]));
-            storageStub.listItems.withArgs(USERNAME_DB_KEY, 0, null).returns(resolves([username]));
-            storageStub.listItems.withArgs(REALNAME_DB_KEY, 0, null).returns(resolves([realname]));
-            storageStub.listItems.withArgs(IMAP_DB_KEY, 0, null).returns(resolves([imap]));
-            storageStub.listItems.withArgs(SMTP_DB_KEY, 0, null).returns(resolves([smtp]));
+            storageStub.listItems.withArgs(EMAIL_ADDR_DB_KEY).returns(resolves([emailAddress]));
+            storageStub.listItems.withArgs(PASSWD_DB_KEY).returns(resolves([encryptedPassword]));
+            storageStub.listItems.withArgs(USERNAME_DB_KEY).returns(resolves([username]));
+            storageStub.listItems.withArgs(REALNAME_DB_KEY).returns(resolves([realname]));
+            storageStub.listItems.withArgs(IMAP_DB_KEY).returns(resolves([imap]));
+            storageStub.listItems.withArgs(SMTP_DB_KEY).returns(resolves([smtp]));
 
             auth._loadCredentials().then(function() {
                 expect(auth.emailAddress).to.equal(emailAddress);

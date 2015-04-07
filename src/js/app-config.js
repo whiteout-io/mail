@@ -42,7 +42,7 @@ appCfg.config = {
     iconPath: '/img/icon-128-chrome.png',
     verificationUrl: '/verify/',
     verificationUuidLength: 36,
-    dbVersion: 5,
+    dbVersion: 6,
     appVersion: undefined,
     outboxMailboxPath: 'OUTBOX',
     outboxMailboxName: 'Outbox',

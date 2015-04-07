@@ -66,7 +66,7 @@ function update(options) {
     });
 
     function loadFromDB(key) {
-        return options.appConfigStorage.listItems(key, 0, null).then(function(cachedItems) {
+        return options.appConfigStorage.listItems(key).then(function(cachedItems) {
             return cachedItems && cachedItems[0];
         });
     }

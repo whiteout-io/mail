@@ -37,7 +37,7 @@
               <span><svg role="presentation"><use xlink:href="#icon-check" /></svg></span>
             </label>
           </li>
-          <li class="mail-list-entry__flags-flagged" wo-touch="flag(email, !email.flagged); $event.stopPropagation()">
+          <li ng-show="email.from" class="mail-list-entry__flags-flagged" wo-touch="flag(email, !email.flagged); $event.stopPropagation()">
             <svg ng-show="email.flagged"><use xlink:href="#icon-star_filled" /><title>Starred</title></svg>
             <svg ng-show="!email.flagged"><use xlink:href="#icon-star" /><title>Not Starred</title></svg>
           </li>
@@ -51,9 +51,12 @@
             <svg><use xlink:href="#icon-attachment" /><title>Attachments</title></svg>
           </li>
         </ul>
-        <h3 class="mail-list-entry__name">{{email.from[0].name || email.from[0].address}}</h3>
+        <h3 class="mail-list-entry__name">
+          <span ng-show="!email.from" class="spinner"></span>
+          {{email.from[0].name || email.from[0].address}}
+        </h3>
         <div class="mail-list-entry__subject">
-          <strong>{{email.subject || 'No subject'}}</strong>
+          <strong>{{email.from ? (email.subject || 'No subject') : ''}}</strong>
           <span>
             {{email.body ? email.body.substr(0, 200) : ''}}
           </span>

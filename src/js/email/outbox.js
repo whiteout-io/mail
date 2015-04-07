@@ -135,7 +135,7 @@ Outbox.prototype._processOutbox = function(callback) {
     self._outboxBusy = true;
 
     // get pending mails from the outbox
-    self._devicestorage.listItems(outboxDb, 0, null).then(function(pendingMails) {
+    self._devicestorage.listItems(outboxDb).then(function(pendingMails) {
         // if we're not online, don't even bother sending mails.
         if (!self._emailDao._account.online || _.isEmpty(pendingMails)) {
             unsentMails = pendingMails.length;

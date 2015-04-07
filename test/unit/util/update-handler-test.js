@@ -468,5 +468,58 @@ describe('UpdateHandler', function() {
                 });
             });
         });
+
+        describe('v5 -> v6', function() {
+            var emailDbType = 'email_';
+
+            beforeEach(function() {
+                cfg.dbVersion = 6; // app requires database version 6
+                appConfigStorageStub.listItems.withArgs(versionDbType).returns(resolves([5])); // database version is 5
+            });
+
+            afterEach(function() {
+                // database version is only queried for version checking prior to the update script
+                // so no need to check this in case-specific tests
+                expect(appConfigStorageStub.listItems.calledOnce).to.be.true;
+            });
+
+            it('should work', function(done) {
+                userStorageStub.removeList.withArgs(emailDbType).returns(resolves());
+                appConfigStorageStub.storeList.withArgs([6], versionDbType).returns(resolves());
+
+                updateHandler.update().then(function() {
+                    expect(userStorageStub.removeList.calledOnce).to.be.true;
+                    expect(appConfigStorageStub.storeList.calledOnce).to.be.true;
+
+                    done();
+                });
+            });
+
+            it('should fail when persisting database version fails', function(done) {
+                userStorageStub.removeList.returns(resolves());
+                appConfigStorageStub.storeList.returns(rejects(new Error()));
+
+                updateHandler.update().catch(function(error) {
+                    expect(error).to.exist;
+                    expect(userStorageStub.removeList.calledOnce).to.be.true;
+                    expect(appConfigStorageStub.storeList.calledOnce).to.be.true;
+
+                    done();
+                });
+            });
+
+            it('should fail when wiping emails from database fails', function(done) {
+                userStorageStub.removeList.returns(rejects(new Error()));
+
+                updateHandler.update().catch(function(error) {
+                    expect(error).to.exist;
+                    expect(userStorageStub.removeList.calledOnce).to.be.true;
+                    expect(appConfigStorageStub.storeList.called).to.be.false;
+
+                    done();
+                });
+            });
+        });
+
     });
 });

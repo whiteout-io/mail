@@ -54,7 +54,7 @@ describe('Keychain DAO unit tests', function() {
 
     describe('listLocalPublicKeys', function() {
         it('should work', function(done) {
-            lawnchairDaoStub.list.withArgs('publickey', 0, null).returns(resolves());
+            lawnchairDaoStub.list.withArgs('publickey').returns(resolves());
 
             keychainDao.listLocalPublicKeys().then(function() {
                 expect(lawnchairDaoStub.list.callCount).to.equal(1);
