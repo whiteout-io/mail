@@ -18,7 +18,6 @@ ngModule.directive('fileReader', function() {
                     keyParts;
 
                 if (index === -1) {
-                    scope.displayError(new Error('Error parsing private PGP key block!'));
                     return;
                 }
 

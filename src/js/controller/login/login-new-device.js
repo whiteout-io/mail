@@ -5,8 +5,19 @@ var LoginExistingCtrl = function($scope, $location, $routeParams, $q, email, aut
 
     $scope.incorrect = false;
 
+    var PRIV_KEY_PREFIX = '-----BEGIN PGP PRIVATE KEY BLOCK-----';
+    var PUB_KEY_PREFIX = '-----BEGIN PGP PUBLIC KEY BLOCK-----';
+    var PRIV_ERR_MSG = 'Cannot find private PGP key block!';
+
     $scope.pasteKey = function(pasted) {
-        var index = pasted.indexOf('-----BEGIN PGP PRIVATE KEY BLOCK-----');
+        var index = pasted.indexOf(PRIV_KEY_PREFIX);
+        if (index === -1) {
+            $scope.errMsg = PRIV_ERR_MSG;
+            return;
+        }
+
+        $scope.errMsg = undefined; // reset error msg
+
         $scope.key = {
             privateKeyArmored: pasted.substring(index, pasted.length).trim()
         };
@@ -14,7 +25,7 @@ var LoginExistingCtrl = function($scope, $location, $routeParams, $q, email, aut
 
     $scope.confirmPassphrase = function() {
         if ($scope.form.$invalid || !$scope.key) {
-            $scope.errMsg = 'Please fill out all required fields!';
+            $scope.errMsg = PRIV_ERR_MSG;
             return;
         }
 
@@ -36,11 +47,11 @@ var LoginExistingCtrl = function($scope, $location, $routeParams, $q, email, aut
             keypair = keys || {};
 
             // extract public key from private key block if missing in key file
-            if (!$scope.key.publicKeyArmored || $scope.key.publicKeyArmored.indexOf('-----BEGIN PGP PUBLIC KEY BLOCK-----') < 0) {
+            if (!$scope.key.publicKeyArmored || $scope.key.publicKeyArmored.indexOf(PUB_KEY_PREFIX) < 0) {
                 try {
                     $scope.key.publicKeyArmored = pgp.extractPublicKey($scope.key.privateKeyArmored);
                 } catch (e) {
-                    throw new Error('Error reading PGP key!');
+                    throw new Error('Cannot find public PGP key!');
                 }
             }
 
