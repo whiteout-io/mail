@@ -15,7 +15,7 @@ We take the privacy of your data very seriously. Here are some of the technical 
 
 * Messages are [encrypted end-to-end ](http://en.wikipedia.org/wiki/End-to-end_encryption) using the [OpenPGP](http://en.wikipedia.org/wiki/Pretty_Good_Privacy) standard. This means that only you and the recipient can read your mail. Your messages and private PGP key are stored only on your computer (in IndexedDB).
 
-* Users have the option to use [encrypted private key sync](https://blog.whiteout.io/2014/07/07/secure-pgp-key-sync-a-proposal/) if they want to use Whiteout on multiple devices.
+* Users have the option to use [encrypted private key sync](https://blog.whiteout.io/2015/04/08/secure-pgp-key-sync-a-proposal-contd/) if they want to use Whiteout on multiple devices.
 
 * [Content Security Policy (CSP)](http://www.html5rocks.com/en/tutorials/security/content-security-policy/) is enforced to prevent injection attacks.
 
