@@ -23,17 +23,16 @@
         padding: 15px;
         background: $color-bg;
         color: $color-text;
-        backface-visibility: hidden;
         display: flex;
         flex-direction: column;
         text-align: left;
         margin: 0 auto;
+        will-change: transform;
 
         @include respond-to(md) {
             width: 90%;
             max-width: 762px;
             min-height: 0;
-            backface-visibility: hidden;
         }
     }
 
