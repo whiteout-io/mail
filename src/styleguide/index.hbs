@@ -1,0 +1,66 @@
+---
+title: Styleguide
+sections:
+  - title: Typography
+    src: src/styleguide/sections/typo/*.hbs
+  - title: Buttons
+    src: src/styleguide/sections/buttons/*.hbs
+  - title: Forms
+    src: src/styleguide/sections/form/*.hbs
+  - title: Labels
+    src: src/styleguide/sections/labels.hbs
+  - title: Spinners
+    src: src/styleguide/sections/spinner/*.hbs
+  - title: Attachments
+    src: src/styleguide/sections/attachments.hbs
+  - title: Dropdowns
+    src: src/styleguide/sections/dropdown.hbs
+  - title: Tooltips
+    src: src/styleguide/sections/Tooltip.hbs
+  - title: Mail addresses
+    src: src/styleguide/sections/mail_addresses.hbs
+  - title: Tags input
+    src: src/styleguide/sections/tags_input.hbs
+  - title: Toolbars
+    src: src/styleguide/sections/toolbars/*.hbs
+---
+
+<section class="sg-section">
+  <h2 class="sg-typo-section-title">Icons</h2>
+  <div class="sg-block">
+    <div class="sg-block__description">
+      <h3 class="sg-typo-description-title">Available icons</h3>
+      <p class="typo-paragraph">
+        All icons are available via inline svg and the <code class="sg-typo-code">xlink:href</code>
+        attribute of the <code class="sg-typo-code">&lt;use&gt;</code> tag.
+      </p>
+    </div>
+    <div class="sg-block__example">
+      <ul class="sg-icon-list">
+        {{#compose src="src/img/icons/[!all]*.svg"}}
+          <li>
+            <svg role="presentation"><use xlink:href="#icon-{{stripFileExtension @filename}}" /></svg>
+            {{@filename}}
+          </li>
+        {{/compose}}
+      </ul>
+    </div>
+  </div>
+</section>
+
+{{#each sections}}
+  <section class="sg-section">
+    <h2 class="sg-typo-section-title">{{title}}</h2>
+    {{#compose src=src}}
+      <div class="sg-block">
+        <div class="sg-block__description">
+          <h3 class="sg-typo-description-title">{{@title}}</h3>
+          <p class="typo-paragraph">{{{@description}}}</p>
+        </div>
+        <div class="sg-block__example">
+          {{{@content}}}
+        </div>
+      </div>
+    {{/compose}}
+  </section>
+{{/each}}

@@ -1,0 +1,33 @@
+.sg-section {
+    margin: 50px 0;
+}
+
+.sg-block {
+    margin: 20px 0;
+    padding-top: 20px;
+    border-top: 1px solid $color-border-light;
+
+    &:last-of-type {
+        border-bottom: 1px solid $color-border-light;
+    }
+
+    &__description {
+        margin-bottom: 20px;
+    }
+    &__example {
+        margin-bottom: 20px;
+    }
+
+    @include respond-to(lg) {
+        @include scut-clearfix;
+
+        &__description {
+            float: left;
+            width: 25%;
+            padding-right: 30px;
+        }
+        &__example {
+            margin-left: 25%;
+        }
+    }
+}

@@ -1,0 +1,82 @@
+// Styleguide layout
+
+.sg-layout {
+    height: 100%;
+    overflow-y: auto;
+    // allow scrolling on iOS
+    -webkit-overflow-scrolling: touch;
+
+    &__canvas {
+        min-height: 100%;
+        display: flex;
+        flex-direction: column;
+        background: $color-bg;
+        color: $color-text;
+    }
+
+    &__header {
+        padding: 50px 20px;
+        background: $color-bg-dark;
+        border-bottom: 1px solid darken($color-bg-dark, 10%);
+        img {
+            display: block;
+            width: 100%;
+            max-width: 300px;
+            max-height: 4em;
+            margin: 0 auto 10px;
+        }
+    }
+
+    &__main {
+        flex-grow: 1;
+        width: 100%;
+        padding: 10px 20px;
+        margin: 0 auto;
+        max-width: 1150px;
+    }
+
+    &__footer {
+        width: 100%;
+        text-align: center;
+        font-size: $font-size-small;
+        color: $color-text-light;
+        line-height: 1.5;
+        padding: 10px 20px;
+
+        nav {
+            ul {
+                list-style: none;
+                margin: 0;
+                padding: 0;
+            }
+            li {
+                display: inline;
+                &:after {
+                    display: inline-block;
+                    content: ' | ';
+                    margin: 0 0.5em;
+                }
+                &:last-child:after {
+                    display: none;
+                }
+            }
+            a {
+                color: inherit;
+                text-decoration: none;
+                &:hover,
+                &:focus {
+                    text-decoration: underline;
+                }
+            }
+        }
+
+        @include respond-to(md) {
+            text-align: left;
+            nav {
+                float: right;
+            }
+        }
+    }
+}
+
+
