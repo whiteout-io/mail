@@ -1205,6 +1205,7 @@ Email.prototype._initFolders = function() {
 
     self._account.folders.forEach(function(folder) {
         folder.modseq = folder.modseq || 0;
+        folder.count = folder.count || 0;
         folder.uids = folder.uids || []; // attach an empty uids array to the folder
         folder.uids.sort(function(a, b) {
             return a - b;
@@ -1543,7 +1544,7 @@ Email.prototype._localDeleteMessage = function(options) {
 //
 
 
-/** 
+/**
  * Helper method that extracts a message body from the body parts
  *
  * @param {Object} message DTO
