@@ -4,7 +4,10 @@
     left: -9999px;
     display: block;
     z-index: 9000;
+    max-height: 400px;
     max-width: 300px;
+    min-width: 150px;
+    overflow-y: auto;
     text-align: left;
     font-size: $font-size-base;
     background: $color-bg;
@@ -39,6 +42,9 @@
         padding: 0.5em 15px 0.5em 15px;
         color: $color-main;
         text-align: left;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
 
         & > svg {
             display: inline-block;

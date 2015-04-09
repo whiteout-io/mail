@@ -45,6 +45,27 @@ Dummy.prototype.listFolders = function() {
         name: 'Junk',
         count: 0,
         path: 'JUNK'
+    }, {
+        name: 'Foo',
+        count: 0,
+        path: 'FOO'
+    }, {
+        name: 'Snafu',
+        count: 0,
+        path: 'SNAFU'
+    }, {
+        name: 'Tralalalala',
+        count: 0,
+        path: 'TRALALALALA'
+    }, {
+        name: 'Another one',
+        count: 0,
+        path: 'ANOTHERONE'
+    }, {
+        name: 'Mucho Folder',
+        count: 0,
+        path: 'MUCHOFOLDER'
+
     }];
 
     return dummies;
