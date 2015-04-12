@@ -62,7 +62,7 @@
     "grunt-svgmin": "~1.0.0",
     "grunt-svgstore": "~0.3.4",
     "iframe-resizer": "^2.8.3",
-    "imap-client": "~0.13.0",
+    "imap-client": "https://github.com/whiteout-io/imap-client/tarball/dev/WO-905",
     "jquery": "~2.1.1",
     "mailbuild": "^0.3.7",
     "mailreader": "~0.4.0",
