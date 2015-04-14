@@ -191,7 +191,7 @@ describe('Public-Key Verifier', function() {
 
             // run the test
             verifier.verify().catch(function(error) {
-                expect(error.message).to.equal('Could not verify public key');
+                expect(error.message).to.equal('');
 
                 // verification
                 expect(imapStub.login.callCount).to.equal(1);

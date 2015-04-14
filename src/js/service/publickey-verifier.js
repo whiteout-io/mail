@@ -95,7 +95,7 @@ PublickeyVerifier.prototype.verify = function() {
 
             if (!verificationSuccessful) {
                 // nothing unexpected went wrong, but no public key could be verified
-                throw new Error('Could not verify public key.');
+                throw new Error();
             }
 
             resolve(); // we're done

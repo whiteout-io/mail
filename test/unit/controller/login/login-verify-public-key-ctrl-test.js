@@ -96,6 +96,26 @@ describe('Public Key Verification Controller unit test', function() {
 
             auth.getCredentials.returns(resolves(credentials));
             verifier.configure.withArgs(credentials).returns(resolves());
+            verifier.verify.withArgs().returns(rejects(new Error()));
+
+            scope.verify().then(function() {
+                expect(auth.getCredentials.calledOnce).to.be.true;
+                expect(verifier.configure.calledOnce).to.be.true;
+                expect(verifier.verify.calledOnce).to.be.true;
+                expect(scope.errMsg).to.equal('');
+
+                clearTimeout(scope.timeout);
+                clearInterval(scope.countdownDecrement);
+
+                done();
+            });
+        });
+
+        it('should not verify with error message', function(done) {
+            var credentials = {};
+
+            auth.getCredentials.returns(resolves(credentials));
+            verifier.configure.withArgs(credentials).returns(resolves());
             verifier.verify.withArgs().returns(rejects(new Error('foo')));
 
             scope.verify().then(function() {
