@@ -13,6 +13,7 @@ var PublicKeyVerifierCtrl = function($scope, $location, $q, $timeout, $interval,
 
         return $q(function(resolve) {
             // updates the GUI
+            $scope.errMsg = undefined;
             resolve();
 
         }).then(function() {
@@ -29,7 +30,7 @@ var PublicKeyVerifierCtrl = function($scope, $location, $q, $timeout, $interval,
             return success();
 
         }).catch(function(error) {
-            $scope.errMsg = error.message; // display error
+            $scope.errMsg = error.message + ' Retrying in ' + RETRY_INTERVAL / 1000 + ' seconds...'; // display error
 
             scheduleVerification(); // schedule next verification attempt
         });
