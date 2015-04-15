@@ -8,6 +8,8 @@
     max-width: 300px;
     min-width: 150px;
     overflow-y: auto;
+    // allow scrolling on iOS
+    -webkit-overflow-scrolling: touch;
     text-align: left;
     font-size: $font-size-base;
     background: $color-bg;
