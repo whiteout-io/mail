@@ -276,6 +276,7 @@ module.exports = function(grunt) {
             },
             app: {
                 src: [
+                    'src/lib/winstore-jscompat.js',
                     'src/lib/underscore/underscore.js',
                     'node_modules/jquery/dist/jquery.min.js',
                     'src/lib/angular/angular.js',
