@@ -1,5 +1,13 @@
 'use strict';
 
+// add DOMPurify hook to sanitze attributes
+DOMPurify.addHook('afterSanitizeAttributes', function(node) {
+    // open all links in a new window
+    if ('target' in node) {
+        node.setAttribute('target', '_blank');
+    }
+});
+
 // set listener for event from main window
 window.onmessage = function(e) {
     var html = '';
@@ -13,18 +21,15 @@ window.onmessage = function(e) {
     }
 
     // sanitize HTML content: https://github.com/cure53/DOMPurify
-    html = window.DOMPurify.sanitize(html);
-    // make links open in a new window
-    html = html.replace(/<a /g, '<a target="_blank" ');
-
-    // remove sources where necessary
     if (e.data.removeImages) {
-        html = html.replace(/(<img[^>]+\b)src=['"][^'">]+['"]/ig, function(match, prefix) {
-            return prefix;
+        // remove http leaks
+        document.body.innerHTML = DOMPurify.sanitize(html, {
+            FORBID_TAGS: ['style', 'svg', 'audio', 'video'],
+            FORBID_ATTR: ['src']
         });
+    } else {
+        document.body.innerHTML = DOMPurify.sanitize(html);
     }
-
-    document.body.innerHTML = html;
 
     attachClickHandlers();
 };
