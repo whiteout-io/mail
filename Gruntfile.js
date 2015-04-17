@@ -171,6 +171,12 @@ module.exports = function(grunt) {
                 },
                 options: browserifyOpt
             },
+            compressionWorker: {
+                files: {
+                    'dist/js/browserbox-compression-worker.browserified.js': ['node_modules/imap-client/node_modules/browserbox/src/browserbox-compression-worker.js']
+                },
+                options: browserifyOpt
+            },
             unitTest: {
                 files: {
                     'test/unit/index.browserified.js': [
@@ -320,6 +326,10 @@ module.exports = function(grunt) {
                 src: ['dist/js/tcp-socket-tls-worker.browserified.js'],
                 dest: 'dist/js/tcp-socket-tls-worker.min.js'
             },
+            compressionWorker: {
+                src: ['dist/js/browserbox-compression-worker.browserified.js'],
+                dest: 'dist/js/browserbox-compression-worker.min.js'
+            },
             unitTest: {
                 src: [
                     'src/lib/underscore/underscore.js',
@@ -401,6 +411,15 @@ module.exports = function(grunt) {
                 options: {
                     sourceMap: true,
                     sourceMapName: 'dist/js/tcp-socket-tls-worker.min.js.map'
+                }
+            },
+            compressionWorker: {
+                files: {
+                    'dist/js/browserbox-compression-worker.min.js': ['dist/js/browserbox-compression-worker.min.js']
+                },
+                options: {
+                    sourceMap: true,
+                    sourceMapName: 'dist/js/browserbox-compression-worker.min.js.map'
                 }
             },
             options: {
@@ -588,6 +607,8 @@ module.exports = function(grunt) {
                         'js/mailreader-parser-worker.min.js.map',
                         'js/tcp-socket-tls-worker.browserified.js',
                         'js/tcp-socket-tls-worker.min.js.map',
+                        'js/browserbox-compression-worker.browserified.js',
+                        'js/browserbox-compression-worker.min.js.map',
                         'img/icon-100-ios.png',
                         'img/icon-114-ios.png',
                         'img/icon-120-ios.png',
@@ -662,15 +683,11 @@ module.exports = function(grunt) {
     grunt.registerTask('dist-js-app', [
         'browserify:app',
         'browserify:pbkdf2Worker',
-        'browserify:mailreaderWorker',
-        'browserify:tlsWorker',
         'exorcise:app',
         'ngtemplates',
         'concat:app',
         'concat:readSandbox',
         'concat:pbkdf2Worker',
-        'concat:mailreaderWorker',
-        'concat:tlsWorker',
         'manifest'
     ]);
     grunt.registerTask('dist-js-unitTest', [
