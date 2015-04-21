@@ -68,12 +68,14 @@ var SetCredentialsCtrl = function($scope, $location, $routeParams, $q, auth, con
                 host: $scope.imapHost.toLowerCase(),
                 port: $scope.imapPort,
                 secure: imapEncryption === ENCRYPTION_METHOD_TLS,
+                requireTLS: imapEncryption === ENCRYPTION_METHOD_STARTTLS,
                 ignoreTLS: imapEncryption === ENCRYPTION_METHOD_NONE
             },
             smtp: {
                 host: $scope.smtpHost.toLowerCase(),
                 port: $scope.smtpPort,
                 secure: smtpEncryption === ENCRYPTION_METHOD_TLS,
+                requireTLS: smtpEncryption === ENCRYPTION_METHOD_STARTTLS,
                 ignoreTLS: smtpEncryption === ENCRYPTION_METHOD_NONE
             }
         };

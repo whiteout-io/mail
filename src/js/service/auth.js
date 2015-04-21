@@ -94,6 +94,8 @@ Auth.prototype.getCredentials = function() {
             var credentials = {
                 imap: {
                     secure: self.imap.secure,
+                    requireTLS: self.imap.requireTLS,
+                    ignoreTLS: self.imap.ignoreTLS,
                     port: self.imap.port,
                     host: self.imap.host,
                     ca: self.imap.ca,
@@ -105,6 +107,8 @@ Auth.prototype.getCredentials = function() {
                 },
                 smtp: {
                     secure: self.smtp.secure,
+                    requireTLS: self.smtp.requireTLS,
+                    ignoreTLS: self.smtp.ignoreTLS,
                     port: self.smtp.port,
                     host: self.smtp.host,
                     ca: self.smtp.ca,
