@@ -71,13 +71,15 @@ describe('Login (Set Credentials) Controller unit test', function() {
                     host: scope.imapHost.toLowerCase(),
                     port: scope.imapPort,
                     secure: true,
-                    ignoreTLS: false
+                    ignoreTLS: false,
+                    requireTLS: false
                 },
                 smtp: {
                     host: scope.smtpHost.toLowerCase(),
                     port: scope.smtpPort,
                     secure: false,
-                    ignoreTLS: false
+                    ignoreTLS: false,
+                    requireTLS: true
                 }
             };
 

@@ -53,6 +53,7 @@ ConnectionDoctor.prototype.configure = function(credentials) {
         port: this.credentials.imap.port,
         secure: this.credentials.imap.secure,
         ignoreTLS: this.credentials.imap.ignoreTLS,
+        requireTLS: this.credentials.imap.requireTLS,
         ca: this.credentials.imap.ca,
         tlsWorkerPath: this._workerPath,
         auth: {
@@ -65,6 +66,7 @@ ConnectionDoctor.prototype.configure = function(credentials) {
     this._smtp = new SmtpClient(this.credentials.smtp.host, this.credentials.smtp.port, {
         useSecureTransport: this.credentials.smtp.secure,
         ignoreTLS: this.credentials.smtp.ignoreTLS,
+        requireTLS: this.credentials.smtp.requireTLS,
         ca: this.credentials.smtp.ca,
         tlsWorkerPath: this._workerPath,
         auth: {
