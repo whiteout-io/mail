@@ -75,6 +75,8 @@ var development = (process.argv[2] === '--dev');
 
 // set HTTP headers
 app.use(function(req, res, next) {
+    // prevent rendering website in foreign iframe (Clickjacking)
+    res.set('X-Frame-Options', 'SAMEORIGIN');
     // HSTS
     res.set('Strict-Transport-Security', 'max-age=16070400; includeSubDomains');
     // CSP
