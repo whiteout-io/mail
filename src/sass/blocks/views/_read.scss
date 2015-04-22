@@ -55,6 +55,21 @@
         & > .attachments {
             margin-top: 1em;
         }
+
+        .signature-status {
+            & > svg {
+                vertical-align: middle;
+                width: 1.5em;
+                height: 1.5em;
+                margin-bottom: .2em;
+                fill: $color-main;
+            }
+        }
+        .signature-status--invalid {
+            & > svg {
+                fill: $color-error-area;
+            }
+        }
     }
     // only visible in stripped version of read view
     .mail-addresses__stripped {
@@ -137,13 +152,6 @@
 
     // Content components
 
-    &__signature-status {
-        margin-top: 0;
-        margin-bottom: 0.5em;
-        text-align: center;
-        color: $color-error;
-        padding: 0 $padding-horizontal;
-    }
     &__display-images {
         margin-bottom: 0.5em;
         text-align: center;

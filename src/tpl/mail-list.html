@@ -42,7 +42,7 @@
             <svg ng-show="!email.flagged"><use xlink:href="#icon-star" /><title>Not Starred</title></svg>
           </li>
           <li class="mail-list-entry__flags-encrypted">
-            <svg ng-show="email.encrypted"><use xlink:href="#icon-encrypted" /><title>Encrypted</title></svg>
+            <svg ng-show="email.encrypted" wo-tooltip="#encrypted-info"><use xlink:href="#icon-encrypted" /></svg>
           </li>
           <li class="mail-list-entry__flags-answered" ng-show="!email.unread && email.answered">
             <svg><use xlink:href="#icon-reply" /><title>Answered</title></svg>
@@ -74,4 +74,11 @@
   </div>
 
   <footer ng-include="'tpl/status-display.html'"></footer>
-</div>
+
+  <!-- tooltips -->
+  <div id="encrypted-info" class="tooltip">
+    <div class="tooltip__arrow"></div>
+    <div class="tooltip__content">Message is encrypted.</div>
+  </div>
+
+</div><!--/mail-list-->
