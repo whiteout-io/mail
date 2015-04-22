@@ -122,9 +122,11 @@ Dummy.prototype.listMails = function() {
             '>> from 0.7.0.1\n' +
             '>>\n' +
             '>> God speed!'; // plaintext body
-        this.html = '<!DOCTYPE html><html><head></head><body><h1 style="border: 1px solid red; width: 500px; margin:0;">Hello there' + Math.random() + '</h1></body></html>';
+        //this.html = '<!DOCTYPE html><html><head></head><body><h1 style="border: 1px solid red; width: 500px; margin:0;">Hello there' + Math.random() + '</h1></body></html>';
         this.encrypted = true;
         this.decrypted = true;
+        this.signed = true;
+        this.signaturesValid = true;
     };
 
     var dummies = [],

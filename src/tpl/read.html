@@ -78,6 +78,13 @@
               {{u.name || u.address}}
               <svg ng-show="u.secure === false"><use xlink:href="#icon-add_contact" /></svg>
             </span>
+
+            <span ng-show="(state.mailList.selected.body || state.mailList.selected.html) && state.mailList.selected.signed"
+              class="signature-status" ng-class="{'signature-status--invalid': !state.mailList.selected.signaturesValid}" wo-tooltip="#signature-info">
+              <svg ng-show="state.mailList.selected.signaturesValid"><use xlink:href="#icon-signature-verified" /></svg>
+              <svg ng-show="!state.mailList.selected.signaturesValid"><use xlink:href="#icon-signature-invalid" /></svg>
+            </span>
+
             <span class="mail-addresses__stripped"></span>
           </span>
         </div>
@@ -110,11 +117,6 @@
         </li>
       </ul>
     </header><!--/read__header-->
-
-    <p class="read__signature-status"
-      ng-show="(state.mailList.selected.body || state.mailList.selected.html) && state.mailList.selected.signed && !state.mailList.selected.signaturesValid">
-      Invalid PGP signature. This message could have been tampered with.
-    </p>
 
     <div class="read__display-images" ng-show="state.mailList.selected.html && showImageButton">
       <button class="btn btn--light" wo-touch="displayImages()">Display images</button>
@@ -163,6 +165,11 @@
   <div id="fingerprint-info" class="tooltip">
     <div class="tooltip__arrow"></div>
     <div class="tooltip__content">{{keyId}}</div>
+  </div>
+  <div id="signature-info" class="tooltip">
+    <div class="tooltip__arrow"></div>
+    <div ng-show="state.mailList.selected.signaturesValid" class="tooltip__content">Message signature is valid.</div>
+    <div ng-show="!state.mailList.selected.signaturesValid" class="tooltip__content">Invalid message signature. This message could have been tampered with!</div>
   </div>
 
   <!-- dropdowns -->
