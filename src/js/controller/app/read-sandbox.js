@@ -24,7 +24,7 @@ window.onmessage = function(e) {
     if (e.data.removeImages) {
         // remove http leaks
         document.body.innerHTML = DOMPurify.sanitize(html, {
-            FORBID_TAGS: ['style', 'svg', 'audio', 'video'],
+            FORBID_TAGS: ['style', 'svg', 'audio', 'video', 'math'],
             FORBID_ATTR: ['src']
         });
     } else {
