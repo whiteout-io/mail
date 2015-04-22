@@ -46,7 +46,8 @@
         "Lawnchair",
         "_",
         "openpgp",
-        "PhoneNumber"
+        "PhoneNumber",
+        "DOMPurify"
     ],
 
     "globals": {}
