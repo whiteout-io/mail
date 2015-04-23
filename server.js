@@ -76,7 +76,7 @@ var development = (process.argv[2] === '--dev');
 // set HTTP headers
 app.use(function(req, res, next) {
     // prevent rendering website in foreign iframe (Clickjacking)
-    res.set('X-Frame-Options', 'SAMEORIGIN');
+    res.set('X-Frame-Options', 'DENY');
     // HSTS
     res.set('Strict-Transport-Security', 'max-age=16070400; includeSubDomains');
     // CSP
@@ -88,9 +88,12 @@ app.use(function(req, res, next) {
     res.set('Cache-control', 'public, max-age=0');
     next();
 });
-
 app.use('/appcache.manifest', function(req, res, next) {
     res.set('Cache-control', 'no-cache');
+    next();
+});
+app.use('/tpl/read-sandbox.html', function(req, res, next) {
+    res.set('X-Frame-Options', 'SAMEORIGIN');
     next();
 });
 
