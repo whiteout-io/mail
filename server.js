@@ -81,7 +81,9 @@ app.use(function(req, res, next) {
     res.set('Strict-Transport-Security', 'max-age=16070400; includeSubDomains');
     // CSP
     var iframe = development ? "http://" + req.hostname + ":" + config.server.port : "https://" + req.hostname; // allow iframe to load assets
-    res.set('Content-Security-Policy', "default-src 'self' " + iframe + "; object-src 'none'; connect-src *; style-src 'self' 'unsafe-inline' " + iframe + "; img-src *");
+    var csp = "default-src 'self' " + iframe + "; object-src 'none'; connect-src *; style-src 'self' 'unsafe-inline' " + iframe + "; img-src *";
+    res.set('Content-Security-Policy', csp);
+    res.set('X-Content-Security-Policy', csp);
     // set Cache-control Header (for AppCache)
     res.set('Cache-control', 'public, max-age=0');
     next();
