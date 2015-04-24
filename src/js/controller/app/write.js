@@ -201,6 +201,17 @@ var WriteCtrl = function($scope, $window, $filter, $q, appConfig, auth, keychain
     //
 
     /**
+     * Warn users when using BCC
+     */
+    $scope.toggleShowBCC = function() {
+        $scope.showBCC = true;
+        return dialog.info({
+            title: 'Warning',
+            message: 'Cannot send encrypted messages with BCC!'
+        });
+    };
+
+    /**
      * Verify email address and fetch its public key
      */
     $scope.verify = function(recipient) {
