@@ -74,6 +74,32 @@ var AddAccountCtrl = function($scope, $location, $routeParams, $timeout, $q, mai
             $location.path('/login-set-credentials');
         });
     };
+
+    /**
+     * A helper function is detect if the app is running as an ios-cordova app
+     * @return {Boolean} if we are running on iOS
+     */
+    $scope.checkIOS = function() {
+        if (!window.chrome || !chrome.runtime) {
+            $scope.isIOS = false;
+            return;
+        }
+
+        // check which runtime the app is running under
+        chrome.runtime.getPlatformInfo(function(platformInfo) {
+            $timeout(function() {
+                if (chrome.runtime.lastError || !platformInfo) {
+                    $scope.isIOS = false; // assume not running of iOS if something goes wrong
+                    return;
+                }
+
+                $scope.isIOS = platformInfo.os.indexOf('ios') !== -1;
+            });
+        });
+    };
+
+    // check platform on init
+    $scope.checkIOS();
 };
 
 module.exports = AddAccountCtrl;
