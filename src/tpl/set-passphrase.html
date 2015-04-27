@@ -16,12 +16,11 @@
         <input class="input-text" type="password" ng-model="oldPassphrase" placeholder="Current passphrase" tabindex="1" wo-focus-me="true">
       </div>
 
-      <p class="form__error-message" ng-show="passphraseMsg && passphraseRating < 2">{{passphraseMsg}}</p>
-      <p class="form__password-strong-message" ng-show="passphraseMsg && passphraseRating >= 2">{{passphraseMsg}}</p>
+      <p class="form__error-message" ng-show="passphraseMsg">{{passphraseMsg}}</p>
       <div class="form__row form__row--multi">
         <div class="form__col">
           <input class="input-text" type="password" ng-model="newPassphrase"
-            placeholder="New passphrase" ng-change="checkPassphraseQuality()" tabindex="2">
+            placeholder="New passphrase" tabindex="2">
         </div>
         <div class="form__col">
           <input class="input-text" type="password" ng-model="confirmation" placeholder="Confirm passphrase"
