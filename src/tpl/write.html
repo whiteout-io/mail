@@ -13,7 +13,7 @@
         focus-input-on-click>
         <div class="mail-addresses__more">
           <button wo-touch="showCC = true;" ng-hide="showCC">Cc</button>
-          <button wo-touch="showBCC = true;" ng-hide="showBCC">Bcc</button>
+          <button wo-touch="toggleShowBCC()" ng-hide="showBCC">Bcc</button>
         </div>
         <label>To:</label>
         <tags-input class="tags-input" ng-model="to" type="email" tabindex="1" add-on-space="true" add-on-enter="true" enable-editing-last-tag="true"
