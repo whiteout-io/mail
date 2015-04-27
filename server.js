@@ -88,10 +88,13 @@ app.use(function(req, res, next) {
     res.set('Cache-control', 'public, max-age=0');
     next();
 });
-app.use('/appcache.manifest', function(req, res, next) {
+app.use('/service-worker.js', noCache);
+app.use('/appcache.manifest', noCache);
+
+function noCache(req, res, next) {
     res.set('Cache-control', 'no-cache');
     next();
-});
+}
 app.use('/tpl/read-sandbox.html', function(req, res, next) {
     res.set('X-Frame-Options', 'SAMEORIGIN');
     next();
