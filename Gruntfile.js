@@ -535,7 +535,7 @@ module.exports = function(grunt) {
         watch: {
             css: {
                 files: ['src/sass/**/*.scss'],
-                tasks: ['dist-css', 'manifest', 'dist-styleguide']
+                tasks: ['dist-css', 'offline-cache', 'dist-styleguide']
             },
             styleguide: {
                 files: ['src/styleguide/**/*.hbs', 'src/styleguide/**/*.js'],
@@ -555,15 +555,15 @@ module.exports = function(grunt) {
             },
             icons: {
                 files: ['src/index.html', 'src/img/icons/*.svg', '!src/img/icons/all.svg'],
-                tasks: ['svgmin', 'svgstore', 'string-replace', 'dist-styleguide', 'manifest']
+                tasks: ['svgmin', 'svgstore', 'string-replace', 'dist-styleguide', 'offline-cache']
             },
             lib: {
                 files: ['src/lib/**/*.js'],
-                tasks: ['copy:lib', 'manifest']
+                tasks: ['copy:lib', 'offline-cache']
             },
             app: {
                 files: ['src/*.js', 'src/*.html', 'src/tpl/**/*.html', 'src/**/*.json', 'src/manifest.*', 'src/img/**/*', 'src/font/**/*'],
-                tasks: ['copy:app', 'copy:tpl', 'copy:img', 'copy:font', 'manifest-dev', 'manifest']
+                tasks: ['copy:app', 'copy:tpl', 'copy:img', 'copy:font', 'manifest-dev', 'offline-cache']
             }
         },
 
@@ -582,6 +582,15 @@ module.exports = function(grunt) {
             }
         },
 
+        // Offline caching
+
+        swPrecache: {
+            prod: {
+                handleFetch: true,
+                rootDir: 'dist'
+            }
+        },
+
         manifest: {
             generate: {
                 options: {
@@ -594,6 +603,9 @@ module.exports = function(grunt) {
                         'manifest.webapp',
                         'manifest.mobile.json',
                         'background.js',
+                        'service-worker.js',
+                        'styleguide/css/styleguide.min.css',
+                        'styleguide/index.html',
                         'js/app.templates.js',
                         'js/app.js.map',
                         'js/app.min.js.map',
@@ -654,6 +666,58 @@ module.exports = function(grunt) {
 
     });
 
+    // generate service-worker stasks
+    grunt.registerMultiTask('swPrecache', function() {
+        var fs = require('fs');
+        var path = require('path');
+        var swPrecache = require('sw-precache');
+        var packageJson = require('./package.json');
+
+        var done = this.async();
+        var rootDir = this.data.rootDir;
+        var handleFetch = this.data.handleFetch;
+
+        generateServiceWorkerFileContents(rootDir, handleFetch, function(error, serviceWorkerFileContents) {
+            if (error) {
+                grunt.fail.warn(error);
+            }
+            fs.writeFile(path.join(rootDir, 'service-worker.js'), serviceWorkerFileContents, function(error) {
+                if (error) {
+                    grunt.fail.warn(error);
+                }
+                done();
+            });
+        });
+
+        function generateServiceWorkerFileContents(rootDir, handleFetch, callback) {
+            var config = {
+                cacheId: packageJson.name,
+                // If handleFetch is false (i.e. because this is called from swPrecache:dev), then
+                // the service worker will precache resources but won't actually serve them.
+                // This allows you to test precaching behavior without worry about the cache preventing your
+                // local changes from being picked up during the development cycle.
+                handleFetch: handleFetch,
+                logger: grunt.log.writeln,
+                dynamicUrlToDependencies: {
+                    'socket.io/socket.io.js': [],
+                },
+                staticFileGlobs: [
+                    rootDir + '/*.html',
+                    rootDir + '/tpl/*.html',
+                    rootDir + '/js/**/*.min.js',
+                    rootDir + '/css/**/*.css',
+                    rootDir + '/img/**.*',
+                    rootDir + '/font/**.*',
+                    rootDir + '/*.json'
+                ],
+                maximumFileSizeToCacheInBytes: 100 * 1024 * 1024,
+                stripPrefix: path.join(rootDir, path.sep)
+            };
+
+            swPrecache(config, callback);
+        }
+    });
+
     // Load the plugin(s)
     grunt.loadNpmTasks('grunt-browserify');
     grunt.loadNpmTasks('grunt-contrib-concat');
@@ -688,7 +752,7 @@ module.exports = function(grunt) {
         'concat:app',
         'concat:readSandbox',
         'concat:pbkdf2Worker',
-        'manifest'
+        'offline-cache'
     ]);
     grunt.registerTask('dist-js-unitTest', [
         'browserify:unitTest',
@@ -704,7 +768,9 @@ module.exports = function(grunt) {
     grunt.registerTask('dist-assets', ['svgmin', 'svgstore', 'string-replace']);
     grunt.registerTask('dist-styleguide', ['sass:styleguide', 'autoprefixer:styleguide', 'csso:styleguide', 'assemble:styleguide']);
     // generate styleguide after manifest to forward version number to styleguide
-    grunt.registerTask('dist', ['clean:dist', 'shell', 'dist-css', 'dist-js', 'dist-assets', 'dist-copy', 'manifest', 'dist-styleguide']);
+    grunt.registerTask('dist', ['clean:dist', 'shell', 'dist-css', 'dist-js', 'dist-assets', 'dist-copy', 'offline-cache', 'dist-styleguide']);
+
+    grunt.registerTask('offline-cache', ['manifest', 'swPrecache:prod']);
 
     // Test/Dev tasks
     grunt.registerTask('dev', ['connect:dev']);
