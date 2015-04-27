@@ -4,19 +4,10 @@
 // AppCache
 //
 
-if (typeof window.applicationCache !== 'undefined') {
-    window.onload = function() {
-        // Check if a new AppCache is available on page load.
-        window.applicationCache.onupdateready = function() {
-            if (window.applicationCache.status === window.applicationCache.UPDATEREADY) {
-                // Browser downloaded a new app cache
-                if (window.confirm('A new version of Whiteout Mail is available. Restart the app to update?')) {
-                    window.location.reload();
-                }
-            }
-        };
-    };
-}
+window.onload = function() {
+    // use service-worker or app-cache for offline caching
+    require('./offline-cache');
+};
 
 //
 // Angular app config
