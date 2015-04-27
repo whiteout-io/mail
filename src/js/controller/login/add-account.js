@@ -80,7 +80,7 @@ var AddAccountCtrl = function($scope, $location, $routeParams, $timeout, $q, mai
      * @return {Boolean} if we are running on iOS
      */
     $scope.checkIOS = function() {
-        if (!window.chrome || !chrome.runtime) {
+        if (!(window.chrome && chrome.runtime && chrome.runtime.getPlatformInfo)) {
             $scope.isIOS = false;
             return;
         }
