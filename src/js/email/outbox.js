@@ -124,8 +124,7 @@ Outbox.prototype.put = function(mail) {
  * @param {Function} callback(error, pendingMailsCount) Callback that informs you about the count of pending mails.
  */
 Outbox.prototype._processOutbox = function(callback) {
-    var self = this,
-        unsentMails = 0;
+    var self = this;
 
     // also, if a _processOutbox call is still in progress, ignore it.
     if (self._outboxBusy) {
@@ -138,7 +137,6 @@ Outbox.prototype._processOutbox = function(callback) {
     self._devicestorage.listItems(outboxDb).then(function(pendingMails) {
         // if we're not online, don't even bother sending mails.
         if (!self._emailDao._account.online || _.isEmpty(pendingMails)) {
-            unsentMails = pendingMails.length;
             return;
         }
 
@@ -154,7 +152,7 @@ Outbox.prototype._processOutbox = function(callback) {
 
     }).then(function() {
         self._outboxBusy = false;
-        callback(null, unsentMails);
+        callback();
 
     }).catch(function(err) {
         self._outboxBusy = false;

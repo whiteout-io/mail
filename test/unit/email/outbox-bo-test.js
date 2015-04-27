@@ -263,10 +263,8 @@ describe('Outbox unit test', function() {
 
             devicestorageStub.removeList.returns(resolves());
 
-            function onOutboxUpdate(err, count) {
+            function onOutboxUpdate(err) {
                 expect(err).to.not.exist;
-                expect(count).to.equal(0);
-
                 expect(outbox._outboxBusy).to.be.false;
                 expect(emailDaoStub.sendEncrypted.callCount).to.equal(2);
                 expect(emailDaoStub.sendPlaintext.callCount).to.equal(2);
@@ -284,9 +282,8 @@ describe('Outbox unit test', function() {
             emailDaoStub._account.online = false;
             devicestorageStub.listItems.returns(resolves([{}]));
 
-            outbox._processOutbox(function(err, count) {
+            outbox._processOutbox(function(err) {
                 expect(err).to.not.exist;
-                expect(count).to.equal(1);
                 expect(devicestorageStub.listItems.callCount).to.equal(1);
                 expect(outbox._outboxBusy).to.be.false;
                 done();

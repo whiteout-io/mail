@@ -809,7 +809,7 @@ Email.prototype.refreshOutbox = function() {
             outbox.messages.splice(index, 1);
         });
 
-        updateUnreadCount(outbox); // update the unread count
+        updateUnreadCount(outbox, true); // update the unread count, count all messages
     });
 };
 
@@ -1731,16 +1731,13 @@ Email.prototype.isOnline = function() {
 
 /**
  * Updates a folder's unread count:
- * - For the outbox, that's the total number of messages,
- * - For every other folder, it's the number of unread messages
+ * - For the outbox, that's the total number of messages (countAllMessages === true),
+ * - For every other folder, it's the number of unread messages (countAllMessages === falsy)
  */
-function updateUnreadCount(folder) {
-    var allMsgs = folder.messages.length,
-        unreadMsgs = _.filter(folder.messages, function(msg) {
-            return msg.unread;
-        }).length;
-
-    folder.count = folder.path === config.outboxMailboxPath ? allMsgs : unreadMsgs;
+function updateUnreadCount(folder, countAllMessages) {
+    folder.count = countAllMessages ? folder.messages.length : _.filter(folder.messages, function(msg) {
+        return msg.unread;
+    }).length;
 }
 
 /**
