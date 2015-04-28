@@ -50,7 +50,7 @@
   </div><!--/read__working-->
 
   <div class="read__content"
-    ng-show="state.mailList.selected && (!state.mailList.selected.encrypted && (state.mailList.selected.body || state.mailList.selected.html)) || (state.mailList.selected.encrypted && state.mailList.selected.decrypted)">
+    ng-show="(state.mailList.selected && !state.mailList.selected.encrypted) || (state.mailList.selected.encrypted && state.mailList.selected.decrypted)">
     <header class="read__header">
       <div class="read__controls__dummy"></div>
 
