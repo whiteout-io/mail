@@ -52,14 +52,12 @@ function useServiceWorker() {
             var installingWorker = registration.installing;
 
             installingWorker.onstatechange = function() {
-                switch (installingWorker.state) {
-                case 'installed':
+                if (installingWorker.state === 'installed') {
                     if (navigator.serviceWorker.controller) {
                         // At this point, the old content will have been purged and the fresh content will
                         // have been added to the cache.
                         // It's the perfect time to display a "New content is available; please refresh."
                         // message in the page's interface.
-                        console.log('New or updated content is available.');
                         if (window.confirm(UPDATE_MSG)) {
                             window.location.reload();
                         }
@@ -68,13 +66,8 @@ function useServiceWorker() {
                         // controlling the page. The service worker will not take control until the next
                         // reload or navigation to a page under the registered scope.
                         // It's the perfect time to display a "Content is cached for offline use." message.
-                        console.log('Content is cached, and will be available for offline use the ' +
-                            'next time the page is loaded.');
+                        console.log('Content is cached, and will be available for offline use the next time the page is loaded.');
                     }
-                    break;
-
-                case 'redundant':
-                    throw 'The installing service worker became redundant.';
                 }
             };
         };
