@@ -4,8 +4,9 @@ var ngModule = angular.module('woUtil');
 ngModule.service('notification', Notif);
 module.exports = Notif;
 
-function Notif(appConfig) {
+function Notif(appConfig, axe) {
     this._appConfig = appConfig;
+    this._axe = axe;
 
     if (window.Notification) {
         this.hasPermission = Notification.permission === "granted";
@@ -39,10 +40,17 @@ Notif.prototype.create = function(options) {
         });
     }
 
-    var notification = new Notification(options.title, {
-        body: options.message,
-        icon: self._appConfig.config.iconPath
-    });
+    var notification;
+    try {
+        notification = new Notification(options.title, {
+            body: options.message,
+            icon: self._appConfig.config.iconPath
+        });
+    } catch (err) {
+        self._axe.error('Displaying notification failed: ' + err.message);
+        return;
+    }
+
     notification.onclick = function() {
         window.focus();
         options.onClick();
