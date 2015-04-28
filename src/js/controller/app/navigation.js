@@ -11,7 +11,7 @@ var NOTIFICATION_SENT_TIMEOUT = 2000;
 // Controller
 //
 
-var NavigationCtrl = function($scope, $location, $q, $timeout, account, email, outbox, notification, appConfig, dialog, dummy, privateKey, axe) {
+var NavigationCtrl = function($scope, $location, $q, $timeout, account, email, outbox, notification, status, appConfig, dialog, dummy, privateKey, axe) {
     if (!$location.search().dev && !account.isLoggedIn()) {
         $location.path('/'); // init app
         return;
@@ -90,10 +90,10 @@ var NavigationCtrl = function($scope, $location, $q, $timeout, account, email, o
     // scope functions
     //
 
-    $scope.onOutboxUpdate = function(err, count) {
+    $scope.onOutboxUpdate = function(err) {
         if (err) {
-            dialog.error(err);
-            return;
+            axe.error('Sending from outbox failed: ' + err.message);
+            status.update('Error sending messages...');
         }
 
         // update the outbox mail count
@@ -105,8 +105,6 @@ var NavigationCtrl = function($scope, $location, $q, $timeout, account, email, o
             // the outbox folder has not been initialized yet
             return;
         }
-
-        ob.count = count;
 
         return $q(function(resolve) {
             resolve();

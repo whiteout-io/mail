@@ -75,17 +75,20 @@ describe('Navigation Controller unit test', function() {
     });
 
     describe('empty outbox', function() {
-        it('should work', function() {
-            var callback;
+        it('should work', function(done) {
+            var onOutboxUpdate;
 
             expect(outboxBoMock.startChecking.callCount).to.equal(1);
-
             outboxBoMock.startChecking.calledWith(sinon.match(function(cb) {
-                callback = cb;
+                onOutboxUpdate = cb;
             }));
 
-            callback(null, 5);
-            expect(outboxFolder.count).to.equal(5);
+            emailDaoMock.refreshOutbox.returns(resolves());
+
+            onOutboxUpdate().then(function() {
+                expect(emailDaoMock.refreshOutbox.calledOnce).to.be.true;
+                done();
+            });
         });
     });
 
