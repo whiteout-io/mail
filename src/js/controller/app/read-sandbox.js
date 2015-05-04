@@ -12,11 +12,6 @@ DOMPurify.addHook('afterSanitizeAttributes', function(node) {
 window.onmessage = function(e) {
     var html = '';
 
-    // ignore messages from other origins to prevent XSS
-    if (e.origin !== location.origin) {
-        return;
-    }
-
     if (e.data.html) {
         // display html mail body
         html = e.data.html;
