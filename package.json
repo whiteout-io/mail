@@ -64,7 +64,7 @@
     "grunt-svgstore": "~0.3.4",
     "handlebars-helper-compose": "~0.2.12",
     "iframe-resizer": "^2.8.3",
-    "imap-client": "~0.14.1",
+    "imap-client": "https://github.com/whiteout-io/imap-client/tarball/dev/WO-978",
     "jquery": "~2.1.1",
     "mailbuild": "^0.3.7",
     "mailreader": "~0.4.0",

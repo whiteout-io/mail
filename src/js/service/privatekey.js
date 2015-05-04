@@ -97,7 +97,8 @@ PrivateKey.prototype.encrypt = function(code) {
  * @param  {String}   options.encryptedPrivateKey   The base64 encoded encrypted private PGP key
  */
 PrivateKey.prototype.upload = function(options) {
-    var self = this;
+    var self = this,
+        path;
 
     return new Promise(function(resolve) {
         if (!options._id || !options.userId || !options.encryptedPrivateKey || !options.salt || !options.iv) {
@@ -109,8 +110,9 @@ PrivateKey.prototype.upload = function(options) {
         // create imap folder
         return self._imap.createFolder({
             path: IMAP_KEYS_FOLDER
-        }).then(function() {
-            self._axe.debug('Successfully created imap folder ' + IMAP_KEYS_FOLDER);
+        }).then(function(fullPath) {
+            path = fullPath;
+            self._axe.debug('Successfully created imap folder ' + path);
         }).catch(function(err) {
             var prettyErr = new Error('Creating imap folder ' + IMAP_KEYS_FOLDER + ' failed: ' + err.message);
             self._axe.error(prettyErr);
@@ -119,7 +121,7 @@ PrivateKey.prototype.upload = function(options) {
     }).then(createMessage).then(function(message) {
         // upload to imap folder
         return self._imap.uploadMessage({
-            path: IMAP_KEYS_FOLDER,
+            path: path,
             message: message
         });
     });
@@ -290,8 +292,38 @@ PrivateKey.prototype._fetchMessage = function(options) {
     }
 
     // get the metadata for the message
-    return self._imap.listMessages({
-        path: IMAP_KEYS_FOLDER,
+
+    return self._imap.listWellKnownFolders().then(function(wellKnownFolders) {
+        var paths = []; // gathers paths
+
+        // extract the paths from the folder arrays
+        for (var folderType in wellKnownFolders) {
+            if (wellKnownFolders.hasOwnProperty(folderType) && Array.isArray(wellKnownFolders[folderType])) {
+                paths = paths.concat(_.pluck(wellKnownFolders[folderType], 'path'));
+            }
+        }
+
+        paths = paths.filter(function(path) {
+            // find a folder that ends with IMAP_KEYS_FOLDER
+            var lastIndex = path.lastIndexOf(IMAP_KEYS_FOLDER);
+            return (lastIndex !== -1) && (lastIndex + IMAP_KEYS_FOLDER.length === path.length);
+        });
+
+        if (paths.length > 1) {
+            self._axe.warn('Multiple folders matching path ' + IMAP_KEYS_FOLDER + ' found, PGP key target folder unclear. Picking first one: ' + paths.join(', '));
+        }
+
+        if (paths.length === 0) {
+            throw new Error('Imap folder ' + IMAP_KEYS_FOLDER + ' does not exist for key sync!');
+        }
+
+        return paths[0];
+
+    }).then(function(path) {
+        return self._imap.listMessages({
+            path: path,
+        });
+
     }).then(function(messages) {
         if (!messages.length) {
             // message has been deleted in the meantime
@@ -302,8 +334,8 @@ PrivateKey.prototype._fetchMessage = function(options) {
         return _.findWhere(messages, {
             subject: options.keyId
         });
-    }).catch(function() {
-        throw new Error('Imap folder ' + IMAP_KEYS_FOLDER + ' does not exist for key sync!');
+    }).catch(function(e) {
+        throw new Error('Failed to retrieve PGP key message from IMAP! Reason: ' + e.message);
     });
 };
 
