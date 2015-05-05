@@ -76,8 +76,17 @@ describe('Private Key DAO unit tests', function() {
         });
 
         it('should work', function(done) {
-            imapClientStub.createFolder.returns(resolves());
-            imapClientStub.uploadMessage.returns(resolves());
+            var IMAP_KEYS_FOLDER = 'openpgp_keys';
+            var fullPath = 'INBOX.' + IMAP_KEYS_FOLDER;
+
+            imapClientStub.createFolder.withArgs({
+                path: IMAP_KEYS_FOLDER
+            }).returns(resolves(fullPath));
+            imapClientStub.uploadMessage.withArgs(sinon.match(function(arg) {
+                expect(arg.path).to.equal(fullPath);
+                expect(arg.message).to.exist;
+                return true;
+            })).returns(resolves());
 
             privkeyDao.upload({
                 _id: keyId,
@@ -86,6 +95,7 @@ describe('Private Key DAO unit tests', function() {
                 salt: salt,
                 iv: iv
             }).then(function() {
+                expect(imapClientStub.createFolder.calledOnce).to.be.true;
                 expect(imapClientStub.uploadMessage.calledOnce).to.be.true;
                 done();
             });
@@ -252,6 +262,14 @@ describe('Private Key DAO unit tests', function() {
         });
 
         it('should fail if imap folder does not exist', function(done) {
+            imapClientStub.listWellKnownFolders.returns(resolves({
+                Inbox: [{
+                    path: 'INBOX'
+                }],
+                Other: [{
+                    path: 'foo'
+                }]
+            }));
             imapClientStub.listMessages.returns(rejects(new Error()));
 
             privkeyDao._fetchMessage({
@@ -264,6 +282,14 @@ describe('Private Key DAO unit tests', function() {
         });
 
         it('should work', function(done) {
+            imapClientStub.listWellKnownFolders.returns(resolves({
+                Inbox: [{
+                    path: 'INBOX'
+                }],
+                Other: [{
+                    path: 'openpgp_keys'
+                }]
+            }));
             imapClientStub.listMessages.returns(resolves([{
                 subject: keyId
             }]));
@@ -273,11 +299,42 @@ describe('Private Key DAO unit tests', function() {
                 keyId: keyId
             }).then(function(msg) {
                 expect(msg.subject).to.equal(keyId);
+                expect(imapClientStub.listWellKnownFolders.calledOnce).to.be.true;
+                expect(imapClientStub.listMessages.calledOnce).to.be.true;
+                done();
+            });
+        });
+
+        it('should work with path prefix', function(done) {
+            imapClientStub.listWellKnownFolders.returns(resolves({
+                Inbox: [{
+                    path: 'INBOX'
+                }],
+                Other: [{
+                    path: 'INBOX.openpgp_keys'
+                }]
+            }));
+            imapClientStub.listMessages.returns(resolves([{
+                subject: keyId
+            }]));
+
+            privkeyDao._fetchMessage({
+                userId: emailAddress,
+                keyId: keyId
+            }).then(function(msg) {
+                expect(msg.subject).to.equal(keyId);
+                expect(imapClientStub.listWellKnownFolders.calledOnce).to.be.true;
+                expect(imapClientStub.listMessages.calledOnce).to.be.true;
                 done();
             });
         });
 
         it('should work for not matching message', function(done) {
+            imapClientStub.listWellKnownFolders.returns(resolves({
+                Other: [{
+                    path: 'INBOX.openpgp_keys'
+                }]
+            }));
             imapClientStub.listMessages.returns(resolves([{
                 subject: '7890'
             }]));
@@ -292,6 +349,11 @@ describe('Private Key DAO unit tests', function() {
         });
 
         it('should work for no messages', function(done) {
+            imapClientStub.listWellKnownFolders.returns(resolves({
+                Other: [{
+                    path: 'INBOX.openpgp_keys'
+                }]
+            }));
             imapClientStub.listMessages.returns(resolves([]));
 
             privkeyDao._fetchMessage({
