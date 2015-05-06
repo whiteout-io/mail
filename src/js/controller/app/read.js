@@ -53,8 +53,12 @@ var ReadCtrl = function($scope, $location, $q, email, invitation, outbox, pgp, k
     };
 
     $scope.decrypt = function(message) {
-        return email.decryptBody({
-            message: message
+        return $q(function(resolve) {
+            resolve();
+        }).then(function() {
+            return email.decryptBody({
+                message: message
+            });
         });
     };
 

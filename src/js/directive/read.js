@@ -53,8 +53,7 @@ ngModule.directive('frameLoad', function($window) {
             if (open) {
                 // trigger rendering of iframe
                 // otherwise scale to fit would not compute correct dimensions on mobile
-                displayText(scope.state.mailList.selected ? scope.state.mailList.selected.body : undefined);
-                displayHtml(scope.state.mailList.selected ? scope.state.mailList.selected.html : undefined);
+                displayContent();
             }
         });
 
@@ -84,60 +83,59 @@ ngModule.directive('frameLoad', function($window) {
 
         iframe.onload = function() {
             // set listeners
-            scope.$watch('state.mailList.selected.body', displayText);
-            scope.$watch('state.mailList.selected.html', displayHtml);
+            scope.$watch('state.mailList.selected.body', displayContent);
+            scope.$watch('state.mailList.selected.html', displayContent);
             // display initial message body
             scope.$apply();
         };
 
-        function displayText(body) {
+        function displayContent() {
             var mail = scope.state.mailList.selected;
 
-            if (mail && mail.encrypted && !mail.decrypted) {
+            if (!mail) {
+                return;
+            }
+
+            if (mail.encrypted && !mail.decrypted) {
                 // decrypt current mail
-                scope.decrypt(mail);
-                return;
-            }
-
-            if (mail && mail.html) {
-                return;
-            }
-
-            resetWidth();
-
-            // send text body for rendering in iframe
-            iframe.contentWindow.postMessage({
-                text: body
-            }, '*');
-        }
-
-        function displayHtml(html) {
-            if (!html) {
+                scope.decrypt(mail).then(function() {
+                    if (scope.state.mailList.selected === mail && mail.decrypted) {
+                        // decrypted mail is still selected, immidiately show body
+                        displayContent();
+                    }
+                });
                 return;
             }
 
             resetWidth();
 
-            // if there are image tags in the html?
-            var hasImages = /<img[^>]+\bsrc=['"][^'">]+['"]/ig.test(html);
-            scope.showImageButton = hasImages;
+            if (mail.html) {
+                // if there are image tags in the html?
+                var hasImages = /<img[^>]+\bsrc=['"][^'">]+['"]/ig.test(mail.html);
+                scope.showImageButton = hasImages;
 
-            iframe.contentWindow.postMessage({
-                html: html,
-                removeImages: hasImages // avoids doing unnecessary work on the html
-            }, '*');
+                iframe.contentWindow.postMessage({
+                    html: mail.html,
+                    removeImages: hasImages // avoids doing unnecessary work on the html
+                }, '*');
 
-            // only add a scope function to reload the html if there are images
-            if (hasImages) {
-                // reload WITH images
-                scope.displayImages = function() {
-                    scope.showImageButton = false;
-                    iframe.contentWindow.postMessage({
-                        html: html,
-                        removeImages: false
-                    }, '*');
-                };
+                // only add a scope function to reload the html if there are images
+                if (hasImages) {
+                    // reload WITH images
+                    scope.displayImages = function() {
+                        scope.showImageButton = false;
+                        iframe.contentWindow.postMessage({
+                            html: mail.html,
+                            removeImages: false
+                        }, '*');
+                    };
+                }
+            } else if (mail.body) {
+                iframe.contentWindow.postMessage({
+                    text: mail.body
+                }, '*');
             }
+
         }
 
         // reset the iframe width to the original (min-width:100%)
