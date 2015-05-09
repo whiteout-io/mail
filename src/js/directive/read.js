@@ -96,6 +96,8 @@ ngModule.directive('frameLoad', function($window) {
                 return;
             }
 
+            resetWidth();
+
             if (mail.encrypted && !mail.decrypted) {
                 // decrypt current mail
                 scope.decrypt(mail).then(function() {
@@ -106,8 +108,6 @@ ngModule.directive('frameLoad', function($window) {
                 });
                 return;
             }
-
-            resetWidth();
 
             if (mail.html) {
                 // if there are image tags in the html?
