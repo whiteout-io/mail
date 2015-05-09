@@ -222,21 +222,42 @@ describe('Account Service unit test', function() {
     });
 
     describe('logout', function() {
+        // cannot test the good case here or the browser will refresh during the test.
+
         it('should fail due to _auth.logout', function(done) {
             authStub.logout.returns(rejects(new Error('asdf')));
 
             account.logout().catch(function(err) {
                 expect(err.message).to.match(/asdf/);
+                expect(authStub.logout.calledOnce).to.be.true;
+                done();
+            });
+        });
+
+        it('should fail due to _accountStore.clear', function(done) {
+            authStub.logout.returns(resolves());
+            devicestorageStub.clear.returns(rejects(new Error('asdf')));
+
+            account.logout().catch(function(err) {
+                expect(err.message).to.match(/asdf/);
+                expect(devicestorageStub.clear.calledOnce).to.be.true;
+                expect(authStub.logout.calledOnce).to.be.true;
                 done();
             });
         });
 
         it('should fail due to _emailDao.onDisconnect', function(done) {
             authStub.logout.returns(resolves());
+            devicestorageStub.clear.returns(resolves());
             emailStub.onDisconnect.returns(rejects(new Error('asdf')));
 
             account.logout().catch(function(err) {
                 expect(err.message).to.match(/asdf/);
+   
+                expect(emailStub.onDisconnect.calledOnce).to.be.true;
+                expect(authStub.logout.calledOnce).to.be.true;
+                expect(devicestorageStub.clear.calledOnce).to.be.true;
+   
                 done();
             });
         });

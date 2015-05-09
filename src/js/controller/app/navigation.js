@@ -194,7 +194,7 @@ var NavigationCtrl = function($scope, $location, $q, $timeout, account, email, o
             if (!synced) {
                 dialog.confirm({
                     title: 'Key backup',
-                    message: 'Your private key is not backed up. Back up now?',
+                    message: 'Your encryption keys are not backed up. Back up now?',
                     positiveBtnStr: 'Backup',
                     negativeBtnStr: 'Not now',
                     showNegativeBtn: true,
