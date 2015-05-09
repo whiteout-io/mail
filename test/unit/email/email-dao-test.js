@@ -953,6 +953,44 @@ describe('Email DAO unit tests', function() {
             expect(message.loadingBody).to.be.true;
         });
 
+        it('should unescape dashes from signed pgp/inline', function(done) {
+            var expected = 'normal line\ndashed line 1\ndashed line 2';
+            var pt = '-----BEGIN PGP SIGNED MESSAGE-----\nHash: WTFHASH\n\nnormal line\n- dashed line 1\n- dashed line 2\n-----BEGIN PGP SIGNATURE----------END PGP SIGNATURE-----';
+            var message = {
+                uid: uid,
+                from: [{
+                    address: 'asdasdasd'
+                }]
+            };
+
+            localListStub.returns(resolves([{
+                uid: uid,
+                bodyParts: [{
+                    type: 'text',
+                    content: pt
+                }]
+            }]));
+            keychainStub.getReceiverPublicKey.withArgs(message.from[0].address).returns(resolves(mockKeyPair.publicKey));
+            pgpStub.verifyClearSignedMessage.withArgs(pt, mockKeyPair.publicKey.publicKey).returns(resolves(true));
+
+            dao.getBody({
+                messages: [message],
+                folder: inboxFolder
+            }).then(function() {
+                expect(message.body).to.equal(expected);
+                expect(message.signed).to.be.true;
+                expect(message.signaturesValid).to.be.true;
+                expect(message.loadingBody).to.be.false;
+
+                expect(localListStub.calledOnce).to.be.true;
+                expect(pgpStub.verifyClearSignedMessage.calledOnce).to.be.true;
+                expect(keychainStub.getReceiverPublicKey.calledOnce).to.be.true;
+
+                done();
+            });
+            expect(message.loadingBody).to.be.true;
+        });
+
         it('should stream from imap and set body', function(done) {
             var body = 'bender is great! bender is great!';
             var uid = 1234;

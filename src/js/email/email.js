@@ -1598,7 +1598,7 @@ Email.prototype._extractBody = function(message) {
             // PGP/INLINE signed
             message.signed = true;
             message.clearSignedMessage = clearSignedMatch[0];
-            body = clearSignedMatch[1];
+            body = (clearSignedMatch[1] || '').replace(/^- /gm, ''); // remove dash escaping https://tools.ietf.org/html/rfc4880#section-7.1
         }
 
         if (!message.signed) {
