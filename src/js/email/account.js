@@ -124,6 +124,10 @@ Account.prototype.logout = function() {
     var self = this;
     // clear app config store
     return self._auth.logout().then(function() {
+        // clear the account DB, including keys and messages
+        return self._accountStore.clear();
+
+    }).then(function() {
         // delete instance of imap-client and pgp-mailer
         return self._emailDao.onDisconnect();
 
