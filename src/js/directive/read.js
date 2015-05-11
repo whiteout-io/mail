@@ -92,18 +92,7 @@ ngModule.directive('frameLoad', function($window) {
         function displayContent() {
             var mail = scope.state.mailList.selected;
 
-            if (!mail) {
-                return;
-            }
-
-            if (mail.encrypted && !mail.decrypted) {
-                // decrypt current mail
-                scope.decrypt(mail).then(function() {
-                    if (scope.state.mailList.selected === mail && mail.decrypted) {
-                        // decrypted mail is still selected, immidiately show body
-                        displayContent();
-                    }
-                });
+            if (!mail || (mail.encrypted && !mail.decrypted)) {
                 return;
             }
 

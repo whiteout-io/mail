@@ -63,21 +63,6 @@ describe('Read Controller unit test', function() {
         });
     });
 
-    describe('decrypt', function() {
-        it('should decrypt a message', function(done) {
-            var msg = {};
-
-            emailMock.decryptBody.withArgs({
-                message: msg
-            }).returns(resolves());
-            
-            scope.decrypt(msg).then(function() {
-                expect(emailMock.decryptBody.calledOnce).to.be.true;
-                done();
-            });
-        });
-    });
-
     describe('getKeyId', function() {
         var address = 'asfd@asdf.com';
 
