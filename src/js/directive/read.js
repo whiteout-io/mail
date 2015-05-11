@@ -124,7 +124,6 @@ ngModule.directive('frameLoad', function($window) {
                     text: mail.body
                 }, '*');
             }
-
         }
 
         // reset the iframe width to the original (min-width:100%)
