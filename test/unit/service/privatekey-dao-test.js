@@ -104,35 +104,61 @@ describe('Private Key DAO unit tests', function() {
 
     describe('isSynced', function() {
         beforeEach(function() {
+            sinon.stub(privkeyDao, '_getFolder');
             sinon.stub(privkeyDao, '_fetchMessage');
         });
         afterEach(function() {
+            privkeyDao._getFolder.restore();
             privkeyDao._fetchMessage.restore();
         });
 
         it('should be synced', function(done) {
+
+            privkeyDao._getFolder.returns(resolves('foo'));
             privkeyDao._fetchMessage.returns(resolves({}));
 
             privkeyDao.isSynced().then(function(synced) {
                 expect(synced).to.be.true;
+                expect(privkeyDao._getFolder.calledOnce).to.be.true;
+                expect(privkeyDao._fetchMessage.calledOnce).to.be.true;
+
                 done();
             });
         });
 
         it('should not be synced', function(done) {
+            privkeyDao._getFolder.returns(resolves());
             privkeyDao._fetchMessage.returns(resolves());
 
             privkeyDao.isSynced().then(function(synced) {
                 expect(synced).to.be.false;
+                expect(privkeyDao._getFolder.calledOnce).to.be.true;
+                expect(privkeyDao._fetchMessage.calledOnce).to.be.true;
+
                 done();
             });
         });
 
         it('should not be synced in case of error', function(done) {
+            privkeyDao._getFolder.returns(rejects(new Error()));
+
+            privkeyDao.isSynced().then(function(synced) {
+                expect(synced).to.be.false;
+                expect(privkeyDao._getFolder.calledOnce).to.be.true;
+
+                done();
+            });
+        });
+
+        it('should not be synced in case of error', function(done) {
+            privkeyDao._getFolder.returns(resolves('foo'));
             privkeyDao._fetchMessage.returns(rejects(new Error()));
 
             privkeyDao.isSynced().then(function(synced) {
                 expect(synced).to.be.false;
+                expect(privkeyDao._getFolder.calledOnce).to.be.true;
+                expect(privkeyDao._fetchMessage.calledOnce).to.be.true;
+
                 done();
             });
         });
@@ -146,15 +172,18 @@ describe('Private Key DAO unit tests', function() {
         }];
 
         beforeEach(function() {
+            sinon.stub(privkeyDao, '_getFolder');
             sinon.stub(privkeyDao, '_fetchMessage');
             sinon.stub(privkeyDao, '_parse');
         });
         afterEach(function() {
+            privkeyDao._getFolder.restore();
             privkeyDao._fetchMessage.restore();
             privkeyDao._parse.restore();
         });
 
         it('should fail if key not synced', function(done) {
+            privkeyDao._getFolder.returns(resolves('foo'));
             privkeyDao._fetchMessage.returns(resolves());
 
             privkeyDao.download({
@@ -167,6 +196,7 @@ describe('Private Key DAO unit tests', function() {
         });
 
         it('should work', function(done) {
+            privkeyDao._getFolder.returns(resolves('foo'));
             privkeyDao._fetchMessage.returns(resolves({}));
             imapClientStub.getBodyParts.returns(resolves());
             privkeyDao._parse.returns(resolves(root));
@@ -253,14 +283,7 @@ describe('Private Key DAO unit tests', function() {
         });
     });
 
-    describe('_fetchMessage', function() {
-        it('should fail due to invalid args', function(done) {
-            privkeyDao._fetchMessage({}).catch(function(err) {
-                expect(err.message).to.match(/Incomplete/);
-                done();
-            });
-        });
-
+    describe('_getFolder', function() {
         it('should fail if imap folder does not exist', function(done) {
             imapClientStub.listWellKnownFolders.returns(resolves({
                 Inbox: [{
@@ -270,13 +293,10 @@ describe('Private Key DAO unit tests', function() {
                     path: 'foo'
                 }]
             }));
-            imapClientStub.listMessages.returns(rejects(new Error()));
 
-            privkeyDao._fetchMessage({
-                userId: emailAddress,
-                keyId: keyId
-            }).catch(function(err) {
+            privkeyDao._getFolder().catch(function(err) {
                 expect(err.message).to.match(/Imap folder/);
+                expect(imapClientStub.listWellKnownFolders.calledOnce).to.be.true;
                 done();
             });
         });
@@ -290,6 +310,25 @@ describe('Private Key DAO unit tests', function() {
                     path: 'openpgp_keys'
                 }]
             }));
+
+            privkeyDao._getFolder().then(function(path) {
+                expect(path).to.equal('openpgp_keys');
+                expect(imapClientStub.listWellKnownFolders.calledOnce).to.be.true;
+                done();
+            });
+        });
+    });
+
+    describe('_fetchMessage', function() {
+        it('should fail due to invalid args', function(done) {
+            privkeyDao._fetchMessage({}).catch(function(err) {
+                expect(err.message).to.match(/Incomplete/);
+                done();
+            });
+        });
+
+
+        it('should work', function(done) {
             imapClientStub.listMessages.returns(resolves([{
                 subject: keyId
             }]));
@@ -299,21 +338,12 @@ describe('Private Key DAO unit tests', function() {
                 keyId: keyId
             }).then(function(msg) {
                 expect(msg.subject).to.equal(keyId);
-                expect(imapClientStub.listWellKnownFolders.calledOnce).to.be.true;
                 expect(imapClientStub.listMessages.calledOnce).to.be.true;
                 done();
             });
         });
 
         it('should work with path prefix', function(done) {
-            imapClientStub.listWellKnownFolders.returns(resolves({
-                Inbox: [{
-                    path: 'INBOX'
-                }],
-                Other: [{
-                    path: 'INBOX.openpgp_keys'
-                }]
-            }));
             imapClientStub.listMessages.returns(resolves([{
                 subject: keyId
             }]));
@@ -323,18 +353,12 @@ describe('Private Key DAO unit tests', function() {
                 keyId: keyId
             }).then(function(msg) {
                 expect(msg.subject).to.equal(keyId);
-                expect(imapClientStub.listWellKnownFolders.calledOnce).to.be.true;
                 expect(imapClientStub.listMessages.calledOnce).to.be.true;
                 done();
             });
         });
 
         it('should work for not matching message', function(done) {
-            imapClientStub.listWellKnownFolders.returns(resolves({
-                Other: [{
-                    path: 'INBOX.openpgp_keys'
-                }]
-            }));
             imapClientStub.listMessages.returns(resolves([{
                 subject: '7890'
             }]));
@@ -349,11 +373,6 @@ describe('Private Key DAO unit tests', function() {
         });
 
         it('should work for no messages', function(done) {
-            imapClientStub.listWellKnownFolders.returns(resolves({
-                Other: [{
-                    path: 'INBOX.openpgp_keys'
-                }]
-            }));
             imapClientStub.listMessages.returns(resolves([]));
 
             privkeyDao._fetchMessage({
