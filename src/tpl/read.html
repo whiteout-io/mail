@@ -75,7 +75,7 @@
           <label>From:</label>
           <span ng-repeat="u in state.mailList.selected.from">
             <span class="label" ng-class="{'label--invalid': u.secure === false, 'label--invalid-clickable': u.secure === false}" ng-mouseover="getKeyId(u.address)" wo-touch="invite(u)" wo-tooltip="#fingerprint-info">
-              {{u.name || u.address}}
+              {{u.name || u.address}} <span ng-show="u.name" ng-class="{'read__sender-address': !notStripped}">&#60; {{u.address}} &#62;</span>
               <svg ng-show="u.secure === false"><use xlink:href="#icon-add_contact" /></svg>
             </span>
 
