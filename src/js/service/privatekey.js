@@ -165,9 +165,13 @@ PrivateKey.prototype.upload = function(options) {
  * Check if matching private key is stored in IMAP.
  */
 PrivateKey.prototype.isSynced = function() {
-    return this._fetchMessage({
-        userId: this._auth.emailAddress,
-        keyId: this._pgp.getKeyId()
+    var self = this;
+
+    return self._getFolder().then(function(path) {
+        return self._fetchMessage({
+            keyId: self._pgp.getKeyId(),
+            path: path
+        });
     }).then(function(msg) {
         return !!msg;
     }).catch(function() {
@@ -183,18 +187,24 @@ PrivateKey.prototype.isSynced = function() {
  */
 PrivateKey.prototype.download = function(options) {
     var self = this,
-        message;
+        path, message;
 
-    return self._fetchMessage(options).then(function(msg) {
-        if (!msg) {
-            throw new Error('Private key not synced!');
-        }
+    return self._getFolder().then(function(fullPath) {
+        path = fullPath;
+        return self._fetchMessage({
+            keyId: options.keyId,
+            path: path
+        }).then(function(msg) {
+            if (!msg) {
+                throw new Error('Private key not synced!');
+            }
 
-        message = msg;
+            message = msg;
+        });
     }).then(function() {
         // get the body for the message
         return self._imap.getBodyParts({
-            path: IMAP_KEYS_FOLDER,
+            path: path,
             uid: message.uid,
             bodyParts: message.bodyParts
         });
@@ -282,16 +292,8 @@ PrivateKey.prototype.decrypt = function(options) {
     });
 };
 
-PrivateKey.prototype._fetchMessage = function(options) {
+PrivateKey.prototype._getFolder = function() {
     var self = this;
-
-    if (!options.userId || !options.keyId) {
-        return new Promise(function() {
-            throw new Error('Incomplete arguments!');
-        });
-    }
-
-    // get the metadata for the message
 
     return self._imap.listWellKnownFolders().then(function(wellKnownFolders) {
         var paths = []; // gathers paths
@@ -318,12 +320,21 @@ PrivateKey.prototype._fetchMessage = function(options) {
         }
 
         return paths[0];
+    });
+};
 
-    }).then(function(path) {
-        return self._imap.listMessages({
-            path: path,
+PrivateKey.prototype._fetchMessage = function(options) {
+    var self = this;
+
+    if (!options.keyId) {
+        return new Promise(function() {
+            throw new Error('Incomplete arguments!');
         });
+    }
 
+    // get the metadata for the message
+    return self._imap.listMessages({
+        path: options.path
     }).then(function(messages) {
         if (!messages.length) {
             // message has been deleted in the meantime
