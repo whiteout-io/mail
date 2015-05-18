@@ -333,8 +333,6 @@ PrivateKey.prototype._fetchMessage = function(options) {
     }
 
     // get the metadata for the message
-
-
     return self._imap.listMessages({
         path: options.path
     }).then(function(messages) {
