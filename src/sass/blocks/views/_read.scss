@@ -191,6 +191,9 @@
             .mail-addresses__stripped {
                 display: inline;
             }
+            .read__sender-address {
+                display: none;
+            }
         }
     }
 }
