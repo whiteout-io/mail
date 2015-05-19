@@ -25,10 +25,10 @@ Download.prototype.createDownload = function(options) {
         supportsBlob = !!new Blob();
     } catch (e) {}
 
-    if (typeof a.download !== "undefined" && supportsBlob) {
+    if (typeof a.download !== 'undefined' && supportsBlob) {
         // ff 30+, chrome 27+ (android: 37+)
         document.body.appendChild(a);
-        a.style = "display: none";
+        a.style.display = 'none';
         a.href = window.URL.createObjectURL(new Blob([content], {
             type: contentType
         }));
@@ -52,15 +52,15 @@ Download.prototype.createDownload = function(options) {
         var url = window.URL.createObjectURL(new Blob([content], {
             type: contentType
         }));
-        var newTab = window.open(url, "_blank");
+        var newTab = window.open(url, '_blank');
         if (!newTab) {
             window.location.href = url;
         }
     } else {
         // anything else, where anything at all is better than nothing
-        if (typeof content !== "string" && content.buffer) {
+        if (typeof content !== 'string' && content.buffer) {
             content = util.arrBuf2BinStr(content.buffer);
         }
-        window.open('data:' + contentType + ';base64,' + btoa(content), "_blank");
+        window.open('data:' + contentType + ';base64,' + btoa(content), '_blank');
     }
 };
