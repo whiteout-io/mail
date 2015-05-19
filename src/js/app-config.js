@@ -109,5 +109,7 @@ appCfg.string = {
     connDocNoInbox: 'We could not detect an IMAP inbox folder on {0}.  Please have a look at the FAQ for information on how to fix this error.',
     connDocGenericError: 'There was an error connecting to {0}: {1}',
     logoutTitle: 'Logout',
-    logoutMessage: 'Are you sure you want to log out? Please back up your encryption key before proceeding!'
+    logoutMessage: 'Are you sure you want to log out? Please back up your encryption key before proceeding!',
+    removePreAuthAccountTitle: 'Remove account',
+    removePreAuthAccountMessage: 'Are you sure you want to remove this account from this device?'
 };
