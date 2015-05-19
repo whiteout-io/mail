@@ -938,8 +938,10 @@ Email.prototype.onConnect = function(imap) {
 Email.prototype.onDisconnect = function() {
     // logout of imap-client
     // ignore error, because it's not problem if logout fails
-    this._imapClient.stopListeningForChanges(function() {});
-    this._imapClient.logout(function() {});
+    if (this._imapClient) {
+        this._imapClient.stopListeningForChanges(function() {});
+        this._imapClient.logout(function() {});
+    }
 
     // discard clients
     this._account.online = false;

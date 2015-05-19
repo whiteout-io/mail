@@ -1,7 +1,9 @@
 'use strict';
 
-var LoginExistingCtrl = function($scope, $location, $routeParams, $q, email, auth, keychain) {
+var LoginExistingCtrl = function($scope, $location, $routeParams, $q, email, auth, keychain, account, dialog, appConfig) {
     !$routeParams.dev && !auth.isInitialized() && $location.path('/'); // init app
+
+    var str = appConfig.string;
 
     $scope.confirmPassphrase = function() {
         if ($scope.form.$invalid) {
@@ -36,6 +38,18 @@ var LoginExistingCtrl = function($scope, $location, $routeParams, $q, email, aut
             $location.path('/account');
 
         }).catch(displayError);
+    };
+
+    $scope.logout = function() {
+        return dialog.confirm({
+            title: str.removePreAuthAccountTitle,
+            message: str.removePreAuthAccountMessage,
+            callback: function(confirm) {
+                if (confirm) {
+                    account.logout().catch(dialog.error);
+                }
+            }
+        });
     };
 
     function displayError(err) {
