@@ -1,12 +1,14 @@
 'use strict';
 
 var Auth = require('../../../../src/js/service/auth'),
+    Account = require('../../../../src/js/email/account'),
+    Dialog = require('../../../../src/js/util/dialog'),
     LoginExistingCtrl = require('../../../../src/js/controller/login/login-existing'),
     EmailDAO = require('../../../../src/js/email/email'),
     KeychainDAO = require('../../../../src/js/service/keychain');
 
 describe('Login (existing user) Controller unit test', function() {
-    var scope, location, ctrl, emailDaoMock, authMock,
+    var scope, location, ctrl, emailDaoMock, authMock, accountMock, dialogMock,
         emailAddress = 'fred@foo.com',
         passphrase = 'asd',
         keychainMock;
@@ -15,6 +17,8 @@ describe('Login (existing user) Controller unit test', function() {
         emailDaoMock = sinon.createStubInstance(EmailDAO);
         authMock = sinon.createStubInstance(Auth);
         keychainMock = sinon.createStubInstance(KeychainDAO);
+        accountMock = sinon.createStubInstance(Account);
+        dialogMock = sinon.createStubInstance(Dialog);
 
         authMock.emailAddress = emailAddress;
 
@@ -31,7 +35,10 @@ describe('Login (existing user) Controller unit test', function() {
                 $q: window.qMock,
                 email: emailDaoMock,
                 auth: authMock,
-                keychain: keychainMock
+                keychain: keychainMock,
+                account: accountMock,
+                dialog: dialogMock,
+                appConfig: {}
             });
         });
     });
