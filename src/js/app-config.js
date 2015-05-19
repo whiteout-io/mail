@@ -111,5 +111,5 @@ appCfg.string = {
     logoutTitle: 'Logout',
     logoutMessage: 'Are you sure you want to log out? Please back up your encryption key before proceeding!',
     removePreAuthAccountTitle: 'Remove account',
-    removePreAuthAccountMessage: 'Are you sure you want to remove this account from this device?'
+    removePreAuthAccountMessage: 'Are you sure you want to remove your account from this device?'
 };
