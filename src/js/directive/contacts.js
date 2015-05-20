@@ -8,6 +8,7 @@ ngModule.directive('keyfileInput', function() {
             for (var i = 0; i < e.target.files.length; i++) {
                 importKey(e.target.files.item(i));
             }
+            elm.val(null);  // clear input
         });
 
         function importKey(file) {
