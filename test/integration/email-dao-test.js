@@ -100,6 +100,10 @@ describe('Email DAO integration tests', function() {
         }, {
             raw: 'Message-id: <foobar>\r\nSubject: moveme\r\n\r\nmoveme!',
             uid: 900
+        }, {
+            description: "Thunderbird (no attachment - PGP/INLINE): Signed w/ unsigned content spoofing attack",
+            raw: "Message-ID: <53A87B12.9010706@gmail.com>\r\nDate: Mon, 23 Jun 2014 21:08:02 +0200\r\nFrom: Andris Testbox2 <safewithme.testuser@gmail.com>\r\nUser-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:24.0) Gecko/20100101 Thunderbird/24.2.0\r\nMIME-Version: 1.0\r\nTo: safewithme.testuser@gmail.com\r\nSubject: test6\r\nX-Enigmail-Version: 1.6\r\nContent-Type: text/plain; charset=ISO-8859-1\r\nContent-Transfer-Encoding: 7bit\r\n\r\n\r\n-----BEGIN PGP SIGNED MESSAGE-----\r\nHash: SHA512\r\n\r\ntest6\r\n-----BEGIN PGP SIGNATURE-----\r\nVersion: GnuPG v1.4.13 (Darwin)\r\nComment: GPGTools - https://gpgtools.org\r\nComment: Using GnuPG with Thunderbird - http://www.enigmail.net/\r\n\r\niQEcBAEBCgAGBQJTqHsSAAoJENf7k/zfv8I8wz4H/RWo1qJvvJtMl7GyqGGbaByX\r\n/D7/yWJzMdE0Y7J/tHIexQ/sZnmcDlHG0mtJKgI7EOh2EyV+r+78vF71Mlc+bg8g\r\n3B4TKyp0QU1Pb6SETG//FtKrU7SnkjKujHvRMpzcOcm0ZLBDpmftyWLvp9Dg3KOF\r\n5sMBGpJRn1pqX2DxXZtc1rYOmSAaxFI5jewPws0DCDkLDGp9gLyusNeDHkmAT4AG\r\nDqsDPQvW0R4Sy7aQFT7GjrdnCiLyikynkocUpR95fDnjHJ6Xbyj2Yj9/ofewPQ//\r\nMq39sIYbcqlDBAhsOlii3ekdzLS4xEOkvtFoD4pufyLj3pYY60FG4bPygcccYkI=\r\n=IkRV\r\n-----END PGP SIGNATURE-----\r\n\r\nTHIS IS UNSINGED CONTENT AND MUST NOT BE SHOWN\r\n\r\n-----BEGIN PGP SIGNATURE-----\r\n-----END PGP SIGNATURE-----\r\n",
+            uid: 910
         }];
 
         imapFolders = {
@@ -562,6 +566,14 @@ describe('Email DAO integration tests', function() {
                     expect(message.body).to.equal('this is a test');
                     done();
                 });
+            });
+
+            it('should parse Thunderbird (no attachment): Signed w/ PGP/INLINE including unsigned content spoofing attack', function() {
+                expect(inbox.messages[19].encrypted).to.be.false;
+                expect(inbox.messages[19].signed).to.be.true;
+                expect(inbox.messages[19].signaturesValid).to.be.true;
+                expect(inbox.messages[19].attachments.length).to.equal(0);
+                expect(inbox.messages[19].body).to.equal('test6');
             });
         });
     });
