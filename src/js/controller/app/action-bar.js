@@ -8,6 +8,42 @@ var ActionBarCtrl = function($scope, $q, email, dialog, status) {
     // scope functions
     //
 
+    $scope.CHECKNONE = 0;
+    $scope.CHECKALL = 1;
+    $scope.CHECKUNREAD = 2;
+    $scope.CHECKREAD = 3;
+    $scope.CHECKFLAGGED = 4;
+    $scope.CHECKUNFLAGGED = 5;
+    $scope.CHECKENCRYPTED = 6;
+    $scope.CHECKUNENCRYPTED = 7;
+
+    $scope.check = function(option) {
+        currentFolder().messages.forEach(function(email) {
+            if (!email.from) {
+                // only mark loaded messages, not the dummy messages
+                return;
+            }
+
+            if (option === $scope.CHECKNONE) {
+                email.checked = false;
+            } else if (option === $scope.CHECKALL) {
+                email.checked = true;
+            } else if (option === $scope.CHECKUNREAD) {
+                email.checked = !!email.unread;
+            } else if (option === $scope.CHECKREAD) {
+                email.checked = !email.unread;
+            } else if (option === $scope.CHECKFLAGGED) {
+                email.checked = !!email.flagged;
+            } else if (option === $scope.CHECKUNFLAGGED) {
+                email.checked = !email.flagged;
+            } else if (option === $scope.CHECKENCRYPTED) {
+                email.checked = !!email.encrypted;
+            } else if (option === $scope.CHECKUNENCRYPTED) {
+                email.checked = !email.encrypted;
+            }
+        });
+    };
+
     /**
      * Move a single message from the currently selected folder to another folder
      * @param  {Object} message     The message that is to be moved

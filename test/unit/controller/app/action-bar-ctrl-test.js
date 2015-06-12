@@ -24,9 +24,20 @@ describe('Action Bar Controller unit test', function() {
                     type: 'Inbox',
                     path: 'INBOX',
                     messages: [{
+                        from: [],
                         checked: true
                     }, {
+                        from: [],
                         checked: false
+                    }, {
+                        from: [],
+                        flagged: true
+                    }, {
+                        from: [],
+                        encrypted: true
+                    }, {
+                        from: [],
+                        unread: true
                     }]
                 }
             };
@@ -42,6 +53,83 @@ describe('Action Bar Controller unit test', function() {
     });
 
     afterEach(function() {});
+
+    describe('check', function() {
+        it('should check all', function() {
+            scope.check(scope.CHECKALL);
+
+            expect(scope.state.nav.currentFolder.messages[0].checked).to.be.true;
+            expect(scope.state.nav.currentFolder.messages[1].checked).to.be.true;
+            expect(scope.state.nav.currentFolder.messages[2].checked).to.be.true;
+            expect(scope.state.nav.currentFolder.messages[3].checked).to.be.true;
+            expect(scope.state.nav.currentFolder.messages[4].checked).to.be.true;
+        });
+
+        it('should check none', function() {
+            scope.check(scope.CHECKNONE);
+            expect(scope.state.nav.currentFolder.messages[0].checked).to.be.false;
+            expect(scope.state.nav.currentFolder.messages[1].checked).to.be.false;
+            expect(scope.state.nav.currentFolder.messages[2].checked).to.be.false;
+            expect(scope.state.nav.currentFolder.messages[3].checked).to.be.false;
+            expect(scope.state.nav.currentFolder.messages[4].checked).to.be.false;
+        });
+
+        it('should check encrypted', function() {
+            scope.check(scope.CHECKENCRYPTED);
+            expect(scope.state.nav.currentFolder.messages[0].checked).to.be.false;
+            expect(scope.state.nav.currentFolder.messages[1].checked).to.be.false;
+            expect(scope.state.nav.currentFolder.messages[2].checked).to.be.false;
+            expect(scope.state.nav.currentFolder.messages[3].checked).to.be.true;
+            expect(scope.state.nav.currentFolder.messages[4].checked).to.be.false;
+        });
+
+        it('should check unencrypted', function() {
+            scope.check(scope.CHECKUNENCRYPTED);
+            expect(scope.state.nav.currentFolder.messages[0].checked).to.be.true;
+            expect(scope.state.nav.currentFolder.messages[1].checked).to.be.true;
+            expect(scope.state.nav.currentFolder.messages[2].checked).to.be.true;
+            expect(scope.state.nav.currentFolder.messages[3].checked).to.be.false;
+            expect(scope.state.nav.currentFolder.messages[4].checked).to.be.true;
+        });
+
+        it('should check unread', function() {
+            scope.check(scope.CHECKUNREAD);
+            expect(scope.state.nav.currentFolder.messages[0].checked).to.be.false;
+            expect(scope.state.nav.currentFolder.messages[1].checked).to.be.false;
+            expect(scope.state.nav.currentFolder.messages[2].checked).to.be.false;
+            expect(scope.state.nav.currentFolder.messages[3].checked).to.be.false;
+            expect(scope.state.nav.currentFolder.messages[4].checked).to.be.true;
+        });
+
+        it('should check read', function() {
+            scope.check(scope.CHECKREAD);
+            expect(scope.state.nav.currentFolder.messages[0].checked).to.be.true;
+            expect(scope.state.nav.currentFolder.messages[1].checked).to.be.true;
+            expect(scope.state.nav.currentFolder.messages[2].checked).to.be.true;
+            expect(scope.state.nav.currentFolder.messages[3].checked).to.be.true;
+            expect(scope.state.nav.currentFolder.messages[4].checked).to.be.false;
+
+        });
+
+        it('should check starred', function() {
+            scope.check(scope.CHECKFLAGGED);
+            expect(scope.state.nav.currentFolder.messages[0].checked).to.be.false;
+            expect(scope.state.nav.currentFolder.messages[1].checked).to.be.false;
+            expect(scope.state.nav.currentFolder.messages[2].checked).to.be.true;
+            expect(scope.state.nav.currentFolder.messages[3].checked).to.be.false;
+            expect(scope.state.nav.currentFolder.messages[4].checked).to.be.false;
+
+        });
+
+        it('should check unstarred', function() {
+            scope.check(scope.CHECKUNFLAGGED);
+            expect(scope.state.nav.currentFolder.messages[0].checked).to.be.true;
+            expect(scope.state.nav.currentFolder.messages[1].checked).to.be.true;
+            expect(scope.state.nav.currentFolder.messages[2].checked).to.be.false;
+            expect(scope.state.nav.currentFolder.messages[3].checked).to.be.true;
+            expect(scope.state.nav.currentFolder.messages[4].checked).to.be.true;
+        });
+    });
 
     describe('deleteMessage', function() {
         it('should not delete without a selected mail', function() {
