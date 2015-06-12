@@ -1183,7 +1183,7 @@ Email.prototype._updateFolders = function() {
                 return 1;
             } else {
                 // non-wellknown folders should be sorted case-insensitive
-                return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+                return a.path.toLowerCase().localeCompare(b.path.toLowerCase());
             }
         });
 
