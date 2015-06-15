@@ -1,5 +1,9 @@
 <div class="action-bar" ng-controller="ActionBarCtrl">
   <div class="action-bar__primary">
+    <button class="btn btn--light-dropdown" ng-hide="state.read.open" wo-dropdown="#dropdown-checkmessages">
+      <svg role="presentation"><use xlink:href="#icon-check" />Check messages</svg>
+      <svg class="btn__dropdown" role="presentation"><use xlink:href="#icon-dropdown" /></svg>
+    </button>
     <button class="btn btn--light" wo-touch="state.read.open ? deleteMessage(state.mailList.selected) : deleteCheckedMessages()">Delete</button>
     <button class="btn btn--light" wo-touch="state.read.open ? moveMessage(state.mailList.selected, getJunkFolder()) : moveCheckedMessages(getJunkFolder())">Spam</button>
     <button class="btn btn--light-dropdown" wo-dropdown="#dropdown-folder">
@@ -33,6 +37,17 @@
       </button>
     </li>
   </ul><!--/dropdown-->
+
+  <ul id="dropdown-checkmessages" class="dropdown">
+    <li><button wo-touch="check(CHECKALL)">All</button></li>
+    <li><button wo-touch="check(CHECKNONE)">None</button></li>
+    <li><button wo-touch="check(CHECKENCRYPTED)">Encrypted</button></li>
+    <li><button wo-touch="check(CHECKUNENCRYPTED)">Unencrypted</button></li>
+    <li><button wo-touch="check(CHECKUNREAD)">Unread</button></li>
+    <li><button wo-touch="check(CHECKREAD)">Read</button></li>
+    <li><button wo-touch="check(CHECKFLAGGED)">Starred</button></li>
+    <li><button wo-touch="check(CHECKUNFLAGGED)">Unstarred</button></li>
+  </ul><!--/checkmessages-->
 
   <ul id="dropdown-more" class="dropdown">
     <li><button wo-touch="state.read.open ? markMessage(state.mailList.selected, false) : markCheckedMessages(false)">Mark as read</button></li>
