@@ -106,7 +106,7 @@ PGP.prototype.getKeyId = function(keyArmored) {
  * Read all relevant params of an armored key.
  */
 PGP.prototype.getKeyParams = function(keyArmored) {
-    var key, packet, userIds;
+    var key, packet, userIds, emailAddress;
 
     // process armored key input
     if (keyArmored) {
@@ -122,15 +122,24 @@ PGP.prototype.getKeyParams = function(keyArmored) {
     // read user names and email addresses
     userIds = [];
     key.getUserIds().forEach(function(userId) {
+        if (!userId || userId.indexOf('<') < 0 || userId.indexOf('>') < 0) {
+            return;
+        }
         userIds.push({
             name: userId.split('<')[0].trim(),
             emailAddress: userId.split('<')[1].split('>')[0].trim()
         });
     });
 
+    // check user ID
+    emailAddress = userIds[0] && userIds[0].emailAddress;
+    if (!emailAddress) {
+        throw new Error('Cannot parse PGP key user ID!');
+    }
+
     return {
         _id: packet.getKeyId().toHex().toUpperCase(),
-        userId: userIds[0].emailAddress, // the primary (first) email address of the key
+        userId: emailAddress, // the primary (first) email address of the key
         userIds: userIds, // a dictonary of all the key's name/address pairs
         fingerprint: packet.getFingerprint().toUpperCase(),
         algorithm: packet.algorithm,
