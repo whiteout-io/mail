@@ -52,8 +52,7 @@ var CreateAccountCtrl = function($scope, $location, $routeParams, $q, auth, admi
             return admin.createUser({
                 emailAddress: emailAddress,
                 password: $scope.pass,
-                phone: phone.internationalNumber,
-                betaCode: $scope.betaCode.toUpperCase()
+                phone: phone.internationalNumber
             });
 
         }).then(function() {
