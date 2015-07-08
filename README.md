@@ -13,6 +13,8 @@ You can read about product features and our future roadmap in our [FAQ](https://
 
 We take the privacy of your data very seriously. Here are some of the technical details:
 
+* The code has undergone a [full security audit](https://blog.whiteout.io/2015/06/11/whiteout-mail-1-0-and-security-audit-by-cure53/) by [Cure53](https://cure53.de).
+
 * Messages are [encrypted end-to-end ](http://en.wikipedia.org/wiki/End-to-end_encryption) using the [OpenPGP](http://en.wikipedia.org/wiki/Pretty_Good_Privacy) standard. This means that only you and the recipient can read your mail. Your messages and private PGP key are stored only on your computer (in IndexedDB).
 
 * Users have the option to use [encrypted private key sync](https://github.com/whiteout-io/mail-html5/wiki/Secure-OpenPGP-Key-Pair-Synchronization-via-IMAP) if they want to use Whiteout on multiple devices.
