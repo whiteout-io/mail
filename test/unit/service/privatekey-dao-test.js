@@ -68,6 +68,14 @@ describe('Private Key DAO unit tests', function() {
     });
 
     describe('upload', function() {
+        beforeEach(function() {
+            sinon.stub(privkeyDao, '_getFolder');
+        });
+
+        afterEach(function() {
+            privkeyDao._getFolder.restore();
+        });
+
         it('should fail due to invalid args', function(done) {
             privkeyDao.upload({}).catch(function(err) {
                 expect(err.message).to.match(/Incomplete/);
@@ -75,10 +83,11 @@ describe('Private Key DAO unit tests', function() {
             });
         });
 
-        it('should work', function(done) {
+        it('should work without existing folder', function(done) {
             var IMAP_KEYS_FOLDER = 'openpgp_keys';
             var fullPath = 'INBOX.' + IMAP_KEYS_FOLDER;
 
+            privkeyDao._getFolder.returns(rejects(new Error()));
             imapClientStub.createFolder.withArgs({
                 path: IMAP_KEYS_FOLDER
             }).returns(resolves(fullPath));
@@ -95,7 +104,33 @@ describe('Private Key DAO unit tests', function() {
                 salt: salt,
                 iv: iv
             }).then(function() {
+                expect(privkeyDao._getFolder.calledOnce).to.be.true;
                 expect(imapClientStub.createFolder.calledOnce).to.be.true;
+                expect(imapClientStub.uploadMessage.calledOnce).to.be.true;
+                done();
+            });
+        });
+
+        it('should work with existing folder', function(done) {
+            var IMAP_KEYS_FOLDER = 'openpgp_keys';
+            var fullPath = 'INBOX.' + IMAP_KEYS_FOLDER;
+
+            privkeyDao._getFolder.returns(resolves(fullPath));
+            imapClientStub.uploadMessage.withArgs(sinon.match(function(arg) {
+                expect(arg.path).to.equal(fullPath);
+                expect(arg.message).to.exist;
+                return true;
+            })).returns(resolves());
+
+            privkeyDao.upload({
+                _id: keyId,
+                userId: emailAddress,
+                encryptedPrivateKey: encryptedPrivateKey,
+                salt: salt,
+                iv: iv
+            }).then(function() {
+                expect(privkeyDao._getFolder.calledOnce).to.be.true;
+                expect(imapClientStub.createFolder.called).to.be.false;
                 expect(imapClientStub.uploadMessage.calledOnce).to.be.true;
                 done();
             });

@@ -102,24 +102,39 @@ PrivateKey.prototype.upload = function(options) {
 
     return new Promise(function(resolve) {
         if (!options._id || !options.userId || !options.encryptedPrivateKey || !options.salt || !options.iv) {
-            throw new Error('Incomplete arguments!');
+            throw new Error('Incomplete arguments for key upload!');
         }
         resolve();
 
     }).then(function() {
-        // create imap folder
-        return self._imap.createFolder({
-            path: IMAP_KEYS_FOLDER
-        }).then(function(fullPath) {
+
+        // Some servers (Exchange, Cyrus) error when creating an existing IMAP mailbox instead of
+        // responding with ALREADYEXISTS. Hence we search for the folder before uploading.
+
+        self._axe.debug('Searching imap folder for key upload...');
+
+        return self._getFolder().then(function(fullPath) {
             path = fullPath;
-            self._axe.debug('Successfully created imap folder ' + path);
-        }).catch(function(err) {
-            var prettyErr = new Error('Creating imap folder ' + IMAP_KEYS_FOLDER + ' failed: ' + err.message);
-            self._axe.error(prettyErr);
-            throw prettyErr;
+        }).catch(function() {
+
+            // create imap folder
+            self._axe.debug('Folder not found, creating imap folder.');
+            return self._imap.createFolder({
+                path: IMAP_KEYS_FOLDER
+            }).then(function(fullPath) {
+                path = fullPath;
+                self._axe.debug('Successfully created imap folder ' + path);
+            }).catch(function(err) {
+                var prettyErr = new Error('Creating imap folder ' + IMAP_KEYS_FOLDER + ' failed: ' + err.message);
+                self._axe.error(prettyErr);
+                throw prettyErr;
+            });
         });
+
     }).then(createMessage).then(function(message) {
+
         // upload to imap folder
+        self._axe.debug('Uploading key...');
         return self._imap.uploadMessage({
             path: path,
             message: message
