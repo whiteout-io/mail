@@ -249,6 +249,7 @@ describe('Email DAO integration tests', function() {
             function onCleaned() {
                 userStorage = accountService._accountStore;
                 auth = accountService._auth;
+                emailDao = accountService._emailDao;
 
                 auth.setCredentials({
                     emailAddress: testAccount.user,
@@ -257,18 +258,16 @@ describe('Email DAO integration tests', function() {
                     imap: {} // a preconfigured smtpclient with mocked tcp sockets
                 });
 
+                // stub rest request to key server
+                sinon.stub(emailDao._keychain._publicKeyDao, 'get').returns(resolves(mockKeyPair.publicKey));
+                sinon.stub(emailDao._keychain._publicKeyDao, 'getByUserId').returns(resolves(mockKeyPair.publicKey));
+
                 auth.init().then(function() {
                     accountService.init({
                         emailAddress: testAccount.user
                     }).then(function() {
-                        emailDao = accountService._emailDao;
-
                         // retrieve the pgpbuilder from the emaildao and initialize the pgpmailer with the existing pgpbuilder
                         pgpMailer = new PgpMailer({}, emailDao._pgpbuilder);
-
-                        // stub rest request to key server
-                        sinon.stub(emailDao._keychain._publicKeyDao, 'get').returns(resolves(mockKeyPair.publicKey));
-                        sinon.stub(emailDao._keychain._publicKeyDao, 'getByUserId').returns(resolves(mockKeyPair.publicKey));
 
                         emailDao.unlock({
                             passphrase: testAccount.pass,
