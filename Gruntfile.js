@@ -542,7 +542,7 @@ module.exports = function(grunt) {
         watch: {
             css: {
                 files: ['src/sass/**/*.scss'],
-                tasks: ['dist-css', 'offline-cache', 'dist-styleguide'],
+                tasks: ['dist-css', 'dist-styleguide'],
                 options: {
                     livereload: true
                 }
@@ -553,14 +553,14 @@ module.exports = function(grunt) {
             },
             jsApp: {
                 files: ['src/js/**/*.js', 'src/*.html', ],
-                tasks: ['browserify:app', 'exorcise:app', 'concat:app', 'offline-cache'],
+                tasks: ['browserify:app', 'exorcise:app', 'concat:app'],
                 options: {
                     livereload: true
                 }
             },
             pbkdf2Worker: {
                 files: [],
-                tasks: [ 'browserify:pbkdf2Worker', 'concat:pbkdf2Worker', 'offline-cache'],
+                tasks: [ 'browserify:pbkdf2Worker', 'concat:pbkdf2Worker'],
                 options: {
                     livereload: true
                 }
@@ -574,7 +574,7 @@ module.exports = function(grunt) {
             },
             templates: {
                 files: ['src/tpl/**/*.html'],
-                tasks: ['ngtemplates', 'concat:app', 'offline-cache'],
+                tasks: ['ngtemplates', 'concat:app'],
                 options: {
                     livereload: true
                 }
@@ -589,11 +589,11 @@ module.exports = function(grunt) {
             },
             icons: {
                 files: ['src/index.html', 'src/img/icons/*.svg', '!src/img/icons/all.svg'],
-                tasks: ['svgmin', 'svgstore', 'string-replace', 'dist-styleguide', 'offline-cache']
+                tasks: ['svgmin', 'svgstore', 'string-replace', 'dist-styleguide']
             },
             lib: {
                 files: ['src/lib/**/*.js'],
-                tasks: ['copy:lib', 'offline-cache'],
+                tasks: ['copy:lib'],
                 options: {
                     livereload: true
                 }
@@ -602,26 +602,26 @@ module.exports = function(grunt) {
                 files: ['src/js/controller/app/read-sandbox.js'],
                 tasks: ['copy:tpl'],
                 options: {
-                    livereload: true
+                    livereload: true,
                 }
             },
             app: {
                 files: ['src/*.js', 'src/**/*.json', 'src/manifest.*'],
-                tasks: ['copy:app', 'manifest-dev', 'offline-cache'],
+                tasks: ['copy:app'],
                 options: {
                     livereload: true
                 }
             },
             images: {
-                files: ['src/img/**/*']
-                tasks: ['copy:img', 'manifest-dev', 'offline-cache'],
+                files: ['src/img/**/*'],
+                tasks: ['copy:img'],
                 options: {
                     livereload: true
                 }
             },
             font: {
                 files:['src/font/**/*'],
-                tasks: ['copy:font', 'manifest-dev', 'offline-cache'],
+                tasks: ['copy:font'],
                 options: {
                     livereload: true
                 }
