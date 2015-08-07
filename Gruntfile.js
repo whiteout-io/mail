@@ -542,7 +542,10 @@ module.exports = function(grunt) {
             },
             jsApp: {
                 files: ['src/js/**/*.js', 'src/*.html', 'src/tpl/**/*.html'],
-                tasks: ['dist-js-app']
+                tasks: ['dist-js-app'],
+                options: {
+                    livereload: true
+                }
             },
             jsUnitTest: {
                 files: ['test/unit/**/*-test.js', 'test/*.js'],
@@ -563,6 +566,13 @@ module.exports = function(grunt) {
             app: {
                 files: ['src/*.js', 'src/*.html', 'src/tpl/**/*.html', 'src/**/*.json', 'src/manifest.*', 'src/img/**/*', 'src/font/**/*'],
                 tasks: ['copy:app', 'copy:tpl', 'copy:img', 'copy:font', 'manifest-dev', 'offline-cache']
+            },
+            server: {
+                // watch for file written by nodemon on reboot to trigger live reload.
+                files: ['.rebooted'],
+                options: {
+                    livereload: true
+                }
             }
         },
 
@@ -661,6 +671,52 @@ module.exports = function(grunt) {
                 src: ['**/*.*'],
                 dest: 'dist/appcache.manifest'
             }
+        },
+        nodemon: {
+            dev: {
+                script: 'server.js',
+                options: {
+                    // tell server not to redirect to https
+                    args: ['--dev'],
+                    // node inspector support.
+                    nodeArgs: ['--debug'],
+                    env: { PORT: 8859 },
+                    watch: ['server.js'],
+                    callback: function(nodemon) {
+                        nodemon.on('log', function (event) {
+                            console.log(event.colour);
+                        });
+
+                        // opens browser on initial server start
+                        nodemon.on('config:update', function () {
+                            // Delay before server listens on port
+                            setTimeout(function() {
+                                require('open')('http://localhost:8859');
+                            }, 1000);
+                        });
+
+                        // refreshes browser when server reboots
+                        nodemon.on('restart', function () {
+                            // Delay before server listens on port
+                            setTimeout(function() {
+                                require('fs').writeFileSync('.rebooted', 'rebooted');
+                            }, 1000);
+                        });
+                    }
+                }
+            }
+        },
+        'node-inspector': {
+            dev: {}
+        },
+
+        concurrent: {
+            'dev': {
+                tasks: ['nodemon', 'node-inspector', 'watch'],
+                options: {
+                    logConcurrentOutput: true,
+                }
+            }
         }
 
     });
@@ -720,6 +776,7 @@ module.exports = function(grunt) {
 
     // Load the plugin(s)
     grunt.loadNpmTasks('grunt-browserify');
+    grunt.loadNpmTasks('grunt-concurrent');
     grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-connect');
@@ -733,6 +790,8 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-compress');
     grunt.loadNpmTasks('grunt-manifest');
     grunt.loadNpmTasks('grunt-mocha-phantomjs');
+    grunt.loadNpmTasks('grunt-node-inspector');
+    grunt.loadNpmTasks('grunt-nodemon');
     grunt.loadNpmTasks('grunt-exorcise');
     grunt.loadNpmTasks('grunt-string-replace');
     grunt.loadNpmTasks('grunt-svgmin');
@@ -773,7 +832,7 @@ module.exports = function(grunt) {
     grunt.registerTask('offline-cache', ['manifest', 'swPrecache:prod']);
 
     // Test/Dev tasks
-    grunt.registerTask('dev', ['connect:dev']);
+    grunt.registerTask('dev', ['concurrent:dev', 'watch']);
     grunt.registerTask('test', ['jshint', 'connect:test', 'mocha_phantomjs']);
     grunt.registerTask('prod', ['connect:prod']);
 

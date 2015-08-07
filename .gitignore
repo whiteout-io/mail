@@ -12,3 +12,4 @@ src/img/icons/all.svg
 test/*/index.js
 **/*.browserified.js
 **/*.js.map
+.rebooted

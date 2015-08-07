@@ -50,13 +50,23 @@ You can download a prebuilt bundle under [releases](https://github.com/whiteout-
 This will download all dependencies, run the tests and build the Chrome Packaged App bundle **release/whiteout-mail_DEV.zip** which can be installed under [chrome://extensions](chrome://extensions) in developer mode.
 
 ### Development
-For development you can start a connect dev server:
 
+For development you should begin by ensuring you have build a complete distribution.
+
+*windows users may may need to comment out the shell task on line 823 of Gruntfile.js*
+
+```bash
+    grunt dist
+```
+
+Then you can start a local instance with watchers and [live reload](http://livereload.com/) for the application js files.
+
+```bash
     grunt dev
+```
 
-Then visit [http://localhost:8580/dist/#/account?dev=true](http://localhost:8580/dist/#/account?dev=true) for front-end code or [http://localhost:8580/test/unit/](http://localhost:8580/test/unit/) to test JavaScript changes. You can also start a watch task so you don't have rebuild everytime you make a change:
+If a browser window does not open to the local development instance automatically, you can goto [http://localhost:8859](http://localhost:8859) manually.
 
-    grunt watch
 
 ## Releasing Chrome App
 
