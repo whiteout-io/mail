@@ -282,6 +282,16 @@ module.exports = function(grunt) {
             },
             app: {
                 src: [
+                    'dist/js/app.browserified.js',
+                    '<%= ngtemplates.mail.dest %>'
+                ],
+                dest: 'dist/js/app.min.js',
+                options: {
+                    sourceMapName: 'dist/js/app.js.map'
+                }
+            },
+            vendor: {
+                src: [
                     'src/lib/underscore/underscore.js',
                     'node_modules/jquery/dist/jquery.min.js',
                     'src/lib/angular/angular.js',
@@ -296,13 +306,11 @@ module.exports = function(grunt) {
                     'src/lib/lawnchair/lawnchair-adapter-indexed-db-git.js',
                     'src/lib/phonenumber/PhoneNumberMetadata.js',
                     'src/lib/phonenumber/PhoneNumberNormalizer.js',
-                    'src/lib/phonenumber/PhoneNumber.js',
-                    'dist/js/app.browserified.js',
-                    '<%= ngtemplates.mail.dest %>'
+                    'src/lib/phonenumber/PhoneNumber.js'
                 ],
-                dest: 'dist/js/app.min.js',
+                dest: 'dist/js/vendor.min.js',
                 options: {
-                    sourceMapName: 'dist/js/app.js.map'
+                    sourceMapName: 'dist/js/vendor.js.map'
                 }
             },
             readSandbox: {
@@ -541,8 +549,29 @@ module.exports = function(grunt) {
                 tasks: ['dist-styleguide']
             },
             jsApp: {
-                files: ['src/js/**/*.js', 'src/*.html', 'src/tpl/**/*.html'],
-                tasks: ['dist-js-app'],
+                files: ['src/js/**/*.js', 'src/*.html', ],
+                tasks: ['browserify:app', 'exorcise:app', 'concat:app', 'offline-cache'],
+                options: {
+                    livereload: true
+                }
+            },
+            pbkdf2Worker: {
+                files: [],
+                tasks: [ 'browserify:pbkdf2Worker', 'concat:pbkdf2Worker', 'offline-cache'],
+                options: {
+                    livereload: true
+                }
+            },
+            readSandbox: {
+                files: ['src/js/controller/app/read-sandbox.js'],
+                tasks: ['concat:readSandbox'],
+                options: {
+                    livereload: true
+                }
+            },
+            templates: {
+                files: ['src/tpl/**/*.html'],
+                tasks: ['ngtemplates', 'concat:app', 'offline-cache'],
                 options: {
                     livereload: true
                 }
