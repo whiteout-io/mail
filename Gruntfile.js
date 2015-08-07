@@ -542,7 +542,10 @@ module.exports = function(grunt) {
         watch: {
             css: {
                 files: ['src/sass/**/*.scss'],
-                tasks: ['dist-css', 'offline-cache', 'dist-styleguide']
+                tasks: ['dist-css', 'offline-cache', 'dist-styleguide'],
+                options: {
+                    livereload: true
+                }
             },
             styleguide: {
                 files: ['src/styleguide/**/*.hbs', 'src/styleguide/**/*.js'],
@@ -590,11 +593,46 @@ module.exports = function(grunt) {
             },
             lib: {
                 files: ['src/lib/**/*.js'],
-                tasks: ['copy:lib', 'offline-cache']
+                tasks: ['copy:lib', 'offline-cache'],
+                options: {
+                    livereload: true
+                }
+            },
+            readSandboxTpl: {
+                files: ['src/js/controller/app/read-sandbox.js'],
+                tasks: ['copy:tpl'],
+                options: {
+                    livereload: true
+                }
             },
             app: {
-                files: ['src/*.js', 'src/*.html', 'src/tpl/**/*.html', 'src/**/*.json', 'src/manifest.*', 'src/img/**/*', 'src/font/**/*'],
-                tasks: ['copy:app', 'copy:tpl', 'copy:img', 'copy:font', 'manifest-dev', 'offline-cache']
+                files: ['src/*.js', 'src/**/*.json', 'src/manifest.*'],
+                tasks: ['copy:app', 'manifest-dev', 'offline-cache'],
+                options: {
+                    livereload: true
+                }
+            },
+            images: {
+                files: ['src/img/**/*']
+                tasks: ['copy:img', 'manifest-dev', 'offline-cache'],
+                options: {
+                    livereload: true
+                }
+            },
+            font: {
+                files:['src/font/**/*'],
+                tasks: ['copy:font', 'manifest-dev', 'offline-cache'],
+                options: {
+                    livereload: true
+                }
+            },
+            index: {
+                // insert csvg icons in index.
+                files: ['src/index.html'],
+                tasks: ['string-replace'],
+                options: {
+                    livereload: true
+                }
             },
             server: {
                 // watch for file written by nodemon on reboot to trigger live reload.
