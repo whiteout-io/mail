@@ -71,7 +71,7 @@ The App can be used either as a Chrome Packaged App or just by hosting it on you
 
 Clone the git repository
 
-    git clone https://github.com/whiteout-io/mail-html5.git
+    git clone https://github.com/whiteout-io/mail.git
 
 Build and generate the `dist/` directory:
 
