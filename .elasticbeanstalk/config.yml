@@ -1,10 +1,10 @@
 branch-defaults:
   release/prod:
-    environment: mail-html5-prod
+    environment: mail-prod
   release/test:
-    environment: mail-html5-test
+    environment: mail-test
 global:
-  application_name: mail-html5
+  application_name: mail
   default_ec2_keyname: null
   default_platform: Node.js
   default_region: eu-central-1
