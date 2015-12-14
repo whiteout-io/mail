@@ -1,9 +1,7 @@
+sudo: false
 language: node_js
 node_js:
   - "0.12"
 before_install:
   - gem install sass
   - npm install -g grunt-cli
-notifications:
-  email:
-    - build@whiteout.io
