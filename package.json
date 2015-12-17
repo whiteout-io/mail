@@ -25,7 +25,7 @@
     "browsersmtp": "https://github.com/whiteout-io/browsersmtp/tarball/master",
     "chai": "~1.9.2",
     "crypto-lib": "~0.2.1",
-    "dompurify": "~0.6.3",
+    "dompurify": "~0.7.3",
     "grunt": "~0.4.1",
     "grunt-angular-templates": "~0.5.7",
     "grunt-autoprefixer": "~0.7.2",
