@@ -307,7 +307,7 @@ module.exports = function(grunt) {
             },
             readSandbox: {
                 src: [
-                    'node_modules/dompurify/purify.js',
+                    'node_modules/dompurify/src/purify.js',
                     'node_modules/iframe-resizer/js/iframeResizer.contentWindow.min.js',
                     'src/js/controller/app/read-sandbox.js'
                 ],
