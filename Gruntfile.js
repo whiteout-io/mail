@@ -282,6 +282,16 @@ module.exports = function(grunt) {
             },
             app: {
                 src: [
+                    'dist/js/app.browserified.js',
+                    '<%= ngtemplates.mail.dest %>'
+                ],
+                dest: 'dist/js/app.min.js',
+                options: {
+                    sourceMapName: 'dist/js/app.js.map'
+                }
+            },
+            vendor: {
+                src: [
                     'src/lib/underscore/underscore.js',
                     'node_modules/jquery/dist/jquery.min.js',
                     'src/lib/angular/angular.js',
@@ -296,13 +306,11 @@ module.exports = function(grunt) {
                     'src/lib/lawnchair/lawnchair-adapter-indexed-db-git.js',
                     'src/lib/phonenumber/PhoneNumberMetadata.js',
                     'src/lib/phonenumber/PhoneNumberNormalizer.js',
-                    'src/lib/phonenumber/PhoneNumber.js',
-                    'dist/js/app.browserified.js',
-                    '<%= ngtemplates.mail.dest %>'
+                    'src/lib/phonenumber/PhoneNumber.js'
                 ],
-                dest: 'dist/js/app.min.js',
+                dest: 'dist/js/vendor.min.js',
                 options: {
-                    sourceMapName: 'dist/js/app.js.map'
+                    sourceMapName: 'dist/js/vendor.js.map'
                 }
             },
             readSandbox: {
@@ -534,15 +542,42 @@ module.exports = function(grunt) {
         watch: {
             css: {
                 files: ['src/sass/**/*.scss'],
-                tasks: ['dist-css', 'offline-cache', 'dist-styleguide']
+                tasks: ['dist-css', 'dist-styleguide'],
+                options: {
+                    livereload: true
+                }
             },
             styleguide: {
                 files: ['src/styleguide/**/*.hbs', 'src/styleguide/**/*.js'],
                 tasks: ['dist-styleguide']
             },
             jsApp: {
-                files: ['src/js/**/*.js', 'src/*.html', 'src/tpl/**/*.html'],
-                tasks: ['dist-js-app']
+                files: ['src/js/**/*.js', 'src/*.html', ],
+                tasks: ['browserify:app', 'exorcise:app', 'concat:app'],
+                options: {
+                    livereload: true
+                }
+            },
+            pbkdf2Worker: {
+                files: [],
+                tasks: [ 'browserify:pbkdf2Worker', 'concat:pbkdf2Worker'],
+                options: {
+                    livereload: true
+                }
+            },
+            readSandbox: {
+                files: ['src/js/controller/app/read-sandbox.js'],
+                tasks: ['concat:readSandbox'],
+                options: {
+                    livereload: true
+                }
+            },
+            templates: {
+                files: ['src/tpl/**/*.html'],
+                tasks: ['ngtemplates', 'concat:app'],
+                options: {
+                    livereload: true
+                }
             },
             jsUnitTest: {
                 files: ['test/unit/**/*-test.js', 'test/*.js'],
@@ -554,15 +589,57 @@ module.exports = function(grunt) {
             },
             icons: {
                 files: ['src/index.html', 'src/img/icons/*.svg', '!src/img/icons/all.svg'],
-                tasks: ['svgmin', 'svgstore', 'string-replace', 'dist-styleguide', 'offline-cache']
+                tasks: ['svgmin', 'svgstore', 'string-replace', 'dist-styleguide']
             },
             lib: {
                 files: ['src/lib/**/*.js'],
-                tasks: ['copy:lib', 'offline-cache']
+                tasks: ['copy:lib'],
+                options: {
+                    livereload: true
+                }
+            },
+            readSandboxTpl: {
+                files: ['src/js/controller/app/read-sandbox.js'],
+                tasks: ['copy:tpl'],
+                options: {
+                    livereload: true,
+                }
             },
             app: {
-                files: ['src/*.js', 'src/*.html', 'src/tpl/**/*.html', 'src/**/*.json', 'src/manifest.*', 'src/img/**/*', 'src/font/**/*'],
-                tasks: ['copy:app', 'copy:tpl', 'copy:img', 'copy:font', 'manifest-dev', 'offline-cache']
+                files: ['src/*.js', 'src/**/*.json', 'src/manifest.*'],
+                tasks: ['copy:app'],
+                options: {
+                    livereload: true
+                }
+            },
+            images: {
+                files: ['src/img/**/*'],
+                tasks: ['copy:img'],
+                options: {
+                    livereload: true
+                }
+            },
+            font: {
+                files:['src/font/**/*'],
+                tasks: ['copy:font'],
+                options: {
+                    livereload: true
+                }
+            },
+            index: {
+                // insert csvg icons in index.
+                files: ['src/index.html'],
+                tasks: ['string-replace'],
+                options: {
+                    livereload: true
+                }
+            },
+            server: {
+                // watch for file written by nodemon on reboot to trigger live reload.
+                files: ['.rebooted'],
+                options: {
+                    livereload: true
+                }
             }
         },
 
@@ -661,6 +738,52 @@ module.exports = function(grunt) {
                 src: ['**/*.*'],
                 dest: 'dist/appcache.manifest'
             }
+        },
+        nodemon: {
+            dev: {
+                script: 'server.js',
+                options: {
+                    // tell server not to redirect to https
+                    args: ['--dev'],
+                    // node inspector support.
+                    nodeArgs: ['--debug'],
+                    env: { PORT: 8859 },
+                    watch: ['server.js'],
+                    callback: function(nodemon) {
+                        nodemon.on('log', function (event) {
+                            console.log(event.colour);
+                        });
+
+                        // opens browser on initial server start
+                        nodemon.on('config:update', function () {
+                            // Delay before server listens on port
+                            setTimeout(function() {
+                                require('open')('http://localhost:8859');
+                            }, 1000);
+                        });
+
+                        // refreshes browser when server reboots
+                        nodemon.on('restart', function () {
+                            // Delay before server listens on port
+                            setTimeout(function() {
+                                require('fs').writeFileSync('.rebooted', 'rebooted');
+                            }, 1000);
+                        });
+                    }
+                }
+            }
+        },
+        'node-inspector': {
+            dev: {}
+        },
+
+        concurrent: {
+            'dev': {
+                tasks: ['nodemon', 'node-inspector', 'watch'],
+                options: {
+                    logConcurrentOutput: true,
+                }
+            }
         }
 
     });
@@ -720,6 +843,7 @@ module.exports = function(grunt) {
 
     // Load the plugin(s)
     grunt.loadNpmTasks('grunt-browserify');
+    grunt.loadNpmTasks('grunt-concurrent');
     grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-connect');
@@ -733,6 +857,8 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-compress');
     grunt.loadNpmTasks('grunt-manifest');
     grunt.loadNpmTasks('grunt-mocha-phantomjs');
+    grunt.loadNpmTasks('grunt-node-inspector');
+    grunt.loadNpmTasks('grunt-nodemon');
     grunt.loadNpmTasks('grunt-exorcise');
     grunt.loadNpmTasks('grunt-string-replace');
     grunt.loadNpmTasks('grunt-svgmin');
@@ -773,7 +899,7 @@ module.exports = function(grunt) {
     grunt.registerTask('offline-cache', ['manifest', 'swPrecache:prod']);
 
     // Test/Dev tasks
-    grunt.registerTask('dev', ['connect:dev']);
+    grunt.registerTask('dev', ['concurrent:dev', 'watch']);
     grunt.registerTask('test', ['jshint', 'connect:test', 'mocha_phantomjs']);
     grunt.registerTask('prod', ['connect:prod']);
 
