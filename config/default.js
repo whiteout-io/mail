@@ -1,6 +1,6 @@
 'use strict';
 
-var port = process.env.PORT || 8889;
+var port = process.env.PORT || process.env.VCAP_APP_PORT || 8889;
 
 module.exports = {
     server: {
