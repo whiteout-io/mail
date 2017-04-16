@@ -33,7 +33,8 @@
     <li ng-repeat="folder in account.folders">
       <button wo-touch="state.read.open ? moveMessage(state.mailList.selected, folder) : moveCheckedMessages(folder)">
         <svg><use xlink:href="#icon-folder" /></svg>
-        {{folder.wellknown ? folder.type : folder.name}}
+        <span ng-show="folder.wellknown">{{folder.type === 'Flagged' ? 'Starred' : folder.type}}</span>
+        <span ng-show="!folder.wellknown">{{folder.name}}</span>
       </button>
     </li>
   </ul><!--/dropdown-->
