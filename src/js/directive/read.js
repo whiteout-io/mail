@@ -77,6 +77,15 @@ ngModule.directive('frameLoad', function($window) {
                             address: e.message.address
                         }]
                     });
+                } else if (e.message.type === 'keydown') {
+                    var ev = new Event("keydown", {
+                        "bubbles":true,
+                        "cancelable":false
+                    });
+                    ev.keyCode = e.message.keyCode,
+                    ev.ctrlKey = e.message.ctrlKey,
+                    ev.metaKey = e.message.metaKey,
+                    window.dispatchEvent(ev);
                 }
             }
         });
