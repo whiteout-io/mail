@@ -1414,7 +1414,7 @@ $scut-swhitesquare: "\25ab";
 
   $element-list: em, cite, i;
   @each $el in $elements {
-    $element-list: append($element-list, unquote($el), comma)
+    $element-list: append($element-list, $el, comma)
   }
 
   font-style: italic;

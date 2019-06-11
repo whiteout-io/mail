@@ -1,5 +1,6 @@
 {
   "name": "whiteout-mail",
+  "version": "1.2.2",
   "description": "Mail App with integrated OpenPGP encryption.",
   "author": "Whiteout Networks",
   "homepage": "https://whiteout.io",

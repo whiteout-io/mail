@@ -698,7 +698,7 @@ module.exports = function(grunt) {
                 handleFetch: handleFetch,
                 logger: grunt.log.writeln,
                 dynamicUrlToDependencies: {
-                    'socket.io/socket.io.js': ['node_modules/socket.io/node_modules/socket.io-client/socket.io.js'],
+                    'socket.io/socket.io.js': ['node_modules/socket.io-client/dist/socket.io.js'],
                 },
                 staticFileGlobs: [
                     rootDir + '/*.html',
